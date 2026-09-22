@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/source-symbol-inventory.schema.json",
+  "title": "SpawnPK recovered-source symbol inventory",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "inventory_id",
+    "workspace_id",
+    "build_id",
+    "source_tree_sha256",
+    "summary",
+    "methods",
+    "symbols",
+    "orphan_variables"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "source_symbol_inventory"},
+    "inventory_id": {
+      "type": "string",
+      "pattern": "^SRCINV_[0-9A-F]{20}$"
+    },
+    "workspace_id": {"type": ["string", "null"]},
+    "build_id": {"type": "string", "minLength": 1},
+    "source_authority_sha256": {"type": ["string", "null"]},
+    "readable_jar_sha256": {"type": ["string", "null"]},
+    "namespace_id": {"type": ["string", "null"]},
+    "source_tree_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "target_package": {"type": "string"},
+    "summary": {"type": "object"},
+    "methods": {"type": "array"},
+    "symbols": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "source_symbol_id",
+          "source_method_id",
+          "kind",
+          "ordinal",
+          "current_name",
+          "declared_type",
+          "semantic_name",
+          "semantic_status",
+          "semantic_confidence",
+          "semantic_provenance"
+        ],
+        "properties": {
+          "source_symbol_id": {
+            "type": "string",
+            "pattern": "^SRC_[A-Z_]+_[0-9A-F]{20}$"
+          },
+          "source_method_id": {
+            "type": "string",
+            "pattern": "^SRC_METHOD_[0-9A-F]{20}$"
+          },
+          "canonical_method_id": {
+            "type": ["string", "null"]
+          },
+          "owner_logical_id": {
+            "type": ["string", "null"]
+          },
+          "kind": {
+            "enum": [
+              "parameter",
+              "local",
+              "catch",
+              "resource",
+              "enhanced_for",
+              "lambda_parameter"
+            ]
+          },
+          "ordinal": {"type": "integer"},
+          "current_name": {"type": "string"},
+          "declared_type": {"type": "string"},
+          "semantic_name": {"type": ["string", "null"]},
+          "semantic_status": {
+            "enum": ["UNKNOWN", "CANDIDATE", "ACCEPTED"]
+          },
+          "semantic_confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "semantic_provenance": {"type": "array"}
+        }
+      }
+    },
+    "orphan_variables": {"type": "array"}
+  }
+}
