@@ -1,0 +1,27 @@
+name: R8D Source Checkout Artifact
+
+on:
+  push:
+    branches:
+      - core/r8d-exact-v308-run
+  workflow_dispatch:
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ac67d4de29caee628bdd8a15d0e5fec646a2bcdb
+      - name: Package exact main source checkout
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD
+          tar --exclude=.git -czf SpawnPK-Client-ac67d4de.tar.gz .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spawnpk-client-source-ac67d4de
+          path: SpawnPK-Client-ac67d4de.tar.gz
+          if-no-files-found: error
+          retention-days: 1
