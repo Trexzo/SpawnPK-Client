@@ -32,7 +32,14 @@ from .semantic_review import (
     resolve_semantic_candidates,
     write_json as write_semantic_json,
 )
-from .member_safety import (\n    MemberSafetyError,\n    build_member_safety_report,\n    validate_member_safety_acceptance,\n    write_json as write_member_safety_json,\n)\nfrom .member_remap_plan import (\n    MemberRemapPlanError,
+from .member_safety import (
+    MemberSafetyError,
+    build_member_safety_report,
+    validate_member_safety_acceptance,
+    write_json as write_member_safety_json,
+)
+from .member_remap_plan import (
+    MemberRemapPlanError,
     build_member_remap_plan,
     write_json as write_member_remap_json,
 )
