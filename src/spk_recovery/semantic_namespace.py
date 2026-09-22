@@ -96,7 +96,7 @@ def _accepted_class_spec(
     source_sha256: str,
     target_package: str,
     source_safe_fallback: bool,
-    fallback_package: str,
+    fallback_name_prefix: str,
 ) -> tuple[dict[str, Any], list[str], list[dict[str, Any]]]:
     requested: dict[str, Any] = {}
     accepted_ids: list[str] = []
@@ -168,10 +168,17 @@ def _accepted_class_spec(
                     f"{logical_id}: ACCEPTED semantic class remained at a "
                     "class/package collision root"
                 )
+            source_name = effective_names[logical_id]
+            source_package = (
+                source_name.rsplit("/", 1)[0]
+                if "/" in source_name
+                else ""
+            )
+            fallback_simple_name = fallback_name_prefix + logical_id
             target = (
-                fallback_package.rstrip("/")
-                + "/"
-                + logical_id
+                source_package + "/" + fallback_simple_name
+                if source_package
+                else fallback_simple_name
             )
             requested[logical_id] = {
                 "target_internal_name": target,
@@ -180,6 +187,7 @@ def _accepted_class_spec(
                     {
                         "kind": "source_safety",
                         "reason": "java_class_package_collision",
+                        "strategy": "package_preserving_class_rename",
                         "conflicting_descendants": descendants,
                     }
                 ],
@@ -190,6 +198,7 @@ def _accepted_class_spec(
                     "source_internal_name": effective_names[logical_id],
                     "target_internal_name": target,
                     "reason": "java_class_package_collision",
+                    "strategy": "package_preserving_class_rename",
                     "conflicting_descendants": descendants,
                 }
             )
@@ -212,7 +221,7 @@ def build_semantic_namespace(
     build_id: str,
     target_package: str = "recovered/spawnpk/client",
     source_safe_fallback: bool = False,
-    fallback_package: str = "recovered/spawnpk/fallback",
+    fallback_name_prefix: str = "Recovered_",
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     """Build semantic remaps plus optional non-semantic Java source-safety remaps."""
     validate_lineage(class_lineage)
@@ -238,15 +247,13 @@ def build_semantic_namespace(
             f"invalid or reserved target package {target_package!r}"
         )
 
-    fallback = fallback_package.rstrip("/")
-    fallback_parts = fallback.split("/")
     if (
-        not fallback
-        or any(not _IDENTIFIER.fullmatch(part) for part in fallback_parts)
-        or fallback.startswith(("java/", "javax/", "jdk/", "sun/"))
+        not isinstance(fallback_name_prefix, str)
+        or not fallback_name_prefix
+        or not _IDENTIFIER.fullmatch(fallback_name_prefix + "X")
     ):
         raise SemanticNamespaceError(
-            f"invalid or reserved fallback package {fallback_package!r}"
+            f"invalid fallback name prefix {fallback_name_prefix!r}"
         )
 
     class_spec, accepted_class_ids, fallback_rows = _accepted_class_spec(
@@ -255,7 +262,7 @@ def build_semantic_namespace(
         source_sha256=source_sha,
         target_package=package,
         source_safe_fallback=source_safe_fallback,
-        fallback_package=fallback,
+        fallback_name_prefix=fallback_name_prefix,
     )
     if class_spec["classes"]:
         try:
@@ -327,7 +334,7 @@ def build_semantic_namespace(
         "source_sha256": source_sha,
         "target_package": package,
         "source_safe_fallback": source_safe_fallback,
-        "fallback_package": fallback,
+        "fallback_name_prefix": fallback_name_prefix,
         "fallback_remaps": fallback_rows,
         "class_plan_digest": class_plan_digest,
         "member_plan_digest": member_plan_digest,
@@ -345,7 +352,7 @@ def build_semantic_namespace(
         "source_sha256": source_sha,
         "target_package": package,
         "source_safe_fallback": source_safe_fallback,
-        "fallback_package": fallback,
+        "fallback_name_prefix": fallback_name_prefix,
         "class_plan_digest": class_plan_digest,
         "member_plan_digest": member_plan_digest,
         "summary": {

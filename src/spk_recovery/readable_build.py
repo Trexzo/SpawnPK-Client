@@ -60,11 +60,9 @@ def _manifest(
     source_safe_fallback = bool(
         namespace.get("source_safe_fallback", False)
     )
-    fallback_package = str(
-        namespace.get("fallback_package", "")
-    ).strip("/")
-    if source_safe_fallback and fallback_package:
-        project_source_prefixes.append(fallback_package + "/")
+    fallback_name_prefix = str(
+        namespace.get("fallback_name_prefix", "")
+    )
     project_source_prefixes = sorted(set(project_source_prefixes))
 
     material = {
@@ -86,8 +84,8 @@ def _manifest(
         "source_sha256": namespace["source_sha256"],
         "target_package": namespace["target_package"],
         "source_safe_fallback": source_safe_fallback,
-        "fallback_package": (
-            fallback_package if source_safe_fallback else None
+        "fallback_name_prefix": (
+            fallback_name_prefix if source_safe_fallback else None
         ),
         "project_source_prefixes": project_source_prefixes,
         "class_plan_digest": namespace["class_plan_digest"],
@@ -122,7 +120,7 @@ def build_readable_client(
     out_dir: Path,
     target_package: str = "recovered/spawnpk/client",
     source_safe_fallback: bool = False,
-    fallback_package: str = "recovered/spawnpk/fallback",
+    fallback_name_prefix: str = "Recovered_",
     member_safety_acceptance: dict[str, Any] | None = None,
     allow_package_resource_risk: bool = False,
     rewrite_class_name_strings: bool = False,
@@ -151,7 +149,7 @@ def build_readable_client(
             build_id=build_id,
             target_package=target_package,
             source_safe_fallback=source_safe_fallback,
-            fallback_package=fallback_package,
+            fallback_name_prefix=fallback_name_prefix,
         )
     except SemanticNamespaceError as exc:
         raise ReadableBuildError(str(exc)) from exc

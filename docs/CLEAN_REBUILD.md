@@ -10,7 +10,7 @@ without any SpawnPK classfile being supplied on the compiler classpath.
 
 The verified readable client JAR is split into:
 
-- project classes: every prefix published by R4B `project_source_prefixes` — normally original `rs/**`, the accepted semantic target package, and any enabled source-safety fallback package;
+- project classes: every prefix published by R4B `project_source_prefixes` — normally original `rs/**` plus the accepted semantic target package; package-preserving source-safety renames remain under `rs/**`;
 - non-project classes: bundled dependency bytecode.
 
 R5D writes a deterministic `dependency-capsule.jar` containing only non-project classfiles.

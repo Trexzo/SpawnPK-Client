@@ -36,8 +36,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--target-package", default="recovered/spawnpk/client")
     p.add_argument("--source-safe-fallback", action="store_true")
     p.add_argument(
-        "--fallback-package",
-        default="recovered/spawnpk/fallback",
+        "--fallback-name-prefix",
+        default="Recovered_",
     )
     p.add_argument("--member-safety-acceptance", type=Path)
     p.add_argument("--allow-package-resource-risk", action="store_true")
@@ -73,7 +73,7 @@ def main(argv: list[str] | None = None) -> int:
             scope_prefix=args.scope_prefix,
             target_package=args.target_package,
             source_safe_fallback=args.source_safe_fallback,
-            fallback_package=args.fallback_package,
+            fallback_name_prefix=args.fallback_name_prefix,
             member_safety_acceptance=(
                 _load(args.member_safety_acceptance)
                 if args.member_safety_acceptance

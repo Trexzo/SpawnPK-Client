@@ -117,7 +117,7 @@ class ExistingAuthorityReleaseTests(unittest.TestCase):
                     build_id="v308",
                     out_dir=root / "out",
                     source_safe_fallback=True,
-                    fallback_package="recovered/test/fallback",
+                    fallback_name_prefix="Safe_",
                 )
 
             self.assertFalse(report["ready_for_release"])
@@ -128,8 +128,8 @@ class ExistingAuthorityReleaseTests(unittest.TestCase):
                 readable.call_args.kwargs["source_safe_fallback"]
             )
             self.assertEqual(
-                readable.call_args.kwargs["fallback_package"],
-                "recovered/test/fallback",
+                readable.call_args.kwargs["fallback_name_prefix"],
+                "Safe_",
             )
             source.assert_not_called()
             self.assertTrue((root / "out" / "release-run.json").is_file())
