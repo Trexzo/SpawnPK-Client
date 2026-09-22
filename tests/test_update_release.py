@@ -193,7 +193,7 @@ class UpdateReleaseTests(unittest.TestCase):
                     new_build_number=309,
                     out_dir=out,
                     source_safe_fallback=True,
-                    fallback_package="recovered/test/fallback",
+                    fallback_name_prefix="Safe_",
                 )
 
             self.assertTrue(report["ready_for_release"])
@@ -204,8 +204,8 @@ class UpdateReleaseTests(unittest.TestCase):
                 release.call_args.kwargs["source_safe_fallback"]
             )
             self.assertEqual(
-                release.call_args.kwargs["fallback_package"],
-                "recovered/test/fallback",
+                release.call_args.kwargs["fallback_name_prefix"],
+                "Safe_",
             )
 
 
