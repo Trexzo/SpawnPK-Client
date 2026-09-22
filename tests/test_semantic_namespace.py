@@ -358,5 +358,109 @@ class SemanticNamespaceTests(unittest.TestCase):
         )
 
 
+    def test_accepted_outer_closes_over_unknown_nested_class(self):
+        classes, members, index = _fixture()
+        classes["classes"].append(
+            {
+                "logical_id": "CLIENT_CLASS_000003",
+                "semantic_name": None,
+                "semantic_status": "UNKNOWN",
+                "semantic_confidence": 0.0,
+                "lineage": [
+                    {
+                        "build_id": "v308",
+                        "internal_name": "rs/a$Inner",
+                        "entry_path": "rs/a$Inner.class",
+                        "entry_sha256": "f" * 64,
+                        "structural_sha256": "1" * 64,
+                        "relation": "BASELINE",
+                        "confidence": 1.0,
+                        "provenance": [],
+                    }
+                ],
+                "semantic_provenance": [],
+            }
+        )
+        index["classes"]["rs/a$Inner.class"] = {
+            "internal_name": "rs/a$Inner",
+            "fields": [],
+            "methods": [],
+        }
+
+        manifest, class_plan, _ = build_semantic_namespace(
+            classes,
+            members,
+            index,
+            build_id="v308",
+        )
+
+        self.assertEqual(class_plan["class_count"], 2)
+        nested = next(
+            row
+            for row in class_plan["classes"]
+            if row["logical_id"] == "CLIENT_CLASS_000003"
+        )
+        self.assertEqual(
+            nested["target_internal_name"],
+            "recovered/spawnpk/client/ExampleController$Inner",
+        )
+        self.assertEqual(
+            nested["provenance"][0]["reason"],
+            "semantic_outer_nested_class_closure",
+        )
+        self.assertEqual(
+            manifest["summary"]["source_safety_nested_class_remaps"],
+            1,
+        )
+        self.assertEqual(
+            manifest["nested_class_closure_remaps"][0]["logical_id"],
+            "CLIENT_CLASS_000003",
+        )
+        self.assertEqual(
+            classes["classes"][2]["semantic_status"],
+            "UNKNOWN",
+        )
+        self.assertIsNone(classes["classes"][2]["semantic_name"])
+
+    def test_conflicting_accepted_nested_semantic_target_fails_closed(self):
+        classes, members, index = _fixture()
+        classes["classes"].append(
+            {
+                "logical_id": "CLIENT_CLASS_000003",
+                "semantic_name": "IndependentNested",
+                "semantic_status": "ACCEPTED",
+                "semantic_confidence": 0.99,
+                "lineage": [
+                    {
+                        "build_id": "v308",
+                        "internal_name": "rs/a$Inner",
+                        "entry_path": "rs/a$Inner.class",
+                        "entry_sha256": "f" * 64,
+                        "structural_sha256": "1" * 64,
+                        "relation": "BASELINE",
+                        "confidence": 1.0,
+                        "provenance": [],
+                    }
+                ],
+                "semantic_provenance": [
+                    {"proposal_id": "SEMPROP_NESTED"}
+                ],
+            }
+        )
+        index["classes"]["rs/a$Inner.class"] = {
+            "internal_name": "rs/a$Inner",
+            "fields": [],
+            "methods": [],
+        }
+
+        with self.assertRaises(SemanticNamespaceError):
+            build_semantic_namespace(
+                classes,
+                members,
+                index,
+                build_id="v308",
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
