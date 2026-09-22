@@ -52,6 +52,21 @@ def _manifest(
     verification_pass: bool | None,
     blocker: dict[str, Any] | None,
 ) -> dict[str, Any]:
+    target_package = str(namespace.get("target_package", "")).strip("/")
+    project_source_prefixes = ["rs/"]
+    if target_package:
+        project_source_prefixes.append(target_package + "/")
+
+    source_safe_fallback = bool(
+        namespace.get("source_safe_fallback", False)
+    )
+    fallback_package = str(
+        namespace.get("fallback_package", "")
+    ).strip("/")
+    if source_safe_fallback and fallback_package:
+        project_source_prefixes.append(fallback_package + "/")
+    project_source_prefixes = sorted(set(project_source_prefixes))
+
     material = {
         "namespace_id": namespace["namespace_id"],
         "source_sha256": namespace["source_sha256"],
@@ -60,6 +75,7 @@ def _manifest(
         "status": status,
         "output_sha256": output_sha256,
         "verification_pass": verification_pass,
+        "project_source_prefixes": project_source_prefixes,
         "blocker": blocker,
     }
     return {
@@ -69,6 +85,11 @@ def _manifest(
         "namespace_id": namespace["namespace_id"],
         "source_sha256": namespace["source_sha256"],
         "target_package": namespace["target_package"],
+        "source_safe_fallback": source_safe_fallback,
+        "fallback_package": (
+            fallback_package if source_safe_fallback else None
+        ),
+        "project_source_prefixes": project_source_prefixes,
         "class_plan_digest": namespace["class_plan_digest"],
         "member_plan_digest": namespace["member_plan_digest"],
         "status": status,

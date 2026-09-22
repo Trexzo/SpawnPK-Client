@@ -8,7 +8,10 @@ import tempfile
 import unittest
 import zipfile
 
-from spk_recovery.clean_rebuild import clean_project_rebuild
+from spk_recovery.clean_rebuild import (
+    CleanRebuildError,
+    clean_project_rebuild,
+)
 from spk_recovery.progressive_compile import _probe_javac
 
 
@@ -34,8 +37,16 @@ class CleanRebuildTests(unittest.TestCase):
     def _fixture(self, root: Path):
         dep_src = root / "orig-src" / "dep"
         rs_src = root / "orig-src" / "rs"
+        fallback_src = (
+            root
+            / "orig-src"
+            / "recovered"
+            / "spawnpk"
+            / "fallback"
+        )
         dep_src.mkdir(parents=True)
         rs_src.mkdir(parents=True)
+        fallback_src.mkdir(parents=True)
         (dep_src / "Fallback.java").write_text(
             "package dep; public class Fallback { "
             "public String value() { return \"ok\"; } }\n",
@@ -48,6 +59,12 @@ class CleanRebuildTests(unittest.TestCase):
         )
         (rs_src / "B.java").write_text(
             "package rs; public class B { public int value = 1; }\n",
+            encoding="utf-8",
+        )
+        (fallback_src / "CLIENT_CLASS_000001.java").write_text(
+            "package recovered.spawnpk.fallback; "
+            "public class CLIENT_CLASS_000001 { "
+            "public int value = 2; }\n",
             encoding="utf-8",
         )
 
@@ -75,6 +92,7 @@ class CleanRebuildTests(unittest.TestCase):
                 str(project_classes),
                 str(rs_src / "A.java"),
                 str(rs_src / "B.java"),
+                str(fallback_src / "CLIENT_CLASS_000001.java"),
             ],
             check=True,
             stdout=subprocess.PIPE,
@@ -101,8 +119,19 @@ class CleanRebuildTests(unittest.TestCase):
 
         recovered_root = root / "recovered"
         (recovered_root / "rs").mkdir(parents=True)
+        recovered_fallback = (
+            recovered_root
+            / "recovered"
+            / "spawnpk"
+            / "fallback"
+        )
+        recovered_fallback.mkdir(parents=True)
         shutil.copy2(rs_src / "A.java", recovered_root / "rs" / "A.java")
         shutil.copy2(rs_src / "B.java", recovered_root / "rs" / "B.java")
+        shutil.copy2(
+            fallback_src / "CLIENT_CLASS_000001.java",
+            recovered_fallback / "CLIENT_CLASS_000001.java",
+        )
         tree_sha = _tree_sha(recovered_root)
         readable_sha = _sha(readable)
 
@@ -119,7 +148,7 @@ class CleanRebuildTests(unittest.TestCase):
             "engine": "cfr",
             "decompiler_sha256": "e" * 64,
             "source_tree_sha256": tree_sha,
-            "java_file_count": 2,
+            "java_file_count": 3,
             "source_bytes": sum(
                 p.stat().st_size
                 for p in recovered_root.rglob("*.java")
@@ -138,6 +167,16 @@ class CleanRebuildTests(unittest.TestCase):
             "verification_pass": True,
             "output_sha256": readable_sha,
             "target_package": "recovered/spawnpk/client",
+            "source_safe_fallback": True,
+            "fallback_package": "recovered/spawnpk/fallback",
+            "project_source_prefixes": [
+                "recovered/spawnpk/client/",
+                "recovered/spawnpk/fallback/",
+                "rs/",
+            ],
+            "semantic_summary": {
+                "source_safety_fallbacks": 1,
+            },
         }
         authority = {
             "schema_version": 1,
@@ -215,6 +254,81 @@ class CleanRebuildTests(unittest.TestCase):
                 self.assertIn("rs/A.class", names)
                 self.assertIn("rs/B.class", names)
                 self.assertIn("rs/resource.txt", names)
+
+
+    def test_default_project_prefixes_rebuild_fallback_class(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                source,
+                readable,
+                recovered,
+                readiness,
+                readable_manifest,
+                authority,
+            ) = self._fixture(root)
+
+            report = clean_project_rebuild(
+                recovered,
+                readiness,
+                readable_manifest,
+                readable,
+                authority,
+                source,
+                out_dir=root / "out",
+            )
+
+            self.assertEqual(report["status"], "complete")
+            self.assertEqual(
+                report["project_classes"]["expected_count"],
+                3,
+            )
+            self.assertEqual(
+                report["project_classes"]["generated_count"],
+                3,
+            )
+            self.assertEqual(
+                report["project_classes"]["binary_fallback_count"],
+                0,
+            )
+
+            fallback_class = (
+                "recovered/spawnpk/fallback/"
+                "CLIENT_CLASS_000001.class"
+            )
+            with zipfile.ZipFile(
+                root / "out" / "dependency-capsule.jar"
+            ) as z:
+                self.assertNotIn(fallback_class, set(z.namelist()))
+            with zipfile.ZipFile(
+                root / "out" / "rebuilt-client.jar"
+            ) as z:
+                self.assertIn(fallback_class, set(z.namelist()))
+
+    def test_old_fallback_manifest_without_project_prefixes_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                source,
+                readable,
+                recovered,
+                readiness,
+                readable_manifest,
+                authority,
+            ) = self._fixture(root)
+            readable_manifest.pop("project_source_prefixes")
+
+            with self.assertRaises(CleanRebuildError):
+                clean_project_rebuild(
+                    recovered,
+                    readiness,
+                    readable_manifest,
+                    readable,
+                    authority,
+                    source,
+                    out_dir=root / "out",
+                )
+
 
 
 if __name__ == "__main__":

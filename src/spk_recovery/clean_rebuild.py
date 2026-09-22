@@ -37,12 +37,39 @@ def _normalize_prefixes(
     source_prefixes: list[str] | None,
 ) -> list[str]:
     if source_prefixes is None:
-        target_package = str(
-            readable_manifest.get("target_package", "")
-        ).strip("/")
-        values = ["rs/"]
-        if target_package:
-            values.append(target_package + "/")
+        manifest_prefixes = readable_manifest.get(
+            "project_source_prefixes"
+        )
+        if manifest_prefixes is not None:
+            if (
+                not isinstance(manifest_prefixes, list)
+                or not manifest_prefixes
+            ):
+                raise CleanRebuildError(
+                    "readable manifest project_source_prefixes must be "
+                    "a non-empty array"
+                )
+            values = manifest_prefixes
+        else:
+            fallback_count = int(
+                readable_manifest.get("semantic_summary", {}).get(
+                    "source_safety_fallbacks",
+                    0,
+                )
+            )
+            if fallback_count:
+                raise CleanRebuildError(
+                    "readable manifest contains source-safety fallback "
+                    "classes but lacks project_source_prefixes; rebuild "
+                    "the readable client with current tooling or supply "
+                    "explicit source prefixes"
+                )
+            target_package = str(
+                readable_manifest.get("target_package", "")
+            ).strip("/")
+            values = ["rs/"]
+            if target_package:
+                values.append(target_package + "/")
     else:
         values = source_prefixes
 
