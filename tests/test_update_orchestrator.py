@@ -190,6 +190,21 @@ class UpdateOrchestratorTests(unittest.TestCase):
                 2,
             )
 
+            self.assertEqual(
+                result["class_delta_summary"]["byte_identical"],
+                1,
+            )
+            self.assertEqual(
+                result["member_delta_summary"][
+                    "member_shape_unchanged"
+                ],
+                2,
+            )
+            delta_report = Path(
+                result["paths"]["delta_report"]
+            ).read_text(encoding="utf-8")
+            self.assertIn('"kind": "update_delta_report"', delta_report)
+
     def test_missing_member_intelligence_blocks_without_guessing(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
