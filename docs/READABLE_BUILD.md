@@ -60,6 +60,11 @@ These flags acknowledge reviewed risks; they do not create semantic acceptance.
 
 ## Workspace
 
+The readable manifest also carries `project_source_prefixes`: the exact namespace
+prefixes that remain SpawnPK project-owned after rewriting. With the R8A source-safety
+fallback enabled this includes the fallback package as well as `rs/` and the semantic
+target package. The fallback prefix is ownership metadata, not semantic acceptance.
+
 A completed build contains:
 
 ```text
