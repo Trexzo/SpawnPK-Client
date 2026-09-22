@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from .diffing import diff_indexes
+from .delta_classify import classify_class_deltas
 from .indexer import index_jar, write_index
 from .matcher import match_classes
 
@@ -75,6 +76,11 @@ def build_update_intake(
         old_index,
         new_index,
         prefix=scope_prefix,
+    )
+    class_delta_report = classify_class_deltas(
+        old_index,
+        new_index,
+        matcher,
     )
 
     matched_rows: list[dict[str, Any]] = []
@@ -262,6 +268,7 @@ def build_update_intake(
         "diff_summary": diff["summary"],
         "matcher_summary": matcher["summary"],
         "package_anchors": matcher.get("package_anchors", {}),
+        "class_delta_report": class_delta_report,
     }
 
 
