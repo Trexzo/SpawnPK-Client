@@ -7,6 +7,16 @@ import sys
 
 from .indexer import index_jar, write_index
 from .diffing import diff_indexes
+from .decompiler import (
+    DecompilerError,
+    run_decompiler,
+    write_json as write_decompiler_json,
+)
+from .verification import (
+    VerificationError,
+    verify_transformed_jar,
+    write_json as write_verify_json,
+)
 from .canonicalize import CandidateApplicationError, apply_lineage_candidates
 from .promotion import NewClassPromotionError, promote_new_classes
 from .repack import RepackError, remap_jar, write_result
@@ -206,6 +216,28 @@ def main(argv: list[str] | None = None) -> int:
     rj.add_argument("--rewrite-class-name-strings", action="store_true")
     rj.add_argument("--allow-package-resource-risk", action="store_true")
     rj.add_argument("--allow-member-reflection-risk", action="store_true")
+
+    rv = sub.add_parser(
+        "verify-remap",
+        help="Independently verify a transformed client JAR against exact remap plans",
+    )
+    rv.add_argument("source_index", type=Path)
+    rv.add_argument("output_jar", type=Path)
+    rv.add_argument("--class-plan", type=Path)
+    rv.add_argument("--member-plan", type=Path)
+    rv.add_argument("--out", type=Path, required=True)
+
+    rd = sub.add_parser(
+        "decompile",
+        help="Run a hash-pinned CFR or Vineflower JAR against a transformed client",
+    )
+    rd.add_argument("input_jar", type=Path)
+    rd.add_argument("decompiler_jar", type=Path)
+    rd.add_argument("--decompiler-sha256", required=True)
+    rd.add_argument("--engine", choices=["cfr", "vineflower"], required=True)
+    rd.add_argument("--out-dir", type=Path, required=True)
+    rd.add_argument("--clean-out", action="store_true")
+    rd.add_argument("--result-out", type=Path)
 
     args = p.parse_args(argv)
     if args.cmd == "index":
@@ -620,6 +652,74 @@ def main(argv: list[str] | None = None) -> int:
         ):
             print(f"{key}={result[key]}")
         print(f"out={args.out}")
+        if args.result_out:
+            print(f"result_out={args.result_out}")
+        return 0
+
+    if args.cmd == "verify-remap":
+        try:
+            class_plan = (
+                _load(args.class_plan)
+                if args.class_plan
+                else None
+            )
+            member_plan = (
+                _load(args.member_plan)
+                if args.member_plan
+                else None
+            )
+            report = verify_transformed_jar(
+                _load(args.source_index),
+                args.output_jar,
+                class_plan=class_plan,
+                member_plan=member_plan,
+            )
+            write_verify_json(report, args.out)
+        except (
+            VerificationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print(
+            "SPK_RECOVERY_VERIFY_REMAP_PASS"
+            if report["pass"]
+            else "SPK_RECOVERY_VERIFY_REMAP_FAIL"
+        )
+        for k, v in report["summary"].items():
+            print(f"{k}={v}")
+        print(f"issues={len(report['issues'])}")
+        print(f"out={args.out}")
+        return 0 if report["pass"] else 1
+
+    if args.cmd == "decompile":
+        try:
+            result = run_decompiler(
+                args.input_jar,
+                args.decompiler_jar,
+                expected_decompiler_sha256=(
+                    args.decompiler_sha256
+                ),
+                engine=args.engine,
+                out_dir=args.out_dir,
+                clean_out=args.clean_out,
+            )
+            if args.result_out:
+                write_decompiler_json(
+                    result,
+                    args.result_out,
+                )
+        except DecompilerError as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_DECOMPILE_PASS")
+        print(f"engine={result['engine']}")
+        print(f"input_sha256={result['input_sha256']}")
+        print(
+            f"decompiler_sha256={result['decompiler_sha256']}"
+        )
+        print(f"java_files={result['java_file_count']}")
+        print(f"out_dir={args.out_dir}")
         if args.result_out:
             print(f"result_out={args.result_out}")
         return 0
