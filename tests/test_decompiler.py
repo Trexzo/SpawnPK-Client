@@ -40,7 +40,7 @@ public class FakeDecompiler {
         Files.createDirectories(out);
         Files.writeString(
             out.resolve("Recovered.java"),
-            "public class Recovered {}\n"
+            "public class Recovered {}\\n"
         );
     }
 }
