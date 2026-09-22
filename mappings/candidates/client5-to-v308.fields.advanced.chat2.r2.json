@@ -1,0 +1,873 @@
+{
+  "schema_version": 1,
+  "kind": "advanced_field_identity_candidates",
+  "canonical": false,
+  "old_build": "client(5)-alternate-lineage",
+  "old_sha256": "a9a5d1f35a6657b5c26939ca30e008748e718f6b206cc8fd93b64b57c4833385",
+  "new_build": "v308",
+  "new_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "authoritative_class_pairs": 1046,
+  "field_old": 5482,
+  "declaration_matched": 5404,
+  "post_declaration_matched": 46,
+  "total_matched": 5450,
+  "field_coverage": 0.994163,
+  "unresolved": 32,
+  "stage_counts": {
+    "matched_method_field_usage": 11,
+    "cross_owner_field_usage": 2,
+    "matched_method_instruction_neighborhood": 9,
+    "initializer_instruction_neighborhood": 13,
+    "aligned_instruction_votes": 8,
+    "constant_value_exact": 3
+  },
+  "relationships": [
+    {
+      "relationship_id": "FIELDREL_ADV_0001",
+      "strategy": "matched_method_field_usage",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/a/a/a.class",
+      "new_owner": "rs/n/a/a/a.class",
+      "old": {
+        "name": "bH",
+        "descriptor": "I"
+      },
+      "new": {
+        "name": "bJ",
+        "descriptor": "I"
+      },
+      "evidence": {
+        "matched_method_accesses": 2
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0002",
+      "strategy": "matched_method_field_usage",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/aD.class",
+      "new_owner": "rs/n/c/aD.class",
+      "old": {
+        "name": "bH",
+        "descriptor": "I"
+      },
+      "new": {
+        "name": "bJ",
+        "descriptor": "I"
+      },
+      "evidence": {
+        "matched_method_accesses": 2
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0003",
+      "strategy": "matched_method_field_usage",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/aM.class",
+      "new_owner": "rs/n/c/aM.class",
+      "old": {
+        "name": "bG",
+        "descriptor": "I"
+      },
+      "new": {
+        "name": "bI",
+        "descriptor": "I"
+      },
+      "evidence": {
+        "matched_method_accesses": 4
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0004",
+      "strategy": "matched_method_field_usage",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/aM.class",
+      "new_owner": "rs/n/c/aM.class",
+      "old": {
+        "name": "bH",
+        "descriptor": "I"
+      },
+      "new": {
+        "name": "bJ",
+        "descriptor": "I"
+      },
+      "evidence": {
+        "matched_method_accesses": 3
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0005",
+      "strategy": "matched_method_field_usage",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/ab.class",
+      "new_owner": "rs/n/c/ab.class",
+      "old": {
+        "name": "bK",
+        "descriptor": "Z"
+      },
+      "new": {
+        "name": "bM",
+        "descriptor": "Z"
+      },
+      "evidence": {
+        "matched_method_accesses": 1
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0006",
+      "strategy": "matched_method_field_usage",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/ab.class",
+      "new_owner": "rs/n/c/ab.class",
+      "old": {
+        "name": "bR",
+        "descriptor": "Z"
+      },
+      "new": {
+        "name": "bT",
+        "descriptor": "Z"
+      },
+      "evidence": {
+        "matched_method_accesses": 1
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0007",
+      "strategy": "matched_method_field_usage",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/ac.class",
+      "new_owner": "rs/n/c/ac.class",
+      "old": {
+        "name": "bP",
+        "descriptor": "[Ljava/lang/String;"
+      },
+      "new": {
+        "name": "bR",
+        "descriptor": "[Ljava/lang/String;"
+      },
+      "evidence": {
+        "matched_method_accesses": 1
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0008",
+      "strategy": "matched_method_field_usage",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/ac.class",
+      "new_owner": "rs/n/c/ac.class",
+      "old": {
+        "name": "bR",
+        "descriptor": "[I"
+      },
+      "new": {
+        "name": "bT",
+        "descriptor": "[I"
+      },
+      "evidence": {
+        "matched_method_accesses": 3
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0009",
+      "strategy": "matched_method_field_usage",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/aq.class",
+      "new_owner": "rs/n/c/aq.class",
+      "old": {
+        "name": "bG",
+        "descriptor": "[I"
+      },
+      "new": {
+        "name": "bI",
+        "descriptor": "[I"
+      },
+      "evidence": {
+        "matched_method_accesses": 1
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0010",
+      "strategy": "matched_method_field_usage",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/aq.class",
+      "new_owner": "rs/n/c/aq.class",
+      "old": {
+        "name": "bH",
+        "descriptor": "[I"
+      },
+      "new": {
+        "name": "bJ",
+        "descriptor": "[I"
+      },
+      "evidence": {
+        "matched_method_accesses": 1
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0011",
+      "strategy": "matched_method_field_usage",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/aw.class",
+      "new_owner": "rs/n/c/aw.class",
+      "old": {
+        "name": "bI",
+        "descriptor": "[I"
+      },
+      "new": {
+        "name": "bL",
+        "descriptor": "[I"
+      },
+      "evidence": {
+        "matched_method_accesses": 1
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0012",
+      "strategy": "cross_owner_field_usage",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/O.class",
+      "new_owner": "rs/n/c/O.class",
+      "old": {
+        "name": "bQ",
+        "descriptor": "J"
+      },
+      "new": {
+        "name": "bS",
+        "descriptor": "J"
+      },
+      "evidence": {
+        "global_access_signature_items": 2
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0013",
+      "strategy": "cross_owner_field_usage",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/c.class",
+      "new_owner": "rs/n/c/c.class",
+      "old": {
+        "name": "bH",
+        "descriptor": "I"
+      },
+      "new": {
+        "name": "bJ",
+        "descriptor": "I"
+      },
+      "evidence": {
+        "global_access_signature_items": 2
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0014",
+      "strategy": "matched_method_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/G.class",
+      "new_owner": "rs/n/c/G.class",
+      "old": {
+        "name": "bG",
+        "descriptor": "Lrs/m/q;"
+      },
+      "new": {
+        "name": "bI",
+        "descriptor": "Lrs/l/F;"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0015",
+      "strategy": "matched_method_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/G.class",
+      "new_owner": "rs/n/c/G.class",
+      "old": {
+        "name": "bH",
+        "descriptor": "Lrs/m/q;"
+      },
+      "new": {
+        "name": "bJ",
+        "descriptor": "Lrs/l/F;"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0016",
+      "strategy": "matched_method_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/O.class",
+      "new_owner": "rs/n/c/O.class",
+      "old": {
+        "name": "bG",
+        "descriptor": "J"
+      },
+      "new": {
+        "name": "bI",
+        "descriptor": "J"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0017",
+      "strategy": "matched_method_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/O.class",
+      "new_owner": "rs/n/c/O.class",
+      "old": {
+        "name": "bH",
+        "descriptor": "I"
+      },
+      "new": {
+        "name": "bJ",
+        "descriptor": "I"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0018",
+      "strategy": "matched_method_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/O.class",
+      "new_owner": "rs/n/c/O.class",
+      "old": {
+        "name": "bI",
+        "descriptor": "I"
+      },
+      "new": {
+        "name": "bK",
+        "descriptor": "I"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0019",
+      "strategy": "matched_method_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/O.class",
+      "new_owner": "rs/n/c/O.class",
+      "old": {
+        "name": "bJ",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "new": {
+        "name": "bL",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0020",
+      "strategy": "matched_method_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/O.class",
+      "new_owner": "rs/n/c/O.class",
+      "old": {
+        "name": "bK",
+        "descriptor": "J"
+      },
+      "new": {
+        "name": "bM",
+        "descriptor": "J"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0021",
+      "strategy": "matched_method_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/ac.class",
+      "new_owner": "rs/n/c/ac.class",
+      "old": {
+        "name": "bM",
+        "descriptor": "[I"
+      },
+      "new": {
+        "name": "bO",
+        "descriptor": "[I"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0022",
+      "strategy": "matched_method_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/d/a.class",
+      "new_owner": "rs/n/c/d/a.class",
+      "old": {
+        "name": "dD",
+        "descriptor": "Lrs/m/f/b/d;"
+      },
+      "new": {
+        "name": "dF",
+        "descriptor": "Lrs/l/f/b/d;"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0023",
+      "strategy": "initializer_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/O.class",
+      "new_owner": "rs/n/c/O.class",
+      "old": {
+        "name": "bT",
+        "descriptor": "Ljava/util/List;"
+      },
+      "new": {
+        "name": "bV",
+        "descriptor": "Ljava/util/List;"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0024",
+      "strategy": "initializer_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/t/a/a.class",
+      "new_owner": "rs/t/a/a.class",
+      "old": {
+        "name": "g",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "new": {
+        "name": "b",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0025",
+      "strategy": "initializer_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/t/a/a.class",
+      "new_owner": "rs/t/a/a.class",
+      "old": {
+        "name": "h",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "new": {
+        "name": "c",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0026",
+      "strategy": "initializer_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/t/a/b.class",
+      "new_owner": "rs/t/a/b.class",
+      "old": {
+        "name": "g",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "new": {
+        "name": "b",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0027",
+      "strategy": "initializer_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/t/a/b.class",
+      "new_owner": "rs/t/a/b.class",
+      "old": {
+        "name": "h",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "new": {
+        "name": "c",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0028",
+      "strategy": "initializer_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/t/a/c.class",
+      "new_owner": "rs/t/a/c.class",
+      "old": {
+        "name": "g",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "new": {
+        "name": "b",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0029",
+      "strategy": "initializer_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/t/a/c.class",
+      "new_owner": "rs/t/a/c.class",
+      "old": {
+        "name": "h",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "new": {
+        "name": "c",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0030",
+      "strategy": "initializer_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/t/a/e.class",
+      "new_owner": "rs/t/a/e.class",
+      "old": {
+        "name": "f",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "new": {
+        "name": "d",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0031",
+      "strategy": "initializer_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/t/a/e.class",
+      "new_owner": "rs/t/a/e.class",
+      "old": {
+        "name": "g",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "new": {
+        "name": "e",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0032",
+      "strategy": "initializer_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/t/a/f.class",
+      "new_owner": "rs/t/a/f.class",
+      "old": {
+        "name": "f",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "new": {
+        "name": "a",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0033",
+      "strategy": "initializer_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/t/a/f.class",
+      "new_owner": "rs/t/a/f.class",
+      "old": {
+        "name": "g",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "new": {
+        "name": "b",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0034",
+      "strategy": "initializer_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/t/a/g.class",
+      "new_owner": "rs/t/a/g.class",
+      "old": {
+        "name": "e",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "new": {
+        "name": "c",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0035",
+      "strategy": "initializer_instruction_neighborhood",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/t/a/g.class",
+      "new_owner": "rs/t/a/g.class",
+      "old": {
+        "name": "f",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "new": {
+        "name": "d",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "evidence": {
+        "window": 5
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0036",
+      "strategy": "aligned_instruction_votes",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/ab.class",
+      "new_owner": "rs/n/c/ab.class",
+      "old": {
+        "name": "bG",
+        "descriptor": "Lrs/a/h;"
+      },
+      "new": {
+        "name": "bI",
+        "descriptor": "Lrs/a/h;"
+      },
+      "evidence": {
+        "votes": 3,
+        "outbound_dominance": 1,
+        "inbound_dominance": 1
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0037",
+      "strategy": "aligned_instruction_votes",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/ab.class",
+      "new_owner": "rs/n/c/ab.class",
+      "old": {
+        "name": "bH",
+        "descriptor": "Lrs/a/h;"
+      },
+      "new": {
+        "name": "bJ",
+        "descriptor": "Lrs/a/h;"
+      },
+      "evidence": {
+        "votes": 3,
+        "outbound_dominance": 1,
+        "inbound_dominance": 1
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0038",
+      "strategy": "aligned_instruction_votes",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/ac.class",
+      "new_owner": "rs/n/c/ac.class",
+      "old": {
+        "name": "bJ",
+        "descriptor": "I"
+      },
+      "new": {
+        "name": "bL",
+        "descriptor": "I"
+      },
+      "evidence": {
+        "votes": 3,
+        "outbound_dominance": 1,
+        "inbound_dominance": 1
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0039",
+      "strategy": "aligned_instruction_votes",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/ac.class",
+      "new_owner": "rs/n/c/ac.class",
+      "old": {
+        "name": "bN",
+        "descriptor": "[I"
+      },
+      "new": {
+        "name": "bP",
+        "descriptor": "[I"
+      },
+      "evidence": {
+        "votes": 3,
+        "outbound_dominance": 1,
+        "inbound_dominance": 1
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0040",
+      "strategy": "aligned_instruction_votes",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/d/a.class",
+      "new_owner": "rs/n/c/d/a.class",
+      "old": {
+        "name": "dC",
+        "descriptor": "Lrs/m/f/b/d;"
+      },
+      "new": {
+        "name": "dE",
+        "descriptor": "Lrs/l/f/b/d;"
+      },
+      "evidence": {
+        "votes": 2,
+        "outbound_dominance": 1,
+        "inbound_dominance": 1
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0041",
+      "strategy": "aligned_instruction_votes",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/h.class",
+      "new_owner": "rs/n/c/h.class",
+      "old": {
+        "name": "bI",
+        "descriptor": "[Ljava/lang/String;"
+      },
+      "new": {
+        "name": "bK",
+        "descriptor": "[Ljava/lang/String;"
+      },
+      "evidence": {
+        "votes": 2,
+        "outbound_dominance": 1,
+        "inbound_dominance": 1
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0042",
+      "strategy": "aligned_instruction_votes",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/t/a.class",
+      "new_owner": "rs/t/a.class",
+      "old": {
+        "name": "a",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "new": {
+        "name": "f",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "evidence": {
+        "votes": 5,
+        "outbound_dominance": 0.833333,
+        "inbound_dominance": 0.833333
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0043",
+      "strategy": "aligned_instruction_votes",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/t/a.class",
+      "new_owner": "rs/t/a.class",
+      "old": {
+        "name": "b",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "new": {
+        "name": "g",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "evidence": {
+        "votes": 4,
+        "outbound_dominance": 0.8,
+        "inbound_dominance": 0.8
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0044",
+      "strategy": "constant_value_exact",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/ac.class",
+      "new_owner": "rs/n/c/ac.class",
+      "old": {
+        "name": "bS",
+        "descriptor": "I"
+      },
+      "new": {
+        "name": "bU",
+        "descriptor": "I"
+      },
+      "evidence": {
+        "constant_type": "I",
+        "constant_value": 32
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0045",
+      "strategy": "constant_value_exact",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/ac.class",
+      "new_owner": "rs/n/c/ac.class",
+      "old": {
+        "name": "bT",
+        "descriptor": "I"
+      },
+      "new": {
+        "name": "bV",
+        "descriptor": "I"
+      },
+      "evidence": {
+        "constant_type": "I",
+        "constant_value": 20
+      }
+    },
+    {
+      "relationship_id": "FIELDREL_ADV_0046",
+      "strategy": "constant_value_exact",
+      "confidence": "INFERRED_HIGH",
+      "old_owner": "rs/n/c/aw.class",
+      "new_owner": "rs/n/c/aw.class",
+      "old": {
+        "name": "bG",
+        "descriptor": "I"
+      },
+      "new": {
+        "name": "bI",
+        "descriptor": "I"
+      },
+      "evidence": {
+        "constant_type": "I",
+        "constant_value": 60205
+      }
+    }
+  ]
+}
