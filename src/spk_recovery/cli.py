@@ -22,6 +22,11 @@ from .semantic_review import (
     resolve_semantic_candidates,
     write_json as write_semantic_json,
 )
+from .member_remap_plan import (
+    MemberRemapPlanError,
+    build_member_remap_plan,
+    write_json as write_member_remap_json,
+)
 from .member_lineage import (
     MemberLineageError,
     load_member_lineage,
@@ -79,6 +84,42 @@ def main(argv: list[str] | None = None) -> int:
     )
     pv.add_argument("lineage", type=Path)
 
+    pms = sub.add_parser(
+        "member-lineage-seed",
+        help="Create deterministic field/method IDs from an exact class-lineage baseline",
+    )
+    pms.add_argument("class_lineage", type=Path)
+    pms.add_argument("index", type=Path)
+    pms.add_argument("--build-id", required=True)
+    pms.add_argument("--out", type=Path, required=True)
+
+    pmv = sub.add_parser(
+        "member-lineage-validate",
+        help="Validate a canonical member-lineage document",
+    )
+    pmv.add_argument("member_lineage", type=Path)
+    pmv.add_argument("--class-lineage", type=Path)
+
+    psr = sub.add_parser(
+        "semantic-resolve",
+        help="Resolve non-canonical semantic candidates to stable class/member IDs",
+    )
+    psr.add_argument("class_lineage", type=Path)
+    psr.add_argument("member_lineage", type=Path)
+    psr.add_argument("candidates", type=Path)
+    psr.add_argument("--out", type=Path, required=True)
+
+    psa = sub.add_parser(
+        "semantic-accept",
+        help="Explicitly accept reviewed semantic proposal IDs into canonical lineage",
+    )
+    psa.add_argument("class_lineage", type=Path)
+    psa.add_argument("member_lineage", type=Path)
+    psa.add_argument("review", type=Path)
+    psa.add_argument("acceptance", type=Path)
+    psa.add_argument("--class-out", type=Path, required=True)
+    psa.add_argument("--member-out", type=Path, required=True)
+
     pa = sub.add_parser(
         "lineage-apply-candidates",
         help="Verify and apply matcher candidates to canonical lineage",
@@ -130,6 +171,16 @@ def main(argv: list[str] | None = None) -> int:
     rr.add_argument("plan", type=Path)
     rr.add_argument("--out", type=Path, required=True)
 
+    pmrp = sub.add_parser(
+        "member-remap-plan",
+        help="Build an exact-build member remap plan from ACCEPTED semantic names",
+    )
+    pmrp.add_argument("class_lineage", type=Path)
+    pmrp.add_argument("member_lineage", type=Path)
+    pmrp.add_argument("index", type=Path)
+    pmrp.add_argument("--build-id", required=True)
+    pmrp.add_argument("--out", type=Path, required=True)
+
     rc = sub.add_parser(
         "class-remap",
         help="Apply a verified class remap plan and deterministically repackage the JAR",
@@ -141,6 +192,20 @@ def main(argv: list[str] | None = None) -> int:
     rc.add_argument("--result-out", type=Path)
     rc.add_argument("--rewrite-class-name-strings", action="store_true")
     rc.add_argument("--allow-package-resource-risk", action="store_true")
+
+    rj = sub.add_parser(
+        "jar-remap",
+        help="Apply verified class and/or member remap plans to one exact client JAR",
+    )
+    rj.add_argument("source_jar", type=Path)
+    rj.add_argument("index", type=Path)
+    rj.add_argument("--class-plan", type=Path)
+    rj.add_argument("--member-plan", type=Path)
+    rj.add_argument("--out", type=Path, required=True)
+    rj.add_argument("--result-out", type=Path)
+    rj.add_argument("--rewrite-class-name-strings", action="store_true")
+    rj.add_argument("--allow-package-resource-risk", action="store_true")
+    rj.add_argument("--allow-member-reflection-risk", action="store_true")
 
     args = p.parse_args(argv)
     if args.cmd == "index":
@@ -228,6 +293,56 @@ def main(argv: list[str] | None = None) -> int:
             )
             return 2
         print("SPK_RECOVERY_LINEAGE_VALIDATE_PASS")
+        for k, v in summary.items():
+            print(f"{k}={v}")
+        return 0
+
+    if args.cmd == "member-lineage-seed":
+        try:
+            class_lineage = load_lineage(args.class_lineage)
+            doc = seed_member_lineage(
+                class_lineage,
+                _load(args.index),
+                build_id=args.build_id,
+            )
+            write_member_lineage(doc, args.out)
+        except (
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        summary = validate_member_lineage(
+            doc,
+            class_lineage=class_lineage,
+        )
+        print("SPK_RECOVERY_MEMBER_LINEAGE_SEED_PASS")
+        for k, v in summary.items():
+            print(f"{k}={v}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "member-lineage-validate":
+        try:
+            member_doc = load_member_lineage(args.member_lineage)
+            class_doc = (
+                load_lineage(args.class_lineage)
+                if args.class_lineage
+                else None
+            )
+            summary = validate_member_lineage(
+                member_doc,
+                class_lineage=class_doc,
+            )
+        except (
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_MEMBER_LINEAGE_VALIDATE_PASS")
         for k, v in summary.items():
             print(f"{k}={v}")
         return 0
@@ -396,6 +511,30 @@ def main(argv: list[str] | None = None) -> int:
         print(f"out={args.out}")
         return 0
 
+    if args.cmd == "member-remap-plan":
+        try:
+            plan = build_member_remap_plan(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.index),
+                build_id=args.build_id,
+            )
+            write_member_remap_json(plan, args.out)
+        except (
+            MemberRemapPlanError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_MEMBER_REMAP_PLAN_PASS")
+        print(f"mapped_members={plan['member_count']}")
+        print(f"mapped_fields={plan['field_count']}")
+        print(f"mapped_methods={plan['method_count']}")
+        print(f"out={args.out}")
+        return 0
+
     if args.cmd == "class-remap":
         try:
             result = remap_jar(
@@ -427,6 +566,59 @@ def main(argv: list[str] | None = None) -> int:
         print(f"mapped_classes={result['mapped_classes']}")
         print(f"output_entries={result['output_entries']}")
         print(f"class_parse_errors={result['class_parse_errors']}")
+        print(f"out={args.out}")
+        if args.result_out:
+            print(f"result_out={args.result_out}")
+        return 0
+
+    if args.cmd == "jar-remap":
+        try:
+            class_plan = (
+                _load(args.class_plan)
+                if args.class_plan
+                else None
+            )
+            member_plan = (
+                _load(args.member_plan)
+                if args.member_plan
+                else None
+            )
+            result = remap_jar(
+                args.source_jar,
+                _load(args.index),
+                class_plan,
+                args.out,
+                member_plan=member_plan,
+                allow_package_resource_risk=(
+                    args.allow_package_resource_risk
+                ),
+                rewrite_class_name_strings=(
+                    args.rewrite_class_name_strings
+                ),
+                allow_member_reflection_risk=(
+                    args.allow_member_reflection_risk
+                ),
+            )
+            if args.result_out:
+                write_result(result, args.result_out)
+        except (
+            RepackError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_JAR_REMAP_PASS")
+        for key in (
+            "source_sha256",
+            "output_sha256",
+            "mapped_classes",
+            "mapped_members",
+            "mapped_fields",
+            "mapped_methods",
+            "output_entries",
+            "class_parse_errors",
+        ):
+            print(f"{key}={result[key]}")
         print(f"out={args.out}")
         if args.result_out:
             print(f"result_out={args.result_out}")

@@ -8,37 +8,55 @@ import jdk.internal.org.objectweb.asm.*;
 import jdk.internal.org.objectweb.asm.commons.ClassRemapper;
 import jdk.internal.org.objectweb.asm.commons.Remapper;
 
-/**
- * Whole-JAR class-name remapper used by the Python recovery orchestrator.
- *
- * Uses the ASM copy bundled inside the selected JDK so the repository does not
- * need to vendor a third-party ASM JAR. Only class identities are remapped in
- * R2B; member renaming belongs to a later stage.
- */
+/** Whole-JAR class/member remapper used by the Python recovery orchestrator. */
 public final class SpkJarRemapper {
+    private record MemberKey(String owner, String name, String descriptor) {}
+
+    private static final class MappingSet {
+        final Map<String, String> classes = new LinkedHashMap<>();
+        final Map<MemberKey, String> fields = new LinkedHashMap<>();
+        final Map<MemberKey, String> methods = new LinkedHashMap<>();
+    }
+
     private static final class MapRemapper extends Remapper {
-        private final Map<String, String> names;
+        private final MappingSet mappings;
         private final boolean rewriteStrings;
 
-        MapRemapper(Map<String, String> names, boolean rewriteStrings) {
-            this.names = names;
+        MapRemapper(MappingSet mappings, boolean rewriteStrings) {
+            this.mappings = mappings;
             this.rewriteStrings = rewriteStrings;
         }
 
         @Override
         public String map(String internalName) {
-            return names.getOrDefault(internalName, internalName);
+            return mappings.classes.getOrDefault(internalName, internalName);
+        }
+
+        @Override
+        public String mapFieldName(String owner, String name, String descriptor) {
+            return mappings.fields.getOrDefault(
+                new MemberKey(owner, name, descriptor),
+                name
+            );
+        }
+
+        @Override
+        public String mapMethodName(String owner, String name, String descriptor) {
+            return mappings.methods.getOrDefault(
+                new MemberKey(owner, name, descriptor),
+                name
+            );
         }
 
         @Override
         public Object mapValue(Object value) {
             if (rewriteStrings && value instanceof String) {
                 String s = (String) value;
-                String internal = names.get(s);
+                String internal = mappings.classes.get(s);
                 if (internal != null) {
                     return internal;
                 }
-                for (Map.Entry<String, String> entry : names.entrySet()) {
+                for (Map.Entry<String, String> entry : mappings.classes.entrySet()) {
                     if (s.equals(entry.getKey().replace('/', '.'))) {
                         return entry.getValue().replace('/', '.');
                     }
@@ -48,27 +66,47 @@ public final class SpkJarRemapper {
         }
     }
 
-    private static Map<String, String> loadMap(Path path) throws IOException {
-        Map<String, String> out = new LinkedHashMap<>();
+    private static MappingSet loadMap(Path path) throws IOException {
+        MappingSet out = new MappingSet();
         for (String line : Files.readAllLines(path, StandardCharsets.UTF_8)) {
             if (line.isBlank() || line.startsWith("#")) {
                 continue;
             }
             String[] parts = line.split("\\t", -1);
-            if (parts.length != 2 || parts[0].isEmpty() || parts[1].isEmpty()) {
-                throw new IllegalArgumentException("bad mapping row: " + line);
-            }
-            if (out.put(parts[0], parts[1]) != null) {
-                throw new IllegalArgumentException("duplicate source: " + parts[0]);
+            switch (parts[0]) {
+                case "C" -> {
+                    if (parts.length != 3) {
+                        throw new IllegalArgumentException("bad class mapping row: " + line);
+                    }
+                    if (out.classes.put(parts[1], parts[2]) != null) {
+                        throw new IllegalArgumentException("duplicate class source: " + parts[1]);
+                    }
+                }
+                case "F", "M" -> {
+                    if (parts.length != 5) {
+                        throw new IllegalArgumentException("bad member mapping row: " + line);
+                    }
+                    MemberKey key = new MemberKey(parts[1], parts[2], parts[3]);
+                    Map<MemberKey, String> map =
+                        "F".equals(parts[0]) ? out.fields : out.methods;
+                    if (map.put(key, parts[4]) != null) {
+                        throw new IllegalArgumentException("duplicate member source: " + key);
+                    }
+                }
+                default -> throw new IllegalArgumentException(
+                    "unknown mapping row kind: " + line
+                );
             }
         }
-        if (out.isEmpty()) {
+
+        if (out.classes.isEmpty() && out.fields.isEmpty() && out.methods.isEmpty()) {
             throw new IllegalArgumentException("empty mapping");
         }
-        Set<String> targets = new HashSet<>();
-        for (String target : out.values()) {
-            if (!targets.add(target)) {
-                throw new IllegalArgumentException("duplicate target: " + target);
+
+        Set<String> classTargets = new HashSet<>();
+        for (String target : out.classes.values()) {
+            if (!classTargets.add(target)) {
+                throw new IllegalArgumentException("duplicate class target: " + target);
             }
         }
         return out;
@@ -76,13 +114,13 @@ public final class SpkJarRemapper {
 
     private static byte[] remapClass(
         byte[] input,
-        Map<String, String> names,
+        MappingSet mappings,
         boolean rewriteStrings
     ) {
         ClassReader reader = new ClassReader(input);
         ClassWriter writer = new ClassWriter(0);
         reader.accept(
-            new ClassRemapper(writer, new MapRemapper(names, rewriteStrings)),
+            new ClassRemapper(writer, new MapRemapper(mappings, rewriteStrings)),
             0
         );
         return writer.toByteArray();
@@ -183,7 +221,7 @@ public final class SpkJarRemapper {
             args.length >= 4
             && "--rewrite-class-name-strings".equals(args[3]);
 
-        Map<String, String> names = loadMap(mappingPath);
+        MappingSet mappings = loadMap(mappingPath);
         Map<String, byte[]> output = new TreeMap<>();
 
         try (ZipFile input = new ZipFile(inputPath.toFile())) {
@@ -200,14 +238,14 @@ public final class SpkJarRemapper {
 
                 String name = entry.getName();
                 if (name.endsWith(".class")) {
-                    data = remapClass(data, names, rewriteStrings);
+                    data = remapClass(data, mappings, rewriteStrings);
                 } else if ("META-INF/MANIFEST.MF".equalsIgnoreCase(name)) {
-                    data = remapManifest(data, names);
+                    data = remapManifest(data, mappings.classes);
                 } else if (name.startsWith("META-INF/services/")) {
-                    data = remapService(data, names);
+                    data = remapService(data, mappings.classes);
                 }
 
-                String target = outputName(name, names);
+                String target = outputName(name, mappings.classes);
                 if (output.put(target, data) != null) {
                     throw new IllegalStateException(
                         "output path collision: " + target
@@ -245,7 +283,9 @@ public final class SpkJarRemapper {
         }
 
         System.out.println("SPK_JAR_REMAP_PASS");
-        System.out.println("mapped_classes=" + names.size());
+        System.out.println("mapped_classes=" + mappings.classes.size());
+        System.out.println("mapped_fields=" + mappings.fields.size());
+        System.out.println("mapped_methods=" + mappings.methods.size());
         System.out.println("output_entries=" + output.size());
     }
 }
