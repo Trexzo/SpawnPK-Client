@@ -8,6 +8,9 @@ from spk_recovery.semantic_review import (
 from spk_recovery.member_remap_plan import (
     build_member_remap_plan,
 )
+from spk_recovery.semantic_namespace import (
+    build_semantic_namespace,
+)
 
 
 SHA = (
@@ -242,6 +245,31 @@ class Chat2SemanticReviewIntegrationTests(unittest.TestCase):
             "SEMREVIEW_E471CA15CA95C7CD00A7",
         )
         self.assertEqual(actual, expected)
+
+    def test_r4a_candidate_only_state_has_empty_namespace(self):
+        manifest, class_plan, member_plan = build_semantic_namespace(
+            _class_lineage(),
+            _member_lineage(),
+            {
+                "sha256": SHA,
+                "classes": {},
+            },
+            build_id="v308",
+        )
+        self.assertEqual(
+            manifest["summary"]["classes_accepted"],
+            0,
+        )
+        self.assertEqual(
+            manifest["summary"]["fields_accepted"],
+            0,
+        )
+        self.assertEqual(
+            manifest["summary"]["methods_accepted"],
+            0,
+        )
+        self.assertEqual(class_plan["class_count"], 0)
+        self.assertEqual(member_plan["member_count"], 0)
 
     def test_r2c3_emits_no_member_remap_before_acceptance(self):
         plan = build_member_remap_plan(
