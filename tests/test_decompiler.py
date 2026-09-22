@@ -79,7 +79,7 @@ public class FakeDecompiler {
             z.writestr("placeholder.txt", "x")
         return path
 
-    def test_cfr_and_vineflower_shapes_are_supported(self):
+    def test_cfr_vineflower_and_procyon_shapes_are_supported(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             tool = self._fake_decompiler(root)
@@ -100,8 +100,17 @@ public class FakeDecompiler {
                 engine="vineflower",
                 out_dir=root / "vine-out",
             )
+            procyon = run_decompiler(
+                source,
+                tool,
+                expected_decompiler_sha256=sha,
+                engine="procyon",
+                out_dir=root / "procyon-out",
+            )
             self.assertEqual(cfr["java_file_count"], 1)
             self.assertEqual(vine["java_file_count"], 1)
+            self.assertEqual(procyon["java_file_count"], 1)
+            self.assertEqual(procyon["engine"], "procyon")
 
     def test_wrong_decompiler_hash_is_rejected(self):
         with tempfile.TemporaryDirectory() as td:
