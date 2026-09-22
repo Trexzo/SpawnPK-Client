@@ -58,13 +58,46 @@ def _has_build_entry(
     )
 
 
+def _entry_for_build(record: dict[str, Any], build_id: str) -> dict[str, Any]:
+    hits = [
+        entry
+        for entry in record.get("lineage", [])
+        if entry.get("build_id") == build_id
+    ]
+    if len(hits) != 1:
+        raise SemanticNamespaceError(
+            f"{record.get('logical_id')}: expected one lineage entry for "
+            f"{build_id!r}, found {len(hits)}"
+        )
+    return hits[0]
+
+
+def _class_package_collision_roots(names: dict[str, str]) -> dict[str, list[str]]:
+    """Return logical IDs whose effective class name is also a package prefix."""
+    by_name = {name: logical_id for logical_id, name in names.items()}
+    roots: dict[str, set[str]] = {}
+    for descendant_id, descendant in names.items():
+        parts = descendant.split("/")
+        for i in range(1, len(parts)):
+            prefix = "/".join(parts[:i])
+            root_id = by_name.get(prefix)
+            if root_id is not None and root_id != descendant_id:
+                roots.setdefault(root_id, set()).add(descendant)
+    return {
+        logical_id: sorted(descendants)
+        for logical_id, descendants in sorted(roots.items())
+    }
+
+
 def _accepted_class_spec(
     class_lineage: dict[str, Any],
     *,
     build_id: str,
     source_sha256: str,
     target_package: str,
-) -> tuple[dict[str, Any], list[str]]:
+    source_safe_fallback: bool,
+    fallback_package: str,
+) -> tuple[dict[str, Any], list[str], list[dict[str, Any]]]:
     requested: dict[str, Any] = {}
     accepted_ids: list[str] = []
 
@@ -104,6 +137,63 @@ def _accepted_class_spec(
         }
         accepted_ids.append(logical_id)
 
+    fallback_rows: list[dict[str, Any]] = []
+    if source_safe_fallback:
+        effective_names: dict[str, str] = {}
+        records_by_id: dict[str, dict[str, Any]] = {}
+        for record in class_lineage.get("classes", []):
+            if not _has_build_entry(record, build_id):
+                continue
+            logical_id = str(record.get("logical_id"))
+            records_by_id[logical_id] = record
+            entry = _entry_for_build(record, build_id)
+            cfg = requested.get(logical_id)
+            effective_names[logical_id] = (
+                str(cfg["target_internal_name"])
+                if cfg is not None
+                else str(entry["internal_name"])
+            )
+
+        collisions = _class_package_collision_roots(effective_names)
+        for logical_id, descendants in collisions.items():
+            if logical_id in requested:
+                raise SemanticNamespaceError(
+                    f"{logical_id}: accepted semantic target still creates a "
+                    "Java class/package collision; source-safety fallback cannot "
+                    "override ACCEPTED semantics"
+                )
+            record = records_by_id[logical_id]
+            if record.get("semantic_status") == "ACCEPTED":
+                raise SemanticNamespaceError(
+                    f"{logical_id}: ACCEPTED semantic class remained at a "
+                    "class/package collision root"
+                )
+            target = (
+                fallback_package.rstrip("/")
+                + "/"
+                + logical_id
+            )
+            requested[logical_id] = {
+                "target_internal_name": target,
+                "confidence": 1.0,
+                "provenance": [
+                    {
+                        "kind": "source_safety",
+                        "reason": "java_class_package_collision",
+                        "conflicting_descendants": descendants,
+                    }
+                ],
+            }
+            fallback_rows.append(
+                {
+                    "logical_id": logical_id,
+                    "source_internal_name": effective_names[logical_id],
+                    "target_internal_name": target,
+                    "reason": "java_class_package_collision",
+                    "conflicting_descendants": descendants,
+                }
+            )
+
     spec = {
         "schema_version": 1,
         "kind": "remap_spec",
@@ -111,7 +201,7 @@ def _accepted_class_spec(
         "source_sha256": source_sha256,
         "classes": requested,
     }
-    return spec, sorted(accepted_ids)
+    return spec, sorted(accepted_ids), fallback_rows
 
 
 def build_semantic_namespace(
@@ -121,6 +211,8 @@ def build_semantic_namespace(
     *,
     build_id: str,
     target_package: str = "recovered/spawnpk/client",
+    source_safe_fallback: bool = False,
+    fallback_package: str = "recovered/spawnpk/fallback",
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     """Build verified remap plans from canonical ACCEPTED semantic names only."""
     validate_lineage(class_lineage)
@@ -146,11 +238,24 @@ def build_semantic_namespace(
             f"invalid or reserved target package {target_package!r}"
         )
 
-    class_spec, accepted_class_ids = _accepted_class_spec(
+    fallback = fallback_package.rstrip("/")
+    fallback_parts = fallback.split("/")
+    if (
+        not fallback
+        or any(not _IDENTIFIER.fullmatch(part) for part in fallback_parts)
+        or fallback.startswith(("java/", "javax/", "jdk/", "sun/"))
+    ):
+        raise SemanticNamespaceError(
+            f"invalid or reserved fallback package {fallback_package!r}"
+        )
+
+    class_spec, accepted_class_ids, fallback_rows = _accepted_class_spec(
         class_lineage,
         build_id=build_id,
         source_sha256=source_sha,
         target_package=package,
+        source_safe_fallback=source_safe_fallback,
+        fallback_package=fallback,
     )
     if class_spec["classes"]:
         try:
@@ -221,9 +326,13 @@ def build_semantic_namespace(
         "build_id": build_id,
         "source_sha256": source_sha,
         "target_package": package,
+        "source_safe_fallback": source_safe_fallback,
+        "fallback_package": fallback,
+        "fallback_remaps": fallback_rows,
         "class_plan_digest": class_plan_digest,
         "member_plan_digest": member_plan_digest,
         "accepted_class_ids": accepted_class_ids,
+        "fallback_remaps": fallback_rows,
     }
 
     manifest = {
@@ -235,9 +344,12 @@ def build_semantic_namespace(
         "build_id": build_id,
         "source_sha256": source_sha,
         "target_package": package,
+        "source_safe_fallback": source_safe_fallback,
+        "fallback_package": fallback,
         "class_plan_digest": class_plan_digest,
         "member_plan_digest": member_plan_digest,
         "summary": {
+            "source_safety_fallbacks": len(fallback_rows),
             "classes_total": len(build_classes),
             "classes_accepted": accepted_classes,
             "classes_remapped": class_plan["class_count"],
