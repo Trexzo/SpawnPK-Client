@@ -3,6 +3,13 @@ from __future__ import annotations
 import hashlib
 
 
+_CANONICALIZER_SUPPORTED = {
+    "exact_sha256",
+    "structural_unique",
+    "weighted_mutual_best",
+}
+
+
 def _relationship_id(
     old_build: str,
     old_path: str,
@@ -11,6 +18,18 @@ def _relationship_id(
 ) -> str:
     raw = f"{old_build}:{old_path}->{new_build}:{new_path}".encode("utf-8")
     return "REL_" + hashlib.sha256(raw).hexdigest()[:16].upper()
+
+
+def _research_only(match: dict) -> dict:
+    return {
+        "old": match["old"],
+        "proposed_new": match["new"],
+        "reason": "strategy_requires_integration_review",
+        "strategy": match["strategy"],
+        "score": match["score"],
+        "confidence": match["confidence"],
+        "evidence": match["evidence"],
+    }
 
 
 def build_lineage_candidates(
@@ -25,10 +44,22 @@ def build_lineage_candidates(
 
     The integration chat owns canonical logical IDs and persistent schema. Chat 2
     emits deterministic identity relationships plus evidence for canonicalization.
+
+    Strategies not yet supported by the main-chat canonicalizer are deliberately
+    withheld from relationships and retained as research/unresolved evidence.
     """
     old_build_s, new_build_s = str(old_build), str(new_build)
     relationships = []
+    research_only = []
+    unresolved = list(match_report.get("ambiguous", []))
+
     for match in match_report.get("matches", []):
+        if match.get("strategy") not in _CANONICALIZER_SUPPORTED:
+            item = _research_only(match)
+            research_only.append(item)
+            unresolved.append(item)
+            continue
+
         old_path, new_path = match["old"], match["new"]
         renamed = old_path != new_path
         old_entry = old_index.get("entries", {}).get(old_path, {})
@@ -64,6 +95,9 @@ def build_lineage_candidates(
     relationships.sort(
         key=lambda r: (r["from"]["path"], r["to"]["path"])
     )
+    research_only.sort(
+        key=lambda r: (r["old"], r["proposed_new"])
+    )
     return {
         "schema_version": 1,
         "kind": "lineage_candidates",
@@ -73,7 +107,8 @@ def build_lineage_candidates(
         "old_build": old_build_s,
         "new_build": new_build_s,
         "relationships": relationships,
-        "ambiguous": match_report.get("ambiguous", []),
+        "research_only": research_only,
+        "ambiguous": unresolved,
         "unmatched_old": match_report.get("unmatched_old", []),
         "unmatched_new": match_report.get("unmatched_new", []),
     }
