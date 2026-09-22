@@ -195,6 +195,71 @@ migration-workspace.json
 
 The previous authority is never modified in place.
 
+## R4 — accepted semantics to readable client/source
+
+R4 turns one accepted authority state into reproducible readable artifacts without
+weakening the review boundaries established in R1-R3.
+
+### Readable client build
+
+```powershell
+spk-readable-build `
+  .\client-v308.jar `
+  .\authority\class-lineage.json `
+  .\authority\member-lineage.json `
+  .\authority\v308-index.json `
+  --build-id v308 `
+  --out-dir .\generated\readable-v308
+```
+
+This composes the accepted semantic namespace, class/member remap plans, class/member
+safety gates, deterministic ASM rewrite and independent verification into one workspace.
+
+### Recovered source workspace
+
+```powershell
+spk-source-workspace `
+  .\generated\readable-v308\readable-client-manifest.json `
+  .\generated\readable-v308\readable-client.jar `
+  .\tools\cfr.jar `
+  --decompiler-sha256 <PINNED_SHA256> `
+  --engine cfr `
+  --out-dir .\generated\source-v308
+```
+
+The source manifest pins the original authority SHA, transformed JAR SHA, semantic namespace,
+class/member plan digests, exact decompiler SHA and a deterministic generated source-tree SHA.
+
+### Coverage
+
+```powershell
+spk-coverage `
+  .\authority\class-lineage.json `
+  .\authority\member-lineage.json `
+  --build-id v308 `
+  --out .\generated\v308-coverage.json
+```
+
+Coverage keeps `ACCEPTED`, `CANDIDATE` and `UNKNOWN` separate. Only accepted names count
+as remap-ready semantic coverage.
+
+### Future-build semantic carry-forward
+
+After a new build is promoted to exact authority:
+
+```powershell
+spk-semantic-carry-forward `
+  .\authority\v308.snapshot.json `
+  .\authority\v309.snapshot.json `
+  .\authority\class-lineage.json `
+  .\authority\member-lineage.json `
+  .\authority\v309-index.json `
+  --out-dir .\generated\v309-semantic-carry
+```
+
+Accepted names carry forward only when the same stable class/member ID has proven identity
+in both authority builds. Missing new identity blocks carry-forward rather than guessing.
+
 ## Repository rules
 
 - Do not commit client JARs or cache binaries.
@@ -224,3 +289,9 @@ Useful starting points:
 - `docs/UPDATE_MEMBER_TRANSFER.md`
 - `docs/UPDATE_FINALIZE.md`
 - `docs/UPDATE_ORCHESTRATION.md`
+
+- `docs/SEMANTIC_NAMESPACE.md`
+- `docs/READABLE_BUILD.md`
+- `docs/RECOVERED_SOURCE.md`
+- `docs/COVERAGE.md`
+- `docs/SEMANTIC_CARRY_FORWARD.md`
