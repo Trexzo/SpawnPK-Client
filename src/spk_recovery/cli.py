@@ -592,6 +592,46 @@ def main(argv: list[str] | None = None) -> int:
         print(f"out={args.out}")
         return 0
 
+    if args.cmd == "member-safety-scan":
+        try:
+            report = build_member_safety_report(
+                args.source_jar,
+                _load(args.index),
+                _load(args.member_plan),
+            )
+            write_member_safety_json(report, args.out)
+        except (
+            MemberSafetyError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_MEMBER_SAFETY_SCAN_PASS")
+        print(f"report_id={report['report_id']}")
+        print(f"member_count={report['member_count']}")
+        for level, count in report["risk_level_counts"].items():
+            print(f"risk_{level}={count}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "member-safety-validate":
+        try:
+            summary = validate_member_safety_acceptance(
+                _load(args.member_plan),
+                _load(args.report),
+                _load(args.acceptance),
+            )
+        except (
+            MemberSafetyError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_MEMBER_SAFETY_VALIDATE_PASS")
+        for k, v in summary.items():
+            print(f"{k}={v}")
+        return 0
+
     if args.cmd == "class-remap":
         try:
             result = remap_jar(
