@@ -7,7 +7,14 @@ import sys
 
 from .indexer import index_jar, write_index
 from .diffing import diff_indexes
-from .lineage import LineageValidationError, load_lineage, seed_lineage, validate_lineage, write_lineage
+from .canonicalize import CandidateApplicationError, apply_lineage_candidates
+from .lineage import (
+    LineageValidationError,
+    load_lineage,
+    seed_lineage,
+    validate_lineage,
+    write_lineage,
+)
 
 
 def _load(path: Path) -> dict:
@@ -28,7 +35,10 @@ def main(argv: list[str] | None = None) -> int:
     pd.add_argument("new", type=Path)
     pd.add_argument("--out", type=Path, required=True)
 
-    ps = sub.add_parser("lineage-seed", help="Create deterministic logical class IDs from an exact baseline index")
+    ps = sub.add_parser(
+        "lineage-seed",
+        help="Create deterministic logical class IDs from an exact baseline index",
+    )
     ps.add_argument("index", type=Path)
     ps.add_argument("--build-id", required=True)
     ps.add_argument("--build-number", type=int)
@@ -36,14 +46,39 @@ def main(argv: list[str] | None = None) -> int:
     ps.add_argument("--prefix", default="rs/")
     ps.add_argument("--out", type=Path, required=True)
 
-    pv = sub.add_parser("lineage-validate", help="Validate a canonical logical-lineage document")
+    pv = sub.add_parser(
+        "lineage-validate",
+        help="Validate a canonical logical-lineage document",
+    )
     pv.add_argument("lineage", type=Path)
+
+    pa = sub.add_parser(
+        "lineage-apply-candidates",
+        help="Verify and apply matcher candidates to canonical lineage",
+    )
+    pa.add_argument("lineage", type=Path)
+    pa.add_argument("old_index", type=Path)
+    pa.add_argument("new_index", type=Path)
+    pa.add_argument("candidates", type=Path)
+    pa.add_argument("--old-build-id", required=True)
+    pa.add_argument("--new-build-id", required=True)
+    pa.add_argument("--new-build-number", type=int)
+    pa.add_argument("--new-authority", default="CROSS_BUILD")
+    pa.add_argument("--minimum-weighted-score", type=float, default=0.88)
+    pa.add_argument("--out", type=Path, required=True)
 
     args = p.parse_args(argv)
     if args.cmd == "index":
         idx = index_jar(args.jar)
-        if args.expect_sha256 and idx["sha256"].lower() != args.expect_sha256.lower():
-            print(f"REFUSED: SHA-256 {idx['sha256']} != expected {args.expect_sha256}", file=sys.stderr)
+        if (
+            args.expect_sha256
+            and idx["sha256"].lower() != args.expect_sha256.lower()
+        ):
+            print(
+                f"REFUSED: SHA-256 {idx['sha256']} != expected "
+                f"{args.expect_sha256}",
+                file=sys.stderr,
+            )
             return 2
         write_index(idx, args.out)
         print("SPK_RECOVERY_INDEX_PASS")
@@ -57,7 +92,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "diff":
         report = diff_indexes(_load(args.old), _load(args.new))
         args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(json.dumps(report, indent=2, sort_keys=True), encoding="utf-8")
+        args.out.write_text(
+            json.dumps(report, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
         print("SPK_RECOVERY_DIFF_PASS")
         for k, v in report["summary"].items():
             print(f"{k}={v}")
@@ -90,6 +128,32 @@ def main(argv: list[str] | None = None) -> int:
         print("SPK_RECOVERY_LINEAGE_VALIDATE_PASS")
         for k, v in summary.items():
             print(f"{k}={v}")
+        return 0
+    if args.cmd == "lineage-apply-candidates":
+        try:
+            out, summary = apply_lineage_candidates(
+                load_lineage(args.lineage),
+                _load(args.old_index),
+                _load(args.new_index),
+                _load(args.candidates),
+                old_build_id=args.old_build_id,
+                new_build_id=args.new_build_id,
+                new_build_number=args.new_build_number,
+                new_authority=args.new_authority,
+                minimum_weighted_score=args.minimum_weighted_score,
+            )
+            write_lineage(out, args.out)
+        except (
+            CandidateApplicationError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_LINEAGE_APPLY_PASS")
+        for k, v in summary.items():
+            print(f"{k}={v}")
+        print(f"out={args.out}")
         return 0
     return 2
 
