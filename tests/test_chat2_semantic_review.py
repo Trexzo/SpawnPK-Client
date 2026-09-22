@@ -1,0 +1,425 @@
+import json
+from pathlib import Path
+import unittest
+
+from spk_recovery.semantic_review import (
+    resolve_semantic_candidates,
+)
+from spk_recovery.member_remap_plan import (
+    build_member_remap_plan,
+)
+from spk_recovery.semantic_opportunity import (
+    build_semantic_opportunity_report,
+)
+
+
+SHA = (
+    "854f26ff9f134b0317572e7ac1688e6f"
+    "40a231d5a4c66f8db5d655b7f45ce7c6"
+)
+ROOT = Path(__file__).resolve().parents[1]
+
+
+CLASS_COORDS = [
+    ("CLIENT_CLASS_000029", "rs/Client"),
+    ("CLIENT_CLASS_000297", "rs/i/b"),
+    ("CLIENT_CLASS_000552", "rs/n/c/G"),
+    ("CLIENT_CLASS_000561", "rs/n/c/O"),
+    ("CLIENT_CLASS_000567", "rs/n/c/U"),
+    ("CLIENT_CLASS_000568", "rs/n/c/V"),
+    ("CLIENT_CLASS_000573", "rs/n/c/a"),
+    ("CLIENT_CLASS_000578", "rs/n/c/aC"),
+    ("CLIENT_CLASS_000579", "rs/n/c/aD"),
+    ("CLIENT_CLASS_000582", "rs/n/c/aG"),
+    ("CLIENT_CLASS_000583", "rs/n/c/aH"),
+    ("CLIENT_CLASS_000584", "rs/n/c/aI"),
+    ("CLIENT_CLASS_000587", "rs/n/c/aL"),
+    ("CLIENT_CLASS_000599", "rs/n/c/aX"),
+    ("CLIENT_CLASS_000600", "rs/n/c/aY"),
+    ("CLIENT_CLASS_000603", "rs/n/c/ab"),
+    ("CLIENT_CLASS_000605", "rs/n/c/ad"),
+    ("CLIENT_CLASS_000614", "rs/n/c/am"),
+    ("CLIENT_CLASS_000617", "rs/n/c/ap"),
+    ("CLIENT_CLASS_000626", "rs/n/c/av"),
+    ("CLIENT_CLASS_000627", "rs/n/c/aw"),
+    ("CLIENT_CLASS_000632", "rs/n/c/b"),
+    ("CLIENT_CLASS_000640", "rs/n/c/c"),
+    ("CLIENT_CLASS_000643", "rs/n/c/c/a"),
+    ("CLIENT_CLASS_000661", "rs/n/c/h"),
+    ("CLIENT_CLASS_000662", "rs/n/c/i"),
+    ("CLIENT_CLASS_000665", "rs/n/c/l"),
+    ("CLIENT_CLASS_000666", "rs/n/c/m"),
+    ("CLIENT_CLASS_000668", "rs/n/c/o"),
+    ("CLIENT_CLASS_000669", "rs/n/c/p"),
+    ("CLIENT_CLASS_000672", "rs/n/c/s"),
+    ("CLIENT_CLASS_000675", "rs/n/c/v"),
+    ("CLIENT_CLASS_000566", "rs/n/c/T"),
+    ("CLIENT_CLASS_000571", "rs/n/c/Y"),
+    ("CLIENT_CLASS_000592", "rs/n/c/aQ"),
+    ("CLIENT_CLASS_000594", "rs/n/c/aS"),
+    ("CLIENT_CLASS_000596", "rs/n/c/aU"),
+    ("CLIENT_CLASS_000607", "rs/n/c/af"),
+    ("CLIENT_CLASS_000608", "rs/n/c/ag"),
+    ("CLIENT_CLASS_000610", "rs/n/c/ai"),
+    ("CLIENT_CLASS_000613", "rs/n/c/al"),
+    ("CLIENT_CLASS_000623", "rs/n/c/as"),
+    ("CLIENT_CLASS_000624", "rs/n/c/at"),
+    ("CLIENT_CLASS_000625", "rs/n/c/au"),
+    ("CLIENT_CLASS_000639", "rs/n/c/ba"),
+    ("CLIENT_CLASS_000652", "rs/n/c/d/b"),
+    ("CLIENT_CLASS_000664", "rs/n/c/k"),
+    ("CLIENT_CLASS_000667", "rs/n/c/n"),
+    ("CLIENT_CLASS_000670", "rs/n/c/q"),
+    ("CLIENT_CLASS_000674", "rs/n/c/u"),
+    ("CLIENT_CLASS_000548", "rs/n/c/C"),
+    ("CLIENT_CLASS_000560", "rs/n/c/N"),
+    ("CLIENT_CLASS_000606", "rs/n/c/ae"),
+    ("CLIENT_CLASS_000611", "rs/n/c/aj"),
+    ("CLIENT_CLASS_000616", "rs/n/c/ao"),
+    ("CLIENT_CLASS_000634", "rs/n/c/b/a"),
+    ("CLIENT_CLASS_000676", "rs/n/c/w"),
+    ("CLIENT_CLASS_000550", "rs/n/c/E"),
+    ("CLIENT_CLASS_000551", "rs/n/c/F"),
+    ("CLIENT_CLASS_000553", "rs/n/c/H"),
+    ("CLIENT_CLASS_000554", "rs/n/c/I"),
+    ("CLIENT_CLASS_000555", "rs/n/c/J"),
+    ("CLIENT_CLASS_000572", "rs/n/c/Z"),
+    ("CLIENT_CLASS_000580", "rs/n/c/aE"),
+    ("CLIENT_CLASS_000581", "rs/n/c/aF"),
+    ("CLIENT_CLASS_000585", "rs/n/c/aJ"),
+    ("CLIENT_CLASS_000598", "rs/n/c/aW"),
+    ("CLIENT_CLASS_000601", "rs/n/c/aZ"),
+    ("CLIENT_CLASS_000615", "rs/n/c/an"),
+    ("CLIENT_CLASS_000622", "rs/n/c/ar"),
+    ("CLIENT_CLASS_000631", "rs/n/c/az"),
+    ("CLIENT_CLASS_000655", "rs/n/c/d/e"),
+    ("CLIENT_CLASS_000663", "rs/n/c/j"),
+    ("CLIENT_CLASS_000679", "rs/n/c/z"),
+]
+
+MEMBER_COORDS = [
+    (
+        "CLIENT_FIELD_000156",
+        "CLIENT_CLASS_000029",
+        "field",
+        "rs/Client",
+        "P",
+        "I",
+    ),
+    (
+        "CLIENT_METHOD_000298",
+        "CLIENT_CLASS_000029",
+        "method",
+        "rs/Client",
+        "a",
+        "(J)V",
+    ),
+    (
+        "CLIENT_METHOD_000473",
+        "CLIENT_CLASS_000029",
+        "method",
+        "rs/Client",
+        "f",
+        "(J)V",
+    ),
+    (
+        "CLIENT_METHOD_000491",
+        "CLIENT_CLASS_000029",
+        "method",
+        "rs/Client",
+        "h",
+        "(J)V",
+    ),
+    (
+        "CLIENT_METHOD_000498",
+        "CLIENT_CLASS_000029",
+        "method",
+        "rs/Client",
+        "i",
+        "(J)V",
+    ),
+    (
+        "CLIENT_FIELD_002920",
+        "CLIENT_CLASS_000297",
+        "field",
+        "rs/i/b",
+        "c",
+        "Lrs/l/F;",
+    ),
+    (
+        "CLIENT_FIELD_002921",
+        "CLIENT_CLASS_000297",
+        "field",
+        "rs/i/b",
+        "d",
+        "Lrs/l/F;",
+    ),
+    (
+        "CLIENT_FIELD_002922",
+        "CLIENT_CLASS_000297",
+        "field",
+        "rs/i/b",
+        "e",
+        "Lrs/l/F;",
+    ),
+    (
+        "CLIENT_METHOD_001933",
+        "CLIENT_CLASS_000297",
+        "method",
+        "rs/i/b",
+        "a",
+        "()V",
+    ),
+    (
+        "CLIENT_METHOD_001934",
+        "CLIENT_CLASS_000297",
+        "method",
+        "rs/i/b",
+        "a",
+        "(I)V",
+    ),
+    (
+        "CLIENT_METHOD_001937",
+        "CLIENT_CLASS_000297",
+        "method",
+        "rs/i/b",
+        "b",
+        "()V",
+    ),
+    (
+        "CLIENT_FIELD_002923",
+        "CLIENT_CLASS_000297",
+        "field",
+        "rs/i/b",
+        "f",
+        "Lrs/l/F;",
+    ),
+    (
+        "CLIENT_FIELD_002924",
+        "CLIENT_CLASS_000297",
+        "field",
+        "rs/i/b",
+        "g",
+        "Lrs/l/F;",
+    ),
+]
+
+
+def _class_lineage():
+    classes = []
+    for logical_id, internal_name in CLASS_COORDS:
+        classes.append(
+            {
+                "logical_id": logical_id,
+                "semantic_name": None,
+                "semantic_status": "UNKNOWN",
+                "semantic_confidence": 0.0,
+                "lineage": [
+                    {
+                        "build_id": "v308",
+                        "internal_name": internal_name,
+                        "entry_path": internal_name + ".class",
+                        "entry_sha256": "b" * 64,
+                        "structural_sha256": "c" * 64,
+                        "relation": "BASELINE",
+                        "confidence": 1.0,
+                        "provenance": [
+                            {
+                                "authority": "EXACT_CURRENT_CLIENT",
+                                "source": "chat2-r2c2-fixture",
+                            }
+                        ],
+                    }
+                ],
+                "semantic_provenance": [],
+            }
+        )
+    return {
+        "schema_version": 1,
+        "namespace": "spawnpk-client",
+        "id_format": "CLIENT_CLASS_%06d",
+        "baseline_build_id": "v308",
+        "builds": [
+            {
+                "build_id": "v308",
+                "build_number": 308,
+                "sha256": SHA,
+                "source_name": "client(6).jar",
+                "authority": "EXACT_CURRENT_CLIENT",
+            }
+        ],
+        "classes": classes,
+        "unresolved": [],
+    }
+
+
+def _member_lineage():
+    members = []
+    for (
+        member_id,
+        owner_id,
+        kind,
+        owner,
+        name,
+        descriptor,
+    ) in MEMBER_COORDS:
+        entry = {
+            "build_id": "v308",
+            "owner_internal_name": owner,
+            "name": name,
+            "descriptor": descriptor,
+            "access": 1,
+            "relation": "BASELINE",
+            "confidence": 1.0,
+            "provenance": [],
+        }
+        if kind == "method":
+            entry["code_length"] = 1
+        members.append(
+            {
+                "member_id": member_id,
+                "owner_logical_id": owner_id,
+                "kind": kind,
+                "semantic_name": None,
+                "semantic_status": "UNKNOWN",
+                "semantic_confidence": 0.0,
+                "lineage": [entry],
+                "semantic_provenance": [],
+            }
+        )
+    return {
+        "schema_version": 1,
+        "kind": "member_lineage",
+        "class_namespace": "spawnpk-client",
+        "baseline_build_id": "v308",
+        "source_sha256": SHA,
+        "members": members,
+        "unresolved": [],
+    }
+
+
+def _load(relative):
+    return json.loads(
+        (ROOT / relative).read_text(encoding="utf-8")
+    )
+
+
+class Chat2SemanticReviewIntegrationTests(unittest.TestCase):
+    def test_exact_v308_candidates_resolve_through_r2c2(self):
+        candidates = _load(
+            "mappings/candidates/"
+            "v308.semantic.chat2.r2.json"
+        )
+        expected = _load(
+            "mappings/candidates/"
+            "v308.semantic-review.chat2.r2.json"
+        )
+
+        actual = resolve_semantic_candidates(
+            _class_lineage(),
+            _member_lineage(),
+            candidates,
+        )
+
+        self.assertEqual(actual["proposal_count"], 86)
+        self.assertEqual(actual["unresolved"], [])
+        self.assertEqual(
+            actual["review_id"],
+            "SEMREVIEW_799C2D52A4528B4A66D0",
+        )
+        self.assertEqual(actual, expected)
+
+    def test_r4d_opportunity_overlay_sees_all_reviewed_names(self):
+        review = _load(
+            "mappings/candidates/"
+            "v308.semantic-review.chat2.r2.json"
+        )
+        report = build_semantic_opportunity_report(
+            _class_lineage(),
+            _member_lineage(),
+            review,
+            build_id="v308",
+        )
+
+        self.assertEqual(
+            report["summary"]["reviewed_proposals"],
+            86,
+        )
+        self.assertEqual(
+            report["summary"]["reviewed_unknown_targets"],
+            86,
+        )
+        self.assertEqual(
+            report["summary"]["accepted_name_conflicts"],
+            0,
+        )
+        self.assertEqual(
+            report["by_kind"]["class"][
+                "reviewed_proposals"
+            ],
+            73,
+        )
+        self.assertEqual(
+            report["by_kind"]["field"][
+                "reviewed_proposals"
+            ],
+            6,
+        )
+        self.assertEqual(
+            report["by_kind"]["method"][
+                "reviewed_proposals"
+            ],
+            7,
+        )
+
+    def test_r2c3_emits_no_member_remap_before_acceptance(self):
+        plan = build_member_remap_plan(
+            _class_lineage(),
+            _member_lineage(),
+            {
+                "sha256": SHA,
+                "classes": {},
+            },
+            build_id="v308",
+        )
+        self.assertEqual(plan["member_count"], 0)
+        self.assertEqual(plan["field_count"], 0)
+        self.assertEqual(plan["method_count"], 0)
+        self.assertEqual(plan["members"], [])
+
+    def test_resolved_review_uses_canonical_r2c_ids(self):
+        review = _load(
+            "mappings/candidates/"
+            "v308.semantic-review.chat2.r2.json"
+        )
+        by_name = {
+            row["proposed_name"]: row
+            for row in review["proposals"]
+        }
+
+        self.assertEqual(
+            by_name["addFriend"]["stable_id"],
+            "CLIENT_METHOD_000298",
+        )
+        self.assertEqual(
+            by_name["loginRewardContainerIndex"][
+                "stable_id"
+            ],
+            "CLIENT_FIELD_000156",
+        )
+        self.assertEqual(
+            by_name["GameframeRenderer"]["stable_id"],
+            "CLIENT_CLASS_000297",
+        )
+        self.assertEqual(
+            by_name["renderGameframe"]["stable_id"],
+            "CLIENT_METHOD_001933",
+        )
+        self.assertEqual(
+            by_name["chatButtonSprite"]["stable_id"],
+            "CLIENT_FIELD_002920",
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()
