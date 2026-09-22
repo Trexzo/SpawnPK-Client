@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/source-name-acceptance.schema.json",
+  "title": "SpawnPK explicit inferred source-name acceptance",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "inventory_id",
+    "review_id",
+    "accepted_proposal_ids"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "source_name_acceptance"},
+    "inventory_id": {
+      "type": "string",
+      "pattern": "^SRCINV_[0-9A-F]{20}$"
+    },
+    "review_id": {
+      "type": "string",
+      "pattern": "^SRCREVIEW_[0-9A-F]{20}$"
+    },
+    "accepted_proposal_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^SRCPROP_[0-9A-F]{20}$"
+      }
+    },
+    "note": {"type": ["string", "null"]}
+  },
+  "additionalProperties": false
+}
