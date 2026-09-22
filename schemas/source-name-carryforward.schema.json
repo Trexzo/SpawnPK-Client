@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/source-name-carryforward.schema.json",
+  "title": "SpawnPK source-name carry-forward report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "report_id",
+    "previous_plan_id",
+    "old_inventory_id",
+    "new_inventory_id",
+    "old_build_id",
+    "new_build_id",
+    "old_source_authority_sha256",
+    "new_source_authority_sha256",
+    "same_exact_build",
+    "full_carryforward_ready",
+    "safe_rewrite_plan_available",
+    "ready_without_rewrite",
+    "summary",
+    "carried",
+    "already_applied",
+    "blocked"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "source_name_carryforward_report"},
+    "report_id": {
+      "type": "string",
+      "pattern": "^SRCCARRY_[0-9A-F]{20}$"
+    },
+    "previous_plan_id": {"type": ["string", "null"]},
+    "old_inventory_id": {"type": "string"},
+    "new_inventory_id": {"type": "string"},
+    "old_build_id": {"type": "string"},
+    "new_build_id": {"type": "string"},
+    "old_source_authority_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "new_source_authority_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "same_exact_build": {"type": "boolean"},
+    "full_carryforward_ready": {"type": "boolean"},
+    "safe_rewrite_plan_available": {"type": "boolean"},
+    "ready_without_rewrite": {"type": "boolean"},
+    "summary": {
+      "type": "object",
+      "required": [
+        "previously_accepted_names",
+        "carried_to_new_symbol",
+        "already_applied",
+        "blocked_for_review"
+      ],
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "carried": {"type": "array"},
+    "already_applied": {"type": "array"},
+    "blocked": {"type": "array"},
+    "generated_candidate_set": {"type": ["string", "null"]},
+    "generated_review": {"type": ["string", "null"]},
+    "generated_acceptance": {"type": ["string", "null"]},
+    "generated_plan": {"type": ["string", "null"]},
+    "note": {"type": "string"}
+  },
+  "additionalProperties": false
+}
