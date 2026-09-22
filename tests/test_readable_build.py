@@ -5,7 +5,10 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from spk_recovery.readable_build import build_readable_client
+from spk_recovery.readable_build import (
+    _manifest,
+    build_readable_client,
+)
 
 
 NAMESPACE = {
@@ -53,6 +56,35 @@ MEMBER_PLAN_EMPTY = {
 
 
 class ReadableBuildTests(unittest.TestCase):
+    def test_manifest_publishes_source_safe_project_prefixes(self):
+        namespace = dict(NAMESPACE)
+        namespace["summary"] = dict(NAMESPACE["summary"])
+        namespace["summary"]["source_safety_fallbacks"] = 1
+        namespace["source_safe_fallback"] = True
+        namespace["fallback_package"] = "recovered/spawnpk/fallback"
+
+        manifest = _manifest(
+            namespace=namespace,
+            status="complete",
+            output_sha256="b" * 64,
+            verification_pass=True,
+            blocker=None,
+        )
+
+        self.assertTrue(manifest["source_safe_fallback"])
+        self.assertEqual(
+            manifest["fallback_package"],
+            "recovered/spawnpk/fallback",
+        )
+        self.assertEqual(
+            manifest["project_source_prefixes"],
+            [
+                "recovered/spawnpk/client/",
+                "recovered/spawnpk/fallback/",
+                "rs/",
+            ],
+        )
+
     def _source(self, root: Path) -> Path:
         path = root / "client.jar"
         path.write_bytes(b"jar")
