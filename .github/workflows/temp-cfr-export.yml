@@ -1,0 +1,25 @@
+name: Temporary CFR export
+
+on:
+  push:
+    branches:
+      - chat1/temp-source-export-578dd325
+
+permissions:
+  contents: read
+
+jobs:
+  export-cfr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download official CFR 0.152 release
+        run: |
+          curl -fL --retry 3 -o cfr-0.152.jar https://github.com/leibnitz27/cfr/releases/download/0.152/cfr-0.152.jar
+          echo "f686e8f3ded377d7bc87d216a90e9e9512df4156e75b06c655a16648ae8765b2  cfr-0.152.jar" | sha256sum -c -
+      - name: Upload pinned CFR
+        uses: actions/upload-artifact@v4
+        with:
+          name: cfr-0.152-pinned
+          path: cfr-0.152.jar
+          if-no-files-found: error
+          retention-days: 1
