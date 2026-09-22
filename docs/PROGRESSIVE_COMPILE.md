@@ -4,7 +4,7 @@ R5C measures real Java buildability without pretending a partial build is a clea
 
 ## Strategy
 
-Recovered Java files are compiled in deterministic batches against the verified R4 readable client JAR as an explicit fallback classpath.
+Recovered **project** Java files are compiled in deterministic batches against the verified R4 readable client JAR as an explicit fallback classpath. By default the project scope is original `rs/**` source plus the R4 semantic target package; shaded third-party source is excluded from the SpawnPK buildability percentage.
 
 If a batch compiles, every file in that batch is marked successful.
 
@@ -40,3 +40,5 @@ Successful files are labeled `compiled_with_readable_fallback`.
 That is deliberately **not** a clean build claim. The fallback readable JAR can satisfy references to source files that have not yet become independently compilable.
 
 R5D removes this fallback entirely.
+
+Custom layouts can override/repeat `--source-prefix`. The full R4C source-tree hash is still verified even when compilation is scoped to project sources.
