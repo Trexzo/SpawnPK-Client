@@ -3,6 +3,7 @@ import unittest
 from spk_recovery.source_name_intelligence import (
     build_source_name_candidate_diagnostics,
     build_source_name_candidates,
+    build_source_name_carryforward_diagnostics,
 )
 from spk_recovery.source_name_review import (
     resolve_source_name_candidates,
@@ -441,6 +442,161 @@ class SourceNameIntelligenceTests(unittest.TestCase):
         out = build_source_name_candidates(inv, members)
         self.assertEqual(out["candidates"], [])
         self.assertEqual(out["candidates"], [])
+
+
+class SourceNameCarryForwardDiagnosticsTests(unittest.TestCase):
+    def _report(self, *, carried=None, already_applied=None, blocked=None):
+        return {
+            "schema_version": 1,
+            "kind": "source_name_carryforward_report",
+            "report_id": "SRCCARRY_0123456789ABCDEF0123",
+            "carried": carried or [],
+            "already_applied": already_applied or [],
+            "blocked": blocked or [],
+        }
+
+    def _candidates(self, rows):
+        return {
+            "schema_version": 1,
+            "kind": "source_name_candidate_set",
+            "canonical": False,
+            "inventory_id": "SRCINV_0123456789ABCDEF0123",
+            "source_tree_sha256": "a" * 64,
+            "candidates": rows,
+        }
+
+    def test_candidates_are_classified_relative_to_r6e(self):
+        candidates = self._candidates([
+            {
+                "source_symbol_id": "SRC_PARAM_00000000000000000021",
+                "proposed_name": "nameKey",
+            },
+            {
+                "source_symbol_id": "SRC_LOCAL_00000000000000000022",
+                "proposed_name": "player",
+            },
+            {
+                "source_symbol_id": "SRC_LOCAL_00000000000000000023",
+                "proposed_name": "urlDecoder",
+            },
+        ])
+        report = self._report(
+            carried=[
+                {
+                    "source_symbol_id": "SRC_PARAM_00000000000000000021",
+                    "desired_name": "nameKey",
+                },
+                {
+                    "source_symbol_id": "SRC_LOCAL_00000000000000000022",
+                    "desired_name": "targetPlayer",
+                },
+            ]
+        )
+
+        out = build_source_name_carryforward_diagnostics(
+            candidates,
+            report,
+        )
+
+        self.assertFalse(out["canonical"])
+        self.assertEqual(
+            out["candidate_summary"],
+            {
+                "new_candidate": 1,
+                "candidate_same_as_prior_accepted": 1,
+                "candidate_changed": 1,
+            },
+        )
+        states = {
+            row["source_symbol_id"]: row["state"]
+            for row in out["candidate_states"]
+        }
+        self.assertEqual(
+            states["SRC_PARAM_00000000000000000021"],
+            "candidate_same_as_prior_accepted",
+        )
+        self.assertEqual(
+            states["SRC_LOCAL_00000000000000000022"],
+            "candidate_changed",
+        )
+        self.assertEqual(
+            states["SRC_LOCAL_00000000000000000023"],
+            "new_candidate",
+        )
+
+    def test_r6e_blockers_are_grouped_without_reimplementing_transfer(self):
+        candidates = self._candidates([])
+        report = self._report(
+            blocked=[
+                {
+                    "previous_source_symbol_id": "SRC_LOCAL_OLD_1",
+                    "canonical_method_id": "CLIENT_METHOD_000001",
+                    "desired_name": "player",
+                    "reason": "source_symbol_shape_changed",
+                },
+                {
+                    "previous_source_symbol_id": "SRC_LOCAL_OLD_2",
+                    "canonical_method_id": "CLIENT_METHOD_000002",
+                    "desired_name": "bufferedReader",
+                    "reason": "method_modified_or_unproven",
+                },
+                {
+                    "previous_source_symbol_id": "SRC_LOCAL_OLD_3",
+                    "canonical_method_id": "CLIENT_METHOD_000003",
+                    "desired_name": "url",
+                    "reason": "target_name_collision",
+                },
+                {
+                    "previous_source_symbol_id": "SRC_LOCAL_OLD_4",
+                    "canonical_method_id": "CLIENT_METHOD_000004",
+                    "desired_name": "value",
+                    "reason": "future_unknown_reason",
+                },
+            ]
+        )
+
+        out = build_source_name_carryforward_diagnostics(
+            candidates,
+            report,
+        )
+
+        self.assertEqual(
+            out["blocker_summary"],
+            {
+                "candidate_blocked_by_source_shape_drift": 1,
+                "candidate_blocked_by_method_lineage_drift": 1,
+                "ambiguous_after_regeneration": 1,
+                "blocked_requires_review": 1,
+            },
+        )
+
+    def test_already_applied_is_consumed_as_r6e_evidence(self):
+        candidates = self._candidates([
+            {
+                "source_symbol_id": "SRC_PARAM_00000000000000000024",
+                "proposed_name": "enabled",
+            }
+        ])
+        report = self._report(
+            already_applied=[
+                {
+                    "source_symbol_id": "SRC_PARAM_00000000000000000024",
+                    "desired_name": "enabled",
+                }
+            ]
+        )
+
+        out = build_source_name_carryforward_diagnostics(
+            candidates,
+            report,
+        )
+
+        self.assertEqual(out["r6e_already_applied"], 1)
+        self.assertEqual(
+            out["candidate_states"][0]["r6e_transfer_state"],
+            "already_applied",
+        )
+
 
 
 if __name__ == "__main__":
