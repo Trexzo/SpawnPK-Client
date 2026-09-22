@@ -95,5 +95,50 @@ class LineageCandidateTests(unittest.TestCase):
         )
 
 
-if __name__ == "__main__":
+
+
+    def test_unsupported_strategy_stays_research_only(self):
+        old = {
+            "sha256": "old",
+            "entries": {"rs/m/a.class": {"sha256": "one"}},
+        }
+        new = {
+            "sha256": "new",
+            "entries": {"rs/l/a.class": {"sha256": "two"}},
+        }
+        report = {
+            "matches": [
+                {
+                    "old": "rs/m/a.class",
+                    "new": "rs/l/a.class",
+                    "strategy": "package_anchor",
+                    "confidence": "INFERRED_HIGH",
+                    "score": 0.91,
+                    "evidence": {
+                        "package_anchor": {
+                            "support": 133,
+                            "dominance": 1.0,
+                        }
+                    },
+                }
+            ],
+            "ambiguous": [],
+            "unmatched_old": [],
+            "unmatched_new": [],
+        }
+        out = build_lineage_candidates(
+            old,
+            new,
+            report,
+            old_build="alternate",
+            new_build="v308",
+        )
+        self.assertEqual(out["relationships"], [])
+        self.assertEqual(len(out["research_only"]), 1)
+        self.assertEqual(len(out["ambiguous"]), 1)
+        self.assertEqual(
+            out["research_only"][0]["strategy"],
+            "package_anchor",
+        )
+\nif __name__ == "__main__":
     unittest.main()
