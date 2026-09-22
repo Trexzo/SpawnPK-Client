@@ -12,6 +12,11 @@ from .decompiler import (
     run_decompiler,
     write_json as write_decompiler_json,
 )
+from .update_finalize import (
+    UpdateFinalizeError,
+    build_authority_candidate_report,
+    write_authority_candidate_report,
+)
 from .update_member_transfer import (
     UpdateMemberTransferError,
     transfer_member_identity_candidates,
@@ -141,6 +146,18 @@ def main(argv: list[str] | None = None) -> int:
     pum.add_argument("--new-build-id", required=True)
     pum.add_argument("--out", type=Path, required=True)
     pum.add_argument("--summary-out", type=Path)
+
+    puf = sub.add_parser(
+        "update-finalize",
+        help="Prove target class/member coverage and emit an authority-candidate report",
+    )
+    puf.add_argument("class_lineage", type=Path)
+    puf.add_argument("member_lineage", type=Path)
+    puf.add_argument("target_index", type=Path)
+    puf.add_argument("intake_report", type=Path)
+    puf.add_argument("--build-id", required=True)
+    puf.add_argument("--scope-prefix")
+    puf.add_argument("--out", type=Path, required=True)
 
     ps = sub.add_parser(
         "lineage-seed",
@@ -473,6 +490,40 @@ def main(argv: list[str] | None = None) -> int:
         if args.summary_out:
             print(f"summary_out={args.summary_out}")
         return 0
+
+    if args.cmd == "update-finalize":
+        try:
+            report = build_authority_candidate_report(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.target_index),
+                _load(args.intake_report),
+                build_id=args.build_id,
+                scope_prefix=args.scope_prefix,
+            )
+            write_authority_candidate_report(
+                report,
+                args.out,
+            )
+        except (
+            UpdateFinalizeError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print(
+            "SPK_RECOVERY_UPDATE_FINALIZE_PASS"
+            if report["ready_for_authority"]
+            else "SPK_RECOVERY_UPDATE_FINALIZE_BLOCKED"
+        )
+        print(f"report_id={report['report_id']}")
+        print(f"ready_for_authority={report['ready_for_authority']}")
+        for k, v in report["summary"].items():
+            print(f"{k}={v}")
+        print(f"out={args.out}")
+        return 0 if report["ready_for_authority"] else 1
 
     if args.cmd == "lineage-seed":
         try:

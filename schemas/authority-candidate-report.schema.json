@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/authority-candidate-report.schema.json",
+  "title": "SpawnPK authority candidate report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "report_id",
+    "migration_id",
+    "build_id",
+    "target_sha256",
+    "scope_prefix",
+    "ready_for_authority",
+    "summary",
+    "blockers",
+    "missing_classes",
+    "stale_classes",
+    "missing_members",
+    "stale_members",
+    "blocking_class_unresolved",
+    "blocking_member_unresolved",
+    "informational_class_removals",
+    "informational_member_removals"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "authority_candidate_report"},
+    "report_id": {
+      "type": "string",
+      "pattern": "^AUTHCAND_[0-9A-F]{20}$"
+    },
+    "migration_id": {
+      "type": ["string", "null"]
+    },
+    "build_id": {"type": "string", "minLength": 1},
+    "target_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "scope_prefix": {"type": "string"},
+    "ready_for_authority": {"type": "boolean"},
+    "summary": {"type": "object"},
+    "blockers": {"type": "array"},
+    "missing_classes": {"type": "array"},
+    "stale_classes": {"type": "array"},
+    "missing_members": {"type": "array"},
+    "stale_members": {"type": "array"},
+    "blocking_class_unresolved": {"type": "array"},
+    "blocking_member_unresolved": {"type": "array"},
+    "informational_class_removals": {"type": "array"},
+    "informational_member_removals": {"type": "array"}
+  },
+  "additionalProperties": false
+}

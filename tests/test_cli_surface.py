@@ -11,6 +11,7 @@ COMMANDS = [
     "update-intake",
     "update-transfer-classes",
     "update-transfer-members",
+    "update-finalize",
     "lineage-seed",
     "lineage-validate",
     "member-lineage-seed",
