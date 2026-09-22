@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/update-to-release.schema.json",
+  "title": "SpawnPK future update to recovered-source release",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "run_id",
+    "old_build_id",
+    "new_build_id",
+    "status",
+    "terminal_stage",
+    "ready_for_release",
+    "migration_workspace_id",
+    "new_authority_id",
+    "semantic_carryforward_id",
+    "release_run_id",
+    "release_id",
+    "blocker",
+    "note"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "update_to_release_report"},
+    "run_id": {
+      "type": "string",
+      "pattern": "^UPDATE_RELEASE_[0-9A-F]{20}$"
+    },
+    "old_build_id": {"type": "string"},
+    "new_build_id": {"type": "string"},
+    "status": {"enum": ["complete", "blocked"]},
+    "terminal_stage": {
+      "enum": ["migration", "semantic_carryforward", "release"]
+    },
+    "ready_for_release": {"type": "boolean"},
+    "migration_workspace_id": {"type": ["string", "null"]},
+    "new_authority_id": {"type": ["string", "null"]},
+    "semantic_carryforward_id": {"type": ["string", "null"]},
+    "release_run_id": {"type": ["string", "null"]},
+    "release_id": {"type": ["string", "null"]},
+    "blocker": {"type": ["object", "null"]},
+    "note": {"type": "string"}
+  },
+  "additionalProperties": false
+}
