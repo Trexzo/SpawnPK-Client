@@ -55,6 +55,8 @@ def _manifest(
     material = {
         "namespace_id": namespace["namespace_id"],
         "source_sha256": namespace["source_sha256"],
+        "class_plan_digest": namespace["class_plan_digest"],
+        "member_plan_digest": namespace["member_plan_digest"],
         "status": status,
         "output_sha256": output_sha256,
         "verification_pass": verification_pass,
@@ -67,6 +69,8 @@ def _manifest(
         "namespace_id": namespace["namespace_id"],
         "source_sha256": namespace["source_sha256"],
         "target_package": namespace["target_package"],
+        "class_plan_digest": namespace["class_plan_digest"],
+        "member_plan_digest": namespace["member_plan_digest"],
         "status": status,
         "output_sha256": output_sha256,
         "verification_pass": verification_pass,
