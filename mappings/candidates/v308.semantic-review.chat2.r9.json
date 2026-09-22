@@ -1,0 +1,238 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 9,
+  "review_id": "SEMREVIEW_45033AF6496AE782988D",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_03BC3615390C88B5E8DC",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000928",
+      "owner_logical_id": "CLIENT_CLASS_000928",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/l/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MenuEntrySwapperPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is Menu Entry Swapper; actions include Swap left click, Swap shift click and Walk here."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references rs/s/l/b MenuEntrySwapperConfig."
+        }
+      ],
+      "note": "Name follows the exact plugin title."
+    },
+    {
+      "proposal_id": "SEMPROP_0C25FF8775CD6AE2C224",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000910",
+      "owner_logical_id": "CLIENT_CLASS_000910",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/f/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GroundMarkersPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include Ground Markers, Shift-key tile marking, Unmark, Label, Reset all, Tile label and Tile marker color."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references rs/s/f/b GroundMarkersConfig."
+        }
+      ],
+      "note": "Ground-markers runtime/plugin role."
+    },
+    {
+      "proposal_id": "SEMPROP_0DB85F9B1BA99F15B195",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000903",
+      "owner_logical_id": "CLIENT_CLASS_000903",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/e/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GpuConfig",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact options include GPU enablement, Anti Aliasing, Anisotropic Filtering, Colorblindness Correction, Smooth banding, Stretched Mode, UI scaling and Vsync Mode."
+        }
+      ],
+      "note": "GPU/stretched-mode configuration role is explicit from option text."
+    },
+    {
+      "proposal_id": "SEMPROP_58AF0A206F7EA87B06E6",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000945",
+      "owner_logical_id": "CLIENT_CLASS_000945",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/o/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcIndicatorsPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is NPC Indicators; menu actions include Tag-All, Untag-All, Tag color/style, Highlight NPCs on-screen and tile/true-tile styles."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references rs/s/o/d, reviewed in R4 as NpcHighlightConfig."
+        }
+      ],
+      "note": "Runtime NPC-indicators role."
+    },
+    {
+      "proposal_id": "SEMPROP_7C3465C379E423344BFF",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000935",
+      "owner_logical_id": "CLIENT_CLASS_000935",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/n/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NotificationAlertsConfig",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact options configure alert notifications, private messages, superior slayer/boss alerts, de-aggro timer, tray icon/notifications, focus, flash, sound and timeout."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Runtime class rs/s/n/b directly references this config class."
+        }
+      ],
+      "note": "Notification-alert configuration role is explicit from options and runtime pairing."
+    },
+    {
+      "proposal_id": "SEMPROP_95C5347B7EF380DE6664",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000927",
+      "owner_logical_id": "CLIENT_CLASS_000927",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/l/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MenuEntrySwapperConfig",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact options include Item Swaps, NPC Swaps, customizable left-clicks and shift-clicks."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Runtime class rs/s/l/c directly references this config class."
+        }
+      ],
+      "note": "Menu-entry swapper configuration role."
+    },
+    {
+      "proposal_id": "SEMPROP_BFE02942D9D02BFA1C7C",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000936",
+      "owner_logical_id": "CLIENT_CLASS_000936",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/n/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NotificationAlertsPlugin",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact runtime messages include superior slayer/boss spawned, de-aggro timer reached and PM notifications."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references rs/s/n/a NotificationAlertsConfig."
+        }
+      ],
+      "note": "Runtime notification-alert role."
+    },
+    {
+      "proposal_id": "SEMPROP_D32EC38E28B9C962D7FA",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000203",
+      "owner_logical_id": "CLIENT_CLASS_000203",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GpuSettingsPanel",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact panel headings include GPU Settings and Stretched Mode Settings, with GPU Mode, Anti Aliasing, anisotropic filtering, colorblind mode, VSync, UI scaling and aspect-ratio controls."
+        }
+      ],
+      "note": "Desktop settings-panel role is explicit from rendered labels."
+    },
+    {
+      "proposal_id": "SEMPROP_E10A8B3459A06395BA7B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000908",
+      "owner_logical_id": "CLIENT_CLASS_000908",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/f/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GroundMarkersConfig",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact options include marked tile color/border/fill opacity, Draw tiles on minimap, and Import/Export/Clear world-map options."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Runtime class rs/s/f/d directly references this config class."
+        }
+      ],
+      "note": "Ground-marker configuration role."
+    }
+  ],
+  "unresolved": []
+}

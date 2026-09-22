@@ -1,0 +1,469 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/ai",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ControlOptionsInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'Control Options Menu'; options include player/NPC attack-option behavior, item drag, key bindings, dropdowns and restore defaults."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads options/dropdown*, options/keybind* and teleport interface assets."
+        }
+      ],
+      "note": "Name follows the exact self-identifying control-options role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/ag",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemsKeptOnDeathInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'Items kept on death' with separate lists for items kept, auto-kept and lost, plus red-skull/prayer loss explanations."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads equipment/SPRITE and icons/death assets."
+        }
+      ],
+      "note": "Name follows the exact interface title."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aS",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TaskScrollInterface",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include Task Scroll Title, Task Information, Completion Progress, Potential Rewards, Track progress and Collect reward."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads tasks/SPRITE assets."
+        }
+      ],
+      "note": "Conservative task-scroll presentation role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aZ",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WellOfGoodWillInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'Well of Good Will'; text covers server-wide progress, contributing Divine spirit shields, goodwill points and global rewards."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads fountain/sprite and teleport/sprite assets."
+        }
+      ],
+      "note": "Name follows the exact interface title."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/ba",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "KnowledgebaseInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'Official SpawnPK Knowledgebase'; controls include Category List, selected article title, guide resources and option selection."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads wiki/guide*, wiki/sprite* and drops/sprite assets."
+        }
+      ],
+      "note": "Name follows the exact self-identifying knowledgebase title."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/az",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MonsterDropSearchInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'Monster item drop search'; controls search by item/monster, Search item, Search npc, Select this monster and boosted-rate notes."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads drops/button, drops/icon and drops/sprite assets."
+        }
+      ],
+      "note": "Name follows the exact monster-drop search role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/T",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MonsterSpawnerInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'Monster Spawner'; controls include Monster Selections, Spawn this NPC, Spawn x3, Spawn distanced and Toggle spawner."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads factory/SPRITE and fountain assets."
+        }
+      ],
+      "note": "Name follows the exact interface title."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/J",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EventActivityViewerInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'Event Activity Viewer'; text explains timed token limits, activity locking and timer resets."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads popups/activities 1 and 2 assets."
+        }
+      ],
+      "note": "Name follows the exact interface title."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodcoreTokenLotteryInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'Bloodcore Token Lottery'; controls include Enter bloodcore lottery, latest winners, pot, participants and winner countdown."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads fountain/button, fountain/icon and fountain/sprite assets."
+        }
+      ],
+      "note": "Name follows the exact interface title."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/an",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LootingBagInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'Looting bag'; controls include Deposit 1/5/10/All and Deposit all to bank, plus empty-bag state."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads misc/BAG."
+        }
+      ],
+      "note": "Name follows the exact interface title."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodDiamondFuserInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'Blood Diamond Fuser'; text says 'Fuse items to sacrifice them into blood diamonds!' with Cycle items control."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads fountain and teleport interface assets."
+        }
+      ],
+      "note": "Name follows the exact interface title."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/H",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EquipmentStatsInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact presentation text includes Equip Your Character, Attack bonus, Defence bonus, Other bonuses, Magic damage, Range strength, risk value, drop-rate and blood-money bonuses."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads equipment/CUSTOM assets."
+        }
+      ],
+      "note": "Semantic role is equipment/stat presentation; identifier intentionally avoids claiming an original title."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/F",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EmoteInterface",
+      "confidence": 0.98,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact constants enumerate emotes including Blow kiss, Goblin Bow/Salute, Jump for Joy, Skillcape Emote, Zombie Dance and Zombie Walk."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads emotes/EMOTE resources."
+        }
+      ],
+      "note": "Role is strongly identified by emote-only content/resources."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aq",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MakeQuantityInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact text asks 'How many would you like to make?' and 'Choose a quantity, then click an image to begin.' with Select quantity."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads options/make/sprite resources."
+        }
+      ],
+      "note": "Generic make-quantity role is deliberately chosen instead of guessing a specific production skill."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodShardSalvagingInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'Blood Shard Salvaging Kit'; text says 'Items you'll salvage into shards..' with remove controls and Item guide."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads fountain and teleport interface assets."
+        }
+      ],
+      "note": "Name follows the exact salvage-kit role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aF",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PlankMakeInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact controls are Make-all Wood/Oak/Teak/Mahogony with per-type GP prices."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads construction/sprite and LOGS/ICON resources."
+        }
+      ],
+      "note": "Role is inferred conservatively from construction assets plus wood/plank conversion choices."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/ao",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaffleInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact text includes Latest Raffle Winners, Enter lottery, winning pot, participants and winner countdown."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads fountain/button and fountain/icon assets."
+        }
+      ],
+      "note": "Raffle is used because that exact word identifies the winner history; generic lottery mechanics remain in evidence."
+    }
+  ],
+  "conflicts": []
+}

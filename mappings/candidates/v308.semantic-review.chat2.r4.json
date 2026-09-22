@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 9,
+  "review_id": "SEMREVIEW_0D067AB471D25E575699",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_3C7AC1BBE22E12C38783",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000855",
+      "owner_logical_id": "CLIENT_CLASS_000855",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CombatOverlayConfig",
+      "confidence": 0.97,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact options include Opponent overlays, Boss overlay style, Bounty hunter overlay style, health-bar style, hit display and animated overlay health loss."
+        }
+      ],
+      "note": "Broad combat-overlay config name intentionally covers opponent, boss and bounty-hunter overlay settings."
+    },
+    {
+      "proposal_id": "SEMPROP_59E4D5DDED17426214F4",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000897",
+      "owner_logical_id": "CLIENT_CLASS_000897",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/d/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EntityHiderConfig",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact options repeatedly configure hiding local/other players, pets, mini-pets, projectiles, PK bots, HP/prayer/hitsplat overlays and special pets."
+        }
+      ],
+      "note": "Entity-hiding configuration role is explicit from option text."
+    },
+    {
+      "proposal_id": "SEMPROP_5D9B3F3826B54575A031",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000922",
+      "owner_logical_id": "CLIENT_CLASS_000922",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/j/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "KeyRemappingConfig",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact option groups are Camera Remapping and F-key remapping, with replacement keys for camera directions and F1-F12."
+        }
+      ],
+      "note": "Self-identifying remapping configuration role."
+    },
+    {
+      "proposal_id": "SEMPROP_619203A885EDE3BCB7EF",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000958",
+      "owner_logical_id": "CLIENT_CLASS_000958",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/r/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TileIndicatorConfig",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact option groups are Current Tile, Destination Tile and Hovered Tile with highlight/fill colors and border widths."
+        }
+      ],
+      "note": "Exact tile-indicator configuration role."
+    },
+    {
+      "proposal_id": "SEMPROP_683677EA207DDFF446CE",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000944",
+      "owner_logical_id": "CLIENT_CLASS_000944",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/o/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcHighlightConfig",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact options include NPCs to Highlight, Highlight hull/outline/tile/true tile, Draw names above NPC, Ignore pets, render style, colors, feather and border width."
+        }
+      ],
+      "note": "Exact NPC highlight configuration role."
+    },
+    {
+      "proposal_id": "SEMPROP_A991FB51C99329AB5CC0",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000887",
+      "owner_logical_id": "CLIENT_CLASS_000887",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/c/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InterfaceDeveloperToolsConfig",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact options include Dev settings for interfaces, Dev tools for interfaces, Interface Builder, Interface Tools, widget IDs/types, scene info and color options."
+        }
+      ],
+      "note": "Developer-tool configuration centered on interface/widget inspection."
+    },
+    {
+      "proposal_id": "SEMPROP_BD1774D5AEA85BC95A94",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000918",
+      "owner_logical_id": "CLIENT_CLASS_000918",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/h/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "StatusInfoboxConfig",
+      "confidence": 0.975,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact options cover Info boxes for counters/statuses/timers, infobox size, vertical layout, hover tooltips, text outline, expiry, antifire/venom/poison/freeze/teleblock and task/status progress."
+        }
+      ],
+      "note": "Name reflects the shared status/timer/counter infobox configuration surface."
+    },
+    {
+      "proposal_id": "SEMPROP_D801C60285CA54754F93",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000961",
+      "owner_logical_id": "CLIENT_CLASS_000961",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/s/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TooltipConfig",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact options cover Entity hovers, Item hovers, tooltip overlay colors, inventory/bank/equipment descriptions, guide/NPC/object/player hovers, wilderness hiding and sink values."
+        }
+      ],
+      "note": "Tooltip/hover configuration role is explicit from option text."
+    },
+    {
+      "proposal_id": "SEMPROP_FA8C0EC9848F2AC2CB73",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000919",
+      "owner_logical_id": "CLIENT_CLASS_000919",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/i/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InteractionHighlightConfig",
+      "confidence": 0.98,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact options include NPC attack/hover/interact, Object hover/interact, Show on hover/interact, outline colors, feather and border width."
+        }
+      ],
+      "note": "Shared NPC/object interaction highlight configuration role."
+    }
+  ],
+  "unresolved": []
+}
