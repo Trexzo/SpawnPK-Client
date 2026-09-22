@@ -53,6 +53,10 @@ from .member_safety import (
     validate_member_safety_acceptance,
     write_json as write_member_safety_json,
 )
+from .member_promotion import (
+    NewMemberPromotionError,
+    promote_new_members,
+)
 from .member_remap_plan import (
     MemberRemapPlanError,
     build_member_remap_plan,
@@ -170,6 +174,16 @@ def main(argv: list[str] | None = None) -> int:
     )
     pmv.add_argument("member_lineage", type=Path)
     pmv.add_argument("--class-lineage", type=Path)
+
+    pmp = sub.add_parser(
+        "member-promote-new",
+        help="Promote explicitly reviewed unmatched-new fields/methods into stable IDs",
+    )
+    pmp.add_argument("class_lineage", type=Path)
+    pmp.add_argument("member_lineage", type=Path)
+    pmp.add_argument("new_index", type=Path)
+    pmp.add_argument("spec", type=Path)
+    pmp.add_argument("--out", type=Path, required=True)
 
     psr = sub.add_parser(
         "semantic-resolve",
@@ -552,6 +566,29 @@ def main(argv: list[str] | None = None) -> int:
         print("SPK_RECOVERY_MEMBER_LINEAGE_VALIDATE_PASS")
         for k, v in summary.items():
             print(f"{k}={v}")
+        return 0
+
+    if args.cmd == "member-promote-new":
+        try:
+            out, summary = promote_new_members(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.new_index),
+                _load(args.spec),
+            )
+            write_member_lineage(out, args.out)
+        except (
+            NewMemberPromotionError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_MEMBER_PROMOTE_NEW_PASS")
+        for k, v in summary.items():
+            print(f"{k}={v}")
+        print(f"out={args.out}")
         return 0
 
     if args.cmd == "semantic-resolve":

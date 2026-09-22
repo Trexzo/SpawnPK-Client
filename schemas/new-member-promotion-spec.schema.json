@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/new-member-promotion-spec.schema.json",
+  "title": "SpawnPK reviewed new-member promotion spec",
+  "type": "object",
+  "required": ["schema_version", "kind", "build_id", "members"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "new_member_promotion_spec"},
+    "build_id": {"type": "string", "minLength": 1},
+    "authority": {
+      "enum": [
+        "EXACT_CURRENT_CLIENT",
+        "EXACT_HISTORICAL_CLIENT",
+        "CROSS_BUILD",
+        "RESEARCH",
+        "INFERENCE"
+      ]
+    },
+    "note": {"type": "string", "minLength": 1},
+    "members": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "owner_logical_id",
+          "kind",
+          "name",
+          "descriptor"
+        ],
+        "properties": {
+          "owner_logical_id": {
+            "type": "string",
+            "pattern": "^CLIENT_CLASS_[0-9]{6}$"
+          },
+          "kind": {"enum": ["field", "method"]},
+          "name": {"type": "string", "minLength": 1},
+          "descriptor": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -15,6 +15,7 @@ COMMANDS = [
     "lineage-validate",
     "member-lineage-seed",
     "member-lineage-validate",
+    "member-promote-new",
     "semantic-resolve",
     "semantic-accept",
     "lineage-apply-candidates",
