@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/progressive-compile.schema.json",
+  "title": "SpawnPK progressive source compile report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "run_id",
+    "workspace_id",
+    "build_id",
+    "source_authority_sha256",
+    "readable_jar_sha256",
+    "namespace_id",
+    "source_tree_sha256",
+    "build_authority_id",
+    "javac",
+    "target_release",
+    "fallback_classpath",
+    "summary",
+    "files"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "progressive_compile_report"},
+    "run_id": {"type": "string", "pattern": "^PROGCOMPILE_[0-9A-F]{20}$"},
+    "workspace_id": {"type": "string"},
+    "build_id": {"type": "string"},
+    "source_authority_sha256": {"type": "string"},
+    "readable_jar_sha256": {"type": "string"},
+    "namespace_id": {"type": "string"},
+    "source_tree_sha256": {"type": "string"},
+    "build_authority_id": {"type": "string"},
+    "javac": {"type": "object"},
+    "target_release": {"type": ["integer", "null"]},
+    "fallback_classpath": {"type": "object"},
+    "summary": {"type": "object"},
+    "files": {"type": "array"}
+  },
+  "additionalProperties": false
+}
