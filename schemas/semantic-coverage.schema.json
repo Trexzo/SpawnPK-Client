@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/semantic-coverage.schema.json",
+  "title": "SpawnPK semantic coverage report",
+  "type": "object",
+  "required": ["schema_version", "kind", "coverage_id", "build_id", "source_sha256", "summary", "overall", "accepted_provenance_families"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "semantic_coverage_report"},
+    "coverage_id": {"type": "string", "pattern": "^COVERAGE_[0-9A-F]{20}$"},
+    "build_id": {"type": "string", "minLength": 1},
+    "source_sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+    "summary": {"type": "object"},
+    "overall": {"type": "object"},
+    "accepted_provenance_families": {"type": "object"}
+  },
+  "additionalProperties": false
+}
