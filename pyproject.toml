@@ -14,6 +14,7 @@ spk-corpus-audit = "spk_recovery.corpus_audit:main"
 spk-field-proof-transfer = "spk_recovery.field_proof_cli:main"
 spk-semantic-namespace = "spk_recovery.semantic_namespace_cli:main"
 spk-readable-build = "spk_recovery.readable_build_cli:main"
+spk-semantic-carry-forward = "spk_recovery.semantic_carryforward_cli:main"
 spk-source-workspace = "spk_recovery.source_workspace_cli:main"
 
 [tool.setuptools]
