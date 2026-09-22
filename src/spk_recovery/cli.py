@@ -16,6 +16,13 @@ from .remap_plan import (
     remap_risk_scan,
     write_json,
 )
+from .member_lineage import (
+    MemberLineageError,
+    load_member_lineage,
+    seed_member_lineage,
+    validate_member_lineage,
+    write_member_lineage,
+)
 from .lineage import (
     LineageValidationError,
     load_lineage,

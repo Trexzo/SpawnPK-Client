@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/member-lineage.schema.json",
+  "title": "SpawnPK canonical member lineage",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "class_namespace",
+    "baseline_build_id",
+    "source_sha256",
+    "members",
+    "unresolved"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "member_lineage"},
+    "class_namespace": {"const": "spawnpk-client"},
+    "baseline_build_id": {"type": "string", "minLength": 1},
+    "source_sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+    "members": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "member_id",
+          "owner_logical_id",
+          "kind",
+          "semantic_name",
+          "semantic_status",
+          "semantic_confidence",
+          "lineage",
+          "semantic_provenance"
+        ],
+        "properties": {
+          "member_id": {
+            "type": "string",
+            "pattern": "^CLIENT_(FIELD|METHOD)_[0-9]{6}$"
+          },
+          "owner_logical_id": {
+            "type": "string",
+            "pattern": "^CLIENT_CLASS_[0-9]{6}$"
+          },
+          "kind": {"enum": ["field", "method"]},
+          "semantic_name": {"type": ["string", "null"]},
+          "semantic_status": {
+            "enum": ["UNKNOWN", "CANDIDATE", "ACCEPTED"]
+          },
+          "semantic_confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "lineage": {"type": "array", "minItems": 1},
+          "semantic_provenance": {"type": "array"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "unresolved": {"type": "array"}
+  },
+  "additionalProperties": false
+}
