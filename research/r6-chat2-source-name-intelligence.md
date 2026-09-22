@@ -109,3 +109,15 @@ R6E proof, accept a proposal, or authorize AST rewriting.
 R7A also means a release-ready authority chain may include accepted rewritten source.
 Chat 2 diagnostics are evidence feeding review; they are not release authority and are not
 added to the R7A release manifest.
+
+
+## R7C future-update boundary
+
+R7C now carries an exact future client through R3 migration, authority promotion, accepted
+class/member semantic carry-forward, and the R7 release path. It explicitly keeps R6
+parameter/local inferred-name carry-forward as a post-source extension.
+
+That means Chat 2 source-name diagnostics must not become a gate for exact binary,
+class/member authority, or R7C release orchestration. They begin only after the new recovered
+source inventory exists, consume R6E results when available, and return candidate/review
+evidence rather than promotion authority.
