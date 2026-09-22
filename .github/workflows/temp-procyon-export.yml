@@ -1,0 +1,27 @@
+name: Temporary Procyon export
+
+on:
+  push:
+    branches:
+      - chat1/temp-source-export-578dd325
+
+permissions:
+  contents: read
+
+jobs:
+  export-procyon:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download official Procyon v0.6.0 release
+        run: |
+          curl -fL --retry 3 -o procyon-decompiler-0.6.0.jar https://github.com/mstrobel/procyon/releases/download/v0.6.0/procyon-decompiler-0.6.0.jar
+          sha256sum procyon-decompiler-0.6.0.jar | tee procyon-decompiler-0.6.0.jar.sha256
+      - name: Upload diagnostic Procyon artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: procyon-0.6.0-official
+          path: |
+            procyon-decompiler-0.6.0.jar
+            procyon-decompiler-0.6.0.jar.sha256
+          if-no-files-found: error
+          retention-days: 1
