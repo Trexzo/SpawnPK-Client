@@ -80,7 +80,7 @@ public final class SpkJarRemapper {
         boolean rewriteStrings
     ) {
         ClassReader reader = new ClassReader(input);
-        ClassWriter writer = new ClassWriter(reader, 0);
+        ClassWriter writer = new ClassWriter(0);
         reader.accept(
             new ClassRemapper(writer, new MapRemapper(names, rewriteStrings)),
             0
