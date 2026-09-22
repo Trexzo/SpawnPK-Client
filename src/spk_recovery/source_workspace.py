@@ -53,8 +53,22 @@ def _project_prefixes(readable_manifest: dict[str, Any]) -> list[str]:
                 "non-empty strings"
             )
         normalized = value.replace("\\", "/").lstrip("/")
-        if normalized and not normalized.endswith("/"):
-            normalized += "/"
+        if not normalized:
+            raise SourceWorkspaceError(
+                "readable manifest project_source_prefixes must not normalize "
+                "to the archive root"
+            )
+        parts = [part for part in normalized.rstrip("/").split("/") if part]
+        if (
+            not parts
+            or any(part in {".", ".."} for part in parts)
+            or normalized.startswith("META-INF/")
+        ):
+            raise SourceWorkspaceError(
+                "readable manifest project_source_prefixes contains an unsafe "
+                f"or unsupported prefix: {value!r}"
+            )
+        normalized = "/".join(parts) + "/"
         out.append(normalized)
     return sorted(set(out))
 
