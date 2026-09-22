@@ -16,6 +16,7 @@
     "build_authority_id",
     "javac",
     "target_release",
+    "source_scope",
     "fallback_classpath",
     "summary",
     "files"
@@ -33,6 +34,7 @@
     "build_authority_id": {"type": "string"},
     "javac": {"type": "object"},
     "target_release": {"type": ["integer", "null"]},
+    "source_scope": {"type": "object"},
     "fallback_classpath": {"type": "object"},
     "summary": {"type": "object"},
     "files": {"type": "array"}
