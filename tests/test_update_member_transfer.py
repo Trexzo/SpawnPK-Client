@@ -170,7 +170,11 @@ def _indexes():
     return old, new
 
 
-def _candidates(\n    field_strategy="exact_matched_method_access_positions",\n    class_strategy="structural_unique",\n):\n    return {
+def _candidates(
+    field_strategy="exact_matched_method_access_positions",
+    class_strategy="structural_unique",
+):
+    return {
         "schema_version": 1,
         "kind": "member_identity_candidates",
         "canonical": False,
