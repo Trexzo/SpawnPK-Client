@@ -4,8 +4,8 @@
   "canonical": false,
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-  "proposal_count": 45,
-  "review_id": "SEMREVIEW_E471CA15CA95C7CD00A7",
+  "proposal_count": 65,
+  "review_id": "SEMREVIEW_1D05C99BCABD6CB508EF",
   "proposals": [
     {
       "proposal_id": "SEMPROP_006DAFA033359204B91A",
@@ -152,6 +152,84 @@
         }
       ],
       "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_17B2B5371235A11FDF96",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000548",
+      "owner_logical_id": "CLIENT_CLASS_000548",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/C",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DonationCheckoutInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Donation Shopping Cart Interface, Purchase Options, Checkout cart, Select PayPal and Select OSRS GP."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads misc/donor resources."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources; it is not claimed as the original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_1933E649A1577E271F03",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000639",
+      "owner_logical_id": "CLIENT_CLASS_000639",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/ba",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "KnowledgebaseInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Official SpawnPK Knowledgebase, Category List and Selected Article Title Text."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads wiki/sprite and wiki/guide resources."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources; it is not claimed as the original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_1B1EC1ED20CB9DD66CFA",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000631",
+      "owner_logical_id": "CLIENT_CLASS_000631",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/az",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MonsterDropSearchInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Monster item drop search, Search by item/monster, Select this monster, Quantity and Rarity."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads drops/button, drops/icon and drops/sprite resources."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources; it is not claimed as the original developer identifier."
     },
     {
       "proposal_id": "SEMPROP_1B3D8B44D0FB7615B756",
@@ -344,6 +422,58 @@
       "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
     },
     {
+      "proposal_id": "SEMPROP_3196CFB535EF6C5EBAA5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000623",
+      "owner_logical_id": "CLIENT_CLASS_000623",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/as",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MarketplaceInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include SpawnPK Marketplace, View listings, Sell item, Search item/user, recent sales and history controls."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads pos/button, pos/icon and pos/sprite marketplace resources."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources; it is not claimed as the original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_31D041343FA83A603FF7",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000553",
+      "owner_logical_id": "CLIENT_CLASS_000553",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/H",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EquipmentStatsInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Equip Your Character, Attack bonus, Defence bonus, Other bonuses, Risk value, Drop rate bonus and Magic damage."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads equipment/CUSTOM resources."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources; it is not claimed as the original developer identifier."
+    },
+    {
       "proposal_id": "SEMPROP_3BB68104BE5AE6C76676",
       "target_kind": "method",
       "stable_id": "CLIENT_METHOD_000473",
@@ -456,6 +586,58 @@
       "note": "Semantic intent is exact-current client behavior; proposed English identifier is not claimed to be the original developer name."
     },
     {
+      "proposal_id": "SEMPROP_4E5EB23CF0B90C4AB9EA",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000625",
+      "owner_logical_id": "CLIENT_CLASS_000625",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/au",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MarketplaceListingInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include SpawnPK Marketplace Listing, Set quantity, Set price, Select a currency and View item history."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads pos/button and pos/sprite marketplace resources."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources; it is not claimed as the original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_4EA233622ABCC849879D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000653",
+      "owner_logical_id": "CLIENT_CLASS_000653",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/d/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaidPartyLobbyInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include raid party create/join modes, ready/cancel/leave/enter controls, Raid Selection and Raid Difficulty."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads raids/sprite and related raid interface resources."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources; it is not claimed as the original developer identifier."
+    },
+    {
       "proposal_id": "SEMPROP_553B9C7A1B2661146287",
       "target_kind": "class",
       "stable_id": "CLIENT_CLASS_000679",
@@ -546,6 +728,58 @@
       "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
     },
     {
+      "proposal_id": "SEMPROP_640DBB8D3A40B3C9D910",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000572",
+      "owner_logical_id": "CLIENT_CLASS_000572",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/Z",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LeaderboardSelectionInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Leaderboard Selection Menu, Tournament Leaderboard and Daily PK Leaderboards."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads misc/hs leaderboard resources."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources; it is not claimed as the original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_6FA4F7AFBC7231032488",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000566",
+      "owner_logical_id": "CLIENT_CLASS_000566",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/T",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MonsterSpawnerInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Monster Spawner, Monster Selections, Spawn this NPC, Spawn x3 and Toggle spawner."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads factory/SPRITE resources."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources; it is not claimed as the original developer identifier."
+    },
+    {
       "proposal_id": "SEMPROP_73F28BE72A9967178F86",
       "target_kind": "class",
       "stable_id": "CLIENT_CLASS_000599",
@@ -606,6 +840,32 @@
       "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
     },
     {
+      "proposal_id": "SEMPROP_7CFBCFB979D2523164CE",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000608",
+      "owner_logical_id": "CLIENT_CLASS_000608",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/ag",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemsKeptOnDeathInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Items kept on death, Items I will keep, Items I will lose and red-skull loss guidance."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads icons/death and equipment/SPRITE resources."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources; it is not claimed as the original developer identifier."
+    },
+    {
       "proposal_id": "SEMPROP_7E1A58870F3845739B66",
       "target_kind": "class",
       "stable_id": "CLIENT_CLASS_000545",
@@ -626,6 +886,32 @@
         }
       ],
       "note": "Role name is inferred from exact-v308 class literals/resources; it is not claimed as the original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_7EE280D0221B9B001411",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000613",
+      "owner_logical_id": "CLIENT_CLASS_000613",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/al",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemLoadoutModificationInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Item Loadout Modification Interface, Save loadout, Set as default and LMS Loadout."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads equipment/loadout resources."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources; it is not claimed as the original developer identifier."
     },
     {
       "proposal_id": "SEMPROP_7F794D5CA7E8A003BB5F",
@@ -768,6 +1054,58 @@
         }
       ],
       "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_884E5794C08FB389B63D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000601",
+      "owner_logical_id": "CLIENT_CLASS_000601",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aZ",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WellOfGoodwillInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Well of Good Will, Donate to well of goodwill and server-wide progress/reward guidance."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads fountain/sprite goodwill resources."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources; it is not claimed as the original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_8AC614FC63B57FC9FE0E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000594",
+      "owner_logical_id": "CLIENT_CLASS_000594",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aS",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TaskScrollInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Task Scroll Title, Task Information, Completion Progress, Potential Rewards, Track progress and Collect reward."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads tasks/SPRITE resources."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources; it is not claimed as the original developer identifier."
     },
     {
       "proposal_id": "SEMPROP_8DF5C13962ED758A15B8",
@@ -920,6 +1258,32 @@
       "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
     },
     {
+      "proposal_id": "SEMPROP_A99071CDC6D7F8688940",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000555",
+      "owner_logical_id": "CLIENT_CLASS_000555",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/J",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EventActivityViewerInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Event Activity Viewer, token earning limits, timer reset guidance and activity-locked state."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads popups/activities resources."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources; it is not claimed as the original developer identifier."
+    },
+    {
       "proposal_id": "SEMPROP_B11F7525F8100F4CC7D9",
       "target_kind": "class",
       "stable_id": "CLIENT_CLASS_000573",
@@ -980,6 +1344,32 @@
       "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
     },
     {
+      "proposal_id": "SEMPROP_B891FB2FFB08DCFC4283",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000655",
+      "owner_logical_id": "CLIENT_CLASS_000655",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/d/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaidAfflictionTomesInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Affliction Tomes, What are Modifier tomes, deposit controls and modifier roll purchases."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads raids/tomes and raids/button resources."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources; it is not claimed as the original developer identifier."
+    },
+    {
       "proposal_id": "SEMPROP_BD8E042FD546EC475022",
       "target_kind": "field",
       "stable_id": "CLIENT_FIELD_000156",
@@ -1008,6 +1398,32 @@
         }
       ],
       "note": "Intentionally avoids stronger server-semantic names such as claimedDay or streakDay."
+    },
+    {
+      "proposal_id": "SEMPROP_C30283FA5C69A4C56A06",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000598",
+      "owner_logical_id": "CLIENT_CLASS_000598",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aW",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WorldTournamentLeaderboardsInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include World Tournament Leaderboards, weekly/all-time leaderboard controls and Top Players/Top Clans."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads misc/hs leaderboard resources."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources; it is not claimed as the original developer identifier."
     },
     {
       "proposal_id": "SEMPROP_C515872B379F5D8F9796",
@@ -1068,6 +1484,58 @@
         }
       ],
       "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_C7502CD6DEA3DBDFD00F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000560",
+      "owner_logical_id": "CLIENT_CLASS_000560",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/N",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EventChestInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Event Chest Tier I, Event Chest Tier II, Event Guide, prize tiers and roll/reset controls."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads fountain/event, fountain/glow and fountain/icon resources."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources; it is not claimed as the original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_D177ACCF9F63E5DE4F64",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000652",
+      "owner_logical_id": "CLIENT_CLASS_000652",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/d/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaidPartyBrowserInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Party / Size / Raid Type & Difficulty, Join party and Refresh party list."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads raids/list, raids/refresh and raids/close resources."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources; it is not claimed as the original developer identifier."
     },
     {
       "proposal_id": "SEMPROP_D20E4047D8575B94E13F",
@@ -1146,6 +1614,32 @@
         }
       ],
       "note": "Exact-current behavioral name candidate."
+    },
+    {
+      "proposal_id": "SEMPROP_DB2BAF53655BD50B2EC9",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000551",
+      "owner_logical_id": "CLIENT_CLASS_000551",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/F",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EmotesInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals enumerate emotes including Zombie Walk, Zombie Dance, Skillcape Emote, Goblin Salute and Rabbit Hop."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads emotes/EMOTE resources."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources; it is not claimed as the original developer identifier."
     },
     {
       "proposal_id": "SEMPROP_E4387C5319408C5177F3",
@@ -1288,6 +1782,32 @@
         }
       ],
       "note": "Exact-current behavioral name candidate."
+    },
+    {
+      "proposal_id": "SEMPROP_FE23FD8A18327420C8F5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000592",
+      "owner_logical_id": "CLIENT_CLASS_000592",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aQ",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SkillsInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Total Level and View skill Guide plus level/current XP/next level presentation."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads skills/SKILL and skills/* resources."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources; it is not claimed as the original developer identifier."
     }
   ],
   "unresolved": []
