@@ -279,7 +279,12 @@ def remap_risk_scan(
             if "/" in source
             else ""
         )
-        if not source_pkg:
+        target_pkg = (
+            target.rsplit("/", 1)[0] + "/"
+            if "/" in target
+            else ""
+        )
+        if not source_pkg or source_pkg == target_pkg:
             continue
         hits = sorted(
             path
