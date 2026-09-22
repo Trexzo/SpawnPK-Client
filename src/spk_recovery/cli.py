@@ -12,6 +12,11 @@ from .decompiler import (
     run_decompiler,
     write_json as write_decompiler_json,
 )
+from .update_transfer import (
+    UpdateTransferError,
+    transfer_trusted_class_lineage,
+    write_transfer_result,
+)
 from .update_intake import (
     UpdateIntakeError,
     intake_new_jar,
@@ -98,6 +103,21 @@ def main(argv: list[str] | None = None) -> int:
     pui.add_argument("--new-build-id", required=True)
     pui.add_argument("--scope-prefix", default="rs/")
     pui.add_argument("--out-dir", type=Path, required=True)
+
+    put = sub.add_parser(
+        "update-transfer-classes",
+        help="Transfer only trusted class identities from one intake into canonical lineage",
+    )
+    put.add_argument("class_lineage", type=Path)
+    put.add_argument("old_index", type=Path)
+    put.add_argument("new_index", type=Path)
+    put.add_argument("intake_report", type=Path)
+    put.add_argument("--old-build-id", required=True)
+    put.add_argument("--new-build-id", required=True)
+    put.add_argument("--new-build-number", type=int)
+    put.add_argument("--new-authority", default="CROSS_BUILD")
+    put.add_argument("--out", type=Path, required=True)
+    put.add_argument("--summary-out", type=Path)
 
     ps = sub.add_parser(
         "lineage-seed",
@@ -353,6 +373,39 @@ def main(argv: list[str] | None = None) -> int:
         print(f"index={paths['index']}")
         print(f"report={paths['report']}")
         print(f"queue={paths['queue']}")
+        return 0
+
+    if args.cmd == "update-transfer-classes":
+        try:
+            out, summary = transfer_trusted_class_lineage(
+                load_lineage(args.class_lineage),
+                _load(args.old_index),
+                _load(args.new_index),
+                _load(args.intake_report),
+                old_build_id=args.old_build_id,
+                new_build_id=args.new_build_id,
+                new_build_number=args.new_build_number,
+                new_authority=args.new_authority,
+            )
+            write_transfer_result(
+                out,
+                summary,
+                lineage_out=args.out,
+                summary_out=args.summary_out,
+            )
+        except (
+            UpdateTransferError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_UPDATE_TRANSFER_CLASSES_PASS")
+        for k, v in summary.items():
+            print(f"{k}={v}")
+        print(f"out={args.out}")
+        if args.summary_out:
+            print(f"summary_out={args.summary_out}")
         return 0
 
     if args.cmd == "lineage-seed":
