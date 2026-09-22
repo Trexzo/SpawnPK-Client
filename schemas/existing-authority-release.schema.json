@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/existing-authority-release.schema.json",
+  "title": "SpawnPK existing-authority release run",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "run_id",
+    "build_id",
+    "status",
+    "ready_for_release",
+    "terminal_stage",
+    "blocker",
+    "release_id",
+    "stage_ids",
+    "artifacts",
+    "note"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "existing_authority_release_report"},
+    "run_id": {
+      "type": "string",
+      "pattern": "^RELEASE_RUN_[0-9A-F]{20}$"
+    },
+    "build_id": {"type": "string"},
+    "status": {"enum": ["complete", "blocked"]},
+    "ready_for_release": {"type": "boolean"},
+    "terminal_stage": {
+      "enum": [
+        "readable_build",
+        "clean_rebuild",
+        "release_manifest"
+      ]
+    },
+    "blocker": {"type": ["object", "null"]},
+    "release_id": {"type": ["string", "null"]},
+    "stage_ids": {"type": "object"},
+    "artifacts": {"type": "object"},
+    "note": {"type": "string"}
+  },
+  "additionalProperties": false
+}
