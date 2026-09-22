@@ -1,0 +1,29 @@
+name: R8B Procyon Evidence Fetch
+
+on:
+  push:
+    branches:
+      - core/r8b-procyon-decompiler
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch official Procyon 0.6.0 release
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="https://github.com/mstrobel/procyon/releases/download/v0.6.0/procyon-decompiler-0.6.0.jar"
+          expected="821da96012fc69244fa1ea298c90455ee4e021434bc796d3b9546ab24601b779"
+          curl -fL "$url" -o procyon-decompiler-0.6.0.jar
+          actual="$(sha256sum procyon-decompiler-0.6.0.jar | awk '{print $1}')"
+          test "$actual" = "$expected"
+          mkdir artifact
+          mv procyon-decompiler-0.6.0.jar artifact/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: procyon-0.6.0-evidence
+          path: artifact/procyon-decompiler-0.6.0.jar
+          if-no-files-found: error
+          retention-days: 1
