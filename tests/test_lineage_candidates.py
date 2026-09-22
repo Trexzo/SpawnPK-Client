@@ -140,5 +140,6 @@ class LineageCandidateTests(unittest.TestCase):
             out["research_only"][0]["strategy"],
             "package_anchor",
         )
-\nif __name__ == "__main__":
+
+if __name__ == "__main__":
     unittest.main()
