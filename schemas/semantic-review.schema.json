@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/semantic-review.schema.json",
+  "title": "Resolved non-canonical semantic review set",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "canonical",
+    "source_build",
+    "source_sha256",
+    "proposal_count",
+    "review_id",
+    "proposals",
+    "unresolved"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "semantic_review_set"},
+    "canonical": {"const": false},
+    "source_build": {"type": "string", "minLength": 1},
+    "source_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{64}$"
+    },
+    "proposal_count": {"type": "integer", "minimum": 0},
+    "review_id": {
+      "type": "string",
+      "pattern": "^SEMREVIEW_[0-9A-F]{20}$"
+    },
+    "proposals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "proposal_id",
+          "target_kind",
+          "stable_id",
+          "owner_logical_id",
+          "source_build",
+          "source_sha256",
+          "source_coordinate",
+          "proposed_name",
+          "confidence",
+          "evidence"
+        ],
+        "properties": {
+          "proposal_id": {
+            "type": "string",
+            "pattern": "^SEMPROP_[0-9A-F]{20}$"
+          },
+          "target_kind": {
+            "enum": ["class", "field", "method"]
+          },
+          "stable_id": {
+            "type": "string",
+            "pattern": "^CLIENT_(CLASS|FIELD|METHOD)_[0-9]{6}$"
+          },
+          "owner_logical_id": {
+            "type": "string",
+            "pattern": "^CLIENT_CLASS_[0-9]{6}$"
+          },
+          "source_build": {"type": "string", "minLength": 1},
+          "source_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{64}$"
+          },
+          "source_coordinate": {"type": "object"},
+          "proposed_name": {
+            "type": "string",
+            "pattern": "^[A-Za-z_$][A-Za-z0-9_$]*$"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "evidence": {"type": "array"},
+          "note": {}
+        },
+        "additionalProperties": false
+      }
+    },
+    "unresolved": {"type": "array"}
+  },
+  "additionalProperties": false
+}
