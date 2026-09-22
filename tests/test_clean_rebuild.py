@@ -37,16 +37,9 @@ class CleanRebuildTests(unittest.TestCase):
     def _fixture(self, root: Path):
         dep_src = root / "orig-src" / "dep"
         rs_src = root / "orig-src" / "rs"
-        fallback_src = (
-            root
-            / "orig-src"
-            / "recovered"
-            / "spawnpk"
-            / "fallback"
-        )
+        fallback_src = rs_src
         dep_src.mkdir(parents=True)
         rs_src.mkdir(parents=True)
-        fallback_src.mkdir(parents=True)
         (dep_src / "Fallback.java").write_text(
             "package dep; public class Fallback { "
             "public String value() { return \"ok\"; } }\n",
@@ -61,9 +54,9 @@ class CleanRebuildTests(unittest.TestCase):
             "package rs; public class B { public int value = 1; }\n",
             encoding="utf-8",
         )
-        (fallback_src / "CLIENT_CLASS_000001.java").write_text(
-            "package recovered.spawnpk.fallback; "
-            "public class CLIENT_CLASS_000001 { "
+        (fallback_src / "Recovered_CLIENT_CLASS_000001.java").write_text(
+            "package rs; "
+            "public class Recovered_CLIENT_CLASS_000001 { "
             "public int value = 2; }\n",
             encoding="utf-8",
         )
@@ -92,7 +85,7 @@ class CleanRebuildTests(unittest.TestCase):
                 str(project_classes),
                 str(rs_src / "A.java"),
                 str(rs_src / "B.java"),
-                str(fallback_src / "CLIENT_CLASS_000001.java"),
+                str(fallback_src / "Recovered_CLIENT_CLASS_000001.java"),
             ],
             check=True,
             stdout=subprocess.PIPE,
@@ -119,18 +112,11 @@ class CleanRebuildTests(unittest.TestCase):
 
         recovered_root = root / "recovered"
         (recovered_root / "rs").mkdir(parents=True)
-        recovered_fallback = (
-            recovered_root
-            / "recovered"
-            / "spawnpk"
-            / "fallback"
-        )
-        recovered_fallback.mkdir(parents=True)
         shutil.copy2(rs_src / "A.java", recovered_root / "rs" / "A.java")
         shutil.copy2(rs_src / "B.java", recovered_root / "rs" / "B.java")
         shutil.copy2(
-            fallback_src / "CLIENT_CLASS_000001.java",
-            recovered_fallback / "CLIENT_CLASS_000001.java",
+            fallback_src / "Recovered_CLIENT_CLASS_000001.java",
+            recovered_root / "rs" / "Recovered_CLIENT_CLASS_000001.java",
         )
         tree_sha = _tree_sha(recovered_root)
         readable_sha = _sha(readable)
@@ -168,10 +154,9 @@ class CleanRebuildTests(unittest.TestCase):
             "output_sha256": readable_sha,
             "target_package": "recovered/spawnpk/client",
             "source_safe_fallback": True,
-            "fallback_package": "recovered/spawnpk/fallback",
+            "fallback_name_prefix": "Recovered_",
             "project_source_prefixes": [
                 "recovered/spawnpk/client/",
-                "recovered/spawnpk/fallback/",
                 "rs/",
             ],
             "semantic_summary": {
@@ -292,10 +277,7 @@ class CleanRebuildTests(unittest.TestCase):
                 0,
             )
 
-            fallback_class = (
-                "recovered/spawnpk/fallback/"
-                "CLIENT_CLASS_000001.class"
-            )
+            fallback_class = "rs/Recovered_CLIENT_CLASS_000001.class"
             with zipfile.ZipFile(
                 root / "out" / "dependency-capsule.jar"
             ) as z:
