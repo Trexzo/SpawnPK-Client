@@ -215,11 +215,11 @@ class CleanRebuildTests(unittest.TestCase):
             )
             self.assertEqual(
                 report["project_classes"]["expected_count"],
-                2,
+                3,
             )
             self.assertEqual(
                 report["project_classes"]["generated_count"],
-                2,
+                3,
             )
             self.assertFalse(
                 report["all_dependencies_rebuilt_from_source"]
@@ -232,12 +232,20 @@ class CleanRebuildTests(unittest.TestCase):
                 self.assertIn("dep/Fallback.class", names)
                 self.assertNotIn("rs/A.class", names)
                 self.assertNotIn("rs/B.class", names)
+                self.assertNotIn(
+                    "rs/Recovered_CLIENT_CLASS_000001.class",
+                    names,
+                )
 
             with zipfile.ZipFile(rebuilt) as z:
                 names = set(z.namelist())
                 self.assertIn("dep/Fallback.class", names)
                 self.assertIn("rs/A.class", names)
                 self.assertIn("rs/B.class", names)
+                self.assertIn(
+                    "rs/Recovered_CLIENT_CLASS_000001.class",
+                    names,
+                )
                 self.assertIn("rs/resource.txt", names)
 
 
