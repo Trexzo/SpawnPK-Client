@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/roundtrip-verification.schema.json",
+  "title": "SpawnPK recovered-source round-trip verification",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "verification_id",
+    "rebuild_id",
+    "readable_jar_sha256",
+    "rebuilt_jar_sha256",
+    "comparison",
+    "rebuild_authority_candidate"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "round_trip_verification_report"},
+    "verification_id": {
+      "type": "string",
+      "pattern": "^ROUNDTRIP_[0-9A-F]{20}$"
+    },
+    "rebuild_id": {"type": ["string", "null"]},
+    "build_id": {"type": ["string", "null"]},
+    "workspace_id": {"type": ["string", "null"]},
+    "namespace_id": {"type": ["string", "null"]},
+    "source_authority_sha256": {"type": ["string", "null"]},
+    "readable_jar_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "rebuilt_jar_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "comparison": {
+      "type": "object",
+      "required": [
+        "prefixes",
+        "authority_project_classes",
+        "rebuilt_project_classes",
+        "missing_classes",
+        "unexpected_classes",
+        "summary",
+        "classes"
+      ]
+    },
+    "rebuild_authority_candidate": {
+      "type": "object",
+      "required": [
+        "ready",
+        "project_binary_fallback_count",
+        "semantic_surface_blockers",
+        "byte_identical_class_count",
+        "structural_equivalent_class_count",
+        "codegen_variance_only_class_count",
+        "note"
+      ],
+      "properties": {
+        "ready": {"type": "boolean"},
+        "project_binary_fallback_count": {"type": ["integer", "null"]},
+        "semantic_surface_blockers": {"type": "integer", "minimum": 0},
+        "byte_identical_class_count": {"type": "integer", "minimum": 0},
+        "structural_equivalent_class_count": {"type": "integer", "minimum": 0},
+        "codegen_variance_only_class_count": {"type": "integer", "minimum": 0},
+        "note": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  }
+}
