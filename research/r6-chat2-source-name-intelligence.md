@@ -78,3 +78,34 @@ The tests pass the generated set directly through
 without any adapter or alternate schema.
 
 No source name is accepted or rewritten by Chat 2.
+
+
+## R6E carry-forward-aware diagnostics
+
+Core R6E now owns accepted inferred-name carry-forward across regeneration and supported
+cross-build updates. Chat 2 does not duplicate that transfer engine.
+
+`build_source_name_carryforward_diagnostics()` consumes the canonical
+`source_name_carryforward_report` and the current non-canonical candidate set to classify
+research state only.
+
+Candidate states:
+
+- `new_candidate` — current Chat 2 inference has no R6E transfer relation;
+- `candidate_same_as_prior_accepted` — current inference agrees with the previously
+  accepted inferred name carried by R6E;
+- `candidate_changed` — current inference disagrees with the R6E-carried accepted name.
+
+R6E blockers are grouped separately as:
+
+- `candidate_blocked_by_source_shape_drift`;
+- `candidate_blocked_by_method_lineage_drift`;
+- `ambiguous_after_regeneration`;
+- `blocked_requires_review`.
+
+This output remains diagnostic and non-canonical. It does not transfer a name, rebuild
+R6E proof, accept a proposal, or authorize AST rewriting.
+
+R7A also means a release-ready authority chain may include accepted rewritten source.
+Chat 2 diagnostics are evidence feeding review; they are not release authority and are not
+added to the R7A release manifest.
