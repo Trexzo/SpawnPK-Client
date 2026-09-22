@@ -25,6 +25,7 @@ class ProjectScopedSourceWorkspaceTests(unittest.TestCase):
         jar = root / "readable.jar"
         with zipfile.ZipFile(jar, "w") as z:
             z.writestr("rs/A.class", b"a")
+            z.writestr("rs/A$Inner.class", b"inner")
             z.writestr("rs/sub/B.class", b"b")
             z.writestr("dep/C.class", b"c")
         manifest = {
@@ -57,9 +58,11 @@ class ProjectScopedSourceWorkspaceTests(unittest.TestCase):
                     else path.name
                     for path in selected
                 )
-                # The dependency class must never be an input target.
+                # Dependency and nested classfiles remain resolver context only;
+                # neither may become an independent Java source target.
                 self.assertEqual(len(selected), 2)
                 self.assertTrue(all("/dep/" not in path.as_posix() for path in selected))
+                self.assertTrue(all("$" not in path.name for path in selected))
                 out = kwargs["out_dir"]
                 (out / "rs" / "sub").mkdir(parents=True, exist_ok=True)
                 (out / "rs" / "A.java").write_text(
