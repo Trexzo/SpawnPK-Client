@@ -197,6 +197,23 @@ def main(argv: list[str] | None = None) -> int:
     pmrp.add_argument("--build-id", required=True)
     pmrp.add_argument("--out", type=Path, required=True)
 
+    pmsr = sub.add_parser(
+        "member-safety-scan",
+        help="Build exact per-member name-sensitivity risk evidence",
+    )
+    pmsr.add_argument("source_jar", type=Path)
+    pmsr.add_argument("index", type=Path)
+    pmsr.add_argument("member_plan", type=Path)
+    pmsr.add_argument("--out", type=Path, required=True)
+
+    pmsv = sub.add_parser(
+        "member-safety-validate",
+        help="Validate explicit acceptance against one exact member safety report",
+    )
+    pmsv.add_argument("member_plan", type=Path)
+    pmsv.add_argument("report", type=Path)
+    pmsv.add_argument("acceptance", type=Path)
+
     rc = sub.add_parser(
         "class-remap",
         help="Apply a verified class remap plan and deterministically repackage the JAR",
@@ -222,6 +239,8 @@ def main(argv: list[str] | None = None) -> int:
     rj.add_argument("--rewrite-class-name-strings", action="store_true")
     rj.add_argument("--allow-package-resource-risk", action="store_true")
     rj.add_argument("--allow-member-reflection-risk", action="store_true")
+    rj.add_argument("--member-safety-report", type=Path)
+    rj.add_argument("--member-safety-acceptance", type=Path)
 
     rv = sub.add_parser(
         "verify-remap",
