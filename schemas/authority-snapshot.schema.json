@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/authority-snapshot.schema.json",
+  "title": "SpawnPK exact client authority snapshot",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "authority_id",
+    "state",
+    "build_id",
+    "build_number",
+    "source_name",
+    "sha256",
+    "scope_prefix",
+    "migration_id",
+    "authority_candidate_report_id",
+    "previous_build_id",
+    "previous_sha256",
+    "class_lineage_sha256",
+    "member_lineage_sha256",
+    "summary"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "authority_snapshot"
+    },
+    "authority_id": {
+      "type": "string",
+      "pattern": "^AUTHORITY_[0-9A-F]{20}$"
+    },
+    "state": {
+      "const": "EXACT_CURRENT_CLIENT"
+    },
+    "build_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "build_number": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "source_name": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "scope_prefix": {
+      "type": "string"
+    },
+    "migration_id": {
+      "type": "string"
+    },
+    "authority_candidate_report_id": {
+      "type": "string",
+      "pattern": "^AUTHCAND_[0-9A-F]{20}$"
+    },
+    "previous_build_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "previous_sha256": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "class_lineage_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "member_lineage_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "summary": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}
