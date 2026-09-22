@@ -7,18 +7,18 @@ Exact v308 authority:
 Chat 2 currently supplies a non-canonical semantic review with:
 
 ```text
-class candidates    38
+class candidates    58
 field candidates     3
 method candidates    4
-total candidates    45
-resolved proposals  45
+total candidates    65
+resolved proposals  65
 unresolved           0
-review_id            SEMREVIEW_E471CA15CA95C7CD00A7
+review_id            SEMREVIEW_1D05C99BCABD6CB508EF
 ```
 
 ## R4A boundary verification
 
-The Chat 2 integration test now passes the candidate-only canonical fixture through
+The Chat 2 integration test passes the candidate-only canonical fixture through
 `build_semantic_namespace()`.
 
 Expected and verified pre-acceptance result:
@@ -31,7 +31,7 @@ class remaps      0
 member remaps     0
 ```
 
-Therefore the 45 reviewed proposals are ready for explicit semantic review/selection, but
+Therefore the 65 reviewed proposals are ready for explicit semantic review/selection, but
 R4A cannot turn them into readable remap plans until a separate acceptance step writes
 `semantic_status = ACCEPTED` plus name, confidence and provenance into canonical lineage.
 
@@ -39,7 +39,7 @@ Chat 2 does not perform that acceptance step.
 
 ## Field-proof ownership
 
-R3M/R3N now own canonical JAR-bound exact field proof and transfer. Chat 2 keeps only the
+R3M/R3N own canonical JAR-bound exact field proof and transfer. Chat 2 keeps only the
 research evidence that motivated the stronger policy and the semantic/cross-build
 intelligence layer.
 
