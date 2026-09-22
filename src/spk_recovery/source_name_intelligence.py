@@ -556,3 +556,173 @@ def build_source_name_candidate_diagnostics(
             and row.get("kind") == "local"
         ),
     }
+
+
+_CARRY_AMBIGUOUS_REASONS = {
+    "new_source_method_ambiguous_or_missing",
+    "target_symbol_ambiguous_or_missing",
+    "target_name_collision",
+    "carried_name_collision",
+}
+
+_CARRY_SOURCE_SHAPE_REASONS = {
+    "source_symbol_shape_changed",
+    "previous_symbol_shape_invalid",
+    "target_source_method_missing",
+}
+
+_CARRY_METHOD_LINEAGE_REASONS = {
+    "missing_canonical_method_identity",
+    "canonical_method_missing",
+    "canonical_owner_missing",
+    "canonical_lineage_missing_build_relation",
+    "owner_class_modified_or_unproven",
+    "method_modified_or_unproven",
+}
+
+
+def build_source_name_carryforward_diagnostics(
+    candidate_set: dict[str, Any],
+    carryforward_report: dict[str, Any],
+) -> dict[str, Any]:
+    """Classify Chat 2 candidates against the canonical R6E carry-forward result.
+
+    This is diagnostics only. It consumes R6E output and never transfers,
+    accepts, or rewrites source names itself.
+    """
+    if (
+        candidate_set.get("schema_version") != 1
+        or candidate_set.get("kind") != "source_name_candidate_set"
+    ):
+        raise SourceNameIntelligenceError(
+            "unsupported source name candidate set"
+        )
+    if (
+        carryforward_report.get("schema_version") != 1
+        or carryforward_report.get("kind")
+        != "source_name_carryforward_report"
+    ):
+        raise SourceNameIntelligenceError(
+            "unsupported source name carry-forward report"
+        )
+
+    transfer_by_symbol: dict[str, dict[str, Any]] = {}
+    for transfer_state, key in (
+        ("carried", "carried"),
+        ("already_applied", "already_applied"),
+    ):
+        for row in carryforward_report.get(key, []):
+            if not isinstance(row, dict):
+                continue
+            symbol_id = row.get("source_symbol_id")
+            if not isinstance(symbol_id, str) or not symbol_id:
+                continue
+            transfer_by_symbol[symbol_id] = {
+                "transfer_state": transfer_state,
+                "row": row,
+            }
+
+    candidate_states: list[dict[str, Any]] = []
+    candidate_summary = {
+        "new_candidate": 0,
+        "candidate_same_as_prior_accepted": 0,
+        "candidate_changed": 0,
+    }
+    for candidate in sorted(
+        (
+            row
+            for row in candidate_set.get("candidates", [])
+            if isinstance(row, dict)
+        ),
+        key=lambda row: (
+            str(row.get("source_symbol_id", "")),
+            str(row.get("proposed_name", "")),
+        ),
+    ):
+        symbol_id = str(candidate.get("source_symbol_id") or "")
+        proposed_name = str(candidate.get("proposed_name") or "")
+        transfer = transfer_by_symbol.get(symbol_id)
+        if transfer is None:
+            state = "new_candidate"
+            previous_accepted_name = None
+            transfer_state = None
+        else:
+            transfer_row = transfer["row"]
+            previous_accepted_name = transfer_row.get("desired_name")
+            transfer_state = transfer["transfer_state"]
+            state = (
+                "candidate_same_as_prior_accepted"
+                if proposed_name == previous_accepted_name
+                else "candidate_changed"
+            )
+        candidate_summary[state] += 1
+        candidate_states.append(
+            {
+                "source_symbol_id": symbol_id,
+                "proposed_name": proposed_name,
+                "state": state,
+                "previous_accepted_name": previous_accepted_name,
+                "r6e_transfer_state": transfer_state,
+            }
+        )
+
+    blocker_summary = {
+        "candidate_blocked_by_source_shape_drift": 0,
+        "candidate_blocked_by_method_lineage_drift": 0,
+        "ambiguous_after_regeneration": 0,
+        "blocked_requires_review": 0,
+    }
+    carryforward_blockers: list[dict[str, Any]] = []
+    for row in sorted(
+        (
+            item
+            for item in carryforward_report.get("blocked", [])
+            if isinstance(item, dict)
+        ),
+        key=lambda item: (
+            str(item.get("canonical_method_id", "")),
+            str(item.get("previous_source_symbol_id", "")),
+            str(item.get("reason", "")),
+        ),
+    ):
+        reason = str(row.get("reason") or "")
+        if reason in _CARRY_AMBIGUOUS_REASONS:
+            state = "ambiguous_after_regeneration"
+        elif reason in _CARRY_SOURCE_SHAPE_REASONS:
+            state = "candidate_blocked_by_source_shape_drift"
+        elif reason in _CARRY_METHOD_LINEAGE_REASONS:
+            state = "candidate_blocked_by_method_lineage_drift"
+        else:
+            state = "blocked_requires_review"
+        blocker_summary[state] += 1
+        carryforward_blockers.append(
+            {
+                "previous_source_symbol_id": row.get(
+                    "previous_source_symbol_id"
+                ),
+                "canonical_method_id": row.get("canonical_method_id"),
+                "desired_name": row.get("desired_name"),
+                "reason": reason,
+                "state": state,
+            }
+        )
+
+    return {
+        "schema_version": 1,
+        "kind": "source_name_carryforward_diagnostics",
+        "canonical": False,
+        "inventory_id": candidate_set.get("inventory_id"),
+        "source_tree_sha256": candidate_set.get(
+            "source_tree_sha256"
+        ),
+        "carryforward_report_id": carryforward_report.get(
+            "report_id"
+        ),
+        "candidate_summary": candidate_summary,
+        "blocker_summary": blocker_summary,
+        "r6e_already_applied": len(
+            carryforward_report.get("already_applied", [])
+        ),
+        "candidate_states": candidate_states,
+        "carryforward_blockers": carryforward_blockers,
+    }
