@@ -8,6 +8,7 @@ import sys
 from .indexer import index_jar, write_index
 from .diffing import diff_indexes
 from .canonicalize import CandidateApplicationError, apply_lineage_candidates
+from .promotion import NewClassPromotionError, promote_new_classes
 from .lineage import (
     LineageValidationError,
     load_lineage,
@@ -30,7 +31,10 @@ def main(argv: list[str] | None = None) -> int:
     pi.add_argument("--out", type=Path, required=True)
     pi.add_argument("--expect-sha256")
 
-    pd = sub.add_parser("diff", help="Compare two previously generated indexes")
+    pd = sub.add_parser(
+        "diff",
+        help="Compare two previously generated indexes",
+    )
     pd.add_argument("old", type=Path)
     pd.add_argument("new", type=Path)
     pd.add_argument("--out", type=Path, required=True)
@@ -66,6 +70,26 @@ def main(argv: list[str] | None = None) -> int:
     pa.add_argument("--new-authority", default="CROSS_BUILD")
     pa.add_argument("--minimum-weighted-score", type=float, default=0.88)
     pa.add_argument("--out", type=Path, required=True)
+
+    pp = sub.add_parser(
+        "lineage-promote-new",
+        help="Explicitly promote reviewed unmatched-new classes into logical IDs",
+    )
+    pp.add_argument("lineage", type=Path)
+    pp.add_argument("new_index", type=Path)
+    pp.add_argument("--build-id", required=True)
+    pp.add_argument(
+        "--path",
+        action="append",
+        dest="paths",
+        required=True,
+    )
+    pp.add_argument("--authority", default="RESEARCH")
+    pp.add_argument(
+        "--note",
+        default="Explicitly reviewed and promoted from unmatched_new.",
+    )
+    pp.add_argument("--out", type=Path, required=True)
 
     args = p.parse_args(argv)
     if args.cmd == "index":
@@ -151,6 +175,29 @@ def main(argv: list[str] | None = None) -> int:
             print(f"REFUSED: {e}", file=sys.stderr)
             return 2
         print("SPK_RECOVERY_LINEAGE_APPLY_PASS")
+        for k, v in summary.items():
+            print(f"{k}={v}")
+        print(f"out={args.out}")
+        return 0
+    if args.cmd == "lineage-promote-new":
+        try:
+            out, summary = promote_new_classes(
+                load_lineage(args.lineage),
+                _load(args.new_index),
+                build_id=args.build_id,
+                paths=args.paths,
+                authority=args.authority,
+                note=args.note,
+            )
+            write_lineage(out, args.out)
+        except (
+            NewClassPromotionError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_LINEAGE_PROMOTE_NEW_PASS")
         for k, v in summary.items():
             print(f"{k}={v}")
         print(f"out={args.out}")
