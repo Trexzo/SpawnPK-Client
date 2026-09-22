@@ -57,6 +57,94 @@ def _stable_tree_digest(root: Path) -> tuple[str, list[Path], int]:
     return h.hexdigest(), files, total_bytes
 
 
+def _line_start_depths(text: str) -> list[int]:
+    """Return lexical brace depth at the start of every source line."""
+    depths = [0]
+    depth = 0
+    state = "code"
+    escaped = False
+    i = 0
+    while i < len(text):
+        ch = text[i]
+        nxt = text[i + 1] if i + 1 < len(text) else ""
+
+        if state == "line_comment":
+            if ch == "\n":
+                state = "code"
+                depths.append(depth)
+        elif state == "block_comment":
+            if ch == "*" and nxt == "/":
+                state = "code"
+                i += 1
+            elif ch == "\n":
+                depths.append(depth)
+        elif state == "string":
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                state = "code"
+            elif ch == "\n":
+                depths.append(depth)
+        elif state == "char":
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == "'":
+                state = "code"
+            elif ch == "\n":
+                depths.append(depth)
+        elif state == "text_block":
+            if text.startswith('"""', i):
+                state = "code"
+                i += 2
+            elif ch == "\n":
+                depths.append(depth)
+        else:
+            if ch == "/" and nxt == "/":
+                state = "line_comment"
+                i += 1
+            elif ch == "/" and nxt == "*":
+                state = "block_comment"
+                i += 1
+            elif text.startswith('"""', i):
+                state = "text_block"
+                i += 2
+            elif ch == '"':
+                state = "string"
+                escaped = False
+            elif ch == "'":
+                state = "char"
+                escaped = False
+            elif ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth = max(0, depth - 1)
+            elif ch == "\n":
+                depths.append(depth)
+        i += 1
+    return depths
+
+
+def _top_level_type_names(
+    text: str,
+    *,
+    public_only: bool,
+) -> list[str]:
+    pattern = _PUBLIC_TYPE_RE if public_only else _TOP_TYPE_RE
+    depths = _line_start_depths(text)
+    names: list[str] = []
+    for line_number, line in enumerate(text.splitlines()):
+        if line_number >= len(depths) or depths[line_number] != 0:
+            continue
+        match = pattern.match(line)
+        if match:
+            names.append(match.group(1))
+    return names
+
+
 def _import_root(name: str) -> str:
     clean = name[:-2] if name.endswith(".*") else name
     parts = clean.split(".")
@@ -126,8 +214,14 @@ def audit_source_workspace(
         rel = path.relative_to(source_root).as_posix()
         package = file_packages[path]
         imports = sorted(set(_IMPORT_RE.findall(text)))
-        public_types = _PUBLIC_TYPE_RE.findall(text)
-        top_types = _TOP_TYPE_RE.findall(text)
+        public_types = _top_level_type_names(
+            text,
+            public_only=True,
+        )
+        top_types = _top_level_type_names(
+            text,
+            public_only=False,
+        )
 
         for imp in imports:
             import_counts[imp] += 1
