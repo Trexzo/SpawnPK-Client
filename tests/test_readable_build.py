@@ -61,7 +61,7 @@ class ReadableBuildTests(unittest.TestCase):
         namespace["summary"] = dict(NAMESPACE["summary"])
         namespace["summary"]["source_safety_fallbacks"] = 1
         namespace["source_safe_fallback"] = True
-        namespace["fallback_package"] = "recovered/spawnpk/fallback"
+        namespace["fallback_name_prefix"] = "Recovered_"
 
         manifest = _manifest(
             namespace=namespace,
@@ -73,14 +73,13 @@ class ReadableBuildTests(unittest.TestCase):
 
         self.assertTrue(manifest["source_safe_fallback"])
         self.assertEqual(
-            manifest["fallback_package"],
-            "recovered/spawnpk/fallback",
+            manifest["fallback_name_prefix"],
+            "Recovered_",
         )
         self.assertEqual(
             manifest["project_source_prefixes"],
             [
                 "recovered/spawnpk/client/",
-                "recovered/spawnpk/fallback/",
                 "rs/",
             ],
         )
