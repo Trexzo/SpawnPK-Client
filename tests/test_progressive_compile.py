@@ -160,6 +160,7 @@ class ProgressiveCompileTests(unittest.TestCase):
                 source_root,
                 out_dir=root / "out",
                 batch_size=2,
+                source_prefixes=["sample/"],
             )
 
             self.assertEqual(
