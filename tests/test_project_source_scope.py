@@ -135,7 +135,7 @@ class SelectiveDecompilerTests(unittest.TestCase):
             tool = root / "procyon.jar"
             tool.write_bytes(b"tool")
             classes = []
-            for i in range(8):
+            for i in range(24):
                 path = root / "classes" / ("package_" + str(i)) / ("Class" + str(i) + ".class")
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_bytes(bytes([i]))
@@ -161,11 +161,11 @@ class SelectiveDecompilerTests(unittest.TestCase):
                     engine="procyon",
                     out_dir=out,
                     input_class_files=list(reversed(classes)),
-                    max_command_chars=420,
+                    max_command_chars=1024,
                 )
 
             self.assertEqual(result["input_mode"], "class_files")
-            self.assertEqual(result["selected_class_file_count"], 8)
+            self.assertEqual(result["selected_class_file_count"], 24)
             self.assertGreater(result["batch_count"], 1)
             self.assertEqual(run.call_count, result["batch_count"])
 
