@@ -9,6 +9,12 @@ from .indexer import index_jar, write_index
 from .diffing import diff_indexes
 from .canonicalize import CandidateApplicationError, apply_lineage_candidates
 from .promotion import NewClassPromotionError, promote_new_classes
+from .remap_plan import (
+    RemapPlanError,
+    build_remap_plan,
+    remap_risk_scan,
+    write_json,
+)
 from .lineage import (
     LineageValidationError,
     load_lineage,
@@ -26,7 +32,10 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="spk-recovery")
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    pi = sub.add_parser("index", help="Index and fingerprint a client JAR")
+    pi = sub.add_parser(
+        "index",
+        help="Index and fingerprint a client JAR",
+    )
     pi.add_argument("jar", type=Path)
     pi.add_argument("--out", type=Path, required=True)
     pi.add_argument("--expect-sha256")
@@ -91,6 +100,22 @@ def main(argv: list[str] | None = None) -> int:
     )
     pp.add_argument("--out", type=Path, required=True)
 
+    rp = sub.add_parser(
+        "remap-plan",
+        help="Resolve an explicit logical-ID remap spec for one exact client build",
+    )
+    rp.add_argument("lineage", type=Path)
+    rp.add_argument("spec", type=Path)
+    rp.add_argument("--out", type=Path, required=True)
+
+    rr = sub.add_parser(
+        "remap-risk-scan",
+        help="Scan a resolved remap plan for reflection/resource/repackage risks",
+    )
+    rr.add_argument("index", type=Path)
+    rr.add_argument("plan", type=Path)
+    rr.add_argument("--out", type=Path, required=True)
+
     args = p.parse_args(argv)
     if args.cmd == "index":
         idx = index_jar(args.jar)
@@ -113,11 +138,22 @@ def main(argv: list[str] | None = None) -> int:
         print(f"parse_errors={idx['summary']['class_parse_error_count']}")
         print(f"out={args.out}")
         return 0
+
     if args.cmd == "diff":
-        report = diff_indexes(_load(args.old), _load(args.new))
-        args.out.parent.mkdir(parents=True, exist_ok=True)
+        report = diff_indexes(
+            _load(args.old),
+            _load(args.new),
+        )
+        args.out.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
         args.out.write_text(
-            json.dumps(report, indent=2, sort_keys=True),
+            json.dumps(
+                report,
+                indent=2,
+                sort_keys=True,
+            ),
             encoding="utf-8",
         )
         print("SPK_RECOVERY_DIFF_PASS")
@@ -125,6 +161,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{k}={v}")
         print(f"out={args.out}")
         return 0
+
     if args.cmd == "lineage-seed":
         try:
             doc = seed_lineage(
@@ -134,25 +171,41 @@ def main(argv: list[str] | None = None) -> int:
                 authority=args.authority,
                 prefix=args.prefix,
             )
-            write_lineage(doc, args.out)
+            write_lineage(
+                doc,
+                args.out,
+            )
         except LineageValidationError as e:
-            print(f"REFUSED: {e}", file=sys.stderr)
+            print(
+                f"REFUSED: {e}",
+                file=sys.stderr,
+            )
             return 2
         print("SPK_RECOVERY_LINEAGE_SEED_PASS")
         print(f"build_id={args.build_id}")
         print(f"logical_classes={len(doc['classes'])}")
         print(f"out={args.out}")
         return 0
+
     if args.cmd == "lineage-validate":
         try:
-            summary = validate_lineage(load_lineage(args.lineage))
-        except (LineageValidationError, json.JSONDecodeError) as e:
-            print(f"REFUSED: {e}", file=sys.stderr)
+            summary = validate_lineage(
+                load_lineage(args.lineage)
+            )
+        except (
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(
+                f"REFUSED: {e}",
+                file=sys.stderr,
+            )
             return 2
         print("SPK_RECOVERY_LINEAGE_VALIDATE_PASS")
         for k, v in summary.items():
             print(f"{k}={v}")
         return 0
+
     if args.cmd == "lineage-apply-candidates":
         try:
             out, summary = apply_lineage_candidates(
@@ -164,21 +217,30 @@ def main(argv: list[str] | None = None) -> int:
                 new_build_id=args.new_build_id,
                 new_build_number=args.new_build_number,
                 new_authority=args.new_authority,
-                minimum_weighted_score=args.minimum_weighted_score,
+                minimum_weighted_score=(
+                    args.minimum_weighted_score
+                ),
             )
-            write_lineage(out, args.out)
+            write_lineage(
+                out,
+                args.out,
+            )
         except (
             CandidateApplicationError,
             LineageValidationError,
             json.JSONDecodeError,
         ) as e:
-            print(f"REFUSED: {e}", file=sys.stderr)
+            print(
+                f"REFUSED: {e}",
+                file=sys.stderr,
+            )
             return 2
         print("SPK_RECOVERY_LINEAGE_APPLY_PASS")
         for k, v in summary.items():
             print(f"{k}={v}")
         print(f"out={args.out}")
         return 0
+
     if args.cmd == "lineage-promote-new":
         try:
             out, summary = promote_new_classes(
@@ -189,19 +251,77 @@ def main(argv: list[str] | None = None) -> int:
                 authority=args.authority,
                 note=args.note,
             )
-            write_lineage(out, args.out)
+            write_lineage(
+                out,
+                args.out,
+            )
         except (
             NewClassPromotionError,
             LineageValidationError,
             json.JSONDecodeError,
         ) as e:
-            print(f"REFUSED: {e}", file=sys.stderr)
+            print(
+                f"REFUSED: {e}",
+                file=sys.stderr,
+            )
             return 2
         print("SPK_RECOVERY_LINEAGE_PROMOTE_NEW_PASS")
         for k, v in summary.items():
             print(f"{k}={v}")
         print(f"out={args.out}")
         return 0
+
+    if args.cmd == "remap-plan":
+        try:
+            plan = build_remap_plan(
+                load_lineage(args.lineage),
+                _load(args.spec),
+            )
+            write_json(
+                plan,
+                args.out,
+            )
+        except (
+            RemapPlanError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(
+                f"REFUSED: {e}",
+                file=sys.stderr,
+            )
+            return 2
+        print("SPK_RECOVERY_REMAP_PLAN_PASS")
+        print(f"build_id={plan['build_id']}")
+        print(f"mapped_classes={plan['class_count']}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "remap-risk-scan":
+        try:
+            report = remap_risk_scan(
+                _load(args.index),
+                _load(args.plan),
+            )
+            write_json(
+                report,
+                args.out,
+            )
+        except (
+            RemapPlanError,
+            json.JSONDecodeError,
+        ) as e:
+            print(
+                f"REFUSED: {e}",
+                file=sys.stderr,
+            )
+            return 2
+        print("SPK_RECOVERY_REMAP_RISK_SCAN_PASS")
+        for k, v in report["summary"].items():
+            print(f"{k}={v}")
+        print(f"out={args.out}")
+        return 0
+
     return 2
 
 
