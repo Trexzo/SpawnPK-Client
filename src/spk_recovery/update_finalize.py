@@ -45,9 +45,9 @@ def _target_class_paths(
     class_lineage: dict[str, Any],
     build_id: str,
     prefix: str,
-) -> tuple[set[str], int]:
+) -> tuple[set[str], set[str]]:
     paths: set[str] = set()
-    accepted = 0
+    accepted_paths: set[str] = set()
     for record in class_lineage.get("classes", []):
         target_entries = [
             entry
@@ -70,8 +70,8 @@ def _target_class_paths(
             continue
         paths.add(path)
         if record.get("semantic_status") == "ACCEPTED":
-            accepted += 1
-    return paths, accepted
+            accepted_paths.add(path)
+    return paths, accepted_paths
 
 
 def _expected_member_coords(
@@ -132,14 +132,10 @@ def _canonical_member_coords(
     prefix: str,
 ) -> tuple[
     set[tuple[str, str, str, str]],
-    int,
-    int,
-    int,
+    set[tuple[str, str, str, str]],
 ]:
     coords: set[tuple[str, str, str, str]] = set()
-    fields = 0
-    methods = 0
-    accepted = 0
+    accepted_coords: set[tuple[str, str, str, str]] = set()
 
     for record in member_lineage.get("members", []):
         entries = [
@@ -171,18 +167,14 @@ def _canonical_member_coords(
             str(entry.get("descriptor", "")),
         )
         coords.add(coord)
-        if kind == "field":
-            fields += 1
-        elif kind == "method":
-            methods += 1
-        else:
+        if kind not in {"field", "method"}:
             raise UpdateFinalizeError(
                 f"unsupported canonical member kind {kind!r}"
             )
         if record.get("semantic_status") == "ACCEPTED":
-            accepted += 1
+            accepted_coords.add(coord)
 
-    return coords, fields, methods, accepted
+    return coords, accepted_coords
 
 
 def _relevant_unresolved(
@@ -279,7 +271,7 @@ def build_authority_candidate_report(
         for path in target_index.get("classes", {})
         if not prefix or path.startswith(prefix)
     }
-    canonical_classes, accepted_classes = _target_class_paths(
+    canonical_classes, accepted_class_paths = _target_class_paths(
         class_lineage,
         build_id,
         prefix,
@@ -299,9 +291,7 @@ def build_authority_candidate_report(
     )
     (
         canonical_members,
-        canonical_fields,
-        canonical_methods,
-        accepted_members,
+        accepted_member_coords,
     ) = _canonical_member_coords(
         member_lineage,
         build_id=build_id,
@@ -312,6 +302,20 @@ def build_authority_candidate_report(
     )
     stale_members = sorted(
         canonical_members - expected_members
+    )
+    covered_classes = canonical_classes & expected_classes
+    covered_members = canonical_members & expected_members
+    covered_fields = sum(
+        1 for row in covered_members if row[1] == "field"
+    )
+    covered_methods = sum(
+        1 for row in covered_members if row[1] == "method"
+    )
+    accepted_classes_carried = len(
+        accepted_class_paths & expected_classes
+    )
+    accepted_members_carried = len(
+        accepted_member_coords & expected_members
     )
 
     class_blockers, class_info = _relevant_unresolved(
@@ -378,7 +382,7 @@ def build_authority_candidate_report(
 
     class_coverage = (
         round(
-            len(canonical_classes & expected_classes)
+            len(covered_classes)
             / len(expected_classes)
             * 100.0,
             4,
@@ -388,7 +392,7 @@ def build_authority_candidate_report(
     )
     member_coverage = (
         round(
-            len(canonical_members & expected_members)
+            len(covered_members)
             / len(expected_members)
             * 100.0,
             4,
@@ -399,21 +403,17 @@ def build_authority_candidate_report(
 
     summary = {
         "target_classes": len(expected_classes),
-        "canonical_target_classes": len(
-            canonical_classes & expected_classes
-        ),
+        "canonical_target_classes": len(covered_classes),
         "class_coverage_percent": class_coverage,
         "target_fields": expected_fields,
-        "canonical_target_fields": canonical_fields,
+        "canonical_target_fields": covered_fields,
         "target_methods": expected_methods,
-        "canonical_target_methods": canonical_methods,
+        "canonical_target_methods": covered_methods,
         "target_members": len(expected_members),
-        "canonical_target_members": len(
-            canonical_members & expected_members
-        ),
+        "canonical_target_members": len(covered_members),
         "member_coverage_percent": member_coverage,
-        "accepted_semantic_classes_carried": accepted_classes,
-        "accepted_semantic_members_carried": accepted_members,
+        "accepted_semantic_classes_carried": accepted_classes_carried,
+        "accepted_semantic_members_carried": accepted_members_carried,
         "class_parse_errors": parse_errors,
         "blocking_unresolved_classes": len(class_blockers),
         "blocking_unresolved_members": len(member_blockers),
