@@ -63,6 +63,23 @@ The indexer reads the whole JAR and produces both exact entry hashes and a first
 name-insensitive class structural fingerprint. The matcher is deliberately conservative:
 ambiguous fingerprints are reported, never guessed.
 
+## R1 — canonical logical identities
+
+Obfuscated paths are build-local coordinates. The canonical identity layer assigns stable
+`CLIENT_CLASS_XXXXXX` IDs once from the exact v308 baseline and stores later build
+locations as lineage entries with confidence + provenance. Semantic names are a separate
+layer and may remain unknown even when cross-build identity is certain.
+
+```powershell
+spk-recovery lineage-seed .\evidence\indexes\v308.json `
+  --build-id v308 --build-number 308 --authority EXACT_CURRENT_CLIENT `
+  --out .\generated\v308.lineage.json
+
+spk-recovery lineage-validate .\generated\v308.lineage.json
+```
+
+See `docs/LINEAGE.md` and `schemas/lineage.schema.json`.
+
 ## Repository rules
 
 - Do not commit client JARs.
