@@ -17,10 +17,36 @@ class UpdateMemberTransferError(MemberLineageError):
     pass
 
 
-_TRUSTED_MEMBER_STRATEGIES = {
+_TRUSTED_METHOD_STRATEGIES = {
     "stable_symbol",
     "structural_unique",
 }
+
+_EXACT_FIELD_STRATEGY = "exact_matched_method_access_positions"
+
+
+def _trusted_member_relation(
+    *,
+    kind: str,
+    strategy: str | None,
+    class_strategy: str | None,
+) -> bool:
+    if kind == "method":
+        return strategy in _TRUSTED_METHOD_STRATEGIES
+
+    if kind == "field":
+        if strategy == _EXACT_FIELD_STRATEGY:
+            return True
+        # If the enclosing class entry is byte-identical, a same-symbol field
+        # declaration is carried by identical class bytes and is safe to reuse.
+        if (
+            class_strategy == "exact_sha256"
+            and strategy == "stable_symbol"
+        ):
+            return True
+        return False
+
+    return False
 
 
 def _canonical_owner_map(
@@ -258,6 +284,8 @@ def transfer_member_identity_candidates(
                 f"{label} must be an object"
             )
 
+        class_strategy = class_row.get("class_strategy")
+
         old_owner = _owner_internal(
             class_row.get("old_owner"),
             label=label + ".old_owner",
@@ -317,14 +345,38 @@ def transfer_member_identity_candidates(
                     )
 
                 strategy = rel.get("strategy")
-                if strategy not in _TRUSTED_MEMBER_STRATEGIES:
+                if not _trusted_member_relation(
+                    kind=kind,
+                    strategy=(
+                        str(strategy)
+                        if strategy is not None
+                        else None
+                    ),
+                    class_strategy=(
+                        str(class_strategy)
+                        if class_strategy is not None
+                        else None
+                    ),
+                ):
                     out["unresolved"].append(
                         {
                             "old_build_id": old_build_id,
                             "new_build_id": new_build_id,
                             "kind": "member_identity_review",
+                            "member_kind": kind,
                             "candidate": copy.deepcopy(rel),
                             "source": "member_identity_candidates",
+                            "reason": (
+                                "relationship evidence is below the core "
+                                "automatic-transfer threshold"
+                                if kind == "method"
+                                else (
+                                    "field relationship is not backed by "
+                                    "byte-identical enclosing class evidence "
+                                    "or exact matched-method access-position "
+                                    "evidence"
+                                )
+                            ),
                         }
                     )
                     review_only += 1
