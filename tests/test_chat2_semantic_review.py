@@ -60,6 +60,27 @@ CLASS_COORDS = [
     ("CLIENT_CLASS_000674", "rs/n/c/u"),
     ("CLIENT_CLASS_000675", "rs/n/c/v"),
     ("CLIENT_CLASS_000679", "rs/n/c/z"),
+
+    ("CLIENT_CLASS_000548", "rs/n/c/C"),
+    ("CLIENT_CLASS_000551", "rs/n/c/F"),
+    ("CLIENT_CLASS_000553", "rs/n/c/H"),
+    ("CLIENT_CLASS_000555", "rs/n/c/J"),
+    ("CLIENT_CLASS_000560", "rs/n/c/N"),
+    ("CLIENT_CLASS_000566", "rs/n/c/T"),
+    ("CLIENT_CLASS_000572", "rs/n/c/Z"),
+    ("CLIENT_CLASS_000592", "rs/n/c/aQ"),
+    ("CLIENT_CLASS_000594", "rs/n/c/aS"),
+    ("CLIENT_CLASS_000598", "rs/n/c/aW"),
+    ("CLIENT_CLASS_000601", "rs/n/c/aZ"),
+    ("CLIENT_CLASS_000608", "rs/n/c/ag"),
+    ("CLIENT_CLASS_000613", "rs/n/c/al"),
+    ("CLIENT_CLASS_000623", "rs/n/c/as"),
+    ("CLIENT_CLASS_000625", "rs/n/c/au"),
+    ("CLIENT_CLASS_000631", "rs/n/c/az"),
+    ("CLIENT_CLASS_000639", "rs/n/c/ba"),
+    ("CLIENT_CLASS_000652", "rs/n/c/d/b"),
+    ("CLIENT_CLASS_000653", "rs/n/c/d/c"),
+    ("CLIENT_CLASS_000655", "rs/n/c/d/e"),
 ]
 
 MEMBER_COORDS = [
@@ -238,11 +259,11 @@ class Chat2SemanticReviewIntegrationTests(unittest.TestCase):
             candidates,
         )
 
-        self.assertEqual(actual["proposal_count"], 45)
+        self.assertEqual(actual["proposal_count"], 65)
         self.assertEqual(actual["unresolved"], [])
         self.assertEqual(
             actual["review_id"],
-            "SEMREVIEW_E471CA15CA95C7CD00A7",
+            "SEMREVIEW_1D05C99BCABD6CB508EF",
         )
         self.assertEqual(actual, expected)
 
