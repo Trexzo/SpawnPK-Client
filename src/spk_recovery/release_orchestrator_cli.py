@@ -25,7 +25,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("member_lineage", type=Path)
     p.add_argument("decompiler_jar", type=Path)
     p.add_argument("--decompiler-sha256", required=True)
-    p.add_argument("--engine", choices=["cfr", "vineflower"], required=True)
+    p.add_argument("--engine", choices=["cfr", "vineflower", "procyon"], required=True)
     p.add_argument("--build-id", required=True)
     p.add_argument("--target-package", default="recovered/spawnpk/client")
     p.add_argument("--source-safe-fallback", action="store_true")
