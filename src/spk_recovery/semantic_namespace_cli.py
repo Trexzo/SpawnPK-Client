@@ -31,11 +31,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument(
         "--source-safe-fallback",
         action="store_true",
-        help="remap only residual Java class/package collision roots into a non-semantic fallback namespace",
+        help="rename residual Java class/package collision roots without changing their packages",
     )
     p.add_argument(
-        "--fallback-package",
-        default="recovered/spawnpk/fallback",
+        "--fallback-name-prefix",
+        default="Recovered_",
     )
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args(argv)
@@ -48,7 +48,7 @@ def main(argv: list[str] | None = None) -> int:
             build_id=args.build_id,
             target_package=args.target_package,
             source_safe_fallback=args.source_safe_fallback,
-            fallback_package=args.fallback_package,
+            fallback_name_prefix=args.fallback_name_prefix,
         )
         out = args.out_dir.resolve()
         write_json(manifest, out / "semantic-namespace.json")
