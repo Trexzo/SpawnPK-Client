@@ -214,7 +214,7 @@ def build_semantic_namespace(
     source_safe_fallback: bool = False,
     fallback_package: str = "recovered/spawnpk/fallback",
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
-    """Build verified remap plans from canonical ACCEPTED semantic names only."""
+    """Build semantic remaps plus optional non-semantic Java source-safety remaps."""
     validate_lineage(class_lineage)
     validate_member_lineage(
         member_lineage,
@@ -364,6 +364,7 @@ def build_semantic_namespace(
             "members_remapped": member_plan["member_count"],
         },
         "accepted_class_ids": accepted_class_ids,
+        "fallback_remaps": fallback_rows,
     }
     return manifest, class_plan, member_plan
 
