@@ -12,7 +12,12 @@ from .decompiler import (
     run_decompiler,
     write_json as write_decompiler_json,
 )
-from .update_orchestrator import (\n    UpdateOrchestratorError,\n    migrate_update,\n)\nfrom .update_finalize import (\n    UpdateFinalizeError,
+from .update_orchestrator import (
+    UpdateOrchestratorError,
+    migrate_update,
+)
+from .update_finalize import (
+    UpdateFinalizeError,
     build_authority_candidate_report,
     write_authority_candidate_report,
 )
