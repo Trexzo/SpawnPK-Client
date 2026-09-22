@@ -89,6 +89,82 @@ def _class_package_collision_roots(names: dict[str, str]) -> dict[str, list[str]
     }
 
 
+def _accepted_nested_class_closure(
+    class_lineage: dict[str, Any],
+    *,
+    build_id: str,
+    requested: dict[str, Any],
+    accepted_ids: list[str],
+) -> list[dict[str, Any]]:
+    """Keep binary nested-class names coupled to ACCEPTED outer remaps."""
+    records_by_id: dict[str, dict[str, Any]] = {}
+    records_by_source: dict[str, dict[str, Any]] = {}
+    for record in class_lineage.get("classes", []):
+        if not _has_build_entry(record, build_id):
+            continue
+        logical_id = str(record.get("logical_id"))
+        source = str(_entry_for_build(record, build_id)["internal_name"])
+        records_by_id[logical_id] = record
+        records_by_source[source] = record
+
+    rows: list[dict[str, Any]] = []
+    for outer_id in sorted(accepted_ids):
+        outer = records_by_id[outer_id]
+        outer_source = str(_entry_for_build(outer, build_id)["internal_name"])
+        outer_target = str(requested[outer_id]["target_internal_name"])
+        prefix = outer_source + "$"
+
+        for nested_source in sorted(
+            name for name in records_by_source if name.startswith(prefix)
+        ):
+            nested = records_by_source[nested_source]
+            nested_id = str(nested.get("logical_id"))
+            suffix = nested_source[len(outer_source):]
+            required_target = outer_target + suffix
+            existing = requested.get(nested_id)
+
+            if existing is not None:
+                existing_target = str(existing["target_internal_name"])
+                if existing_target != required_target:
+                    if nested.get("semantic_status") == "ACCEPTED":
+                        raise SemanticNamespaceError(
+                            f"{nested_id}: accepted nested semantic target "
+                            f"{existing_target!r} conflicts with required binary "
+                            f"nesting target {required_target!r} from {outer_id}"
+                        )
+                    raise SemanticNamespaceError(
+                        f"{nested_id}: nested class already has incompatible "
+                        f"target {existing_target!r}"
+                    )
+                continue
+
+            requested[nested_id] = {
+                "target_internal_name": required_target,
+                "confidence": 1.0,
+                "provenance": [
+                    {
+                        "kind": "source_safety",
+                        "reason": "semantic_outer_nested_class_closure",
+                        "strategy": "preserve_outer_inner_binary_name",
+                        "accepted_outer_logical_id": outer_id,
+                        "accepted_outer_source": outer_source,
+                        "accepted_outer_target": outer_target,
+                    }
+                ],
+            }
+            rows.append(
+                {
+                    "logical_id": nested_id,
+                    "source_internal_name": nested_source,
+                    "target_internal_name": required_target,
+                    "reason": "semantic_outer_nested_class_closure",
+                    "strategy": "preserve_outer_inner_binary_name",
+                    "accepted_outer_logical_id": outer_id,
+                }
+            )
+    return rows
+
+
 def _accepted_class_spec(
     class_lineage: dict[str, Any],
     *,
@@ -97,7 +173,12 @@ def _accepted_class_spec(
     target_package: str,
     source_safe_fallback: bool,
     fallback_name_prefix: str,
-) -> tuple[dict[str, Any], list[str], list[dict[str, Any]]]:
+) -> tuple[
+    dict[str, Any],
+    list[str],
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+]:
     requested: dict[str, Any] = {}
     accepted_ids: list[str] = []
 
@@ -136,6 +217,13 @@ def _accepted_class_spec(
             "provenance": provenance,
         }
         accepted_ids.append(logical_id)
+
+    nested_rows = _accepted_nested_class_closure(
+        class_lineage,
+        build_id=build_id,
+        requested=requested,
+        accepted_ids=accepted_ids,
+    )
 
     fallback_rows: list[dict[str, Any]] = []
     if source_safe_fallback:
@@ -210,7 +298,7 @@ def _accepted_class_spec(
         "source_sha256": source_sha256,
         "classes": requested,
     }
-    return spec, sorted(accepted_ids), fallback_rows
+    return spec, sorted(accepted_ids), fallback_rows, nested_rows
 
 
 def build_semantic_namespace(
@@ -256,7 +344,12 @@ def build_semantic_namespace(
             f"invalid fallback name prefix {fallback_name_prefix!r}"
         )
 
-    class_spec, accepted_class_ids, fallback_rows = _accepted_class_spec(
+    (
+        class_spec,
+        accepted_class_ids,
+        fallback_rows,
+        nested_rows,
+    ) = _accepted_class_spec(
         class_lineage,
         build_id=build_id,
         source_sha256=source_sha,
@@ -336,10 +429,10 @@ def build_semantic_namespace(
         "source_safe_fallback": source_safe_fallback,
         "fallback_name_prefix": fallback_name_prefix,
         "fallback_remaps": fallback_rows,
+        "nested_class_closure_remaps": nested_rows,
         "class_plan_digest": class_plan_digest,
         "member_plan_digest": member_plan_digest,
         "accepted_class_ids": accepted_class_ids,
-        "fallback_remaps": fallback_rows,
     }
 
     manifest = {
@@ -357,6 +450,7 @@ def build_semantic_namespace(
         "member_plan_digest": member_plan_digest,
         "summary": {
             "source_safety_fallbacks": len(fallback_rows),
+            "source_safety_nested_class_remaps": len(nested_rows),
             "classes_total": len(build_classes),
             "classes_accepted": accepted_classes,
             "classes_remapped": class_plan["class_count"],
@@ -372,6 +466,7 @@ def build_semantic_namespace(
         },
         "accepted_class_ids": accepted_class_ids,
         "fallback_remaps": fallback_rows,
+        "nested_class_closure_remaps": nested_rows,
     }
     return manifest, class_plan, member_plan
 
