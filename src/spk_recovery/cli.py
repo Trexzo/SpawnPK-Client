@@ -16,6 +16,12 @@ from .remap_plan import (
     remap_risk_scan,
     write_json,
 )
+from .semantic_review import (
+    SemanticReviewError,
+    accept_semantic_proposals,
+    resolve_semantic_candidates,
+    write_json as write_semantic_json,
+)
 from .member_lineage import (
     MemberLineageError,
     load_member_lineage,
@@ -224,6 +230,54 @@ def main(argv: list[str] | None = None) -> int:
         print("SPK_RECOVERY_LINEAGE_VALIDATE_PASS")
         for k, v in summary.items():
             print(f"{k}={v}")
+        return 0
+
+    if args.cmd == "semantic-resolve":
+        try:
+            review = resolve_semantic_candidates(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.candidates),
+            )
+            write_semantic_json(review, args.out)
+        except (
+            SemanticReviewError,
+            LineageValidationError,
+            MemberLineageError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_SEMANTIC_RESOLVE_PASS")
+        print(f"review_id={review['review_id']}")
+        print(f"proposals={review['proposal_count']}")
+        print(f"unresolved={len(review['unresolved'])}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "semantic-accept":
+        try:
+            out_classes, out_members, summary = accept_semantic_proposals(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.review),
+                _load(args.acceptance),
+            )
+            write_lineage(out_classes, args.class_out)
+            write_member_lineage(out_members, args.member_out)
+        except (
+            SemanticReviewError,
+            LineageValidationError,
+            MemberLineageError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_SEMANTIC_ACCEPT_PASS")
+        for k, v in summary.items():
+            print(f"{k}={v}")
+        print(f"class_out={args.class_out}")
+        print(f"member_out={args.member_out}")
         return 0
 
     if args.cmd == "lineage-apply-candidates":
