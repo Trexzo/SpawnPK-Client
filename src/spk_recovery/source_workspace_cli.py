@@ -18,7 +18,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("readable_jar", type=Path)
     p.add_argument("decompiler_jar", type=Path)
     p.add_argument("--decompiler-sha256", required=True)
-    p.add_argument("--engine", choices=["cfr", "vineflower"], required=True)
+    p.add_argument("--engine", choices=["cfr", "vineflower", "procyon"], required=True)
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args(argv)
 

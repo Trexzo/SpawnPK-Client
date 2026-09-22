@@ -387,12 +387,12 @@ def main(argv: list[str] | None = None) -> int:
 
     rd = sub.add_parser(
         "decompile",
-        help="Run a hash-pinned CFR or Vineflower JAR against a transformed client",
+        help="Run a hash-pinned CFR, Vineflower, or Procyon JAR against a transformed client",
     )
     rd.add_argument("input_jar", type=Path)
     rd.add_argument("decompiler_jar", type=Path)
     rd.add_argument("--decompiler-sha256", required=True)
-    rd.add_argument("--engine", choices=["cfr", "vineflower"], required=True)
+    rd.add_argument("--engine", choices=["cfr", "vineflower", "procyon"], required=True)
     rd.add_argument("--out-dir", type=Path, required=True)
     rd.add_argument("--clean-out", action="store_true")
     rd.add_argument("--result-out", type=Path)

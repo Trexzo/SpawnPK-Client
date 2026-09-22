@@ -64,6 +64,21 @@ spk-recovery decompile `
   --out-dir .\generated\decompiled-v308
 ```
 
+Procyon is also supported as a third hash-pinned engine. Whole-JAR invocation follows
+the upstream Procyon CLI contract (`-jar <input> -o <output>`):
+
+```powershell
+spk-recovery decompile `
+  .\\generated\\client-v308-readable.jar `
+  .\\tools\\procyon-decompiler-0.6.0.jar `
+  --decompiler-sha256 <EXACT_SHA256> `
+  --engine procyon `
+  --out-dir .\\generated\\decompiled-v308
+```
+
+R5A still scans generated Java for decompiler failure markers, so a zero process exit code
+from any engine does not by itself make the recovered source acceptable.
+
 The output directory must be empty unless `--clean-out` is explicitly supplied. The
 adapter refuses a decompiler hash mismatch and refuses success if no `.java` files were
 created.

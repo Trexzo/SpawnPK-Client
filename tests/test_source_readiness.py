@@ -96,6 +96,25 @@ class SourceReadinessTests(unittest.TestCase):
                 1,
             )
 
+
+    def test_procyon_inline_failure_marker_is_high(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "A.java").write_text(
+                "public class A {\n"
+                "    // This method could not be decompiled.\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            manifest = _manifest(root)
+            manifest["engine"] = "procyon"
+            report = audit_source_workspace(manifest, root)
+            self.assertFalse(report["summary"]["static_readiness_pass"])
+            self.assertEqual(
+                report["issue_counts"]["decompiler_failure_marker"],
+                1,
+            )
+
     def test_source_tree_drift_is_rejected(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

@@ -35,6 +35,16 @@ public class FakeDecompiler {
             }
         }
         if (out == null) {
+            for (int i = 0; i < args.length - 1; i++) {
+                if (args[i].equals("-o")) {
+                    if (args.length < 4 || !args[0].equals("-jar")) {
+                        throw new IllegalArgumentException("bad procyon jar form");
+                    }
+                    out = Paths.get(args[i + 1]);
+                }
+            }
+        }
+        if (out == null) {
             out = Paths.get(args[args.length - 1]);
         }
         Files.createDirectories(out);
@@ -79,7 +89,7 @@ public class FakeDecompiler {
             z.writestr("placeholder.txt", "x")
         return path
 
-    def test_cfr_and_vineflower_shapes_are_supported(self):
+    def test_cfr_vineflower_and_procyon_shapes_are_supported(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             tool = self._fake_decompiler(root)
@@ -100,8 +110,17 @@ public class FakeDecompiler {
                 engine="vineflower",
                 out_dir=root / "vine-out",
             )
+            procyon = run_decompiler(
+                source,
+                tool,
+                expected_decompiler_sha256=sha,
+                engine="procyon",
+                out_dir=root / "procyon-out",
+            )
             self.assertEqual(cfr["java_file_count"], 1)
             self.assertEqual(vine["java_file_count"], 1)
+            self.assertEqual(procyon["java_file_count"], 1)
+            self.assertEqual(procyon["engine"], "procyon")
 
     def test_wrong_decompiler_hash_is_rejected(self):
         with tempfile.TemporaryDirectory() as td:

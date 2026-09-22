@@ -52,9 +52,9 @@ def run_decompiler(
         )
 
     engine = engine.lower()
-    if engine not in {"cfr", "vineflower"}:
+    if engine not in {"cfr", "vineflower", "procyon"}:
         raise DecompilerError(
-            "engine must be one of: cfr, vineflower"
+            "engine must be one of: cfr, vineflower, procyon"
         )
 
     if out_dir.exists():
@@ -81,12 +81,24 @@ def run_decompiler(
             "--outputdir",
             str(out_dir),
         ]
-    else:
+    elif engine == "vineflower":
         cmd = [
             java,
             "-jar",
             str(decompiler_jar),
             str(input_jar),
+            str(out_dir),
+        ]
+    else:
+        # Official Procyon whole-JAR form:
+        # java -jar decompiler.jar -jar input.jar -o out
+        cmd = [
+            java,
+            "-jar",
+            str(decompiler_jar),
+            "-jar",
+            str(input_jar),
+            "-o",
             str(out_dir),
         ]
 
