@@ -25,6 +25,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("source_root", type=Path)
     p.add_argument("--javac-command", default="javac")
     p.add_argument("--batch-size", type=int, default=64)
+    p.add_argument(
+        "--source-prefix",
+        action="append",
+        dest="source_prefixes",
+        help="Project source path prefix; repeatable. Defaults to rs/ plus the readable semantic target package.",
+    )
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args(argv)
 
@@ -39,6 +45,7 @@ def main(argv: list[str] | None = None) -> int:
             out_dir=args.out_dir,
             javac_command=args.javac_command,
             batch_size=args.batch_size,
+            source_prefixes=args.source_prefixes,
         )
     except (
         ProgressiveCompileError,
