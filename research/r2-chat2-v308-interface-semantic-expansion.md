@@ -11,16 +11,22 @@ No private research text is copied into this public repository.
 
 ## New class role candidates
 
+The stable IDs below were re-derived from the canonical R1 v308 seed ordering and then
+resolved again through the R2C2 semantic-review boundary.
+
 | Logical ID | Raw v308 class | Candidate | Direct v308 evidence |
 | --- | --- | --- | --- |
-| `CLIENT_CLASS_000642` | `rs/n/c/c` | `AdventureBookInterface` | Next/Previous chapter, Chapter Progress, Claim rewards, Tips & Information, Teleport to Task, Claim reward |
+| `CLIENT_CLASS_000640` | `rs/n/c/c` | `AdventureBookInterface` | Next/Previous chapter, Chapter Progress, Claim rewards, Tips & Information, Teleport to Task, Claim reward |
 | `CLIENT_CLASS_000587` | `rs/n/c/aL` | `RaidPartySetupInterface` | Raiding Party Set-up, Chambers of Xeric, Theatre of Blood, raid difficulties, invite/remove/start/leave controls, `raids/sprite` |
 | `CLIENT_CLASS_000626` | `rs/n/c/av` | `DailyMoneyMakingInterface` | Daily Money Making Activities, reward bonus, Easy/Medium/Hard task labels, Track and Teleport |
-| `CLIENT_CLASS_000633` | `rs/n/c/b` | `DailyChallengesInterface` | Daily Challenges, Collect reward, View information and challenge task text |
+| `CLIENT_CLASS_000632` | `rs/n/c/b` | `DailyChallengesInterface` | Daily Challenges, Collect reward, View information and challenge task text |
 | `CLIENT_CLASS_000552` | `rs/n/c/G` | `ItemEnchantmentInterface` | Item Enchantment Chest, Enchantments, Select enchantment/item/category, Attempt Enchantment, success/failure presentation |
 | `CLIENT_CLASS_000679` | `rs/n/c/z` | `ConstructionRoomSelectionInterface` | exact room/level list from Parlour through Treasure room plus `construction/sprite` |
 | `CLIENT_CLASS_000675` | `rs/n/c/v` | `CollectionLogInterface` | Collection Log, category labels, Select collection log, Collection name, Obtained, Kill count, `drops/collection` assets |
 | `CLIENT_CLASS_000614` | `rs/n/c/am` | `WelcomeBackInterface` | Welcome back, Play now, daily-login reward copy and `misc/login` assets |
+
+The initial `AdventureOrbRenderer` candidate resolves separately to
+`CLIENT_CLASS_000297` / `rs/i/b`.
 
 Each class also has a unique R1 structural lineage relationship between the alternate
 lineage and exact v308.
@@ -43,7 +49,9 @@ After this pass:
 - class semantic candidates: **9**
 - member semantic candidates: **7**
 - total semantic candidates: **16**
-- class remap proposals keyed by stable logical ID: **9**
-- member remap proposals keyed by stable owner logical ID + exact descriptor: **7**
+- R2C2 resolved proposals: **16**
+- R2C2 unresolved candidates: **0**
+- semantic review ID: `SEMREVIEW_2271674067C2B1C69D77`
 
-All remain non-canonical and require an explicit integration decision before remapping.
+All remain non-canonical. R2C2 requires a separate explicit acceptance specification before
+any proposal becomes `ACCEPTED`.
