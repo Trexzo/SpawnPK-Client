@@ -1,0 +1,25 @@
+name: Temporary Vineflower export
+
+on:
+  push:
+    branches:
+      - chat1/temp-source-export-578dd325
+
+permissions:
+  contents: read
+
+jobs:
+  export-vineflower:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download official Vineflower 1.12.0 release
+        run: |
+          curl -fL --retry 3 -o vineflower-1.12.0.jar https://github.com/Vineflower/vineflower/releases/download/1.12.0/vineflower-1.12.0.jar
+          echo "1dfcfe974395734fa467ce620661c7623d05ba83670de0529b1fbd63ff548b9d  vineflower-1.12.0.jar" | sha256sum -c -
+      - name: Upload pinned Vineflower
+        uses: actions/upload-artifact@v4
+        with:
+          name: vineflower-1.12.0-pinned
+          path: vineflower-1.12.0.jar
+          if-no-files-found: error
+          retention-days: 1
