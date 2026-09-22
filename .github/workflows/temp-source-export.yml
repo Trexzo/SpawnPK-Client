@@ -1,0 +1,37 @@
+name: Temporary source export
+
+on:
+  push:
+    branches:
+      - chat1/temp-source-export-578dd325
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload public recovery source snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: spawnpk-client-source-578dd325
+          if-no-files-found: error
+          retention-days: 1
+          path: |
+            pyproject.toml
+            README.md
+            BOOTSTRAP.ps1
+            INDEX_V308.ps1
+            authority
+            docs
+            evidence
+            generated
+            mappings
+            reports
+            research
+            schemas
+            scripts
+            src
+            tests
