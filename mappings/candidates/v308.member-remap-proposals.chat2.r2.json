@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "kind": "member_remap_proposals",
+  "canonical": false,
+  "build_id": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "minimum_confidence": 0.9,
+  "proposal_count": 7,
+  "proposals": [
+    {
+      "owner_logical_id": "CLIENT_CLASS_000030",
+      "owner_internal_name": "rs/Client",
+      "member_kind": "method",
+      "source_name": "a",
+      "source_descriptor": "(J)V",
+      "proposed_name": "addFriend",
+      "confidence": 0.995,
+      "provenance": [{"source":"semantic_name_candidate","source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","evidence":["opcode 188 + supplied i64 key","friend-list preflight/state append"]}]
+    },
+    {
+      "owner_logical_id": "CLIENT_CLASS_000030",
+      "owner_internal_name": "rs/Client",
+      "member_kind": "method",
+      "source_name": "f",
+      "source_descriptor": "(J)V",
+      "proposed_name": "removeFriend",
+      "confidence": 0.992,
+      "provenance": [{"source":"semantic_name_candidate","source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","evidence":["opcode 215 + supplied i64 key","friend-state removal/compaction"]}]
+    },
+    {
+      "owner_logical_id": "CLIENT_CLASS_000030",
+      "owner_internal_name": "rs/Client",
+      "member_kind": "method",
+      "source_name": "h",
+      "source_descriptor": "(J)V",
+      "proposed_name": "addIgnore",
+      "confidence": 0.995,
+      "provenance": [{"source":"semantic_name_candidate","source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","evidence":["opcode 133 + supplied i64 key","ignore-list preflight/state append"]}]
+    },
+    {
+      "owner_logical_id": "CLIENT_CLASS_000030",
+      "owner_internal_name": "rs/Client",
+      "member_kind": "method",
+      "source_name": "i",
+      "source_descriptor": "(J)V",
+      "proposed_name": "removeIgnore",
+      "confidence": 0.992,
+      "provenance": [{"source":"semantic_name_candidate","source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","evidence":["opcode 74 + supplied i64 key","ignore-state removal/compaction"]}]
+    },
+    {
+      "owner_logical_id": "CLIENT_CLASS_000030",
+      "owner_internal_name": "rs/Client",
+      "member_kind": "field",
+      "source_name": "P",
+      "source_descriptor": "I",
+      "proposed_name": "loginRewardContainerIndex",
+      "confidence": 0.995,
+      "provenance": [{"source":"semantic_name_candidate","source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","evidence":["LOGIN_REWARD_IDX setter","50600/50615 renderer join"]}]
+    },
+    {
+      "owner_logical_id": "CLIENT_CLASS_000299",
+      "owner_internal_name": "rs/i/b",
+      "member_kind": "field",
+      "source_name": "f",
+      "source_descriptor": "Lrs/l/F;",
+      "proposed_name": "adventureOrbSprite",
+      "confidence": 0.901,
+      "provenance": [{"source":"semantic_name_candidate","source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","evidence":["constructor assignment from orbs/adventure_orb"]}]
+    },
+    {
+      "owner_logical_id": "CLIENT_CLASS_000299",
+      "owner_internal_name": "rs/i/b",
+      "member_kind": "field",
+      "source_name": "g",
+      "source_descriptor": "Lrs/l/F;",
+      "proposed_name": "adventureOrbHoverSprite",
+      "confidence": 0.901,
+      "provenance": [{"source":"semantic_name_candidate","source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","evidence":["constructor assignment from orbs/adventure_orb_hover"]}]
+    }
+  ],
+  "unresolved": []
+}
