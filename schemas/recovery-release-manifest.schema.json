@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/recovery-release-manifest.schema.json",
+  "title": "SpawnPK recovery release manifest",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "release_id",
+    "build_id",
+    "authority_sha256",
+    "namespace_id",
+    "readable_jar_sha256",
+    "recovered_workspace_id",
+    "final_workspace_id",
+    "final_source_tree_sha256",
+    "source_state",
+    "ready_for_release",
+    "blockers",
+    "authority_pins",
+    "stage_ids",
+    "note"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "recovery_release_manifest"},
+    "release_id": {
+      "type": "string",
+      "pattern": "^RECOVERY_[0-9A-F]{20}$"
+    },
+    "build_id": {"type": "string", "minLength": 1},
+    "authority_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "namespace_id": {"type": "string"},
+    "readable_jar_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "recovered_workspace_id": {"type": "string"},
+    "final_workspace_id": {"type": "string"},
+    "final_source_tree_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "source_state": {"enum": ["recovered", "rewritten"]},
+    "ready_for_release": {"type": "boolean"},
+    "blockers": {"type": "array"},
+    "authority_pins": {"type": "object"},
+    "stage_ids": {"type": "object"},
+    "note": {"type": "string"}
+  },
+  "additionalProperties": false
+}
