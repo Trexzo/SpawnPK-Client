@@ -118,6 +118,7 @@ def migrate_update_to_release(
     allow_package_resource_risk: bool = False,
     rewrite_class_name_strings: bool = False,
     source_prefixes: list[str] | None = None,
+    project_source_only: bool = False,
 ) -> dict[str, Any]:
     out_dir = out_dir.resolve()
     if out_dir.exists() and any(out_dir.iterdir()):
@@ -268,6 +269,7 @@ def migrate_update_to_release(
             allow_package_resource_risk=allow_package_resource_risk,
             rewrite_class_name_strings=rewrite_class_name_strings,
             source_prefixes=source_prefixes,
+        project_source_only=project_source_only,
         )
     except ExistingAuthorityReleaseError as exc:
         raise UpdateReleaseError(str(exc)) from exc
