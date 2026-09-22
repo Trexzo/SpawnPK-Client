@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from .delta_classify import classify_member_deltas
+from .field_proof import prove_and_apply_fields
 from .lineage import validate_lineage, write_lineage
 from .member_lineage import validate_member_lineage, write_member_lineage
 from .update_finalize import build_authority_candidate_report
@@ -150,6 +151,7 @@ def migrate_update(
     out_dir: Path,
     scope_prefix: str = "rs/",
     member_candidates: dict[str, Any] | None = None,
+    old_jar: Path | None = None,
     new_authority: str = "CROSS_BUILD",
 ) -> dict[str, Any]:
     """Run the safe automatic portion of a client-version migration.
@@ -211,10 +213,44 @@ def migrate_update(
             "status": "member_candidates_not_supplied",
         }
 
+    field_proof = None
+    field_proof_summary: dict[str, Any] = {
+        "status": "not_requested",
+        "proofs": 0,
+        "applied_fields": 0,
+        "already_present": 0,
+        "unresolved_removed": 0,
+    }
+    if old_jar is not None:
+        if member_candidates is None:
+            field_proof_summary["status"] = (
+                "member_candidates_required_before_field_proof"
+            )
+        else:
+            (
+                migrated_members,
+                field_proof,
+                field_proof_summary,
+            ) = prove_and_apply_fields(
+                migrated_classes,
+                migrated_members,
+                old_index,
+                new_index,
+                old_jar,
+                new_jar,
+                old_build_id=old_build_id,
+                new_build_id=new_build_id,
+            )
+            field_proof_summary = {
+                "status": "applied",
+                **field_proof_summary,
+            }
+
     class_path = out_dir / "class-lineage.json"
     member_path = out_dir / "member-lineage.json"
     class_summary_path = out_dir / "class-transfer-summary.json"
     member_summary_path = out_dir / "member-transfer-summary.json"
+    field_proof_path = out_dir / "field-position-proof.json"
     authority_path = out_dir / "authority-candidate.json"
     delta_path = out_dir / "delta-report.json"
     queue_path = out_dir / "focused-analysis-queue.json"
@@ -224,6 +260,8 @@ def migrate_update(
     write_member_lineage(migrated_members, member_path)
     _dump(class_summary_path, class_summary)
     _dump(member_summary_path, member_summary)
+    if field_proof is not None:
+        _dump(field_proof_path, field_proof)
 
     member_delta_report = (
         classify_member_deltas(member_candidates)
@@ -292,6 +330,7 @@ def migrate_update(
         "new_build_id": new_build_id,
         "class_transfer_summary": class_summary,
         "member_transfer_summary": member_summary,
+        "field_proof_summary": field_proof_summary,
         "class_delta_summary": intake["class_delta_report"]["summary"],
         "member_delta_summary": member_delta_report["summary"],
         "authority_report_id": authority["report_id"],
@@ -318,6 +357,11 @@ def migrate_update(
             "member_lineage": str(member_path),
             "class_transfer_summary": str(class_summary_path),
             "member_transfer_summary": str(member_summary_path),
+            **(
+                {"field_position_proof": str(field_proof_path)}
+                if field_proof is not None
+                else {}
+            ),
             "delta_report": str(delta_path),
             "authority_candidate": str(authority_path),
             "focused_analysis_queue": str(queue_path),
