@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/recovery-release-verification.schema.json",
+  "title": "SpawnPK recovery release reproducibility verification",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "verification_id",
+    "release_id",
+    "release_ready",
+    "verified",
+    "required_check_count",
+    "failed_required_check_count",
+    "checks",
+    "toolchain_probe",
+    "note"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "recovery_release_verification"},
+    "verification_id": {
+      "type": "string",
+      "pattern": "^REPRO_[0-9A-F]{20}$"
+    },
+    "release_id": {"type": ["string", "null"]},
+    "release_ready": {"type": "boolean"},
+    "verified": {"type": "boolean"},
+    "required_check_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "failed_required_check_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "checks": {"type": "array"},
+    "toolchain_probe": {
+      "type": ["object", "null"]
+    },
+    "note": {"type": "string"}
+  },
+  "additionalProperties": false
+}
