@@ -35,6 +35,16 @@ public class FakeDecompiler {
             }
         }
         if (out == null) {
+            for (int i = 0; i < args.length - 1; i++) {
+                if (args[i].equals("-o")) {
+                    if (args.length < 4 || !args[0].equals("-jar")) {
+                        throw new IllegalArgumentException("bad procyon jar form");
+                    }
+                    out = Paths.get(args[i + 1]);
+                }
+            }
+        }
+        if (out == null) {
             out = Paths.get(args[args.length - 1]);
         }
         Files.createDirectories(out);
