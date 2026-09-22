@@ -319,5 +319,56 @@ class UpdateFinalizeTests(unittest.TestCase):
         self.assertEqual(a["report_id"], b["report_id"])
 
 
+    def test_member_identity_review_blocks_authority(self):
+        members = _member_lineage()
+        members["unresolved"].append(
+            {
+                "old_build_id": "v308",
+                "new_build_id": "v309",
+                "kind": "member_identity_review",
+                "member_kind": "field",
+                "candidate": {
+                    "old": {
+                        "name": "bI",
+                        "descriptor": "I",
+                    },
+                    "new": {
+                        "name": "bI",
+                        "descriptor": "I",
+                    },
+                    "strategy": "stable_symbol",
+                },
+                "source": "member_identity_candidates",
+                "reason": (
+                    "field relationship requires review because the enclosing "
+                    "class changed and there is no exact matched-method "
+                    "access-position evidence"
+                ),
+            }
+        )
+
+        report = build_authority_candidate_report(
+            _class_lineage(),
+            members,
+            _index(),
+            _intake(),
+            build_id="v309",
+        )
+
+        self.assertFalse(report["ready_for_authority"])
+        self.assertEqual(
+            report["summary"]["blocking_unresolved_members"],
+            1,
+        )
+        self.assertEqual(
+            report["blocking_member_unresolved"][0]["kind"],
+            "member_identity_review",
+        )
+        self.assertIn(
+            "member_unresolved_blockers",
+            {row["kind"] for row in report["blockers"]},
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
