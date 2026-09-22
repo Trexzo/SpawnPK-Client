@@ -12,6 +12,11 @@ from .decompiler import (
     run_decompiler,
     write_json as write_decompiler_json,
 )
+from .update_member_transfer import (
+    UpdateMemberTransferError,
+    transfer_member_identity_candidates,
+    write_member_transfer_result,
+)
 from .update_transfer import (
     UpdateTransferError,
     transfer_trusted_class_lineage,
@@ -118,6 +123,20 @@ def main(argv: list[str] | None = None) -> int:
     put.add_argument("--new-authority", default="CROSS_BUILD")
     put.add_argument("--out", type=Path, required=True)
     put.add_argument("--summary-out", type=Path)
+
+    pum = sub.add_parser(
+        "update-transfer-members",
+        help="Verify research member identities and append only trusted relations",
+    )
+    pum.add_argument("class_lineage", type=Path)
+    pum.add_argument("member_lineage", type=Path)
+    pum.add_argument("old_index", type=Path)
+    pum.add_argument("new_index", type=Path)
+    pum.add_argument("candidates", type=Path)
+    pum.add_argument("--old-build-id", required=True)
+    pum.add_argument("--new-build-id", required=True)
+    pum.add_argument("--out", type=Path, required=True)
+    pum.add_argument("--summary-out", type=Path)
 
     ps = sub.add_parser(
         "lineage-seed",
@@ -401,6 +420,39 @@ def main(argv: list[str] | None = None) -> int:
             print(f"REFUSED: {e}", file=sys.stderr)
             return 2
         print("SPK_RECOVERY_UPDATE_TRANSFER_CLASSES_PASS")
+        for k, v in summary.items():
+            print(f"{k}={v}")
+        print(f"out={args.out}")
+        if args.summary_out:
+            print(f"summary_out={args.summary_out}")
+        return 0
+
+    if args.cmd == "update-transfer-members":
+        try:
+            out, summary = transfer_member_identity_candidates(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.old_index),
+                _load(args.new_index),
+                _load(args.candidates),
+                old_build_id=args.old_build_id,
+                new_build_id=args.new_build_id,
+            )
+            write_member_transfer_result(
+                out,
+                summary,
+                lineage_out=args.out,
+                summary_out=args.summary_out,
+            )
+        except (
+            UpdateMemberTransferError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_UPDATE_TRANSFER_MEMBERS_PASS")
         for k, v in summary.items():
             print(f"{k}={v}")
         print(f"out={args.out}")
