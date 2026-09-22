@@ -15,6 +15,9 @@ from spk_recovery.semantic_namespace import (
 from spk_recovery.readable_build import (
     build_readable_client,
 )
+from spk_recovery.coverage_projection import (
+    project_semantic_review_coverage,
+)
 
 
 SHA = (
@@ -270,6 +273,43 @@ class Chat2SemanticReviewIntegrationTests(unittest.TestCase):
             "SEMREVIEW_1D05C99BCABD6CB508EF",
         )
         self.assertEqual(actual, expected)
+
+    def test_r4d_projects_reviewed_candidates_without_acceptance(self):
+        review = _load(
+            "mappings/candidates/"
+            "v308.semantic-review.chat2.r2.json"
+        )
+        projection = project_semantic_review_coverage(
+            _class_lineage(),
+            _member_lineage(),
+            review,
+            build_id="v308",
+        )
+
+        self.assertEqual(
+            projection["application"]["classes"],
+            58,
+        )
+        self.assertEqual(
+            projection["application"]["fields"],
+            3,
+        )
+        self.assertEqual(
+            projection["application"]["methods"],
+            4,
+        )
+        self.assertEqual(
+            projection["application"]["projected_candidate"],
+            65,
+        )
+        self.assertEqual(
+            projection["projected"]["overall"]["accepted"],
+            0,
+        )
+        self.assertEqual(
+            projection["projected"]["overall"]["candidate"],
+            65,
+        )
 
     def test_r4b_candidate_only_state_blocks_readable_build(self):
         with tempfile.TemporaryDirectory() as td:
