@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/source-rewrite-acceptance.schema.json",
+  "title": "SpawnPK rewritten-source rebuild acceptance",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "acceptance_id",
+    "accepted",
+    "rewrite_id",
+    "workspace_id",
+    "source_authority_sha256",
+    "rewritten_source_tree_sha256",
+    "source_readiness",
+    "build_authority_id",
+    "clean_rebuild",
+    "roundtrip",
+    "artifacts",
+    "note"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "source_rewrite_acceptance_report"},
+    "acceptance_id": {
+      "type": "string",
+      "pattern": "^SRCACCEPT_[0-9A-F]{20}$"
+    },
+    "accepted": {"type": "boolean"},
+    "rewrite_id": {
+      "type": ["string", "null"]
+    },
+    "source_rename_plan_id": {
+      "type": ["string", "null"]
+    },
+    "parent_workspace_id": {
+      "type": ["string", "null"]
+    },
+    "workspace_id": {
+      "type": "string",
+      "pattern": "^SRCWSR_[0-9A-F]{20}$"
+    },
+    "build_id": {
+      "type": ["string", "null"]
+    },
+    "source_authority_sha256": {
+      "type": ["string", "null"]
+    },
+    "readable_jar_sha256": {
+      "type": ["string", "null"]
+    },
+    "input_source_tree_sha256": {
+      "type": ["string", "null"]
+    },
+    "rewritten_source_tree_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "source_readiness": {"type": "object"},
+    "build_authority_id": {"type": ["string", "null"]},
+    "clean_rebuild": {"type": "object"},
+    "roundtrip": {"type": ["object", "null"]},
+    "blocker": {"type": ["object", "null"]},
+    "artifacts": {"type": "object"},
+    "note": {"type": "string"}
+  }
+}
