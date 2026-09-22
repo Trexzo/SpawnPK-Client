@@ -12,6 +12,10 @@ from .decompiler import (
     run_decompiler,
     write_json as write_decompiler_json,
 )
+from .update_orchestrator import (
+    UpdateOrchestratorError,
+    migrate_update,
+)
 from .update_finalize import (
     UpdateFinalizeError,
     build_authority_candidate_report,
@@ -158,6 +162,22 @@ def main(argv: list[str] | None = None) -> int:
     puf.add_argument("--build-id", required=True)
     puf.add_argument("--scope-prefix")
     puf.add_argument("--out", type=Path, required=True)
+
+    pum = sub.add_parser(
+        "update-migrate",
+        help="Run the safe automatic client-update migration pipeline into one workspace",
+    )
+    pum.add_argument("old_index", type=Path)
+    pum.add_argument("new_jar", type=Path)
+    pum.add_argument("class_lineage", type=Path)
+    pum.add_argument("member_lineage", type=Path)
+    pum.add_argument("--old-build-id", required=True)
+    pum.add_argument("--new-build-id", required=True)
+    pum.add_argument("--new-build-number", type=int)
+    pum.add_argument("--scope-prefix", default="rs/")
+    pum.add_argument("--member-candidates", type=Path)
+    pum.add_argument("--new-authority", default="CROSS_BUILD")
+    pum.add_argument("--out-dir", type=Path, required=True)
 
     ps = sub.add_parser(
         "lineage-seed",
@@ -524,6 +544,50 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{k}={v}")
         print(f"out={args.out}")
         return 0 if report["ready_for_authority"] else 1
+
+    if args.cmd == "update-migrate":
+        try:
+            result = migrate_update(
+                _load(args.old_index),
+                args.new_jar,
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                old_build_id=args.old_build_id,
+                new_build_id=args.new_build_id,
+                new_build_number=args.new_build_number,
+                out_dir=args.out_dir,
+                scope_prefix=args.scope_prefix,
+                member_candidates=(
+                    _load(args.member_candidates)
+                    if args.member_candidates
+                    else None
+                ),
+                new_authority=args.new_authority,
+            )
+        except (
+            UpdateOrchestratorError,
+            UpdateIntakeError,
+            UpdateTransferError,
+            UpdateMemberTransferError,
+            UpdateFinalizeError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print(
+            "SPK_RECOVERY_UPDATE_MIGRATE_PASS"
+            if result["ready_for_authority"]
+            else "SPK_RECOVERY_UPDATE_MIGRATE_BLOCKED"
+        )
+        print(f"workspace_id={result['workspace_id']}")
+        print(f"migration_id={result['migration_id']}")
+        print(f"ready_for_authority={result['ready_for_authority']}")
+        print(f"focused_analysis_items={result['focused_analysis_items']}")
+        for key, value in result["paths"].items():
+            print(f"{key}={value}")
+        return 0 if result["ready_for_authority"] else 1
 
     if args.cmd == "lineage-seed":
         try:
