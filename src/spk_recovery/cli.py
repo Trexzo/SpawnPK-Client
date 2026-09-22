@@ -9,6 +9,7 @@ from .indexer import index_jar, write_index
 from .diffing import diff_indexes
 from .canonicalize import CandidateApplicationError, apply_lineage_candidates
 from .promotion import NewClassPromotionError, promote_new_classes
+from .repack import RepackError, remap_jar, write_result
 from .remap_plan import (
     RemapPlanError,
     build_remap_plan,
@@ -115,6 +116,18 @@ def main(argv: list[str] | None = None) -> int:
     rr.add_argument("index", type=Path)
     rr.add_argument("plan", type=Path)
     rr.add_argument("--out", type=Path, required=True)
+
+    rc = sub.add_parser(
+        "class-remap",
+        help="Apply a verified class remap plan and deterministically repackage the JAR",
+    )
+    rc.add_argument("source_jar", type=Path)
+    rc.add_argument("index", type=Path)
+    rc.add_argument("plan", type=Path)
+    rc.add_argument("--out", type=Path, required=True)
+    rc.add_argument("--result-out", type=Path)
+    rc.add_argument("--rewrite-class-name-strings", action="store_true")
+    rc.add_argument("--allow-package-resource-risk", action="store_true")
 
     args = p.parse_args(argv)
     if args.cmd == "index":
@@ -320,6 +333,42 @@ def main(argv: list[str] | None = None) -> int:
         for k, v in report["summary"].items():
             print(f"{k}={v}")
         print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "class-remap":
+        try:
+            result = remap_jar(
+                args.source_jar,
+                _load(args.index),
+                _load(args.plan),
+                args.out,
+                allow_package_resource_risk=(
+                    args.allow_package_resource_risk
+                ),
+                rewrite_class_name_strings=(
+                    args.rewrite_class_name_strings
+                ),
+            )
+            if args.result_out:
+                write_result(result, args.result_out)
+        except (
+            RepackError,
+            json.JSONDecodeError,
+        ) as e:
+            print(
+                f"REFUSED: {e}",
+                file=sys.stderr,
+            )
+            return 2
+        print("SPK_RECOVERY_CLASS_REMAP_PASS")
+        print(f"source_sha256={result['source_sha256']}")
+        print(f"output_sha256={result['output_sha256']}")
+        print(f"mapped_classes={result['mapped_classes']}")
+        print(f"output_entries={result['output_entries']}")
+        print(f"class_parse_errors={result['class_parse_errors']}")
+        print(f"out={args.out}")
+        if args.result_out:
+            print(f"result_out={args.result_out}")
         return 0
 
     return 2
