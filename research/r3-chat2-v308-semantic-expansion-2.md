@@ -16,9 +16,9 @@ No original developer identifiers are claimed.
 | `CLIENT_CLASS_000670` | `rs/n/c/q` | `ClanChatInterface` | `Clan Chat`, Join Chat, Clan Setup, Manage clan member, owner/talking state, clan assets |
 | `CLIENT_CLASS_000674` | `rs/n/c/u` | `UnclaimedRewardsCofferInterface` | `Coffer of Unclaimed Rewards & Prizes`, deposit to bank/inventory, bank assets |
 
-## Updated semantic review
+## Semantic review snapshot at this pass
 
-Current Chat 2 semantic inventory:
+Inventory after this six-class pass:
 
 ```text
 class candidates   38
@@ -30,4 +30,4 @@ unresolved          0
 review_id           SEMREVIEW_E471CA15CA95C7CD00A7
 ```
 
-All remain non-canonical and require the existing explicit semantic acceptance boundary.
+A later Chat 2 pass expands this set further. All names in this snapshot remain non-canonical and require the existing explicit semantic acceptance boundary.
