@@ -8,6 +8,7 @@ import unittest
 COMMANDS = [
     "index",
     "diff",
+    "update-intake",
     "lineage-seed",
     "lineage-validate",
     "member-lineage-seed",
