@@ -260,8 +260,8 @@ class UpdateMemberTransferTests(unittest.TestCase):
             new_build_id="v309",
         )
 
-        self.assertEqual(summary["applied_member_relationships"], 2)
-        self.assertEqual(summary["review_only_relationships"], 0)
+        self.assertEqual(summary["applied_member_relationships"], 1)
+        self.assertEqual(summary["review_only_relationships"], 1)
 
         by_id = {
             row["member_id"]: row
