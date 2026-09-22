@@ -192,12 +192,21 @@ class UpdateReleaseTests(unittest.TestCase):
                     new_build_id="v309",
                     new_build_number=309,
                     out_dir=out,
+                    source_safe_fallback=True,
+                    fallback_package="recovered/test/fallback",
                 )
 
             self.assertTrue(report["ready_for_release"])
             self.assertEqual(report["terminal_stage"], "release")
             self.assertEqual(report["release_id"], "RECOVERY_TEST")
             release.assert_called_once()
+            self.assertTrue(
+                release.call_args.kwargs["source_safe_fallback"]
+            )
+            self.assertEqual(
+                release.call_args.kwargs["fallback_package"],
+                "recovered/test/fallback",
+            )
 
 
 if __name__ == "__main__":
