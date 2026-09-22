@@ -21,6 +21,8 @@ COMMANDS = [
     "member-remap-plan",
     "class-remap",
     "jar-remap",
+    "verify-remap",
+    "decompile",
 ]
 
 
