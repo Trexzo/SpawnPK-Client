@@ -2,90 +2,225 @@
 
 Version-aware recovery tooling for the obfuscated SpawnPK JVM client.
 
-The project is designed around **stable logical identities**, not whatever short names
-ProGuard emits in one release. It fingerprints every build, reuses proven mappings across
-updates, deep-analyses only real deltas, and keeps the exact client binaries outside Git.
+The project is built around **stable logical identities**, not whatever short names
+ProGuard emits in one release. It fingerprints every build, transfers proven identities
+across updates, deep-analyzes only real deltas, and keeps exact client binaries outside Git.
 
 ## Current authority
 
 Exact v308 authority:
 
-- Library artifact: `client(6).jar`
 - SHA-256: `854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`
 - Main class: `rs.gui.Launcher`
 - Build/config value: `308`
 - Outer protocol revision: `317`
 
-The existing SpawnPK-Src research established that v307 -> v308 changed one archive
-entry (`rs/f/a.class`) and one meaningful build constant (`307 -> 308`).
+The known v307 -> v308 update changed one archive entry (`rs/f/a.class`) and one
+meaningful build constant (`307 -> 308`).
 
-## Scope
+## What exists today
 
-The recovery pipeline is intentionally bytecode-first:
+The repository now has a complete core recovery/update pipeline:
 
 ```text
 exact client JAR
-  -> full index + fingerprints
-  -> cross-version logical matching
-  -> semantic mapping + provenance
-  -> whole-JAR remap/repackage
-  -> readable decompilation
-  -> selective buildable source recovery
+  -> complete index + structural fingerprints
+  -> cross-build class matching
+  -> stable CLIENT_CLASS identities
+  -> stable CLIENT_FIELD / CLIENT_METHOD identities
+  -> semantic candidate review + explicit acceptance
+  -> verified class/member remap plans
+  -> ASM whole-JAR rewrite
+  -> deterministic repackaging
+  -> independent transformed-JAR verification
+  -> hash-pinned decompiler handoff
 ```
 
-Original local-variable, parameter, source-file and line-number metadata was stripped
-from v308. Human-readable names produced here are therefore either proven by surviving
-evidence or explicitly inferred; they are not falsely presented as lost original names.
+For future releases:
 
-## R0 — baseline index/diff
+```text
+previous authority + new client.jar
+  -> update-migrate
+  -> exact hash/index/diff
+  -> trusted class-lineage transfer
+  -> trusted member-lineage transfer
+  -> semantic-name carry-forward only where identity survives
+  -> focused unresolved/new/changed analysis queue
+  -> authority-candidate completion gate
+```
 
-Requirements: Python 3.11+
+Unmatched or ambiguous entities remain unresolved. The tool does not invent identity just
+to complete an update.
+
+## Important naming rule
+
+Original local-variable, parameter, source-file and line-number metadata was stripped from
+v308. Readable names produced by this project are therefore either:
+
+- supported by surviving exact evidence, or
+- explicitly labeled inference/candidate names.
+
+They are not presented as lost original source identifiers.
+
+## Setup
+
+Requirements:
+
+- Python 3.11+
+- JDK 21 for bytecode remapping / integration tests
 
 ```powershell
 py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -e .
+```
 
+CI runs on both Windows and Linux and includes:
+
+- unit/integration tests
+- Python compile checks
+- CLI registration checks
+- repository hygiene checks
+- real Java/ASM remap fixtures
+
+## R0 — exact indexing and diffing
+
+```powershell
 spk-recovery index C:\path\to\client-v308.jar `
   --expect-sha256 854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6 `
   --out .\evidence\indexes\v308.json
 ```
 
-When the next client arrives:
+The index contains exact entry hashes, parsed class metadata, constants, strings, member
+shapes and name-insensitive structural fingerprints.
 
-```powershell
-spk-recovery index C:\path\to\client-v309.jar --out .\evidence\indexes\v309.json
-spk-recovery diff .\evidence\indexes\v308.json .\evidence\indexes\v309.json `
-  --out .\reports\v308-to-v309.json
-```
-
-The indexer reads the whole JAR and produces both exact entry hashes and a first-pass,
-name-insensitive class structural fingerprint. The matcher is deliberately conservative:
-ambiguous fingerprints are reported, never guessed.
-
-## R1 — canonical logical identities
-
-Obfuscated paths are build-local coordinates. The canonical identity layer assigns stable
-`CLIENT_CLASS_XXXXXX` IDs once from the exact v308 baseline and stores later build
-locations as lineage entries with confidence + provenance. Semantic names are a separate
-layer and may remain unknown even when cross-build identity is certain.
+## R1 — stable class identities
 
 ```powershell
 spk-recovery lineage-seed .\evidence\indexes\v308.json `
-  --build-id v308 --build-number 308 --authority EXACT_CURRENT_CLIENT `
+  --build-id v308 `
+  --build-number 308 `
+  --authority EXACT_CURRENT_CLIENT `
   --out .\generated\v308.lineage.json
 
 spk-recovery lineage-validate .\generated\v308.lineage.json
 ```
 
-See `docs/LINEAGE.md` and `schemas/lineage.schema.json`.
+Canonical IDs look like:
+
+```text
+CLIENT_CLASS_000001
+CLIENT_CLASS_000002
+...
+```
+
+A class can retain the same logical ID even if its obfuscated path changes in a later build.
+
+## R2 — semantic review and verified rewriting
+
+Fields and non-constructor methods get their own stable identities:
+
+```text
+CLIENT_FIELD_000001
+CLIENT_METHOD_000001
+```
+
+Semantic names remain separate from identity and require explicit review/acceptance.
+
+Core R2 commands include:
+
+```text
+semantic-resolve
+semantic-accept
+remap-plan
+remap-risk-scan
+member-remap-plan
+member-safety-scan
+member-safety-validate
+class-remap
+jar-remap
+verify-remap
+decompile
+```
+
+The remapper uses ASM and rewrites JVM references consistently. Class entry paths,
+manifest `Main-Class`, and `META-INF/services` entries are handled explicitly.
+
+Member remapping has a separate name-sensitivity/reflection safety gate.
+
+The output JAR is deterministic and is independently re-indexed/verified after rewriting.
+
+## R3 — incremental future-update migration
+
+The one-command migration entry point is:
+
+```powershell
+spk-recovery update-migrate `
+  .\authority\previous-index.json `
+  .\client-new.jar `
+  .\authority\class-lineage.json `
+  .\authority\member-lineage.json `
+  --old-build-id v308 `
+  --new-build-id v309 `
+  --new-build-number 309 `
+  --member-candidates .\research\v308-to-v309.members.json `
+  --out-dir .\generated\migration-v309
+```
+
+It composes the safe automatic stages and writes a deterministic migration workspace.
+
+A clean update can finish with:
+
+```text
+ready_for_authority=true
+```
+
+A nontrivial update can validly finish blocked with a focused review queue instead. This
+is expected behavior; it prevents ambiguous/new code from silently entering canonical state.
+
+The workspace contains:
+
+```text
+new-index.json
+migration-report.json
+analysis-queue.json
+class-lineage.json
+member-lineage.json
+class-transfer-summary.json
+member-transfer-summary.json
+authority-candidate.json
+focused-analysis-queue.json
+migration-workspace.json
+```
+
+The previous authority is never modified in place.
 
 ## Repository rules
 
-- Do not commit client JARs.
+- Do not commit client JARs or cache binaries.
+- Do not commit generated/decompiled client output.
+- Preserve exact SHA-256 provenance for authority builds.
 - Do not claim inferred names are original developer names.
-- Preserve exact hashes for every authority build.
-- Prefer deterministic mappings over editing decompiled output by hand.
-- Treat decompiled/recovered source as generated until deliberately promoted.
+- Do not automatically promote unmatched-new classes or members.
+- Do not transfer semantic names unless stable identity is proven.
+- Prefer deterministic mappings over hand-editing decompiled Java.
 
-See `docs/ARCHITECTURE.md`, `docs/UPDATE_PIPELINE.md`, and `docs/AUTHORITY.md`.
+## Documentation
+
+Useful starting points:
+
+- `docs/ARCHITECTURE.md`
+- `docs/AUTHORITY.md`
+- `docs/LINEAGE.md`
+- `docs/MEMBER_LINEAGE.md`
+- `docs/SEMANTIC_REVIEW.md`
+- `docs/REMAP_PLAN.md`
+- `docs/CLASS_REMAP.md`
+- `docs/MEMBER_REMAP.md`
+- `docs/MEMBER_SAFETY.md`
+- `docs/VERIFY_DECOMPILE.md`
+- `docs/UPDATE_INTAKE.md`
+- `docs/UPDATE_TRANSFER.md`
+- `docs/UPDATE_MEMBER_TRANSFER.md`
+- `docs/UPDATE_FINALIZE.md`
+- `docs/UPDATE_ORCHESTRATION.md`
