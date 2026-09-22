@@ -37,7 +37,18 @@ exact client JAR
   -> ASM whole-JAR rewrite
   -> deterministic repackaging
   -> independent transformed-JAR verification
-  -> hash-pinned decompiler handoff
+  -> readable client JAR
+  -> hash-pinned recovered source
+  -> source readiness + rebuild toolchain authority
+  -> zero-project-binary-fallback clean rebuild
+  -> round-trip verification
+  -> stable SRC_* parameter/local identities
+  -> explicit inferred source-name review + semantic AST rewrite
+  -> clean rebuild + round-trip acceptance of rewritten source
+  -> safe inferred source-name carry-forward
+  -> deterministic recovery release manifest
+  -> one-command existing-authority/future-update release
+  -> independent release reproducibility verification
 ```
 
 For future releases:
@@ -264,6 +275,66 @@ spk-semantic-carry-forward `
 Accepted names carry forward only when the same stable class/member ID has proven identity
 in both authority builds. Missing new identity blocks carry-forward rather than guessing.
 
+
+## R5 — buildable recovered source
+
+R5 strengthens recovered source from a static decompile into a rebuildable project without
+claiming that compiler output must be byte-identical to the original client.
+
+- `spk-source-readiness` verifies the recovered source-tree authority and audits layout,
+  imports and decompiler-failure surfaces.
+- `spk-build-authority` records exact bytecode/build metadata plus the actual rebuild
+  `java`/`javac` toolchain.
+- `spk-progressive-compile` measures compile coverage with the readable client only as an
+  explicit temporary fallback.
+- `spk-clean-rebuild` removes every SpawnPK project-class binary fallback. Only bundled
+  non-project dependency bytecode may remain in the dependency capsule.
+- `spk-roundtrip-verify` compares rebuilt project classes with readable authority and
+  separates `byte_identical`, `structural_equivalent`, `codegen_variance_only` and
+  `semantic_surface_drift`.
+
+A clean project rebuild requires `clean_project_build=true` and
+`project_binary_fallback_count=0`. Compiler/decompiler codegen variance is recorded, not
+misrepresented as byte identity or runtime equivalence.
+
+## R6 — inferred parameter/local naming
+
+Exact v308 has no surviving original local-variable or parameter-name metadata. R6 therefore
+adds a separate inferred source-name layer with explicit review and binary regression gates.
+
+- `spk-source-symbols` uses `com.sun.source.*` to create deterministic `SRC_METHOD_*`,
+  `SRC_PARAM_*`, `SRC_LOCAL_*`, `SRC_CATCH_*`, `SRC_RESOURCE_*`, `SRC_ENHFOR_*` and
+  `SRC_LAMBDA_PARAM_*` identities.
+- `spk-source-name-review` validates evidence-backed candidate names against exact
+  `source_symbol_id` targets. Candidate confidence 1.0 is forbidden.
+- `spk-source-name-plan` consumes only explicitly accepted `SRCPROP_*` proposals.
+- `spk-source-rewrite` rewrites a copied workspace through javac semantic `Element`
+  resolution; it never performs global text replacement.
+- `spk-source-rewrite-accept` requires the rewritten source to survive R5A/R5B, a zero-
+  fallback R5D rebuild and R5E round-trip verification.
+- `spk-source-name-carry-forward` reuses previously accepted inferred names only when
+  canonical method identity and whole-method source-symbol shape remain trustworthy.
+
+These names remain inferred readable replacements, never recovered original developer names.
+
+## R7 — release, update and reproducibility authority
+
+R7 turns the proven R4-R6 stages into deterministic release workflows:
+
+- `spk-release-manifest` binds the verified recovery chain into one deterministic R7A
+  release authority manifest.
+- `spk-release-build` runs the existing-authority readable/source/rebuild/round-trip release
+  chain in one command.
+- `spk-update-release` connects conservative R3 update migration to a new exact authority
+  and then the R7 release path.
+- `spk-release-verify` independently re-verifies the R7A manifest and can additionally
+  verify authority/readable/decompiler JAR hashes, final source-tree hash and rebuild javac
+  toolchain.
+
+R6 inferred parameter/local carry-forward is intentionally post-source and never contaminates
+exact binary/class/member authority. A reproducibility PASS is provenance/rebuild evidence,
+not proof that inferred names are original identifiers.
+
 ## Repository rules
 
 - Do not commit client JARs or cache binaries.
@@ -299,3 +370,17 @@ Useful starting points:
 - `docs/RECOVERED_SOURCE.md`
 - `docs/COVERAGE.md`
 - `docs/SEMANTIC_CARRY_FORWARD.md`
+- `docs/SOURCE_READINESS.md`
+- `docs/BUILD_AUTHORITY.md`
+- `docs/PROGRESSIVE_COMPILE.md`
+- `docs/CLEAN_REBUILD.md`
+- `docs/ROUNDTRIP_VERIFICATION.md`
+- `docs/SOURCE_SYMBOLS.md`
+- `docs/SOURCE_NAME_REVIEW.md`
+- `docs/SOURCE_REWRITE.md`
+- `docs/SOURCE_REWRITE_ACCEPTANCE.md`
+- `docs/SOURCE_NAME_CARRY_FORWARD.md`
+- `docs/RECOVERY_RELEASE.md`
+- `docs/EXISTING_AUTHORITY_RELEASE.md`
+- `docs/UPDATE_TO_RELEASE.md`
+- `docs/RELEASE_VERIFICATION.md`
