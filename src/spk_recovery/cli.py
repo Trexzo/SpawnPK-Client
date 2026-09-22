@@ -32,8 +32,7 @@ from .semantic_review import (
     resolve_semantic_candidates,
     write_json as write_semantic_json,
 )
-from .member_remap_plan import (
-    MemberRemapPlanError,
+from .member_safety import (\n    MemberSafetyError,\n    build_member_safety_report,\n    validate_member_safety_acceptance,\n    write_json as write_member_safety_json,\n)\nfrom .member_remap_plan import (\n    MemberRemapPlanError,
     build_member_remap_plan,
     write_json as write_member_remap_json,
 )
@@ -615,6 +614,16 @@ def main(argv: list[str] | None = None) -> int:
                 if args.member_plan
                 else None
             )
+            member_safety_report = (
+                _load(args.member_safety_report)
+                if args.member_safety_report
+                else None
+            )
+            member_safety_acceptance = (
+                _load(args.member_safety_acceptance)
+                if args.member_safety_acceptance
+                else None
+            )
             result = remap_jar(
                 args.source_jar,
                 _load(args.index),
@@ -630,6 +639,8 @@ def main(argv: list[str] | None = None) -> int:
                 allow_member_reflection_risk=(
                     args.allow_member_reflection_risk
                 ),
+                member_safety_report=member_safety_report,
+                member_safety_acceptance=member_safety_acceptance,
             )
             if args.result_out:
                 write_result(result, args.result_out)
