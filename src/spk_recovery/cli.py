@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import sys
 
+from .field_proof import FieldProofError
 from .authority_snapshot import (
     AuthoritySnapshotError,
     promote_authority_snapshot,
@@ -194,6 +195,14 @@ def main(argv: list[str] | None = None) -> int:
     pum.add_argument("--new-build-number", type=int)
     pum.add_argument("--scope-prefix", default="rs/")
     pum.add_argument("--member-candidates", type=Path)
+    pum.add_argument(
+        "--old-jar",
+        type=Path,
+        help=(
+            "Optional exact previous JAR. When supplied with member candidates, "
+            "run JAR-bound exact field-position proof before finalization."
+        ),
+    )
     pum.add_argument("--new-authority", default="CROSS_BUILD")
     pum.add_argument("--out-dir", type=Path, required=True)
 
@@ -544,6 +553,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.out,
             )
         except (
+            FieldProofError,
             UpdateFinalizeError,
             MemberLineageError,
             LineageValidationError,
@@ -608,6 +618,7 @@ def main(argv: list[str] | None = None) -> int:
                     if args.member_candidates
                     else None
                 ),
+                old_jar=args.old_jar,
                 new_authority=args.new_authority,
             )
         except (
