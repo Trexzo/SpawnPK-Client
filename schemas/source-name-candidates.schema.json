@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/source-name-candidates.schema.json",
+  "title": "SpawnPK inferred source-name candidate set",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "canonical",
+    "inventory_id",
+    "source_tree_sha256",
+    "candidates"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "source_name_candidate_set"},
+    "canonical": {"const": false},
+    "inventory_id": {
+      "type": "string",
+      "pattern": "^SRCINV_[0-9A-F]{20}$"
+    },
+    "source_tree_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "source_symbol_id",
+          "proposed_name",
+          "confidence",
+          "evidence"
+        ],
+        "properties": {
+          "source_symbol_id": {"type": "string"},
+          "proposed_name": {"type": "string", "minLength": 1},
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMaximum": 1
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1
+          },
+          "note": {"type": ["string", "null"]}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
