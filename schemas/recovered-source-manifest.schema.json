@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/recovered-source-manifest.schema.json",
+  "title": "SpawnPK recovered source workspace manifest",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "workspace_id",
+    "build_id",
+    "source_authority_sha256",
+    "readable_jar_sha256",
+    "namespace_id",
+    "class_plan_digest",
+    "member_plan_digest",
+    "engine",
+    "decompiler_sha256",
+    "source_tree_sha256",
+    "java_file_count",
+    "source_bytes",
+    "source_directory"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "recovered_source_workspace_manifest"},
+    "workspace_id": {"type": "string", "pattern": "^SRCWS_[0-9A-F]{20}$"},
+    "build_id": {"type": "string", "minLength": 1},
+    "source_authority_sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+    "readable_jar_sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+    "namespace_id": {"type": "string", "pattern": "^SEMNS_[0-9A-F]{20}$"},
+    "class_plan_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "member_plan_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "engine": {"enum": ["cfr", "vineflower"]},
+    "decompiler_sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+    "source_tree_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "java_file_count": {"type": "integer", "minimum": 1},
+    "source_bytes": {"type": "integer", "minimum": 1},
+    "source_directory": {"const": "src"}
+  },
+  "additionalProperties": false
+}
