@@ -12,6 +12,7 @@ COMMANDS = [
     "update-transfer-classes",
     "update-transfer-members",
     "update-finalize",
+    "authority-promote",
     "update-migrate",
     "lineage-seed",
     "lineage-validate",
