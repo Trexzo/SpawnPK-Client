@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import tempfile
 import unittest
 
 from spk_recovery.semantic_review import (
@@ -10,6 +11,9 @@ from spk_recovery.member_remap_plan import (
 )
 from spk_recovery.semantic_namespace import (
     build_semantic_namespace,
+)
+from spk_recovery.readable_build import (
+    build_readable_client,
 )
 
 
@@ -266,6 +270,34 @@ class Chat2SemanticReviewIntegrationTests(unittest.TestCase):
             "SEMREVIEW_1D05C99BCABD6CB508EF",
         )
         self.assertEqual(actual, expected)
+
+    def test_r4b_candidate_only_state_blocks_readable_build(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "client.jar"
+            source.write_bytes(b"jar")
+            out = root / "out"
+
+            manifest = build_readable_client(
+                source,
+                _class_lineage(),
+                _member_lineage(),
+                {
+                    "sha256": SHA,
+                    "classes": {},
+                },
+                build_id="v308",
+                out_dir=out,
+            )
+
+            self.assertEqual(manifest["status"], "blocked")
+            self.assertEqual(
+                manifest["blocker"]["code"],
+                "no_accepted_remaps",
+            )
+            self.assertFalse(
+                (out / "readable-client.jar").exists()
+            )
 
     def test_r4a_candidate_only_state_has_empty_namespace(self):
         manifest, class_plan, member_plan = build_semantic_namespace(
