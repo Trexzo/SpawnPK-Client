@@ -5,6 +5,11 @@ import json
 from pathlib import Path
 import sys
 
+from .authority_snapshot import (
+    AuthoritySnapshotError,
+    promote_authority_snapshot,
+    write_authority_snapshot,
+)
 from .indexer import index_jar, write_index
 from .diffing import diff_indexes
 from .decompiler import (
@@ -162,6 +167,19 @@ def main(argv: list[str] | None = None) -> int:
     puf.add_argument("--build-id", required=True)
     puf.add_argument("--scope-prefix")
     puf.add_argument("--out", type=Path, required=True)
+
+    pap = sub.add_parser(
+        "authority-promote",
+        help="Re-prove a ready R3E candidate and emit an immutable authority snapshot",
+    )
+    pap.add_argument("class_lineage", type=Path)
+    pap.add_argument("member_lineage", type=Path)
+    pap.add_argument("target_index", type=Path)
+    pap.add_argument("intake_report", type=Path)
+    pap.add_argument("candidate_report", type=Path)
+    pap.add_argument("--build-id", required=True)
+    pap.add_argument("--scope-prefix")
+    pap.add_argument("--out", type=Path, required=True)
 
     pum = sub.add_parser(
         "update-migrate",
@@ -544,6 +562,34 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{k}={v}")
         print(f"out={args.out}")
         return 0 if report["ready_for_authority"] else 1
+
+    if args.cmd == "authority-promote":
+        try:
+            snapshot = promote_authority_snapshot(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.target_index),
+                _load(args.intake_report),
+                _load(args.candidate_report),
+                build_id=args.build_id,
+                scope_prefix=args.scope_prefix,
+            )
+            write_authority_snapshot(snapshot, args.out)
+        except (
+            AuthoritySnapshotError,
+            UpdateFinalizeError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_AUTHORITY_PROMOTE_PASS")
+        print(f"authority_id={snapshot['authority_id']}")
+        print(f"build_id={snapshot['build_id']}")
+        print(f"sha256={snapshot['sha256']}")
+        print(f"out={args.out}")
+        return 0
 
     if args.cmd == "update-migrate":
         try:
