@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/semantic-carryforward.schema.json",
+  "title": "SpawnPK semantic carry-forward report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "report_id",
+    "previous_authority_id",
+    "new_authority_id",
+    "old_build_id",
+    "new_build_id",
+    "old_sha256",
+    "new_sha256",
+    "namespace_id",
+    "target_package",
+    "ready_for_readable_build",
+    "summary",
+    "classes",
+    "fields",
+    "methods"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "semantic_carryforward_report"},
+    "report_id": {"type": "string", "pattern": "^SEMCARRY_[0-9A-F]{20}$"},
+    "previous_authority_id": {"type": "string"},
+    "new_authority_id": {"type": "string"},
+    "old_build_id": {"type": "string"},
+    "new_build_id": {"type": "string"},
+    "old_sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+    "new_sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+    "namespace_id": {"type": "string", "pattern": "^SEMNS_[0-9A-F]{20}$"},
+    "target_package": {"type": "string"},
+    "ready_for_readable_build": {"type": "boolean"},
+    "summary": {"type": "object"},
+    "classes": {"type": "object"},
+    "fields": {"type": "object"},
+    "methods": {"type": "object"}
+  },
+  "additionalProperties": false
+}
