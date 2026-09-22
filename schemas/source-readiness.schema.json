@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/source-readiness.schema.json",
+  "title": "SpawnPK recovered source readiness report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "audit_id",
+    "workspace_id",
+    "build_id",
+    "source_authority_sha256",
+    "readable_jar_sha256",
+    "namespace_id",
+    "source_tree_sha256",
+    "summary",
+    "packages",
+    "external_import_roots",
+    "external_imports",
+    "issue_counts",
+    "issues",
+    "files"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "source_readiness_report"},
+    "audit_id": {"type": "string", "pattern": "^SRCREADY_[0-9A-F]{20}$"},
+    "workspace_id": {"type": "string"},
+    "build_id": {"type": "string"},
+    "source_authority_sha256": {"type": "string"},
+    "readable_jar_sha256": {"type": "string"},
+    "namespace_id": {"type": "string"},
+    "source_tree_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "summary": {"type": "object"},
+    "packages": {"type": "object"},
+    "external_import_roots": {"type": "object"},
+    "external_imports": {"type": "array"},
+    "issue_counts": {"type": "object"},
+    "issues": {"type": "array"},
+    "files": {"type": "array"}
+  },
+  "additionalProperties": false
+}
