@@ -10,6 +10,7 @@ requires-python = ">=3.11"
 
 [project.scripts]
 spk-recovery = "spk_recovery.cli:main"
+spk-corpus-audit = "spk_recovery.corpus_audit:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
