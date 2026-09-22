@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/build-authority.schema.json",
+  "title": "SpawnPK rebuild dependency/toolchain authority",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "authority_id",
+    "source_sha256",
+    "class_prefix",
+    "bytecode",
+    "compiler_runtime",
+    "embedded_maven_metadata",
+    "root_build_metadata",
+    "source_dependency_surface",
+    "interpretation"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "build_authority_manifest"},
+    "authority_id": {
+      "type": "string",
+      "pattern": "^BUILDAUTH_[0-9A-F]{20}$"
+    },
+    "source_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{64}$"
+    },
+    "class_prefix": {"type": "string"},
+    "bytecode": {"type": "object"},
+    "compiler_runtime": {"type": "object"},
+    "embedded_maven_metadata": {"type": "array"},
+    "root_build_metadata": {"type": "array"},
+    "source_dependency_surface": {"type": "object"},
+    "interpretation": {"type": "object"}
+  },
+  "additionalProperties": false
+}
