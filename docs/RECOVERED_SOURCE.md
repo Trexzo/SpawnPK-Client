@@ -16,7 +16,7 @@ spk-source-workspace `
   --out-dir .\generated\source-v308
 ```
 
-Vineflower is also supported via `--engine vineflower`.
+Vineflower and Procyon are also supported via `--engine vineflower` and `--engine procyon`. All engines remain bound to the explicitly supplied decompiler JAR SHA-256.
 
 ## Required authority pins
 
