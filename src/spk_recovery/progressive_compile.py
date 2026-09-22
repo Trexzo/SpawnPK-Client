@@ -238,6 +238,7 @@ def progressive_compile(
     out_dir: Path,
     javac_command: str = "javac",
     batch_size: int = 64,
+    source_prefixes: list[str] | None = None,
 ) -> dict[str, Any]:
     source_root = source_root.resolve()
     if not source_root.is_dir():
@@ -265,6 +266,40 @@ def progressive_compile(
     if not files:
         raise ProgressiveCompileError(
             "source workspace contains no Java files"
+        )
+
+    if source_prefixes is None:
+        target_package = str(
+            readable_manifest.get("target_package", "")
+        ).strip("/")
+        source_prefixes = ["rs/"]
+        if target_package:
+            source_prefixes.append(target_package + "/")
+    normalized_prefixes: list[str] = []
+    for prefix in source_prefixes:
+        if not isinstance(prefix, str) or not prefix:
+            raise ProgressiveCompileError(
+                "source prefixes must be non-empty strings"
+            )
+        normalized = prefix.replace("\\", "/").lstrip("/")
+        if normalized and not normalized.endswith("/"):
+            normalized += "/"
+        normalized_prefixes.append(normalized)
+    normalized_prefixes = sorted(set(normalized_prefixes))
+
+    all_files = files
+    files = [
+        path
+        for path in all_files
+        if any(
+            path.relative_to(source_root).as_posix().startswith(prefix)
+            for prefix in normalized_prefixes
+        )
+    ]
+    if not files:
+        raise ProgressiveCompileError(
+            "no Java source files matched project source prefixes "
+            + repr(normalized_prefixes)
         )
 
     out_dir = out_dir.resolve()
@@ -385,6 +420,7 @@ def progressive_compile(
         "compiled_count": compiled_count,
         "failed_count": failed_count,
         "batch_size": batch_size,
+        "source_prefixes": normalized_prefixes,
         "javac_version": javac_probe["version_output"],
     }
     run_id = (
@@ -418,6 +454,11 @@ def progressive_compile(
         "build_authority_id": build_authority.get("authority_id"),
         "javac": javac_probe,
         "target_release": release,
+        "source_scope": {
+            "prefixes": normalized_prefixes,
+            "all_workspace_java_files": len(all_files),
+            "scoped_project_java_files": len(files),
+        },
         "fallback_classpath": {
             "kind": "verified_readable_client_jar",
             "sha256": readable_manifest.get("output_sha256"),
