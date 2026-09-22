@@ -97,6 +97,20 @@ class RemapPlanTests(unittest.TestCase):
                 _spec("java/lang/Alpha"),
             )
 
+    def test_risk_scan_ignores_resources_when_package_is_preserved(self):
+        plan = build_remap_plan(
+            _lineage(),
+            _spec("rs/Recovered_CLIENT_CLASS_000001"),
+        )
+        report = remap_risk_scan(
+            _index(),
+            plan,
+        )
+        self.assertEqual(
+            report["summary"]["package_resource_hit_count"],
+            0,
+        )
+
     def test_risk_scan_finds_package_resources(self):
         plan = build_remap_plan(
             _lineage(),

@@ -296,7 +296,7 @@ class SemanticNamespaceTests(unittest.TestCase):
         self.assertEqual(fallbacks[0]["logical_id"], "CLIENT_CLASS_000002")
         self.assertEqual(
             fallbacks[0]["target_internal_name"],
-            "recovered/spawnpk/fallback/CLIENT_CLASS_000002",
+            "rs/Recovered_CLIENT_CLASS_000002",
         )
         row = next(
             row
@@ -306,6 +306,10 @@ class SemanticNamespaceTests(unittest.TestCase):
         self.assertEqual(
             row["provenance"][0]["reason"],
             "java_class_package_collision",
+        )
+        self.assertEqual(
+            row["provenance"][0]["strategy"],
+            "package_preserving_class_rename",
         )
         self.assertEqual(classes["classes"][1]["semantic_status"], "UNKNOWN")
         self.assertIsNone(classes["classes"][1]["semantic_name"])
