@@ -94,3 +94,16 @@ retained as `member_identity_review` instead of entering canonical member lineag
 This is intentionally fail-closed. Reduced automatic field coverage is preferable to
 silently carrying one incorrect field ID into semantic naming, remapping, or a later
 authority snapshot.
+
+
+## Field proof trust boundary
+
+A research candidate's strategy string is not itself proof.
+
+The generic `update-transfer-members` path automatically accepts fields only when a
+`stable_symbol` relationship is enclosed by a byte-identical `exact_sha256` class.
+Claims such as `exact_matched_method_access_positions` remain review-only until a
+separate integration path independently binds and verifies the exact old/new JARs and
+the bytecode-position evidence.
+
+This prevents a forged research JSON strategy label from entering canonical field lineage.
