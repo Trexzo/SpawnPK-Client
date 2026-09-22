@@ -12,6 +12,11 @@ from .decompiler import (
     run_decompiler,
     write_json as write_decompiler_json,
 )
+from .update_intake import (
+    UpdateIntakeError,
+    intake_new_jar,
+    write_update_workspace,
+)
 from .verification import (
     VerificationError,
     verify_transformed_jar,
@@ -82,6 +87,17 @@ def main(argv: list[str] | None = None) -> int:
     pd.add_argument("old", type=Path)
     pd.add_argument("new", type=Path)
     pd.add_argument("--out", type=Path, required=True)
+
+    pui = sub.add_parser(
+        "update-intake",
+        help="Index a new client build and produce a deterministic delta/matcher workspace",
+    )
+    pui.add_argument("old_index", type=Path)
+    pui.add_argument("new_jar", type=Path)
+    pui.add_argument("--old-build-id", required=True)
+    pui.add_argument("--new-build-id", required=True)
+    pui.add_argument("--scope-prefix", default="rs/")
+    pui.add_argument("--out-dir", type=Path, required=True)
 
     ps = sub.add_parser(
         "lineage-seed",
@@ -308,6 +324,35 @@ def main(argv: list[str] | None = None) -> int:
         for k, v in report["summary"].items():
             print(f"{k}={v}")
         print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "update-intake":
+        try:
+            new_index, report = intake_new_jar(
+                _load(args.old_index),
+                args.new_jar,
+                old_build_id=args.old_build_id,
+                new_build_id=args.new_build_id,
+                scope_prefix=args.scope_prefix,
+            )
+            paths = write_update_workspace(
+                args.out_dir,
+                new_index=new_index,
+                report=report,
+            )
+        except (
+            UpdateIntakeError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_UPDATE_INTAKE_PASS")
+        print(f"migration_id={report['migration_id']}")
+        for k, v in report["summary"].items():
+            print(f"{k}={v}")
+        print(f"index={paths['index']}")
+        print(f"report={paths['report']}")
+        print(f"queue={paths['queue']}")
         return 0
 
     if args.cmd == "lineage-seed":
