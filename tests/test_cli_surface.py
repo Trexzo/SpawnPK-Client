@@ -10,6 +10,7 @@ COMMANDS = [
     "diff",
     "update-intake",
     "update-transfer-classes",
+    "update-transfer-members",
     "lineage-seed",
     "lineage-validate",
     "member-lineage-seed",
