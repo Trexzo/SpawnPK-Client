@@ -28,6 +28,15 @@ def main(argv: list[str] | None = None) -> int:
         "--target-package",
         default="recovered/spawnpk/client",
     )
+    p.add_argument(
+        "--source-safe-fallback",
+        action="store_true",
+        help="remap only residual Java class/package collision roots into a non-semantic fallback namespace",
+    )
+    p.add_argument(
+        "--fallback-package",
+        default="recovered/spawnpk/fallback",
+    )
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args(argv)
 
@@ -38,6 +47,8 @@ def main(argv: list[str] | None = None) -> int:
             _load(args.index),
             build_id=args.build_id,
             target_package=args.target_package,
+            source_safe_fallback=args.source_safe_fallback,
+            fallback_package=args.fallback_package,
         )
         out = args.out_dir.resolve()
         write_json(manifest, out / "semantic-namespace.json")
