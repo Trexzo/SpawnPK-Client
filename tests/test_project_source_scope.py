@@ -108,6 +108,43 @@ class ProjectScopedSourceWorkspaceTests(unittest.TestCase):
             )
             self.assertEqual(result["java_file_count"], 2)
 
+
+    def test_project_only_refuses_archive_root_prefix(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar, manifest = self._readable(root)
+            manifest["project_source_prefixes"] = ["/"]
+            tool = root / "procyon.jar"
+            tool.write_bytes(b"tool")
+            with self.assertRaises(SourceWorkspaceError):
+                build_source_workspace(
+                    manifest,
+                    jar,
+                    tool,
+                    expected_decompiler_sha256="d" * 64,
+                    engine="procyon",
+                    out_dir=root / "out",
+                    project_only=True,
+                )
+
+    def test_project_only_refuses_parent_traversal_prefix(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar, manifest = self._readable(root)
+            manifest["project_source_prefixes"] = ["../rs/"]
+            tool = root / "procyon.jar"
+            tool.write_bytes(b"tool")
+            with self.assertRaises(SourceWorkspaceError):
+                build_source_workspace(
+                    manifest,
+                    jar,
+                    tool,
+                    expected_decompiler_sha256="d" * 64,
+                    engine="procyon",
+                    out_dir=root / "out",
+                    project_only=True,
+                )
+
     def test_project_only_refuses_non_procyon_engine(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
