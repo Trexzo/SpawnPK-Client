@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/e/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GpuPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_plugin_descriptor",
+          "detail": "Runtime plugin descriptor/title strings identify GPU Mode / GPU Mode (Beta), group gpu, description \"Enhance the graphics and performance of the game\", panel tag and gpu_icon.png."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends plugin base rs/s/a, injects GpuConfig, Client, NavigationButton and GPU panel and reacts to ConfigChanged."
+        }
+      ],
+      "note": "Plugin role is exact from hierarchy and runtime descriptor/config ownership."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/k/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AntiAliasingMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_binding",
+          "detail": "GpuConfig method annotated key antiAliasingMode / title Anti Aliasing returns this enum type."
+        },
+        {
+          "family": "exact_enum_role",
+          "detail": "Enum constants survive as DISABLED, MSAA_2, MSAA_4, MSAA_8 and MSAA_16 with display labels Disabled and MSAA x2/x4/x8/x16."
+        }
+      ],
+      "note": "Name follows the exact GpuConfig binding and enum values."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/k/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorBlindMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_binding",
+          "detail": "GpuConfig method annotated key colorBlindMode / title Colorblindness Correction returns this enum type."
+        },
+        {
+          "family": "exact_enum_role",
+          "detail": "Enum constants survive as NONE, PROTANOPE, DEUTERANOPE and TRITANOPE."
+        }
+      ],
+      "note": "Name follows the exact GpuConfig binding and enum values."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/k/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "VsyncMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_binding",
+          "detail": "GpuConfig method annotated key vsyncMode / title Vsync Mode returns this enum type."
+        },
+        {
+          "family": "exact_enum_role",
+          "detail": "Enum includes ADAPTIVE plus the other synchronization modes used by GPU configuration."
+        }
+      ],
+      "note": "Name follows the exact GpuConfig binding."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/e/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "UiScalingMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_binding",
+          "detail": "GpuConfig method annotated key uiScalingMode / title UI scaling mode returns this enum type."
+        },
+        {
+          "family": "exact_enum_role",
+          "detail": "Enum values carry NEAREST, LINEAR, CATMULL_ROM and MITCHELL with display names Nearest Neighbor, Bilinear and Bicubic variants."
+        }
+      ],
+      "note": "Name follows the exact GpuConfig binding and sampling-mode labels."
+    }
+  ],
+  "conflicts": []
+}
