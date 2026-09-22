@@ -359,6 +359,56 @@ class SourceNameCarryForwardTests(unittest.TestCase):
             "SRC_PARAM_NEW",
         )
 
+    def test_regenerated_method_symbol_shape_change_is_blocked(self):
+        old = _inventory(
+            inventory_id="SRCINV_OLD",
+            build="v308",
+            authority=OLD_SHA,
+            symbol_id="SRC_PARAM_OLD",
+            source_method_id="SRC_METHOD_OLD",
+            current_name="var1",
+        )
+        new = _inventory(
+            inventory_id="SRCINV_NEW",
+            build="v308",
+            authority=OLD_SHA,
+            symbol_id="SRC_PARAM_NEW",
+            source_method_id="SRC_METHOD_NEW",
+            current_name="arg0",
+        )
+        extra = copy.deepcopy(new["symbols"][0])
+        extra.update(
+            {
+                "source_symbol_id": "SRC_LOCAL_EXTRA",
+                "kind": "local",
+                "ordinal": 0,
+                "current_name": "var2",
+                "declared_type": "int",
+                "start": 30,
+                "end": 35,
+            }
+        )
+        new["symbols"].append(extra)
+
+        report, candidates, review, acceptance, plan = (
+            carry_forward_source_names(
+                _previous_plan(old),
+                old,
+                new,
+                _class_lineage(cross_build=False),
+                _member_lineage(cross_build=False),
+            )
+        )
+        self.assertFalse(report["full_carryforward_ready"])
+        self.assertEqual(
+            report["blocked"][0]["reason"],
+            "source_symbol_shape_changed",
+        )
+        self.assertEqual(candidates["candidates"], [])
+        self.assertEqual(review["proposals"], [])
+        self.assertIsNone(acceptance)
+        self.assertIsNone(plan)
+
     def test_modified_method_is_blocked_for_fresh_review(self):
         old = _inventory(
             inventory_id="SRCINV_OLD",
