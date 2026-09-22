@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/d/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EntityHiderPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact runtime/plugin descriptor text identifies 'Entity Hider'. Description says it hides players, NPCs and/or projectiles."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references R4 rs/s/d/a EntityHiderConfig."
+        }
+      ],
+      "note": "Runtime/plugin role is supported by exact descriptor text plus direct config reference."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/s/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HoverDescriptionsPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact runtime/plugin descriptor text identifies 'Hover Descriptions'. Runtime class is the hover/tooltip plugin surface."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references R4 rs/s/s/a TooltipConfig."
+        }
+      ],
+      "note": "Runtime/plugin role is supported by exact descriptor text plus direct config reference."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/h/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TimersInfoboxPlugin",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact runtime/plugin descriptor text identifies 'Timers / Info Boxes'. Runtime strings enumerate combat boosts, freeze/teleblock, slayer/task scroll timers and next buff change."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references R4 rs/s/h/b StatusInfoboxConfig."
+        }
+      ],
+      "note": "Runtime/plugin role is supported by exact descriptor text plus direct config reference."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/j/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "KeyRemappingPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact runtime/plugin descriptor text identifies 'Key Remapping'. Description includes WASD camera movement and Press Enter to Chat."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references R4 rs/s/j/a KeyRemappingConfig."
+        }
+      ],
+      "note": "Runtime/plugin role is supported by exact descriptor text plus direct config reference."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/r/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TileIndicatorsPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact runtime/plugin descriptor text identifies 'Tile Indicators'. Description says it highlights the tile you are currently moving to."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references R4 rs/s/r/a TileIndicatorConfig."
+        }
+      ],
+      "note": "Runtime/plugin role is supported by exact descriptor text plus direct config reference."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/i/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InteractHighlightPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact runtime/plugin descriptor text identifies 'Interact Highlight'. Description says it outlines NPCs and objects you interact with or hover over."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references R4 rs/s/i/a InteractionHighlightConfig."
+        }
+      ],
+      "note": "Runtime/plugin role is supported by exact descriptor text plus direct config reference."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CombatOverlaysPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact runtime/plugin descriptor text identifies 'Combat overlays'. Runtime plugin descriptor is self-identifying."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references R4 rs/s/a/a CombatOverlayConfig."
+        }
+      ],
+      "note": "Runtime/plugin role is supported by exact descriptor text plus direct config reference."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/c/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DeveloperToolsPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact runtime/plugin descriptor text identifies 'Developer Tools'. Runtime plugin descriptor is self-identifying."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references R4 rs/s/c/a InterfaceDeveloperToolsConfig."
+        }
+      ],
+      "note": "Runtime/plugin role is supported by exact descriptor text plus direct config reference."
+    }
+  ],
+  "conflicts": []
+}

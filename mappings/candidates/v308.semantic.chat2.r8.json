@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/Y",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GameframeNavigationInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_widget_root",
+          "detail": "Class builds root 32000 and gameframe/tab navigation widgets."
+        },
+        {
+          "family": "exact_navigation_flow",
+          "detail": "Exact click routing maps Achievements -> 44100, Account Information -> 638, Knowledgebase -> 64600, World Events -> 40087, and PK Ratings -> 40403."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads gameframe/tab/sprite, achievement, event, info, player and ratings assets."
+        }
+      ],
+      "note": "Navigation name is based on exact multi-destination root routing, not one content tab."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aa",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AccountInformationInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_parent_join",
+          "detail": "GameframeNavigationInterface exact Account Information action routes to interface root 638."
+        },
+        {
+          "family": "exact_widget_root",
+          "detail": "rs/n/c/aa.a() directly obtains and populates root 638."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Root content includes Achievement Diary, Monster drop tables and Hotspot status/actions."
+        }
+      ],
+      "note": "Account Information is proven by the exact navigation-to-root join."
+    }
+  ],
+  "conflicts": []
+}

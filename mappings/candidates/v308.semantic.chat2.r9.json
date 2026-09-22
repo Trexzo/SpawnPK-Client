@@ -1,0 +1,245 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/n/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NotificationAlertsConfig",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact options configure alert notifications, private messages, superior slayer/boss alerts, de-aggro timer, tray icon/notifications, focus, flash, sound and timeout."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Runtime class rs/s/n/b directly references this config class."
+        }
+      ],
+      "note": "Notification-alert configuration role is explicit from options and runtime pairing."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/n/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NotificationAlertsPlugin",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact runtime messages include superior slayer/boss spawned, de-aggro timer reached and PM notifications."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references rs/s/n/a NotificationAlertsConfig."
+        }
+      ],
+      "note": "Runtime notification-alert role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/f/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GroundMarkersConfig",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact options include marked tile color/border/fill opacity, Draw tiles on minimap, and Import/Export/Clear world-map options."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Runtime class rs/s/f/d directly references this config class."
+        }
+      ],
+      "note": "Ground-marker configuration role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/f/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GroundMarkersPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include Ground Markers, Shift-key tile marking, Unmark, Label, Reset all, Tile label and Tile marker color."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references rs/s/f/b GroundMarkersConfig."
+        }
+      ],
+      "note": "Ground-markers runtime/plugin role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/l/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MenuEntrySwapperConfig",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact options include Item Swaps, NPC Swaps, customizable left-clicks and shift-clicks."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Runtime class rs/s/l/c directly references this config class."
+        }
+      ],
+      "note": "Menu-entry swapper configuration role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/l/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MenuEntrySwapperPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is Menu Entry Swapper; actions include Swap left click, Swap shift click and Walk here."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references rs/s/l/b MenuEntrySwapperConfig."
+        }
+      ],
+      "note": "Name follows the exact plugin title."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/o/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcIndicatorsPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is NPC Indicators; menu actions include Tag-All, Untag-All, Tag color/style, Highlight NPCs on-screen and tile/true-tile styles."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references rs/s/o/d, reviewed in R4 as NpcHighlightConfig."
+        }
+      ],
+      "note": "Runtime NPC-indicators role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/e/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GpuConfig",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact options include GPU enablement, Anti Aliasing, Anisotropic Filtering, Colorblindness Correction, Smooth banding, Stretched Mode, UI scaling and Vsync Mode."
+        }
+      ],
+      "note": "GPU/stretched-mode configuration role is explicit from option text."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GpuSettingsPanel",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact panel headings include GPU Settings and Stretched Mode Settings, with GPU Mode, Anti Aliasing, anisotropic filtering, colorblind mode, VSync, UI scaling and aspect-ratio controls."
+        }
+      ],
+      "note": "Desktop settings-panel role is explicit from rendered labels."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginManager",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact lifecycle strings include 'Plugin {} is now running/stopped', dependency graph cycle detection, safe-mode disabling, scheduled-task removal, config lookup/reset and plugin start failures."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class stores plugin lists, EventBus/config dependencies and exposes start/stop/load/dependency operations over rs/s/a plugin instances."
+        }
+      ],
+      "note": "Manager name follows exact lifecycle/dependency behavior."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/a/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InfoBoxManager",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include Adding/Removed InfoBox, InfoBox Group, Detach, Merge/Unmerge, group deletion and layer movement."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class owns grouped maps of InfoBoxes and synchronized add/remove/move/group operations."
+        }
+      ],
+      "note": "Manager name follows exact grouped InfoBox lifecycle behavior."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/t/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TradingPostSearchPanel",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'Trading Post Search'; text explains searching an item by name for sale history, pagination, login requirement and failed/no-result states."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends javax.swing.JPanel and owns Swing search/results/pagination widgets."
+        }
+      ],
+      "note": "Panel name is exact from class shape and title."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/d/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoginScreen",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact UI strings include Username, Password, Log in, 5-digit PIN, Recovery PIN ownership verification, invitation code, latest update and login-attempt/loading states."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class implements Runnable, owns the login sprites/text inputs/state and is directly referenced by Client and adjacent rs/l/d login classes."
+        }
+      ],
+      "note": "LoginScreen is intentionally broader than renderer/controller because the class owns both presentation and login/recovery interaction state."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "StatusTimer",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads popups/timer 0..3 and per-type sprites supplied by StatusTimerType."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Each instance stores a StatusTimerType, start/end timing fields, tooltip/name state and renders/removes timer instances from a list."
+        }
+      ],
+      "note": "Singular StatusTimer reflects one rendered timed status instance."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/q$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "StatusTimerType",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_enum_role",
+          "detail": "Class is an enum with named constants such as VENGEANCE, ANTIFIRE, ANTIVENOM, TELEBLOCK, FREEZE, STAMINA and many SpawnPK boost/event timers."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Each enum value carries timer title/description, optional popups/* resource path and numeric presentation metadata."
+        }
+      ],
+      "note": "Type name reflects the enum's exact role as metadata for StatusTimer instances."
+    }
+  ],
+  "conflicts": []
+}

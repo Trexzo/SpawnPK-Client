@@ -1,0 +1,220 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 8,
+  "review_id": "SEMREVIEW_0A7899AD6B7C9AC5BE83",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_137A82FC730FA075CE68",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000960",
+      "owner_logical_id": "CLIENT_CLASS_000960",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/r/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TileIndicatorsPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact runtime/plugin descriptor text identifies 'Tile Indicators'. Description says it highlights the tile you are currently moving to."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references R4 rs/s/r/a TileIndicatorConfig."
+        }
+      ],
+      "note": "Runtime/plugin role is supported by exact descriptor text plus direct config reference."
+    },
+    {
+      "proposal_id": "SEMPROP_3DD785AEF0B96F66C864",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000917",
+      "owner_logical_id": "CLIENT_CLASS_000917",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/h/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TimersInfoboxPlugin",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact runtime/plugin descriptor text identifies 'Timers / Info Boxes'. Runtime strings enumerate combat boosts, freeze/teleblock, slayer/task scroll timers and next buff change."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references R4 rs/s/h/b StatusInfoboxConfig."
+        }
+      ],
+      "note": "Runtime/plugin role is supported by exact descriptor text plus direct config reference."
+    },
+    {
+      "proposal_id": "SEMPROP_49C64E46F66CA3B0B996",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000856",
+      "owner_logical_id": "CLIENT_CLASS_000856",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CombatOverlaysPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact runtime/plugin descriptor text identifies 'Combat overlays'. Runtime plugin descriptor is self-identifying."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references R4 rs/s/a/a CombatOverlayConfig."
+        }
+      ],
+      "note": "Runtime/plugin role is supported by exact descriptor text plus direct config reference."
+    },
+    {
+      "proposal_id": "SEMPROP_7D6A63AE3752D4E416D4",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000924",
+      "owner_logical_id": "CLIENT_CLASS_000924",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/j/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "KeyRemappingPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact runtime/plugin descriptor text identifies 'Key Remapping'. Description includes WASD camera movement and Press Enter to Chat."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references R4 rs/s/j/a KeyRemappingConfig."
+        }
+      ],
+      "note": "Runtime/plugin role is supported by exact descriptor text plus direct config reference."
+    },
+    {
+      "proposal_id": "SEMPROP_979D07A45E0DE36A2105",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000889",
+      "owner_logical_id": "CLIENT_CLASS_000889",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/c/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DeveloperToolsPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact runtime/plugin descriptor text identifies 'Developer Tools'. Runtime plugin descriptor is self-identifying."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references R4 rs/s/c/a InterfaceDeveloperToolsConfig."
+        }
+      ],
+      "note": "Runtime/plugin role is supported by exact descriptor text plus direct config reference."
+    },
+    {
+      "proposal_id": "SEMPROP_A0B1230CFECDF0F90284",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000921",
+      "owner_logical_id": "CLIENT_CLASS_000921",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/i/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InteractHighlightPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact runtime/plugin descriptor text identifies 'Interact Highlight'. Description says it outlines NPCs and objects you interact with or hover over."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references R4 rs/s/i/a InteractionHighlightConfig."
+        }
+      ],
+      "note": "Runtime/plugin role is supported by exact descriptor text plus direct config reference."
+    },
+    {
+      "proposal_id": "SEMPROP_B7EAAB04352C68496FFC",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000898",
+      "owner_logical_id": "CLIENT_CLASS_000898",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/d/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EntityHiderPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact runtime/plugin descriptor text identifies 'Entity Hider'. Description says it hides players, NPCs and/or projectiles."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references R4 rs/s/d/a EntityHiderConfig."
+        }
+      ],
+      "note": "Runtime/plugin role is supported by exact descriptor text plus direct config reference."
+    },
+    {
+      "proposal_id": "SEMPROP_BAAE67005036B55F6F12",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000962",
+      "owner_logical_id": "CLIENT_CLASS_000962",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/s/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HoverDescriptionsPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact runtime/plugin descriptor text identifies 'Hover Descriptions'. Runtime class is the hover/tooltip plugin surface."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references R4 rs/s/s/a TooltipConfig."
+        }
+      ],
+      "note": "Runtime/plugin role is supported by exact descriptor text plus direct config reference."
+    }
+  ],
+  "unresolved": []
+}
