@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/source-rename-plan.schema.json",
+  "title": "SpawnPK accepted source rename plan",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "plan_id",
+    "inventory_id",
+    "review_id",
+    "source_tree_sha256",
+    "accepted_proposal_count",
+    "renames"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "source_rename_plan"},
+    "plan_id": {
+      "type": "string",
+      "pattern": "^SRCPLAN_[0-9A-F]{20}$"
+    },
+    "inventory_id": {
+      "type": "string",
+      "pattern": "^SRCINV_[0-9A-F]{20}$"
+    },
+    "review_id": {
+      "type": "string",
+      "pattern": "^SRCREVIEW_[0-9A-F]{20}$"
+    },
+    "workspace_id": {"type": ["string", "null"]},
+    "build_id": {"type": ["string", "null"]},
+    "source_tree_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "accepted_proposal_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "renames": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "proposal_id",
+          "source_symbol_id",
+          "source_method_id",
+          "source_file",
+          "method_name",
+          "kind",
+          "ordinal",
+          "declaration_start",
+          "current_name",
+          "new_name",
+          "confidence",
+          "evidence"
+        ]
+      }
+    }
+  }
+}
