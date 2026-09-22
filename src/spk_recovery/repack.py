@@ -9,6 +9,10 @@ import tempfile
 from typing import Any
 
 from .indexer import index_jar
+from .member_safety import (
+    MemberSafetyError,
+    validate_member_safety_acceptance,
+)
 from .remap_plan import RemapPlanError, remap_risk_scan
 
 
@@ -277,6 +281,8 @@ def remap_jar(
     allow_package_resource_risk: bool = False,
     rewrite_class_name_strings: bool = False,
     allow_member_reflection_risk: bool = False,
+    member_safety_report: dict[str, Any] | None = None,
+    member_safety_acceptance: dict[str, Any] | None = None,
     java_command: str = "java",
     javac_command: str = "javac",
 ) -> dict[str, Any]:
@@ -321,11 +327,35 @@ def remap_jar(
         if member_plan is not None
         else 0
     )
-    if member_count and not allow_member_reflection_risk:
-        raise RepackError(
-            "member remap reflection/name-sensitivity is not yet proven safe; "
-            "use explicit allow_member_reflection_risk acknowledgement"
-        )
+    member_safety_summary: dict[str, Any] | None = None
+    if member_count:
+        if (
+            member_safety_report is not None
+            or member_safety_acceptance is not None
+        ):
+            if (
+                member_safety_report is None
+                or member_safety_acceptance is None
+            ):
+                raise RepackError(
+                    "member safety report and acceptance must be supplied together"
+                )
+            try:
+                member_safety_summary = validate_member_safety_acceptance(
+                    member_plan,
+                    member_safety_report,
+                    member_safety_acceptance,
+                )
+            except MemberSafetyError as exc:
+                raise RepackError(
+                    f"member safety acceptance rejected: {exc}"
+                ) from exc
+        elif not allow_member_reflection_risk:
+            raise RepackError(
+                "member remap name-sensitivity has not been reviewed; "
+                "supply an exact member safety report + acceptance or use "
+                "the legacy global allow_member_reflection_risk override"
+            )
 
     java = _require_executable(java_command)
     javac = _require_executable(javac_command)
@@ -441,7 +471,10 @@ def remap_jar(
         "class_parse_errors": output_index["summary"]["class_parse_error_count"],
         "rewrite_class_name_strings": rewrite_class_name_strings,
         "package_resource_risk_acknowledged": allow_package_resource_risk,
-        "member_reflection_risk_acknowledged": allow_member_reflection_risk,
+        "member_reflection_risk_acknowledged": (
+            allow_member_reflection_risk
+        ),
+        "member_safety_review": member_safety_summary,
         "helper_stdout": helper_stdout.strip().splitlines(),
         "risk_summary": risk["summary"],
     }

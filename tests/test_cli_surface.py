@@ -19,6 +19,8 @@ COMMANDS = [
     "remap-plan",
     "remap-risk-scan",
     "member-remap-plan",
+    "member-safety-validate",
+    "member-safety-scan",
     "class-remap",
     "jar-remap",
     "verify-remap",

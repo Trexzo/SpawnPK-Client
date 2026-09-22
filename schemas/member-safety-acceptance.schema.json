@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/member-safety-acceptance.schema.json",
+  "title": "SpawnPK explicit member safety acceptance",
+  "type": "object",
+  "required": ["schema_version", "kind", "report_id", "allow"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "member_safety_acceptance"},
+    "report_id": {"type": "string", "pattern": "^MEMRISKREVIEW_[0-9A-F]{20}$"},
+    "allow": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["risk_id", "reason"],
+        "properties": {
+          "risk_id": {"type": "string", "pattern": "^MEMRISK_[0-9A-F]{20}$"},
+          "reason": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

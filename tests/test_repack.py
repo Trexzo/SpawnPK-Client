@@ -9,6 +9,7 @@ import unittest
 import zipfile
 
 from spk_recovery.indexer import index_jar
+from spk_recovery.member_safety import build_member_safety_report
 from spk_recovery.repack import RepackError, remap_jar
 
 
@@ -283,6 +284,46 @@ class RepackTest(unittest.TestCase):
             self.assertIn(b"valueText", main_bytes)
             self.assertIn(b"valueText", helper_bytes)
             self.assertIn(b"valueText", svc_bytes)
+
+    def test_member_safety_acceptance_replaces_global_override(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar, index, class_plan = self._fixture(root)
+            member_plan = self._member_plan(index)
+            report = build_member_safety_report(
+                jar,
+                index,
+                member_plan,
+            )
+            acceptance = {
+                "schema_version": 1,
+                "kind": "member_safety_acceptance",
+                "report_id": report["report_id"],
+                "allow": [
+                    {
+                        "risk_id": row["risk_id"],
+                        "reason": "reviewed synthetic fixture",
+                    }
+                    for row in report["members"]
+                ],
+            }
+            output = root / "reviewed.jar"
+            result = remap_jar(
+                jar,
+                index,
+                class_plan,
+                output,
+                member_plan=member_plan,
+                rewrite_class_name_strings=True,
+                member_safety_report=report,
+                member_safety_acceptance=acceptance,
+            )
+            self.assertEqual(result["mapped_members"], 4)
+            self.assertIsNotNone(result["member_safety_review"])
+            self.assertEqual(
+                result["member_safety_review"]["approved_members"],
+                4,
+            )
 
 
 if __name__ == "__main__":

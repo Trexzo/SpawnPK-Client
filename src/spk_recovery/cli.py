@@ -32,6 +32,12 @@ from .semantic_review import (
     resolve_semantic_candidates,
     write_json as write_semantic_json,
 )
+from .member_safety import (
+    MemberSafetyError,
+    build_member_safety_report,
+    validate_member_safety_acceptance,
+    write_json as write_member_safety_json,
+)
 from .member_remap_plan import (
     MemberRemapPlanError,
     build_member_remap_plan,
@@ -191,6 +197,23 @@ def main(argv: list[str] | None = None) -> int:
     pmrp.add_argument("--build-id", required=True)
     pmrp.add_argument("--out", type=Path, required=True)
 
+    pmsr = sub.add_parser(
+        "member-safety-scan",
+        help="Build exact per-member name-sensitivity risk evidence",
+    )
+    pmsr.add_argument("source_jar", type=Path)
+    pmsr.add_argument("index", type=Path)
+    pmsr.add_argument("member_plan", type=Path)
+    pmsr.add_argument("--out", type=Path, required=True)
+
+    pmsv = sub.add_parser(
+        "member-safety-validate",
+        help="Validate explicit acceptance against one exact member safety report",
+    )
+    pmsv.add_argument("member_plan", type=Path)
+    pmsv.add_argument("report", type=Path)
+    pmsv.add_argument("acceptance", type=Path)
+
     rc = sub.add_parser(
         "class-remap",
         help="Apply a verified class remap plan and deterministically repackage the JAR",
@@ -216,6 +239,8 @@ def main(argv: list[str] | None = None) -> int:
     rj.add_argument("--rewrite-class-name-strings", action="store_true")
     rj.add_argument("--allow-package-resource-risk", action="store_true")
     rj.add_argument("--allow-member-reflection-risk", action="store_true")
+    rj.add_argument("--member-safety-report", type=Path)
+    rj.add_argument("--member-safety-acceptance", type=Path)
 
     rv = sub.add_parser(
         "verify-remap",
@@ -567,6 +592,46 @@ def main(argv: list[str] | None = None) -> int:
         print(f"out={args.out}")
         return 0
 
+    if args.cmd == "member-safety-scan":
+        try:
+            report = build_member_safety_report(
+                args.source_jar,
+                _load(args.index),
+                _load(args.member_plan),
+            )
+            write_member_safety_json(report, args.out)
+        except (
+            MemberSafetyError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_MEMBER_SAFETY_SCAN_PASS")
+        print(f"report_id={report['report_id']}")
+        print(f"member_count={report['member_count']}")
+        for level, count in report["risk_level_counts"].items():
+            print(f"risk_{level}={count}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "member-safety-validate":
+        try:
+            summary = validate_member_safety_acceptance(
+                _load(args.member_plan),
+                _load(args.report),
+                _load(args.acceptance),
+            )
+        except (
+            MemberSafetyError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_MEMBER_SAFETY_VALIDATE_PASS")
+        for k, v in summary.items():
+            print(f"{k}={v}")
+        return 0
+
     if args.cmd == "class-remap":
         try:
             result = remap_jar(
@@ -615,6 +680,16 @@ def main(argv: list[str] | None = None) -> int:
                 if args.member_plan
                 else None
             )
+            member_safety_report = (
+                _load(args.member_safety_report)
+                if args.member_safety_report
+                else None
+            )
+            member_safety_acceptance = (
+                _load(args.member_safety_acceptance)
+                if args.member_safety_acceptance
+                else None
+            )
             result = remap_jar(
                 args.source_jar,
                 _load(args.index),
@@ -630,6 +705,8 @@ def main(argv: list[str] | None = None) -> int:
                 allow_member_reflection_risk=(
                     args.allow_member_reflection_risk
                 ),
+                member_safety_report=member_safety_report,
+                member_safety_acceptance=member_safety_acceptance,
             )
             if args.result_out:
                 write_result(result, args.result_out)
