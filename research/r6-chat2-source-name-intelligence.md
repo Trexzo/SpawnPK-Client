@@ -121,3 +121,12 @@ That means Chat 2 source-name diagnostics must not become a gate for exact binar
 class/member authority, or R7C release orchestration. They begin only after the new recovered
 source inventory exists, consume R6E results when available, and return candidate/review
 evidence rather than promotion authority.
+
+
+## R7D reproducibility boundary
+
+R7D independently verifies that an R7 release can be reproduced from its pinned authority
+documents and optional on-disk artifacts/toolchain. That verification strengthens provenance
+and reproducibility only. It does not upgrade an inferred parameter/local name into recovered
+original source text, and Chat 2 must not use an R7D PASS as semantic-name acceptance evidence
+beyond the evidence that originally justified the candidate or accepted inferred replacement.
