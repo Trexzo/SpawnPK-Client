@@ -19,25 +19,66 @@
     "analysis_queue",
     "diff_summary",
     "matcher_summary",
-    "package_anchors"
+    "package_anchors",
+    "class_delta_report"
   ],
   "properties": {
-    "schema_version": {"const": 1},
-    "kind": {"const": "update_intake_report"},
-    "migration_id": {"type": "string", "pattern": "^MIGRATION_[0-9A-F]{20}$"},
-    "old_build_id": {"type": "string", "minLength": 1},
-    "new_build_id": {"type": "string", "minLength": 1},
-    "old_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "new_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "scope_prefix": {"type": "string"},
-    "summary": {"type": "object"},
-    "classifications": {"type": "object"},
-    "changed_same_path_classes": {"type": "array"},
-    "matched_classes": {"type": "array"},
-    "analysis_queue": {"type": "array"},
-    "diff_summary": {"type": "object"},
-    "matcher_summary": {"type": "object"},
-    "package_anchors": {"type": "object"}
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "update_intake_report"
+    },
+    "migration_id": {
+      "type": "string",
+      "pattern": "^MIGRATION_[0-9A-F]{20}$"
+    },
+    "old_build_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "new_build_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "old_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "new_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "scope_prefix": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "object"
+    },
+    "classifications": {
+      "type": "object"
+    },
+    "changed_same_path_classes": {
+      "type": "array"
+    },
+    "matched_classes": {
+      "type": "array"
+    },
+    "analysis_queue": {
+      "type": "array"
+    },
+    "diff_summary": {
+      "type": "object"
+    },
+    "matcher_summary": {
+      "type": "object"
+    },
+    "package_anchors": {
+      "type": "object"
+    },
+    "class_delta_report": {
+      "type": "object"
+    }
   },
   "additionalProperties": false
 }

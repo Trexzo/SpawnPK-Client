@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from .delta_classify import classify_member_deltas
 from .lineage import validate_lineage, write_lineage
 from .member_lineage import validate_member_lineage, write_member_lineage
 from .update_finalize import build_authority_candidate_report
@@ -215,6 +216,7 @@ def migrate_update(
     class_summary_path = out_dir / "class-transfer-summary.json"
     member_summary_path = out_dir / "member-transfer-summary.json"
     authority_path = out_dir / "authority-candidate.json"
+    delta_path = out_dir / "delta-report.json"
     queue_path = out_dir / "focused-analysis-queue.json"
     orchestration_path = out_dir / "migration-workspace.json"
 
@@ -222,6 +224,38 @@ def migrate_update(
     write_member_lineage(migrated_members, member_path)
     _dump(class_summary_path, class_summary)
     _dump(member_summary_path, member_summary)
+
+    member_delta_report = (
+        classify_member_deltas(member_candidates)
+        if member_candidates is not None
+        else {
+            "schema_version": 1,
+            "kind": "member_delta_report",
+            "old_sha256": old_index.get("sha256"),
+            "new_sha256": new_index.get("sha256"),
+            "summary": {
+                "matched_members": 0,
+                "new_member_candidates": 0,
+                "removed_member_candidates": 0,
+                "skipped_classes": 0,
+                "status": "member_candidates_not_supplied",
+            },
+            "members": [],
+            "new_member_candidates": [],
+            "removed_member_candidates": [],
+            "skipped_classes": [],
+        }
+    )
+    delta_report = {
+        "schema_version": 1,
+        "kind": "update_delta_report",
+        "migration_id": intake["migration_id"],
+        "old_sha256": intake["old_sha256"],
+        "new_sha256": intake["new_sha256"],
+        "classes": intake["class_delta_report"],
+        "members": member_delta_report,
+    }
+    _dump(delta_path, delta_report)
 
     authority = build_authority_candidate_report(
         migrated_classes,
@@ -258,6 +292,8 @@ def migrate_update(
         "new_build_id": new_build_id,
         "class_transfer_summary": class_summary,
         "member_transfer_summary": member_summary,
+        "class_delta_summary": intake["class_delta_report"]["summary"],
+        "member_delta_summary": member_delta_report["summary"],
         "authority_report_id": authority["report_id"],
         "ready_for_authority": authority["ready_for_authority"],
         "focused_analysis_items": len(queue),
@@ -282,6 +318,7 @@ def migrate_update(
             "member_lineage": str(member_path),
             "class_transfer_summary": str(class_summary_path),
             "member_transfer_summary": str(member_summary_path),
+            "delta_report": str(delta_path),
             "authority_candidate": str(authority_path),
             "focused_analysis_queue": str(queue_path),
         },

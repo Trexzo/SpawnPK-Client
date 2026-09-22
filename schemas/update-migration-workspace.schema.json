@@ -14,26 +14,70 @@
     "new_build_id",
     "class_transfer_summary",
     "member_transfer_summary",
+    "class_delta_summary",
+    "member_delta_summary",
     "authority_report_id",
     "ready_for_authority",
     "focused_analysis_items",
     "paths"
   ],
   "properties": {
-    "schema_version": {"const": 1},
-    "kind": {"const": "update_migration_workspace"},
-    "workspace_id": {"type": "string", "pattern": "^MIGWORK_[0-9A-F]{20}$"},
-    "migration_id": {"type": "string", "pattern": "^MIGRATION_[0-9A-F]{20}$"},
-    "old_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "new_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "old_build_id": {"type": "string", "minLength": 1},
-    "new_build_id": {"type": "string", "minLength": 1},
-    "class_transfer_summary": {"type": "object"},
-    "member_transfer_summary": {"type": "object"},
-    "authority_report_id": {"type": "string", "pattern": "^AUTHCAND_[0-9A-F]{20}$"},
-    "ready_for_authority": {"type": "boolean"},
-    "focused_analysis_items": {"type": "integer", "minimum": 0},
-    "paths": {"type": "object"}
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "update_migration_workspace"
+    },
+    "workspace_id": {
+      "type": "string",
+      "pattern": "^MIGWORK_[0-9A-F]{20}$"
+    },
+    "migration_id": {
+      "type": "string",
+      "pattern": "^MIGRATION_[0-9A-F]{20}$"
+    },
+    "old_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "new_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "old_build_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "new_build_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "class_transfer_summary": {
+      "type": "object"
+    },
+    "member_transfer_summary": {
+      "type": "object"
+    },
+    "authority_report_id": {
+      "type": "string",
+      "pattern": "^AUTHCAND_[0-9A-F]{20}$"
+    },
+    "ready_for_authority": {
+      "type": "boolean"
+    },
+    "focused_analysis_items": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "paths": {
+      "type": "object"
+    },
+    "class_delta_summary": {
+      "type": "object"
+    },
+    "member_delta_summary": {
+      "type": "object"
+    }
   },
   "additionalProperties": false
 }
