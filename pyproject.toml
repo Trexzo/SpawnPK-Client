@@ -18,6 +18,7 @@ spk-source-workspace = "spk_recovery.source_workspace_cli:main"
 spk-coverage = "spk_recovery.coverage_cli:main"
 spk-semantic-carry-forward = "spk_recovery.semantic_carryforward_cli:main"
 spk-source-readiness = "spk_recovery.source_readiness_cli:main"
+spk-build-authority = "spk_recovery.build_authority_cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
