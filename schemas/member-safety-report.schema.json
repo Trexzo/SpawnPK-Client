@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/member-safety-report.schema.json",
+  "title": "SpawnPK member safety report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "source_sha256",
+    "member_plan_digest",
+    "report_id",
+    "member_count",
+    "risk_level_counts",
+    "reflection_surface",
+    "members"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "member_safety_report"},
+    "source_sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+    "member_plan_digest": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+    "report_id": {"type": "string", "pattern": "^MEMRISKREVIEW_[0-9A-F]{20}$"},
+    "member_count": {"type": "integer", "minimum": 0},
+    "risk_level_counts": {
+      "type": "object",
+      "required": ["low", "medium", "high", "critical"],
+      "properties": {
+        "low": {"type": "integer", "minimum": 0},
+        "medium": {"type": "integer", "minimum": 0},
+        "high": {"type": "integer", "minimum": 0},
+        "critical": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "reflection_surface": {"type": "object"},
+    "members": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "source_sha256",
+          "plan_digest",
+          "member_id",
+          "kind",
+          "owner_internal_name",
+          "source_name",
+          "descriptor",
+          "target_name",
+          "access",
+          "hazards",
+          "risk_id",
+          "risk_level"
+        ],
+        "properties": {
+          "risk_id": {"type": "string", "pattern": "^MEMRISK_[0-9A-F]{20}$"},
+          "member_id": {"type": "string"},
+          "kind": {"enum": ["field", "method"]},
+          "owner_internal_name": {"type": "string", "minLength": 1},
+          "source_name": {"type": "string", "minLength": 1},
+          "descriptor": {"type": "string", "minLength": 1},
+          "target_name": {"type": "string", "minLength": 1},
+          "risk_level": {"enum": ["low", "medium", "high", "critical"]},
+          "hazards": {"type": "array"},
+          "source_sha256": {"type": "string"},
+          "plan_digest": {"type": "string"},
+          "access": {"type": "integer"}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}
