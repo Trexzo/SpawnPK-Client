@@ -134,6 +134,30 @@ def _source_method_counts(
     return counts
 
 
+def _method_symbol_shape(
+    inventory: dict[str, Any],
+    canonical_method_id: str,
+) -> list[tuple[str, int, str]]:
+    rows = [
+        row
+        for row in inventory.get("symbols", [])
+        if isinstance(row, dict)
+        and row.get("canonical_method_id") == canonical_method_id
+        and isinstance(row.get("kind"), str)
+        and isinstance(row.get("ordinal"), int)
+        and not isinstance(row.get("ordinal"), bool)
+        and isinstance(row.get("declared_type"), str)
+    ]
+    return sorted(
+        (
+            str(row["kind"]),
+            int(row["ordinal"]),
+            str(row["declared_type"]),
+        )
+        for row in rows
+    )
+
+
 def _target_symbols(
     inventory: dict[str, Any],
     *,
@@ -380,6 +404,21 @@ def carry_forward_source_names(
             block(
                 "canonical_lineage_missing_build_relation",
                 "Stable class/method identity is not present in both source builds.",
+            )
+            continue
+
+        old_shape = _method_symbol_shape(
+            old_inventory,
+            method_id,
+        )
+        new_shape = _method_symbol_shape(
+            new_inventory,
+            method_id,
+        )
+        if not old_shape or old_shape != new_shape:
+            block(
+                "source_symbol_shape_changed",
+                "Regenerated method parameter/local kind-ordinal-type shape changed or became unavailable.",
             )
             continue
 
