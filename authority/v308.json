@@ -1,0 +1,13 @@
+{
+  "authority": "EXACT_CURRENT_CLIENT",
+  "build": 308,
+  "library_source_name": "client(6).jar",
+  "sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "main_class": "rs.gui.Launcher",
+  "outer_protocol_revision": 317,
+  "notes": [
+    "Client binary is intentionally not committed.",
+    "v307 -> v308 whole-JAR delta is one changed class: rs/f/a.class; build/config constant 307 -> 308.",
+    "Original SourceFile/LineNumberTable/LocalVariableTable/MethodParameters metadata is stripped from v308."
+  ]
+}

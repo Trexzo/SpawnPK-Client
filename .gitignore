@@ -1,0 +1,29 @@
+# Exact/proprietary client artifacts never belong in Git.
+evidence/binaries/*
+!evidence/binaries/.gitkeep
+
+# Generated analysis output
+generated/*
+!generated/.gitkeep
+reports/*
+!reports/.gitkeep
+evidence/indexes/*
+!evidence/indexes/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Recovered/decompiled source is generated until explicitly promoted.
+recovered-src/
+decompiled/
+*.jar
