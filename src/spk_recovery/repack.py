@@ -44,6 +44,31 @@ def _require_executable(name: str) -> str:
     return found
 
 
+def _remap_descriptor(
+    descriptor: str,
+    class_names: dict[str, str],
+) -> str:
+    out: list[str] = []
+    i = 0
+    while i < len(descriptor):
+        ch = descriptor[i]
+        if ch == "L":
+            semi = descriptor.find(";", i)
+            if semi < 0:
+                return descriptor
+            internal = descriptor[i + 1 : semi]
+            out.append(
+                "L"
+                + class_names.get(internal, internal)
+                + ";"
+            )
+            i = semi + 1
+        else:
+            out.append(ch)
+            i += 1
+    return "".join(out)
+
+
 def _member_exists(
     index: dict[str, Any],
     *,
@@ -380,14 +405,18 @@ def remap_jar(
             collection = (
                 "fields" if row["kind"] == "field" else "methods"
             )
+            target_descriptor = _remap_descriptor(
+                row["descriptor"],
+                class_names,
+            )
             if not any(
                 m.get("name") == row["target_name"]
-                and m.get("descriptor") == row["descriptor"]
+                and m.get("descriptor") == target_descriptor
                 for m in cls.get(collection, [])
             ):
                 raise RepackError(
                     f"transformed {row['kind']} missing: "
-                    f"{owner}.{row['target_name']}{row['descriptor']}"
+                    f"{owner}.{row['target_name']}{target_descriptor}"
                 )
 
     return {
