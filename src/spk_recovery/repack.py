@@ -9,7 +9,11 @@ import tempfile
 from typing import Any
 
 from .indexer import index_jar
-from .member_safety import (\n    MemberSafetyError,\n    validate_member_safety_acceptance,\n)\nfrom .remap_plan import RemapPlanError, remap_risk_scan
+from .member_safety import (
+    MemberSafetyError,
+    validate_member_safety_acceptance,
+)
+from .remap_plan import RemapPlanError, remap_risk_scan
 
 
 class RepackError(RemapPlanError):
