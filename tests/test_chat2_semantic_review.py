@@ -3,6 +3,7 @@ from pathlib import Path
 import unittest
 
 from spk_recovery.semantic_review import (
+    accept_semantic_proposals,
     resolve_semantic_candidates,
 )
 from spk_recovery.member_remap_plan import (
@@ -251,6 +252,53 @@ class Chat2SemanticReviewIntegrationTests(unittest.TestCase):
         self.assertEqual(plan["field_count"], 0)
         self.assertEqual(plan["method_count"], 0)
         self.assertEqual(plan["members"], [])
+
+    def test_explicit_project_acceptance_promotes_full_seed(self):
+        review = _load(
+            "mappings/candidates/"
+            "v308.semantic-review.chat2.r2.json"
+        )
+        acceptance = _load(
+            "mappings/v308.semantic.acceptance.json"
+        )
+
+        self.assertEqual(
+            acceptance["review_id"],
+            "SEMREVIEW_DD69CD752A6E46181BAC",
+        )
+        self.assertEqual(
+            set(acceptance["accept"]),
+            {
+                row["proposal_id"]
+                for row in review["proposals"]
+            },
+        )
+
+        classes, members, summary = accept_semantic_proposals(
+            _class_lineage(),
+            _member_lineage(),
+            review,
+            acceptance,
+        )
+
+        self.assertEqual(summary["accepted"], 39)
+        self.assertEqual(summary["accepted_classes"], 32)
+        self.assertEqual(summary["accepted_members"], 7)
+        self.assertEqual(summary["already_accepted"], 0)
+        self.assertEqual(
+            sum(
+                row["semantic_status"] == "ACCEPTED"
+                for row in classes["classes"]
+            ),
+            32,
+        )
+        self.assertEqual(
+            sum(
+                row["semantic_status"] == "ACCEPTED"
+                for row in members["members"]
+            ),
+            7,
+        )
 
     def test_resolved_review_uses_canonical_r2c_ids(self):
         review = _load(
