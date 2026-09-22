@@ -47,6 +47,7 @@ def main(argv: list[str] | None = None) -> int:
         action="append",
         dest="source_prefixes",
     )
+    p.add_argument("--project-source-only", action="store_true")
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args(argv)
 
@@ -86,6 +87,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.rewrite_class_name_strings
             ),
             source_prefixes=args.source_prefixes,
+            project_source_only=args.project_source_only,
         )
     except (
         UpdateReleaseError,
