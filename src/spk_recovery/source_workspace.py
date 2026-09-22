@@ -83,6 +83,19 @@ def _is_project_class(entry: str, prefixes: list[str]) -> bool:
     return any(entry.startswith(prefix) for prefix in prefixes)
 
 
+def _is_project_source_target(entry: str, prefixes: list[str]) -> bool:
+    """Select Java source units, not nested/inner classfiles.
+
+    Procyon reconstructs $-named inner classes from the outer class when they
+    remain available as resolver context. Targeting them independently produces
+    invalid duplicate source units such as Outer$Inner.java declaring public
+    class Inner.
+    """
+    if not _is_project_class(entry, prefixes):
+        return False
+    return "$" not in Path(entry).name
+
+
 def _selection_digest(entries: list[str]) -> str:
     h = hashlib.sha256()
     for entry in entries:
@@ -112,7 +125,7 @@ def _extract_class_context(
             target = root / path
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(z.read(info))
-            if _is_project_class(name, prefixes):
+            if _is_project_source_target(name, prefixes):
                 if name.startswith("META-INF/versions/"):
                     raise SourceWorkspaceError(
                         "project-only source workspace does not support "
