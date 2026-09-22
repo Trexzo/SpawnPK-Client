@@ -553,7 +553,6 @@ def main(argv: list[str] | None = None) -> int:
                 args.out,
             )
         except (
-            FieldProofError,
             UpdateFinalizeError,
             MemberLineageError,
             LineageValidationError,
@@ -622,6 +621,7 @@ def main(argv: list[str] | None = None) -> int:
                 new_authority=args.new_authority,
             )
         except (
+            FieldProofError,
             UpdateOrchestratorError,
             UpdateIntakeError,
             UpdateTransferError,
