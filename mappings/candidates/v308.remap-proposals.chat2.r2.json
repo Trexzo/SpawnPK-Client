@@ -1,0 +1,253 @@
+{
+  "schema_version": 1,
+  "kind": "remap_spec_proposals",
+  "canonical": false,
+  "build_id": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "target_package": "recovered/spawnpk/client",
+  "minimum_confidence": 0.9,
+  "proposal_count": 9,
+  "proposals": [
+    {
+      "logical_id": "CLIENT_CLASS_000299",
+      "source_internal_name": "rs/i/b",
+      "semantic_name": "AdventureOrbRenderer",
+      "proposed_target_internal_name": "recovered/spawnpk/client/AdventureOrbRenderer",
+      "confidence": 0.992872,
+      "provenance": [
+        {
+          "source": "semantic_name_candidate",
+          "source_build": "v308",
+          "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+          "evidence": [
+            {
+              "family": "exact_resource_role",
+              "detail": "Class constructs orbs/adventure_orb and orbs/adventure_orb_hover sprite resources."
+            },
+            {
+              "family": "exact_literal_role",
+              "detail": "Class renders Adventure book / Adventure Book hover tooltip text."
+            },
+            {
+              "family": "structural_lineage",
+              "detail": "R1 uniquely correlates alternate rs/j/b.class to exact-v308 rs/i/b.class."
+            }
+          ]
+        },
+        {
+          "source": "v308_lineage_seed_order",
+          "note": "Exact v308 rs/** internal-name ordering places rs/i/b at ordinal 299, yielding CLIENT_CLASS_000299 under the canonical R1 seed rule."
+        }
+      ]
+    },
+    {
+      "logical_id": "CLIENT_CLASS_000552",
+      "source_internal_name": "rs/n/c/G",
+      "semantic_name": "ItemEnchantmentInterface",
+      "proposed_target_internal_name": "recovered/spawnpk/client/ItemEnchantmentInterface",
+      "confidence": 0.9604,
+      "provenance": [
+        {
+          "source": "semantic_name_candidate",
+          "source_build": "v308",
+          "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+          "evidence": [
+            {
+              "family": "exact_literal_role",
+              "detail": "Exact literals include Item Enchantment Chest, Enchantments, Select enchantment, Attempt Enchantment, Success chance and item/category controls."
+            },
+            {
+              "family": "structural_lineage",
+              "detail": "R1 uniquely correlates alternate rs/n/c/G.class to exact-v308 rs/n/c/G.class."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical_id": "CLIENT_CLASS_000587",
+      "source_internal_name": "rs/n/c/aL",
+      "semantic_name": "RaidPartySetupInterface",
+      "proposed_target_internal_name": "recovered/spawnpk/client/RaidPartySetupInterface",
+      "confidence": 0.992872,
+      "provenance": [
+        {
+          "source": "semantic_name_candidate",
+          "source_build": "v308",
+          "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+          "evidence": [
+            {
+              "family": "exact_literal_role",
+              "detail": "Exact literals include Raiding Party Set-up, Chambers of Xeric, Theatre of Blood, Start raid, Leave/disband party, Invite member and difficulty labels."
+            },
+            {
+              "family": "exact_resource_role",
+              "detail": "Class loads raids/sprite assets."
+            },
+            {
+              "family": "structural_lineage",
+              "detail": "R1 uniquely correlates alternate rs/n/c/aL.class to exact-v308 rs/n/c/aL.class."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical_id": "CLIENT_CLASS_000614",
+      "source_internal_name": "rs/n/c/am",
+      "semantic_name": "WelcomeBackInterface",
+      "proposed_target_internal_name": "recovered/spawnpk/client/WelcomeBackInterface",
+      "confidence": 0.992872,
+      "provenance": [
+        {
+          "source": "semantic_name_candidate",
+          "source_build": "v308",
+          "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+          "evidence": [
+            {
+              "family": "exact_literal_role",
+              "detail": "Exact literals include Welcome back, Username!, Play now, logging-in daily reward copy and next daily reward presentation."
+            },
+            {
+              "family": "exact_resource_role",
+              "detail": "Class loads misc/login resources."
+            },
+            {
+              "family": "structural_lineage",
+              "detail": "R1 uniquely correlates alternate rs/n/c/am.class to exact-v308 rs/n/c/am.class."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical_id": "CLIENT_CLASS_000626",
+      "source_internal_name": "rs/n/c/av",
+      "semantic_name": "DailyMoneyMakingInterface",
+      "proposed_target_internal_name": "recovered/spawnpk/client/DailyMoneyMakingInterface",
+      "confidence": 0.9604,
+      "provenance": [
+        {
+          "source": "semantic_name_candidate",
+          "source_build": "v308",
+          "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+          "evidence": [
+            {
+              "family": "exact_literal_role",
+              "detail": "Exact literals include Daily Money Making Activities, Daily reward bonus, Easy/Medium/Hard money making tasks, Track and Teleport."
+            },
+            {
+              "family": "structural_lineage",
+              "detail": "R1 uniquely correlates alternate rs/n/c/av.class to exact-v308 rs/n/c/av.class."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical_id": "CLIENT_CLASS_000633",
+      "source_internal_name": "rs/n/c/b",
+      "semantic_name": "DailyChallengesInterface",
+      "proposed_target_internal_name": "recovered/spawnpk/client/DailyChallengesInterface",
+      "confidence": 0.9604,
+      "provenance": [
+        {
+          "source": "semantic_name_candidate",
+          "source_build": "v308",
+          "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+          "evidence": [
+            {
+              "family": "exact_literal_role",
+              "detail": "Exact literals include Daily Challenges, Collect reward, View information and challenge task text."
+            },
+            {
+              "family": "structural_lineage",
+              "detail": "R1 uniquely correlates alternate rs/n/c/b.class to exact-v308 rs/n/c/b.class."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical_id": "CLIENT_CLASS_000642",
+      "source_internal_name": "rs/n/c/c",
+      "semantic_name": "AdventureBookInterface",
+      "proposed_target_internal_name": "recovered/spawnpk/client/AdventureBookInterface",
+      "confidence": 0.9604,
+      "provenance": [
+        {
+          "source": "semantic_name_candidate",
+          "source_build": "v308",
+          "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+          "evidence": [
+            {
+              "family": "exact_literal_role",
+              "detail": "Exact class literals include Next chapter, Previous chapter, Chapter Progress, Claim rewards, Tips & Information, Teleport to Task and Claim reward."
+            },
+            {
+              "family": "structural_lineage",
+              "detail": "R1 uniquely correlates alternate rs/n/c/c.class to exact-v308 rs/n/c/c.class."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical_id": "CLIENT_CLASS_000675",
+      "source_internal_name": "rs/n/c/v",
+      "semantic_name": "CollectionLogInterface",
+      "proposed_target_internal_name": "recovered/spawnpk/client/CollectionLogInterface",
+      "confidence": 0.992872,
+      "provenance": [
+        {
+          "source": "semantic_name_candidate",
+          "source_build": "v308",
+          "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+          "evidence": [
+            {
+              "family": "exact_literal_role",
+              "detail": "Exact literals include Collection Log, Select collection log, Bosses, Boxes, Minigames, Collection name, Obtained and Kill count."
+            },
+            {
+              "family": "exact_resource_role",
+              "detail": "Class loads drops/collection resources."
+            },
+            {
+              "family": "structural_lineage",
+              "detail": "R1 uniquely correlates alternate rs/n/c/v.class to exact-v308 rs/n/c/v.class."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "logical_id": "CLIENT_CLASS_000679",
+      "source_internal_name": "rs/n/c/z",
+      "semantic_name": "ConstructionRoomSelectionInterface",
+      "proposed_target_internal_name": "recovered/spawnpk/client/ConstructionRoomSelectionInterface",
+      "confidence": 0.992872,
+      "provenance": [
+        {
+          "source": "semantic_name_candidate",
+          "source_build": "v308",
+          "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+          "evidence": [
+            {
+              "family": "exact_literal_role",
+              "detail": "Exact literals enumerate buildable rooms and level requirements including Parlour, Garden, Kitchen, Chapel, Throne room and Treasure room."
+            },
+            {
+              "family": "exact_resource_role",
+              "detail": "Class loads construction/sprite resources."
+            },
+            {
+              "family": "structural_lineage",
+              "detail": "R1 uniquely correlates alternate rs/n/c/z.class to exact-v308 rs/n/c/z.class."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "unresolved": []
+}
