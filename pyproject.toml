@@ -24,6 +24,8 @@ spk-clean-rebuild = "spk_recovery.clean_rebuild_cli:main"
 spk-roundtrip-verify = "spk_recovery.roundtrip_verify_cli:main"
 spk-source-symbols = "spk_recovery.source_symbols_cli:main"
 spk-source-name-review = "spk_recovery.source_name_review_cli:main"
+spk-source-name-plan = "spk_recovery.source_name_plan_cli:main"
+spk-source-rewrite = "spk_recovery.source_rewrite_cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
