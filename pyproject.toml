@@ -29,6 +29,7 @@ spk-source-name-plan = "spk_recovery.source_name_plan_cli:main"
 spk-source-rewrite = "spk_recovery.source_rewrite_cli:main"
 spk-source-rewrite-accept = "spk_recovery.source_rewrite_acceptance_cli:main"
 spk-release-manifest = "spk_recovery.release_manifest_cli:main"
+spk-release-build = "spk_recovery.release_orchestrator_cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
