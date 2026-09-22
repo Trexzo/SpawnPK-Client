@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "method", "owner": "rs/Client", "name": "a", "descriptor": "(J)V"},
+      "proposed_name": "addFriend",
+      "confidence": 0.995,
+      "evidence": [
+        {"family": "exact_packet_behavior", "detail": "Method emits opcode 188 followed by the supplied i64 name key."},
+        {"family": "exact_literal_role", "detail": "Method contains the 350-entry friend-list capacity message and friend/ignore preflight behavior."},
+        {"family": "exact_field_flow", "detail": "Method appends the name key and local friend-list presentation state before sending."}
+      ],
+      "note": "Semantic intent is exact-current client behavior; proposed English identifier is not claimed to be the original developer name."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "method", "owner": "rs/Client", "name": "f", "descriptor": "(J)V"},
+      "proposed_name": "removeFriend",
+      "confidence": 0.992,
+      "evidence": [
+        {"family": "exact_packet_behavior", "detail": "Method emits opcode 215 followed by the supplied i64 name key."},
+        {"family": "exact_field_flow", "detail": "Method finds the key in friend state, decrements the friend count and compacts friend arrays."}
+      ],
+      "note": "Exact-current behavioral name candidate."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "method", "owner": "rs/Client", "name": "h", "descriptor": "(J)V"},
+      "proposed_name": "addIgnore",
+      "confidence": 0.995,
+      "evidence": [
+        {"family": "exact_packet_behavior", "detail": "Method emits opcode 133 followed by the supplied i64 name key."},
+        {"family": "exact_literal_role", "detail": "Method contains the 100-entry ignore-list capacity message and cross-list preflight behavior."},
+        {"family": "exact_field_flow", "detail": "Method appends the name key to local ignore state before sending."}
+      ],
+      "note": "Exact-current behavioral name candidate."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "method", "owner": "rs/Client", "name": "i", "descriptor": "(J)V"},
+      "proposed_name": "removeIgnore",
+      "confidence": 0.992,
+      "evidence": [
+        {"family": "exact_packet_behavior", "detail": "Method emits opcode 74 followed by the supplied i64 name key."},
+        {"family": "exact_field_flow", "detail": "Method removes the key from ignore state and compacts the local ignore array."}
+      ],
+      "note": "Exact-current behavioral name candidate."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "field", "owner": "rs/Client", "name": "P", "descriptor": "I"},
+      "proposed_name": "loginRewardContainerIndex",
+      "confidence": 0.995,
+      "evidence": [
+        {"family": "exact_literal_role", "detail": "LOGIN_REWARD_IDX token parses an integer directly into this field."},
+        {"family": "exact_field_flow", "detail": "The exact setter stores only the parsed LOGIN_REWARD_IDX value into Client.P."},
+        {"family": "exact_renderer_join", "detail": "rs/l/b/d reads Client.P in root 50600 / item-container 50615 rendering paths for slot highlight/order comparisons."}
+      ],
+      "note": "Intentionally avoids stronger server-semantic names such as claimedDay or streakDay."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "class", "owner": "rs/i/b", "name": null, "descriptor": null},
+      "proposed_name": "AdventureOrbRenderer",
+      "confidence": 0.992872,
+      "evidence": [
+        {"family": "exact_resource_role", "detail": "Class constructs orbs/adventure_orb and orbs/adventure_orb_hover sprite resources."},
+        {"family": "exact_literal_role", "detail": "Class renders Adventure book / Adventure Book hover tooltip text."},
+        {"family": "structural_lineage", "detail": "R1 uniquely correlates alternate rs/j/b.class to exact-v308 rs/i/b.class."}
+      ],
+      "note": "Renderer is a conservative role name; it does not imply server-owned Adventure gameplay semantics."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "field", "owner": "rs/i/b", "name": "f", "descriptor": "Lrs/l/F;"},
+      "proposed_name": "adventureOrbSprite",
+      "confidence": 0.901,
+      "evidence": [
+        {"family": "exact_resource_role", "detail": "Constructor assigns the orbs/adventure_orb resource to this field."},
+        {"family": "type_shape", "detail": "Field type is the same sprite/render resource type used by sibling orb assets."}
+      ],
+      "note": "Candidate follows exact resource assignment."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "field", "owner": "rs/i/b", "name": "g", "descriptor": "Lrs/l/F;"},
+      "proposed_name": "adventureOrbHoverSprite",
+      "confidence": 0.901,
+      "evidence": [
+        {"family": "exact_resource_role", "detail": "Constructor assigns the orbs/adventure_orb_hover resource to this field."},
+        {"family": "type_shape", "detail": "Field type matches the paired Adventure orb sprite field."}
+      ],
+      "note": "Candidate follows exact resource assignment."
+    }
+  ],
+  "conflicts": []
+}
