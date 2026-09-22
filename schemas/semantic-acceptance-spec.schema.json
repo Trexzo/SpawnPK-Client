@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/semantic-acceptance-spec.schema.json",
+  "title": "Explicit semantic proposal acceptance",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "review_id",
+    "accept"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "semantic_acceptance_spec"},
+    "review_id": {
+      "type": "string",
+      "pattern": "^SEMREVIEW_[0-9A-F]{20}$"
+    },
+    "accept": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^SEMPROP_[0-9A-F]{20}$"
+      }
+    }
+  },
+  "additionalProperties": false
+}
