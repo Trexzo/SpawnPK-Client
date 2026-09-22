@@ -19,6 +19,13 @@ Static bytecode inspection of `rs.Client` establishes:
 | `h(J)V` | ignore-list preflight/state append; opcode 133 + i64 key | `addIgnore` |
 | `i(J)V` | removes/compacts ignore state; opcode 74 + i64 key | `removeIgnore` |
 
+R2C1 resolves these exact coordinates to:
+
+- `a(J)V` -> `CLIENT_METHOD_000298`
+- `f(J)V` -> `CLIENT_METHOD_000473`
+- `h(J)V` -> `CLIENT_METHOD_000491`
+- `i(J)V` -> `CLIENT_METHOD_000498`
+
 These are semantic behavior labels, not recovered original source identifiers.
 
 ## Re-proved login-reward field
@@ -37,6 +44,8 @@ and compares rendered slot indices against it. The deliberately conservative can
 
 `loginRewardContainerIndex`
 
+R2C1 resolves the exact field coordinate to `CLIENT_FIELD_000156`.
+
 No claim is made that this is a server-side streak day, claim day, eligibility index, or
 other stronger gameplay concept.
 
@@ -54,13 +63,21 @@ Candidate class role:
 
 `AdventureOrbRenderer`
 
+R1/R2C2 resolve the class to `CLIENT_CLASS_000297`.
+
 Two direct resource-backed field candidates are also emitted:
 
-- `f:Lrs/l/F;` -> `adventureOrbSprite`
-- `g:Lrs/l/F;` -> `adventureOrbHoverSprite`
+- `f:Lrs/l/F;` -> `adventureOrbSprite` -> `CLIENT_FIELD_002923`
+- `g:Lrs/l/F;` -> `adventureOrbHoverSprite` -> `CLIENT_FIELD_002924`
 
-## Boundary
+## R2C2 boundary
 
-All names remain `CANDIDATE`, non-canonical, and outside remap state. The core/integration
-lane must define the eventual semantic-promotion boundary before any candidate becomes an
-accepted remap.
+The full Chat 2 candidate set resolves through the canonical R2C2 review layer to:
+
+- **16 proposals**
+- **0 unresolved**
+- review ID `SEMREVIEW_2271674067C2B1C69D77`
+
+Resolution does not mutate canonical lineage. A separate
+`semantic_acceptance_spec` is required before any selected proposal becomes
+`ACCEPTED`.
