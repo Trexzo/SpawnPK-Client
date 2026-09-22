@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/readable-client-manifest.schema.json",
+  "title": "SpawnPK readable client build manifest",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "build_id",
+    "namespace_id",
+    "source_sha256",
+    "target_package",
+    "class_plan_digest",
+    "member_plan_digest",
+    "status",
+    "output_sha256",
+    "verification_pass",
+    "semantic_summary",
+    "blocker",
+    "artifact_names",
+    "manifest_id"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "readable_client_build_manifest"},
+    "build_id": {"type": "string", "minLength": 1},
+    "namespace_id": {"type": "string", "pattern": "^SEMNS_[0-9A-F]{20}$"},
+    "source_sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+    "target_package": {"type": "string", "minLength": 1},
+    "class_plan_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "member_plan_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "status": {"enum": ["complete", "blocked", "failed"]},
+    "output_sha256": {"type": ["string", "null"]},
+    "verification_pass": {"type": ["boolean", "null"]},
+    "semantic_summary": {"type": "object"},
+    "blocker": {"type": ["object", "null"]},
+    "artifact_names": {"type": "object"},
+    "manifest_id": {"type": "string", "pattern": "^READABLE_[0-9A-F]{20}$"}
+  },
+  "additionalProperties": false
+}
