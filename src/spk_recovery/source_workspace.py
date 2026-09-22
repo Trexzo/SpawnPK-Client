@@ -3,7 +3,9 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import tempfile
 from typing import Any
+import zipfile
 
 from .decompiler import DecompilerError, run_decompiler, sha256_file
 
@@ -35,6 +37,80 @@ def _source_tree_digest(root: Path) -> tuple[str, int, int]:
     return h.hexdigest(), len(files), total_bytes
 
 
+
+def _project_prefixes(readable_manifest: dict[str, Any]) -> list[str]:
+    values = readable_manifest.get("project_source_prefixes")
+    if not isinstance(values, list) or not values:
+        raise SourceWorkspaceError(
+            "project-only source workspace requires non-empty "
+            "readable manifest project_source_prefixes"
+        )
+    out: list[str] = []
+    for value in values:
+        if not isinstance(value, str) or not value:
+            raise SourceWorkspaceError(
+                "readable manifest project_source_prefixes must contain "
+                "non-empty strings"
+            )
+        normalized = value.replace("\\", "/").lstrip("/")
+        if normalized and not normalized.endswith("/"):
+            normalized += "/"
+        out.append(normalized)
+    return sorted(set(out))
+
+
+def _is_project_class(entry: str, prefixes: list[str]) -> bool:
+    if not entry.endswith(".class"):
+        return False
+    if entry.startswith("META-INF/versions/"):
+        parts = entry.split("/", 3)
+        if len(parts) == 4:
+            return any(parts[3].startswith(prefix) for prefix in prefixes)
+    return any(entry.startswith(prefix) for prefix in prefixes)
+
+
+def _selection_digest(entries: list[str]) -> str:
+    h = hashlib.sha256()
+    for entry in entries:
+        raw = entry.encode("utf-8")
+        h.update(len(raw).to_bytes(4, "big"))
+        h.update(raw)
+    return h.hexdigest()
+
+
+def _extract_class_context(
+    readable_jar: Path,
+    root: Path,
+    prefixes: list[str],
+) -> tuple[list[Path], list[str]]:
+    selected: list[str] = []
+    with zipfile.ZipFile(readable_jar) as z:
+        infos = sorted(z.infolist(), key=lambda info: info.filename)
+        for info in infos:
+            name = info.filename
+            if info.is_dir() or not name.endswith(".class"):
+                continue
+            path = Path(name)
+            if path.is_absolute() or ".." in path.parts:
+                raise SourceWorkspaceError(
+                    f"unsafe class entry in readable JAR: {name!r}"
+                )
+            target = root / path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(z.read(info))
+            if _is_project_class(name, prefixes):
+                if name.startswith("META-INF/versions/"):
+                    raise SourceWorkspaceError(
+                        "project-only source workspace does not support "
+                        f"multi-release project class {name!r}"
+                    )
+                selected.append(name)
+    if not selected:
+        raise SourceWorkspaceError(
+            "project-only source workspace selected no project classes"
+        )
+    return [root / Path(name) for name in selected], selected
+
 def build_source_workspace(
     readable_manifest: dict[str, Any],
     readable_jar: Path,
@@ -43,6 +119,7 @@ def build_source_workspace(
     expected_decompiler_sha256: str,
     engine: str,
     out_dir: Path,
+    project_only: bool = False,
 ) -> dict[str, Any]:
     if (
         readable_manifest.get("schema_version") != 1
@@ -99,15 +176,44 @@ def build_source_workspace(
     out_dir.mkdir(parents=True, exist_ok=True)
     source_dir = out_dir / "src"
 
+    project_prefixes: list[str] = []
+    selected_entries: list[str] = []
+    selection_sha: str | None = None
     try:
-        result = run_decompiler(
-            readable_jar,
-            decompiler_jar,
-            expected_decompiler_sha256=expected_decompiler_sha256,
-            engine=engine,
-            out_dir=source_dir,
-            clean_out=False,
-        )
+        if project_only:
+            if engine.lower() != "procyon":
+                raise SourceWorkspaceError(
+                    "project-only source workspace is currently supported "
+                    "only with Procyon"
+                )
+            project_prefixes = _project_prefixes(readable_manifest)
+            with tempfile.TemporaryDirectory(
+                prefix="spk-project-decompile-"
+            ) as td:
+                class_files, selected_entries = _extract_class_context(
+                    readable_jar,
+                    Path(td),
+                    project_prefixes,
+                )
+                selection_sha = _selection_digest(selected_entries)
+                result = run_decompiler(
+                    readable_jar,
+                    decompiler_jar,
+                    expected_decompiler_sha256=expected_decompiler_sha256,
+                    engine=engine,
+                    out_dir=source_dir,
+                    clean_out=False,
+                    input_class_files=class_files,
+                )
+        else:
+            result = run_decompiler(
+                readable_jar,
+                decompiler_jar,
+                expected_decompiler_sha256=expected_decompiler_sha256,
+                engine=engine,
+                out_dir=source_dir,
+                clean_out=False,
+            )
     except DecompilerError as exc:
         raise SourceWorkspaceError(str(exc)) from exc
 
@@ -126,6 +232,10 @@ def build_source_workspace(
         "engine": result["engine"],
         "decompiler_sha256": result["decompiler_sha256"],
         "source_tree_sha256": tree_sha,
+        "source_scope": "project_classes" if project_only else "whole_archive",
+        "project_source_prefixes": project_prefixes,
+        "selected_class_count": len(selected_entries) if project_only else None,
+        "selected_class_digest": selection_sha,
     }
     raw = json.dumps(
         material,
@@ -153,6 +263,10 @@ def build_source_workspace(
         "java_file_count": java_count,
         "source_bytes": source_bytes,
         "source_directory": "src",
+        "source_scope": "project_classes" if project_only else "whole_archive",
+        "project_source_prefixes": project_prefixes,
+        "selected_class_count": len(selected_entries) if project_only else None,
+        "selected_class_digest": selection_sha,
     }
     _write_json(result, out_dir / "decompiler-result.json")
     _write_json(
