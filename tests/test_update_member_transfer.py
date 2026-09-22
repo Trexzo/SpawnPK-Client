@@ -170,7 +170,10 @@ def _indexes():
     return old, new
 
 
-def _candidates(field_strategy="structural_unique"):
+def _candidates(
+    field_strategy="exact_matched_method_access_positions",
+    class_strategy="structural_unique",
+):
     return {
         "schema_version": 1,
         "kind": "member_identity_candidates",
@@ -182,7 +185,7 @@ def _candidates(field_strategy="structural_unique"):
             {
                 "old_owner": "rs/a.class",
                 "new_owner": "rs/b.class",
-                "class_strategy": "structural_unique",
+                "class_strategy": class_strategy,
                 "class_score": 0.995,
                 "fields": {
                     "relationships": [
@@ -274,6 +277,63 @@ class UpdateMemberTransferTests(unittest.TestCase):
 
         self.assertEqual(method["semantic_name"], "runTask")
         self.assertEqual(method["lineage"][1]["name"], "c")
+
+    def test_weak_structural_field_relationship_is_withheld(self):
+        old, new = _indexes()
+        out, summary = transfer_member_identity_candidates(
+            _class_lineage(),
+            _member_lineage(),
+            old,
+            new,
+            _candidates(field_strategy="structural_unique"),
+            old_build_id="v308",
+            new_build_id="v309",
+        )
+
+        self.assertEqual(summary["applied_member_relationships"], 1)
+        self.assertEqual(summary["review_only_relationships"], 1)
+        field = next(
+            row
+            for row in out["members"]
+            if row["member_id"] == "CLIENT_FIELD_000001"
+        )
+        self.assertEqual(len(field["lineage"]), 1)
+        self.assertTrue(
+            any(
+                row.get("kind") == "member_identity_review"
+                and row.get("member_kind") == "field"
+                for row in out["unresolved"]
+            )
+        )
+
+    def test_byte_identical_class_allows_same_symbol_field(self):
+        old, new = _indexes()
+        new["classes"]["rs/b.class"]["fields"][0]["name"] = "x"
+        candidates = _candidates(
+            field_strategy="stable_symbol",
+            class_strategy="exact_sha256",
+        )
+        candidates["classes"][0]["fields"]["relationships"][0][
+            "new"
+        ]["name"] = "x"
+
+        out, summary = transfer_member_identity_candidates(
+            _class_lineage(),
+            _member_lineage(),
+            old,
+            new,
+            candidates,
+            old_build_id="v308",
+            new_build_id="v309",
+        )
+
+        self.assertEqual(summary["applied_member_relationships"], 2)
+        field = next(
+            row
+            for row in out["members"]
+            if row["member_id"] == "CLIENT_FIELD_000001"
+        )
+        self.assertEqual(field["lineage"][1]["name"], "x")
 
     def test_untrusted_strategy_remains_unresolved(self):
         old, new = _indexes()

@@ -59,3 +59,38 @@ member lineage `unresolved` array. R3C never creates a new member ID automatical
 
 A later explicit promotion/review stage may decide whether an unmatched target member is
 genuinely new.
+
+
+## Field-specific trust hardening
+
+Field names are not reliable cross-build identity anchors once same-shape fields are
+inserted or reordered. Exact matched-method access-position research found concrete
+cases where a surviving obfuscated field spelling pointed at the wrong logical field.
+
+Core automatic transfer therefore distinguishes methods from fields.
+
+### Methods
+
+The existing trusted member strategies remain eligible:
+
+- `stable_symbol`
+- `structural_unique`
+
+Owner-class identity and exact old/new declarations are still independently re-verified.
+
+### Fields
+
+Automatic transfer is allowed only when one of these stronger conditions holds:
+
+1. the enclosing class relationship is `exact_sha256` and the field relationship is
+   `stable_symbol`; identical class bytes make the carried declaration identity safe; or
+2. the field relationship strategy is
+   `exact_matched_method_access_positions`, proving the mapping through unique exact
+   field-access positions inside already-correlated methods.
+
+A `stable_symbol` or `structural_unique` field relationship inside a changed class is
+retained as `member_identity_review` instead of entering canonical member lineage.
+
+This is intentionally fail-closed. Reduced automatic field coverage is preferable to
+silently carrying one incorrect field ID into semantic naming, remapping, or a later
+authority snapshot.
