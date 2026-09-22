@@ -1,0 +1,1179 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "field",
+        "owner": "rs/Client",
+        "name": "P",
+        "descriptor": "I"
+      },
+      "proposed_name": "loginRewardContainerIndex",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "LOGIN_REWARD_IDX token parses an integer directly into this field."
+        },
+        {
+          "family": "exact_field_flow",
+          "detail": "The exact setter stores only the parsed LOGIN_REWARD_IDX value into Client.P."
+        },
+        {
+          "family": "exact_renderer_join",
+          "detail": "rs/l/b/d reads Client.P in root 50600 / item-container 50615 rendering paths for slot highlight/order comparisons."
+        }
+      ],
+      "note": "Intentionally avoids stronger server-semantic names such as claimedDay or streakDay."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "method",
+        "owner": "rs/Client",
+        "name": "a",
+        "descriptor": "(J)V"
+      },
+      "proposed_name": "addFriend",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_packet_behavior",
+          "detail": "Method emits opcode 188 followed by the supplied i64 name key."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Method contains the 350-entry friend-list capacity message and friend/ignore preflight behavior."
+        },
+        {
+          "family": "exact_field_flow",
+          "detail": "Method appends the name key and local friend-list presentation state before sending."
+        }
+      ],
+      "note": "Semantic intent is exact-current client behavior; proposed English identifier is not claimed to be the original developer name."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "method",
+        "owner": "rs/Client",
+        "name": "f",
+        "descriptor": "(J)V"
+      },
+      "proposed_name": "removeFriend",
+      "confidence": 0.992,
+      "evidence": [
+        {
+          "family": "exact_packet_behavior",
+          "detail": "Method emits opcode 215 followed by the supplied i64 name key."
+        },
+        {
+          "family": "exact_field_flow",
+          "detail": "Method finds the key in friend state, decrements the friend count and compacts friend arrays."
+        }
+      ],
+      "note": "Exact-current behavioral name candidate."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "method",
+        "owner": "rs/Client",
+        "name": "h",
+        "descriptor": "(J)V"
+      },
+      "proposed_name": "addIgnore",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_packet_behavior",
+          "detail": "Method emits opcode 133 followed by the supplied i64 name key."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Method contains the 100-entry ignore-list capacity message and cross-list preflight behavior."
+        },
+        {
+          "family": "exact_field_flow",
+          "detail": "Method appends the name key to local ignore state before sending."
+        }
+      ],
+      "note": "Exact-current behavioral name candidate."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "method",
+        "owner": "rs/Client",
+        "name": "i",
+        "descriptor": "(J)V"
+      },
+      "proposed_name": "removeIgnore",
+      "confidence": 0.992,
+      "evidence": [
+        {
+          "family": "exact_packet_behavior",
+          "detail": "Method emits opcode 74 followed by the supplied i64 name key."
+        },
+        {
+          "family": "exact_field_flow",
+          "detail": "Method removes the key from ignore state and compacts the local ignore array."
+        }
+      ],
+      "note": "Exact-current behavioral name candidate."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/i/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AdventureOrbRenderer",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_resource_role",
+          "detail": "Class constructs orbs/adventure_orb and orbs/adventure_orb_hover sprite resources."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Class renders Adventure book / Adventure Book hover tooltip text."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "R1 uniquely correlates alternate rs/j/b.class to exact-v308 rs/i/b.class."
+        }
+      ],
+      "note": "Renderer is a conservative role name; it does not imply server-owned Adventure gameplay semantics."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "field",
+        "owner": "rs/i/b",
+        "name": "f",
+        "descriptor": "Lrs/l/F;"
+      },
+      "proposed_name": "adventureOrbSprite",
+      "confidence": 0.901,
+      "evidence": [
+        {
+          "family": "exact_resource_role",
+          "detail": "Constructor assigns the orbs/adventure_orb resource to this field."
+        },
+        {
+          "family": "type_shape",
+          "detail": "Field type is the same sprite/render resource type used by sibling orb assets."
+        }
+      ],
+      "note": "Candidate follows exact resource assignment."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "field",
+        "owner": "rs/i/b",
+        "name": "g",
+        "descriptor": "Lrs/l/F;"
+      },
+      "proposed_name": "adventureOrbHoverSprite",
+      "confidence": 0.901,
+      "evidence": [
+        {
+          "family": "exact_resource_role",
+          "detail": "Constructor assigns the orbs/adventure_orb_hover resource to this field."
+        },
+        {
+          "family": "type_shape",
+          "detail": "Field type matches the paired Adventure orb sprite field."
+        }
+      ],
+      "note": "Candidate follows exact resource assignment."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AchievementDiaryInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include SpawnPK Achievement Diary, Select achievement, progress, rewards and bonuses."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads achievements/SPRITE assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/ab",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemGuideInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Official SpawnPK Item Library, item search, equipment/stat labels and guide description state."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads wiki/item and wiki/button assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aC",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientSettingsInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Toggle fog/roofs/particles, hitmarks/HP bars, player lighting, instant switching and attack/shift-drop settings."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads options/sprite assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/ad",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemRepairCofferInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Item repairing coffer, store/withdraw gold/shards and gold/shard auto-repair controls."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads popups/repair assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aD",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodFountainPerkTreeInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Blood Fountain Perk Tree, selected perk state and named Blood perk entries."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads fountain/sprite assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aG",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CursesPrayerInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals enumerate Soul Split, Deflect, Sap, Leech and Turmoil curse prayers."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads prayer/curses/ICON assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aH",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "StandardPrayerInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals enumerate standard prayers including Thick Skin, Rapid Heal, Eagle Eye, Piety and related level text."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads prayer/PRAYER and prayer/sprite assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aI",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DonorPanelInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Main Donor Panel, donor options/features, donator shop, donate-for-rewards and donor-zone teleports."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads misc/donor assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aL",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaidPartySetupInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Raiding Party Set-up, Chambers of Xeric, Theatre of Blood, Start raid, Leave/disband party, Invite member and difficulty labels."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads raids/sprite assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "R1 uniquely correlates alternate rs/n/c/aL.class to exact-v308 rs/n/c/aL.class."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 presentation bytecode and stable R1 lineage; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/am",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WelcomeBackInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Welcome back, Username!, Play now, logging-in daily reward copy and next daily reward presentation."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads misc/login resources."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "R1 uniquely correlates alternate rs/n/c/am.class to exact-v308 rs/n/c/am.class."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 presentation bytecode and stable R1 lineage; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/ap",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MagicSpellbookInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include combat/teleport/utility spell filters and spell names such as Cure, Heal, Plank Make and Miasmic spells."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads magic/* spellbook assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/av",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DailyMoneyMakingInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Daily Money Making Activities, Daily reward bonus, Easy/Medium/Hard money making tasks, Track and Teleport."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "R1 uniquely correlates alternate rs/n/c/av.class to exact-v308 rs/n/c/av.class."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 presentation bytecode and stable R1 lineage; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aw",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DonationShoppingCartInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Donation Shopping Cart, Shopping Cart, Checkout, Subtotal, purchase options and daily/exclusive offers."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads misc/cart assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aX",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WorldTournamentInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include SpawnPK World Tournaments, Enter tournament, Spectate Tournament, tournament shop and previous winners."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads tournament/sprite assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aY",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CombatStyleInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals enumerate Accurate/Aggressive/Controlled/Defensive/Rapid/Long range combat styles, XP types and Auto Retaliate."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads combaticons/combaticons2 assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DailyChallengesInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Daily Challenges, Collect reward, View information and challenge task text."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "R1 uniquely correlates alternate rs/n/c/b.class to exact-v308 rs/n/c/b.class."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 presentation bytecode and stable R1 lineage; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/c/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MailboxInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Inbox, Mail Subject, Delete this message and deposit attached items to bank/inventory."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads misc/mail and misc/refresh assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AdventureBookInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact class literals include Next chapter, Previous chapter, Chapter Progress, Claim rewards, Tips & Information, Teleport to Task and Claim reward."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "R1 uniquely correlates alternate rs/n/c/c.class to exact-v308 rs/n/c/c.class."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 presentation bytecode and stable R1 lineage; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/G",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemEnchantmentInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Item Enchantment Chest, Enchantments, Select enchantment, Attempt Enchantment, Success chance and item/category controls."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "R1 uniquely correlates alternate rs/n/c/G.class to exact-v308 rs/n/c/G.class."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 presentation bytecode and stable R1 lineage; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BankInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Withdraw/Deposit actions, bank tabs, Toggle note, Deposit pet and bank-management controls."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads bank/TAB and bank/SEP assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodFountainHubInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include The Blood Fountain and selectors for shard/diamond/pool shops, fusing, salvaging and perk tree."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads fountain/SPRITE assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TaskSelectionInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Choose a Task, Get a task, Slaughter, Bounty hunter, Monster hunter, Boss hunter and Blood Slayer task controls."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodcoreSynthesisInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Bloodcore Token Synthesis, Synthesize items, Bloodcore lottery, token shop and synthesis guide."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads fountain/sprite and fountain/dice assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BossTeleportInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Boss Teleportation Network, Bosses, Possible drops and rewards, Teleport to boss and drop-table controls."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads teleport/SPRITE assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/O",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ActiveEventsInterface",
+      "confidence": 0.9604,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include View Active Events, View all events, Event Wildy Boss, Event Global Boss and tournament/event countdown state."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClanChatSetupInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Clan name, who can enter/talk/kick/ban, rank privileges and setup controls."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads clan/sprite assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/s",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClanWarsSetupInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Clan Wars Setup, arena/mode/spellbook/PJ-timer rules and kill targets."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads clan/sprite assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/U",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PlayerIpUidMatcherInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Player IP / UID Matcher, IP/UID ban state, geolocation, player search and match ordering."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads misc/matcher assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/v",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CollectionLogInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Collection Log, Select collection log, Bosses, Boxes, Minigames, Collection name, Obtained and Kill count."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads drops/collection resources."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "R1 uniquely correlates alternate rs/n/c/v.class to exact-v308 rs/n/c/v.class."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 presentation bytecode and stable R1 lineage; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/V",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GamblingInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals include Flower poker, Dice duel, blackjack/55x2 host modes, player offers and gambling safety/rules."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads gambling/SPRITE assets."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "client(5) and exact-v308 class have the same unique name-insensitive structural fingerprint."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 literals/resources and stable cross-build structure; it is not claimed as the original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/z",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConstructionRoomSelectionInterface",
+      "confidence": 0.992872,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact literals enumerate buildable rooms and level requirements including Parlour, Garden, Kitchen, Chapel, Throne room and Treasure room."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads construction/sprite resources."
+        },
+        {
+          "family": "structural_lineage",
+          "detail": "R1 uniquely correlates alternate rs/n/c/z.class to exact-v308 rs/n/c/z.class."
+        }
+      ],
+      "note": "Role name is independently inferred from exact-v308 presentation bytecode and stable R1 lineage; it is not claimed as the original developer identifier."
+    }
+  ],
+  "conflicts": []
+}
