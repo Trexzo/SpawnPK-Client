@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/source-rewrite-manifest.schema.json",
+  "title": "SpawnPK semantic source rewrite manifest",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "rewrite_id",
+    "plan_id",
+    "inventory_id",
+    "input_source_tree_sha256",
+    "output_source_tree_sha256",
+    "java_file_count",
+    "accepted_rename_count",
+    "files_changed",
+    "identifier_replacements",
+    "semantic_analysis_pass",
+    "source_directory"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "source_rewrite_manifest"},
+    "rewrite_id": {
+      "type": "string",
+      "pattern": "^SRCREWRITE_[0-9A-F]{20}$"
+    },
+    "plan_id": {
+      "type": "string",
+      "pattern": "^SRCPLAN_[0-9A-F]{20}$"
+    },
+    "inventory_id": {
+      "type": "string",
+      "pattern": "^SRCINV_[0-9A-F]{20}$"
+    },
+    "review_id": {
+      "type": ["string", "null"]
+    },
+    "workspace_id": {
+      "type": ["string", "null"]
+    },
+    "build_id": {
+      "type": ["string", "null"]
+    },
+    "input_source_tree_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "output_source_tree_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "java_file_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "input_source_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "output_source_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "accepted_rename_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "files_changed": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "identifier_replacements": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "classpath": {
+      "type": "array"
+    },
+    "source_directory": {
+      "const": "src"
+    },
+    "semantic_analysis_pass": {
+      "const": true
+    },
+    "note": {"type": "string"}
+  }
+}
