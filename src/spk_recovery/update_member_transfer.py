@@ -35,8 +35,8 @@ def _trusted_member_relation(
         return strategy in _TRUSTED_METHOD_STRATEGIES
 
     if kind == "field":
-        if strategy == _EXACT_FIELD_STRATEGY:
-            return True
+        # Research strategy labels are not proof. Exact-position field claims
+        # require a separate JAR-bound verification path before canonical import.
         # If the enclosing class entry is byte-identical, a same-symbol field
         # declaration is carried by identical class bytes and is safe to reuse.
         if (
@@ -372,9 +372,9 @@ def transfer_member_identity_candidates(
                                 if kind == "method"
                                 else (
                                     "field relationship is not backed by "
-                                    "byte-identical enclosing class evidence "
-                                    "or exact matched-method access-position "
-                                    "evidence"
+                                    "byte-identical enclosing class evidence; "
+                                    "research exact-position labels require a "
+                                    "separate JAR-bound proof-verification path"
                                 )
                             ),
                         }

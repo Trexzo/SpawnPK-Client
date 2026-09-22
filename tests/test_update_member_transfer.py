@@ -248,7 +248,7 @@ def _candidates(
 
 
 class UpdateMemberTransferTests(unittest.TestCase):
-    def test_trusted_relations_append_to_same_stable_ids(self):
+    def test_unverified_exact_position_label_is_withheld(self):
         old, new = _indexes()
         out, summary = transfer_member_identity_candidates(
             _class_lineage(),
@@ -272,8 +272,14 @@ class UpdateMemberTransferTests(unittest.TestCase):
 
         self.assertEqual(field["semantic_name"], "value")
         self.assertEqual(field["semantic_status"], "ACCEPTED")
-        self.assertEqual(field["lineage"][1]["build_id"], "v309")
-        self.assertEqual(field["lineage"][1]["name"], "y")
+        self.assertEqual(len(field["lineage"]), 1)
+        self.assertTrue(
+            any(
+                row.get("kind") == "member_identity_review"
+                and row.get("member_kind") == "field"
+                for row in out["unresolved"]
+            )
+        )
 
         self.assertEqual(method["semantic_name"], "runTask")
         self.assertEqual(method["lineage"][1]["name"], "c")
