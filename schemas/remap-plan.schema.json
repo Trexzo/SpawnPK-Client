@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/remap-plan.schema.json",
+  "title": "SpawnPK resolved remap plan",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "build_id",
+    "source_sha256",
+    "class_count",
+    "classes"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "remap_plan"
+    },
+    "build_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{64}$"
+    },
+    "class_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "classes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "logical_id",
+          "source_internal_name",
+          "source_entry_path",
+          "source_entry_sha256",
+          "target_internal_name",
+          "target_entry_path",
+          "confidence",
+          "provenance"
+        ],
+        "properties": {
+          "logical_id": {
+            "type": "string",
+            "pattern": "^CLIENT_CLASS_[0-9]{6}$"
+          },
+          "source_internal_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_entry_path": {
+            "type": "string",
+            "pattern": "\\.class$"
+          },
+          "source_entry_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-fA-F]{64}$"
+          },
+          "target_internal_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target_entry_path": {
+            "type": "string",
+            "pattern": "\\.class$"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "provenance": {
+            "type": "array",
+            "minItems": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
