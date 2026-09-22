@@ -184,6 +184,11 @@ spk-recovery update-migrate `
 
 It composes the safe automatic stages and writes a deterministic migration workspace.
 
+Changed-class field transfer is intentionally stricter than method transfer. Canonical
+promotion does not trust a research strategy label by itself: `spk-field-proof-transfer`
+recomputes JAR-bound field-position evidence from the exact old/new bytecode and canonical
+method lineage before a changed-class field can enter authority.
+
 A clean update can finish with:
 
 ```text
@@ -358,6 +363,7 @@ Useful starting points:
 - `docs/CLASS_REMAP.md`
 - `docs/MEMBER_REMAP.md`
 - `docs/MEMBER_SAFETY.md`
+- `docs/FIELD_POSITION_PROOF.md`
 - `docs/VERIFY_DECOMPILE.md`
 - `docs/UPDATE_INTAKE.md`
 - `docs/UPDATE_TRANSFER.md`
