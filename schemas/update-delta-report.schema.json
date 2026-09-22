@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/update-delta-report.schema.json",
+  "title": "SpawnPK update delta report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "migration_id",
+    "old_sha256",
+    "new_sha256",
+    "classes",
+    "members"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "update_delta_report"
+    },
+    "migration_id": {
+      "type": "string",
+      "pattern": "^MIGRATION_[0-9A-F]{20}$"
+    },
+    "old_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "new_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "classes": {
+      "type": "object"
+    },
+    "members": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}
