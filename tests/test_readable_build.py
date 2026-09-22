@@ -15,6 +15,8 @@ NAMESPACE = {
     "build_id": "v308",
     "source_sha256": "a" * 64,
     "target_package": "recovered/spawnpk/client",
+    "class_plan_digest": "c" * 64,
+    "member_plan_digest": "d" * 64,
     "summary": {
         "classes_total": 1,
         "classes_accepted": 1,
