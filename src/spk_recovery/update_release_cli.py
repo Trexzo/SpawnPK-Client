@@ -34,6 +34,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--old-jar", type=Path)
     p.add_argument("--scope-prefix", default="rs/")
     p.add_argument("--target-package", default="recovered/spawnpk/client")
+    p.add_argument("--source-safe-fallback", action="store_true")
+    p.add_argument(
+        "--fallback-package",
+        default="recovered/spawnpk/fallback",
+    )
     p.add_argument("--member-safety-acceptance", type=Path)
     p.add_argument("--allow-package-resource-risk", action="store_true")
     p.add_argument("--rewrite-class-name-strings", action="store_true")
@@ -67,6 +72,8 @@ def main(argv: list[str] | None = None) -> int:
             old_jar=args.old_jar,
             scope_prefix=args.scope_prefix,
             target_package=args.target_package,
+            source_safe_fallback=args.source_safe_fallback,
+            fallback_package=args.fallback_package,
             member_safety_acceptance=(
                 _load(args.member_safety_acceptance)
                 if args.member_safety_acceptance

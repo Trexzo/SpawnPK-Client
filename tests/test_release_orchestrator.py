@@ -116,12 +116,21 @@ class ExistingAuthorityReleaseTests(unittest.TestCase):
                     engine="cfr",
                     build_id="v308",
                     out_dir=root / "out",
+                    source_safe_fallback=True,
+                    fallback_package="recovered/test/fallback",
                 )
 
             self.assertFalse(report["ready_for_release"])
             self.assertEqual(report["terminal_stage"], "readable_build")
             self.assertEqual(report["status"], "blocked")
             readable.assert_called_once()
+            self.assertTrue(
+                readable.call_args.kwargs["source_safe_fallback"]
+            )
+            self.assertEqual(
+                readable.call_args.kwargs["fallback_package"],
+                "recovered/test/fallback",
+            )
             source.assert_not_called()
             self.assertTrue((root / "out" / "release-run.json").is_file())
 

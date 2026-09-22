@@ -244,5 +244,115 @@ class SemanticNamespaceTests(unittest.TestCase):
             )
 
 
+    def test_source_safe_fallback_is_opt_in_and_non_semantic(self):
+        classes, members, index = _fixture()
+        classes["classes"].append(
+            {
+                "logical_id": "CLIENT_CLASS_000003",
+                "semantic_name": None,
+                "semantic_status": "UNKNOWN",
+                "semantic_confidence": 0.0,
+                "lineage": [
+                    {
+                        "build_id": "v308",
+                        "internal_name": "rs/b/c",
+                        "entry_path": "rs/b/c.class",
+                        "entry_sha256": "f" * 64,
+                        "structural_sha256": "1" * 64,
+                        "relation": "BASELINE",
+                        "confidence": 1.0,
+                        "provenance": [],
+                    }
+                ],
+                "semantic_provenance": [],
+            }
+        )
+        index["classes"]["rs/b/c.class"] = {
+            "internal_name": "rs/b/c",
+            "fields": [],
+            "methods": [],
+        }
+
+        manifest, class_plan, _ = build_semantic_namespace(
+            classes,
+            members,
+            index,
+            build_id="v308",
+        )
+        self.assertEqual(class_plan["class_count"], 1)
+        self.assertEqual(manifest["summary"]["source_safety_fallbacks"], 0)
+        self.assertEqual(manifest["fallback_remaps"], [])
+
+        manifest, class_plan, _ = build_semantic_namespace(
+            classes,
+            members,
+            index,
+            build_id="v308",
+            source_safe_fallback=True,
+        )
+        self.assertEqual(class_plan["class_count"], 2)
+        fallbacks = manifest["fallback_remaps"]
+        self.assertEqual(len(fallbacks), 1)
+        self.assertEqual(fallbacks[0]["logical_id"], "CLIENT_CLASS_000002")
+        self.assertEqual(
+            fallbacks[0]["target_internal_name"],
+            "recovered/spawnpk/fallback/CLIENT_CLASS_000002",
+        )
+        row = next(
+            row
+            for row in class_plan["classes"]
+            if row["logical_id"] == "CLIENT_CLASS_000002"
+        )
+        self.assertEqual(
+            row["provenance"][0]["reason"],
+            "java_class_package_collision",
+        )
+        self.assertEqual(classes["classes"][1]["semantic_status"], "UNKNOWN")
+        self.assertIsNone(classes["classes"][1]["semantic_name"])
+
+    def test_accepted_semantic_remap_takes_precedence_over_fallback(self):
+        classes, members, index = _fixture()
+        classes["classes"].append(
+            {
+                "logical_id": "CLIENT_CLASS_000003",
+                "semantic_name": None,
+                "semantic_status": "UNKNOWN",
+                "semantic_confidence": 0.0,
+                "lineage": [
+                    {
+                        "build_id": "v308",
+                        "internal_name": "rs/a/c",
+                        "entry_path": "rs/a/c.class",
+                        "entry_sha256": "f" * 64,
+                        "structural_sha256": "1" * 64,
+                        "relation": "BASELINE",
+                        "confidence": 1.0,
+                        "provenance": [],
+                    }
+                ],
+                "semantic_provenance": [],
+            }
+        )
+        index["classes"]["rs/a/c.class"] = {
+            "internal_name": "rs/a/c",
+            "fields": [],
+            "methods": [],
+        }
+
+        manifest, class_plan, _ = build_semantic_namespace(
+            classes,
+            members,
+            index,
+            build_id="v308",
+            source_safe_fallback=True,
+        )
+        self.assertEqual(class_plan["class_count"], 1)
+        self.assertEqual(manifest["fallback_remaps"], [])
+        self.assertEqual(
+            class_plan["classes"][0]["target_internal_name"],
+            "recovered/spawnpk/client/ExampleController",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

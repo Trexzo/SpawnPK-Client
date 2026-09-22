@@ -100,6 +100,8 @@ def build_readable_client(
     build_id: str,
     out_dir: Path,
     target_package: str = "recovered/spawnpk/client",
+    source_safe_fallback: bool = False,
+    fallback_package: str = "recovered/spawnpk/fallback",
     member_safety_acceptance: dict[str, Any] | None = None,
     allow_package_resource_risk: bool = False,
     rewrite_class_name_strings: bool = False,
@@ -127,6 +129,8 @@ def build_readable_client(
             source_index,
             build_id=build_id,
             target_package=target_package,
+            source_safe_fallback=source_safe_fallback,
+            fallback_package=fallback_package,
         )
     except SemanticNamespaceError as exc:
         raise ReadableBuildError(str(exc)) from exc

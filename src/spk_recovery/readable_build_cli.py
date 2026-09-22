@@ -22,6 +22,15 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("index", type=Path)
     p.add_argument("--build-id", required=True)
     p.add_argument("--target-package", default="recovered/spawnpk/client")
+    p.add_argument(
+        "--source-safe-fallback",
+        action="store_true",
+        help="remap residual Java class/package collision roots into the non-semantic fallback namespace",
+    )
+    p.add_argument(
+        "--fallback-package",
+        default="recovered/spawnpk/fallback",
+    )
     p.add_argument("--member-safety-acceptance", type=Path)
     p.add_argument("--allow-package-resource-risk", action="store_true")
     p.add_argument("--rewrite-class-name-strings", action="store_true")
@@ -36,6 +45,8 @@ def main(argv: list[str] | None = None) -> int:
             _load(args.index),
             build_id=args.build_id,
             target_package=args.target_package,
+            source_safe_fallback=args.source_safe_fallback,
+            fallback_package=args.fallback_package,
             member_safety_acceptance=(
                 _load(args.member_safety_acceptance)
                 if args.member_safety_acceptance
