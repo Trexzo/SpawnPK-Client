@@ -811,10 +811,9 @@ class DependencyRemapProofTests(unittest.TestCase):
                         "package target.pkg; public class SupportThree { "
                         "public double three() { return 3.0; } }"
                     ),
-                    "target/pkg/U.java": "package target.pkg; public class U {}",
                     "target/pkg/Api.java": (
                         "package target.pkg; public class Api { "
-                        "public target.pkg.U real() { return null; } }"
+                        "public Object real() { return null; } }"
                     ),
                 },
             )
