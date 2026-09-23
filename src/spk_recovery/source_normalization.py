@@ -424,6 +424,81 @@ def _matching_brace_end(text: str, brace_start: int) -> int:
     )
 
 
+def _java_code_mask(text: str) -> str:
+    """Mask comments and literals while preserving source offsets."""
+    chars = list(text)
+    state = "code"
+    escaped = False
+    i = 0
+    while i < len(text):
+        ch = text[i]
+        nxt = text[i + 1] if i + 1 < len(text) else ""
+
+        if state == "line_comment":
+            if ch == "\n":
+                state = "code"
+            else:
+                chars[i] = " "
+        elif state == "block_comment":
+            chars[i] = " " if ch != "\n" else "\n"
+            if ch == "*" and nxt == "/":
+                chars[i + 1] = " "
+                state = "code"
+                i += 1
+        elif state == "string":
+            chars[i] = " " if ch != "\n" else "\n"
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                state = "code"
+        elif state == "char":
+            chars[i] = " " if ch != "\n" else "\n"
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == "'":
+                state = "code"
+        elif state == "text_block":
+            chars[i] = " " if ch != "\n" else "\n"
+            if text.startswith('"""', i):
+                if i + 1 < len(chars):
+                    chars[i + 1] = " "
+                if i + 2 < len(chars):
+                    chars[i + 2] = " "
+                state = "code"
+                i += 2
+        else:
+            if ch == "/" and nxt == "/":
+                chars[i] = chars[i + 1] = " "
+                state = "line_comment"
+                i += 1
+            elif ch == "/" and nxt == "*":
+                chars[i] = chars[i + 1] = " "
+                state = "block_comment"
+                i += 1
+            elif text.startswith('"""', i):
+                chars[i] = " "
+                if i + 1 < len(chars):
+                    chars[i + 1] = " "
+                if i + 2 < len(chars):
+                    chars[i + 2] = " "
+                state = "text_block"
+                i += 2
+            elif ch == '"':
+                chars[i] = " "
+                state = "string"
+                escaped = False
+            elif ch == "'":
+                chars[i] = " "
+                state = "char"
+                escaped = False
+        i += 1
+    return "".join(chars)
+
+
 def _field_access_counter(
     method: dict[str, Any],
     *,
@@ -540,6 +615,7 @@ def _normalize_shadowed_self_static_field_owners(
             continue
         body_end = _matching_brace_end(text, brace_start)
         method_text = text[match.start():body_end]
+        method_code = _java_code_mask(method_text)
 
         source_counts: dict[str, int] = {}
         occurrences: list[tuple[int, int, str]] = []
@@ -551,7 +627,7 @@ def _normalize_shadowed_self_static_field_owners(
                 + re.escape(field_name)
                 + r"\b(?!\s*\()"
             )
-            hits = list(token.finditer(method_text))
+            hits = list(token.finditer(method_code))
             if not hits:
                 continue
             source_counts[field_name] = len(hits)
