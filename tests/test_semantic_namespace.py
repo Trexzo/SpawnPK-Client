@@ -383,6 +383,8 @@ class SemanticNamespaceTests(unittest.TestCase):
         )
         index["classes"]["rs/a$Inner.class"] = {
             "internal_name": "rs/a$Inner",
+            "inner_outer_name": "rs/a",
+            "enclosing_class_name": None,
             "fields": [],
             "methods": [],
         }
@@ -449,6 +451,8 @@ class SemanticNamespaceTests(unittest.TestCase):
         )
         index["classes"]["rs/a$Inner.class"] = {
             "internal_name": "rs/a$Inner",
+            "inner_outer_name": "rs/a",
+            "enclosing_class_name": None,
             "fields": [],
             "methods": [],
         }
@@ -460,6 +464,52 @@ class SemanticNamespaceTests(unittest.TestCase):
                 index,
                 build_id="v308",
             )
+
+
+    def test_dollar_named_top_level_class_without_nesting_evidence_is_not_closed(self):
+        classes, members, index = _fixture()
+        classes["classes"].append(
+            {
+                "logical_id": "CLIENT_CLASS_000003",
+                "semantic_name": None,
+                "semantic_status": "UNKNOWN",
+                "semantic_confidence": 0.0,
+                "lineage": [
+                    {
+                        "build_id": "v308",
+                        "internal_name": "rs/a$Utility",
+                        "entry_path": "rs/a$Utility.class",
+                        "entry_sha256": "f" * 64,
+                        "structural_sha256": "1" * 64,
+                        "relation": "BASELINE",
+                        "confidence": 1.0,
+                        "provenance": [],
+                    }
+                ],
+                "semantic_provenance": [],
+            }
+        )
+        index["classes"]["rs/a$Utility.class"] = {
+            "internal_name": "rs/a$Utility",
+            "inner_outer_name": None,
+            "enclosing_class_name": None,
+            "fields": [],
+            "methods": [],
+        }
+
+        manifest, class_plan, _ = build_semantic_namespace(
+            classes,
+            members,
+            index,
+            build_id="v308",
+        )
+
+        self.assertEqual(class_plan["class_count"], 1)
+        self.assertEqual(
+            manifest["summary"]["source_safety_nested_class_remaps"],
+            0,
+        )
+        self.assertEqual(manifest["nested_class_closure_remaps"], [])
 
 
 if __name__ == "__main__":
