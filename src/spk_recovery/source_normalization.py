@@ -744,6 +744,23 @@ def _read_readable_hierarchy(
     return hierarchy
 
 
+def _field_visible_from(
+    *,
+    declaring_owner: str,
+    current_owner: str,
+    access: int,
+) -> bool:
+    if declaring_owner == current_owner:
+        return True
+    if access & 0x0002:  # private
+        return False
+    if access & (0x0001 | 0x0004):  # public or protected
+        return True
+    declaring_package = declaring_owner.rpartition("/")[0]
+    current_package = current_owner.rpartition("/")[0]
+    return declaring_package == current_package
+
+
 def _method_has_same_name_value_binding(
     *,
     method_match: re.Match[str],
@@ -827,6 +844,11 @@ def _normalize_hierarchy_shadowed_self_static_field_owners(
             str(field.get("name", "")) == simple_name
             and str(field.get("descriptor", ""))
             in _PRIMITIVE_FIELD_DESCRIPTORS
+            and _field_visible_from(
+                declaring_owner=owner,
+                current_owner=internal_name,
+                access=int(field.get("access", 0)),
+            )
         )
     ]
     if not primitive_shadow_owners:
@@ -839,6 +861,11 @@ def _normalize_hierarchy_shadowed_self_static_field_owners(
             if (
                 int(field.get("access", 0)) & 0x0008
                 and _is_java_identifier(name)
+                and _field_visible_from(
+                    declaring_owner=owner,
+                    current_owner=internal_name,
+                    access=int(field.get("access", 0)),
+                )
             ):
                 static_by_name.setdefault(name, []).append(owner)
     static_targets = {
