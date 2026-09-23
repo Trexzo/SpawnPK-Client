@@ -229,25 +229,25 @@ class DependencyRemapProofTests(unittest.TestCase):
                 root,
                 "official",
                 {
-                    "new/pkg/SupportOne.java": (
-                        "package new.pkg; public class SupportOne { "
+                    "target/pkg/SupportOne.java": (
+                        "package target.pkg; public class SupportOne { "
                         "public int one() { return 1; } }"
                     ),
-                    "new/pkg/SupportTwo.java": (
-                        "package new.pkg; public class SupportTwo { "
+                    "target/pkg/SupportTwo.java": (
+                        "package target.pkg; public class SupportTwo { "
                         "public long two() { return 2L; } }"
                     ),
-                    "new/pkg/SupportThree.java": (
-                        "package new.pkg; public class SupportThree { "
+                    "target/pkg/SupportThree.java": (
+                        "package target.pkg; public class SupportThree { "
                         "public double three() { return 3.0; } }"
                     ),
-                    "new/pkg/Api.java": (
-                        "package new.pkg; public class Api { "
+                    "target/pkg/Api.java": (
+                        "package target.pkg; public class Api { "
                         "public String real(String value) { "
                         "String copy = value; return copy; } }"
                     ),
-                    "new/pkg/ExactApi.java": (
-                        "package new.pkg; public class ExactApi { "
+                    "target/pkg/ExactApi.java": (
+                        "package target.pkg; public class ExactApi { "
                         "public int ping(int value) { "
                         "int copy = value; return copy; } }"
                     ),
@@ -291,7 +291,7 @@ class DependencyRemapProofTests(unittest.TestCase):
             )
             self.assertEqual(
                 mapped["old/pkg/x"]["new_owner"],
-                "new/pkg/Api",
+                "target/pkg/Api",
             )
             self.assertEqual(
                 mapped["old/pkg/x"]["new_name"],
@@ -309,7 +309,7 @@ class DependencyRemapProofTests(unittest.TestCase):
             )
             self.assertEqual(
                 mapped["old/pkg/y"]["new_owner"],
-                "new/pkg/ExactApi",
+                "target/pkg/ExactApi",
             )
             self.assertEqual(
                 mapped["old/pkg/y"]["new_name"],
@@ -369,25 +369,25 @@ class DependencyRemapProofTests(unittest.TestCase):
                 root,
                 "official",
                 {
-                    "new/pkg/SupportOne.java": (
-                        "package new.pkg; public class SupportOne { "
+                    "target/pkg/SupportOne.java": (
+                        "package target.pkg; public class SupportOne { "
                         "public int one() { return 1; } }"
                     ),
-                    "new/pkg/SupportTwo.java": (
-                        "package new.pkg; public class SupportTwo { "
+                    "target/pkg/SupportTwo.java": (
+                        "package target.pkg; public class SupportTwo { "
                         "public long two() { return 2L; } }"
                     ),
-                    "new/pkg/SupportThree.java": (
-                        "package new.pkg; public class SupportThree { "
+                    "target/pkg/SupportThree.java": (
+                        "package target.pkg; public class SupportThree { "
                         "public double three() { return 3.0; } }"
                     ),
-                    "new/pkg/ApiOne.java": (
-                        "package new.pkg; public class ApiOne { "
+                    "target/pkg/ApiOne.java": (
+                        "package target.pkg; public class ApiOne { "
                         "public String realOne(String value) { "
                         "String copy = value; return copy; } }"
                     ),
-                    "new/pkg/ApiTwo.java": (
-                        "package new.pkg; public class ApiTwo { "
+                    "target/pkg/ApiTwo.java": (
+                        "package target.pkg; public class ApiTwo { "
                         "public String realTwo(String value) { "
                         "String copy = value; return copy; } }"
                     ),
