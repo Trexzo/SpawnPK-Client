@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemSpawnSearchResult",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_value_shape",
+          "detail": "The class is a two-field immutable-style value object containing exactly one String and one int, initialized by the (String,int) constructor and returned unchanged by its two accessors."
+        },
+        {
+          "family": "exact_spawn_search_construction",
+          "detail": "The live spawn-tab search controller rs/n/c/af constructs these objects from ItemDefinition display name plus the exact item ID while iterating search matches."
+        },
+        {
+          "family": "exact_spawn_ui_rendering",
+          "detail": "The same controller renders the stored String alongside the exact action text 'Spawn this item' and maps the result object into the generated spawn/search interface rows."
+        },
+        {
+          "family": "exact_item_id_use",
+          "detail": "The stored integer is read back to configure the result row's item/model widget, independently fixing it as the matched item ID rather than a generic score or index."
+        }
+      ],
+      "note": "ItemSpawnSearchResult is descriptive exact-behavior recovery for the spawn-tab item search value object. No surviving original source noun was found; confidence is 0.998."
+    }
+  ],
+  "conflicts": []
+}
