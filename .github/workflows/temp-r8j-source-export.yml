@@ -1,0 +1,40 @@
+name: Temp R8J Source Export
+
+on:
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package current source
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import zipfile
+          root = Path(".")
+          include = [
+              Path("src"),
+              Path("mappings"),
+              Path("research"),
+              Path("pyproject.toml"),
+          ]
+          with zipfile.ZipFile("r8j-current-source.zip", "w", zipfile.ZIP_DEFLATED) as z:
+              for item in include:
+                  if item.is_file():
+                      z.write(item, item.as_posix())
+                  elif item.is_dir():
+                      for p in sorted(item.rglob("*")):
+                          if p.is_file():
+                              z.write(p, p.as_posix())
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: r8j-current-source
+          path: r8j-current-source.zip
+          retention-days: 1
