@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_74335A2459C0E4FF7A83",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_C43759ED6E87A4198158",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000343",
+      "owner_logical_id": "CLIENT_CLASS_000343",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/k/m$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Unit",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_nested_structure",
+          "detail": "The nested class has exactly two final instance fields: int shader type and String filename, initialized by a two-argument constructor and exposed by integer/String accessors."
+        },
+        {
+          "family": "exact_shader_consumer",
+          "detail": "R89 Shader stores these objects in its unit list, reads the integer as the OpenGL shader type and the String as the Template resource filename during shader compilation."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "The public RuneLite-derived Shader source preserves an exact nested class named Unit with final int type and final String filename, the same constructor shape, and the same compile-loop use."
+        },
+        {
+          "family": "owner_identity",
+          "detail": "The enclosing exact-v308 owner rs/k/m is independently R89 Shader, fixing the nested source identity as Shader.Unit rather than a generic unrelated two-field record."
+        }
+      ],
+      "note": "Unit is an exact nested Shader source-name/structure match. The enclosing owner is independently identified as R89 Shader, and no prior Chat 2 semantic proposal uses the simple name Unit."
+    }
+  ],
+  "unresolved": []
+}
