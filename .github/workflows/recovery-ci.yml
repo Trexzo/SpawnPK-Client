@@ -31,19 +31,3 @@ jobs:
         run: python -m spk_recovery.cli --help
       - name: Repository hygiene
         run: python scripts/check_repo_hygiene.py
-
-
-      - name: Build temporary public R8G acceptance source snapshot
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p acceptance-source
-          git archive --format=zip -o acceptance-source/r8g-source.zip HEAD
-      - name: Upload temporary public R8G acceptance source snapshot
-        if: runner.os == 'Linux'
-        uses: actions/upload-artifact@v4
-        with:
-          name: r8g-public-source-snapshot
-          path: acceptance-source/r8g-source.zip
-          retention-days: 1
