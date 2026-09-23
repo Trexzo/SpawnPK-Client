@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ImageDumper",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_png_output",
+          "detail": "rs/g has two static dump overloads accepting byte[] or int[] pixel buffers plus width/height/name. Both build a BufferedImage, copy every pixel with setRGB, and write the result through ImageIO.write(..., \"png\", file)."
+        },
+        {
+          "family": "exact_test_output_path",
+          "detail": "The class has a constant output root \"./tests/\" and constructs files as \"./tests/<name>.png\"."
+        },
+        {
+          "family": "surviving_diagnostic",
+          "detail": "The class prints the surviving diagnostic \"Dumped image to: <absolute path>\" after preparing the target file."
+        }
+      ],
+      "note": "ImageDumper is a conservative semantic recovery name for the exact v308 PNG test-image export utility; it does not claim a verbatim original developer identifier."
+    }
+  ],
+  "conflicts": []
+}
