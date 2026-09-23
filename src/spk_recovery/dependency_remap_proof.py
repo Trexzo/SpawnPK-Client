@@ -735,21 +735,54 @@ def _map_declared_member(
         "package_api_shape",
         "package_api_topology",
     }:
-        if name in _SPECIAL_METHODS:
+        if name == "<clinit>":
             return None
+
+        translated = _translate_descriptor(
+            descriptor,
+            class_mappings=mappings,
+            bundled_classes=bundled,
+        )
+        if translated is None:
+            return None
+
         official_rows = (
             new_class.fields
             if kind == "field"
             else new_class.methods
         )
         access = int(member["access"])
+
+        if name == "<init>":
+            constructors = [
+                row
+                for row in official_rows
+                if (
+                    str(row["name"]) == "<init>"
+                    and int(row["access"]) == access
+                    and str(row["descriptor"]) == translated
+                )
+            ]
+            if len(constructors) != 1:
+                return None
+            return {
+                "declaring_old_owner": declaring_owner,
+                "declaring_new_owner": official_owner,
+                "new_name": "<init>",
+                "new_descriptor": translated,
+                "strategy": (
+                    str(class_mapping["strategy"])
+                    + "_translated_constructor"
+                ),
+            }
+
         exact = [
             row
             for row in official_rows
             if (
                 int(row["access"]) == access
                 and str(row["name"]) == name
-                and str(row["descriptor"]) == descriptor
+                and str(row["descriptor"]) == translated
             )
         ]
         if len(exact) == 1:
@@ -757,18 +790,19 @@ def _map_declared_member(
                 "declaring_old_owner": declaring_owner,
                 "declaring_new_owner": official_owner,
                 "new_name": name,
-                "new_descriptor": descriptor,
+                "new_descriptor": translated,
                 "strategy": (
                     str(class_mapping["strategy"])
-                    + "_exact_member"
+                    + "_translated_exact_member"
                 ),
             }
+
         descriptor_matches = [
             row
             for row in official_rows
             if (
                 int(row["access"]) == access
-                and str(row["descriptor"]) == descriptor
+                and str(row["descriptor"]) == translated
             )
         ]
         if len(descriptor_matches) != 1:
@@ -778,10 +812,10 @@ def _map_declared_member(
             "declaring_old_owner": declaring_owner,
             "declaring_new_owner": official_owner,
             "new_name": str(official_member["name"]),
-            "new_descriptor": descriptor,
+            "new_descriptor": translated,
             "strategy": (
                 str(class_mapping["strategy"])
-                + "_unique_descriptor_member"
+                + "_translated_unique_descriptor_member"
             ),
         }
 
