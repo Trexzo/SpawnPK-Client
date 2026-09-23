@@ -91,6 +91,7 @@ def _class_package_collision_roots(names: dict[str, str]) -> dict[str, list[str]
 
 def _accepted_nested_class_closure(
     class_lineage: dict[str, Any],
+    index: dict[str, Any],
     *,
     build_id: str,
     requested: dict[str, Any],
@@ -107,6 +108,26 @@ def _accepted_nested_class_closure(
         records_by_id[logical_id] = record
         records_by_source[source] = record
 
+    indexed_by_name = {
+        str(row.get("internal_name")): row
+        for row in index.get("classes", {}).values()
+        if isinstance(row, dict) and row.get("internal_name")
+    }
+
+    def structural_root(source: str) -> str | None:
+        seen: set[str] = set()
+        current = source
+        while current not in seen:
+            seen.add(current)
+            meta = indexed_by_name.get(current)
+            if not isinstance(meta, dict):
+                return None
+            owner = meta.get("inner_outer_name") or meta.get("enclosing_class_name")
+            if not isinstance(owner, str) or not owner:
+                return current if current != source else None
+            current = owner
+        return None
+
     rows: list[dict[str, Any]] = []
     for outer_id in sorted(accepted_ids):
         outer = records_by_id[outer_id]
@@ -115,7 +136,10 @@ def _accepted_nested_class_closure(
         prefix = outer_source + "$"
 
         for nested_source in sorted(
-            name for name in records_by_source if name.startswith(prefix)
+            name
+            for name in records_by_source
+            if name.startswith(prefix)
+            and structural_root(name) == outer_source
         ):
             nested = records_by_source[nested_source]
             nested_id = str(nested.get("logical_id"))
@@ -220,6 +244,7 @@ def _accepted_class_spec(
 
     nested_rows = _accepted_nested_class_closure(
         class_lineage,
+        index,
         build_id=build_id,
         requested=requested,
         accepted_ids=accepted_ids,
