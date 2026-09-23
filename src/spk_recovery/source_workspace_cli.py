@@ -20,6 +20,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--decompiler-sha256", required=True)
     p.add_argument("--engine", choices=["cfr", "vineflower", "procyon"], required=True)
     p.add_argument("--project-only", action="store_true")
+    p.add_argument("--resume-project-only", action="store_true")
+    p.add_argument("--project-batch-size", type=int, default=5)
+    p.add_argument("--max-batches-per-run", type=int)
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args(argv)
 
@@ -32,6 +35,9 @@ def main(argv: list[str] | None = None) -> int:
             engine=args.engine,
             out_dir=args.out_dir,
             project_only=args.project_only,
+            resume_project_only=args.resume_project_only,
+            project_batch_size=args.project_batch_size,
+            max_batches_per_run=args.max_batches_per_run,
         )
     except (
         SourceWorkspaceError,
@@ -41,6 +47,14 @@ def main(argv: list[str] | None = None) -> int:
     ) as exc:
         print(f"REFUSED: {exc}", file=sys.stderr)
         return 2
+
+    if manifest.get("kind") == "project_source_resume_checkpoint":
+        print("SPK_SOURCE_WORKSPACE_INCOMPLETE")
+        print(f"checkpoint_id={manifest['checkpoint_id']}")
+        print(f"completed_batches={len(manifest['completed_batches'])}")
+        print(f"batch_count={manifest['material']['batch_count']}")
+        print(f"out_dir={args.out_dir.resolve()}")
+        return 3
 
     print("SPK_SOURCE_WORKSPACE_PASS")
     print(f"workspace_id={manifest['workspace_id']}")
