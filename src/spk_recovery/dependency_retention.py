@@ -258,7 +258,6 @@ def classify_project_coupled_retention(
     profiles = _class_profiles(bundled_jar, profile_names)
 
     coupled_seeds: set[str] = set()
-    consumed_only: set[str] = set()
     reverse_project_targets: dict[str, list[str]] = {}
     for owner in sorted(unresolved_owner_rows):
         targets = sorted(
@@ -267,8 +266,6 @@ def classify_project_coupled_retention(
         reverse_project_targets[owner] = targets
         if targets:
             coupled_seeds.add(owner)
-        else:
-            consumed_only.add(owner)
 
     retained: set[str] = set(coupled_seeds)
     closure_parent: dict[str, str] = {}
@@ -288,15 +285,14 @@ def classify_project_coupled_retention(
             closure_parent[target] = current
             queue.append(target)
 
-    closure_only = retained - coupled_seeds
     classifications: dict[str, str] = {}
-    for owner in sorted(coupled_seeds):
-        classifications[owner] = "project_coupled_non_pom"
-    for owner in sorted(consumed_only):
-        if owner not in retained:
+    for owner in sorted(retained):
+        if owner in coupled_seeds:
+            classifications[owner] = "project_coupled_non_pom"
+        elif owner in unresolved_owner_rows:
             classifications[owner] = "project_consumed_non_pom"
-    for owner in sorted(closure_only):
-        classifications[owner] = "source_retention_closure"
+        else:
+            classifications[owner] = "source_retention_closure"
 
     lineage_equal: dict[str, bool] = {}
     lineage_sha = None
@@ -381,22 +377,33 @@ def classify_project_coupled_retention(
     retained_weighted = sum(
         int(row["reference_count"])
         for row in member_rows
-        if row["retention_status"]
-        in {
-            "project_coupled_non_pom",
-            "source_retention_closure",
-        }
+    )
+    coupled_weighted = sum(
+        int(row["reference_count"])
+        for row in member_rows
+        if row["retention_status"] == "project_coupled_non_pom"
     )
     consumed_weighted = sum(
         int(row["reference_count"])
         for row in member_rows
         if row["retention_status"] == "project_consumed_non_pom"
     )
+    unresolved_dependency_statuses = {
+        "bundled_unresolved_class",
+        "bundled_member_unresolved",
+        "bundled_member_not_declared",
+        "bundled_member_ambiguous",
+        "external_hierarchy_member",
+    }
     prior_unresolved_weighted = sum(
         int(row.get("reference_count", 0))
         for row in remap.get("member_results", [])
-        if row.get("status") == "bundled_unresolved_class"
+        if row.get("status") in unresolved_dependency_statuses
     )
+    if retained_weighted > prior_unresolved_weighted:
+        raise DependencyRetentionError(
+            "source-retention reclassification exceeds dependency uncertainty"
+        )
 
     material = {
         "bundled_jar_sha256": sha256_file(bundled_jar),
@@ -432,14 +439,13 @@ def classify_project_coupled_retention(
                 for row in class_rows
             ),
             "retained_weighted_reference_count": retained_weighted,
+            "project_coupled_weighted_reference_count": coupled_weighted,
             "project_consumed_weighted_reference_count": consumed_weighted,
-            "prior_bundled_unresolved_weighted_reference_count": (
+            "prior_dependency_uncertainty_weighted_reference_count": (
                 prior_unresolved_weighted
             ),
             "remaining_dependency_uncertainty_weighted_reference_count": (
-                prior_unresolved_weighted
-                - retained_weighted
-                - consumed_weighted
+                prior_unresolved_weighted - retained_weighted
             ),
             "lineage_byte_identical_retained_class_count": (
                 sum(lineage_equal.values())
