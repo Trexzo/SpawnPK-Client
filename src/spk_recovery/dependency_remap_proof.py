@@ -226,6 +226,8 @@ def _class_mappings(
     bundled: dict[str, ParsedClass],
     official: dict[str, ParsedClass],
     artifact_by_class: dict[str, str],
+    *,
+    package_api_candidate_names: set[str] | None = None,
 ) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
     bundled_groups = _structural_groups(bundled)
     official_groups = _structural_groups(official)
@@ -296,6 +298,11 @@ def _class_mappings(
     initial_mapped_names = set(mappings)
     for old_name, old_class in sorted(bundled.items()):
         if old_name in initial_mapped_names:
+            continue
+        if (
+            package_api_candidate_names is None
+            or old_name not in package_api_candidate_names
+        ):
             continue
         package_counts = package_targets.get(
             _package_name(old_name),
@@ -899,10 +906,15 @@ def prove_dependency_remaps(
         bundled_jar,
         project_prefixes=prefixes,
     )
+    referenced_owners = {
+        str(row["owner"])
+        for row in surface.get("member_references", [])
+    }
     mappings, class_summary = _class_mappings(
         bundled,
         official,
         artifact_by_class,
+        package_api_candidate_names=referenced_owners,
     )
     alignments = _member_alignment(
         bundled,
@@ -910,10 +922,6 @@ def prove_dependency_remaps(
         mappings,
     )
 
-    referenced_owners = {
-        str(row["owner"])
-        for row in surface.get("member_references", [])
-    }
     referenced_class_rows = [
         {
             **mappings[owner],
