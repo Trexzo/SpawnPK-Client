@@ -30,6 +30,7 @@ def run_decompiler(
     clean_out: bool = False,
     java_command: str = "java",
     input_class_files: list[Path] | None = None,
+    isolate_class_files: list[Path] | None = None,
     max_command_chars: int = 12000,
 ) -> dict[str, Any]:
     input_jar = input_jar.resolve()
@@ -60,6 +61,11 @@ def run_decompiler(
         )
 
     class_files: list[Path] | None = None
+    isolated_files: set[Path] = set()
+    if isolate_class_files is not None and input_class_files is None:
+        raise DecompilerError(
+            "isolated class-file input requires selective input_class_files"
+        )
     if input_class_files is not None:
         if engine != "procyon":
             raise DecompilerError(
@@ -79,6 +85,19 @@ def run_decompiler(
                 "selective class-file input contains missing files: "
                 + repr([str(path) for path in missing[:10]])
             )
+        if isolate_class_files is not None:
+            isolated_files = {
+                Path(path).resolve() for path in isolate_class_files
+            }
+            unknown = sorted(
+                isolated_files - set(class_files),
+                key=lambda path: path.as_posix(),
+            )
+            if unknown:
+                raise DecompilerError(
+                    "isolated class-file input must be a subset of selective input: "
+                    + repr([str(path) for path in unknown[:10]])
+                )
 
     if out_dir.exists():
         if clean_out:
@@ -130,21 +149,30 @@ def run_decompiler(
         commands = []
         current = list(base)
         current_chars = sum(len(value) + 1 for value in current)
-        for class_file in class_files:
-            value = str(class_file)
-            extra = len(value) + 1
-            if len(current) > len(base) and current_chars + extra > max_command_chars:
+
+        def flush_current() -> None:
+            nonlocal current, current_chars
+            if len(current) > len(base):
                 commands.append(current)
                 current = list(base)
                 current_chars = sum(len(item) + 1 for item in current)
+
+        for class_file in class_files:
+            value = str(class_file)
+            extra = len(value) + 1
             if current_chars + extra > max_command_chars:
-                raise DecompilerError(
-                    "one selective class-file path exceeds max_command_chars"
-                )
+                if len(current) == len(base):
+                    raise DecompilerError(
+                        "one selective class-file path exceeds max_command_chars"
+                    )
+                flush_current()
+            if class_file in isolated_files:
+                flush_current()
+                commands.append(base + [value])
+                continue
             current.append(value)
             current_chars += extra
-        if len(current) > len(base):
-            commands.append(current)
+        flush_current()
 
     stdout_parts: list[str] = []
     stderr_parts: list[str] = []
@@ -186,6 +214,7 @@ def run_decompiler(
             len(class_files) if class_files is not None else None
         ),
         "batch_count": len(commands),
+        "isolated_class_file_count": len(isolated_files),
         "stdout": combined_stdout,
         "stderr": combined_stderr,
     }
