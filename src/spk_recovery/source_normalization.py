@@ -785,6 +785,7 @@ def _method_has_same_name_value_binding(
     # only suppress a rewrite; they never authorize one.
     local_name = re.compile(
         r"(?:^|[;{}]\s*|\(\s*|,\s*)"
+        r"\s*"
         r"(?:final\s+)?"
         r"[A-Za-z_$][A-Za-z0-9_$.\[\]<>?]*"
         r"(?:\s*<[^;{}()]*>)?"
