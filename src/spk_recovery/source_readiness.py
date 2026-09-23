@@ -17,11 +17,11 @@ _IMPORT_RE = re.compile(
     r"(?m)^\s*import\s+(?:static\s+)?([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*(?:\.\*)?)\s*;"
 )
 _PUBLIC_TYPE_RE = re.compile(
-    r"(?m)^\s*public\s+(?:(?:abstract|final|sealed|non-sealed|strictfp)\s+)*"
+    r"(?<![\w$.])public\s+(?:(?:abstract|final|sealed|non-sealed|strictfp)\s+)*"
     r"(?:class|interface|enum|record|@interface)\s+([A-Za-z_$][\w$]*)\b"
 )
 _TOP_TYPE_RE = re.compile(
-    r"(?m)^\s*(?:(?:public|protected|private|abstract|final|sealed|non-sealed|strictfp|static)\s+)*"
+    r"(?<![\w$.])(?:(?:public|protected|private|abstract|final|sealed|non-sealed|strictfp|static)\s+)*"
     r"(?:class|interface|enum|record|@interface)\s+([A-Za-z_$][\w$]*)\b"
 )
 
@@ -57,75 +57,121 @@ def _stable_tree_digest(root: Path) -> tuple[str, list[Path], int]:
     return h.hexdigest(), files, total_bytes
 
 
-def _line_start_depths(text: str) -> list[int]:
-    """Return lexical brace depth at the start of every source line."""
-    depths = [0]
+def _code_mask_and_depths(text: str) -> tuple[str, list[int]]:
+    """Mask non-code text and record lexical brace depth per character."""
+    masked = [" "] * len(text)
+    depths = [0] * len(text)
     depth = 0
     state = "code"
     escaped = False
     i = 0
+
     while i < len(text):
         ch = text[i]
         nxt = text[i + 1] if i + 1 < len(text) else ""
+        depths[i] = depth
 
-        if state == "line_comment":
-            if ch == "\n":
-                state = "code"
-                depths.append(depth)
-        elif state == "block_comment":
-            if ch == "*" and nxt == "/":
-                state = "code"
-                i += 1
-            elif ch == "\n":
-                depths.append(depth)
-        elif state == "string":
-            if escaped:
-                escaped = False
-            elif ch == "\\":
-                escaped = True
-            elif ch == '"':
-                state = "code"
-            elif ch == "\n":
-                depths.append(depth)
-        elif state == "char":
-            if escaped:
-                escaped = False
-            elif ch == "\\":
-                escaped = True
-            elif ch == "'":
-                state = "code"
-            elif ch == "\n":
-                depths.append(depth)
-        elif state == "text_block":
-            if text.startswith('"""', i):
-                state = "code"
-                i += 2
-            elif ch == "\n":
-                depths.append(depth)
-        else:
+        if state == "code":
             if ch == "/" and nxt == "/":
+                masked[i] = " "
+                if i + 1 < len(text):
+                    depths[i + 1] = depth
+                    masked[i + 1] = " "
                 state = "line_comment"
-                i += 1
-            elif ch == "/" and nxt == "*":
-                state = "block_comment"
-                i += 1
-            elif text.startswith('"""', i):
-                state = "text_block"
                 i += 2
-            elif ch == '"':
+                continue
+            if ch == "/" and nxt == "*":
+                masked[i] = " "
+                if i + 1 < len(text):
+                    depths[i + 1] = depth
+                    masked[i + 1] = " "
+                state = "block_comment"
+                i += 2
+                continue
+            if text.startswith('"""', i):
+                for j in range(i, min(i + 3, len(text))):
+                    depths[j] = depth
+                    masked[j] = " "
+                state = "text_block"
+                i += 3
+                continue
+            if ch == '"':
+                masked[i] = " "
                 state = "string"
                 escaped = False
-            elif ch == "'":
+                i += 1
+                continue
+            if ch == "'":
+                masked[i] = " "
                 state = "char"
                 escaped = False
-            elif ch == "{":
+                i += 1
+                continue
+
+            masked[i] = ch
+            if ch == "{":
                 depth += 1
             elif ch == "}":
                 depth = max(0, depth - 1)
-            elif ch == "\n":
-                depths.append(depth)
-        i += 1
-    return depths
+            i += 1
+            continue
+
+        if state == "line_comment":
+            if ch == "\n":
+                masked[i] = "\n"
+                state = "code"
+            i += 1
+            continue
+
+        if state == "block_comment":
+            if ch == "*" and nxt == "/":
+                masked[i] = " "
+                if i + 1 < len(text):
+                    depths[i + 1] = depth
+                    masked[i + 1] = " "
+                state = "code"
+                i += 2
+                continue
+            if ch == "\n":
+                masked[i] = "\n"
+            i += 1
+            continue
+
+        if state in {"string", "char"}:
+            quote = '"' if state == "string" else "'"
+            if ch == "\n":
+                masked[i] = "\n"
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == quote:
+                state = "code"
+            i += 1
+            continue
+
+        if state == "text_block":
+            if ch == "\\" and i + 1 < len(text):
+                masked[i] = " "
+                depths[i + 1] = depth
+                masked[i + 1] = (
+                    "\n" if text[i + 1] == "\n" else " "
+                )
+                i += 2
+                continue
+            if text.startswith('"""', i):
+                for j in range(i, min(i + 3, len(text))):
+                    depths[j] = depth
+                    masked[j] = " "
+                state = "code"
+                i += 3
+                continue
+            if ch == "\n":
+                masked[i] = "\n"
+            i += 1
+            continue
+
+    return "".join(masked), depths
 
 
 def _top_level_type_names(
@@ -134,13 +180,10 @@ def _top_level_type_names(
     public_only: bool,
 ) -> list[str]:
     pattern = _PUBLIC_TYPE_RE if public_only else _TOP_TYPE_RE
-    depths = _line_start_depths(text)
+    masked, depths = _code_mask_and_depths(text)
     names: list[str] = []
-    for line_number, line in enumerate(text.splitlines()):
-        if line_number >= len(depths) or depths[line_number] != 0:
-            continue
-        match = pattern.match(line)
-        if match:
+    for match in pattern.finditer(masked):
+        if depths[match.start()] == 0:
             names.append(match.group(1))
     return names
 
