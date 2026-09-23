@@ -223,6 +223,31 @@ def _hierarchy_shadow_fixture(
     return jar
 
 
+def _compile_java_fixture(root: Path, files: dict[str, str]) -> Path:
+    legal = root / "custom-legal"
+    sources: list[Path] = []
+    for rel, content in sorted(files.items()):
+        path = legal / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+        sources.append(path)
+    classes = root / "custom-classes"
+    classes.mkdir()
+    proc = subprocess.run(
+        ["javac", "-d", str(classes), *map(str, sources)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if proc.returncode != 0:
+        raise AssertionError("javac custom fixture failed: " + proc.stderr)
+    jar = root / "custom-readable.jar"
+    with zipfile.ZipFile(jar, "w") as z:
+        for class_file in sorted(classes.rglob("*.class")):
+            z.write(class_file, class_file.relative_to(classes).as_posix())
+    return jar
+
+
 class ProcyonSourceNormalizationTests(unittest.TestCase):
     def test_reconstructs_proven_synthetic_switch_class(self):
         with tempfile.TemporaryDirectory() as td:
@@ -605,6 +630,8 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 "    public static int x;\n"
                 "    public static void m() {\n"
                 "        h.x = 7;\n"
+                "        int y = h.x;\n"
+                "        int z = h.x;\n"
                 "    }\n"
                 "}\n"
             )
@@ -652,6 +679,323 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 ],
                 2,
             )
+
+    def test_primitive_same_name_parameter_does_not_block_exact_owner(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/h.java": (
+                        "package pkg;\n"
+                        "public class h {\n"
+                        "    public int h;\n"
+                        "    public static int x;\n"
+                        "    public static void m(int h) {\n"
+                        "        pkg.h.x = 1;\n"
+                        "        int y = pkg.h.x;\n"
+                        "    }\n"
+                        "}\n"
+                    )
+                },
+            )
+            source = root / "src" / "pkg" / "h.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package pkg;\n"
+                "public class h {\n"
+                "    public int h;\n"
+                "    public static int x;\n"
+                "    public static void m(int h) {\n"
+                "        h.x = 1;\n"
+                "        int y = h.x;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            text = source.read_text(encoding="utf-8")
+
+            self.assertIn("pkg.h.x = 1;", text)
+            self.assertIn("int y = pkg.h.x;", text)
+            self.assertEqual(
+                report["summary"][
+                    "hierarchy_shadowed_self_static_field_reference_count"
+                ],
+                2,
+            )
+
+    def test_reference_same_name_parameter_still_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/h.java": (
+                        "package pkg;\n"
+                        "public class h {\n"
+                        "    public int h;\n"
+                        "    public static int x;\n"
+                        "    public static void m(Object h) {\n"
+                        "        pkg.h.x = 1;\n"
+                        "        int y = pkg.h.x;\n"
+                        "    }\n"
+                        "}\n"
+                    )
+                },
+            )
+            source = root / "src" / "pkg" / "h.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package pkg;\n"
+                "public class h {\n"
+                "    public int h;\n"
+                "    public static int x;\n"
+                "    public static void m(Object h) {\n"
+                "        h.x = 1;\n"
+                "        int y = h.x;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "hierarchy_shadowed_self_static_field_reference_count"
+                ],
+                0,
+            )
+
+    def test_object_local_blocks_only_its_lexical_scope(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/h.java": (
+                        "package pkg;\n"
+                        "public class h {\n"
+                        "    public int h;\n"
+                        "    public static int x;\n"
+                        "    public static void m() {\n"
+                        "        pkg.h.x = 1;\n"
+                        "        { Object h = null; }\n"
+                        "        int y = pkg.h.x;\n"
+                        "    }\n"
+                        "}\n"
+                    )
+                },
+            )
+            source = root / "src" / "pkg" / "h.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package pkg;\n"
+                "public class h {\n"
+                "    public int h;\n"
+                "    public static int x;\n"
+                "    public static void m() {\n"
+                "        h.x = 1;\n"
+                "        { Object h = null; h.x = 99; }\n"
+                "        int y = h.x;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            text = source.read_text(encoding="utf-8")
+
+            self.assertIn("pkg.h.x = 1;", text)
+            self.assertIn("{ Object h = null; h.x = 99; }", text)
+            self.assertIn("int y = pkg.h.x;", text)
+            self.assertEqual(
+                report["summary"][
+                    "hierarchy_shadowed_self_static_field_reference_count"
+                ],
+                2,
+            )
+
+    def test_source_subset_uses_sufficient_exact_field_access_counts(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/h.java": (
+                        "package pkg;\n"
+                        "public class h {\n"
+                        "    public int h;\n"
+                        "    public static int x;\n"
+                        "    public static void m() {\n"
+                        "        pkg.h.x = 1;\n"
+                        "        int y = pkg.h.x;\n"
+                        "    }\n"
+                        "}\n"
+                    )
+                },
+            )
+            source = root / "src" / "pkg" / "h.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package pkg;\n"
+                "public class h {\n"
+                "    public int h;\n"
+                "    public static int x;\n"
+                "    public static void m() {\n"
+                "        h.x = 1;\n"
+                "        int y = pkg.h.x;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            text = source.read_text(encoding="utf-8")
+
+            self.assertIn("pkg.h.x = 1;", text)
+            self.assertEqual(
+                report["summary"][
+                    "hierarchy_shadowed_self_static_field_reference_count"
+                ],
+                1,
+            )
+
+    def test_overloads_are_bound_by_source_parameter_descriptor_shape(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/h.java": (
+                        "package pkg;\n"
+                        "public class h {\n"
+                        "    public int h;\n"
+                        "    public static int x;\n"
+                        "    public static void m(String s) { pkg.h.x = 1; }\n"
+                        "    public static void m(Boolean b) { pkg.h.x = 2; }\n"
+                        "}\n"
+                    )
+                },
+            )
+            source = root / "src" / "pkg" / "h.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package pkg;\n"
+                "public class h {\n"
+                "    public int h;\n"
+                "    public static int x;\n"
+                "    public static void m(String s) { h.x = 1; }\n"
+                "    public static void m(Boolean b) { h.x = 2; }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            text = source.read_text(encoding="utf-8")
+
+            self.assertEqual(text.count("pkg.h.x"), 2)
+            actions = [
+                row for row in report["actions"]
+                if row["kind"]
+                == "hierarchy_shadowed_self_static_field_owner_qualification"
+            ]
+            self.assertEqual(len(actions), 2)
+            self.assertEqual(
+                {row["method_descriptor"] for row in actions},
+                {"(Ljava/lang/String;)V", "(Ljava/lang/Boolean;)V"},
+            )
+
+    def test_relative_nested_parameter_type_matches_exact_descriptor(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/h.java": (
+                        "package pkg;\n"
+                        "public class h { public static class a {} }\n"
+                    ),
+                    "pkg/t.java": (
+                        "package pkg;\n"
+                        "public class t {\n"
+                        "    public int t;\n"
+                        "    public static int[] b;\n"
+                        "    public static void m(h.a a) {\n"
+                        "        pkg.t.b = new int[1];\n"
+                        "        int y = pkg.t.b.length;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "pkg" / "t.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package pkg;\n"
+                "public class t {\n"
+                "    public int t;\n"
+                "    public static int[] b;\n"
+                "    public static void m(h.a a) {\n"
+                "        t.b = new int[1];\n"
+                "        int y = t.b.length;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            text = source.read_text(encoding="utf-8")
+
+            self.assertIn("pkg.t.b = new int[1];", text)
+            self.assertIn("int y = pkg.t.b.length;", text)
+            action = next(
+                row for row in report["actions"]
+                if row["kind"]
+                == "hierarchy_shadowed_self_static_field_owner_qualification"
+            )
+            self.assertEqual(action["method_descriptor"], "(Lpkg/h$a;)V")
+
+    def test_static_initializer_uses_exact_clinit_field_proof(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/h.java": (
+                        "package pkg;\n"
+                        "public class h {\n"
+                        "    public int h;\n"
+                        "    public static int x;\n"
+                        "    static { pkg.h.x = 1; }\n"
+                        "}\n"
+                    )
+                },
+            )
+            source = root / "src" / "pkg" / "h.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package pkg;\n"
+                "public class h {\n"
+                "    public int h;\n"
+                "    public static int x;\n"
+                "    static { h.x = 1; }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            text = source.read_text(encoding="utf-8")
+
+            self.assertIn("static { pkg.h.x = 1; }", text)
+            action = next(
+                row for row in report["actions"]
+                if row.get("method_name") == "<clinit>"
+            )
+            self.assertEqual(action["method_descriptor"], "()V")
 
     def test_discarded_string_expression_preserves_evaluation(self):
         with tempfile.TemporaryDirectory() as td:

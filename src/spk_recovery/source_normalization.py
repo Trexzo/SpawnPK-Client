@@ -761,41 +761,292 @@ def _field_visible_from(
     return declaring_package == current_package
 
 
+def _same_name_value_shadow_spans(
+    *,
+    method_match: re.Match[str],
+    method_code: str,
+    simple_name: str,
+) -> tuple[bool, list[tuple[int, int]]]:
+    """Return whole-method parameter shadow plus conservative local scopes."""
+    params = method_match.group("params")
+    primitive_source_types = {
+        "boolean", "byte", "char", "short", "int", "long", "float",
+        "double",
+    }
+    param_name = re.compile(
+        r"(?:^|,)\s*(?:final\s+)?"
+        r"(?P<type>[A-Za-z_$][A-Za-z0-9_$.\[\]<>?, ]*?)\s+"
+        + re.escape(simple_name)
+        + r"\s*(?=,|$)"
+    )
+    for param in param_name.finditer(params):
+        param_type = param.group("type").strip()
+        if param_type not in primitive_source_types:
+            return True, []
+
+    brace = method_code.find("{")
+    if brace < 0:
+        return True, []
+    body_start = brace + 1
+    body = method_code[body_start:]
+    local_name = re.compile(
+        r"(?:^|[;{}]\s*|\(\s*|,\s*)\s*"
+        r"(?:final\s+)?"
+        r"(?P<type>[A-Za-z_$][A-Za-z0-9_$.\[\]<>?]*"
+        r"(?:\s*<[^;{}()]*>)?)"
+        r"\s+(?P<name>"
+        + re.escape(simple_name)
+        + r")\s*(?==|;|,|:|\))",
+        re.MULTILINE,
+    )
+    spans: list[tuple[int, int]] = []
+    for local in local_name.finditer(body):
+        local_type = local.group("type").strip()
+        if local_type in primitive_source_types:
+            # A scalar primitive cannot be the receiver of `.field`; exact
+            # bytecode proof can therefore establish class qualification
+            # even while the primitive local shadows the class simple name.
+            continue
+        declaration = body_start + local.start("name")
+        stack: list[int] = []
+        for index, ch in enumerate(method_code[:declaration]):
+            if ch == "{":
+                stack.append(index)
+            elif ch == "}" and stack:
+                stack.pop()
+        if not stack:
+            spans.append((declaration, len(method_code)))
+            continue
+        spans.append(
+            (declaration, _matching_brace_end(method_code, stack[-1]))
+        )
+    return False, spans
+
+
 def _method_has_same_name_value_binding(
     *,
     method_match: re.Match[str],
     method_code: str,
     simple_name: str,
 ) -> bool:
-    params = method_match.group("params")
-    param_name = re.compile(
-        r"(?:^|,)\s*(?:final\s+)?"
-        r"[A-Za-z_$][A-Za-z0-9_$.\[\]<>?, ]*\s+"
-        + re.escape(simple_name)
-        + r"\s*(?=,|$)"
+    parameter_shadow, local_spans = _same_name_value_shadow_spans(
+        method_match=method_match,
+        method_code=method_code,
+        simple_name=simple_name,
     )
-    if param_name.search(params):
-        return True
+    return parameter_shadow or bool(local_spans)
 
-    brace = method_code.find("{")
-    if brace < 0:
-        return True
-    body = method_code[brace + 1:]
-    # Conservative local/catch/foreach declaration detector. False positives
-    # only suppress a rewrite; they never authorize one.
+
+def _source_parameter_count(params: str) -> int:
+    text = params.strip()
+    if not text:
+        return 0
+    depth = 0
+    count = 1
+    for ch in text:
+        if ch == "<":
+            depth += 1
+        elif ch == ">" and depth:
+            depth -= 1
+        elif ch == "," and depth == 0:
+            count += 1
+    return count
+
+
+def _descriptor_parameter_count(descriptor: str) -> int | None:
+    if not descriptor.startswith("("):
+        return None
+    i = 1
+    count = 0
+    while i < len(descriptor) and descriptor[i] != ")":
+        while i < len(descriptor) and descriptor[i] == "[":
+            i += 1
+        if i >= len(descriptor):
+            return None
+        if descriptor[i] == "L":
+            end = descriptor.find(";", i + 1)
+            if end < 0:
+                return None
+            i = end + 1
+        elif descriptor[i] in "ZBCSIJFD":
+            i += 1
+        else:
+            return None
+        count += 1
+    if i >= len(descriptor) or descriptor[i] != ")":
+        return None
+    return count
+
+
+def _source_parameter_shapes(
+    params: str,
+) -> list[tuple[int, str, str]] | None:
+    text = params.strip()
+    if not text:
+        return []
+    parts: list[str] = []
+    start = 0
+    depth = 0
+    for index, ch in enumerate(text):
+        if ch == "<":
+            depth += 1
+        elif ch == ">" and depth:
+            depth -= 1
+        elif ch == "," and depth == 0:
+            parts.append(text[start:index].strip())
+            start = index + 1
+    parts.append(text[start:].strip())
+
+    primitive = {
+        "boolean": "Z", "byte": "B", "char": "C", "short": "S",
+        "int": "I", "long": "J", "float": "F", "double": "D",
+    }
+    out: list[tuple[int, str, str]] = []
+    for part in parts:
+        value = re.sub(r"^(?:final\s+)+", "", part.strip())
+        match = re.fullmatch(
+            r"(?P<type>.+?)\s+"
+            r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)"
+            r"(?P<var_arrays>(?:\[\])*)",
+            value,
+        )
+        if match is None:
+            return None
+        type_text = match.group("type").strip()
+        # Erase generic arguments conservatively while preserving the raw
+        # reference name around them.
+        erased: list[str] = []
+        generic_depth = 0
+        for ch in type_text:
+            if ch == "<":
+                generic_depth += 1
+            elif ch == ">" and generic_depth:
+                generic_depth -= 1
+            elif generic_depth == 0:
+                erased.append(ch)
+        type_text = "".join(erased).strip()
+        arrays = 0
+        while type_text.endswith("[]"):
+            arrays += 1
+            type_text = type_text[:-2].strip()
+        arrays += len(match.group("var_arrays")) // 2
+        if type_text in primitive:
+            out.append((arrays, "primitive", primitive[type_text]))
+            continue
+        if not re.fullmatch(
+            r"[A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)*",
+            type_text,
+        ):
+            return None
+        kind = "qualified_ref" if "." in type_text else "simple_ref"
+        out.append((arrays, kind, type_text))
+    return out
+
+
+def _descriptor_parameter_shapes(
+    descriptor: str,
+) -> list[tuple[int, str, str]] | None:
+    if not descriptor.startswith("("):
+        return None
+    i = 1
+    out: list[tuple[int, str, str]] = []
+    while i < len(descriptor) and descriptor[i] != ")":
+        arrays = 0
+        while i < len(descriptor) and descriptor[i] == "[":
+            arrays += 1
+            i += 1
+        if i >= len(descriptor):
+            return None
+        ch = descriptor[i]
+        if ch == "L":
+            end = descriptor.find(";", i + 1)
+            if end < 0:
+                return None
+            out.append((arrays, "ref", descriptor[i + 1:end]))
+            i = end + 1
+        elif ch in "ZBCSIJFD":
+            out.append((arrays, "primitive", ch))
+            i += 1
+        else:
+            return None
+    if i >= len(descriptor) or descriptor[i] != ")":
+        return None
+    return out
+
+
+def _source_parameters_match_descriptor(
+    params: str,
+    descriptor: str,
+    *,
+    current_package: str | None = None,
+) -> bool | None:
+    source = _source_parameter_shapes(params)
+    target = _descriptor_parameter_shapes(descriptor)
+    if source is None or target is None:
+        return None
+    if len(source) != len(target):
+        return False
+    for (s_arrays, s_kind, s_name), (t_arrays, t_kind, t_name) in zip(
+        source, target
+    ):
+        if s_arrays != t_arrays:
+            return False
+        if s_kind == "primitive":
+            if t_kind != "primitive" or s_name != t_name:
+                return False
+            continue
+        if t_kind != "ref":
+            return False
+        if s_kind == "qualified_ref":
+            parts = s_name.split(".")
+            candidates: set[str] = set()
+            # A dotted Java source type can represent package separators,
+            # nested-class separators, or (for a relative spelling such as
+            # h.a) a type in the current package. Enumerate those exact JVM
+            # spellings and require the descriptor owner to equal one.
+            for split in range(1, len(parts) + 1):
+                package = "/".join(parts[:split])
+                nested = "$".join(parts[split:])
+                candidates.add(package + (("$" + nested) if nested else ""))
+            if current_package:
+                relative = set()
+                for candidate in candidates:
+                    relative.add(current_package + "/" + candidate)
+                candidates.update(relative)
+            if t_name not in candidates:
+                return False
+        else:
+            target_simple = t_name.rsplit("/", 1)[-1].rsplit("$", 1)[-1]
+            if target_simple != s_name:
+                return False
+    return True
+
+
+def _brace_depth_before(code: str, offset: int) -> int:
+    depth = 0
+    for ch in code[:offset]:
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth = max(0, depth - 1)
+    return depth
+
+
+def _block_has_same_name_local_declaration(
+    code: str,
+    *,
+    simple_name: str,
+) -> bool:
     local_name = re.compile(
-        r"(?:^|[;{}]\s*|\(\s*|,\s*)"
-        r"\s*"
+        r"(?:^|[;{}]\s*|\(\s*|,\s*)\s*"
         r"(?:final\s+)?"
         r"[A-Za-z_$][A-Za-z0-9_$.\[\]<>?]*"
-        r"(?:\s*<[^;{}()]*>)?"
-        r"\s+"
+        r"(?:\s*<[^;{}()]*>)?\s+"
         + re.escape(simple_name)
         + r"\s*(?==|;|,|:|\))",
         re.MULTILINE,
     )
-    return bool(local_name.search(body))
-
+    return bool(local_name.search(code))
 
 def _hierarchy_static_field_access_counts(
     method: dict[str, Any],
@@ -948,11 +1199,14 @@ def _normalize_hierarchy_shadowed_self_static_field_owners(
         method_text = text[match.start():body_end]
         method_code = _java_code_mask(method_text)
 
-        if _method_has_same_name_value_binding(
-            method_match=match,
-            method_code=method_code,
-            simple_name=simple_name,
-        ):
+        parameter_shadow, local_shadow_spans = (
+            _same_name_value_shadow_spans(
+                method_match=match,
+                method_code=method_code,
+                simple_name=simple_name,
+            )
+        )
+        if parameter_shadow:
             continue
 
         source_counts: dict[tuple[str, str], int] = {}
@@ -965,7 +1219,14 @@ def _normalize_hierarchy_shadowed_self_static_field_owners(
                 + re.escape(field_name)
                 + r"\b(?!\s*\()"
             )
-            hits = list(token.finditer(method_code))
+            hits = [
+                hit
+                for hit in token.finditer(method_code)
+                if not any(
+                    start <= hit.start() < end
+                    for start, end in local_shadow_spans
+                )
+            ]
             if not hits:
                 continue
             source_counts[(declaring_owner, field_name)] = len(hits)
@@ -981,20 +1242,29 @@ def _normalize_hierarchy_shadowed_self_static_field_owners(
             continue
 
         candidates: list[dict[str, Any]] = []
+        source_arity = _source_parameter_count(match.group("params"))
         for method in profile.get("methods", []):
             if method.get("name") != match.group("name"):
+                continue
+            descriptor = str(method.get("descriptor", ""))
+            if _descriptor_parameter_count(descriptor) != source_arity:
+                continue
+            parameter_match = _source_parameters_match_descriptor(
+                match.group("params"),
+                descriptor,
+                current_package=internal_name.rpartition("/")[0],
+            )
+            if parameter_match is False:
                 continue
             exact_counts = _hierarchy_static_field_access_counts(
                 method,
                 hierarchy=hierarchy,
                 targets=static_targets,
             )
-            relevant_counts = {
-                key: count
-                for key, count in exact_counts.items()
-                if key in source_counts
-            }
-            if relevant_counts == source_counts:
+            if all(
+                exact_counts.get(key, 0) >= count
+                for key, count in source_counts.items()
+            ):
                 candidates.append(method)
 
         if len(candidates) != 1:
@@ -1027,11 +1297,104 @@ def _normalize_hierarchy_shadowed_self_static_field_owners(
                         "procyon_hierarchy_primitive_shadowed_class_owner"
                     ),
                     "strategy": (
-                        "exact_hierarchy_static_field_access_multiset_qualification"
+                        "exact_hierarchy_static_field_access_sufficiency_qualification"
                     ),
                 },
             }
         )
+
+    whole_code = _java_code_mask(text)
+    static_block_re = re.compile(r"(?m)^[ \t]*static[ \t]*\{")
+    exact_clinits = [
+        method
+        for method in profile.get("methods", [])
+        if method.get("name") == "<clinit>"
+        and method.get("descriptor") == "()V"
+    ]
+    if len(exact_clinits) == 1:
+        for block_match in static_block_re.finditer(whole_code):
+            brace_start = whole_code.find(
+                "{", block_match.start(), block_match.end()
+            )
+            if (
+                brace_start < 0
+                or _brace_depth_before(whole_code, brace_start) != 1
+            ):
+                continue
+            block_end = _matching_brace_end(whole_code, brace_start)
+            block_code = whole_code[block_match.start():block_end]
+            if _block_has_same_name_local_declaration(
+                block_code, simple_name=simple_name
+            ):
+                continue
+
+            block_counts: dict[tuple[str, str], int] = {}
+            block_occurrences: list[tuple[int, int, str]] = []
+            for field_name, declaring_owner in sorted(
+                static_targets.items()
+            ):
+                token = re.compile(
+                    r"(?<![A-Za-z0-9_$.])"
+                    + re.escape(simple_name)
+                    + r"\."
+                    + re.escape(field_name)
+                    + r"\b(?!\s*\()"
+                )
+                hits = list(token.finditer(block_code))
+                if not hits:
+                    continue
+                block_counts[(declaring_owner, field_name)] = len(hits)
+                for hit in hits:
+                    block_occurrences.append(
+                        (
+                            block_match.start() + hit.start(),
+                            block_match.start() + hit.end(),
+                            qualified_owner + "." + field_name,
+                        )
+                    )
+            if not block_counts:
+                continue
+            exact_counts = _hierarchy_static_field_access_counts(
+                exact_clinits[0],
+                hierarchy=hierarchy,
+                targets=static_targets,
+            )
+            if not all(
+                exact_counts.get(key, 0) >= count
+                for key, count in block_counts.items()
+            ):
+                continue
+            edits.extend(block_occurrences)
+            actions.append(
+                {
+                    "kind": (
+                        "hierarchy_shadowed_self_static_field_owner_qualification"
+                    ),
+                    "source_path": rel,
+                    "method_name": "<clinit>",
+                    "method_descriptor": "()V",
+                    "qualified_owner": internal_name,
+                    "primitive_shadow_owners": sorted(
+                        set(primitive_shadow_owners)
+                    ),
+                    "field_access_counts": {
+                        owner + "." + name: count
+                        for (owner, name), count in sorted(
+                            block_counts.items()
+                        )
+                    },
+                    "replacement_count": sum(block_counts.values()),
+                    "provenance": {
+                        "kind": "source_safety",
+                        "reason": (
+                            "procyon_hierarchy_primitive_shadowed_class_owner"
+                        ),
+                        "strategy": (
+                            "exact_hierarchy_static_field_access_sufficiency_qualification"
+                        ),
+                    },
+                }
+            )
 
     if not edits:
         return []
