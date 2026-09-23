@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_B32BB0529FC7A78DD9B4",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_24F152093B7B18865AE3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000097",
+      "owner_logical_id": "CLIENT_CLASS_000097",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/cache/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OnDemandFetcher",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_async_fetcher_role",
+          "detail": "rs/cache/d extends a fetcher base, implements Runnable, owns multiple request queues/lists, a worker run() loop, request counters and a Socket/InputStream/OutputStream network channel."
+        },
+        {
+          "family": "exact_cache_validation_role",
+          "detail": "The class owns CRC32 state plus version/CRC tables and validates fetched payloads against a trailing version word and computed CRC before accepting cache data."
+        },
+        {
+          "family": "exact_cache_store_role",
+          "detail": "It owns multiple CacheStoreSet-backed stores for main_file_cache.dat/main_file_cache.idx and main_file_osrs.dat/main_file_osrs.idx, reading/writing requested archive files through the local cache path."
+        },
+        {
+          "family": "exact_request_record_role",
+          "detail": "Request methods allocate rs/cache/c records carrying archive/type/id, priority and delivery flags, enqueue them into Node/NodeSub-backed queues, then the worker services pending local or remote requests."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "This combined Runnable + request-queue + CRC/version + socket/cache-store responsibility matches the classic client OnDemandFetcher architecture; exact v308 behavior is the primary authority."
+        }
+      ],
+      "note": "OnDemandFetcher is the conservative historical/semantic name for the exact v308 asynchronous cache request engine. Exact bytecode behavior is primary evidence; this does not independently prove the original source identifier."
+    }
+  ],
+  "unresolved": []
+}
