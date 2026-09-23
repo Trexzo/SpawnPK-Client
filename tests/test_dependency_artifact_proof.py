@@ -185,6 +185,56 @@ class DependencyArtifactProofTests(unittest.TestCase):
                 [{"owner": "dep/Api", "name": "realPing"}],
             )
 
+    def test_multi_release_artifact_requires_explicit_java_release(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            base = self._compile_jar(
+                root,
+                "dep",
+                {
+                    "dep/Api.java": (
+                        "package dep; public class Api { "
+                        "public static int VALUE = 1; "
+                        "public String ping(int x) { return String.valueOf(x); } "
+                        "}"
+                    )
+                },
+            )
+            multi = root / "dep-mr.jar"
+            with zipfile.ZipFile(base) as source, zipfile.ZipFile(multi, "w") as out:
+                for name in source.namelist():
+                    out.writestr(name, source.read(name))
+                out.writestr(
+                    "META-INF/versions/9/dep/Api.class",
+                    source.read("dep/Api.class"),
+                )
+
+            with self.assertRaisesRegex(
+                Exception,
+                "multi-release JAR requires explicit java_release",
+            ):
+                prove_official_artifact_compatibility(
+                    self._surface(root),
+                    [multi],
+                )
+
+            report = prove_official_artifact_compatibility(
+                self._surface(root),
+                [multi],
+                java_release=9,
+            )
+            self.assertEqual(
+                report["summary"]["member_status_counts"],
+                {"direct": 2},
+            )
+            self.assertEqual(report["java_release"], 9)
+            self.assertEqual(
+                report["official_artifacts"][0][
+                    "multi_release_class_count"
+                ],
+                1,
+            )
+
     def test_missing_owner_remains_unresolved(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
