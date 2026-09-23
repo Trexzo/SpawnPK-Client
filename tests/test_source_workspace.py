@@ -4,6 +4,7 @@ import hashlib
 from pathlib import Path
 import tempfile
 import unittest
+import zipfile
 from unittest.mock import patch
 
 from spk_recovery.source_workspace import (
@@ -121,6 +122,81 @@ class SourceWorkspaceTests(unittest.TestCase):
             self.assertTrue((out / "src" / "pkg" / "A.java").is_file())
             self.assertTrue((out / "recovered-source-manifest.json").is_file())
             self.assertTrue(manifest["source_tree_sha256"])
+
+
+    @patch("spk_recovery.source_workspace.run_decompiler")
+    def test_procyon_normalization_is_bound_into_workspace(self, run):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = root / "readable.jar"
+            with zipfile.ZipFile(jar, "w") as z:
+                z.writestr("pkg/A.class", b"class-context")
+            decompiler = root / "procyon.jar"
+            decompiler.write_bytes(b"tool")
+            out = root / "out"
+
+            def fake_decompile(
+                input_jar,
+                decompiler_jar,
+                *,
+                expected_decompiler_sha256,
+                engine,
+                out_dir,
+                clean_out,
+            ):
+                (out_dir / "pkg").mkdir(parents=True)
+                (out_dir / "pkg" / "A.java").write_text(
+                    "package pkg;\n"
+                    "class A\n"
+                    "{\n"
+                    "    void m(int n)\n"
+                    "    {\n"
+                    "        \"value=\" + n;\n"
+                    "    }\n"
+                    "}\n",
+                    encoding="utf-8",
+                )
+                return {
+                    "schema_version": 1,
+                    "kind": "decompiler_result",
+                    "engine": "procyon",
+                    "input_sha256": _sha(jar.read_bytes()),
+                    "decompiler_sha256": expected_decompiler_sha256,
+                    "java_file_count": 1,
+                    "output_directory": str(out_dir),
+                    "stdout": "",
+                    "stderr": "",
+                }
+
+            run.side_effect = fake_decompile
+            manifest = build_source_workspace(
+                _manifest(_sha(jar.read_bytes())),
+                jar,
+                decompiler,
+                expected_decompiler_sha256="b" * 64,
+                engine="procyon",
+                out_dir=out,
+            )
+
+            self.assertTrue(
+                manifest["normalization_id"].startswith("SRCNORM_")
+            )
+            self.assertEqual(
+                manifest["normalization_summary"][
+                    "discarded_string_expression_count"
+                ],
+                1,
+            )
+            self.assertTrue(
+                (out / "source-normalization.json").is_file()
+            )
+            text = (out / "src" / "pkg" / "A.java").read_text(
+                encoding="utf-8"
+            )
+            self.assertIn(
+                "final String recoveredDiscardedExpression_",
+                text,
+            )
 
 
 if __name__ == "__main__":
