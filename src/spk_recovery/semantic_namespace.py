@@ -408,9 +408,22 @@ def build_semantic_namespace(
             member_lineage,
             index,
             build_id=build_id,
+            source_safe_fallback=source_safe_fallback,
+            fallback_name_prefix=fallback_name_prefix,
         )
     except MemberRemapPlanError as exc:
         raise SemanticNamespaceError(str(exc)) from exc
+
+    member_source_safety_rows = [
+        row
+        for row in member_plan.get("members", [])
+        if any(
+            isinstance(prov, dict)
+            and prov.get("kind") == "source_safety"
+            and prov.get("reason") == "java_reserved_member_name"
+            for prov in row.get("provenance", [])
+        )
+    ]
 
     build_classes = [
         row
@@ -456,6 +469,7 @@ def build_semantic_namespace(
         "source_safe_fallback": source_safe_fallback,
         "fallback_name_prefix": fallback_name_prefix,
         "fallback_remaps": fallback_rows,
+        "member_source_safety_remaps": member_source_safety_rows,
         "nested_class_closure_remaps": nested_rows,
         "class_plan_digest": class_plan_digest,
         "member_plan_digest": member_plan_digest,
@@ -478,6 +492,7 @@ def build_semantic_namespace(
         "summary": {
             "source_safety_fallbacks": len(fallback_rows),
             "source_safety_nested_class_remaps": len(nested_rows),
+            "source_safety_member_remaps": len(member_source_safety_rows),
             "classes_total": len(build_classes),
             "classes_accepted": accepted_classes,
             "classes_remapped": class_plan["class_count"],
@@ -494,6 +509,7 @@ def build_semantic_namespace(
         "accepted_class_ids": accepted_class_ids,
         "fallback_remaps": fallback_rows,
         "nested_class_closure_remaps": nested_rows,
+        "member_source_safety_remaps": member_source_safety_rows,
     }
     return manifest, class_plan, member_plan
 

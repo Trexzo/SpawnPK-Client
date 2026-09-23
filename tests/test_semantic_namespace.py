@@ -512,5 +512,35 @@ class SemanticNamespaceTests(unittest.TestCase):
         self.assertEqual(manifest["nested_class_closure_remaps"], [])
 
 
+    def test_member_source_safety_is_separate_and_non_semantic(self):
+        classes, members, index = _fixture()
+        field = members["members"][2]
+        field["lineage"][0]["name"] = "if"
+        index["classes"]["rs/b.class"]["fields"][0]["name"] = "if"
+
+        manifest, _, member_plan = build_semantic_namespace(
+            classes,
+            members,
+            index,
+            build_id="v308",
+            source_safe_fallback=True,
+        )
+
+        self.assertEqual(member_plan["member_count"], 3)
+        self.assertEqual(
+            manifest["summary"]["source_safety_member_remaps"],
+            1,
+        )
+        rows = manifest["member_source_safety_remaps"]
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["member_id"], "CLIENT_FIELD_000002")
+        self.assertEqual(
+            rows[0]["target_name"],
+            "Recovered_CLIENT_FIELD_000002",
+        )
+        self.assertEqual(field["semantic_status"], "UNKNOWN")
+        self.assertIsNone(field["semantic_name"])
+
+
 if __name__ == "__main__":
     unittest.main()
