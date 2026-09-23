@@ -12,8 +12,17 @@ recovery work but switches into the adjacent classic animation/model support lan
 - candidate classes: **2**
 - resolved proposals: **2**
 - unresolved: **0**
-- review ID: `SEMREVIEW_5E11D60B98A4A7CF9AA7`
+- review ID: `SEMREVIEW_0192FC051C5A1EFC4605`
 - field/method proposals: **0**
+
+## Stable-ID verification
+
+Exact `seed_lineage()` ordering over the complete `rs/` baseline gives:
+
+- `rs/K` -> `CLIENT_CLASS_000038`
+- `rs/k` -> `CLIENT_CLASS_000313`
+
+The lowercase `rs/k` coordinate is not adjacent to `rs/l` in stable-ID space because all `rs/k/**` package classes sort between them.
 
 ## `rs/K` -> `Skeleton`
 
@@ -63,4 +72,4 @@ SpawnPK developer identifiers.
 ## Acceptance boundary
 
 Chat 2 does not promote R43. Main/Core may accept either proposal only through an explicit
-`semantic_acceptance_spec` bound to `SEMREVIEW_5E11D60B98A4A7CF9AA7`.
+`semantic_acceptance_spec` bound to `SEMREVIEW_0192FC051C5A1EFC4605`.

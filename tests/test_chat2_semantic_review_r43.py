@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 CLASS_COORDS = [
     ("CLIENT_CLASS_000038", "rs/K"),
-    ("CLIENT_CLASS_000348", "rs/k"),
+    ("CLIENT_CLASS_000313", "rs/k"),
 ]
 
 
@@ -91,7 +91,7 @@ class Chat2SemanticReviewR43Tests(unittest.TestCase):
         self.assertEqual(actual["unresolved"], [])
         self.assertEqual(
             actual["review_id"],
-            "SEMREVIEW_5E11D60B98A4A7CF9AA7",
+            "SEMREVIEW_0192FC051C5A1EFC4605",
         )
         self.assertEqual(actual, expected)
 
@@ -101,7 +101,7 @@ class Chat2SemanticReviewR43Tests(unittest.TestCase):
             {row["proposed_name"]: row["stable_id"] for row in review["proposals"]},
             {
                 "Skeleton": "CLIENT_CLASS_000038",
-                "AnimationFrame": "CLIENT_CLASS_000348",
+                "AnimationFrame": "CLIENT_CLASS_000313",
             },
         )
 
