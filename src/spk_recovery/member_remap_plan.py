@@ -15,6 +15,22 @@ class MemberRemapPlanError(ValueError):
 
 _IDENTIFIER = re.compile(r"^[A-Za-z_$][A-Za-z0-9_$]*$")
 
+_JAVA_RESERVED_IDENTIFIERS = {
+    "abstract", "assert", "boolean", "break", "byte", "case", "catch",
+    "char", "class", "const", "continue", "default", "do", "double",
+    "else", "enum", "extends", "final", "finally", "float", "for",
+    "goto", "if", "implements", "import", "instanceof", "int",
+    "interface", "long", "native", "new", "package", "private",
+    "protected", "public", "return", "short", "static", "strictfp",
+    "super", "switch", "synchronized", "this", "throw", "throws",
+    "transient", "try", "void", "volatile", "while", "_",
+    "true", "false", "null",
+}
+
+
+def _is_java_source_identifier(name: str) -> bool:
+    return bool(_IDENTIFIER.fullmatch(name)) and name not in _JAVA_RESERVED_IDENTIFIERS
+
 
 def _build(class_lineage: dict[str, Any], build_id: str) -> dict[str, Any]:
     hits = [
@@ -50,9 +66,9 @@ def _accepted_target_name(record: dict[str, Any]) -> str | None:
     if record.get("semantic_status") != "ACCEPTED":
         return None
     name = record.get("semantic_name")
-    if not isinstance(name, str) or not _IDENTIFIER.fullmatch(name):
+    if not isinstance(name, str) or not _is_java_source_identifier(name):
         raise MemberRemapPlanError(
-            f"{record.get('member_id')}: accepted semantic name is invalid"
+            f"{record.get('member_id')}: accepted semantic name is not a legal Java source identifier"
         )
     if name in {"<init>", "<clinit>"}:
         raise MemberRemapPlanError(
@@ -100,8 +116,10 @@ def build_member_remap_plan(
     index: dict[str, Any],
     *,
     build_id: str,
+    source_safe_member_fallback: bool = False,
+    member_fallback_name_prefix: str = "Recovered_",
 ) -> dict[str, Any]:
-    """Resolve ACCEPTED semantic member names for one exact client build."""
+    """Resolve ACCEPTED semantics plus optional non-semantic source-safety member names."""
     validate_lineage(class_lineage)
     validate_member_lineage(
         member_lineage,
@@ -114,16 +132,46 @@ def build_member_remap_plan(
             "member remap index SHA does not match canonical build"
         )
 
+    if (
+        not isinstance(member_fallback_name_prefix, str)
+        or not member_fallback_name_prefix
+        or not _is_java_source_identifier(member_fallback_name_prefix + "X")
+    ):
+        raise MemberRemapPlanError(
+            f"invalid member fallback name prefix {member_fallback_name_prefix!r}"
+        )
+
     rows: list[dict[str, Any]] = []
     for record in member_lineage.get("members", []):
+        entry = _entry_for_build(record, build_id)
         target_name = _accepted_target_name(record)
-        if target_name is None:
+        source_name = entry["name"]
+        provenance: list[dict[str, Any]] | None = None
+        confidence: float | None = None
+
+        if target_name is not None:
+            provenance = record["semantic_provenance"]
+            confidence = float(record["semantic_confidence"])
+        elif source_safe_member_fallback and not _is_java_source_identifier(source_name):
+            target_name = member_fallback_name_prefix + str(record["member_id"])
+            if not _is_java_source_identifier(target_name):
+                raise MemberRemapPlanError(
+                    f"{record.get('member_id')}: generated member fallback is not Java-source safe"
+                )
+            provenance = [
+                {
+                    "kind": "source_safety",
+                    "reason": "java_reserved_member_name",
+                    "strategy": "stable_member_id_rename",
+                    "source_name": source_name,
+                }
+            ]
+            confidence = 1.0
+        else:
             continue
 
-        entry = _entry_for_build(record, build_id)
         kind = record["kind"]
         owner = entry["owner_internal_name"]
-        source_name = entry["name"]
         descriptor = entry["descriptor"]
 
         if target_name == source_name:
@@ -149,8 +197,8 @@ def build_member_remap_plan(
                 "source_name": source_name,
                 "descriptor": descriptor,
                 "target_name": target_name,
-                "confidence": float(record["semantic_confidence"]),
-                "provenance": record["semantic_provenance"],
+                "confidence": confidence,
+                "provenance": provenance,
             }
         )
 
