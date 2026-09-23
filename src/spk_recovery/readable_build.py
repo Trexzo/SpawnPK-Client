@@ -53,8 +53,26 @@ def _manifest(
     blocker: dict[str, Any] | None,
 ) -> dict[str, Any]:
     target_package = str(namespace.get("target_package", "")).strip("/")
+    semantic_package_strategy = str(
+        namespace.get(
+            "semantic_package_strategy",
+            "global_target_package",
+        )
+    )
+    if semantic_package_strategy not in {
+        "global_target_package",
+        "source_package_preserving",
+    }:
+        raise ReadableBuildError(
+            "unknown semantic package strategy "
+            f"{semantic_package_strategy!r}"
+        )
+
     project_source_prefixes = ["rs/"]
-    if target_package:
+    if (
+        target_package
+        and semantic_package_strategy == "global_target_package"
+    ):
         project_source_prefixes.append(target_package + "/")
 
     source_safe_fallback = bool(
@@ -73,6 +91,7 @@ def _manifest(
         "status": status,
         "output_sha256": output_sha256,
         "verification_pass": verification_pass,
+        "semantic_package_strategy": semantic_package_strategy,
         "project_source_prefixes": project_source_prefixes,
         "blocker": blocker,
     }
@@ -84,6 +103,7 @@ def _manifest(
         "source_sha256": namespace["source_sha256"],
         "target_package": namespace["target_package"],
         "source_safe_fallback": source_safe_fallback,
+        "semantic_package_strategy": semantic_package_strategy,
         "fallback_name_prefix": (
             fallback_name_prefix if source_safe_fallback else None
         ),
