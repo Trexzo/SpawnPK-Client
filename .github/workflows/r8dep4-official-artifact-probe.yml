@@ -1,0 +1,56 @@
+name: R8DEP4 temporary official artifact probe
+
+on:
+  push:
+    branches:
+      - probe/r8dep4-official-artifacts
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch exact POM-authorized artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p official
+          base="https://repo.maven.apache.org/maven2"
+          fetch() {
+            local rel="$1"
+            local out="$2"
+            echo "FETCH $rel"
+            curl --fail --location --silent --show-error "$base/$rel" -o "official/$out"
+          }
+
+          fetch "org/slf4j/slf4j-api/1.7.25/slf4j-api-1.7.25.jar" "slf4j-api-1.7.25.jar"
+          fetch "org/slf4j/slf4j-simple/1.7.25/slf4j-simple-1.7.25.jar" "slf4j-simple-1.7.25.jar"
+          fetch "org/yaml/snakeyaml/1.31/snakeyaml-1.31.jar" "snakeyaml-1.31.jar"
+          fetch "javax/inject/javax.inject/1/javax.inject-1.jar" "javax.inject-1.jar"
+          fetch "org/apache/commons/commons-compress/1.9/commons-compress-1.9.jar" "commons-compress-1.9.jar"
+          fetch "org/apache/commons/commons-text/1.2/commons-text-1.2.jar" "commons-text-1.2.jar"
+          fetch "org/apache/commons/commons-lang3/3.7/commons-lang3-3.7.jar" "commons-lang3-3.7.jar"
+          fetch "com/fasterxml/jackson/core/jackson-annotations/2.13.3/jackson-annotations-2.13.3.jar" "jackson-annotations-2.13.3.jar"
+          fetch "com/fasterxml/jackson/core/jackson-core/2.13.3/jackson-core-2.13.3.jar" "jackson-core-2.13.3.jar"
+          fetch "com/fasterxml/jackson/core/jackson-databind/2.13.3/jackson-databind-2.13.3.jar" "jackson-databind-2.13.3.jar"
+          fetch "com/google/code/gson/gson/2.8.5/gson-2.8.5.jar" "gson-2.8.5.jar"
+          fetch "com/google/guava/guava/23.2-jre/guava-23.2-jre.jar" "guava-23.2-jre.jar"
+          fetch "com/google/inject/guice/5.0.1/guice-5.0.1.jar" "guice-5.0.1.jar"
+          fetch "net/sf/trove4j/trove4j/3.0.3/trove4j-3.0.3.jar" "trove4j-3.0.3.jar"
+          fetch "net/java/dev/jna/jna/5.9.0/jna-5.9.0.jar" "jna-5.9.0.jar"
+          fetch "net/java/dev/jna/jna-platform/5.9.0/jna-platform-5.9.0.jar" "jna-platform-5.9.0.jar"
+          fetch "org/msgpack/jackson-dataformat-msgpack/0.9.3/jackson-dataformat-msgpack-0.9.3.jar" "jackson-dataformat-msgpack-0.9.3.jar"
+          fetch "org/lwjgl/lwjgl/3.3.2/lwjgl-3.3.2.jar" "lwjgl-3.3.2.jar"
+          fetch "org/lwjgl/lwjgl-opengl/3.3.2/lwjgl-opengl-3.3.2.jar" "lwjgl-opengl-3.3.2.jar"
+          fetch "org/lwjgl/lwjgl-opencl/3.3.2/lwjgl-opencl-3.3.2.jar" "lwjgl-opencl-3.3.2.jar"
+
+          (cd official && sha256sum *.jar | sort -k2) > official/SHA256SUMS.txt
+          ls -lh official
+          cat official/SHA256SUMS.txt
+
+      - name: Upload official artifact probe
+        uses: actions/upload-artifact@v4
+        with:
+          name: r8dep4-official-artifacts
+          path: official/
+          if-no-files-found: error
+          retention-days: 1
