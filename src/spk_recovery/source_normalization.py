@@ -708,6 +708,259 @@ def _normalize_shadowed_self_static_field_owners(
     return actions
 
 
+
+_PRIMITIVE_FIELD_DESCRIPTORS = {
+    "Z", "B", "C", "S", "I", "J", "F", "D",
+}
+
+
+def _read_readable_hierarchy(
+    *,
+    readable_zip: zipfile.ZipFile,
+    internal_name: str,
+) -> list[tuple[str, Any]]:
+    hierarchy: list[tuple[str, Any]] = []
+    seen: set[str] = set()
+    current: str | None = internal_name
+    while current and current not in seen:
+        seen.add(current)
+        try:
+            data = readable_zip.read(current + ".class")
+        except KeyError:
+            break
+        try:
+            parsed = parse_class(data)
+        except ClassFormatError as exc:
+            raise SourceNormalizationError(
+                f"{internal_name}: hierarchy class {current} could not be "
+                f"parsed: {exc}"
+            ) from exc
+        if parsed.name != current:
+            raise SourceNormalizationError(
+                f"{internal_name}: hierarchy identity mismatch for {current}"
+            )
+        hierarchy.append((current, parsed))
+        current = parsed.super_name
+    return hierarchy
+
+
+def _method_has_same_name_value_binding(
+    *,
+    method_match: re.Match[str],
+    method_code: str,
+    simple_name: str,
+) -> bool:
+    params = method_match.group("params")
+    param_name = re.compile(
+        r"(?:^|,)\s*(?:final\s+)?"
+        r"[A-Za-z_$][A-Za-z0-9_$.\[\]<>?, ]*\s+"
+        + re.escape(simple_name)
+        + r"\s*(?=,|$)"
+    )
+    if param_name.search(params):
+        return True
+
+    brace = method_code.find("{")
+    if brace < 0:
+        return True
+    body = method_code[brace + 1:]
+    # Conservative local/catch/foreach declaration detector. False positives
+    # only suppress a rewrite; they never authorize one.
+    local_name = re.compile(
+        r"(?:^|[;{}]\s*|\(\s*|,\s*)"
+        r"(?:final\s+)?"
+        r"[A-Za-z_$][A-Za-z0-9_$.\[\]<>?]*"
+        r"(?:\s*<[^;{}()]*>)?"
+        r"\s+"
+        + re.escape(simple_name)
+        + r"\s*(?==|;|,|:|\))",
+        re.MULTILINE,
+    )
+    return bool(local_name.search(body))
+
+
+def _normalize_hierarchy_shadowed_self_static_field_owners(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Qualify class-static fields hidden by a primitive same-name field.
+
+    Procyon can emit h.ae inside class h while h (or a superclass) also
+    declares a primitive field named h. javac then resolves h as a value
+    expression and reports "int cannot be dereferenced". Rewriting is
+    allowed only when hierarchy shape, source occurrence counts and one
+    exact bytecode method agree.
+    """
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError as exc:
+        raise SourceNormalizationError(
+            f"{rel}: exact readable class field profile failed: {exc}"
+        ) from exc
+
+    internal_name = str(profile["internal_name"])
+    simple_name = internal_name.rsplit("/", 1)[-1]
+    if Path(rel).stem != simple_name:
+        return []
+
+    hierarchy = _read_readable_hierarchy(
+        readable_zip=readable_zip,
+        internal_name=internal_name,
+    )
+    if not hierarchy:
+        return []
+
+    primitive_shadow_owners = [
+        owner
+        for owner, parsed in hierarchy
+        for field in parsed.fields
+        if (
+            str(field.get("name", "")) == simple_name
+            and str(field.get("descriptor", ""))
+            in _PRIMITIVE_FIELD_DESCRIPTORS
+        )
+    ]
+    if not primitive_shadow_owners:
+        return []
+
+    static_by_name: dict[str, list[str]] = {}
+    for owner, parsed in hierarchy:
+        for field in parsed.fields:
+            name = str(field.get("name", ""))
+            if (
+                int(field.get("access", 0)) & 0x0008
+                and _is_java_identifier(name)
+            ):
+                static_by_name.setdefault(name, []).append(owner)
+    static_targets = {
+        name: owners[0]
+        for name, owners in static_by_name.items()
+        if len(owners) == 1
+    }
+    if not static_targets:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    qualified_owner = internal_name.replace("/", ".")
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for match in _METHOD_DECL_RE.finditer(text):
+        brace_start = text.find("{", match.start(), match.end())
+        if brace_start < 0:
+            continue
+        body_end = _matching_brace_end(text, brace_start)
+        method_text = text[match.start():body_end]
+        method_code = _java_code_mask(method_text)
+
+        if _method_has_same_name_value_binding(
+            method_match=match,
+            method_code=method_code,
+            simple_name=simple_name,
+        ):
+            continue
+
+        source_counts: dict[tuple[str, str], int] = {}
+        occurrences: list[tuple[int, int, str]] = []
+        for field_name, declaring_owner in sorted(static_targets.items()):
+            token = re.compile(
+                r"(?<![A-Za-z0-9_$.])"
+                + re.escape(simple_name)
+                + r"\."
+                + re.escape(field_name)
+                + r"\b(?!\s*\()"
+            )
+            hits = list(token.finditer(method_code))
+            if not hits:
+                continue
+            source_counts[(declaring_owner, field_name)] = len(hits)
+            for hit in hits:
+                occurrences.append(
+                    (
+                        match.start() + hit.start(),
+                        match.start() + hit.end(),
+                        qualified_owner + "." + field_name,
+                    )
+                )
+        if not source_counts:
+            continue
+
+        candidates: list[dict[str, Any]] = []
+        for method in profile.get("methods", []):
+            if method.get("name") != match.group("name"):
+                continue
+            exact_counts: dict[tuple[str, str], int] = {}
+            for (declaring_owner, field_name) in source_counts:
+                count = _field_access_counter(
+                    method,
+                    owner=declaring_owner,
+                    field_names={field_name},
+                ).get(field_name, 0)
+                if count:
+                    exact_counts[(declaring_owner, field_name)] = count
+            if exact_counts == source_counts:
+                candidates.append(method)
+
+        if len(candidates) != 1:
+            continue
+
+        exact_method = candidates[0]
+        edits.extend(occurrences)
+        actions.append(
+            {
+                "kind": (
+                    "hierarchy_shadowed_self_static_field_owner_qualification"
+                ),
+                "source_path": rel,
+                "method_name": match.group("name"),
+                "method_descriptor": exact_method["descriptor"],
+                "qualified_owner": internal_name,
+                "primitive_shadow_owners": sorted(
+                    set(primitive_shadow_owners)
+                ),
+                "field_access_counts": {
+                    owner + "." + name: count
+                    for (owner, name), count in sorted(
+                        source_counts.items()
+                    )
+                },
+                "replacement_count": sum(source_counts.values()),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_hierarchy_primitive_shadowed_class_owner"
+                    ),
+                    "strategy": (
+                        "exact_hierarchy_static_field_access_multiset_qualification"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping hierarchy owner-qualification edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def normalize_procyon_source(
     source_root: Path,
     readable_jar: Path,
@@ -745,6 +998,13 @@ def normalize_procyon_source(
                     actions.append(action)
                 actions.extend(
                     _normalize_shadowed_self_static_field_owners(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
+                    _normalize_hierarchy_shadowed_self_static_field_owners(
                         source_root=source_root,
                         path=path,
                         readable_zip=z,
@@ -794,6 +1054,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "shadowed_self_static_field_owner_qualification"
+        ),
+        "hierarchy_shadowed_self_static_field_method_count": sum(
+            action["kind"]
+            == "hierarchy_shadowed_self_static_field_owner_qualification"
+            for action in actions
+        ),
+        "hierarchy_shadowed_self_static_field_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "hierarchy_shadowed_self_static_field_owner_qualification"
         ),
         "java_file_count": after_count,
         "source_bytes_before": before_bytes,
