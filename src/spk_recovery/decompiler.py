@@ -31,6 +31,7 @@ def run_decompiler(
     java_command: str = "java",
     input_class_files: list[Path] | None = None,
     max_command_chars: int = 12000,
+    max_batch_classes: int = 20,
 ) -> dict[str, Any]:
     input_jar = input_jar.resolve()
     decompiler_jar = decompiler_jar.resolve()
