@@ -116,8 +116,8 @@ def build_member_remap_plan(
     index: dict[str, Any],
     *,
     build_id: str,
-    source_safe_member_fallback: bool = False,
-    member_fallback_name_prefix: str = "Recovered_",
+    source_safe_fallback: bool = False,
+    fallback_name_prefix: str = "Recovered_",
 ) -> dict[str, Any]:
     """Resolve ACCEPTED semantics plus optional non-semantic source-safety member names."""
     validate_lineage(class_lineage)
@@ -133,12 +133,12 @@ def build_member_remap_plan(
         )
 
     if (
-        not isinstance(member_fallback_name_prefix, str)
-        or not member_fallback_name_prefix
-        or not _is_java_source_identifier(member_fallback_name_prefix + "X")
+        not isinstance(fallback_name_prefix, str)
+        or not fallback_name_prefix
+        or not _is_java_source_identifier(fallback_name_prefix + "X")
     ):
         raise MemberRemapPlanError(
-            f"invalid member fallback name prefix {member_fallback_name_prefix!r}"
+            f"invalid member fallback name prefix {fallback_name_prefix!r}"
         )
 
     rows: list[dict[str, Any]] = []
@@ -152,8 +152,8 @@ def build_member_remap_plan(
         if target_name is not None:
             provenance = record["semantic_provenance"]
             confidence = float(record["semantic_confidence"])
-        elif source_safe_member_fallback and not _is_java_source_identifier(source_name):
-            target_name = member_fallback_name_prefix + str(record["member_id"])
+        elif source_safe_fallback and not _is_java_source_identifier(source_name):
+            target_name = fallback_name_prefix + str(record["member_id"])
             if not _is_java_source_identifier(target_name):
                 raise MemberRemapPlanError(
                     f"{record.get('member_id')}: generated member fallback is not Java-source safe"
