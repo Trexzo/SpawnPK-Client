@@ -191,6 +191,7 @@ def _accepted_nested_class_closure(
 
 def _accepted_class_spec(
     class_lineage: dict[str, Any],
+    index: dict[str, Any],
     *,
     build_id: str,
     source_sha256: str,
@@ -376,6 +377,7 @@ def build_semantic_namespace(
         nested_rows,
     ) = _accepted_class_spec(
         class_lineage,
+        index,
         build_id=build_id,
         source_sha256=source_sha,
         target_package=package,
