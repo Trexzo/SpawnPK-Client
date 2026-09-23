@@ -209,6 +209,70 @@ class SelectiveDecompilerTests(unittest.TestCase):
             self.assertGreater(result["batch_count"], 1)
             self.assertEqual(run.call_count, result["batch_count"])
 
+    def test_procyon_class_inputs_are_bounded_by_target_count(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            input_jar = root / "readable.jar"
+            input_jar.write_bytes(b"readable")
+            tool = root / "procyon.jar"
+            tool.write_bytes(b"tool")
+            classes = []
+            for i in range(12):
+                path = root / "classes" / f"C{i:02d}.class"
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(bytes([i]))
+                classes.append(path)
+            out = root / "out"
+
+            def fake_run(cmd, **kwargs):
+                (out / "rs").mkdir(parents=True, exist_ok=True)
+                (out / "rs" / "A.java").write_text(
+                    "package rs; public class A {}\n",
+                    encoding="utf-8",
+                )
+                return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+            with (
+                patch("spk_recovery.decompiler.shutil.which", return_value="/java"),
+                patch("spk_recovery.decompiler.subprocess.run", side_effect=fake_run) as run,
+            ):
+                result = run_decompiler(
+                    input_jar,
+                    tool,
+                    expected_decompiler_sha256=_sha(tool),
+                    engine="procyon",
+                    out_dir=out,
+                    input_class_files=list(reversed(classes)),
+                    max_command_chars=100000,
+                    max_batch_classes=5,
+                )
+
+            self.assertEqual(result["batch_count"], 3)
+            self.assertEqual(run.call_count, 3)
+            for call in run.call_args_list:
+                cmd = call.args[0]
+                self.assertLessEqual(len(cmd) - 5, 5)
+
+    def test_selective_input_rejects_invalid_target_count_limit(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            input_jar = root / "readable.jar"
+            input_jar.write_bytes(b"readable")
+            tool = root / "procyon.jar"
+            tool.write_bytes(b"tool")
+            class_file = root / "A.class"
+            class_file.write_bytes(b"a")
+            with self.assertRaises(DecompilerError):
+                run_decompiler(
+                    input_jar,
+                    tool,
+                    expected_decompiler_sha256=_sha(tool),
+                    engine="procyon",
+                    out_dir=root / "out",
+                    input_class_files=[class_file],
+                    max_batch_classes=0,
+                )
+
     def test_selective_input_refuses_other_engines(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
