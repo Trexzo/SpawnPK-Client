@@ -200,6 +200,29 @@ class SourceReadinessTests(unittest.TestCase):
                 ["A", "B"],
             )
 
+
+    def test_same_line_multiple_public_top_level_types_remain_high(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "A.java").write_text(
+                "public class A {} public class B {}\n",
+                encoding="utf-8",
+            )
+            report = audit_source_workspace(_manifest(root), root)
+            self.assertFalse(report["summary"]["static_readiness_pass"])
+            self.assertEqual(
+                report["issue_counts"]["multiple_public_top_level_types"],
+                1,
+            )
+            self.assertEqual(
+                report["files"][0]["public_types"],
+                ["A", "B"],
+            )
+            self.assertEqual(
+                report["files"][0]["top_level_types"],
+                ["A", "B"],
+            )
+
     def test_source_tree_drift_is_rejected(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
