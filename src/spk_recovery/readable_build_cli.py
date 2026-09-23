@@ -31,6 +31,14 @@ def main(argv: list[str] | None = None) -> int:
         "--fallback-name-prefix",
         default="Recovered_",
     )
+    p.add_argument(
+        "--source-safe-member-fallback",
+        action="store_true",
+    )
+    p.add_argument(
+        "--member-fallback-name-prefix",
+        default="Recovered_",
+    )
     p.add_argument("--member-safety-acceptance", type=Path)
     p.add_argument("--allow-package-resource-risk", action="store_true")
     p.add_argument("--rewrite-class-name-strings", action="store_true")
@@ -47,6 +55,8 @@ def main(argv: list[str] | None = None) -> int:
             target_package=args.target_package,
             source_safe_fallback=args.source_safe_fallback,
             fallback_name_prefix=args.fallback_name_prefix,
+            source_safe_member_fallback=args.source_safe_member_fallback,
+            member_fallback_name_prefix=args.member_fallback_name_prefix,
             member_safety_acceptance=(
                 _load(args.member_safety_acceptance)
                 if args.member_safety_acceptance
