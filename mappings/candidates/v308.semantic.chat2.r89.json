@@ -1,0 +1,227 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/k/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GLBuffer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structure",
+          "detail": "The class stores String name, int glBufferId initialized to -1, int size initialized to -1 and long clBuffer initialized to -1, with a one-String constructor."
+        },
+        {
+          "family": "exact_renderer_consumer",
+          "detail": "R87 GpuRenderer owns multiple instances named by surviving labels such as scene vertex buffer, scene tex buffer, tmp vertex buffer and uniform buffer; its OpenGL/OpenCL paths mutate the integer GL id, byte size and CL handle fields."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "The public RuneLite-derived GPU source preserves class GLBuffer with the same four fields, defaults and constructor contract."
+        }
+      ],
+      "note": "GLBuffer is corroborated by exact-v308 structure/consumers and a matching public RuneLite-derived GPU class identity. Exact v308 remains the semantic authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/k/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GpuFloatBuffer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structure",
+          "detail": "The class owns a direct native-order FloatBuffer initially sized to 65536 floats, supports scalar/array puts, clear/flip, automatic capacity doubling and buffer access."
+        },
+        {
+          "family": "exact_renderer_consumer",
+          "detail": "R87 GpuRenderer and rs/k/l use it as the UV/texture float upload buffer paired with the integer vertex buffer."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "The public RuneLite-derived GPU source preserves GpuFloatBuffer with the same direct-buffer allocation, 65536 initial capacity, put/clear/flip/ensure-capacity contract."
+        }
+      ],
+      "note": "GpuFloatBuffer is corroborated by exact-v308 structure/consumers and a matching public RuneLite-derived GPU class identity. Exact v308 remains the semantic authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/k/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GpuIntBuffer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structure",
+          "detail": "The class owns a direct native-order IntBuffer initially sized to 65536 ints, supports 3/4-int and array puts, clear/flip, automatic capacity doubling and buffer access."
+        },
+        {
+          "family": "exact_renderer_consumer",
+          "detail": "R87 GpuRenderer and rs/k/l use it as the scene/model vertex and model-info integer upload buffer."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "The public RuneLite-derived GPU source preserves GpuIntBuffer with the same direct-buffer allocation, 65536 initial capacity, put/clear/flip/ensure-capacity contract."
+        }
+      ],
+      "note": "GpuIntBuffer is corroborated by exact-v308 structure/consumers and a matching public RuneLite-derived GPU class identity. Exact v308 remains the semantic authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/k/d/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Template",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_include_processor",
+          "detail": "The class owns a List<Function<String,String>>, expands lines beginning #include, recursively processes loaded resources and supports adding arbitrary/resource-class loaders."
+        },
+        {
+          "family": "exact_shader_consumer",
+          "detail": "R87 GpuRenderer, rs/k/k and rs/k/m use this object to resolve shader/OpenCL resource includes before compilation."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "The public RuneLite-derived GPU source preserves net.runelite.client.plugins.gpu.template.Template with the same Function loader list, #include processor, add/addInclude and UTF-8 resource-loading contract."
+        }
+      ],
+      "note": "Template is corroborated by exact-v308 structure/consumers and a matching public RuneLite-derived GPU class identity. Exact v308 remains the semantic authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/k/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OpenCLManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_opencl_role",
+          "detail": "The class creates/destroys LWJGL OpenCL state, owns CL context/device/queue/program/kernel handles and compiles computeUnordered/computeLarge programs from bundled .cl resources."
+        },
+        {
+          "family": "exact_renderer_consumer",
+          "detail": "R87 GpuRenderer constructs it and delegates the OPENCL ComputeMode path to it, passing GLBuffer objects for shared scene/model/output buffers."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "The public RuneLite-derived GPU source preserves OpenCLManager with the same computeUnordered/computeLarge kernel names, AWTContext interop, GLBuffer sharing and program/kernel lifecycle."
+        }
+      ],
+      "note": "OpenCLManager is corroborated by exact-v308 structure/consumers and a matching public RuneLite-derived GPU class identity. Exact v308 remains the semantic authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/k/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SceneUploader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scene_upload_role",
+          "detail": "The class traverses the four-plane 104x104 scene tile grid, uploads tile paints/models and world-object models into rs/k/d and rs/k/c buffers, and writes buffer offsets/lengths back onto renderable scene data."
+        },
+        {
+          "family": "exact_renderer_consumer",
+          "detail": "R87 GpuRenderer owns this object and uses it for scene/model upload and the CPU-side fallback sorting path."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "The public RuneLite-derived GPU source preserves SceneUploader with the same scene traversal, GpuIntBuffer/GpuFloatBuffer signatures, model deduplication and sorting-buffer responsibilities."
+        }
+      ],
+      "note": "SceneUploader is corroborated by exact-v308 structure/consumers and a matching public RuneLite-derived GPU class identity. Exact v308 remains the semantic authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/k/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Shader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_shader_builder",
+          "detail": "The class owns a list of two-field units (shader type + resource filename), exposes add(int,String), and compiles/links/validates an OpenGL program from sources resolved through rs/k/d/a."
+        },
+        {
+          "family": "exact_renderer_consumer",
+          "detail": "R87 GpuRenderer declares reusable Shader instances for vertex/fragment/geometry/compute program combinations and compiles them through the exact Template helper."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "The public RuneLite-derived GPU source preserves Shader with the same Unit(type,filename) list, add(int,String) builder and compile(Template) OpenGL program lifecycle."
+        }
+      ],
+      "note": "Shader is corroborated by exact-v308 structure/consumers and a matching public RuneLite-derived GPU class identity. Exact v308 remains the semantic authority."
+    }
+  ],
+  "conflicts": []
+}
