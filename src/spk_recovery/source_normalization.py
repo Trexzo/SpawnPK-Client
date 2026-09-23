@@ -796,6 +796,54 @@ def _method_has_same_name_value_binding(
     return bool(local_name.search(body))
 
 
+def _hierarchy_static_field_access_counts(
+    method: dict[str, Any],
+    *,
+    hierarchy: list[tuple[str, Any]],
+    targets: dict[str, str],
+) -> dict[tuple[str, str], int]:
+    hierarchy_index = {
+        owner: index for index, (owner, _parsed) in enumerate(hierarchy)
+    }
+    counts: dict[tuple[str, str], int] = {}
+
+    for access in method.get("field_accesses", []):
+        if access.get("operation") not in {"getstatic", "putstatic"}:
+            continue
+        field_name = str(access.get("name", ""))
+        expected_declaring = targets.get(field_name)
+        if expected_declaring is None:
+            continue
+        symbolic_owner = str(access.get("owner", ""))
+        start = hierarchy_index.get(symbolic_owner)
+        if start is None:
+            continue
+
+        resolved_owner: str | None = None
+        for owner, parsed in hierarchy[start:]:
+            declarations = [
+                field
+                for field in parsed.fields
+                if (
+                    str(field.get("name", "")) == field_name
+                    and int(field.get("access", 0)) & 0x0008
+                )
+            ]
+            if declarations:
+                if len(declarations) != 1:
+                    resolved_owner = None
+                else:
+                    resolved_owner = owner
+                break
+
+        if resolved_owner != expected_declaring:
+            continue
+        key = (expected_declaring, field_name)
+        counts[key] = counts.get(key, 0) + 1
+
+    return counts
+
+
 def _normalize_hierarchy_shadowed_self_static_field_owners(
     *,
     source_root: Path,
@@ -925,16 +973,17 @@ def _normalize_hierarchy_shadowed_self_static_field_owners(
         for method in profile.get("methods", []):
             if method.get("name") != match.group("name"):
                 continue
-            exact_counts: dict[tuple[str, str], int] = {}
-            for (declaring_owner, field_name) in source_counts:
-                count = _field_access_counter(
-                    method,
-                    owner=declaring_owner,
-                    field_names={field_name},
-                ).get(field_name, 0)
-                if count:
-                    exact_counts[(declaring_owner, field_name)] = count
-            if exact_counts == source_counts:
+            exact_counts = _hierarchy_static_field_access_counts(
+                method,
+                hierarchy=hierarchy,
+                targets=static_targets,
+            )
+            relevant_counts = {
+                key: count
+                for key, count in exact_counts.items()
+                if key in source_counts
+            }
+            if relevant_counts == source_counts:
                 candidates.append(method)
 
         if len(candidates) != 1:
