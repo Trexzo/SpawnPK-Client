@@ -341,6 +341,172 @@ def _class_mappings(
         }
         used_targets.add(new_name)
 
+    topology_initial_mapped_names = set(mappings)
+    for old_name, old_class in sorted(bundled.items()):
+        if old_name in topology_initial_mapped_names:
+            continue
+        if (
+            package_api_candidate_names is None
+            or old_name not in package_api_candidate_names
+        ):
+            continue
+
+        package_counts = package_targets.get(
+            _package_name(old_name),
+            {},
+        )
+        package_support = sum(package_counts.values())
+        if package_support < 3 or len(package_counts) != 1:
+            continue
+        target_package = next(iter(package_counts))
+
+        known_super: str | None = None
+        super_is_known = old_class.super_name is None
+        if old_class.super_name is not None:
+            mapped_super = mappings.get(old_class.super_name)
+            if mapped_super is not None:
+                known_super = str(mapped_super["new_name"])
+                super_is_known = True
+            elif old_class.super_name not in bundled:
+                known_super = old_class.super_name
+                super_is_known = True
+
+        translated_interfaces: list[str] = []
+        interfaces_are_known = True
+        for interface in old_class.interfaces:
+            mapped_interface = mappings.get(interface)
+            if mapped_interface is not None:
+                translated_interfaces.append(
+                    str(mapped_interface["new_name"])
+                )
+            elif interface not in bundled:
+                translated_interfaces.append(interface)
+            else:
+                interfaces_are_known = False
+                break
+
+        old_field_sequence = tuple(
+            (
+                int(row["access"]),
+                _descriptor_shape(str(row["descriptor"])),
+            )
+            for row in old_class.fields
+        )
+        old_literals = tuple(sorted(old_class.literal_strings))
+        old_numbers = tuple(
+            sorted(
+                (
+                    type(value).__name__,
+                    repr(value),
+                )
+                for value in old_class.numeric_constants
+            )
+        )
+
+        candidates: list[str] = []
+        for candidate in official_by_package.get(
+            target_package,
+            [],
+        ):
+            if candidate in used_targets:
+                continue
+            official_class = official[candidate]
+            if (
+                official_class.major != old_class.major
+                or official_class.minor != old_class.minor
+                or official_class.access != old_class.access
+                or len(official_class.interfaces)
+                != len(old_class.interfaces)
+                or len(official_class.methods)
+                != len(old_class.methods)
+            ):
+                continue
+            if tuple(
+                (
+                    int(row["access"]),
+                    _descriptor_shape(str(row["descriptor"])),
+                )
+                for row in official_class.fields
+            ) != old_field_sequence:
+                continue
+            if (
+                tuple(sorted(official_class.literal_strings))
+                != old_literals
+            ):
+                continue
+            if tuple(
+                sorted(
+                    (
+                        type(value).__name__,
+                        repr(value),
+                    )
+                    for value in official_class.numeric_constants
+                )
+            ) != old_numbers:
+                continue
+            if (
+                super_is_known
+                and official_class.super_name != known_super
+            ):
+                continue
+            if (
+                interfaces_are_known
+                and tuple(official_class.interfaces)
+                != tuple(translated_interfaces)
+            ):
+                continue
+            candidates.append(candidate)
+
+        if len(candidates) != 1:
+            continue
+
+        new_name = candidates[0]
+        mappings[old_name] = {
+            "old_name": old_name,
+            "new_name": new_name,
+            "strategy": "package_api_topology",
+            "structural_sha256": old_class.structural_sha256(),
+            "package_authority": {
+                "old_package": _package_name(old_name),
+                "new_package": target_package,
+                "support_count": package_support,
+                "purity": 1.0,
+            },
+            "topology_proof": {
+                "major": old_class.major,
+                "minor": old_class.minor,
+                "access": old_class.access,
+                "field_sequence": [
+                    {
+                        "access": access,
+                        "descriptor_shape": descriptor_shape,
+                    }
+                    for access, descriptor_shape
+                    in old_field_sequence
+                ],
+                "method_count": len(old_class.methods),
+                "interface_count": len(old_class.interfaces),
+                "super_constraint_available": super_is_known,
+                "translated_super": known_super,
+                "interfaces_constraint_available": (
+                    interfaces_are_known
+                ),
+                "translated_interfaces": (
+                    translated_interfaces
+                    if interfaces_are_known
+                    else []
+                ),
+                "literal_strings_sha256": _stable_digest(
+                    list(old_literals)
+                ),
+                "numeric_constants_sha256": _stable_digest(
+                    list(old_numbers)
+                ),
+            },
+            "artifact": artifact_by_class.get(new_name),
+        }
+        used_targets.add(new_name)
+
     summary = {
         "accepted_class_mapping_count": len(mappings),
         "identity_structural_count": sum(
@@ -357,6 +523,10 @@ def _class_mappings(
         ),
         "package_api_shape_count": sum(
             row["strategy"] == "package_api_shape"
+            for row in mappings.values()
+        ),
+        "package_api_topology_count": sum(
+            row["strategy"] == "package_api_topology"
             for row in mappings.values()
         ),
         "renamed_class_mapping_count": sum(
@@ -561,7 +731,10 @@ def _map_declared_member(
             "strategy": "identity_api_surface_exact_member",
         }
 
-    if class_mapping["strategy"] == "package_api_shape":
+    if class_mapping["strategy"] in {
+        "package_api_shape",
+        "package_api_topology",
+    }:
         if name in _SPECIAL_METHODS:
             return None
         official_rows = (
@@ -585,7 +758,10 @@ def _map_declared_member(
                 "declaring_new_owner": official_owner,
                 "new_name": name,
                 "new_descriptor": descriptor,
-                "strategy": "package_api_shape_exact_member",
+                "strategy": (
+                    str(class_mapping["strategy"])
+                    + "_exact_member"
+                ),
             }
         descriptor_matches = [
             row
@@ -603,7 +779,10 @@ def _map_declared_member(
             "declaring_new_owner": official_owner,
             "new_name": str(official_member["name"]),
             "new_descriptor": descriptor,
-            "strategy": "package_api_shape_unique_descriptor_member",
+            "strategy": (
+                str(class_mapping["strategy"])
+                + "_unique_descriptor_member"
+            ),
         }
 
     if kind == "field":
