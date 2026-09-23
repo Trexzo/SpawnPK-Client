@@ -523,7 +523,7 @@ class SemanticNamespaceTests(unittest.TestCase):
             members,
             index,
             build_id="v308",
-            source_safe_member_fallback=True,
+            source_safe_fallback=True,
         )
 
         self.assertEqual(member_plan["member_count"], 3)
