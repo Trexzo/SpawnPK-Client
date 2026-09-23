@@ -89,14 +89,14 @@ def scan_dependency_authority(
                 for name in class_entries
                 if any(name.startswith(prefix) for prefix in normalized_prefixes)
             ]
-            external_classes = [
+            non_project_classes = [
                 name
                 for name in class_entries
                 if name not in set(project_classes)
             ]
 
             namespace_counts: dict[str, int] = {}
-            for name in external_classes:
+            for name in non_project_classes:
                 parts = name.split("/")
                 namespace = "/".join(parts[:2]) if len(parts) > 1 else parts[0]
                 namespace_counts[namespace] = (
@@ -125,8 +125,8 @@ def scan_dependency_authority(
         "maven_coordinates": coordinate_rows,
         "class_count": len(class_entries),
         "project_class_count": len(project_classes),
-        "external_class_count": len(external_classes),
-        "external_namespaces": namespace_rows,
+        "non_project_class_count": len(non_project_classes),
+        "non_project_namespaces": namespace_rows,
     }
     return {
         "schema_version": 1,
@@ -149,7 +149,7 @@ def compare_external_class_surfaces(
         for prefix in project_prefixes
     )
 
-    def external_map(path: Path) -> dict[str, str]:
+    def non_project_map(path: Path) -> dict[str, str]:
         try:
             with zipfile.ZipFile(path) as archive:
                 result: dict[str, str] = {}
@@ -170,8 +170,8 @@ def compare_external_class_surfaces(
                 f"invalid JAR/ZIP: {path}"
             ) from exc
 
-    left = external_map(left_jar.resolve())
-    right = external_map(right_jar.resolve())
+    left = non_project_map(left_jar.resolve())
+    right = non_project_map(right_jar.resolve())
     common = sorted(set(left) & set(right))
     equal = [name for name in common if left[name] == right[name]]
     different = [name for name in common if left[name] != right[name]]
@@ -179,26 +179,26 @@ def compare_external_class_surfaces(
     return {
         "left_jar_sha256": _sha256_file(left_jar.resolve()),
         "right_jar_sha256": _sha256_file(right_jar.resolve()),
-        "common_external_class_count": len(common),
-        "byte_identical_common_external_class_count": len(equal),
-        "different_common_external_class_count": len(different),
-        "left_only_external_classes": sorted(set(left) - set(right)),
-        "right_only_external_classes": sorted(set(right) - set(left)),
-        "different_common_external_classes": different,
+        "common_non_project_class_count": len(common),
+        "byte_identical_common_non_project_class_count": len(equal),
+        "different_common_non_project_class_count": len(different),
+        "left_only_non_project_classes": sorted(set(left) - set(right)),
+        "right_only_non_project_classes": sorted(set(right) - set(left)),
+        "different_common_non_project_classes": different,
     }
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Extract exact external dependency authority from a fat client JAR."
+            "Extract exact non-project/dependency authority from a fat client JAR."
         )
     )
     parser.add_argument("jar", type=Path)
     parser.add_argument(
         "--compare",
         type=Path,
-        help="Optional second JAR for external-class byte comparison.",
+        help="Optional second JAR for non-project-class byte comparison.",
     )
     parser.add_argument(
         "--project-prefix",
