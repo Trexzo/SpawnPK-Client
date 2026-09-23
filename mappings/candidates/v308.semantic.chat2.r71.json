@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/t",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FloorOverlayDefinition",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_overlay_loader",
+          "detail": "rs/d/t loads the floor-overlay table from exact flo2.dat / osrs_flo2.dat paths selected by the existing REGULAR/OLDSCHOOL/OSRS floor-definition mode, allocates one definition per decoded entry, and emits surviving [OverlayFloor] diagnostics."
+        },
+        {
+          "family": "exact_overlay_decode",
+          "detail": "Its decoders populate primary/secondary RGB values, texture ids, render/occlusion flags and derived hue/saturation/lightness state; unrecognized attributes report the exact surviving text 'Error unrecognised overlay code'."
+        },
+        {
+          "family": "exact_terrain_consumer",
+          "detail": "R53 ObjectManager indexes rs/d/t.b from terrain overlay ids and consumes its texture, color, HSL and visibility fields while constructing scene tile paint/model geometry."
+        }
+      ],
+      "note": "FloorOverlayDefinition is the conservative semantic name for the exact flo2-backed floor-overlay definition; it does not claim a verbatim original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/z",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "VarpDefinition",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_varp_archive",
+          "detail": "rs/d/z loads exact varp.dat bytes from StreamLoader, decodes a counted definition table, and reports the surviving diagnostic 'varptype load mismatch' when the stream length is inconsistent."
+        },
+        {
+          "family": "exact_varp_decode",
+          "detail": "Its opcode decoder records the integer client-setting type used by the runtime, maintains the classic flagged-varp index list, and marks a boolean property for opcodes 8/11."
+        },
+        {
+          "family": "exact_varbit_relationship",
+          "detail": "R28 VarbitDefinition directly indexes rs/d/z.a using each varbit's referenced base variable and marks that VarpDefinition when the varbit carries the corresponding flag."
+        },
+        {
+          "family": "exact_client_consumer",
+          "detail": "Client.B(varpId) reads rs/d/z.a[varpId].b together with the current varp value and dispatches the resulting setting behavior, fixing this class as varp metadata rather than a generic integer config."
+        }
+      ],
+      "note": "VarpDefinition is the conservative semantic name for this exact varp.dat client-variable parameter definition; it does not claim a verbatim original developer identifier."
+    }
+  ],
+  "conflicts": []
+}
