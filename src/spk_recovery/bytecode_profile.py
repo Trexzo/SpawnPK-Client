@@ -17,6 +17,12 @@ _FIELD_OPS = {
     0xB5: "putfield",
 }
 
+_MEMBER_REF_KINDS = {
+    9: "field",
+    10: "method",
+    11: "interface_method",
+}
+
 
 class _Reader:
     def __init__(self, data: bytes):
@@ -199,6 +205,70 @@ def _field_accesses(
             )
         offset += length
     return result
+
+
+def _normalized_class_reference(name: str) -> str | None:
+    if not name.startswith("["):
+        return name
+    while name.startswith("["):
+        name = name[1:]
+    if name.startswith("L") and name.endswith(";"):
+        return name[1:-1]
+    return None
+
+
+def profile_class_constant_pool_references(
+    data: bytes,
+) -> dict[str, Any]:
+    """Extract exact JVM class/member references from a class constant pool."""
+    r = _Reader(data)
+    if r.u4() != 0xCAFEBABE:
+        raise BytecodeProfileError("not a JVM class")
+    r.u2()
+    r.u2()
+    cp = _constant_pool(r)
+
+    r.u2()
+    this_class = r.u2()
+    r.u2()
+    internal_name = _class_name(cp, this_class)
+
+    class_references: list[str] = []
+    member_references: list[dict[str, str]] = []
+    for index, value in enumerate(cp):
+        if value is None:
+            continue
+        tag = value[0]
+        if tag == 7:
+            reference = _normalized_class_reference(
+                _class_name(cp, index)
+            )
+            if reference is not None:
+                class_references.append(reference)
+        elif tag in _MEMBER_REF_KINDS:
+            owner, name, descriptor = _member_ref(cp, index)
+            member_references.append(
+                {
+                    "kind": _MEMBER_REF_KINDS[tag],
+                    "owner": owner,
+                    "name": name,
+                    "descriptor": descriptor,
+                }
+            )
+
+    return {
+        "internal_name": internal_name,
+        "class_references": sorted(set(class_references)),
+        "member_references": sorted(
+            member_references,
+            key=lambda row: (
+                row["owner"],
+                row["kind"],
+                row["name"],
+                row["descriptor"],
+            ),
+        ),
+    }
 
 
 def profile_class_field_accesses(
