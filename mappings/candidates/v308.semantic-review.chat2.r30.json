@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 5,
+  "review_id": "SEMREVIEW_3283256A87AD65D101B6",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_316C12C791A41C43DAA4",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000051",
+      "owner_logical_id": "CLIENT_CLASS_000051",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Renderable",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends R25 NodeSub, exposes render entrypoints and a model-producing method returning rs/a/h; subclasses include Model itself and the shared actor hierarchy."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Classic client hierarchy uses this NodeSub-derived renderable base between linked-list nodes and Model/Entity-style scene objects."
+        }
+      ],
+      "note": "Renderable is the conservative semantic name for the model-producing scene base."
+    },
+    {
+      "proposal_id": "SEMPROP_47B342F87239B318F537",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000071",
+      "owner_logical_id": "CLIENT_CLASS_000071",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/a/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Model",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Large renderable geometry class owns vertex/face arrays, skin groups, colors/textures/priorities/alphas, bounds, transforms, animation application, projection and rasterization."
+        },
+        {
+          "family": "exact_dependency_role",
+          "detail": "R28 Item/NPC/Object/SpotAnimation definitions and Player/Npc rendering all construct or return this exact type."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Layout and rendering surface match the classic client Model class."
+        }
+      ],
+      "note": "Model is fixed by the geometry/render pipeline and definition consumers."
+    },
+    {
+      "proposal_id": "SEMPROP_9BF68B397EA05F3DE232",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000065",
+      "owner_logical_id": "CLIENT_CLASS_000065",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Actor",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends Renderable and owns movement queue arrays, facing/position state, animation/sequence state, hit/combat/status fields, world-point conversion and path update methods."
+        },
+        {
+          "family": "exact_dependency_role",
+          "detail": "Both exact NPC and Player classes extend this type directly."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Classic client Entity/Actor base carries the same path queue, animation, facing and hit-state responsibilities for NPCs and players."
+        }
+      ],
+      "note": "Actor is chosen over generic Entity because the class is specifically the shared moving/combat character base."
+    },
+    {
+      "proposal_id": "SEMPROP_9E9611A0E7854E7212CC",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000073",
+      "owner_logical_id": "CLIENT_CLASS_000073",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/a/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Npc",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_definition_binding",
+          "detail": "Class extends Actor and stores one rs/d/d NpcDefinition directly."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Its model/name/combat-level/render methods delegate through the bound NpcDefinition and construct Model instances."
+        },
+        {
+          "family": "exact_dependency_role",
+          "detail": "R26 HighlightedNpc stores this exact type and NPC-indicator code consumes it."
+        }
+      ],
+      "note": "Npc is fixed by direct NpcDefinition ownership and actor rendering behavior."
+    },
+    {
+      "proposal_id": "SEMPROP_E45E55CD3DF3CFB459B1",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000074",
+      "owner_logical_id": "CLIENT_CLASS_000074",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/a/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Player",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends Actor, decodes appearance from Stream, owns equipment/color arrays, gender/icon/privilege state, username/display strings and player-specific model assembly."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact appearance diagnostic includes gender, headIcon, skullIcon, orbIcon, miscIcon and privilege values."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Structure matches the classic Player class appearance/equipment decode and actor inheritance."
+        }
+      ],
+      "note": "Player is fixed by appearance decoding, player identity fields and model construction."
+    }
+  ],
+  "unresolved": []
+}
