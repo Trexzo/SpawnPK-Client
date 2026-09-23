@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/o/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HighlightedNpc",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"HighlightedNpc(npc=…, highlightColor=…, fillColor=…, hull=…, tile=…, trueTile=…, swTile=…, swTrueTile=…, outline=…, name=…, nameOnMinimap=…, borderWidth=…, outlineFeather=…, render=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Immutable value stores exactly the NPC reference, highlight/fill colors, rendering flags, border/feather values and predicate described by that self-identifying output."
+        }
+      ],
+      "note": "Name is directly preserved in exact-v308 bytecode."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/o/a$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HighlightedNpcBuilder",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"HighlightedNpc.HighlightedNpcBuilder(npc=…, highlightColor=…, fillColor$value=…, hull=…, tile=…, trueTile=…, swTile=…, swTrueTile=…, outline=…, name=…, nameOnMinimap=…, borderWidth$value=…, outlineFeather=…, render=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Builder setters populate the same HighlightedNpc fields and construct rs/s/o/a directly."
+        }
+      ],
+      "note": "Flattened semantic name preserves the exact nested builder identity."
+    }
+  ],
+  "conflicts": []
+}
