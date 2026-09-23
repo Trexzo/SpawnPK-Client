@@ -51,7 +51,7 @@ class DependencyAuthorityTests(unittest.TestCase):
                 for row in report["non_project_namespaces"]
             }
             self.assertEqual(namespaces["com/example"], 1)
-            self.assertEqual(namespaces["tools/Probe.class"], 1)
+            self.assertEqual(namespaces["tools"], 1)
             self.assertTrue(
                 report["dependency_authority_id"].startswith("DEPAUTH_")
             )
