@@ -143,6 +143,78 @@ def _shadow_owner_fixture(root: Path) -> Path:
     return jar
 
 
+def _hierarchy_shadow_fixture(
+    root: Path,
+    *,
+    inherited: bool = False,
+    object_shadow: bool = False,
+) -> Path:
+    legal = root / "hierarchy-legal"
+    pkg = legal / "pkg"
+    pkg.mkdir(parents=True)
+    sources: list[Path] = []
+
+    if inherited:
+        base = pkg / "Base.java"
+        shadow_type = "Object" if object_shadow else "int"
+        base.write_text(
+            "package pkg;\n"
+            "public class Base {\n"
+            f"    public static {shadow_type} h;\n"
+            "}\n",
+            encoding="utf-8",
+        )
+        sources.append(base)
+        current = pkg / "h.java"
+        current.write_text(
+            "package pkg;\n"
+            "public class h extends Base {\n"
+            "    public static int x;\n"
+            "    public static void m() {\n"
+            "        pkg.h.x = 7;\n"
+            "        int y = pkg.h.x;\n"
+            "    }\n"
+            "}\n",
+            encoding="utf-8",
+        )
+    else:
+        current = pkg / "h.java"
+        shadow_type = "Object" if object_shadow else "int"
+        current.write_text(
+            "package pkg;\n"
+            "public class h {\n"
+            f"    public static {shadow_type} h;\n"
+            "    public static int x;\n"
+            "    public static void m() {\n"
+            "        pkg.h.x = 7;\n"
+            "        int y = pkg.h.x;\n"
+            "    }\n"
+            "}\n",
+            encoding="utf-8",
+        )
+    sources.append(current)
+
+    classes = root / "hierarchy-classes"
+    classes.mkdir()
+    proc = subprocess.run(
+        ["javac", "-d", str(classes), *map(str, sources)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if proc.returncode != 0:
+        raise AssertionError("javac hierarchy fixture failed: " + proc.stderr)
+
+    jar = root / "hierarchy-readable.jar"
+    with zipfile.ZipFile(jar, "w") as z:
+        for class_file in sorted(classes.rglob("*.class")):
+            z.write(
+                class_file,
+                class_file.relative_to(classes).as_posix(),
+            )
+    return jar
+
+
 class ProcyonSourceNormalizationTests(unittest.TestCase):
     def test_reconstructs_proven_synthetic_switch_class(self):
         with tempfile.TemporaryDirectory() as td:
@@ -321,6 +393,191 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                     "shadowed_self_static_field_reference_count"
                 ],
                 0,
+            )
+
+    def test_qualifies_direct_primitive_hierarchy_shadow(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _hierarchy_shadow_fixture(root)
+            source = root / "src" / "pkg" / "h.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package pkg;\n"
+                "public class h {\n"
+                "    public static int h;\n"
+                "    public static int x;\n"
+                "    public static void m() {\n"
+                "        h.x = 7;\n"
+                "        int y = h.x;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            text = source.read_text(encoding="utf-8")
+
+            self.assertIn("pkg.h.x = 7;", text)
+            self.assertIn("int y = pkg.h.x;", text)
+            self.assertEqual(
+                report["summary"][
+                    "hierarchy_shadowed_self_static_field_reference_count"
+                ],
+                2,
+            )
+
+    def test_qualifies_inherited_primitive_hierarchy_shadow(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _hierarchy_shadow_fixture(root, inherited=True)
+            source = root / "src" / "pkg" / "h.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package pkg;\n"
+                "public class h extends Base {\n"
+                "    public static int x;\n"
+                "    public static void m() {\n"
+                "        h.x = 7;\n"
+                "        int y = h.x;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            text = source.read_text(encoding="utf-8")
+
+            self.assertIn("pkg.h.x = 7;", text)
+            self.assertIn("int y = pkg.h.x;", text)
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "hierarchy_shadowed_self_static_field_owner_qualification"
+            )
+            self.assertEqual(action["primitive_shadow_owners"], ["pkg/Base"])
+
+    def test_object_typed_same_name_field_does_not_qualify(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _hierarchy_shadow_fixture(
+                root,
+                inherited=True,
+                object_shadow=True,
+            )
+            source = root / "src" / "pkg" / "h.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package pkg;\n"
+                "public class h extends Base {\n"
+                "    public static int x;\n"
+                "    public static void m() {\n"
+                "        h.x = 7;\n"
+                "        int y = h.x;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "hierarchy_shadowed_self_static_field_reference_count"
+                ],
+                0,
+            )
+
+    def test_same_name_local_value_binding_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _hierarchy_shadow_fixture(root)
+            source = root / "src" / "pkg" / "h.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package pkg;\n"
+                "public class h {\n"
+                "    public static int h;\n"
+                "    public static int x;\n"
+                "    public static void m() {\n"
+                "        Object h = null;\n"
+                "        h.x = 7;\n"
+                "        int y = h.x;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "hierarchy_shadowed_self_static_field_reference_count"
+                ],
+                0,
+            )
+
+    def test_hierarchy_shadow_count_mismatch_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _hierarchy_shadow_fixture(root)
+            source = root / "src" / "pkg" / "h.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package pkg;\n"
+                "public class h {\n"
+                "    public static int h;\n"
+                "    public static int x;\n"
+                "    public static void m() {\n"
+                "        h.x = 7;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "hierarchy_shadowed_self_static_field_reference_count"
+                ],
+                0,
+            )
+
+    def test_hierarchy_shadow_ignores_literals_and_comments(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _hierarchy_shadow_fixture(root)
+            source = root / "src" / "pkg" / "h.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package pkg;\n"
+                "public class h {\n"
+                "    public static int h;\n"
+                "    public static int x;\n"
+                "    public static void m() {\n"
+                "        h.x = 7;\n"
+                "        int y = h.x;\n"
+                '        String s = "h.x"; // h.x\n'
+                "        /* h.x */\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            text = source.read_text(encoding="utf-8")
+
+            self.assertIn('String s = "h.x"; // h.x', text)
+            self.assertIn("/* h.x */", text)
+            self.assertEqual(
+                report["summary"][
+                    "hierarchy_shadowed_self_static_field_reference_count"
+                ],
+                2,
             )
 
     def test_discarded_string_expression_preserves_evaluation(self):
