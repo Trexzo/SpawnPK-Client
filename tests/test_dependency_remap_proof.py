@@ -729,7 +729,8 @@ class DependencyRemapProofTests(unittest.TestCase):
                     ),
                     "target/pkg/Api.java": (
                         "package target.pkg; public class Api { "
-                        "public Api(target.pkg.Param value) {} }"
+                        "public Api(target.pkg.Param value) { "
+                        "Object copy = value; } }"
                     ),
                 },
             )
@@ -813,7 +814,8 @@ class DependencyRemapProofTests(unittest.TestCase):
                     ),
                     "target/pkg/Api.java": (
                         "package target.pkg; public class Api { "
-                        "public Object real() { return null; } }"
+                        "public Object real() { "
+                        "Object copy = null; return copy; } }"
                     ),
                 },
             )
