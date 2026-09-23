@@ -859,6 +859,17 @@ def _normalize_hierarchy_shadowed_self_static_field_owners(
     exact bytecode method agree.
     """
     rel = path.relative_to(source_root).as_posix()
+    simple_name_from_path = Path(rel).stem
+    text = path.read_text(encoding="utf-8")
+    code = _java_code_mask(text)
+    candidate = re.compile(
+        r"(?<![A-Za-z0-9_$.])"
+        + re.escape(simple_name_from_path)
+        + r"\.[A-Za-z_$][A-Za-z0-9_$]*\b"
+    )
+    if candidate.search(code) is None:
+        return []
+
     class_entry = Path(rel).with_suffix(".class").as_posix()
     try:
         class_bytes = readable_zip.read(class_entry)
@@ -924,7 +935,6 @@ def _normalize_hierarchy_shadowed_self_static_field_owners(
     if not static_targets:
         return []
 
-    text = path.read_text(encoding="utf-8")
     qualified_owner = internal_name.replace("/", ".")
     edits: list[tuple[int, int, str]] = []
     actions: list[dict[str, Any]] = []
