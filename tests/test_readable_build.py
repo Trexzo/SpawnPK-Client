@@ -85,6 +85,31 @@ class ReadableBuildTests(unittest.TestCase):
         )
 
 
+    def test_manifest_uses_only_original_project_prefix_for_package_preserving_semantics(self):
+        namespace = dict(NAMESPACE)
+        namespace["summary"] = dict(NAMESPACE["summary"])
+        namespace["source_safe_fallback"] = True
+        namespace["semantic_package_strategy"] = "source_package_preserving"
+        namespace["fallback_name_prefix"] = "Recovered_"
+
+        manifest = _manifest(
+            namespace=namespace,
+            status="complete",
+            output_sha256="b" * 64,
+            verification_pass=True,
+            blocker=None,
+        )
+
+        self.assertEqual(
+            manifest["semantic_package_strategy"],
+            "source_package_preserving",
+        )
+        self.assertEqual(
+            manifest["project_source_prefixes"],
+            ["rs/"],
+        )
+
+
     def test_manifest_publishes_member_source_safety_accounting(self):
         namespace = dict(NAMESPACE)
         namespace["summary"] = dict(NAMESPACE["summary"])

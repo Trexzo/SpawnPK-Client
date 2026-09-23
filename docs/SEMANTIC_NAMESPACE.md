@@ -30,6 +30,16 @@ The default readable class package is:
 
 and can be changed with `--target-package`.
 
+Without source-safety mode, accepted semantic classes use that global target package.
+With `--source-safe-fallback`, the accepted semantic **simple name** remains authoritative
+but the class stays in its exact source package. This preserves Java/JVM package-private
+access while keeping semantic acceptance separate from package placement.
+
+The namespace manifest records the active strategy as:
+
+- `global_target_package` for the default behavior;
+- `source_package_preserving` for source-safe recovery.
+
 ## Acceptance boundary
 
 A class, field or method contributes a readable remap only when its canonical record has:
@@ -54,8 +64,9 @@ parallel remap format.
 
 ## Coverage manifest
 
-`semantic-namespace.json` records exact authority SHA, plan digests, target package and
-counts for total/accepted/remapped classes, fields and methods.
+`semantic-namespace.json` records exact authority SHA, plan digests, configured target
+package, semantic package strategy, and counts for total/accepted/remapped classes, fields
+and methods.
 
 An accepted name that is already identical to the obfuscated/current member spelling is
 counted as accepted but does not require an executable rename row.
