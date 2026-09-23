@@ -704,7 +704,9 @@ class DependencyRemapProofTests(unittest.TestCase):
                     ),
                     "old/pkg/x.java": (
                         "package old.pkg; public class x { "
-                        "public x(old.pkg.p value) {} }"
+                        "public x(old.pkg.p value) {} "
+                        "public Object marker() { return null; } "
+                        "}"
                     ),
                 },
             )
@@ -730,7 +732,10 @@ class DependencyRemapProofTests(unittest.TestCase):
                     "target/pkg/Api.java": (
                         "package target.pkg; public class Api { "
                         "public Api(target.pkg.Param value) { "
-                        "Object copy = value; } }"
+                        "Object copy = value; } "
+                        "public Object marker() { "
+                        "Object copy = null; return copy; } "
+                        "}"
                     ),
                 },
             )
