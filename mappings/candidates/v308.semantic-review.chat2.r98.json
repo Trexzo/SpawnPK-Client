@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_8D6E70473D83F1FE17E0",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_6D58163A09FE2689AD9C",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000327",
+      "owner_logical_id": "CLIENT_CLASS_000327",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/k/c/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GpuParticleInstance",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_particle_state",
+          "detail": "The class owns one R50 ParticleDefinition plus live color, size, alpha, age/dead state, world position and velocity/gravity-derived integer components, initialized directly from the definition."
+        },
+        {
+          "family": "exact_update_contract",
+          "detail": "Its tick method increments age, expires at ParticleDefinition lifespan, advances color/size/alpha, integrates position from velocity, advances velocity by the definition step, and applies the optional additional movement vector."
+        },
+        {
+          "family": "exact_gpu_consumers",
+          "detail": "R87 GpuRenderer and R96 ModelPusher consume this class directly to emit particle geometry/color/alpha into GPU staging buffers; rs/a/h creates instances from ParticleDefinition during model particle spawning."
+        },
+        {
+          "family": "r50_lineage",
+          "detail": "The state/update semantics mirror R50 Particle but this is a separate GPU-optimized runtime representation with renderer-specific fields and pooling identity."
+        }
+      ],
+      "note": "GpuParticleInstance is descriptive rather than a recovered original source identifier. Exact v308 proves the live GPU particle role; confidence is 0.997."
+    },
+    {
+      "proposal_id": "SEMPROP_8B9D054A13A3038A9FB9",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000329",
+      "owner_logical_id": "CLIENT_CLASS_000329",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/k/c/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GpuParticlePool",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_pool_capacity",
+          "detail": "The class owns global live/recycled collections for rs/k/c/a instances, caps the live particle map at 50,000, and emits the exact diagnostic '[GPU] Reached max capacity of particle pool!' before clearing on overflow."
+        },
+        {
+          "family": "exact_reuse_contract",
+          "detail": "Allocation reuses recycled instances when available, resets their ParticleDefinition/position/model/render state, reinitializes definition-derived values, and reinserts them into the live maps/sets."
+        },
+        {
+          "family": "exact_update_recycle",
+          "detail": "The global update loop ticks every live particle, removes expired instances from active maps, and returns them to a recycle list up to the same 50,000-instance bound."
+        },
+        {
+          "family": "exact_batch_registry",
+          "detail": "The same manager creates/reuses up to 50 rs/k/c/d batch objects keyed by integer render/model identity and ages unused batches out after 60 seconds."
+        }
+      ],
+      "note": "GpuParticlePool is descriptive exact-behavior recovery. No surviving public source identifier was found for this SpawnPK-local GPU pooling layer; confidence is 0.997."
+    },
+    {
+      "proposal_id": "SEMPROP_F37DFD241C617E6F3C64",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000330",
+      "owner_logical_id": "CLIENT_CLASS_000330",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/k/c/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GpuParticleBatch",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_group_key",
+          "detail": "Each instance stores one integer grouping key and two primitive long-ID lists used to track active and pending-removal GPU particle instance IDs."
+        },
+        {
+          "family": "exact_capacity",
+          "detail": "A batch accepts at most 1,000 particle IDs and updates its last-use timestamp on capacity checks and insertion."
+        },
+        {
+          "family": "exact_membership_cleanup",
+          "detail": "Its cleanup pass resolves each particle ID through GpuParticlePool, rejects missing/wrong-key/dead-or-recycled members, removes rejected IDs, and preserves only live members matching the batch key."
+        },
+        {
+          "family": "exact_render_consumers",
+          "detail": "R96 ModelPusher and rs/a/h obtain these keyed objects from GpuParticlePool and iterate their member particles as one renderer/model grouping."
+        }
+      ],
+      "note": "GpuParticleBatch is descriptive exact-behavior recovery for the keyed 1,000-particle render grouping. No original source noun survives; confidence is 0.997."
+    }
+  ],
+  "unresolved": []
+}
