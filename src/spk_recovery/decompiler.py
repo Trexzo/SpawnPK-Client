@@ -67,6 +67,8 @@ def run_decompiler(
             )
         if not isinstance(max_command_chars, int) or max_command_chars < 1024:
             raise DecompilerError("max_command_chars must be an integer >= 1024")
+        if not isinstance(max_batch_classes, int) or max_batch_classes < 1:
+            raise DecompilerError("max_batch_classes must be an integer >= 1")
         class_files = sorted(
             {Path(path).resolve() for path in input_class_files},
             key=lambda path: path.as_posix(),
@@ -133,7 +135,11 @@ def run_decompiler(
         for class_file in class_files:
             value = str(class_file)
             extra = len(value) + 1
-            if len(current) > len(base) and current_chars + extra > max_command_chars:
+            current_class_count = len(current) - len(base)
+            if len(current) > len(base) and (
+                current_class_count >= max_batch_classes
+                or current_chars + extra > max_command_chars
+            ):
                 commands.append(current)
                 current = list(base)
                 current_chars = sum(len(item) + 1 for item in current)
