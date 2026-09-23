@@ -1,0 +1,49 @@
+name: R8DEP4 temporary RuneLite artifact probe
+
+on:
+  push:
+    branches:
+      - probe/r8dep4-official-artifacts
+
+jobs:
+  fetch-runelite:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch exact POM-authorized RuneLite/JBoss artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p official-extra
+          runelite="https://repo.runelite.net"
+          jboss="https://repository.jboss.org/nexus/content/repositories/thirdparty-releases"
+
+          fetch() {
+            local url="$1"
+            local out="$2"
+            echo "FETCH $url"
+            curl --fail --location --silent --show-error "$url" -o "official-extra/$out"
+          }
+
+          fetch "$runelite/net/runelite/pushingpixels/substance/8.0.02/substance-8.0.02.jar" "substance-8.0.02.jar"
+          fetch "$runelite/net/runelite/pushingpixels/trident/1.5.00/trident-1.5.00.jar" "trident-1.5.00.jar"
+          fetch "$runelite/net/runelite/rlawt/1.4/rlawt-1.4.jar" "rlawt-1.4.jar"
+          fetch "$runelite/net/runelite/orange-extensions/1.1/orange-extensions-1.1.jar" "orange-extensions-1.1.jar"
+
+          if curl --fail --location --silent --show-error             "$jboss/com/jacob/jacob/1.10/jacob-1.10.jar"             -o "official-extra/jacob-1.10.jar"; then
+            echo "JACOB_FETCH=PASS"
+          else
+            rm -f "official-extra/jacob-1.10.jar"
+            echo "JACOB_FETCH=MISS" | tee official-extra/JACOB_STATUS.txt
+          fi
+
+          (cd official-extra && sha256sum *.jar | sort -k2) > official-extra/SHA256SUMS.txt
+          ls -lh official-extra
+          cat official-extra/SHA256SUMS.txt
+
+      - name: Upload RuneLite artifact probe
+        uses: actions/upload-artifact@v4
+        with:
+          name: r8dep4-runelite-artifacts
+          path: official-extra/
+          if-no-files-found: error
+          retention-days: 1
