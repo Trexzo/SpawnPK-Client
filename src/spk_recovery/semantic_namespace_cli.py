@@ -37,11 +37,6 @@ def main(argv: list[str] | None = None) -> int:
         "--fallback-name-prefix",
         default="Recovered_",
     )
-    p.add_argument(
-        "--source-safe-member-fallback",
-        action="store_true",
-        help="rename Java-source-illegal member names with stable non-semantic fallback names",
-    )
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args(argv)
 
