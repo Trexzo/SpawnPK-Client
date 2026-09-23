@@ -149,6 +149,7 @@ def _hierarchy_shadow_fixture(
     inherited: bool = False,
     object_shadow: bool = False,
     private_shadow: bool = False,
+    inherited_target: bool = False,
 ) -> Path:
     legal = root / "hierarchy-legal"
     pkg = legal / "pkg"
@@ -159,19 +160,24 @@ def _hierarchy_shadow_fixture(
         base = pkg / "Base.java"
         shadow_type = "Object" if object_shadow else "int"
         visibility = "private" if private_shadow else "public"
+        inherited_target_line = (
+            "    public static int x;\n" if inherited_target else ""
+        )
         base.write_text(
             "package pkg;\n"
             "public class Base {\n"
             f"    {visibility} static {shadow_type} h;\n"
-            "}\n",
+            + inherited_target_line
+            + "}\n",
             encoding="utf-8",
         )
         sources.append(base)
         current = pkg / "h.java"
+        target_decl = "" if inherited_target else "    public static int x;\n"
         current.write_text(
             "package pkg;\n"
             "public class h extends Base {\n"
-            "    public static int x;\n"
+            + target_decl
             "    public static void m() {\n"
             "        pkg.h.x = 7;\n"
             "        int y = pkg.h.x;\n"
@@ -458,6 +464,39 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 == "hierarchy_shadowed_self_static_field_owner_qualification"
             )
             self.assertEqual(action["primitive_shadow_owners"], ["pkg/Base"])
+
+    def test_qualifies_inherited_static_target_with_symbolic_subclass_owner(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _hierarchy_shadow_fixture(
+                root,
+                inherited=True,
+                inherited_target=True,
+            )
+            source = root / "src" / "pkg" / "h.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package pkg;\n"
+                "public class h extends Base {\n"
+                "    public static void m() {\n"
+                "        h.x = 7;\n"
+                "        int y = h.x;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            text = source.read_text(encoding="utf-8")
+
+            self.assertIn("pkg.h.x = 7;", text)
+            self.assertIn("int y = pkg.h.x;", text)
+            self.assertEqual(
+                report["summary"][
+                    "hierarchy_shadowed_self_static_field_reference_count"
+                ],
+                2,
+            )
 
     def test_object_typed_same_name_field_does_not_qualify(self):
         with tempfile.TemporaryDirectory() as td:
