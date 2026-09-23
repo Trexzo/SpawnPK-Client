@@ -83,6 +83,119 @@ class DependencyRemapProofTests(unittest.TestCase):
             "source_classes": ["project/Main"],
         }
 
+    def test_same_name_exact_api_surface_allows_code_length_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            bundled = self._compile_jar(
+                root,
+                "bundled",
+                {
+                    "dep/Api.java": (
+                        "package dep; public class Api { "
+                        "public int ping(int value) { return value; } "
+                        "}"
+                    )
+                },
+            )
+            official = self._compile_jar(
+                root,
+                "official",
+                {
+                    "dep/Api.java": (
+                        "package dep; public class Api { "
+                        "public int ping(int value) { "
+                        "int copy = value; return copy; "
+                        "} "
+                        "}"
+                    )
+                },
+            )
+            surface = self._surface(
+                root,
+                [
+                    self._row(
+                        "method",
+                        "dep/Api",
+                        "ping",
+                        "(I)I",
+                        3,
+                    )
+                ],
+            )
+
+            report = prove_dependency_remaps(
+                surface,
+                bundled,
+                [official],
+                java_release=9,
+                project_prefixes=("project/",),
+            )
+
+            row = report["member_results"][0]
+            self.assertEqual(row["status"], "accepted_identity")
+            self.assertEqual(row["new_owner"], "dep/Api")
+            self.assertEqual(row["new_name"], "ping")
+            class_row = report["referenced_class_mappings"][0]
+            self.assertEqual(
+                class_row["strategy"],
+                "identity_api_surface",
+            )
+            self.assertEqual(
+                report["summary"]["identity_api_surface_count"],
+                1,
+            )
+
+    def test_same_name_api_surface_drift_does_not_accept_changed_api(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            bundled = self._compile_jar(
+                root,
+                "bundled",
+                {
+                    "dep/Api.java": (
+                        "package dep; public class Api { "
+                        "public int ping(int value) { return value; } "
+                        "}"
+                    )
+                },
+            )
+            official = self._compile_jar(
+                root,
+                "official",
+                {
+                    "dep/Api.java": (
+                        "package dep; public class Api { "
+                        "public long ping(long value) { return value; } "
+                        "}"
+                    )
+                },
+            )
+            surface = self._surface(
+                root,
+                [
+                    self._row(
+                        "method",
+                        "dep/Api",
+                        "ping",
+                        "(I)I",
+                    )
+                ],
+            )
+
+            report = prove_dependency_remaps(
+                surface,
+                bundled,
+                [official],
+                java_release=9,
+                project_prefixes=("project/",),
+            )
+
+            row = report["member_results"][0]
+            self.assertEqual(
+                row["status"],
+                "bundled_unresolved_class",
+            )
+
     def test_unique_structural_class_and_member_position_recovery(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
