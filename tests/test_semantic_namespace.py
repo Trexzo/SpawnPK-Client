@@ -354,7 +354,115 @@ class SemanticNamespaceTests(unittest.TestCase):
         self.assertEqual(manifest["fallback_remaps"], [])
         self.assertEqual(
             class_plan["classes"][0]["target_internal_name"],
+            "rs/ExampleController",
+        )
+        self.assertEqual(
+            manifest["semantic_package_strategy"],
+            "source_package_preserving",
+        )
+
+
+    def test_source_safe_semantic_package_strategy_is_opt_in(self):
+        classes, members, index = _fixture()
+
+        default_manifest, default_plan, _ = build_semantic_namespace(
+            classes,
+            members,
+            index,
+            build_id="v308",
+        )
+        safe_manifest, safe_plan, _ = build_semantic_namespace(
+            classes,
+            members,
+            index,
+            build_id="v308",
+            source_safe_fallback=True,
+        )
+
+        self.assertEqual(
+            default_plan["classes"][0]["target_internal_name"],
             "recovered/spawnpk/client/ExampleController",
+        )
+        self.assertEqual(
+            default_manifest["semantic_package_strategy"],
+            "global_target_package",
+        )
+        self.assertEqual(
+            safe_plan["classes"][0]["target_internal_name"],
+            "rs/ExampleController",
+        )
+        self.assertEqual(
+            safe_manifest["semantic_package_strategy"],
+            "source_package_preserving",
+        )
+        self.assertEqual(
+            classes["classes"][0]["semantic_name"],
+            "ExampleController",
+        )
+        self.assertEqual(
+            classes["classes"][0]["semantic_status"],
+            "ACCEPTED",
+        )
+
+
+    def test_source_safe_accepted_outer_closes_nested_in_original_package(self):
+        classes, members, index = _fixture()
+        classes["classes"].append(
+            {
+                "logical_id": "CLIENT_CLASS_000003",
+                "semantic_name": None,
+                "semantic_status": "UNKNOWN",
+                "semantic_confidence": 0.0,
+                "lineage": [
+                    {
+                        "build_id": "v308",
+                        "internal_name": "rs/a$Inner",
+                        "entry_path": "rs/a$Inner.class",
+                        "entry_sha256": "f" * 64,
+                        "structural_sha256": "1" * 64,
+                        "relation": "BASELINE",
+                        "confidence": 1.0,
+                        "provenance": [],
+                    }
+                ],
+                "semantic_provenance": [],
+            }
+        )
+        index["classes"]["rs/a$Inner.class"] = {
+            "internal_name": "rs/a$Inner",
+            "inner_outer_name": "rs/a",
+            "enclosing_class_name": None,
+            "fields": [],
+            "methods": [],
+        }
+
+        manifest, class_plan, _ = build_semantic_namespace(
+            classes,
+            members,
+            index,
+            build_id="v308",
+            source_safe_fallback=True,
+        )
+
+        outer = next(
+            row for row in class_plan["classes"]
+            if row["logical_id"] == "CLIENT_CLASS_000001"
+        )
+        nested = next(
+            row for row in class_plan["classes"]
+            if row["logical_id"] == "CLIENT_CLASS_000003"
+        )
+        self.assertEqual(
+            outer["target_internal_name"],
+            "rs/ExampleController",
+        )
+        self.assertEqual(
+            nested["target_internal_name"],
+            "rs/ExampleController$Inner",
+        )
+        self.assertEqual(
+            manifest["semantic_package_strategy"],
+            "source_package_preserving",
         )
 
 
@@ -648,7 +756,11 @@ class SemanticNamespaceTests(unittest.TestCase):
         )
         self.assertEqual(
             nested["target_internal_name"],
-            "recovered/spawnpk/client/ReadableNested",
+            "rs/ReadableNested",
+        )
+        self.assertEqual(
+            manifest["semantic_package_strategy"],
+            "source_package_preserving",
         )
 
 
