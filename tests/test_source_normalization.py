@@ -178,7 +178,7 @@ def _hierarchy_shadow_fixture(
             "package pkg;\n"
             "public class h extends Base {\n"
             + target_decl
-            "    public static void m() {\n"
+            + "    public static void m() {\n"
             "        pkg.h.x = 7;\n"
             "        int y = pkg.h.x;\n"
             "    }\n"
