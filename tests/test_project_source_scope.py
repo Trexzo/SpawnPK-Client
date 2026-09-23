@@ -11,6 +11,8 @@ import zipfile
 from spk_recovery.decompiler import DecompilerError, run_decompiler
 from spk_recovery.source_workspace import (
     SourceWorkspaceError,
+    PROCYON_ISOLATE_METHOD_CODE_LENGTH,
+    _oversized_procyon_targets,
     _selection_digest,
     build_source_workspace,
 )
@@ -52,6 +54,7 @@ class ProjectScopedSourceWorkspaceTests(unittest.TestCase):
 
             def fake_decompiler(*args, **kwargs):
                 selected = kwargs["input_class_files"]
+                self.assertEqual(kwargs["isolate_class_files"], [])
                 rel = sorted(
                     path.relative_to(path.parents[1]).as_posix()
                     if path.parent.name == "sub"
@@ -88,9 +91,15 @@ class ProjectScopedSourceWorkspaceTests(unittest.TestCase):
                     "stderr": "",
                 }
 
-            with patch(
-                "spk_recovery.source_workspace.run_decompiler",
-                side_effect=fake_decompiler,
+            with (
+                patch(
+                    "spk_recovery.source_workspace.run_decompiler",
+                    side_effect=fake_decompiler,
+                ),
+                patch(
+                    "spk_recovery.source_workspace._oversized_procyon_targets",
+                    return_value=([], []),
+                ),
             ):
                 result = build_source_workspace(
                     manifest,
@@ -110,6 +119,15 @@ class ProjectScopedSourceWorkspaceTests(unittest.TestCase):
                 _selection_digest(["rs/A.class", "rs/sub/B.class"]),
             )
             self.assertEqual(result["java_file_count"], 2)
+            self.assertEqual(
+                result["procyon_isolation_method_code_length"],
+                PROCYON_ISOLATE_METHOD_CODE_LENGTH,
+            )
+            self.assertEqual(result["isolated_class_count"], 0)
+            self.assertEqual(
+                result["isolated_class_digest"],
+                _selection_digest([]),
+            )
 
 
     def test_project_only_refuses_archive_root_prefix(self):
@@ -166,6 +184,46 @@ class ProjectScopedSourceWorkspaceTests(unittest.TestCase):
                 )
 
 
+    def test_oversized_source_targets_are_structurally_selected(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            small = root / "Small.class"
+            large = root / "Large.class"
+            small.write_bytes(b"small")
+            large.write_bytes(b"large")
+            parsed_small = SimpleNamespace(
+                methods=[{"code_length": PROCYON_ISOLATE_METHOD_CODE_LENGTH - 1}]
+            )
+            parsed_large = SimpleNamespace(
+                methods=[{"code_length": PROCYON_ISOLATE_METHOD_CODE_LENGTH}]
+            )
+            with patch(
+                "spk_recovery.source_workspace.parse_class",
+                side_effect=[parsed_small, parsed_large],
+            ):
+                files, entries = _oversized_procyon_targets(
+                    [small, large],
+                    ["rs/Small.class", "rs/Large.class"],
+                )
+            self.assertEqual(files, [large])
+            self.assertEqual(entries, ["rs/Large.class"])
+
+    def test_oversized_source_target_parse_failure_is_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            bad = root / "Bad.class"
+            bad.write_bytes(b"bad")
+            with patch(
+                "spk_recovery.source_workspace.parse_class",
+                side_effect=ValueError("bad class"),
+            ):
+                with self.assertRaises(SourceWorkspaceError):
+                    _oversized_procyon_targets(
+                        [bad],
+                        ["rs/Bad.class"],
+                    )
+
+
 class SelectiveDecompilerTests(unittest.TestCase):
     def test_procyon_class_inputs_are_deterministically_batched(self):
         with tempfile.TemporaryDirectory() as td:
@@ -208,6 +266,74 @@ class SelectiveDecompilerTests(unittest.TestCase):
             self.assertEqual(result["selected_class_file_count"], 24)
             self.assertGreater(result["batch_count"], 1)
             self.assertEqual(run.call_count, result["batch_count"])
+
+    def test_requested_isolated_classes_become_singleton_batches(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            input_jar = root / "readable.jar"
+            input_jar.write_bytes(b"readable")
+            tool = root / "procyon.jar"
+            tool.write_bytes(b"tool")
+            classes = []
+            for i in range(5):
+                path = root / "classes" / f"Class{i}.class"
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(bytes([i]))
+                classes.append(path)
+            out = root / "out"
+            seen = []
+
+            def fake_run(cmd, **kwargs):
+                seen.append(list(cmd))
+                (out / "rs").mkdir(parents=True, exist_ok=True)
+                (out / "rs" / "A.java").write_text(
+                    "package rs; public class A {}\n", encoding="utf-8"
+                )
+                return SimpleNamespace(returncode=0, stdout="", stderr="")
+
+            with (
+                patch("spk_recovery.decompiler.shutil.which", return_value="/java"),
+                patch("spk_recovery.decompiler.subprocess.run", side_effect=fake_run),
+            ):
+                result = run_decompiler(
+                    input_jar,
+                    tool,
+                    expected_decompiler_sha256=_sha(tool),
+                    engine="procyon",
+                    out_dir=out,
+                    input_class_files=classes,
+                    isolate_class_files=[classes[2]],
+                    max_command_chars=10000,
+                )
+
+            self.assertEqual(result["isolated_class_file_count"], 1)
+            self.assertEqual(result["batch_count"], 3)
+            class_args = [cmd[5:] for cmd in seen]
+            self.assertEqual(class_args[1], [str(classes[2].resolve())])
+            self.assertEqual(len(class_args[0]), 2)
+            self.assertEqual(len(class_args[2]), 2)
+
+    def test_isolated_class_must_be_selected(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            input_jar = root / "readable.jar"
+            input_jar.write_bytes(b"readable")
+            tool = root / "procyon.jar"
+            tool.write_bytes(b"tool")
+            selected = root / "A.class"
+            selected.write_bytes(b"a")
+            other = root / "B.class"
+            other.write_bytes(b"b")
+            with self.assertRaises(DecompilerError):
+                run_decompiler(
+                    input_jar,
+                    tool,
+                    expected_decompiler_sha256=_sha(tool),
+                    engine="procyon",
+                    out_dir=root / "out",
+                    input_class_files=[selected],
+                    isolate_class_files=[other],
+                )
 
     def test_selective_input_refuses_other_engines(self):
         with tempfile.TemporaryDirectory() as td:
