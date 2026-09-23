@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_33ABFA68EADCBAD63204",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_CBA1B9110978C5CE6268",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000139",
+      "owner_logical_id": "CLIENT_CLASS_000139",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/d/w$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodCurrencyType",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "rs/d/w$a is an enum with surviving exact constants CORE_TOKENS, DIAMONDS and SHARDS."
+        },
+        {
+          "family": "exact_currency_assets",
+          "detail": "The constants bind exact icon ids and YAML filenames: CORE_TOKENS -> 180 / blood_core.yaml, DIAMONDS -> 67 / blood_diamonds.yaml, SHARDS -> 68 / blood_shards.yaml."
+        },
+        {
+          "family": "exact_config_binding",
+          "detail": "BloodCurrencyValueConfig iterates every enum constant, uses its filename to load the corresponding item-value table and its icon id when rendering the mapped value in item hover text."
+        }
+      ],
+      "note": "BloodCurrencyType is the conservative semantic name for this exact three-value blood-currency enum; it does not claim a verbatim original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_E2290399F93667E46351",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000138",
+      "owner_logical_id": "CLIENT_CLASS_000138",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/d/w",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodCurrencyValueConfig",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_yaml_value_tables",
+          "detail": "rs/d/w creates one item-id-to-integer table per rs/d/w$a currency type and loads each exact configs/<enum filename> YAML file with SnakeYAML."
+        },
+        {
+          "family": "exact_currency_value_formatting",
+          "detail": "Its formatter checks each currency table for the item id and appends the mapped numeric value using the exact surviving template ' @cya@(<img=<icon>>%,d)' with the enum's icon id."
+        },
+        {
+          "family": "exact_item_hover_consumer",
+          "detail": "The Client item-hover path calls this formatter with the item id and item display string before hover-description rendering, while the HoverDescriptionsPlugin configuration gate controls whether these currency values are added."
+        }
+      ],
+      "note": "BloodCurrencyValueConfig is the conservative semantic name for these exact blood-core/diamond/shard per-item value tables; it does not claim a verbatim original developer identifier."
+    }
+  ],
+  "unresolved": []
+}
