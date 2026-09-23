@@ -91,3 +91,23 @@ exact dependency capsule.
 
 Whole-archive decompilation remains the default. Project-only mode is currently supported
 only by Procyon and fails closed for other engines.
+
+
+## Oversized Procyon source-unit isolation
+
+Project-scoped Procyon also applies a deterministic source-safety batching rule for
+selected classfiles with unusually large methods. A selected top-level class whose maximum
+JVM method `Code.code_length` is at least **20,000 bytes** is run in its own Procyon JVM
+batch. Ordinary selected classes retain the existing command-length-safe batching.
+
+This is an operational decompiler-isolation boundary, not semantic recovery. It is derived
+from exact classfile structure and never from hard-coded obfuscated class names.
+
+The recovered-source manifest binds the policy into source provenance through:
+
+- `procyon_isolation_method_code_length`;
+- `isolated_class_count`;
+- `isolated_class_digest`, computed over the deterministic sorted selected entry names.
+
+The implementation fails closed if a selected class cannot be parsed for the isolation
+decision. Whole-archive decompilation and non-Procyon engines are unchanged.
