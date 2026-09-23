@@ -31,3 +31,32 @@ jobs:
         run: python -m spk_recovery.cli --help
       - name: Repository hygiene
         run: python scripts/check_repo_hygiene.py
+
+      - name: Build public acceptance harness bundle
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .acceptance-harness
+          git archive --format=zip -o .acceptance-harness/r8f-source.zip HEAD
+          python - <<'PY'
+          import hashlib
+          import pathlib
+          import urllib.request
+
+          url = "https://github.com/mstrobel/procyon/releases/download/v0.6.0/procyon-decompiler-0.6.0.jar"
+          expected = "821da96012fc69244fa1ea298c90455ee4e021434bc796d3b9546ab24601b779"
+          out = pathlib.Path(".acceptance-harness/procyon-decompiler-0.6.0.jar")
+          urllib.request.urlretrieve(url, out)
+          actual = hashlib.sha256(out.read_bytes()).hexdigest()
+          if actual != expected:
+              raise SystemExit(f"Procyon SHA-256 mismatch: {actual}")
+          print(f"PROCYON_SHA256_OK {actual}")
+          PY
+      - name: Upload public acceptance harness bundle
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: r8f-public-acceptance-harness
+          path: .acceptance-harness/*
+          retention-days: 1
