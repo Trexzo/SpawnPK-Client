@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_BFEB6A18E65648025B67",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_24F152093B7B18865AE3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000097",
+      "owner_logical_id": "CLIENT_CLASS_000097",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/cache/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OnDemandFetcher",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runtime_role",
+          "detail": "rs/cache/d extends rs/cache/e, implements Runnable, owns socket InputStream/OutputStream state, CRC32, request buffers and multiple R25/R47 linked request queues."
+        },
+        {
+          "family": "exact_update_tables",
+          "detail": "Surviving literals include model_crc/model_version/model_index, anim_crc/anim_version/anim_index, midi_crc/midi_version/midi_index, map_crc/map_version and map-index data."
+        },
+        {
+          "family": "exact_protocol_diagnostics",
+          "detail": "Surviving diagnostics include \"Loading extra files - <n>%\", \"missing start of file\", missing-file/revision errors and the update request rejection marker \"Rej: ...\"."
+        },
+        {
+          "family": "exact_client_start",
+          "detail": "The fetcher has a start/init method taking the recovered archive/stream-loader type plus Client, then runs the background request/download loop."
+        }
+      ],
+      "note": "OnDemandFetcher is fixed by the threaded socket/CRC/versioned update-fetch role."
+    },
+    {
+      "proposal_id": "SEMPROP_3B95AA1B13C622727D0B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000096",
+      "owner_logical_id": "CLIENT_CLASS_000096",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/cache/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OnDemandData",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_hierarchy",
+          "detail": "rs/cache/c extends R25 NodeSub (rs/a), matching the request-node inheritance used by the classic on-demand queue subsystem."
+        },
+        {
+          "family": "exact_request_payload",
+          "detail": "The class is a compact mutable request record with request-type/id/state integers, booleans and a byte[] payload, and is the element type returned/queued by rs/cache/d."
+        },
+        {
+          "family": "exact_fetcher_consumer",
+          "detail": "rs/cache/d returns rs/cache/c from its completed-request path and passes rs/cache/c through its network/request processing methods."
+        }
+      ],
+      "note": "OnDemandData is fixed by the NodeSub request-record role and exact rs/cache/d queue/consumer relationship."
+    },
+    {
+      "proposal_id": "SEMPROP_82A3D00780E2F204AB69",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000098",
+      "owner_logical_id": "CLIENT_CLASS_000098",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/cache/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OnDemandFetcherParent",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_inheritance",
+          "detail": "rs/cache/d directly extends rs/cache/e."
+        },
+        {
+          "family": "exact_parent_surface",
+          "detail": "rs/cache/e contains only the no-op overridable request hook a(int) plus its constructor, matching the classic on-demand fetcher parent shim."
+        },
+        {
+          "family": "classic_hierarchy_match",
+          "detail": "The child/request-node pairing and this one-method base class reproduce the well-known OnDemandFetcher / OnDemandData / OnDemandFetcherParent hierarchy carried by classic clients."
+        }
+      ],
+      "note": "OnDemandFetcherParent is fixed by the direct parent relationship and the one-method no-op hook surface."
+    }
+  ],
+  "unresolved": []
+}
