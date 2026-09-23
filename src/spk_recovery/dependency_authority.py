@@ -97,8 +97,13 @@ def scan_dependency_authority(
 
             namespace_counts: dict[str, int] = {}
             for name in non_project_classes:
-                parts = name.split("/")
-                namespace = "/".join(parts[:2]) if len(parts) > 1 else parts[0]
+                package_parts = name.split("/")[:-1]
+                if len(package_parts) >= 2:
+                    namespace = "/".join(package_parts[:2])
+                elif package_parts:
+                    namespace = package_parts[0]
+                else:
+                    namespace = "<default>"
                 namespace_counts[namespace] = (
                     namespace_counts.get(namespace, 0) + 1
                 )
