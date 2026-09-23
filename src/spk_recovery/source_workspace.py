@@ -404,7 +404,7 @@ def build_source_workspace(
                             prefix=f"spk-project-batch-{batch_index:04d}-"
                         ) as batch_td:
                             batch_out = Path(batch_td) / "src"
-                            run_decompiler(
+                            batch_result = run_decompiler(
                                 readable_jar,
                                 decompiler_jar,
                                 expected_decompiler_sha256=expected_decompiler_sha256,
@@ -421,6 +421,8 @@ def build_source_workspace(
                             "selected_class_digest": _selection_digest(batch_entries),
                             "java_file_count": batch_java_count,
                             "source_tree_sha256": batch_tree_sha,
+                            "stdout": str(batch_result.get("stdout", "")),
+                            "stderr": str(batch_result.get("stderr", "")),
                         })
                         checkpoint["completed_batches"] = sorted(
                             checkpoint["completed_batches"],
@@ -452,8 +454,14 @@ def build_source_workspace(
                         "input_mode": "class_files_resumable",
                         "selected_class_file_count": len(selected_entries),
                         "batch_count": material["batch_count"],
-                        "stdout": "",
-                        "stderr": "",
+                        "stdout": "".join(
+                            str(row.get("stdout", ""))
+                            for row in checkpoint["completed_batches"]
+                        ),
+                        "stderr": "".join(
+                            str(row.get("stderr", ""))
+                            for row in checkpoint["completed_batches"]
+                        ),
                     }
                 else:
                     result = run_decompiler(
