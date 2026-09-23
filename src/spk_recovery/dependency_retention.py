@@ -203,10 +203,15 @@ def classify_project_coupled_retention(
             bundled_jar,
             project_prefixes=prefixes,
         )
+        referenced_owners = {
+            str(row["owner"])
+            for row in surface.get("member_references", [])
+        }
         accepted_mappings, _ = _class_mappings(
             bundled,
             official,
             artifact_by_class,
+            package_api_candidate_names=referenced_owners,
         )
     except (
         DependencyArtifactProofError,
