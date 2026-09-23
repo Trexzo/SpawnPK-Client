@@ -175,7 +175,7 @@ def _member_rows(
 ) -> list[dict[str, Any]]:
     if kind == "field":
         return parsed.fields
-    if kind == "method":
+    if kind in {"method", "interface_method"}:
         return parsed.methods
     return []
 
