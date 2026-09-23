@@ -41,10 +41,12 @@ def _load_reference_surface(path: Path) -> dict[str, Any]:
 
 def _artifact_index(
     jar_paths: list[Path],
-) -> tuple[dict[str, ParsedClass], dict[str, str], list[dict[str, str]]]:
+    *,
+    java_release: int | None,
+) -> tuple[dict[str, ParsedClass], dict[str, str], list[dict[str, Any]]]:
     classes: dict[str, ParsedClass] = {}
     owners: dict[str, str] = {}
-    artifacts: list[dict[str, str]] = []
+    artifacts: list[dict[str, Any]] = []
 
     for raw_path in jar_paths:
         path = raw_path.resolve()
@@ -61,18 +63,69 @@ def _artifact_index(
         )
         try:
             with zipfile.ZipFile(path) as archive:
+                variants: dict[str, list[tuple[int, str]]] = {}
                 for entry in sorted(
                     name
                     for name in archive.namelist()
                     if name.endswith(".class")
                 ):
+                    release = 0
+                    logical_entry = entry
+                    if entry.startswith("META-INF/versions/"):
+                        parts = entry.split("/", 3)
+                        if len(parts) != 4 or not parts[2].isdigit():
+                            raise DependencyArtifactProofError(
+                                f"{artifact_id}:{entry}: invalid multi-release class path"
+                            )
+                        release = int(parts[2])
+                        logical_entry = parts[3]
+                    variants.setdefault(logical_entry, []).append(
+                        (release, entry)
+                    )
+
+                multi_release_class_count = sum(
+                    any(release > 0 for release, _ in rows)
+                    for rows in variants.values()
+                )
+                if multi_release_class_count and java_release is None:
+                    raise DependencyArtifactProofError(
+                        f"{artifact_id}: multi-release JAR requires explicit java_release"
+                    )
+
+                selected_entries: list[tuple[str, str]] = []
+                for logical_entry, rows in sorted(variants.items()):
+                    eligible = [
+                        row
+                        for row in rows
+                        if row[0] == 0
+                        or (
+                            java_release is not None
+                            and row[0] <= java_release
+                        )
+                    ]
+                    if not eligible:
+                        continue
+                    release, selected = max(
+                        eligible,
+                        key=lambda row: row[0],
+                    )
+                    selected_entries.append(
+                        (logical_entry, selected)
+                    )
+
+                artifacts[-1]["multi_release_class_count"] = (
+                    multi_release_class_count
+                )
+                artifacts[-1]["java_release"] = java_release
+
+                for logical_entry, entry in selected_entries:
                     try:
                         parsed = parse_class(archive.read(entry))
                     except ClassFormatError as exc:
                         raise DependencyArtifactProofError(
                             f"{artifact_id}:{entry}: class parse failed: {exc}"
                         ) from exc
-                    if parsed.name + ".class" != entry:
+                    if parsed.name + ".class" != logical_entry:
                         raise DependencyArtifactProofError(
                             f"{artifact_id}:{entry}: class identity mismatch"
                         )
@@ -180,11 +233,14 @@ def _resolve_member(
 def prove_official_artifact_compatibility(
     reference_surface_path: Path,
     official_artifacts: list[Path],
+    *,
+    java_release: int | None = None,
 ) -> dict[str, Any]:
     reference_surface_path = reference_surface_path.resolve()
     surface = _load_reference_surface(reference_surface_path)
     classes, artifact_by_class, artifacts = _artifact_index(
-        official_artifacts
+        official_artifacts,
+        java_release=java_release,
     )
 
     class_results: list[dict[str, Any]] = []
@@ -261,6 +317,7 @@ def prove_official_artifact_compatibility(
             reference_surface_path.read_bytes()
         ).hexdigest(),
         "official_artifacts": artifacts,
+        "java_release": java_release,
         "class_results": class_results,
         "member_results": member_results,
     }
@@ -272,6 +329,7 @@ def prove_official_artifact_compatibility(
         ),
         "reference_surface_id": surface["reference_surface_id"],
         "official_artifacts": artifacts,
+        "java_release": java_release,
         "summary": {
             "class_reference_count": len(class_results),
             "direct_class_reference_count": sum(
@@ -305,11 +363,21 @@ def main() -> int:
         nargs="+",
         help="Official dependency JAR; repeat by passing multiple paths.",
     )
+    parser.add_argument(
+        "--java-release",
+        type=int,
+        default=None,
+        help=(
+            "Target Java release used to select multi-release JAR classes. "
+            "Required when any supplied artifact is multi-release."
+        ),
+    )
     args = parser.parse_args()
 
     report = prove_official_artifact_compatibility(
         args.reference_surface,
         args.artifact,
+        java_release=args.java_release,
     )
     print(json.dumps(report, indent=2, sort_keys=True))
     return 0
