@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 CLASS_COORDS = [
     ("CLIENT_CLASS_000354", "rs/l/E"),
-    ("CLIENT_CLASS_000355", "rs/l/F"),
+    ("CLIENT_CLASS_000355", "rs/l/F"),\n    ("CLIENT_CLASS_000360", "rs/l/K"),
     ("CLIENT_CLASS_000363", "rs/l/a"),
     ("CLIENT_CLASS_000383", "rs/l/c"),
     ("CLIENT_CLASS_000397", "rs/l/e"),
@@ -91,11 +91,11 @@ class Chat2SemanticReviewR55Tests(unittest.TestCase):
         actual = resolve_semantic_candidates(
             _class_lineage(), _member_lineage(), candidates
         )
-        self.assertEqual(actual["proposal_count"], 6)
+        self.assertEqual(actual["proposal_count"], 7)
         self.assertEqual(actual["unresolved"], [])
         self.assertEqual(
             actual["review_id"],
-            "SEMREVIEW_36C5AEB28D03D1D5DBEB",
+            "SEMREVIEW_B14A4F72F6EC3A5BCF9E",
         )
         self.assertEqual(actual, expected)
 

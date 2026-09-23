@@ -4,8 +4,8 @@
   "canonical": false,
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-  "proposal_count": 6,
-  "review_id": "SEMREVIEW_36C5AEB28D03D1D5DBEB",
+  "proposal_count": 7,
+  "review_id": "SEMREVIEW_B14A4F72F6EC3A5BCF9E",
   "proposals": [
     {
       "proposal_id": "SEMPROP_13FDB50154F3B0A3FD01",
@@ -38,7 +38,7 @@
       "note": "RSImageProducer is the conservative classic-client name for this BufferedImage-backed framebuffer producer; exact v308 behavior is primary authority."
     },
     {
-      "proposal_id": "SEMPROP_1E805F3477EE45A54E02",
+      "proposal_id": "SEMPROP_2E7F9DF4A56DB26739EB",
       "target_kind": "class",
       "stable_id": "CLIENT_CLASS_000497",
       "owner_logical_id": "CLIENT_CLASS_000497",
@@ -49,23 +49,23 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "TextDrawingArea",
+      "proposed_name": "RSFont",
       "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_glyph_storage",
-          "detail": "rs/l/h stores per-glyph byte masks plus width/height/offset/advance arrays decoded from archive font data."
+          "family": "exact_parallel_font_set",
+          "detail": "Client constructs rs/l/h instances for p11_full, p12_full, b12_full and q8_full alongside a separate rs/l/K font set built from p11_full/p12_full/b12_full; this is the client's newer parallel font engine rather than the classic TextDrawingArea slot."
         },
         {
-          "family": "exact_text_surface",
-          "detail": "The class measures strings and exposes numerous left/center/right, shadowed, alpha and effect-oriented text drawing methods that write through DrawingArea."
+          "family": "exact_rich_text_surface",
+          "detail": "rs/l/h owns glyph masks/metrics plus static Sprite[] icon support and a substantially richer markup/effect text API, including icon-aware width/drawing paths and formatted/tagged rendering."
         },
         {
-          "family": "exact_classic_shape",
-          "detail": "Its archive constructors and glyph-mask layout match the classic client TextDrawingArea responsibility."
+          "family": "historical_lineage_crosscheck",
+          "detail": "Public 317-derived clients commonly load classic TextDrawingArea fonts and a second RSFont set side by side from the same p11_full/p12_full/b12_full/q8_full resources; the exact v308 construction pattern matches that split."
         }
       ],
-      "note": "TextDrawingArea preserves the exact classic font/glyph renderer role; this remains a semantic/historical recovery name."
+      "note": "RSFont is the conservative historical/semantic name for v308's newer rich-text/icon-aware font engine, distinct from the parallel classic TextDrawingArea implementation."
     },
     {
       "proposal_id": "SEMPROP_68CA8E4796A23BB38A92",
@@ -156,6 +156,40 @@
         }
       ],
       "note": "IndexedImage is fixed by byte-indexed pixels, integer palette, archive/index.dat decoding and texture/mask consumers."
+    },
+    {
+      "proposal_id": "SEMPROP_C86B4B7AF247C018BDD3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000360",
+      "owner_logical_id": "CLIENT_CLASS_000360",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/K",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TextDrawingArea",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_classic_field_shape",
+          "detail": "rs/l/K stores the canonical classic font state: 256 glyph byte masks, five parallel metric/offset/advance arrays, Random strike-through/effect state and one base-character-height integer."
+        },
+        {
+          "family": "exact_classic_archive_decode",
+          "detail": "Its constructor (boolean, String, StreamLoader) reads <font>.dat and index.dat, advances the index stream by the font header offset and decodes all 256 glyph masks/metrics in the classic TextDrawingArea layout."
+        },
+        {
+          "family": "exact_client_role",
+          "detail": "Client constructs rs/l/K for p11_full, p12_full and b12_full, passes an rs/l/K[] directly into RSInterface loading, and uses the instances for classic chat/interface string measurement and drawing."
+        },
+        {
+          "family": "historical_lineage_crosscheck",
+          "detail": "Public classic TextDrawingArea source has the same Random field, 256 glyph-mask arrays, six classic metric/advance arrays and identical p11_full/p12_full/b12_full archive construction pattern."
+        }
+      ],
+      "note": "TextDrawingArea is fixed by the exact classic glyph-array/Random/archive-loader shape and by Client's use of this font set for RSInterface and classic UI/chat rendering."
     },
     {
       "proposal_id": "SEMPROP_E1AFD708F6516975885A",
