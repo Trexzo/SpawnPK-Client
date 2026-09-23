@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/x/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Stream",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends R25 NodeSub and owns byte[] payload, byte offset/bit-position state, dozens of primitive/string/byte-array read-write transforms, RSA via BigInteger and an attached ISAAC generator."
+        },
+        {
+          "family": "exact_dependency_role",
+          "detail": "All classic definition decoders in R28 consume this type; opcode write adds the next ISAAC value before storing the byte."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Classic 317 Stream has the same NodeSub inheritance, buffer/currentOffset/bitPosition layout, RSA transform and ISAAC-backed opcode write surface."
+        }
+      ],
+      "note": "Stream follows the exact classic client stream/buffer architecture."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/q/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IsaacCipher",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_algorithm_role",
+          "detail": "Class owns two 256-int arrays plus ISAAC accumulator/counter state and emits one pseudorandom int per call."
+        },
+        {
+          "family": "exact_algorithm_constants",
+          "detail": "Initialization uses the golden-ratio constant -1640531527 and the standard ISAAC shift/mix sequence; generation uses the canonical 13,6,2,16 shifts."
+        },
+        {
+          "family": "exact_dependency_role",
+          "detail": "Stream holds this type and adds its next value to outgoing opcodes."
+        }
+      ],
+      "note": "IsaacCipher is fixed by the standard ISAAC algorithm and packet-opcode usage."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/x/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "StreamLoader",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class parses an archive header through Stream, supports GZIP or BZip2 whole-archive decompression, stores per-entry name hashes/sizes/offsets and retrieves entries by uppercased name hash."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Classic StreamLoader has the same archive arrays, hash*61 name lookup, constructor over archive bytes and getDataForName behavior."
+        }
+      ],
+      "note": "StreamLoader follows the exact classic archive-loader structure."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/x/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BZip2Decompressor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_algorithm_role",
+          "detail": "Static decompressor operates over one shared rs/x/b state object and implements BZip2 bit/Huffman/block decode stages."
+        },
+        {
+          "family": "exact_dependency_role",
+          "detail": "StreamLoader invokes this class when packed and unpacked archive lengths differ."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Classic client BZip2Decompressor exposes the same static byte-array decompress entrypoint and shared state-machine organization."
+        }
+      ],
+      "note": "BZip2Decompressor is fixed by exact algorithm and archive-loader use."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/x/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BZip2State",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "State object holds BZip2 input/output positions, 256/257 symbol tables, 16 group flags, selector arrays, six Huffman tables, decode limits/bases/permutations and block counters."
+        },
+        {
+          "family": "exact_dependency_role",
+          "detail": "BZip2Decompressor mutates this object throughout decompression and keeps one static instance."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Layout matches the classic client's dedicated BZip2 decoder state/context object."
+        }
+      ],
+      "note": "BZip2State is the conservative semantic name for the exact decompressor state block."
+    }
+  ],
+  "conflicts": []
+}
