@@ -412,6 +412,63 @@ class DependencyRemapProofTests(unittest.TestCase):
                 row["proof"]["member_transfer_strategies"],
             )
 
+    def test_non_bundled_runtime_superclass_member_is_separate(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            bundled = self._compile_jar(
+                root,
+                "bundled",
+                {
+                    "dep/a.java": (
+                        "package dep; import java.io.*; "
+                        "public class a extends InputStream { "
+                        "public int read() { return -1; } "
+                        "}"
+                    )
+                },
+            )
+            official = self._compile_jar(
+                root,
+                "official",
+                {
+                    "dep/Api.java": (
+                        "package dep; import java.io.*; "
+                        "public class Api extends InputStream { "
+                        "public int read() { return -1; } "
+                        "}"
+                    )
+                },
+            )
+            surface = self._surface(
+                root,
+                [
+                    self._row(
+                        "method",
+                        "dep/a",
+                        "readAllBytes",
+                        "()[B",
+                    )
+                ],
+            )
+
+            report = prove_dependency_remaps(
+                surface,
+                bundled,
+                [official],
+                java_release=9,
+                project_prefixes=("project/",),
+            )
+
+            row = report["member_results"][0]
+            self.assertEqual(
+                row["status"],
+                "external_hierarchy_member",
+            )
+            self.assertIn(
+                "java/io/InputStream",
+                row["proof"]["external_hierarchy_boundaries"],
+            )
+
     def test_non_bundled_platform_owner_is_separate_not_missing_dependency(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
