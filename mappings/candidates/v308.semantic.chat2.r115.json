@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/q/a/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ScriptPacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_handler_contract",
+          "detail": "The abstract class implements Guice Module, owns injected Injector/Client/rs/x/e packet-buffer state, and exposes abstract a() as the per-packet handling entry point."
+        },
+        {
+          "family": "exact_packet_read_helpers",
+          "detail": "Its helper methods read ints, longs and Strings from the injected rs/x/e buffer, including scoped cursor/reset reads used by concrete handler subclasses."
+        },
+        {
+          "family": "exact_dispatch_domain",
+          "detail": "Every concrete instance stored by rs/q/a/a/b is keyed by the framework's exact surviving 'ScriptPacket ID' diagnostics and invoked only after the Client receives the dedicated ScriptPacket dispatch opcode."
+        },
+        {
+          "family": "exact_dependency_injection",
+          "detail": "The registry creates each subclass reflectively, installs it as a Guice Module/instance in a child Injector and stores that injector on the handler before dispatch."
+        }
+      ],
+      "note": "ScriptPacketHandler is fixed by the exact ScriptPacket registry/dispatch domain and the abstract packet-buffer handling contract. The source noun is descriptive but directly anchored to surviving ScriptPacket diagnostics; confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/q/a/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ScriptPacketDispatcher",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_identity",
+          "detail": "The class preserves exact diagnostics 'ScriptPacket ID <id> already in use!' and 'Could not find ScriptPacket ID <id>!', independently fixing the protocol family name."
+        },
+        {
+          "family": "exact_registry",
+          "detail": "Its initialization registers ScriptPacket IDs 1 through 43 into a Map<Integer, ScriptPacketHandler>, using both direct handler classes and live singleton handler instances."
+        },
+        {
+          "family": "exact_instantiation",
+          "detail": "Registration reflectively constructs each handler, creates a Guice child injector that binds/installs the instance, stores that injector on the handler and fails closed on duplicate IDs."
+        },
+        {
+          "family": "exact_client_dispatch",
+          "detail": "Client initialization calls the registry setup method, and the live packet loop handles opcode 250 by reading one integer ScriptPacket ID from rs/x/e then calling this class with Client, buffer and ID."
+        },
+        {
+          "family": "exact_handler_invocation",
+          "detail": "Dispatch looks up the ID, prints the missing-ID diagnostic when absent, otherwise injects the current packet buffer and Client into the handler and invokes its abstract handling entry point."
+        }
+      ],
+      "note": "ScriptPacketDispatcher is fixed by exact surviving ScriptPacket diagnostics, the 1..43 handler registry and direct Client opcode-250 dispatch. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}
