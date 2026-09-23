@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 6,
+  "review_id": "SEMREVIEW_36C5AEB28D03D1D5DBEB",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_13FDB50154F3B0A3FD01",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000397",
+      "owner_logical_id": "CLIENT_CLASS_000397",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RSImageProducer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_backbuffer_role",
+          "detail": "rs/l/e constructs a BufferedImage, obtains its backing DataBufferInt int[] and stores width/height alongside that shared pixel array."
+        },
+        {
+          "family": "exact_drawingarea_binding",
+          "detail": "Its initialization method passes width, height and the backing int[] directly into rs/l/c DrawingArea initialization."
+        },
+        {
+          "family": "exact_awt_blit_role",
+          "detail": "Its graphics method blits the BufferedImage to an AWT Graphics target at supplied coordinates."
+        }
+      ],
+      "note": "RSImageProducer is the conservative classic-client name for this BufferedImage-backed framebuffer producer; exact v308 behavior is primary authority."
+    },
+    {
+      "proposal_id": "SEMPROP_1E805F3477EE45A54E02",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000497",
+      "owner_logical_id": "CLIENT_CLASS_000497",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TextDrawingArea",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_glyph_storage",
+          "detail": "rs/l/h stores per-glyph byte masks plus width/height/offset/advance arrays decoded from archive font data."
+        },
+        {
+          "family": "exact_text_surface",
+          "detail": "The class measures strings and exposes numerous left/center/right, shadowed, alpha and effect-oriented text drawing methods that write through DrawingArea."
+        },
+        {
+          "family": "exact_classic_shape",
+          "detail": "Its archive constructors and glyph-mask layout match the classic client TextDrawingArea responsibility."
+        }
+      ],
+      "note": "TextDrawingArea preserves the exact classic font/glyph renderer role; this remains a semantic/historical recovery name."
+    },
+    {
+      "proposal_id": "SEMPROP_68CA8E4796A23BB38A92",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000354",
+      "owner_logical_id": "CLIENT_CLASS_000354",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/E",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Rasterizer3D",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_triangle_pipeline",
+          "detail": "rs/l/E owns the large triangle rasterization surface: flat, Gouraud and textured triangle entry points plus scanline helpers operating on the shared framebuffer/depth state."
+        },
+        {
+          "family": "exact_texture_palette_state",
+          "detail": "The class owns texture image arrays, texture caches, HSL/RGB palette state, brightness transforms and average texture colors."
+        },
+        {
+          "family": "exact_projection_math",
+          "detail": "It also owns sine/cosine and reciprocal-style lookup tables consumed by Scene/Model projection and triangle drawing."
+        }
+      ],
+      "note": "Rasterizer3D is the conservative semantic name for the textured/Gouraud triangle engine and its texture/palette/projection state."
+    },
+    {
+      "proposal_id": "SEMPROP_82AFD0C6ED925B0F8AE8",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000355",
+      "owner_logical_id": "CLIENT_CLASS_000355",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/F",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Sprite",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_sprite_storage",
+          "detail": "rs/l/F owns image dimensions, offsets and an int[] ARGB/RGB pixel array, with constructors from archive entries, byte arrays, AWT Image objects and named image resources."
+        },
+        {
+          "family": "exact_sprite_render_role",
+          "detail": "Its methods clip, transform, scale, alpha-blend, rotate and draw the pixel array into the shared DrawingArea framebuffer."
+        },
+        {
+          "family": "exact_mask_interop",
+          "detail": "It can draw using rs/l/a IndexedImage as a mask, directly linking the full-color Sprite and paletted IndexedImage layers."
+        }
+      ],
+      "note": "Sprite is fixed by the full-color image storage and comprehensive clipped/transformed sprite drawing surface."
+    },
+    {
+      "proposal_id": "SEMPROP_A62667CD04100ED35E9E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000363",
+      "owner_logical_id": "CLIENT_CLASS_000363",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IndexedImage",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_archive_decode_role",
+          "detail": "rs/l/a loads sprite-index data from an archive entry plus index.dat, decoding a byte-indexed pixel array, integer palette, dimensions, offsets and storage order."
+        },
+        {
+          "family": "exact_palette_render_role",
+          "detail": "Drawing methods clip against rs/l/c DrawingArea bounds and copy palette-selected colors into the shared pixel buffer while treating zero palette indices as transparent."
+        },
+        {
+          "family": "exact_texture_consumer",
+          "detail": "rs/l/E Rasterizer3D stores rs/l/a[] as its texture-image source set, matching the indexed/paletted image role."
+        }
+      ],
+      "note": "IndexedImage is fixed by byte-indexed pixels, integer palette, archive/index.dat decoding and texture/mask consumers."
+    },
+    {
+      "proposal_id": "SEMPROP_E1AFD708F6516975885A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000383",
+      "owner_logical_id": "CLIENT_CLASS_000383",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DrawingArea",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_framebuffer_role",
+          "detail": "rs/l/c owns the global int[] pixel framebuffer plus float[] depth buffer, width/height and clip-bound state; initialization binds caller-supplied pixel/depth arrays."
+        },
+        {
+          "family": "exact_2d_primitive_role",
+          "detail": "Its methods clear and clip the buffer and draw/fill rectangles, lines and alpha-blended 2D primitives directly into the framebuffer."
+        },
+        {
+          "family": "exact_font_hierarchy",
+          "detail": "rs/l/h TextDrawingArea extends rs/l/c directly and renders glyph masks into the same pixel buffer, fixing rs/l/c as the shared classic DrawingArea layer."
+        }
+      ],
+      "note": "DrawingArea preserves the classic semantic identity of the shared 2D framebuffer, clipping and primitive-drawing layer."
+    }
+  ],
+  "unresolved": []
+}
