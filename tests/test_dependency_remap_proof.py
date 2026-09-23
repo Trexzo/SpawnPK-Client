@@ -423,6 +423,178 @@ class DependencyRemapProofTests(unittest.TestCase):
                 0,
             )
 
+    def test_package_api_topology_maps_when_full_method_shape_drifted(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            bundled = self._compile_jar(
+                root,
+                "bundled",
+                {
+                    "old/pkg/s1.java": (
+                        "package old.pkg; public class s1 { "
+                        "public int one() { return 1; } }"
+                    ),
+                    "old/pkg/s2.java": (
+                        "package old.pkg; public class s2 { "
+                        "public long two() { return 2L; } }"
+                    ),
+                    "old/pkg/s3.java": (
+                        "package old.pkg; public class s3 { "
+                        "public double three() { return 3.0; } }"
+                    ),
+                    "old/pkg/x.java": (
+                        "package old.pkg; public class x { "
+                        "public int marker; "
+                        "public int a(int value) { return value; } "
+                        "public Object helper(int value) { return null; } "
+                        "}"
+                    ),
+                },
+            )
+            official = self._compile_jar(
+                root,
+                "official",
+                {
+                    "target/pkg/SupportOne.java": (
+                        "package target.pkg; public class SupportOne { "
+                        "public int one() { return 1; } }"
+                    ),
+                    "target/pkg/SupportTwo.java": (
+                        "package target.pkg; public class SupportTwo { "
+                        "public long two() { return 2L; } }"
+                    ),
+                    "target/pkg/SupportThree.java": (
+                        "package target.pkg; public class SupportThree { "
+                        "public double three() { return 3.0; } }"
+                    ),
+                    "target/pkg/Api.java": (
+                        "package target.pkg; public class Api { "
+                        "public int marker; "
+                        "public int real(int value) { return value; } "
+                        "public Object helper(long value) { return null; } "
+                        "}"
+                    ),
+                },
+            )
+            surface = self._surface(
+                root,
+                [
+                    self._row(
+                        "method",
+                        "old/pkg/x",
+                        "a",
+                        "(I)I",
+                        4,
+                    )
+                ],
+            )
+
+            report = prove_dependency_remaps(
+                surface,
+                bundled,
+                [official],
+                java_release=9,
+                project_prefixes=("project/",),
+            )
+
+            row = report["member_results"][0]
+            self.assertEqual(row["status"], "accepted_remap")
+            self.assertEqual(row["new_owner"], "target/pkg/Api")
+            self.assertEqual(row["new_name"], "real")
+            self.assertIn(
+                "package_api_topology_unique_descriptor_member",
+                row["proof"]["member_transfer_strategies"],
+            )
+            class_row = report["referenced_class_mappings"][0]
+            self.assertEqual(
+                class_row["strategy"],
+                "package_api_topology",
+            )
+            self.assertEqual(
+                report["summary"]["package_api_topology_count"],
+                1,
+            )
+
+    def test_package_api_topology_known_super_mismatch_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            bundled = self._compile_jar(
+                root,
+                "bundled",
+                {
+                    "old/pkg/s1.java": (
+                        "package old.pkg; public class s1 { "
+                        "public int one() { return 1; } }"
+                    ),
+                    "old/pkg/s2.java": (
+                        "package old.pkg; public class s2 { "
+                        "public long two() { return 2L; } }"
+                    ),
+                    "old/pkg/s3.java": (
+                        "package old.pkg; public class s3 { "
+                        "public double three() { return 3.0; } }"
+                    ),
+                    "old/pkg/x.java": (
+                        "package old.pkg; "
+                        "public class x extends java.util.ArrayList<Object> { "
+                        "public Object helper(int value) { return null; } "
+                        "}"
+                    ),
+                },
+            )
+            official = self._compile_jar(
+                root,
+                "official",
+                {
+                    "target/pkg/SupportOne.java": (
+                        "package target.pkg; public class SupportOne { "
+                        "public int one() { return 1; } }"
+                    ),
+                    "target/pkg/SupportTwo.java": (
+                        "package target.pkg; public class SupportTwo { "
+                        "public long two() { return 2L; } }"
+                    ),
+                    "target/pkg/SupportThree.java": (
+                        "package target.pkg; public class SupportThree { "
+                        "public double three() { return 3.0; } }"
+                    ),
+                    "target/pkg/Api.java": (
+                        "package target.pkg; public class Api { "
+                        "public Object helper(long value) { return null; } "
+                        "}"
+                    ),
+                },
+            )
+            surface = self._surface(
+                root,
+                [
+                    self._row(
+                        "method",
+                        "old/pkg/x",
+                        "helper",
+                        "(I)Ljava/lang/Object;",
+                    )
+                ],
+            )
+
+            report = prove_dependency_remaps(
+                surface,
+                bundled,
+                [official],
+                java_release=9,
+                project_prefixes=("project/",),
+            )
+
+            row = report["member_results"][0]
+            self.assertEqual(
+                row["status"],
+                "bundled_unresolved_class",
+            )
+            self.assertEqual(
+                report["summary"]["package_api_topology_count"],
+                0,
+            )
+
     def test_unique_structural_class_and_member_position_recovery(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
