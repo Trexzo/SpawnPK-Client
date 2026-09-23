@@ -141,6 +141,25 @@ class SourceReadinessTests(unittest.TestCase):
                 ["Outer"],
             )
 
+
+    def test_text_block_braces_do_not_change_top_level_depth(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "Outer.java").write_text(
+                'public class Outer {\n'
+                '    String json = """\n'
+                '        { "nested": "} not structural" }\n'
+                '        """;\n'
+                '    public interface Nested {}\n'
+                '}\n',
+                encoding="utf-8",
+            )
+            report = audit_source_workspace(_manifest(root), root)
+            self.assertTrue(report["summary"]["static_readiness_pass"])
+            self.assertEqual(report["issues"], [])
+            self.assertEqual(report["files"][0]["public_types"], ["Outer"])
+            self.assertEqual(report["files"][0]["top_level_types"], ["Outer"])
+
     def test_package_private_outer_with_public_nested_type_has_no_filename_error(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
