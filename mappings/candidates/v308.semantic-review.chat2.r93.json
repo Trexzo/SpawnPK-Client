@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_161E3E5F88A625FE06BD",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_35C789B8B2F6DC35CA17",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000317",
+      "owner_logical_id": "CLIENT_CLASS_000317",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/k/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SyncMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_identity",
+          "detail": "The enum preserves exactly OFF, ON and ADAPTIVE."
+        },
+        {
+          "family": "exact_runtime_consumer",
+          "detail": "The SpawnPK GPU settings holder owns this enum as its synchronization mode, and R87 GpuRenderer switches over its ordinal to derive the active frame/swap synchronization behavior."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "RuneLite GpuPluginConfig preserves a nested enum literally named SyncMode with the identical OFF, ON and ADAPTIVE constants, consumed by the GPU plugin's vsync configuration."
+        }
+      ],
+      "note": "SyncMode is corroborated by exact-v308 enum values/consumers and a matching RuneLite GPU identifier. Exact v308 remains the semantic authority."
+    },
+    {
+      "proposal_id": "SEMPROP_931819A05B390EA9B786",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000315",
+      "owner_logical_id": "CLIENT_CLASS_000315",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/k/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AntiAliasingMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_identity",
+          "detail": "The enum preserves exactly DISABLED, MSAA_2, MSAA_4, MSAA_8 and MSAA_16, with display strings Disabled / MSAA x2 / x4 / x8 / x16 and sample counts 0 / 2 / 4 / 8 / 16."
+        },
+        {
+          "family": "exact_value_contract",
+          "detail": "The enum stores one display String and one int sample count; toString() returns the display label and a() returns the sample count."
+        },
+        {
+          "family": "exact_runtime_consumer",
+          "detail": "The SpawnPK GPU settings holder defaults to DISABLED, while R87 GpuRenderer consumes the selected enum, compares against DISABLED, calls its sample-count accessor, clamps against GL_MAX_SAMPLES and logs the surviving diagnostic \"AA samples: {}, max samples: {}, forced samples: {}\"."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "RuneLite preserves net.runelite.client.plugins.gpu.config.AntiAliasingMode with the same constants, display strings, sample counts, toString behavior and samples accessor."
+        }
+      ],
+      "note": "AntiAliasingMode is corroborated by exact-v308 enum values/consumers and a matching RuneLite GPU identifier. Exact v308 remains the semantic authority."
+    },
+    {
+      "proposal_id": "SEMPROP_B861CE1199E8491D47B7",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000316",
+      "owner_logical_id": "CLIENT_CLASS_000316",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/k/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorBlindMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_identity",
+          "detail": "The enum preserves exactly NONE, PROTANOPE, DEUTERANOPE and TRITANOPE."
+        },
+        {
+          "family": "exact_runtime_consumer",
+          "detail": "The SpawnPK GPU settings holder defaults to the first value and R87 GpuRenderer sends the selected enum ordinal to its color-blindness shader uniform in both the primary draw path and related GPU program setup."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "RuneLite preserves net.runelite.client.plugins.gpu.config.ColorBlindMode with the identical NONE / PROTANOPE / DEUTERANOPE / TRITANOPE enum surface and the GPU config exposes it as colorBlindMode."
+        }
+      ],
+      "note": "ColorBlindMode is corroborated by exact-v308 enum values/consumers and a matching RuneLite GPU identifier. Exact v308 remains the semantic authority."
+    }
+  ],
+  "unresolved": []
+}
