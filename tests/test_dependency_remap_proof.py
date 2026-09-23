@@ -215,12 +215,12 @@ class DependencyRemapProofTests(unittest.TestCase):
                 {
                     "dep/b.java": (
                         "package dep; public interface b { "
-                        "void a(); int marker(); "
+                        "void a(); int leftMarker(); "
                         "}"
                     ),
                     "dep/c.java": (
                         "package dep; public interface c { "
-                        "void a(); long marker(); "
+                        "void a(); long rightMarker(); "
                         "}"
                     ),
                     "dep/a.java": (
@@ -234,12 +234,12 @@ class DependencyRemapProofTests(unittest.TestCase):
                 {
                     "dep/BaseOne.java": (
                         "package dep; public interface BaseOne { "
-                        "void ping(); int marker(); "
+                        "void ping(); int leftMarker(); "
                         "}"
                     ),
                     "dep/BaseTwo.java": (
                         "package dep; public interface BaseTwo { "
-                        "void ping(); long marker(); "
+                        "void ping(); long rightMarker(); "
                         "}"
                     ),
                     "dep/Api.java": (
@@ -286,12 +286,12 @@ class DependencyRemapProofTests(unittest.TestCase):
                 {
                     "dep/b.java": (
                         "package dep; public interface b { "
-                        "void a(); int marker(); "
+                        "void a(); int leftMarker(); "
                         "}"
                     ),
                     "dep/c.java": (
                         "package dep; public interface c { "
-                        "void a(); long marker(); "
+                        "void a(); long rightMarker(); "
                         "}"
                     ),
                     "dep/a.java": (
@@ -305,12 +305,12 @@ class DependencyRemapProofTests(unittest.TestCase):
                 {
                     "dep/BaseOne.java": (
                         "package dep; public interface BaseOne { "
-                        "void ping(); int marker(); "
+                        "void ping(); int leftMarker(); "
                         "}"
                     ),
                     "dep/BaseTwo.java": (
                         "package dep; public interface BaseTwo { "
-                        "void pong(); long marker(); "
+                        "void pong(); long rightMarker(); "
                         "}"
                     ),
                     "dep/Api.java": (
