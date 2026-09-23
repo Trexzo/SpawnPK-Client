@@ -84,6 +84,25 @@ class ReadableBuildTests(unittest.TestCase):
             ],
         )
 
+
+    def test_manifest_publishes_member_source_safety_accounting(self):
+        namespace = dict(NAMESPACE)
+        namespace["summary"] = dict(NAMESPACE["summary"])
+        namespace["summary"]["source_safety_member_remaps"] = 3
+
+        manifest = _manifest(
+            namespace=namespace,
+            status="complete",
+            output_sha256="b" * 64,
+            verification_pass=True,
+            blocker=None,
+        )
+
+        self.assertEqual(
+            manifest["semantic_summary"]["source_safety_member_remaps"],
+            3,
+        )
+
     def _source(self, root: Path) -> Path:
         path = root / "client.jar"
         path.write_bytes(b"jar")
