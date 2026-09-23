@@ -56,6 +56,8 @@ def index_jar(path: Path) -> dict:
                         "fields": c.fields,
                         "methods": c.methods,
                         "attributes": c.attributes,
+                        "inner_outer_name": c.inner_outer_name,
+                        "enclosing_class_name": c.enclosing_class_name,
                         "literal_strings": c.literal_strings,
                         "numeric_constants": c.numeric_constants,
                         "structural_sha256": c.structural_sha256(),
