@@ -206,6 +206,146 @@ class DependencyRemapProofTests(unittest.TestCase):
                 1,
             )
 
+    def test_multiple_interface_paths_accept_only_when_they_converge(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            bundled = self._compile_jar(
+                root,
+                "bundled",
+                {
+                    "dep/b.java": (
+                        "package dep; public interface b { "
+                        "void a(); int marker(); "
+                        "}"
+                    ),
+                    "dep/c.java": (
+                        "package dep; public interface c { "
+                        "void a(); long marker(); "
+                        "}"
+                    ),
+                    "dep/a.java": (
+                        "package dep; public interface a extends b, c {}"
+                    ),
+                },
+            )
+            official = self._compile_jar(
+                root,
+                "official",
+                {
+                    "dep/BaseOne.java": (
+                        "package dep; public interface BaseOne { "
+                        "void ping(); int marker(); "
+                        "}"
+                    ),
+                    "dep/BaseTwo.java": (
+                        "package dep; public interface BaseTwo { "
+                        "void ping(); long marker(); "
+                        "}"
+                    ),
+                    "dep/Api.java": (
+                        "package dep; public interface Api "
+                        "extends BaseOne, BaseTwo {}"
+                    ),
+                },
+            )
+            surface = self._surface(
+                root,
+                [
+                    self._row(
+                        "interface_method",
+                        "dep/a",
+                        "a",
+                        "()V",
+                    )
+                ],
+            )
+
+            report = prove_dependency_remaps(
+                surface,
+                bundled,
+                [official],
+                java_release=9,
+                project_prefixes=("project/",),
+            )
+
+            row = report["member_results"][0]
+            self.assertEqual(row["status"], "accepted_remap")
+            self.assertEqual(row["new_owner"], "dep/Api")
+            self.assertEqual(row["new_name"], "ping")
+            self.assertEqual(
+                row["proof"]["mapped_declaration_count"],
+                2,
+            )
+
+    def test_multiple_interface_paths_fail_when_targets_diverge(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            bundled = self._compile_jar(
+                root,
+                "bundled",
+                {
+                    "dep/b.java": (
+                        "package dep; public interface b { "
+                        "void a(); int marker(); "
+                        "}"
+                    ),
+                    "dep/c.java": (
+                        "package dep; public interface c { "
+                        "void a(); long marker(); "
+                        "}"
+                    ),
+                    "dep/a.java": (
+                        "package dep; public interface a extends b, c {}"
+                    ),
+                },
+            )
+            official = self._compile_jar(
+                root,
+                "official",
+                {
+                    "dep/BaseOne.java": (
+                        "package dep; public interface BaseOne { "
+                        "void ping(); int marker(); "
+                        "}"
+                    ),
+                    "dep/BaseTwo.java": (
+                        "package dep; public interface BaseTwo { "
+                        "void pong(); long marker(); "
+                        "}"
+                    ),
+                    "dep/Api.java": (
+                        "package dep; public interface Api "
+                        "extends BaseOne, BaseTwo {}"
+                    ),
+                },
+            )
+            surface = self._surface(
+                root,
+                [
+                    self._row(
+                        "interface_method",
+                        "dep/a",
+                        "a",
+                        "()V",
+                    )
+                ],
+            )
+
+            report = prove_dependency_remaps(
+                surface,
+                bundled,
+                [official],
+                java_release=9,
+                project_prefixes=("project/",),
+            )
+
+            row = report["member_results"][0]
+            self.assertEqual(
+                row["status"],
+                "bundled_member_ambiguous",
+            )
+            self.assertEqual(row["new_name"], None)
+
     def test_constructor_uses_mapped_descriptor_not_position_guess(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
