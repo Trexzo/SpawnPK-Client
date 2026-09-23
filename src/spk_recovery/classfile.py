@@ -75,6 +75,7 @@ class ParsedClass:
     methods: list[dict[str, Any]]
     attributes: list[str]
     inner_outer_name: str | None
+    inner_simple_name: str | None
     enclosing_class_name: str | None
 
     def structural_payload(self) -> dict[str, Any]:
@@ -177,6 +178,7 @@ def parse_class(data: bytes) -> ParsedClass:
 
     class_attrs: list[str] = []
     inner_outer_name: str | None = None
+    inner_simple_name: str | None = None
     enclosing_class_name: str | None = None
     for _ in range(_u2(f)):
         attr_name = utf8(_u2(f))
@@ -188,11 +190,15 @@ def parse_class(data: bytes) -> ParsedClass:
             for _ in range(_u2(af)):
                 inner_index = _u2(af)
                 outer_index = _u2(af)
-                _inner_name_index = _u2(af)
+                inner_name_index = _u2(af)
                 _inner_access = _u2(af)
                 inner_name = class_name(inner_index)
-                if inner_name == (class_name(this_class) or "") and outer_index:
-                    inner_outer_name = class_name(outer_index)
+                if inner_name == (class_name(this_class) or ""):
+                    inner_simple_name = (
+                        utf8(inner_name_index) if inner_name_index else None
+                    )
+                    if outer_index:
+                        inner_outer_name = class_name(outer_index)
         elif attr_name == "EnclosingMethod" and len(payload) == 4:
             af = io.BytesIO(payload)
             enclosing_class_name = class_name(_u2(af))
@@ -226,5 +232,6 @@ def parse_class(data: bytes) -> ParsedClass:
         methods=methods,
         attributes=class_attrs,
         inner_outer_name=inner_outer_name,
+        inner_simple_name=inner_simple_name,
         enclosing_class_name=enclosing_class_name,
     )
