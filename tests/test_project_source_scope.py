@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path
 from types import SimpleNamespace
 import tempfile
@@ -164,6 +165,240 @@ class ProjectScopedSourceWorkspaceTests(unittest.TestCase):
                     out_dir=root / "out",
                     project_only=True,
                 )
+
+
+class ResumableProjectSourceWorkspaceTests(unittest.TestCase):
+    def _readable(self, root: Path) -> tuple[Path, dict]:
+        jar = root / "readable.jar"
+        with zipfile.ZipFile(jar, "w") as z:
+            z.writestr("rs/A.class", b"a")
+            z.writestr("rs/B.class", b"b")
+            z.writestr("dep/C.class", b"c")
+        manifest = {
+            "schema_version": 1,
+            "kind": "readable_client_build_manifest",
+            "status": "complete",
+            "verification_pass": True,
+            "output_sha256": _sha(jar),
+            "source_sha256": "a" * 64,
+            "namespace_id": "SEMNS_TEST",
+            "class_plan_digest": "b" * 64,
+            "member_plan_digest": "c" * 64,
+            "build_id": "v308",
+            "project_source_prefixes": ["rs/"],
+        }
+        return jar, manifest
+
+    def _fake_decompiler(self, jar: Path):
+        def fake(*args, **kwargs):
+            selected = kwargs["input_class_files"]
+            self.assertEqual(len(selected), 1)
+            class_name = selected[0].stem
+            out = kwargs["out_dir"]
+            (out / "rs").mkdir(parents=True, exist_ok=True)
+            (out / "rs" / f"{class_name}.java").write_text(
+                f"package rs; public class {class_name} {{}}\n",
+                encoding="utf-8",
+            )
+            return {
+                "schema_version": 1,
+                "kind": "decompiler_result",
+                "engine": "procyon",
+                "input_sha256": _sha(jar),
+                "decompiler_sha256": kwargs["expected_decompiler_sha256"],
+                "java_file_count": 1,
+                "output_directory": str(out),
+                "input_mode": "class_files",
+                "selected_class_file_count": 1,
+                "batch_count": 1,
+                "stdout": "",
+                "stderr": "",
+            }
+        return fake
+
+    def test_resume_advances_then_emits_final_manifest(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar, manifest = self._readable(root)
+            tool = root / "procyon.jar"
+            tool.write_bytes(b"tool")
+            out = root / "out"
+            with patch(
+                "spk_recovery.source_workspace.run_decompiler",
+                side_effect=self._fake_decompiler(jar),
+            ) as run:
+                first = build_source_workspace(
+                    manifest,
+                    jar,
+                    tool,
+                    expected_decompiler_sha256=_sha(tool),
+                    engine="procyon",
+                    out_dir=out,
+                    project_only=True,
+                    resume_project_only=True,
+                    project_batch_size=1,
+                    max_batches_per_run=1,
+                )
+                self.assertEqual(first["kind"], "project_source_resume_checkpoint")
+                self.assertEqual(first["status"], "incomplete")
+                self.assertEqual(len(first["completed_batches"]), 1)
+                self.assertFalse((out / "recovered-source-manifest.json").exists())
+
+                final = build_source_workspace(
+                    manifest,
+                    jar,
+                    tool,
+                    expected_decompiler_sha256=_sha(tool),
+                    engine="procyon",
+                    out_dir=out,
+                    project_only=True,
+                    resume_project_only=True,
+                    project_batch_size=1,
+                    max_batches_per_run=1,
+                )
+
+            self.assertEqual(run.call_count, 2)
+            self.assertEqual(final["kind"], "recovered_source_workspace_manifest")
+            self.assertEqual(final["java_file_count"], 2)
+            self.assertEqual(final["selected_class_count"], 2)
+            checkpoint = json.loads(
+                (out / "project-decompile-checkpoint.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(checkpoint["status"], "complete")
+            self.assertEqual(len(checkpoint["completed_batches"]), 2)
+
+    def test_resume_rejects_source_tree_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar, manifest = self._readable(root)
+            tool = root / "procyon.jar"
+            tool.write_bytes(b"tool")
+            out = root / "out"
+            with patch(
+                "spk_recovery.source_workspace.run_decompiler",
+                side_effect=self._fake_decompiler(jar),
+            ):
+                build_source_workspace(
+                    manifest,
+                    jar,
+                    tool,
+                    expected_decompiler_sha256=_sha(tool),
+                    engine="procyon",
+                    out_dir=out,
+                    project_only=True,
+                    resume_project_only=True,
+                    project_batch_size=1,
+                    max_batches_per_run=1,
+                )
+                (out / "src" / "rs" / "A.java").write_text(
+                    "package rs; public class A { int drift; }\n",
+                    encoding="utf-8",
+                )
+                with self.assertRaisesRegex(SourceWorkspaceError, "source tree has drifted"):
+                    build_source_workspace(
+                        manifest,
+                        jar,
+                        tool,
+                        expected_decompiler_sha256=_sha(tool),
+                        engine="procyon",
+                        out_dir=out,
+                        project_only=True,
+                        resume_project_only=True,
+                        project_batch_size=1,
+                        max_batches_per_run=1,
+                    )
+
+    def test_resume_rejects_batch_policy_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar, manifest = self._readable(root)
+            tool = root / "procyon.jar"
+            tool.write_bytes(b"tool")
+            out = root / "out"
+            with patch(
+                "spk_recovery.source_workspace.run_decompiler",
+                side_effect=self._fake_decompiler(jar),
+            ):
+                build_source_workspace(
+                    manifest,
+                    jar,
+                    tool,
+                    expected_decompiler_sha256=_sha(tool),
+                    engine="procyon",
+                    out_dir=out,
+                    project_only=True,
+                    resume_project_only=True,
+                    project_batch_size=1,
+                    max_batches_per_run=1,
+                )
+                with self.assertRaisesRegex(SourceWorkspaceError, "authority or batch policy"):
+                    build_source_workspace(
+                        manifest,
+                        jar,
+                        tool,
+                        expected_decompiler_sha256=_sha(tool),
+                        engine="procyon",
+                        out_dir=out,
+                        project_only=True,
+                        resume_project_only=True,
+                        project_batch_size=2,
+                        max_batches_per_run=1,
+                    )
+
+    def test_resume_rejects_conflicting_duplicate_java_output(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar, manifest = self._readable(root)
+            tool = root / "procyon.jar"
+            tool.write_bytes(b"tool")
+            out = root / "out"
+            calls = 0
+
+            def fake(*args, **kwargs):
+                nonlocal calls
+                calls += 1
+                target = kwargs["out_dir"] / "rs" / "Same.java"
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(
+                    f"package rs; public class Same {{ int v = {calls}; }}\n",
+                    encoding="utf-8",
+                )
+                return {
+                    "schema_version": 1,
+                    "kind": "decompiler_result",
+                    "engine": "procyon",
+                    "input_sha256": _sha(jar),
+                    "decompiler_sha256": kwargs["expected_decompiler_sha256"],
+                    "java_file_count": 1,
+                    "output_directory": str(kwargs["out_dir"]),
+                    "input_mode": "class_files",
+                    "selected_class_file_count": 1,
+                    "batch_count": 1,
+                    "stdout": "",
+                    "stderr": "",
+                }
+
+            with patch(
+                "spk_recovery.source_workspace.run_decompiler",
+                side_effect=fake,
+            ):
+                with self.assertRaisesRegex(SourceWorkspaceError, "conflicting Java output"):
+                    build_source_workspace(
+                        manifest,
+                        jar,
+                        tool,
+                        expected_decompiler_sha256=_sha(tool),
+                        engine="procyon",
+                        out_dir=out,
+                        project_only=True,
+                        resume_project_only=True,
+                        project_batch_size=1,
+                        max_batches_per_run=2,
+                    )
+            checkpoint = json.loads(
+                (out / "project-decompile-checkpoint.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(len(checkpoint["completed_batches"]), 1)
 
 
 class SelectiveDecompilerTests(unittest.TestCase):
