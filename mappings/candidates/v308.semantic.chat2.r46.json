@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/u/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AnimationTransformType",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_keyframe_decode_role",
+          "detail": "KeyframeAnimation decodes one rs/u/c value per curve record, uses rs/u/c.b() as the channel-array width, and routes the record either to the skeletal/bone transform matrix or the legacy Skeleton transform array according to this value."
+        },
+        {
+          "family": "exact_dimension_shape",
+          "detail": "The six instances expose dimensions 0, 9, 3, 6, 1 and 3; the nine-channel instance is exactly the rotation/translation/scale bone transform family and the one-channel instance marks transparency/alpha modification."
+        },
+        {
+          "family": "cross_source_structural_match",
+          "detail": "A public client implementation containing the same \"Not a keyframe file!\" format has an exact six-instance matching class named AnimTransform with NULL, VERTEX, COLOUR and TRANSPARENCY roles and the same dimension counts."
+        }
+      ],
+      "note": "AnimationTransformType is a conservative semantic recovery name for the exact v308 role; public deobfuscated client code is corroborating evidence only, while exact v308 bytecode remains authoritative."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/u/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AnimationChannel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_component_index_role",
+          "detail": "KeyframeAnimation decodes one rs/u/e value per curve and uses rs/u/e.c() solely as the component index into the selected transform-type channel array."
+        },
+        {
+          "family": "exact_channel_shape",
+          "detail": "The type has 17 encoded instances whose component values include rotation indices 0-2, translation 3-5, scale 6-8, transparency 0 and additional non-bone property channels."
+        },
+        {
+          "family": "cross_source_structural_match",
+          "detail": "The same keyframe format in a public client source exposes the exact 17-instance table as AnimationChannel with ROTATE_X/Y/Z, TRANSLATE_X/Y/Z, SCALE_X/Y/Z, TRANSPARENCY and additional property channels."
+        }
+      ],
+      "note": "AnimationChannel is a conservative semantic recovery name for the exact v308 role; public deobfuscated client code is corroborating evidence only, while exact v308 bytecode remains authoritative."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/u/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InterpolationConstants",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_constant_role",
+          "detail": "rs/u/f contains no instance state or behavior; it defines exactly Math.ulp(1.0F) and twice that value."
+        },
+        {
+          "family": "exact_curve_consumer",
+          "detail": "AnimationCurve uses those two values as epsilon/threshold constants throughout cubic control-point clamping and polynomial root/interpolation comparisons."
+        },
+        {
+          "family": "cross_source_structural_match",
+          "detail": "The matching public keyframe implementation exposes the same two float values in a constants-only helper used by curve interpolation."
+        }
+      ],
+      "note": "InterpolationConstants is a conservative semantic recovery name for the exact v308 role; public deobfuscated client code is corroborating evidence only, while exact v308 bytecode remains authoritative."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/u/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InterpolationPolynomial",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_polynomial_shape",
+          "detail": "rs/u/h stores a float[] coefficient vector and an integer degree/count, evaluates that vector with Horner's method, and can derive the coefficient vector for the polynomial derivative."
+        },
+        {
+          "family": "exact_root_solver_role",
+          "detail": "AnimationCurve constructs rs/u/h while recursively solving interpolation polynomials and passes it into the bracketed root/bisection routine."
+        },
+        {
+          "family": "cross_source_structural_match",
+          "detail": "The matching public keyframe implementation exposes the same coefficient/count wrapper as InterpolationChain and uses it only in the interpolation polynomial root solver."
+        }
+      ],
+      "note": "InterpolationPolynomial is a conservative semantic recovery name for the exact v308 role; public deobfuscated client code is corroborating evidence only, while exact v308 bytecode remains authoritative."
+    }
+  ],
+  "conflicts": []
+}
