@@ -58,6 +58,20 @@ Class package-resource overlap and exact class-name string literals also remain 
 
 These flags acknowledge reviewed risks; they do not create semantic acceptance.
 
+Java-source legality can also require a non-semantic member rename even when no semantic
+name is known. The existing source-safety mode covers both class/package collisions and
+Java-illegal member names:
+
+```powershell
+  --source-safe-fallback `
+  --fallback-name-prefix Recovered_
+```
+
+A member fallback is derived from the stable member ID and carries explicit source-safety
+provenance. It does **not** change canonical semantic state. Any such member still enters
+the ordinary member-safety report and requires the same exact report-bound acceptance
+before bytecode rewriting.
+
 ## Workspace
 
 The readable manifest also carries `project_source_prefixes`: the exact namespace

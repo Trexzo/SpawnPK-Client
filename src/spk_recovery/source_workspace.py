@@ -8,6 +8,10 @@ from typing import Any
 import zipfile
 
 from .decompiler import DecompilerError, run_decompiler, sha256_file
+from .source_normalization import (
+    SourceNormalizationError,
+    normalize_procyon_source,
+)
 
 
 class SourceWorkspaceError(ValueError):
@@ -244,6 +248,20 @@ def build_source_workspace(
     except DecompilerError as exc:
         raise SourceWorkspaceError(str(exc)) from exc
 
+    normalization_report: dict[str, Any] | None = None
+    if str(result.get("engine", "")).lower() == "procyon":
+        try:
+            normalization_report = normalize_procyon_source(
+                source_dir,
+                readable_jar,
+            )
+        except SourceNormalizationError as exc:
+            raise SourceWorkspaceError(str(exc)) from exc
+        _write_json(
+            normalization_report,
+            out_dir / "source-normalization.json",
+        )
+
     tree_sha, java_count, source_bytes = _source_tree_digest(source_dir)
     if java_count != int(result.get("java_file_count", -1)):
         raise SourceWorkspaceError(
@@ -264,6 +282,10 @@ def build_source_workspace(
         "selected_class_count": len(selected_entries) if project_only else None,
         "selected_class_digest": selection_sha,
     }
+    if normalization_report is not None:
+        material["normalization_id"] = normalization_report[
+            "normalization_id"
+        ]
     raw = json.dumps(
         material,
         sort_keys=True,
@@ -294,6 +316,16 @@ def build_source_workspace(
         "project_source_prefixes": project_prefixes,
         "selected_class_count": len(selected_entries) if project_only else None,
         "selected_class_digest": selection_sha,
+        "normalization_id": (
+            normalization_report["normalization_id"]
+            if normalization_report is not None
+            else None
+        ),
+        "normalization_summary": (
+            normalization_report["summary"]
+            if normalization_report is not None
+            else None
+        ),
     }
     _write_json(result, out_dir / "decompiler-result.json")
     _write_json(

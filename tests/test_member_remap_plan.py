@@ -159,5 +159,129 @@ class MemberRemapPlanTests(unittest.TestCase):
             )
 
 
+    def test_keyword_member_fallback_is_opt_in_and_non_semantic(self):
+        classes = _class_lineage()
+        members = _member_lineage()
+        index = _index()
+        members["members"].append(
+            _member("field", "CLIENT_FIELD_000003", "if", "Ljava/util/Map;")
+        )
+        index["classes"]["rs/A.class"]["fields"].append(
+            {"name": "if", "descriptor": "Ljava/util/Map;"}
+        )
+
+        default_plan = build_member_remap_plan(
+            classes, members, index, build_id="v308"
+        )
+        self.assertEqual(default_plan["member_count"], 2)
+
+        plan = build_member_remap_plan(
+            classes,
+            members,
+            index,
+            build_id="v308",
+            source_safe_fallback=True,
+        )
+        row = next(
+            item
+            for item in plan["members"]
+            if item["member_id"] == "CLIENT_FIELD_000003"
+        )
+        self.assertEqual(
+            row["target_name"],
+            "Recovered_CLIENT_FIELD_000003",
+        )
+        self.assertEqual(
+            row["provenance"][0]["kind"],
+            "source_safety",
+        )
+        self.assertEqual(
+            row["provenance"][0]["reason"],
+            "java_reserved_member_name",
+        )
+        self.assertEqual(
+            members["members"][-1]["semantic_status"],
+            "UNKNOWN",
+        )
+        self.assertIsNone(members["members"][-1]["semantic_name"])
+
+    def test_accepted_legal_semantic_target_precedes_keyword_fallback(self):
+        members = _member_lineage()
+        members["members"].append(
+            _member(
+                "field",
+                "CLIENT_FIELD_000003",
+                "if",
+                "Ljava/util/Map;",
+                "lookupTable",
+            )
+        )
+        index = _index()
+        index["classes"]["rs/A.class"]["fields"].append(
+            {"name": "if", "descriptor": "Ljava/util/Map;"}
+        )
+        plan = build_member_remap_plan(
+            _class_lineage(),
+            members,
+            index,
+            build_id="v308",
+            source_safe_fallback=True,
+        )
+        row = next(
+            item
+            for item in plan["members"]
+            if item["member_id"] == "CLIENT_FIELD_000003"
+        )
+        self.assertEqual(row["target_name"], "lookupTable")
+        self.assertNotEqual(
+            row["provenance"][0].get("kind"),
+            "source_safety",
+        )
+
+    def test_accepted_keyword_semantic_target_fails_closed(self):
+        members = _member_lineage()
+        members["members"][0]["semantic_name"] = "if"
+        with self.assertRaises(MemberRemapPlanError):
+            build_member_remap_plan(
+                _class_lineage(),
+                members,
+                _index(),
+                build_id="v308",
+                source_safe_fallback=True,
+            )
+
+    def test_keyword_fallback_collision_fails_closed(self):
+        members = _member_lineage()
+        members["members"].append(
+            _member("field", "CLIENT_FIELD_000003", "if", "Ljava/util/Map;")
+        )
+        members["members"].append(
+            _member(
+                "field",
+                "CLIENT_FIELD_000004",
+                "Recovered_CLIENT_FIELD_000003",
+                "Ljava/lang/Object;",
+            )
+        )
+        index = _index()
+        index["classes"]["rs/A.class"]["fields"].extend(
+            [
+                {"name": "if", "descriptor": "Ljava/util/Map;"},
+                {
+                    "name": "Recovered_CLIENT_FIELD_000003",
+                    "descriptor": "Ljava/lang/Object;",
+                },
+            ]
+        )
+        with self.assertRaises(MemberRemapPlanError):
+            build_member_remap_plan(
+                _class_lineage(),
+                members,
+                index,
+                build_id="v308",
+                source_safe_fallback=True,
+            )
+
+
 if __name__ == "__main__":
     unittest.main()

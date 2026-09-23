@@ -91,3 +91,39 @@ exact dependency capsule.
 
 Whole-archive decompilation remains the default. Project-only mode is currently supported
 only by Procyon and fails closed for other engines.
+
+
+## Procyon source normalization
+
+R8I applies a narrow source-safety normalization after Procyon finishes and before the
+recovered source tree is hash-pinned.
+
+This is **not** semantic naming or manual source repair.
+
+The normalizer currently handles only two exact, proven Procyon output defects:
+
+- a top-level `synthetic class X` pseudo-declaration is rewritten only when the matching
+  readable classfile proves the compiler-generated helper shape: package-private
+  `ACC_SYNTHETIC`, `java/lang/Object`, no interfaces, only synthetic static-final
+  `int[]` fields, and at most one static `<clinit>`. Omitted exact fields are restored
+  as Java-representable `static final int[]` declarations;
+- a standalone string-concatenation expression such as `"value=" + call();` is captured
+  into a deterministic unused `String` local only when it is lexically inside executable
+  brace depth. This preserves evaluation, including any method-call side effects, while
+  making the statement legal Java.
+
+Any synthetic-class shape outside that proof boundary fails closed instead of being
+rewritten.
+
+For Procyon workspaces, R4C writes:
+
+```text
+source-normalization.json
+```
+
+The normalization report records the exact readable JAR SHA, before/after source-tree
+hashes, deterministic action provenance, and a `SRCNORM_*` ID. That normalization ID is
+included in the recovered-source workspace ID material, so R5 consumes the normalized tree
+as the explicit source authority.
+
+CFR and Vineflower source workspaces are unchanged by this stage.
