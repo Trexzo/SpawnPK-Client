@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_85873CA645C344480756",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_51CFD0CCC2BCF801122D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000077",
+      "owner_logical_id": "CLIENT_CLASS_000077",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RSCanvas",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_awt_wrapper_role",
+          "detail": "rs/b extends java.awt.Canvas, stores one Component, and forwards update(Graphics) and paint(Graphics) directly to that wrapped Component."
+        },
+        {
+          "family": "exact_shell_ownership",
+          "detail": "R48 RSApplet (rs/C) constructs rs/b with itself, stores it as the active drawing component and returns it from the applet's component-selection path when the standalone frame is not used."
+        },
+        {
+          "family": "exact_focus_and_size_role",
+          "detail": "rs/b owns the client-specific focus suppression/requestFocus behavior and delegates size/location to Canvas while consulting the live Client/Launcher dimensions in resizable mode."
+        }
+      ],
+      "note": "RSCanvas is the conservative legacy-client semantic name for the applet-owned forwarding Canvas wrapper; exact v308 behavior is primary authority."
+    },
+    {
+      "proposal_id": "SEMPROP_91C958BDE9F9BC54DD67",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000295",
+      "owner_logical_id": "CLIENT_CLASS_000295",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FileOperations",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_file_io_contract",
+          "detail": "rs/i exposes one path-to-byte[] reader, one InputStream-to-byte[] reader, one path+byte[] writer and one file-exists predicate using FileInputStream/FileOutputStream/File.exists."
+        },
+        {
+          "family": "exact_counter_shape",
+          "detail": "The class owns three static integer counters initialized to zero; successful file reads increment the first and successful writes increment the second and third, matching the classic FileOperations-style instrumentation."
+        },
+        {
+          "family": "exact_error_behavior",
+          "detail": "The write path creates parent directories, writes the complete byte array, and emits the surviving \"Write Error:\" diagnostic on failure."
+        }
+      ],
+      "note": "FileOperations describes the exact static file read/write/exists helper and its three operation counters; it is a semantic/historical recovery name rather than an independent verbatim-source claim."
+    }
+  ],
+  "unresolved": []
+}
