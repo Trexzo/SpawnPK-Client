@@ -179,6 +179,49 @@ def _api_identity_payload(
     )
 
 
+def _package_name(internal_name: str) -> str:
+    return (
+        internal_name.rsplit("/", 1)[0]
+        if "/" in internal_name
+        else ""
+    )
+
+
+def _package_api_shape_payload(
+    parsed: ParsedClass,
+) -> tuple[Any, ...]:
+    return (
+        parsed.major,
+        parsed.minor,
+        parsed.access,
+        len(parsed.interfaces),
+        tuple(
+            (
+                int(row["access"]),
+                _descriptor_shape(str(row["descriptor"])),
+            )
+            for row in parsed.fields
+        ),
+        tuple(
+            (
+                int(row["access"]),
+                _descriptor_shape(str(row["descriptor"])),
+            )
+            for row in parsed.methods
+        ),
+        tuple(sorted(parsed.literal_strings)),
+        tuple(
+            sorted(
+                (
+                    type(value).__name__,
+                    repr(value),
+                )
+                for value in parsed.numeric_constants
+            )
+        ),
+    )
+
+
 def _class_mappings(
     bundled: dict[str, ParsedClass],
     official: dict[str, ParsedClass],
@@ -230,6 +273,67 @@ def _class_mappings(
                 "artifact": artifact_by_class.get(new_name),
             }
 
+    package_targets: dict[str, dict[str, int]] = {}
+    for old_name, mapping in mappings.items():
+        old_package = _package_name(old_name)
+        new_package = _package_name(str(mapping["new_name"]))
+        bucket = package_targets.setdefault(old_package, {})
+        bucket[new_package] = bucket.get(new_package, 0) + 1
+
+    used_targets = {
+        str(mapping["new_name"])
+        for mapping in mappings.values()
+    }
+    official_by_package: dict[str, list[str]] = {}
+    for name in official:
+        official_by_package.setdefault(
+            _package_name(name),
+            [],
+        ).append(name)
+    for names in official_by_package.values():
+        names.sort()
+
+    initial_mapped_names = set(mappings)
+    for old_name, old_class in sorted(bundled.items()):
+        if old_name in initial_mapped_names:
+            continue
+        package_counts = package_targets.get(
+            _package_name(old_name),
+            {},
+        )
+        package_support = sum(package_counts.values())
+        if package_support < 3 or len(package_counts) != 1:
+            continue
+        target_package = next(iter(package_counts))
+        payload = _package_api_shape_payload(old_class)
+        candidates = [
+            name
+            for name in official_by_package.get(
+                target_package,
+                [],
+            )
+            if name not in used_targets
+            and _package_api_shape_payload(official[name]) == payload
+        ]
+        if len(candidates) != 1:
+            continue
+        new_name = candidates[0]
+        mappings[old_name] = {
+            "old_name": old_name,
+            "new_name": new_name,
+            "strategy": "package_api_shape",
+            "structural_sha256": old_class.structural_sha256(),
+            "package_authority": {
+                "old_package": _package_name(old_name),
+                "new_package": target_package,
+                "support_count": package_support,
+                "purity": 1.0,
+            },
+            "api_shape_sha256": _stable_digest(payload),
+            "artifact": artifact_by_class.get(new_name),
+        }
+        used_targets.add(new_name)
+
     summary = {
         "accepted_class_mapping_count": len(mappings),
         "identity_structural_count": sum(
@@ -242,6 +346,10 @@ def _class_mappings(
         ),
         "unique_structural_count": sum(
             row["strategy"] == "unique_structural"
+            for row in mappings.values()
+        ),
+        "package_api_shape_count": sum(
+            row["strategy"] == "package_api_shape"
             for row in mappings.values()
         ),
         "renamed_class_mapping_count": sum(
@@ -444,6 +552,51 @@ def _map_declared_member(
             "new_name": name,
             "new_descriptor": descriptor,
             "strategy": "identity_api_surface_exact_member",
+        }
+
+    if class_mapping["strategy"] == "package_api_shape":
+        if name in _SPECIAL_METHODS:
+            return None
+        official_rows = (
+            new_class.fields
+            if kind == "field"
+            else new_class.methods
+        )
+        access = int(member["access"])
+        exact = [
+            row
+            for row in official_rows
+            if (
+                int(row["access"]) == access
+                and str(row["name"]) == name
+                and str(row["descriptor"]) == descriptor
+            )
+        ]
+        if len(exact) == 1:
+            return {
+                "declaring_old_owner": declaring_owner,
+                "declaring_new_owner": official_owner,
+                "new_name": name,
+                "new_descriptor": descriptor,
+                "strategy": "package_api_shape_exact_member",
+            }
+        descriptor_matches = [
+            row
+            for row in official_rows
+            if (
+                int(row["access"]) == access
+                and str(row["descriptor"]) == descriptor
+            )
+        ]
+        if len(descriptor_matches) != 1:
+            return None
+        official_member = descriptor_matches[0]
+        return {
+            "declaring_old_owner": declaring_owner,
+            "declaring_new_owner": official_owner,
+            "new_name": str(official_member["name"]),
+            "new_descriptor": descriptor,
+            "strategy": "package_api_shape_unique_descriptor_member",
         }
 
     if kind == "field":
