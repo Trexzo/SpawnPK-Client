@@ -37,6 +37,9 @@ class DependencyReferenceSurfaceTests(unittest.TestCase):
             "    public String run(dep.Api api) {\n"
             "        return api.ping(dep.Api.VALUE);\n"
             "    }\n"
+            "    public dep.Api[] copy(dep.Api[] input) {\n"
+            "        return input.clone();\n"
+            "    }\n"
             "}\n",
             encoding="utf-8",
         )
@@ -147,6 +150,13 @@ class DependencyReferenceSurfaceTests(unittest.TestCase):
                 )
             ]
             self.assertEqual(method["reference_count"], 1)
+
+            self.assertFalse(
+                any(
+                    row["owner"].startswith("[")
+                    for row in report["member_references"]
+                )
+            )
 
             namespaces = {
                 row["namespace"]: row["reference_count"]
