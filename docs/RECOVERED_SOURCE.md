@@ -127,3 +127,24 @@ included in the recovered-source workspace ID material, so R5 consumes the norma
 as the explicit source authority.
 
 CFR and Vineflower source workspaces are unchanged by this stage.
+
+## Exact-bytecode-bound Procyon source normalization
+
+For Procyon workspaces, R4C applies only deterministic source-safety normalizations that are
+bound back to the exact verified readable bytecode. These rewrites do not create semantic
+names or change canonical semantic state.
+
+In addition to synthetic-switch reconstruction and discarded-expression capture, the
+normalizer can repair a shadowed self static-field owner. This is the Procyon shape where a
+method parameter has the same identifier as the enclosing class, so source such as `a.a`
+is resolved by javac as a parameter member even though the exact bytecode accesses a static
+field owned by the enclosing class.
+
+That repair is fail-closed. It requires a fully-qualified shadow parameter type, an exact
+method match, private colliding fields on the shadow type, zero exact static-field accesses
+to that shadow owner for the rewritten names, and an exact equality between the source
+field-use multiset and the method's readable-bytecode `getstatic`/`putstatic` multiset.
+Method calls are excluded from the field rewrite. The normalization report records the exact
+method descriptor, shadow owner, field-access counts and replacement count as source-safety
+provenance.
+
