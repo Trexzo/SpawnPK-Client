@@ -12,7 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 CLASS_COORDS = [
     ("CLIENT_CLASS_000354", "rs/l/E"),
-    ("CLIENT_CLASS_000355", "rs/l/F"),\n    ("CLIENT_CLASS_000360", "rs/l/K"),
+    ("CLIENT_CLASS_000355", "rs/l/F"),
+    ("CLIENT_CLASS_000360", "rs/l/K"),
     ("CLIENT_CLASS_000363", "rs/l/a"),
     ("CLIENT_CLASS_000383", "rs/l/c"),
     ("CLIENT_CLASS_000397", "rs/l/e"),
@@ -106,10 +107,11 @@ class Chat2SemanticReviewR55Tests(unittest.TestCase):
             {
                 "Rasterizer3D": "CLIENT_CLASS_000354",
                 "Sprite": "CLIENT_CLASS_000355",
+                "TextDrawingArea": "CLIENT_CLASS_000360",
                 "IndexedImage": "CLIENT_CLASS_000363",
                 "DrawingArea": "CLIENT_CLASS_000383",
                 "RSImageProducer": "CLIENT_CLASS_000397",
-                "TextDrawingArea": "CLIENT_CLASS_000497",
+                "RSFont": "CLIENT_CLASS_000497",
             },
         )
 
