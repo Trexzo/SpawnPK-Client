@@ -19,6 +19,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("decompiler_jar", type=Path)
     p.add_argument("--decompiler-sha256", required=True)
     p.add_argument("--engine", choices=["cfr", "vineflower", "procyon"], required=True)
+    p.add_argument("--project-only", action="store_true")
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args(argv)
 
@@ -30,6 +31,7 @@ def main(argv: list[str] | None = None) -> int:
             expected_decompiler_sha256=args.decompiler_sha256,
             engine=args.engine,
             out_dir=args.out_dir,
+            project_only=args.project_only,
         )
     except (
         SourceWorkspaceError,

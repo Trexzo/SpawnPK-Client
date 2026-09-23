@@ -55,3 +55,39 @@ source tree in Git.
 
 Generated Java remains an artifact, not authoritative source and not recovered original
 identifier metadata.
+
+
+## Project-scoped Procyon mode
+
+For archives that bundle large dependency trees, R4C can explicitly recover source only for
+project-owned classes while keeping the **entire verified readable JAR** as the binary
+authority:
+
+```powershell
+spk-source-workspace `
+  .\\generated\\readable-v308\\readable-client-manifest.json `
+  .\\generated\\readable-v308\\readable-client.jar `
+  .\\tools\\procyon-decompiler-0.6.0.jar `
+  --decompiler-sha256 <PINNED_SHA256> `
+  --engine procyon `
+  --project-only `
+  --out-dir .\\generated\\source-v308
+```
+
+Project selection is taken only from the verified R4B manifest's
+`project_source_prefixes`. The readable JAR SHA-256 remains the authority pin; dependency
+classfiles are extracted only as decompiler resolution context and are not requested as
+recovered source.
+
+The recovered-source manifest additionally records `source_scope = project_classes`, the
+normalized project prefixes, exact selected project class count, and a deterministic digest
+over the sorted selected class entry names.
+
+Procyon class-file inputs are split into deterministic command-length-safe batches so the
+same mode works on Windows and POSIX. This scope change does not weaken R5: clean rebuild
+still compiles project sources with zero project-binary fallback and independently verifies
+the complete expected project class set, while bundled non-project classes remain in the
+exact dependency capsule.
+
+Whole-archive decompilation remains the default. Project-only mode is currently supported
+only by Procyon and fails closed for other engines.

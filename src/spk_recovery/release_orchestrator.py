@@ -113,6 +113,7 @@ def build_existing_authority_release(
     allow_package_resource_risk: bool = False,
     rewrite_class_name_strings: bool = False,
     source_prefixes: list[str] | None = None,
+    project_source_only: bool = False,
     java_command: str = "java",
     javac_command: str = "javac",
 ) -> dict[str, Any]:
@@ -181,6 +182,7 @@ def build_existing_authority_release(
             expected_decompiler_sha256=expected_decompiler_sha256,
             engine=engine,
             out_dir=source_dir,
+            project_only=project_source_only,
         )
     except SourceWorkspaceError as exc:
         raise ExistingAuthorityReleaseError(str(exc)) from exc

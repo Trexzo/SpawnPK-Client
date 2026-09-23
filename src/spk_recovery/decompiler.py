@@ -29,6 +29,8 @@ def run_decompiler(
     out_dir: Path,
     clean_out: bool = False,
     java_command: str = "java",
+    input_class_files: list[Path] | None = None,
+    max_command_chars: int = 12000,
 ) -> dict[str, Any]:
     input_jar = input_jar.resolve()
     decompiler_jar = decompiler_jar.resolve()
@@ -57,6 +59,27 @@ def run_decompiler(
             "engine must be one of: cfr, vineflower, procyon"
         )
 
+    class_files: list[Path] | None = None
+    if input_class_files is not None:
+        if engine != "procyon":
+            raise DecompilerError(
+                "selective class-file input is currently supported only by Procyon"
+            )
+        if not isinstance(max_command_chars, int) or max_command_chars < 1024:
+            raise DecompilerError("max_command_chars must be an integer >= 1024")
+        class_files = sorted(
+            {Path(path).resolve() for path in input_class_files},
+            key=lambda path: path.as_posix(),
+        )
+        if not class_files:
+            raise DecompilerError("selective class-file input must not be empty")
+        missing = [path for path in class_files if not path.is_file()]
+        if missing:
+            raise DecompilerError(
+                "selective class-file input contains missing files: "
+                + repr([str(path) for path in missing[:10]])
+            )
+
     if out_dir.exists():
         if clean_out:
             shutil.rmtree(out_dir)
@@ -72,27 +95,27 @@ def run_decompiler(
             f"required executable not found on PATH: {java_command}"
         )
 
+    commands: list[list[str]]
+    input_mode = "whole_archive"
     if engine == "cfr":
-        cmd = [
+        commands = [[
             java,
             "-jar",
             str(decompiler_jar),
             str(input_jar),
             "--outputdir",
             str(out_dir),
-        ]
+        ]]
     elif engine == "vineflower":
-        cmd = [
+        commands = [[
             java,
             "-jar",
             str(decompiler_jar),
             str(input_jar),
             str(out_dir),
-        ]
-    else:
-        # Official Procyon whole-JAR form:
-        # java -jar decompiler.jar -jar input.jar -o out
-        cmd = [
+        ]]
+    elif class_files is None:
+        commands = [[
             java,
             "-jar",
             str(decompiler_jar),
@@ -100,20 +123,49 @@ def run_decompiler(
             str(input_jar),
             "-o",
             str(out_dir),
-        ]
+        ]]
+    else:
+        input_mode = "class_files"
+        base = [java, "-jar", str(decompiler_jar), "-o", str(out_dir)]
+        commands = []
+        current = list(base)
+        current_chars = sum(len(value) + 1 for value in current)
+        for class_file in class_files:
+            value = str(class_file)
+            extra = len(value) + 1
+            if len(current) > len(base) and current_chars + extra > max_command_chars:
+                commands.append(current)
+                current = list(base)
+                current_chars = sum(len(item) + 1 for item in current)
+            if current_chars + extra > max_command_chars:
+                raise DecompilerError(
+                    "one selective class-file path exceeds max_command_chars"
+                )
+            current.append(value)
+            current_chars += extra
+        if len(current) > len(base):
+            commands.append(current)
 
-    proc = subprocess.run(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-    )
-    if proc.returncode != 0:
-        raise DecompilerError(
-            f"{engine} decompiler failed with exit code "
-            f"{proc.returncode}\nstdout:\n{proc.stdout}\n"
-            f"stderr:\n{proc.stderr}"
+    stdout_parts: list[str] = []
+    stderr_parts: list[str] = []
+    for batch_index, cmd in enumerate(commands, start=1):
+        proc = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
         )
+        stdout_parts.append(proc.stdout)
+        stderr_parts.append(proc.stderr)
+        if proc.returncode != 0:
+            raise DecompilerError(
+                f"{engine} decompiler batch {batch_index}/{len(commands)} "
+                f"failed with exit code {proc.returncode}\n"
+                f"stdout:\n{proc.stdout}\nstderr:\n{proc.stderr}"
+            )
+
+    combined_stdout = "".join(stdout_parts)
+    combined_stderr = "".join(stderr_parts)
 
     java_files = sorted(out_dir.rglob("*.java"))
     if not java_files:
@@ -129,8 +181,13 @@ def run_decompiler(
         "decompiler_sha256": actual_decompiler_sha,
         "java_file_count": len(java_files),
         "output_directory": str(out_dir),
-        "stdout": proc.stdout,
-        "stderr": proc.stderr,
+        "input_mode": input_mode,
+        "selected_class_file_count": (
+            len(class_files) if class_files is not None else None
+        ),
+        "batch_count": len(commands),
+        "stdout": combined_stdout,
+        "stderr": combined_stderr,
     }
 
 
