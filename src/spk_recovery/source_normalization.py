@@ -7,6 +7,7 @@ import re
 from typing import Any
 import zipfile
 
+from .bytecode_profile import BytecodeProfileError, profile_class_field_accesses
 from .classfile import ClassFormatError, parse_class
 from .decompiler import sha256_file
 
@@ -21,6 +22,20 @@ _SYNTHETIC_CLASS_RE = re.compile(
 )
 _DISCARDED_STRING_RE = re.compile(
     r'^(?P<indent>[ \t]*)(?P<expr>"(?:\\.|[^"\\])*"\s*\+.+);[ \t]*$'
+)
+_METHOD_DECL_RE = re.compile(
+    r"(?m)^(?P<indent>[ \t]*)"
+    r"(?:(?:public|private|protected|static|final|synchronized|strictfp)\s+)*"
+    r"(?P<return>[A-Za-z_$][A-Za-z0-9_$.<>?, \[\]]*)\s+"
+    r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*"
+    r"\((?P<params>[^()\n]*)\)\s*"
+    r"(?:throws\s+[^\{\n]+\s*)?\{"
+)
+_FQ_PARAM_RE = re.compile(
+    r"(?:^|,)\s*(?:final\s+)?"
+    r"(?P<type>[A-Za-z_$][A-Za-z0-9_$]*"
+    r"(?:\.[A-Za-z_$][A-Za-z0-9_$]*)+)\s+"
+    r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*(?=,|$)"
 )
 _IDENTIFIER = re.compile(r"^[A-Za-z_$][A-Za-z0-9_$]*$")
 _JAVA_RESERVED = {
@@ -345,6 +360,354 @@ def _normalize_discarded_strings(
     return actions
 
 
+
+def _matching_brace_end(text: str, brace_start: int) -> int:
+    depth = 0
+    state = "code"
+    escaped = False
+    i = brace_start
+    while i < len(text):
+        ch = text[i]
+        nxt = text[i + 1] if i + 1 < len(text) else ""
+        if state == "line_comment":
+            if ch == "\n":
+                state = "code"
+        elif state == "block_comment":
+            if ch == "*" and nxt == "/":
+                state = "code"
+                i += 1
+        elif state == "string":
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                state = "code"
+        elif state == "char":
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == "'":
+                state = "code"
+        elif state == "text_block":
+            if text.startswith('"""', i):
+                state = "code"
+                i += 2
+        else:
+            if ch == "/" and nxt == "/":
+                state = "line_comment"
+                i += 1
+            elif ch == "/" and nxt == "*":
+                state = "block_comment"
+                i += 1
+            elif text.startswith('"""', i):
+                state = "text_block"
+                i += 2
+            elif ch == '"':
+                state = "string"
+                escaped = False
+            elif ch == "'":
+                state = "char"
+                escaped = False
+            elif ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    return i + 1
+                if depth < 0:
+                    break
+        i += 1
+    raise SourceNormalizationError(
+        f"unbalanced Java method body starting at offset {brace_start}"
+    )
+
+
+def _java_code_mask(text: str) -> str:
+    """Mask comments and literals while preserving source offsets."""
+    chars = list(text)
+    state = "code"
+    escaped = False
+    i = 0
+    while i < len(text):
+        ch = text[i]
+        nxt = text[i + 1] if i + 1 < len(text) else ""
+
+        if state == "line_comment":
+            if ch == "\n":
+                state = "code"
+            else:
+                chars[i] = " "
+        elif state == "block_comment":
+            chars[i] = " " if ch != "\n" else "\n"
+            if ch == "*" and nxt == "/":
+                chars[i + 1] = " "
+                state = "code"
+                i += 1
+        elif state == "string":
+            chars[i] = " " if ch != "\n" else "\n"
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                state = "code"
+        elif state == "char":
+            chars[i] = " " if ch != "\n" else "\n"
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == "'":
+                state = "code"
+        elif state == "text_block":
+            chars[i] = " " if ch != "\n" else "\n"
+            if text.startswith('"""', i):
+                if i + 1 < len(chars):
+                    chars[i + 1] = " "
+                if i + 2 < len(chars):
+                    chars[i + 2] = " "
+                state = "code"
+                i += 2
+        else:
+            if ch == "/" and nxt == "/":
+                chars[i] = chars[i + 1] = " "
+                state = "line_comment"
+                i += 1
+            elif ch == "/" and nxt == "*":
+                chars[i] = chars[i + 1] = " "
+                state = "block_comment"
+                i += 1
+            elif text.startswith('"""', i):
+                chars[i] = " "
+                if i + 1 < len(chars):
+                    chars[i + 1] = " "
+                if i + 2 < len(chars):
+                    chars[i + 2] = " "
+                state = "text_block"
+                i += 2
+            elif ch == '"':
+                chars[i] = " "
+                state = "string"
+                escaped = False
+            elif ch == "'":
+                chars[i] = " "
+                state = "char"
+                escaped = False
+        i += 1
+    return "".join(chars)
+
+
+def _field_access_counter(
+    method: dict[str, Any],
+    *,
+    owner: str,
+    field_names: set[str],
+) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for access in method.get("field_accesses", []):
+        if access.get("owner") != owner:
+            continue
+        name = str(access.get("name", ""))
+        if name not in field_names:
+            continue
+        if access.get("operation") not in {"getstatic", "putstatic"}:
+            continue
+        counts[name] = counts.get(name, 0) + 1
+    return counts
+
+
+def _normalize_shadowed_self_static_field_owners(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Qualify exact self static-field owners hidden by a same-name parameter.
+
+    Procyon can print a.a for a self static field in a method whose parameter
+    is also named a. Java then resolves the qualifier as the parameter
+    expression. Rewriting is allowed only when the source field-use multiset
+    exactly equals the current-owner getstatic/putstatic multiset for one
+    exact method and the bytecode has no corresponding field access through
+    the shadow parameter owner.
+    """
+    rel = path.relative_to(source_root).as_posix()
+    simple_name_from_path = Path(rel).stem
+    text = path.read_text(encoding="utf-8")
+    potential_shadow = False
+    for method_match in _METHOD_DECL_RE.finditer(text):
+        if any(
+            param.group("name") == simple_name_from_path
+            for param in _FQ_PARAM_RE.finditer(method_match.group("params"))
+        ):
+            potential_shadow = True
+            break
+    if not potential_shadow:
+        return []
+
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError as exc:
+        raise SourceNormalizationError(
+            f"{rel}: exact readable class field profile failed: {exc}"
+        ) from exc
+
+    internal_name = str(profile["internal_name"])
+    simple_name = internal_name.rsplit("/", 1)[-1]
+    if Path(rel).stem != simple_name:
+        return []
+
+    static_fields = {
+        str(field["name"])
+        for field in profile.get("fields", [])
+        if int(field.get("access", 0)) & 0x0008
+        and _is_java_identifier(str(field.get("name", "")))
+    }
+    if not static_fields:
+        return []
+
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+    qualified_owner = internal_name.replace("/", ".")
+
+    for match in _METHOD_DECL_RE.finditer(text):
+        shadow_params = [
+            param
+            for param in _FQ_PARAM_RE.finditer(match.group("params"))
+            if param.group("name") == simple_name
+        ]
+        if len(shadow_params) != 1:
+            continue
+        shadow_type = shadow_params[0].group("type")
+        shadow_internal = shadow_type.replace(".", "/")
+        if shadow_internal == internal_name:
+            continue
+
+        shadow_entry = shadow_internal + ".class"
+        try:
+            shadow_bytes = readable_zip.read(shadow_entry)
+        except KeyError:
+            continue
+        try:
+            shadow_profile = profile_class_field_accesses(shadow_bytes)
+        except BytecodeProfileError as exc:
+            raise SourceNormalizationError(
+                f"{rel}: shadow class field profile failed for "
+                f"{shadow_internal}: {exc}"
+            ) from exc
+
+        shadow_private_fields = {
+            str(field["name"])
+            for field in shadow_profile.get("fields", [])
+            if int(field.get("access", 0)) & 0x0002
+        }
+
+        brace_start = text.find("{", match.start(), match.end())
+        if brace_start < 0:
+            continue
+        body_end = _matching_brace_end(text, brace_start)
+        method_text = text[match.start():body_end]
+        method_code = _java_code_mask(method_text)
+
+        source_counts: dict[str, int] = {}
+        occurrences: list[tuple[int, int, str]] = []
+        for field_name in sorted(static_fields):
+            token = re.compile(
+                r"(?<![A-Za-z0-9_$.])"
+                + re.escape(simple_name)
+                + r"\."
+                + re.escape(field_name)
+                + r"\b(?!\s*\()"
+            )
+            hits = list(token.finditer(method_code))
+            if not hits:
+                continue
+            source_counts[field_name] = len(hits)
+            for hit in hits:
+                occurrences.append(
+                    (
+                        match.start() + hit.start(),
+                        match.start() + hit.end(),
+                        qualified_owner + "." + field_name,
+                    )
+                )
+        if not source_counts:
+            continue
+        if not set(source_counts).issubset(shadow_private_fields):
+            continue
+
+        candidates = []
+        for method in profile.get("methods", []):
+            if method.get("name") != match.group("name"):
+                continue
+            descriptor = str(method.get("descriptor", ""))
+            if ("L" + shadow_internal + ";") not in descriptor:
+                continue
+            self_counts = _field_access_counter(
+                method,
+                owner=internal_name,
+                field_names=static_fields,
+            )
+            if self_counts != source_counts:
+                continue
+            shadow_counts = _field_access_counter(
+                method,
+                owner=shadow_internal,
+                field_names=set(source_counts),
+            )
+            if shadow_counts:
+                continue
+            candidates.append(method)
+
+        if len(candidates) != 1:
+            continue
+        exact_method = candidates[0]
+
+        edits.extend(occurrences)
+        actions.append(
+            {
+                "kind": "shadowed_self_static_field_owner_qualification",
+                "source_path": rel,
+                "method_name": match.group("name"),
+                "method_descriptor": exact_method["descriptor"],
+                "shadow_parameter_name": simple_name,
+                "shadow_parameter_type": shadow_internal,
+                "qualified_owner": internal_name,
+                "field_access_counts": dict(sorted(source_counts.items())),
+                "replacement_count": sum(source_counts.values()),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": "procyon_shadowed_self_static_field_owner",
+                    "strategy": (
+                        "exact_method_field_access_multiset_qualification"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping owner-qualification edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def normalize_procyon_source(
     source_root: Path,
     readable_jar: Path,
@@ -380,6 +743,13 @@ def normalize_procyon_source(
                 )
                 if action is not None:
                     actions.append(action)
+                actions.extend(
+                    _normalize_shadowed_self_static_field_owners(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
     except zipfile.BadZipFile as exc:
         raise SourceNormalizationError(
             f"readable JAR is invalid: {readable_jar}"
@@ -413,6 +783,17 @@ def normalize_procyon_source(
         "discarded_string_expression_count": sum(
             action["kind"] == "discarded_string_expression_capture"
             for action in actions
+        ),
+        "shadowed_self_static_field_method_count": sum(
+            action["kind"]
+            == "shadowed_self_static_field_owner_qualification"
+            for action in actions
+        ),
+        "shadowed_self_static_field_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "shadowed_self_static_field_owner_qualification"
         ),
         "java_file_count": after_count,
         "source_bytes_before": before_bytes,
