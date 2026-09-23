@@ -17,6 +17,14 @@ jobs:
           path: |
             pyproject.toml
             README.md
+            BOOTSTRAP.ps1
+            INDEX_V308.ps1
+            authority
+            evidence
+            generated
+            mappings
+            research
+            schemas
             src
             tests
             docs
