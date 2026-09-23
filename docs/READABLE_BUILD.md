@@ -75,10 +75,13 @@ before bytecode rewriting.
 ## Workspace
 
 The readable manifest also carries `project_source_prefixes`: the exact namespace
-prefixes that remain SpawnPK project-owned after rewriting. R8D source-safety fallback
-renames remain inside their original packages, so ordinary `rs/` ownership already
-covers them; only accepted semantic moves add the semantic target package. The fallback
-name prefix is source-safety metadata, not semantic acceptance.
+prefixes that remain SpawnPK project-owned after rewriting. In the default
+`global_target_package` strategy, accepted semantic moves add the semantic target package.
+Under source-safe `source_package_preserving` recovery, both R8D fallback renames and
+accepted semantic class renames remain in their original packages, so ordinary `rs/`
+ownership covers them without claiming the configured semantic target package as a project
+prefix. The fallback name prefix and package strategy are recovery metadata, not semantic
+acceptance.
 
 A completed build contains:
 
