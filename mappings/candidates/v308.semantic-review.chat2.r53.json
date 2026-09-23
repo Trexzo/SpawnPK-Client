@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_E80B92D2470E8CC80E1D",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_3CB4FC4EF6994A842D12",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001114",
+      "owner_logical_id": "CLIENT_CLASS_001114",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/x",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ObjectManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_constructor_state",
+          "detail": "rs/x is constructed from the scene tile-flag byte[][][] and terrain-height int[][][] arrays and owns the additional per-tile overlay/underlay/shape/rotation/shading work arrays used while building the map."
+        },
+        {
+          "family": "exact_region_decode_role",
+          "detail": "Its byte-array loaders decode terrain/map chunks and object-location streams, including rotated chunk placement, and write collision state into the R39 CollisionMap[] set."
+        },
+        {
+          "family": "exact_scene_build_role",
+          "detail": "Object placement resolves ObjectDefinition records and dispatches walls, decorations, ground decorations and general game objects into the R40 Scene while applying corresponding CollisionMap blocking."
+        },
+        {
+          "family": "exact_finalization_role",
+          "detail": "The final build pass computes tile colors/lighting, emits tile surfaces into Scene, updates scene planes/bridges and creates Scene occluders from accumulated terrain flags."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "This exact responsibility set matches the classic client ObjectManager: tile flags/heights constructor, map/object stream decoding, collision updates and Scene construction."
+        }
+      ],
+      "note": "ObjectManager preserves the classic semantic identity of this terrain/object region builder. Exact v308 behavior is primary authority; historical naming is corroborating evidence."
+    }
+  ],
+  "unresolved": []
+}
