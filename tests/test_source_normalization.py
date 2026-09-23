@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import struct
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 import zipfile
@@ -94,6 +95,54 @@ def _synthetic_switch_class(
     return bytes(out)
 
 
+def _shadow_owner_fixture(root: Path) -> Path:
+    legal = root / "legal"
+    current = legal / "pkg" / "A.java"
+    shadow = legal / "pkg" / "shadow" / "A.java"
+    current.parent.mkdir(parents=True)
+    shadow.parent.mkdir(parents=True)
+    current.write_text(
+        "package pkg;\n"
+        "public class A {\n"
+        "    public static A[] A;\n"
+        "    public static A[] B;\n"
+        "    public static void m(final pkg.shadow.A A) {\n"
+        "        pkg.A.A = new A[1];\n"
+        "        pkg.A.B = pkg.A.A;\n"
+        "        A.ping();\n"
+        "    }\n"
+        "}\n",
+        encoding="utf-8",
+    )
+    shadow.write_text(
+        "package pkg.shadow;\n"
+        "public class A {\n"
+        "    private static Object A;\n"
+        "    private static Object B;\n"
+        "    public void ping() {}\n"
+        "}\n",
+        encoding="utf-8",
+    )
+    classes = root / "classes"
+    classes.mkdir()
+    proc = subprocess.run(
+        ["javac", "-d", str(classes), str(current), str(shadow)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if proc.returncode != 0:
+        raise AssertionError("javac fixture failed: " + proc.stderr)
+    jar = root / "readable.jar"
+    with zipfile.ZipFile(jar, "w") as z:
+        for class_file in sorted(classes.rglob("*.class")):
+            z.write(
+                class_file,
+                class_file.relative_to(classes).as_posix(),
+            )
+    return jar
+
+
 class ProcyonSourceNormalizationTests(unittest.TestCase):
     def test_reconstructs_proven_synthetic_switch_class(self):
         with tempfile.TemporaryDirectory() as td:
@@ -148,6 +197,131 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
 
             with self.assertRaises(SourceNormalizationError):
                 normalize_procyon_source(root / "src", jar)
+
+    def test_qualifies_exact_shadowed_self_static_field_owners(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _shadow_owner_fixture(root)
+            source = root / "src" / "pkg" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package pkg;\n"
+                "public class A {\n"
+                "    public static A[] A;\n"
+                "    public static A[] B;\n"
+                "    public static void m(final pkg.shadow.A A) {\n"
+                "        A.A = new A[1];\n"
+                "        A.B = A.A;\n"
+                "        A.ping();\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            text = source.read_text(encoding="utf-8")
+
+            self.assertIn("pkg.A.A = new A[1];", text)
+            self.assertIn("pkg.A.B = pkg.A.A;", text)
+            self.assertIn("A.ping();", text)
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_self_static_field_method_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_self_static_field_reference_count"
+                ],
+                3,
+            )
+            action = next(
+                row for row in report["actions"]
+                if row["kind"]
+                == "shadowed_self_static_field_owner_qualification"
+            )
+            self.assertEqual(
+                action["field_access_counts"],
+                {"A": 2, "B": 1},
+            )
+            self.assertEqual(
+                action["shadow_parameter_type"],
+                "pkg/shadow/A",
+            )
+
+    def test_shadowed_self_static_field_ignores_literals_and_comments(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _shadow_owner_fixture(root)
+            source = root / "src" / "pkg" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package pkg;\n"
+                "public class A {\n"
+                "    public static A[] A;\n"
+                "    public static A[] B;\n"
+                "    public static void m(final pkg.shadow.A A) {\n"
+                "        A.A = new A[1];\n"
+                "        A.B = A.A;\n"
+                "        String literal = \"A.A A.B\"; // A.A\n"
+                "        /* A.B */ A.ping();\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            text = source.read_text(encoding="utf-8")
+
+            self.assertIn("pkg.A.A = new A[1];", text)
+            self.assertIn("pkg.A.B = pkg.A.A;", text)
+            self.assertIn('String literal = "A.A A.B"; // A.A', text)
+            self.assertIn("/* A.B */ A.ping();", text)
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_self_static_field_reference_count"
+                ],
+                3,
+            )
+
+    def test_shadowed_self_static_field_count_mismatch_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _shadow_owner_fixture(root)
+            source = root / "src" / "pkg" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package pkg;\n"
+                "public class A {\n"
+                "    public static A[] A;\n"
+                "    public static A[] B;\n"
+                "    public static void m(final pkg.shadow.A A) {\n"
+                "        A.A = new A[1];\n"
+                "        A.ping();\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_self_static_field_method_count"
+                ],
+                0,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_self_static_field_reference_count"
+                ],
+                0,
+            )
 
     def test_discarded_string_expression_preserves_evaluation(self):
         with tempfile.TemporaryDirectory() as td:
