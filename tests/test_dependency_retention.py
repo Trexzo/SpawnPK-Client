@@ -67,16 +67,21 @@ class DependencyRetentionTests(unittest.TestCase):
                     "project/Main.java": (
                         "package project; public class Main { "
                         "public int run(vendor.b value) { return value.use(); } "
+                        "public int direct(vendor.c value) { return value.value(); } "
                         "}"
                     ),
                     "vendor/b.java": (
                         "package vendor; public class b { "
                         "public int use() { return project.Main.class.getName().length() + "
-                        "new vendor.c().value(); } }"
+                        "new vendor.c().value() + new vendor.d().value(); } }"
                     ),
                     "vendor/c.java": (
                         "package vendor; public class c { "
                         "public int value() { return 7; } }"
+                    ),
+                    "vendor/d.java": (
+                        "package vendor; public class d { "
+                        "public int value() { return 9; } }"
                     ),
                 },
             )
@@ -130,16 +135,20 @@ class DependencyRetentionTests(unittest.TestCase):
             )
             self.assertEqual(
                 statuses["vendor/c"],
+                "project_consumed_non_pom",
+            )
+            self.assertEqual(
+                statuses["vendor/d"],
                 "source_retention_closure",
             )
             self.assertEqual(
                 report["summary"][
                     "lineage_byte_identical_retained_class_count"
                 ],
-                2,
+                3,
             )
 
-    def test_consumed_unmapped_class_without_reverse_edge_is_separate(self):
+    def test_unrelated_consumed_unmapped_class_stays_dependency_uncertainty(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             bundled = self._compile_jar(
@@ -185,9 +194,18 @@ class DependencyRetentionTests(unittest.TestCase):
                 project_prefixes=("project/",),
             )
 
+            self.assertEqual(report["classifications"], [])
             self.assertEqual(
-                report["classifications"][0]["status"],
-                "project_consumed_non_pom",
+                report["summary"][
+                    "prior_dependency_uncertainty_weighted_reference_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "remaining_dependency_uncertainty_weighted_reference_count"
+                ],
+                1,
             )
 
     def test_closure_does_not_cross_accepted_official_mapping(self):
