@@ -7,7 +7,7 @@ import re
 from typing import Any
 import zipfile
 
-from .classfile import ClassFileError, parse_class
+from .classfile import ClassFormatError, parse_class
 from .decompiler import sha256_file
 
 
@@ -170,7 +170,7 @@ def _normalize_synthetic_class(
 
     try:
         parsed = parse_class(class_bytes)
-    except ClassFileError as exc:
+    except ClassFormatError as exc:
         raise SourceNormalizationError(
             f"{rel}: exact readable class could not be parsed: {exc}"
         ) from exc
