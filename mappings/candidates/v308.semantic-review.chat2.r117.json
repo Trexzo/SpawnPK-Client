@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_55DD2BBE6CFF503C78BB",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_9E4DBEAD68BDA3F1E163",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000749",
+      "owner_logical_id": "CLIENT_CLASS_000749",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/q/a/a/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HalloweenHungerGamesPacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_framework",
+          "detail": "The class extends R115 ScriptPacketHandler and is registered as exact ScriptPacket ID 1."
+        },
+        {
+          "family": "exact_target",
+          "detail": "Its packet handling writes exclusively into R3 HalloweenHungerGamesOverlay static state, including lobby/match strings, active/completed flags, kills/survivors values and event timers."
+        },
+        {
+          "family": "exact_visible_text",
+          "detail": "The handler builds exact Hunger Games UI strings including 'Match style', 'Players in lobby', 'Starting a match, please wait..', 'Starting in', 'Waiting for ... players', 'Kills' and 'Survivors'."
+        }
+      ],
+      "note": "HalloweenHungerGamesPacketHandler is fixed by ScriptPacket ID 1 and exclusive writes to the already-recovered R3 HalloweenHungerGamesOverlay. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_AD6884FE303C6D2AE323",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000750",
+      "owner_logical_id": "CLIENT_CLASS_000750",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/q/a/a/a/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InfoBoxPacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_framework",
+          "detail": "The class extends R115 ScriptPacketHandler and is registered as exact ScriptPacket ID 34."
+        },
+        {
+          "family": "exact_literal_identity",
+          "detail": "It preserves the exact literal 'InfoBoxOverlay' and maps incoming 'def' to that default group/domain name."
+        },
+        {
+          "family": "exact_manager_target",
+          "detail": "All add/update/remove paths operate through R11 InfoBoxManager, resolving existing boxes by String ID and creating concrete timer/counter/text InfoBox subclasses when required."
+        },
+        {
+          "family": "exact_operations",
+          "detail": "The packet protocol can remove boxes, update counter values/durations, replace existing boxes and create new boxes with image/title/description/layer/group metadata."
+        }
+      ],
+      "note": "InfoBoxPacketHandler is fixed by ScriptPacket ID 34, the surviving InfoBoxOverlay literal and direct R11 InfoBoxManager lifecycle operations. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_D07C03F92D98F797FD24",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000761",
+      "owner_logical_id": "CLIENT_CLASS_000761",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/q/a/a/a/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "StatusTimerPacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_framework",
+          "detail": "The class extends R115 ScriptPacketHandler and is registered as exact ScriptPacket ID 19."
+        },
+        {
+          "family": "exact_timer_target",
+          "detail": "It resolves R11 StatusTimerType values, finds matching StatusTimer instances in Client.u, updates remaining duration, removes expired entries and constructs new StatusTimer instances when absent."
+        },
+        {
+          "family": "exact_named_aliases",
+          "detail": "The handler preserves timer aliases such as 'magic_sickness', 'welfare_2x' and 'event_elixir', mapping them directly onto surviving StatusTimerType constants."
+        },
+        {
+          "family": "exact_dynamic_timers",
+          "detail": "Incoming names beginning with 'dyn_' are handled by the same class through a separate dynamic-timer path with packet-supplied text, image/metadata and duration."
+        }
+      ],
+      "note": "StatusTimerPacketHandler is fixed by ScriptPacket ID 19 and direct lifecycle management of R11 StatusTimer/StatusTimerType instances. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}
