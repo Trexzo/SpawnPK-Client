@@ -211,8 +211,8 @@ class ResumableProjectSourceWorkspaceTests(unittest.TestCase):
                 "input_mode": "class_files",
                 "selected_class_file_count": 1,
                 "batch_count": 1,
-                "stdout": "",
-                "stderr": "",
+                "stdout": f"stdout-{class_name}\n",
+                "stderr": f"stderr-{class_name}\n",
             }
         return fake
 
@@ -266,6 +266,17 @@ class ResumableProjectSourceWorkspaceTests(unittest.TestCase):
             )
             self.assertEqual(checkpoint["status"], "complete")
             self.assertEqual(len(checkpoint["completed_batches"]), 2)
+            decompiler_result = json.loads(
+                (out / "decompiler-result.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(
+                decompiler_result["stdout"],
+                "stdout-A\nstdout-B\n",
+            )
+            self.assertEqual(
+                decompiler_result["stderr"],
+                "stderr-A\nstderr-B\n",
+            )
 
     def test_resume_rejects_source_tree_drift(self):
         with tempfile.TemporaryDirectory() as td:
