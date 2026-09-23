@@ -180,7 +180,7 @@ class MemberRemapPlanTests(unittest.TestCase):
             members,
             index,
             build_id="v308",
-            source_safe_member_fallback=True,
+            source_safe_fallback=True,
         )
         row = next(
             item
@@ -225,7 +225,7 @@ class MemberRemapPlanTests(unittest.TestCase):
             members,
             index,
             build_id="v308",
-            source_safe_member_fallback=True,
+            source_safe_fallback=True,
         )
         row = next(
             item
@@ -247,7 +247,7 @@ class MemberRemapPlanTests(unittest.TestCase):
                 members,
                 _index(),
                 build_id="v308",
-                source_safe_member_fallback=True,
+                source_safe_fallback=True,
             )
 
     def test_keyword_fallback_collision_fails_closed(self):
@@ -279,7 +279,7 @@ class MemberRemapPlanTests(unittest.TestCase):
                 members,
                 index,
                 build_id="v308",
-                source_safe_member_fallback=True,
+                source_safe_fallback=True,
             )
 
 
