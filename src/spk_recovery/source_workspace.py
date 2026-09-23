@@ -7,7 +7,11 @@ import tempfile
 from typing import Any
 import zipfile
 
+from .classfile import parse_class
 from .decompiler import DecompilerError, run_decompiler, sha256_file
+
+
+PROCYON_ISOLATE_METHOD_CODE_LENGTH = 20_000
 
 
 class SourceWorkspaceError(ValueError):
@@ -138,6 +142,36 @@ def _extract_class_context(
         )
     return [root / Path(name) for name in selected], selected
 
+
+def _oversized_procyon_targets(
+    class_files: list[Path],
+    selected_entries: list[str],
+    *,
+    threshold: int = PROCYON_ISOLATE_METHOD_CODE_LENGTH,
+) -> tuple[list[Path], list[str]]:
+    if len(class_files) != len(selected_entries):
+        raise SourceWorkspaceError(
+            "selected class files and entries disagree in length"
+        )
+    isolated_files: list[Path] = []
+    isolated_entries: list[str] = []
+    for path, entry in zip(class_files, selected_entries, strict=True):
+        try:
+            parsed = parse_class(path.read_bytes())
+        except Exception as exc:
+            raise SourceWorkspaceError(
+                "failed to parse selected class for Procyon isolation: "
+                f"{entry}: {type(exc).__name__}: {exc}"
+            ) from exc
+        max_code_length = max(
+            (method.get("code_length") or 0 for method in parsed.methods),
+            default=0,
+        )
+        if max_code_length >= threshold:
+            isolated_files.append(path)
+            isolated_entries.append(entry)
+    return isolated_files, isolated_entries
+
 def build_source_workspace(
     readable_manifest: dict[str, Any],
     readable_jar: Path,
@@ -206,6 +240,8 @@ def build_source_workspace(
     project_prefixes: list[str] = []
     selected_entries: list[str] = []
     selection_sha: str | None = None
+    isolated_entries: list[str] = []
+    isolated_sha: str | None = None
     try:
         if project_only:
             if engine.lower() != "procyon":
@@ -223,6 +259,11 @@ def build_source_workspace(
                     project_prefixes,
                 )
                 selection_sha = _selection_digest(selected_entries)
+                isolated_files, isolated_entries = _oversized_procyon_targets(
+                    class_files,
+                    selected_entries,
+                )
+                isolated_sha = _selection_digest(isolated_entries)
                 result = run_decompiler(
                     readable_jar,
                     decompiler_jar,
@@ -231,6 +272,7 @@ def build_source_workspace(
                     out_dir=source_dir,
                     clean_out=False,
                     input_class_files=class_files,
+                    isolate_class_files=isolated_files,
                 )
         else:
             result = run_decompiler(
@@ -263,6 +305,11 @@ def build_source_workspace(
         "project_source_prefixes": project_prefixes,
         "selected_class_count": len(selected_entries) if project_only else None,
         "selected_class_digest": selection_sha,
+        "procyon_isolation_method_code_length": (
+            PROCYON_ISOLATE_METHOD_CODE_LENGTH if project_only else None
+        ),
+        "isolated_class_count": len(isolated_entries) if project_only else None,
+        "isolated_class_digest": isolated_sha,
     }
     raw = json.dumps(
         material,
@@ -294,6 +341,11 @@ def build_source_workspace(
         "project_source_prefixes": project_prefixes,
         "selected_class_count": len(selected_entries) if project_only else None,
         "selected_class_digest": selection_sha,
+        "procyon_isolation_method_code_length": (
+            PROCYON_ISOLATE_METHOD_CODE_LENGTH if project_only else None
+        ),
+        "isolated_class_count": len(isolated_entries) if project_only else None,
+        "isolated_class_digest": isolated_sha,
     }
     _write_json(result, out_dir / "decompiler-result.json")
     _write_json(
