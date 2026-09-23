@@ -148,6 +148,7 @@ def _hierarchy_shadow_fixture(
     *,
     inherited: bool = False,
     object_shadow: bool = False,
+    private_shadow: bool = False,
 ) -> Path:
     legal = root / "hierarchy-legal"
     pkg = legal / "pkg"
@@ -157,10 +158,11 @@ def _hierarchy_shadow_fixture(
     if inherited:
         base = pkg / "Base.java"
         shadow_type = "Object" if object_shadow else "int"
+        visibility = "private" if private_shadow else "public"
         base.write_text(
             "package pkg;\n"
             "public class Base {\n"
-            f"    public static {shadow_type} h;\n"
+            f"    {visibility} static {shadow_type} h;\n"
             "}\n",
             encoding="utf-8",
         )
@@ -464,6 +466,38 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 root,
                 inherited=True,
                 object_shadow=True,
+            )
+            source = root / "src" / "pkg" / "h.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package pkg;\n"
+                "public class h extends Base {\n"
+                "    public static int x;\n"
+                "    public static void m() {\n"
+                "        h.x = 7;\n"
+                "        int y = h.x;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "hierarchy_shadowed_self_static_field_reference_count"
+                ],
+                0,
+            )
+
+    def test_private_inherited_primitive_shadow_is_not_visible(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _hierarchy_shadow_fixture(
+                root,
+                inherited=True,
+                private_shadow=True,
             )
             source = root / "src" / "pkg" / "h.java"
             source.parent.mkdir(parents=True)
