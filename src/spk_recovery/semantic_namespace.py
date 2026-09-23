@@ -339,10 +339,25 @@ def _accepted_class_spec(
                 f"{logical_id}: accepted class semantic name lacks provenance"
             )
 
+        source_internal_name = str(
+            _entry_for_build(record, build_id)["internal_name"]
+        )
+        source_package = (
+            source_internal_name.rsplit("/", 1)[0]
+            if "/" in source_internal_name
+            else ""
+        )
+        target_internal_name = (
+            (
+                source_package + "/" + name
+                if source_package
+                else name
+            )
+            if source_safe_fallback
+            else target_package.rstrip("/") + "/" + name
+        )
         requested[logical_id] = {
-            "target_internal_name": (
-                target_package.rstrip("/") + "/" + name
-            ),
+            "target_internal_name": target_internal_name,
             "confidence": float(confidence),
             "provenance": provenance,
         }
@@ -481,6 +496,12 @@ def build_semantic_namespace(
             f"invalid or reserved target package {target_package!r}"
         )
 
+    semantic_package_strategy = (
+        "source_package_preserving"
+        if source_safe_fallback
+        else "global_target_package"
+    )
+
     if (
         not isinstance(fallback_name_prefix, str)
         or not fallback_name_prefix
@@ -588,6 +609,7 @@ def build_semantic_namespace(
         "source_sha256": source_sha,
         "target_package": package,
         "source_safe_fallback": source_safe_fallback,
+        "semantic_package_strategy": semantic_package_strategy,
         "fallback_name_prefix": fallback_name_prefix,
         "fallback_remaps": fallback_rows,
         "member_source_safety_remaps": member_source_safety_rows,
@@ -608,6 +630,7 @@ def build_semantic_namespace(
         "source_sha256": source_sha,
         "target_package": package,
         "source_safe_fallback": source_safe_fallback,
+        "semantic_package_strategy": semantic_package_strategy,
         "fallback_name_prefix": fallback_name_prefix,
         "class_plan_digest": class_plan_digest,
         "member_plan_digest": member_plan_digest,
