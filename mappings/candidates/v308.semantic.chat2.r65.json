@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CacheUpdater",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_self_label",
+          "detail": "rs/cache/b/a/a calls the AssetUpdater base constructor with \"Cache\" and binds AssetVersion key \"cache_version\"."
+        },
+        {
+          "family": "exact_download_role",
+          "detail": "Its update method displays \"Downloading main game assets..\", downloads a ZIP, extracts the main game cache payload and deliberately excludes the separate sprites/configs trees handled by sibling updaters."
+        }
+      ],
+      "note": "CacheUpdater follows the concrete Cache label, cache_version key and main-game-assets download/extraction path."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientUpdater",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_version_key",
+          "detail": "rs/cache/b/a/b is an AssetUpdater subclass whose AssetVersion is keyed by \"client_version\"."
+        },
+        {
+          "family": "exact_download_role",
+          "detail": "Its update method displays \"Downloading client..\", downloads the remote client artifact to the client update directory and reports success based on the resulting file."
+        }
+      ],
+      "note": "ClientUpdater follows the client_version key and explicit client-download path."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigUpdater",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_self_label",
+          "detail": "rs/cache/b/a/c calls the AssetUpdater base constructor with \"Configs\" and binds AssetVersion key \"config_version\"."
+        },
+        {
+          "family": "exact_download_role",
+          "detail": "Its update method displays \"Downloading game configs..\", downloads the config archive and extracts it into the local config destination."
+        }
+      ],
+      "note": "ConfigUpdater follows the concrete Configs label, config_version key and config-download path."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpriteUpdater",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_self_label",
+          "detail": "rs/cache/b/a/d calls the AssetUpdater base constructor with \"Sprites\" and binds AssetVersion key \"sprite_version\"."
+        },
+        {
+          "family": "exact_download_role",
+          "detail": "Its update method displays \"Downloading sprites..\", downloads the sprite archive and extracts it into the local sprite destination."
+        }
+      ],
+      "note": "SpriteUpdater follows the concrete Sprites label, sprite_version key and sprite-download path."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AssetUpdateError",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_values",
+          "detail": "rs/cache/b/b is a two-value enum whose surviving constant names are INVALID_REMOTE_VERSION and ERROR_DOWNLOADING."
+        },
+        {
+          "family": "exact_error_messages",
+          "detail": "The enum payloads are user-facing version-check and game-asset-download failure messages consumed by the shared AssetUpdater error path."
+        }
+      ],
+      "note": "AssetUpdateError describes the exact updater-specific error enum."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AssetUpdateCoordinator",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_owned_updaters",
+          "detail": "rs/cache/b/c constructs Cache, Sprite and Config concrete AssetUpdater instances, stores them in a list, binds the Client into each and exposes each updater through dedicated getters."
+        },
+        {
+          "family": "exact_orchestration",
+          "detail": "Its main check displays \"Please wait, checking assets..\", compares remote/local AssetVersion values, runs outdated updaters, and adds updater-specific errors such as \"Error with the cache updater!\", \"Error with the sprite updater!\" and \"Error with configuration updater!\"."
+        },
+        {
+          "family": "exact_outdated_diagnostic",
+          "detail": "When a version mismatch is found it prints \"Updating outdated game asset: <name>\" before invoking that updater."
+        }
+      ],
+      "note": "AssetUpdateCoordinator owns and sequences the concrete asset updaters."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AssetUpdater",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_abstract_contract",
+          "detail": "rs/cache/b/d is abstract, owns updater name, Client reference and an error-message list, and defines abstract update(), version-info and updater-policy hooks used by the concrete asset updaters."
+        },
+        {
+          "family": "exact_shared_file_ops",
+          "detail": "The base class provides shared directory creation, remote/local version parsing, ZIP extraction/file write helpers and standardized AssetUpdateError reporting."
+        }
+      ],
+      "note": "AssetUpdater is the shared abstract updater contract and common file/version/error implementation."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AssetVersion",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_version_contract",
+          "detail": "rs/cache/b/e stores a version key plus local version-file path, reads the remote versions.txt source, reads/writes local versions.dat state and exposes remote/local version doubles compared by the coordinator."
+        },
+        {
+          "family": "exact_coordinator_consumer",
+          "detail": "AssetUpdateCoordinator compares each updater's rs/cache/b/e remote and local version values and invokes the updater only when they differ."
+        }
+      ],
+      "note": "AssetVersion encapsulates the updater's remote/local version-key state."
+    }
+  ],
+  "conflicts": []
+}
