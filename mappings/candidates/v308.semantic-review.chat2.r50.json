@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 5,
+  "review_id": "SEMREVIEW_E9FF46C24FD436486335",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_06C266ECEF9F492D72B1",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000040",
+      "owner_logical_id": "CLIENT_CLASS_000040",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/M",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpawnShape",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_factory_shape",
+          "detail": "rs/M is a one-method interface accepting java.util.Random and returning rs/R."
+        },
+        {
+          "family": "exact_particle_role",
+          "detail": "ParticleDefinition stores rs/M as the spawn-shape strategy and asks it for one generated point when a particle is created."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "The matching public particle engine exposes SpawnShape with exactly Vector getPoint(Random), the same strategy role."
+        }
+      ],
+      "note": "SpawnShape is a non-canonical semantic recovery name grounded in exact v308 particle behavior; public RSPS source is corroborating lineage evidence only."
+    },
+    {
+      "proposal_id": "SEMPROP_4D0203AA7FDE6DCCCB63",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000785",
+      "owner_logical_id": "CLIENT_CLASS_000785",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/r/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ParticleDefinition",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_particle_definition_layout",
+          "detail": "rs/r/c owns the characteristic particle-definition state: start/end size, start/end color, start/end velocity vectors, spawn-shape strategy, start/end alpha, lifespan, spawn rate, sprite, velocity step, color step, size step and alpha step."
+        },
+        {
+          "family": "exact_step_derivation",
+          "detail": "Its update/derivation methods compute per-tick color, size, alpha and vector velocity changes from the configured start/end values and lifespan, while exposing the configuration to particle instances."
+        },
+        {
+          "family": "exact_particle_binding",
+          "detail": "rs/r/a holds one rs/r/c definition and consumes its lifespan, color/size/alpha steps, velocity/gravity vectors and spawn parameters during initialization and tick updates."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "A public RSPS ParticleDefinition has the same core field layout and semantics, including Vector gravity/start/end velocity, SpawnShape, alpha/size/color endpoints, lifespan/spawnRate, sprite and derived step values."
+        }
+      ],
+      "note": "ParticleDefinition is a non-canonical semantic recovery name grounded in exact v308 particle behavior; public RSPS source is corroborating lineage evidence only."
+    },
+    {
+      "proposal_id": "SEMPROP_673AC866541EFF3E6845",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000783",
+      "owner_logical_id": "CLIENT_CLASS_000783",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/r/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Particle",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_particle_lifecycle",
+          "detail": "rs/r/a owns a ParticleDefinition reference, age counter, color, size, alpha, dead flag, position components, velocity components and depth/id metadata; construction initializes these values from the definition."
+        },
+        {
+          "family": "exact_tick_behavior",
+          "detail": "Its tick/update method increments age, marks the particle dead at definition lifespan, advances color/size/alpha, advances position by velocity, advances velocity by the definition's velocity step and applies definition gravity to position."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "The matching public Particle class performs the same age/lifespan death test and per-tick color, size, position, velocity, alpha and gravity updates against ParticleDefinition; v308 stores vector components as ints directly rather than retaining Vector objects."
+        }
+      ],
+      "note": "Particle is a non-canonical semantic recovery name grounded in exact v308 particle behavior; public RSPS source is corroborating lineage evidence only."
+    },
+    {
+      "proposal_id": "SEMPROP_8BE85A3F1A5D01AE3B6F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000001",
+      "owner_logical_id": "CLIENT_CLASS_000001",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/A",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PointSpawnShape",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_strategy_implementation",
+          "detail": "rs/A implements rs/M, stores one rs/R point and returns a clone of that point for every Random input."
+        },
+        {
+          "family": "exact_default_usage",
+          "detail": "ParticleDefinition initializes its spawn-shape strategy to new rs/A(Vector.ZERO), making this the fixed-point spawn implementation."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "The matching public particle engine exposes PointSpawnShape implementing SpawnShape with one stored Vector and getPoint(Random) returning point.clone()."
+        }
+      ],
+      "note": "PointSpawnShape is a non-canonical semantic recovery name grounded in exact v308 particle behavior; public RSPS source is corroborating lineage evidence only."
+    },
+    {
+      "proposal_id": "SEMPROP_9F71F17F326BE88B75C4",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000045",
+      "owner_logical_id": "CLIENT_CLASS_000045",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/R",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Vector",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_vector_value_shape",
+          "detail": "rs/R stores exactly three integer components plus a static zero instance and exposes component getters, subtraction, scalar division, in-place addition, component-scaled mixing, cloning and a three-component toString."
+        },
+        {
+          "family": "exact_particle_consumers",
+          "detail": "The rs/r particle subsystem uses rs/R for start/end velocity, gravity/velocity-step and particle position/velocity arithmetic."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "A public RSPS particle engine exposes a Vector class with the same ZERO instance, x/y/z fields and subtract/divide/addLocal/mix/clone/toString surface."
+        }
+      ],
+      "note": "Vector is a non-canonical semantic recovery name grounded in exact v308 particle behavior; public RSPS source is corroborating lineage evidence only."
+    }
+  ],
+  "unresolved": []
+}
