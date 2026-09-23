@@ -115,6 +115,91 @@ class SourceReadinessTests(unittest.TestCase):
                 1,
             )
 
+
+    def test_nested_public_types_are_not_top_level(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "Outer.java").write_text(
+                "public class Outer {\n"
+                "    String brace = \"{ not structural }\";\n"
+                "    char close = '}';\n"
+                "    // } comment brace\n"
+                "    /* { block comment brace } */\n"
+                "    public enum Nested { A, B }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            report = audit_source_workspace(_manifest(root), root)
+            self.assertTrue(report["summary"]["static_readiness_pass"])
+            self.assertEqual(report["issues"], [])
+            self.assertEqual(
+                report["files"][0]["public_types"],
+                ["Outer"],
+            )
+            self.assertEqual(
+                report["files"][0]["top_level_types"],
+                ["Outer"],
+            )
+
+
+    def test_text_block_braces_do_not_change_top_level_depth(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "Outer.java").write_text(
+                'public class Outer {\n'
+                '    String json = """\n'
+                '        { "nested": "} not structural" }\n'
+                '        """;\n'
+                '    public interface Nested {}\n'
+                '}\n',
+                encoding="utf-8",
+            )
+            report = audit_source_workspace(_manifest(root), root)
+            self.assertTrue(report["summary"]["static_readiness_pass"])
+            self.assertEqual(report["issues"], [])
+            self.assertEqual(report["files"][0]["public_types"], ["Outer"])
+            self.assertEqual(report["files"][0]["top_level_types"], ["Outer"])
+
+    def test_package_private_outer_with_public_nested_type_has_no_filename_error(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "o.java").write_text(
+                "class o {\n"
+                "    public class a {}\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            report = audit_source_workspace(_manifest(root), root)
+            self.assertTrue(report["summary"]["static_readiness_pass"])
+            self.assertEqual(report["issues"], [])
+            self.assertEqual(
+                report["files"][0]["top_level_types"],
+                ["o"],
+            )
+            self.assertEqual(
+                report["files"][0]["public_types"],
+                [],
+            )
+
+    def test_genuine_multiple_public_top_level_types_remain_high(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "A.java").write_text(
+                "public class A {}\n"
+                "public class B {}\n",
+                encoding="utf-8",
+            )
+            report = audit_source_workspace(_manifest(root), root)
+            self.assertFalse(report["summary"]["static_readiness_pass"])
+            self.assertEqual(
+                report["issue_counts"]["multiple_public_top_level_types"],
+                1,
+            )
+            self.assertEqual(
+                report["files"][0]["public_types"],
+                ["A", "B"],
+            )
+
     def test_source_tree_drift_is_rejected(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
