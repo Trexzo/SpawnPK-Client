@@ -250,6 +250,41 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 "pkg/shadow/A",
             )
 
+    def test_shadowed_self_static_field_ignores_literals_and_comments(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _shadow_owner_fixture(root)
+            source = root / "src" / "pkg" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package pkg;\n"
+                "public class A {\n"
+                "    public static A[] A;\n"
+                "    public static A[] B;\n"
+                "    public static void m(final pkg.shadow.A A) {\n"
+                "        A.A = new A[1];\n"
+                "        A.B = A.A;\n"
+                "        String literal = \"A.A A.B\"; // A.A\n"
+                "        /* A.B */ A.ping();\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            text = source.read_text(encoding="utf-8")
+
+            self.assertIn("pkg.A.A = new A[1];", text)
+            self.assertIn("pkg.A.B = pkg.A.A;", text)
+            self.assertIn('String literal = "A.A A.B"; // A.A', text)
+            self.assertIn("/* A.B */ A.ping();", text)
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_self_static_field_reference_count"
+                ],
+                3,
+            )
+
     def test_shadowed_self_static_field_count_mismatch_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
