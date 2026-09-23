@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemIconOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_overlay_descriptor",
+          "detail": "rs/d/n stores an overlay type, a referenced icon/item id, and x/y offsets in a static registry keyed by the base item id."
+        },
+        {
+          "family": "exact_sprite_resolution",
+          "detail": "Its sprite resolver selects either the client text-icon sprite table for TEXT_ICON or R28 ItemDefinition item-sprite generation for ITEM_ICON."
+        },
+        {
+          "family": "exact_item_config_binding",
+          "detail": "The item-definition update parser recognizes exact icon/iconitem/iconoffsets/iconx/icony configuration keys and constructs rs/d/n descriptors for the corresponding item ids."
+        },
+        {
+          "family": "exact_render_consumer",
+          "detail": "The item/interface rendering path tests the registry for the current item id and draws the resolved overlay sprite at the item's screen coordinates plus the descriptor offsets."
+        }
+      ],
+      "note": "ItemIconOverlay is the conservative semantic name for this per-item sprite-overlay descriptor; it does not claim a verbatim original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/n$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemIconOverlayType",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "rs/d/n$a is an enum with surviving exact constants TEXT_ICON and ITEM_ICON."
+        },
+        {
+          "family": "exact_resolution_contract",
+          "detail": "ItemIconOverlay switches on this enum to distinguish sprites sourced from the text-icon sprite table from sprites generated from another item definition."
+        },
+        {
+          "family": "exact_config_binding",
+          "detail": "The item-definition update path creates TEXT_ICON overlays from the icon configuration and ITEM_ICON overlays from iconitem, sharing the same configured x/y offsets."
+        }
+      ],
+      "note": "ItemIconOverlayType is the conservative semantic name for this exact two-mode item overlay source enum; it does not claim a verbatim original developer identifier."
+    }
+  ],
+  "conflicts": []
+}
