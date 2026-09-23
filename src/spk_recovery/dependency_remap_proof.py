@@ -252,6 +252,34 @@ def _hierarchy_names(
     return result
 
 
+def _external_hierarchy_boundaries(
+    owner: str,
+    classes: dict[str, ParsedClass],
+) -> list[str]:
+    boundaries: set[str] = set()
+    seen: set[str] = set()
+    queue = [owner]
+    while queue:
+        current = queue.pop(0)
+        if current in seen:
+            continue
+        seen.add(current)
+        parsed = classes.get(current)
+        if parsed is None:
+            boundaries.add(current)
+            continue
+        parents: list[str] = []
+        if parsed.super_name:
+            parents.append(parsed.super_name)
+        parents.extend(parsed.interfaces)
+        for parent in parents:
+            if parent in classes:
+                queue.append(parent)
+            else:
+                boundaries.add(parent)
+    return sorted(boundaries)
+
+
 def _declarations(
     *,
     kind: str,
@@ -491,6 +519,25 @@ def _map_reference(
         classes=bundled,
     )
     if not declarations:
+        boundaries = _external_hierarchy_boundaries(
+            owner,
+            bundled,
+        )
+        if boundaries:
+            return {
+                **base,
+                "status": "external_hierarchy_member",
+                "new_owner": str(owner_mapping["new_name"]),
+                "new_name": None,
+                "new_descriptor": None,
+                "artifact": owner_mapping.get("artifact"),
+                "proof": {
+                    "strategy": (
+                        "member_absent_before_non_bundled_hierarchy_boundary"
+                    ),
+                    "external_hierarchy_boundaries": boundaries,
+                },
+            }
         return {
             **base,
             "status": "bundled_member_not_declared",
