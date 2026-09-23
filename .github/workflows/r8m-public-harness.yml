@@ -1,0 +1,25 @@
+name: R8M public source harness
+
+on:
+  push:
+    branches:
+      - core/r8m-public-harness
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload public repository source
+        uses: actions/upload-artifact@v4
+        with:
+          name: r8m-public-source-harness
+          path: |
+            pyproject.toml
+            README.md
+            src
+            tests
+            docs
+            scripts
+          if-no-files-found: error
+          retention-days: 1
