@@ -120,6 +120,8 @@ def scan_project_reference_surface(
 
                 for row in profile["member_references"]:
                     owner = str(row["owner"])
+                    if owner.startswith("["):
+                        continue
                     if _is_project(owner, prefixes):
                         continue
                     key = (
