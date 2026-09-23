@@ -11,10 +11,7 @@ SHA = (
 ROOT = Path(__file__).resolve().parents[1]
 
 CLASS_COORDS = [
-    ("CLIENT_CLASS_001115", "rs/x/a"),
-    ("CLIENT_CLASS_001116", "rs/x/b"),
-    ("CLIENT_CLASS_001119", "rs/x/e"),
-    ("CLIENT_CLASS_001120", "rs/x/f"),
+    ("CLIENT_CLASS_000684", "rs/n/e"),
 ]
 
 
@@ -89,27 +86,24 @@ class Chat2SemanticReviewR56Tests(unittest.TestCase):
         actual = resolve_semantic_candidates(
             _class_lineage(), _member_lineage(), candidates
         )
-        self.assertEqual(actual["proposal_count"], 4)
+        self.assertEqual(actual["proposal_count"], 1)
         self.assertEqual(actual["unresolved"], [])
         self.assertEqual(
             actual["review_id"],
-            "SEMREVIEW_F6955D199D1E36C3F74D",
+            "SEMREVIEW_42DD35214AC4AE229B6C",
         )
         self.assertEqual(actual, expected)
 
-    def test_r56_expected_stable_ids(self):
+    def test_r56_expected_stable_id(self):
         review = _load("mappings/candidates/v308.semantic-review.chat2.r56.json")
         self.assertEqual(
             {row["proposed_name"]: row["stable_id"] for row in review["proposals"]},
             {
-                "BZip2Decompressor": "CLIENT_CLASS_001115",
-                "BZip2DecompressionState": "CLIENT_CLASS_001116",
-                "Stream": "CLIENT_CLASS_001119",
-                "StreamLoader": "CLIENT_CLASS_001120",
+                "RSInterface": "CLIENT_CLASS_000684",
             },
         )
 
-    def test_r56_names_and_owners_do_not_overlap_prior_reviews(self):
+    def test_r56_name_and_owner_do_not_overlap_prior_reviews(self):
         current = _load("mappings/candidates/v308.semantic-review.chat2.r56.json")
         names = {row["proposed_name"] for row in current["proposals"]}
         owners = {row["source_coordinate"]["owner"] for row in current["proposals"]}
