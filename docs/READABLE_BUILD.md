@@ -59,11 +59,12 @@ Class package-resource overlap and exact class-name string literals also remain 
 These flags acknowledge reviewed risks; they do not create semantic acceptance.
 
 Java-source legality can also require a non-semantic member rename even when no semantic
-name is known. R8G keeps this separate and opt-in:
+name is known. The existing source-safety mode covers both class/package collisions and
+Java-illegal member names:
 
 ```powershell
-  --source-safe-member-fallback `
-  --member-fallback-name-prefix Recovered_
+  --source-safe-fallback `
+  --fallback-name-prefix Recovered_
 ```
 
 A member fallback is derived from the stable member ID and carries explicit source-safety
