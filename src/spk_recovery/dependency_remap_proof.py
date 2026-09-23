@@ -131,6 +131,54 @@ def _structural_groups(
     return groups
 
 
+def _api_identity_payload(
+    parsed: ParsedClass,
+) -> tuple[Any, ...]:
+    return (
+        parsed.major,
+        parsed.minor,
+        parsed.access,
+        parsed.super_name,
+        tuple(parsed.interfaces),
+        tuple(
+            (
+                int(row["access"]),
+                str(row["name"]),
+                str(row["descriptor"]),
+                tuple(row.get("attributes", [])),
+            )
+            for row in parsed.fields
+        ),
+        tuple(
+            (
+                int(row["access"]),
+                str(row["name"]),
+                str(row["descriptor"]),
+                tuple(row.get("attributes", [])),
+            )
+            for row in parsed.methods
+        ),
+        tuple(
+            attribute
+            for attribute in parsed.attributes
+            if attribute != "SourceFile"
+        ),
+        tuple(sorted(parsed.literal_strings)),
+        tuple(
+            sorted(
+                (
+                    type(value).__name__,
+                    repr(value),
+                )
+                for value in parsed.numeric_constants
+            )
+        ),
+        parsed.inner_outer_name,
+        parsed.inner_simple_name,
+        parsed.enclosing_class_name,
+    )
+
+
 def _class_mappings(
     bundled: dict[str, ParsedClass],
     official: dict[str, ParsedClass],
@@ -156,6 +204,20 @@ def _class_mappings(
             }
             continue
 
+        if (
+            same is not None
+            and _api_identity_payload(old_class)
+            == _api_identity_payload(same)
+        ):
+            mappings[old_name] = {
+                "old_name": old_name,
+                "new_name": old_name,
+                "strategy": "identity_api_surface",
+                "structural_sha256": structural,
+                "artifact": artifact_by_class.get(old_name),
+            }
+            continue
+
         old_candidates = bundled_groups.get(structural, [])
         new_candidates = official_groups.get(structural, [])
         if len(old_candidates) == 1 and len(new_candidates) == 1:
@@ -172,6 +234,10 @@ def _class_mappings(
         "accepted_class_mapping_count": len(mappings),
         "identity_structural_count": sum(
             row["strategy"] == "identity_structural"
+            for row in mappings.values()
+        ),
+        "identity_api_surface_count": sum(
+            row["strategy"] == "identity_api_surface"
             for row in mappings.values()
         ),
         "unique_structural_count": sum(
@@ -355,6 +421,30 @@ def _map_declared_member(
     new_class = official[official_owner]
     name = str(member["name"])
     descriptor = str(member["descriptor"])
+
+    if class_mapping["strategy"] == "identity_api_surface":
+        official_rows = (
+            new_class.fields
+            if kind == "field"
+            else new_class.methods
+        )
+        exact = [
+            row
+            for row in official_rows
+            if (
+                str(row["name"]) == name
+                and str(row["descriptor"]) == descriptor
+            )
+        ]
+        if len(exact) != 1:
+            return None
+        return {
+            "declaring_old_owner": declaring_owner,
+            "declaring_new_owner": official_owner,
+            "new_name": name,
+            "new_descriptor": descriptor,
+            "strategy": "identity_api_surface_exact_member",
+        }
 
     if kind == "field":
         if not alignments[declaring_owner]["field_sequence_equal"]:
