@@ -189,6 +189,110 @@ def _accepted_nested_class_closure(
     return rows
 
 
+def _same_simple_nested_source_safety(
+    class_lineage: dict[str, Any],
+    index: dict[str, Any],
+    *,
+    build_id: str,
+    requested: dict[str, Any],
+    fallback_name_prefix: str,
+) -> list[dict[str, Any]]:
+    """Rename structurally nested classes that Java cannot declare safely.
+
+    The JVM permits a member class whose InnerClasses simple name equals the
+    direct enclosing type's simple name. Java source does not. This is a
+    source-safety rename only; semantic state is never promoted.
+    """
+    records_by_source: dict[str, dict[str, Any]] = {}
+    for record in class_lineage.get("classes", []):
+        if not _has_build_entry(record, build_id):
+            continue
+        source = str(_entry_for_build(record, build_id)["internal_name"])
+        records_by_source[source] = record
+
+    indexed_by_name = {
+        str(row.get("internal_name")): row
+        for row in index.get("classes", {}).values()
+        if isinstance(row, dict) and row.get("internal_name")
+    }
+
+    rows: list[dict[str, Any]] = []
+    for nested_source in sorted(records_by_source):
+        meta = indexed_by_name.get(nested_source)
+        if not isinstance(meta, dict):
+            continue
+        outer_source = meta.get("inner_outer_name")
+        inner_simple = meta.get("inner_simple_name")
+        if (
+            not isinstance(outer_source, str)
+            or not outer_source
+            or not isinstance(inner_simple, str)
+            or not inner_simple
+        ):
+            continue
+        outer_record = records_by_source.get(outer_source)
+        if outer_record is None:
+            continue
+
+        outer_effective = (
+            str(requested[str(outer_record["logical_id"])]["target_internal_name"])
+            if str(outer_record["logical_id"]) in requested
+            else outer_source
+        )
+        outer_simple = outer_effective.rsplit("$", 1)[-1].rsplit("/", 1)[-1]
+        if inner_simple != outer_simple:
+            continue
+
+        nested = records_by_source[nested_source]
+        nested_id = str(nested.get("logical_id"))
+        existing = requested.get(nested_id)
+        if existing is not None:
+            existing_target = str(existing["target_internal_name"])
+            existing_simple = existing_target.rsplit("$", 1)[-1].rsplit("/", 1)[-1]
+            if existing_simple != outer_simple:
+                continue
+            if nested.get("semantic_status") == "ACCEPTED":
+                raise SemanticNamespaceError(
+                    f"{nested_id}: ACCEPTED semantic nested target "
+                    f"{existing_target!r} still conflicts with enclosing "
+                    f"simple name {outer_simple!r}"
+                )
+
+        target = (
+            outer_effective
+            + "$"
+            + fallback_name_prefix
+            + nested_id
+        )
+        requested[nested_id] = {
+            "target_internal_name": target,
+            "confidence": 1.0,
+            "provenance": [
+                {
+                    "kind": "source_safety",
+                    "reason": "java_enclosing_nested_simple_name_collision",
+                    "strategy": "preserve_outer_binary_nested_class_rename",
+                    "outer_source_internal_name": outer_source,
+                    "outer_target_internal_name": outer_effective,
+                    "inner_simple_name": inner_simple,
+                }
+            ],
+        }
+        rows.append(
+            {
+                "logical_id": nested_id,
+                "source_internal_name": nested_source,
+                "target_internal_name": target,
+                "reason": "java_enclosing_nested_simple_name_collision",
+                "strategy": "preserve_outer_binary_nested_class_rename",
+                "outer_source_internal_name": outer_source,
+                "outer_target_internal_name": outer_effective,
+                "inner_simple_name": inner_simple,
+            }
+        )
+    return rows
+
+
 def _accepted_class_spec(
     class_lineage: dict[str, Any],
     index: dict[str, Any],
@@ -201,6 +305,7 @@ def _accepted_class_spec(
 ) -> tuple[
     dict[str, Any],
     list[str],
+    list[dict[str, Any]],
     list[dict[str, Any]],
     list[dict[str, Any]],
 ]:
@@ -252,6 +357,7 @@ def _accepted_class_spec(
     )
 
     fallback_rows: list[dict[str, Any]] = []
+    same_simple_nested_rows: list[dict[str, Any]] = []
     if source_safe_fallback:
         effective_names: dict[str, str] = {}
         records_by_id: dict[str, dict[str, Any]] = {}
@@ -317,6 +423,14 @@ def _accepted_class_spec(
                 }
             )
 
+        same_simple_nested_rows = _same_simple_nested_source_safety(
+            class_lineage,
+            index,
+            build_id=build_id,
+            requested=requested,
+            fallback_name_prefix=fallback_name_prefix,
+        )
+
     spec = {
         "schema_version": 1,
         "kind": "remap_spec",
@@ -324,7 +438,13 @@ def _accepted_class_spec(
         "source_sha256": source_sha256,
         "classes": requested,
     }
-    return spec, sorted(accepted_ids), fallback_rows, nested_rows
+    return (
+        spec,
+        sorted(accepted_ids),
+        fallback_rows,
+        nested_rows,
+        same_simple_nested_rows,
+    )
 
 
 def build_semantic_namespace(
@@ -375,6 +495,7 @@ def build_semantic_namespace(
         accepted_class_ids,
         fallback_rows,
         nested_rows,
+        same_simple_nested_rows,
     ) = _accepted_class_spec(
         class_lineage,
         index,
@@ -471,6 +592,7 @@ def build_semantic_namespace(
         "fallback_remaps": fallback_rows,
         "member_source_safety_remaps": member_source_safety_rows,
         "nested_class_closure_remaps": nested_rows,
+        "same_simple_nested_source_safety_remaps": same_simple_nested_rows,
         "class_plan_digest": class_plan_digest,
         "member_plan_digest": member_plan_digest,
         "accepted_class_ids": accepted_class_ids,
@@ -492,6 +614,7 @@ def build_semantic_namespace(
         "summary": {
             "source_safety_fallbacks": len(fallback_rows),
             "source_safety_nested_class_remaps": len(nested_rows),
+            "source_safety_same_simple_nested_remaps": len(same_simple_nested_rows),
             "source_safety_member_remaps": len(member_source_safety_rows),
             "classes_total": len(build_classes),
             "classes_accepted": accepted_classes,
@@ -509,6 +632,7 @@ def build_semantic_namespace(
         "accepted_class_ids": accepted_class_ids,
         "fallback_remaps": fallback_rows,
         "nested_class_closure_remaps": nested_rows,
+        "same_simple_nested_source_safety_remaps": same_simple_nested_rows,
         "member_source_safety_remaps": member_source_safety_rows,
     }
     return manifest, class_plan, member_plan

@@ -118,6 +118,7 @@ class NestingMetadataTests(unittest.TestCase):
         )
         self.assertEqual(parsed.name, "Outer$Inner")
         self.assertEqual(parsed.inner_outer_name, "Outer")
+        self.assertEqual(parsed.inner_simple_name, "Inner")
         self.assertIsNone(parsed.enclosing_class_name)
 
 
@@ -125,6 +126,7 @@ class NestingMetadataTests(unittest.TestCase):
         parsed = parse_class(_minimal_enclosing_class_bytes())
         self.assertEqual(parsed.name, "Outer$1")
         self.assertIsNone(parsed.inner_outer_name)
+        self.assertIsNone(parsed.inner_simple_name)
         self.assertEqual(parsed.enclosing_class_name, "Outer")
 
     def test_dollar_name_without_attribute_is_not_nesting_evidence(self):
@@ -133,6 +135,7 @@ class NestingMetadataTests(unittest.TestCase):
         )
         self.assertEqual(parsed.name, "Outer$Inner")
         self.assertIsNone(parsed.inner_outer_name)
+        self.assertIsNone(parsed.inner_simple_name)
         self.assertIsNone(parsed.enclosing_class_name)
 
 
