@@ -408,9 +408,27 @@ def build_semantic_namespace(
             member_lineage,
             index,
             build_id=build_id,
+            source_safe_fallback=source_safe_fallback,
+            fallback_name_prefix=fallback_name_prefix,
         )
     except MemberRemapPlanError as exc:
         raise SemanticNamespaceError(str(exc)) from exc
+
+    member_source_safety_rows = [
+        {
+            "member_id": row["member_id"],
+            "owner_internal_name": row["owner_internal_name"],
+            "kind": row["kind"],
+            "source_name": row["source_name"],
+            "descriptor": row["descriptor"],
+            "target_name": row["target_name"],
+            "reason": row["provenance"][0].get("reason"),
+            "strategy": row["provenance"][0].get("strategy"),
+        }
+        for row in member_plan.get("members", [])
+        if row.get("provenance")
+        and row["provenance"][0].get("kind") == "source_safety"
+    ]
 
     build_classes = [
         row
@@ -457,6 +475,7 @@ def build_semantic_namespace(
         "fallback_name_prefix": fallback_name_prefix,
         "fallback_remaps": fallback_rows,
         "nested_class_closure_remaps": nested_rows,
+        "member_source_safety_remaps": member_source_safety_rows,
         "class_plan_digest": class_plan_digest,
         "member_plan_digest": member_plan_digest,
         "accepted_class_ids": accepted_class_ids,
@@ -478,6 +497,7 @@ def build_semantic_namespace(
         "summary": {
             "source_safety_fallbacks": len(fallback_rows),
             "source_safety_nested_class_remaps": len(nested_rows),
+            "source_safety_member_remaps": len(member_source_safety_rows),
             "classes_total": len(build_classes),
             "classes_accepted": accepted_classes,
             "classes_remapped": class_plan["class_count"],
@@ -494,6 +514,7 @@ def build_semantic_namespace(
         "accepted_class_ids": accepted_class_ids,
         "fallback_remaps": fallback_rows,
         "nested_class_closure_remaps": nested_rows,
+        "member_source_safety_remaps": member_source_safety_rows,
     }
     return manifest, class_plan, member_plan
 
