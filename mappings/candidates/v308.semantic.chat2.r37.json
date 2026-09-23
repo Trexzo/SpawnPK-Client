@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/S",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "VertexNormalBuffer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_vertex_accumulation",
+          "detail": "Model.q() computes one normalized triangle cross-product, then for smooth-shaded faces adds the same XYZ components into rs/S at each of the face's three vertex indices and increments the fourth component by one for each contribution."
+        },
+        {
+          "family": "exact_vertex_count_binding",
+          "detail": "Model allocates rs/S using the model vertex count and indexes it with face vertex indices, while the class stores exactly four integers per entry: accumulated X, Y, Z and contribution count."
+        },
+        {
+          "family": "exact_lighting_consumer",
+          "detail": "The lighting pass reads the accumulated XYZ components for each vertex, forms the light-vector dot product, and divides by a scale multiplied by the fourth rs/S component before computing the per-vertex shade."
+        }
+      ],
+      "note": "VertexNormalBuffer names the packed per-vertex accumulated normal storage used by Model's smooth-shading pipeline; it is a semantic role name, not an original-identifier claim."
+    }
+  ],
+  "conflicts": []
+}
