@@ -79,6 +79,8 @@ def _artifact_index(
                             )
                         release = int(parts[2])
                         logical_entry = parts[3]
+                    if logical_entry == "module-info.class":
+                        continue
                     variants.setdefault(logical_entry, []).append(
                         (release, entry)
                     )
