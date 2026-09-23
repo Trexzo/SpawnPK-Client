@@ -14,6 +14,21 @@ class MemberRemapPlanError(ValueError):
 
 
 _IDENTIFIER = re.compile(r"^[A-Za-z_$][A-Za-z0-9_$]*$")
+_JAVA_RESERVED_IDENTIFIERS = {
+    "abstract", "assert", "boolean", "break", "byte", "case", "catch",
+    "char", "class", "const", "continue", "default", "do", "double",
+    "else", "enum", "extends", "final", "finally", "float", "for",
+    "goto", "if", "implements", "import", "instanceof", "int",
+    "interface", "long", "native", "new", "package", "private",
+    "protected", "public", "return", "short", "static", "strictfp",
+    "super", "switch", "synchronized", "this", "throw", "throws",
+    "transient", "try", "void", "volatile", "while", "true", "false",
+    "null", "_",
+}
+
+
+def _is_java_source_identifier(name: str) -> bool:
+    return bool(_IDENTIFIER.fullmatch(name)) and name not in _JAVA_RESERVED_IDENTIFIERS
 
 
 def _build(class_lineage: dict[str, Any], build_id: str) -> dict[str, Any]:
@@ -50,9 +65,9 @@ def _accepted_target_name(record: dict[str, Any]) -> str | None:
     if record.get("semantic_status") != "ACCEPTED":
         return None
     name = record.get("semantic_name")
-    if not isinstance(name, str) or not _IDENTIFIER.fullmatch(name):
+    if not isinstance(name, str) or not _is_java_source_identifier(name):
         raise MemberRemapPlanError(
-            f"{record.get('member_id')}: accepted semantic name is invalid"
+            f"{record.get('member_id')}: accepted semantic name is not a valid Java source identifier"
         )
     if name in {"<init>", "<clinit>"}:
         raise MemberRemapPlanError(
@@ -100,8 +115,10 @@ def build_member_remap_plan(
     index: dict[str, Any],
     *,
     build_id: str,
+    source_safe_fallback: bool = False,
+    fallback_name_prefix: str = "Recovered_",
 ) -> dict[str, Any]:
-    """Resolve ACCEPTED semantic member names for one exact client build."""
+    """Resolve accepted semantics plus optional non-semantic source-safety names."""
     validate_lineage(class_lineage)
     validate_member_lineage(
         member_lineage,
@@ -113,11 +130,19 @@ def build_member_remap_plan(
         raise MemberRemapPlanError(
             "member remap index SHA does not match canonical build"
         )
+    if source_safe_fallback and (
+        not isinstance(fallback_name_prefix, str)
+        or not fallback_name_prefix
+        or not _IDENTIFIER.fullmatch(fallback_name_prefix + "X")
+    ):
+        raise MemberRemapPlanError(
+            f"invalid member fallback name prefix {fallback_name_prefix!r}"
+        )
 
     rows: list[dict[str, Any]] = []
     for record in member_lineage.get("members", []):
         target_name = _accepted_target_name(record)
-        if target_name is None:
+        if target_name is None and not source_safe_fallback:
             continue
 
         entry = _entry_for_build(record, build_id)
@@ -125,6 +150,23 @@ def build_member_remap_plan(
         owner = entry["owner_internal_name"]
         source_name = entry["name"]
         descriptor = entry["descriptor"]
+
+        confidence: float
+        provenance: list[dict[str, Any]]
+        if target_name is None:
+            if source_name in {"<init>", "<clinit>"} or _is_java_source_identifier(source_name):
+                continue
+            target_name = fallback_name_prefix + str(record["member_id"])
+            confidence = 1.0
+            provenance = [{
+                "kind": "source_safety",
+                "reason": "java_source_identifier",
+                "strategy": "stable_member_id_fallback",
+                "source_name": source_name,
+            }]
+        else:
+            confidence = float(record["semantic_confidence"])
+            provenance = record["semantic_provenance"]
 
         if target_name == source_name:
             continue
@@ -149,8 +191,8 @@ def build_member_remap_plan(
                 "source_name": source_name,
                 "descriptor": descriptor,
                 "target_name": target_name,
-                "confidence": float(record["semantic_confidence"]),
-                "provenance": record["semantic_provenance"],
+                "confidence": confidence,
+                "provenance": provenance,
             }
         )
 
