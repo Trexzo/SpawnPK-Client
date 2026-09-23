@@ -14,93 +14,35 @@
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "target": {
         "kind": "class",
-        "owner": "rs/cache/c",
+        "owner": "rs/q/b",
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "OnDemandData",
+      "proposed_name": "RSSocket",
       "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_hierarchy",
-          "detail": "rs/cache/c extends R25 NodeSub (rs/a), matching the request-node inheritance used by the classic on-demand queue subsystem."
+          "family": "exact_socket_wrapper_shape",
+          "detail": "rs/q/b is final, implements Runnable, owns one Socket plus InputStream/OutputStream, a circular byte[] write buffer, read/write cursors and writer/error lifecycle flags."
         },
         {
-          "family": "exact_request_payload",
-          "detail": "The class is a compact mutable request record with request-type/id/state integers, booleans and a byte[] payload, and is the element type returned/queued by rs/cache/d."
+          "family": "exact_socket_configuration",
+          "detail": "The constructor accepts R48 RSApplet plus Socket, configures socket timeout/TCP_NODELAY/receive-buffer state and captures the socket input/output streams."
         },
         {
-          "family": "exact_fetcher_consumer",
-          "detail": "rs/cache/d returns rs/cache/c from its completed-request path and passes rs/cache/c through its network/request processing methods."
+          "family": "exact_io_contract",
+          "detail": "The class exposes single-byte read, available-byte count, exact-length blocking read with EOF failure, asynchronous buffered write, orderly close and a writer-thread run loop."
+        },
+        {
+          "family": "surviving_diagnostics",
+          "detail": "Exact strings include \"EOF\", \"Error closing stream\", \"Error in writer thread\", \"buffer overflow\" and \"ioerror:\", directly describing the buffered socket lifecycle."
+        },
+        {
+          "family": "exact_writer_thread",
+          "detail": "Buffered writes append into a circular queue; the writer thread is started through RSApplet's runnable scheduler, drains pending bytes to OutputStream and flushes when the queue becomes empty."
         }
       ],
-      "note": "OnDemandData is fixed by the NodeSub request-record role and exact rs/cache/d queue/consumer relationship."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/cache/d",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "OnDemandFetcher",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_runtime_role",
-          "detail": "rs/cache/d extends rs/cache/e, implements Runnable, owns socket InputStream/OutputStream state, CRC32, request buffers and multiple R25/R47 linked request queues."
-        },
-        {
-          "family": "exact_update_tables",
-          "detail": "Surviving literals include model_crc/model_version/model_index, anim_crc/anim_version/anim_index, midi_crc/midi_version/midi_index, map_crc/map_version and map-index data."
-        },
-        {
-          "family": "exact_protocol_diagnostics",
-          "detail": "Surviving diagnostics include \"Loading extra files - <n>%\", \"missing start of file\", missing-file/revision errors and the update request rejection marker \"Rej: ...\"."
-        },
-        {
-          "family": "exact_client_start",
-          "detail": "The fetcher has a start/init method taking the recovered archive/stream-loader type plus Client, then runs the background request/download loop."
-        }
-      ],
-      "note": "OnDemandFetcher is fixed by the threaded socket/CRC/versioned update-fetch role."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/cache/e",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "OnDemandFetcherParent",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_inheritance",
-          "detail": "rs/cache/d directly extends rs/cache/e."
-        },
-        {
-          "family": "exact_parent_surface",
-          "detail": "rs/cache/e contains only the no-op overridable request hook a(int) plus its constructor, matching the classic on-demand fetcher parent shim."
-        },
-        {
-          "family": "classic_hierarchy_match",
-          "detail": "The child/request-node pairing and this one-method base class reproduce the well-known OnDemandFetcher / OnDemandData / OnDemandFetcherParent hierarchy carried by classic clients."
-        }
-      ],
-      "note": "OnDemandFetcherParent is fixed by the direct parent relationship and the one-method no-op hook surface."
+      "note": "RSSocket is the conservative classic semantic identity for this exact buffered threaded socket wrapper; exact v308 behavior is primary evidence."
     }
   ],
   "conflicts": []

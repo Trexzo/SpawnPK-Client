@@ -11,9 +11,7 @@ SHA = (
 ROOT = Path(__file__).resolve().parents[1]
 
 CLASS_COORDS = [
-    ("CLIENT_CLASS_000096", "rs/cache/c"),
-    ("CLIENT_CLASS_000097", "rs/cache/d"),
-    ("CLIENT_CLASS_000098", "rs/cache/e"),
+    ("CLIENT_CLASS_000763", "rs/q/b"),
 ]
 
 
@@ -88,26 +86,24 @@ class Chat2SemanticReviewR63Tests(unittest.TestCase):
         actual = resolve_semantic_candidates(
             _class_lineage(), _member_lineage(), candidates
         )
-        self.assertEqual(actual["proposal_count"], 3)
+        self.assertEqual(actual["proposal_count"], 1)
         self.assertEqual(actual["unresolved"], [])
         self.assertEqual(
             actual["review_id"],
-            "SEMREVIEW_BFEB6A18E65648025B67",
+            "SEMREVIEW_E07DC3208D8F6F9D01B2",
         )
         self.assertEqual(actual, expected)
 
-    def test_r63_expected_stable_ids(self):
+    def test_r63_expected_stable_id(self):
         review = _load("mappings/candidates/v308.semantic-review.chat2.r63.json")
         self.assertEqual(
             {row["proposed_name"]: row["stable_id"] for row in review["proposals"]},
             {
-                "OnDemandData": "CLIENT_CLASS_000096",
-                "OnDemandFetcher": "CLIENT_CLASS_000097",
-                "OnDemandFetcherParent": "CLIENT_CLASS_000098",
+                "RSSocket": "CLIENT_CLASS_000763",
             },
         )
 
-    def test_r63_names_and_owners_do_not_overlap_prior_reviews(self):
+    def test_r63_name_and_owner_do_not_overlap_prior_reviews(self):
         current = _load("mappings/candidates/v308.semantic-review.chat2.r63.json")
         names = {row["proposed_name"] for row in current["proposals"]}
         owners = {row["source_coordinate"]["owner"] for row in current["proposals"]}
