@@ -213,9 +213,12 @@ class DependencyRemapProofTests(unittest.TestCase):
                 root,
                 "bundled",
                 {
-                    "dep/b.java": "package dep; public class b {}",
+                    "dep/b.java": (
+                        "package dep; public class b { public long marker; }"
+                    ),
                     "dep/a.java": (
                         "package dep; public class a { "
+                        "public int marker; "
                         "public a(dep.b value) {} "
                         "}"
                     ),
@@ -225,9 +228,12 @@ class DependencyRemapProofTests(unittest.TestCase):
                 root,
                 "official",
                 {
-                    "dep/Param.java": "package dep; public class Param {}",
+                    "dep/Param.java": (
+                        "package dep; public class Param { public long marker; }"
+                    ),
                     "dep/Api.java": (
                         "package dep; public class Api { "
+                        "public int marker; "
                         "public Api(dep.Param value) {} "
                         "}"
                     ),
