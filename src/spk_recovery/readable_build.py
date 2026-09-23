@@ -63,6 +63,12 @@ def _manifest(
     fallback_name_prefix = str(
         namespace.get("fallback_name_prefix", "")
     )
+    source_safe_member_fallback = bool(
+        namespace.get("source_safe_member_fallback", False)
+    )
+    member_fallback_name_prefix = str(
+        namespace.get("member_fallback_name_prefix", "")
+    )
     project_source_prefixes = sorted(set(project_source_prefixes))
 
     material = {
@@ -86,6 +92,12 @@ def _manifest(
         "source_safe_fallback": source_safe_fallback,
         "fallback_name_prefix": (
             fallback_name_prefix if source_safe_fallback else None
+        ),
+        "source_safe_member_fallback": source_safe_member_fallback,
+        "member_fallback_name_prefix": (
+            member_fallback_name_prefix
+            if source_safe_member_fallback
+            else None
         ),
         "project_source_prefixes": project_source_prefixes,
         "class_plan_digest": namespace["class_plan_digest"],
@@ -121,6 +133,8 @@ def build_readable_client(
     target_package: str = "recovered/spawnpk/client",
     source_safe_fallback: bool = False,
     fallback_name_prefix: str = "Recovered_",
+    source_safe_member_fallback: bool = False,
+    member_fallback_name_prefix: str = "Recovered_",
     member_safety_acceptance: dict[str, Any] | None = None,
     allow_package_resource_risk: bool = False,
     rewrite_class_name_strings: bool = False,
@@ -150,6 +164,8 @@ def build_readable_client(
             target_package=target_package,
             source_safe_fallback=source_safe_fallback,
             fallback_name_prefix=fallback_name_prefix,
+            source_safe_member_fallback=source_safe_member_fallback,
+            member_fallback_name_prefix=member_fallback_name_prefix,
         )
     except SemanticNamespaceError as exc:
         raise ReadableBuildError(str(exc)) from exc
