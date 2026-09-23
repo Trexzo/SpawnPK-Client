@@ -17,6 +17,13 @@ _FIELD_OPS = {
     0xB5: "putfield",
 }
 
+_METHOD_OPS = {
+    0xB6: "invokevirtual",
+    0xB7: "invokespecial",
+    0xB8: "invokestatic",
+    0xB9: "invokeinterface",
+}
+
 _MEMBER_REF_KINDS = {
     9: "field",
     10: "method",
@@ -205,6 +212,132 @@ def _field_accesses(
             )
         offset += length
     return result
+
+
+def _member_accesses(
+    code: bytes,
+    cp: list[Any],
+) -> list[dict[str, Any]]:
+    result: list[dict[str, Any]] = []
+    offset = 0
+    while offset < len(code):
+        opcode = code[offset]
+        if opcode in _FIELD_OPS or opcode in _METHOD_OPS:
+            if offset + 3 > len(code):
+                raise BytecodeProfileError(
+                    "truncated member instruction"
+                )
+            cp_index = struct.unpack_from(
+                ">H",
+                code,
+                offset + 1,
+            )[0]
+            owner, name, descriptor = _member_ref(
+                cp,
+                cp_index,
+            )
+            if opcode in _FIELD_OPS:
+                result.append(
+                    {
+                        "kind": "field",
+                        "operation": _FIELD_OPS[opcode],
+                        "owner": owner,
+                        "name": name,
+                        "descriptor": descriptor,
+                        "offset": offset,
+                    }
+                )
+            else:
+                result.append(
+                    {
+                        "kind": (
+                            "interface_method"
+                            if opcode == 0xB9
+                            else "method"
+                        ),
+                        "operation": _METHOD_OPS[opcode],
+                        "owner": owner,
+                        "name": name,
+                        "descriptor": descriptor,
+                        "offset": offset,
+                    }
+                )
+        length = _instruction_length(code, offset)
+        if length <= 0 or offset + length > len(code):
+            raise BytecodeProfileError(
+                f"invalid instruction length at {offset}"
+            )
+        offset += length
+    return result
+
+
+def profile_class_member_accesses(
+    data: bytes,
+) -> dict[str, Any]:
+    """Extract exact field/method JVM access instructions per method."""
+    r = _Reader(data)
+    if r.u4() != 0xCAFEBABE:
+        raise BytecodeProfileError("not a JVM class")
+    r.u2()
+    r.u2()
+    cp = _constant_pool(r)
+
+    r.u2()
+    this_class = r.u2()
+    r.u2()
+    internal_name = _class_name(cp, this_class)
+
+    for _ in range(r.u2()):
+        r.u2()
+
+    for _ in range(r.u2()):
+        r.u2()
+        r.u2()
+        r.u2()
+        _skip_attributes(r, cp)
+
+    methods: list[dict[str, Any]] = []
+    all_accesses: list[dict[str, Any]] = []
+    for _ in range(r.u2()):
+        access = r.u2()
+        name = _utf8(cp, r.u2())
+        descriptor = _utf8(cp, r.u2())
+        method_accesses: list[dict[str, Any]] = []
+        code_length = None
+        for _ in range(r.u2()):
+            attr_name = _utf8(cp, r.u2())
+            attr_length = r.u4()
+            payload = r.take(attr_length)
+            if attr_name != "Code":
+                continue
+            cr = _Reader(payload)
+            cr.u2()
+            cr.u2()
+            code_length = cr.u4()
+            code = cr.take(code_length)
+            method_accesses = _member_accesses(code, cp)
+        for row in method_accesses:
+            enriched = {
+                **row,
+                "source_method_name": name,
+                "source_method_descriptor": descriptor,
+            }
+            all_accesses.append(enriched)
+        methods.append(
+            {
+                "name": name,
+                "descriptor": descriptor,
+                "access": access,
+                "code_length": code_length,
+                "member_accesses": method_accesses,
+            }
+        )
+
+    return {
+        "internal_name": internal_name,
+        "methods": methods,
+        "member_accesses": all_accesses,
+    }
 
 
 def _normalized_class_reference(name: str) -> str | None:
