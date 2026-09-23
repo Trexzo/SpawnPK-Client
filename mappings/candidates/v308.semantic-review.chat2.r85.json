@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_E90B9897A7720ADF272D",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_12B076A4E1F5F17D4814",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000352",
+      "owner_logical_id": "CLIENT_CLASS_000352",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/C",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DepthBufferedImageSurface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_framebuffer_shape",
+          "detail": "rs/l/C owns an int[] pixel buffer and a parallel float[] depth buffer sized width*height, plus width/height and a BufferedImage whose DataBufferInt is backed directly by that pixel array."
+        },
+        {
+          "family": "exact_drawingarea_binding",
+          "detail": "Its zero-arg bind method passes width, height, the exact pixel array and the exact float depth array into R55 DrawingArea through rs/l/c.a(II[I[F), establishing a depth-aware software-rendering surface contract."
+        },
+        {
+          "family": "exact_awt_surface_role",
+          "detail": "The constructor builds the BufferedImage over the pixel buffer with DirectColorModel/Raster, and its draw method blits that image to a java.awt.Graphics target using the owning Component as ImageObserver."
+        },
+        {
+          "family": "exact_live_consumers",
+          "detail": "R48 RSApplet creates and retains multiple rs/l/C instances for the live client surfaces; rs/Client recreates/binds them during layout/render transitions and invokes their DrawingArea binding repeatedly."
+        },
+        {
+          "family": "exact_parallel_type_distinction",
+          "detail": "R55 RSImageProducer rs/l/e is a separate framebuffer producer that binds only int[] pixels through DrawingArea.a(II[I). The additional float[] depth buffer and distinct live surface consumers make rs/l/C a separate depth-aware BufferedImage surface, not another RSImageProducer alias."
+        }
+      ],
+      "note": "DepthBufferedImageSurface is a deliberately descriptive semantic recovery name for the live BufferedImage-backed pixel+depth framebuffer. R55's caveat remains intact: the exact historical/original class noun is not recovered."
+    }
+  ],
+  "unresolved": []
+}
