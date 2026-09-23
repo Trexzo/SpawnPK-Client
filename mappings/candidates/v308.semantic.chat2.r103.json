@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/B",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Queue",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_secondary_link_structure",
+          "detail": "rs/B owns one sentinel rs/a NodeSub plus one current-iteration NodeSub. Its constructor self-links the sentinel through NodeSub's secondary previous/next pointers."
+        },
+        {
+          "family": "exact_queue_operations",
+          "detail": "Its insertion method unlinks an already-linked NodeSub then splices it at the sentinel head; its removal method takes the tail NodeSub, unlinks it and returns it; two traversal methods walk the same secondary-link chain; d() counts nodes without mutation."
+        },
+        {
+          "family": "exact_ondemand_consumer",
+          "detail": "R24 OnDemandFetcher owns this exact queue and stores rs/cache/c OnDemandData instances in it; OnDemandData extends R25 NodeSub, fixing the queue element hierarchy independently of historical naming."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "Classic 317/RSPS source preserves class Queue with the same sentinel NodeSub/Cacheable structure and the same insertHead, popTail, reverseGetFirst, reverseGetNext and getNodeCount contract."
+        }
+      ],
+      "note": "Queue is strongly corroborated by exact-v308 NodeSub queue behavior and classic 317 lineage. Exact v308 remains the semantic authority."
+    }
+  ],
+  "conflicts": []
+}
