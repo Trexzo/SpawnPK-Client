@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/G",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Occluder",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scene_registration",
+          "detail": "Scene static registration constructs rs/G from tile-space bounds, world-space bounds and an occlusion type, stores records per plane, and keeps counts for each plane."
+        },
+        {
+          "family": "exact_visibility_filtering",
+          "detail": "Scene activation scans the current plane's rs/G records against the camera visibility map; only records intersecting visible cells and lying beyond camera-side thresholds are promoted into the active rs/G list."
+        },
+        {
+          "family": "exact_occlusion_projection",
+          "detail": "For active records, Scene derives camera-relative slope values from the record's X/Y/Z bounds and later uses those projected ranges in point/tile/object visibility tests."
+        }
+      ],
+      "note": "Occluder is the conservative modern semantic name for this exact scene-occlusion volume record; it does not claim recovery of a verbatim original-source identifier."
+    }
+  ],
+  "conflicts": []
+}
