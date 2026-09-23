@@ -115,6 +115,47 @@ class DependencyArtifactProofTests(unittest.TestCase):
                 {"direct": 5},
             )
 
+    def test_interface_method_resolves_as_method_api(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            artifact = self._compile_jar(
+                root,
+                "dep",
+                {
+                    "dep/Api.java": (
+                        "package dep; public interface Api { "
+                        "String ping(int x); "
+                        "}"
+                    )
+                },
+            )
+            surface = self._surface(root)
+            payload = json.loads(surface.read_text(encoding="utf-8"))
+            payload["member_references"] = [
+                {
+                    "kind": "interface_method",
+                    "owner": "dep/Api",
+                    "name": "ping",
+                    "descriptor": "(I)Ljava/lang/String;",
+                    "reference_count": 1,
+                    "source_class_count": 1,
+                    "source_classes": ["project/Main"],
+                }
+            ]
+            surface.write_text(
+                json.dumps(payload, sort_keys=True),
+                encoding="utf-8",
+            )
+
+            report = prove_official_artifact_compatibility(
+                surface,
+                [artifact],
+            )
+            self.assertEqual(
+                report["summary"]["member_status_counts"],
+                {"direct": 1},
+            )
+
     def test_inherited_member_resolves_directly(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
