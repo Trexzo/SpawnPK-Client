@@ -185,6 +185,43 @@ class DependencyArtifactProofTests(unittest.TestCase):
                 [{"owner": "dep/Api", "name": "realPing"}],
             )
 
+    def test_module_descriptors_do_not_create_duplicate_class_ownership(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            first = self._compile_jar(
+                root,
+                "dep",
+                {
+                    "dep/Api.java": (
+                        "package dep; public class Api { "
+                        "public static int VALUE = 1; "
+                        "public String ping(int x) { return String.valueOf(x); } "
+                        "}"
+                    )
+                },
+            )
+            second = self._compile_jar(
+                root,
+                "other",
+                {
+                    "other/Thing.java": (
+                        "package other; public class Thing {}"
+                    )
+                },
+            )
+            for jar in (first, second):
+                with zipfile.ZipFile(jar, "a") as out:
+                    out.writestr("module-info.class", b"not-a-real-class")
+
+            report = prove_official_artifact_compatibility(
+                self._surface(root),
+                [first, second],
+            )
+            self.assertEqual(
+                report["summary"]["member_status_counts"],
+                {"direct": 2},
+            )
+
     def test_multi_release_artifact_requires_explicit_java_release(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
