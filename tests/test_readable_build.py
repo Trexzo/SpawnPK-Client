@@ -84,6 +84,32 @@ class ReadableBuildTests(unittest.TestCase):
             ],
         )
 
+
+    def test_manifest_publishes_member_source_safety_metadata(self):
+        namespace = dict(NAMESPACE)
+        namespace["summary"] = dict(NAMESPACE["summary"])
+        namespace["summary"]["source_safety_member_remaps"] = 3
+        namespace["source_safe_member_fallback"] = True
+        namespace["member_fallback_name_prefix"] = "Recovered_"
+
+        manifest = _manifest(
+            namespace=namespace,
+            status="complete",
+            output_sha256="b" * 64,
+            verification_pass=True,
+            blocker=None,
+        )
+
+        self.assertTrue(manifest["source_safe_member_fallback"])
+        self.assertEqual(
+            manifest["member_fallback_name_prefix"],
+            "Recovered_",
+        )
+        self.assertEqual(
+            manifest["semantic_summary"]["source_safety_member_remaps"],
+            3,
+        )
+
     def _source(self, root: Path) -> Path:
         path = root / "client.jar"
         path.write_bytes(b"jar")
