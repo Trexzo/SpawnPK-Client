@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 4,
+  "review_id": "SEMREVIEW_9BF3AD4F6D29C99D0FD8",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_2A0F0603277F9C40049A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000033",
+      "owner_logical_id": "CLIENT_CLASS_000033",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/F",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MruNodeCache",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_cache_structure",
+          "detail": "rs/F owns a capacity, remaining-space counter, sentinel NodeSub, rs/B intrusive NodeSub list and rs/o keyed node table."
+        },
+        {
+          "family": "exact_mru_behavior",
+          "detail": "Lookup by long key promotes a hit to the list head. Insert evicts the tail when capacity is exhausted, unlinks the evicted node from both intrusive structures, inserts the new node into the keyed table and promotes it to the head."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Classic MRUNodes has the same empty NodeSub sentinel, capacity/space accounting, NodeCache lookup, NodeSubList promotion and tail-eviction algorithm."
+        }
+      ],
+      "note": "MruNodeCache is a non-canonical semantic recovery name grounded in exact v308 behavior; historical 317 sources are corroboration only and do not override current-client evidence."
+    },
+    {
+      "proposal_id": "SEMPROP_74130C2B35A1D58E0025",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000042",
+      "owner_logical_id": "CLIENT_CLASS_000042",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/O",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TextClass",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_name_encoding",
+          "detail": "rs/O implements the classic base-37 player-name conversion in both directions, including the 12-character limit and trailing base-37 zero stripping."
+        },
+        {
+          "family": "exact_text_utilities",
+          "detail": "The same class also implements the classic sprite-name hash, dotted-quad integer address formatting, underscore/name capitalization normalization and password-style asterisk masking."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Classic 317 TextClass exposes this same collection of nameToLong, longToName, sprite-name hash, address formatting, formatted-name and asterisk helpers."
+        }
+      ],
+      "note": "TextClass is a non-canonical semantic recovery name grounded in exact v308 behavior; historical 317 sources are corroboration only and do not override current-client evidence."
+    },
+    {
+      "proposal_id": "SEMPROP_BC35BFB99246D3641A68",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000027",
+      "owner_logical_id": "CLIENT_CLASS_000027",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/B",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NodeSubList",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_intrusive_list_shape",
+          "detail": "rs/B owns a sentinel rs/a NodeSub whose two NodeSub links point back to itself, plus one iterator cursor. Insertion unlinks an already-linked node and inserts it at the sentinel head."
+        },
+        {
+          "family": "exact_list_operations",
+          "detail": "The remaining methods pop/unlink the tail, begin reverse iteration, continue reverse iteration and count nodes by walking the circular NodeSub links."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Classic 317 NodeSubList has the same sentinel NodeSub, insertHead, popTail, reverseGetFirst/reverseGetNext and getNodeCount structure."
+        }
+      ],
+      "note": "NodeSubList is a non-canonical semantic recovery name grounded in exact v308 behavior; historical 317 sources are corroboration only and do not override current-client evidence."
+    },
+    {
+      "proposal_id": "SEMPROP_E3C70BE9918FC1DBAB4C",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000043",
+      "owner_logical_id": "CLIENT_CLASS_000043",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/P",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TextInput",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_chat_codec_role",
+          "detail": "rs/P owns one fixed character alphabet, a reusable character buffer and reusable Stream; it decodes encoded character indices into text, sentence-capitalizes after . ! ?, encodes normalized lowercase text back to stream indices and exposes a normalize round-trip helper."
+        },
+        {
+          "family": "exact_text_constraints",
+          "detail": "Encoding truncates input to 80 characters and maps every character through the fixed legacy chat alphabet before writing to the Stream."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Classic 317 TextInput owns the same fixed chat alphabet, reusable text buffer/stream, lowercase encode path, sentence-capitalizing decode path and processText round trip. v308's wire encoding is simplified to direct character-table indices rather than the older nibble packing, so the evidence is role/lineage rather than byte-for-byte algorithm identity."
+        }
+      ],
+      "note": "TextInput is a non-canonical semantic recovery name grounded in exact v308 behavior; historical 317 sources are corroboration only and do not override current-client evidence."
+    }
+  ],
+  "unresolved": []
+}
