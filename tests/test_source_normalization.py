@@ -1051,3 +1051,5 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+# R8M exact-v308 acceptance is recorded on PR #114; keep this test surface CI-bound.
