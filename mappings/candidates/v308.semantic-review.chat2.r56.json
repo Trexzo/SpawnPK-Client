@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 4,
+  "review_id": "SEMREVIEW_F6955D199D1E36C3F74D",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_1EBAD7647F6BBFEE9669",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001115",
+      "owner_logical_id": "CLIENT_CLASS_001115",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/x/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BZip2Decompressor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_archive_call_flow",
+          "detail": "StreamLoader invokes rs/x/a.a(output, outputLength, input, compressedLength, inputOffset) when an archive or archive entry requires BZip2 decompression."
+        },
+        {
+          "family": "exact_decoder_state_binding",
+          "detail": "The public entry point populates one shared rs/x/b state object with input/output buffers, offsets and counters, runs the private bit/Huffman/BWT decode pipeline and returns produced byte count."
+        },
+        {
+          "family": "exact_algorithm_structure",
+          "detail": "Private methods implement the characteristic BZip2 bit reader, selector/Huffman tables, move-to-front decoding and block reconstruction against rs/x/b scratch arrays."
+        }
+      ],
+      "note": "BZip2Decompressor is fixed by StreamLoader call sites and the exact BZip2 bit/Huffman/BWT decode pipeline."
+    },
+    {
+      "proposal_id": "SEMPROP_78813794A7C0E36A7766",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001120",
+      "owner_logical_id": "CLIENT_CLASS_001120",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/x/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "StreamLoader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_archive_header_role",
+          "detail": "rs/x/f constructs a Stream over archive bytes, reads packed/unpacked lengths, optionally decompresses the whole archive, then reads file count and per-entry hash/size/offset tables."
+        },
+        {
+          "family": "exact_name_lookup",
+          "detail": "File extraction uppercases the requested name and computes the classic rolling hash value*61 + char-32 before matching the stored entry hash."
+        },
+        {
+          "family": "exact_entry_decompression",
+          "detail": "For non-whole-archive compression it invokes BZip2Decompressor on the selected entry; otherwise it copies bytes directly from the decompressed archive payload."
+        },
+        {
+          "family": "exact_graphics_definition_consumers",
+          "detail": "R55 IndexedImage/TextDrawingArea and numerous R28 definitions receive rs/x/f as their archive/resource source and request named payloads from it."
+        }
+      ],
+      "note": "StreamLoader preserves the classic archive/resource-loader identity: hashed named entries plus whole/per-entry decompression."
+    },
+    {
+      "proposal_id": "SEMPROP_B8CBE18E9343D99FF617",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001116",
+      "owner_logical_id": "CLIENT_CLASS_001116",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/x/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BZip2DecompressionState",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_state_ownership",
+          "detail": "rs/x/b is instantiated once by BZip2Decompressor and is passed through all private decode stages; no unrelated subsystem owns or consumes it."
+        },
+        {
+          "family": "exact_bzip_work_arrays",
+          "detail": "The class contains input/output byte arrays, bit-buffer counters, in-use flags, selector arrays, frequency/cumulative tables, Huffman limit/base/perm tables and block reconstruction scratch state."
+        },
+        {
+          "family": "exact_mutable_decoder_role",
+          "detail": "All fields are mutable package-private decoder state updated in-place by rs/x/a during one decompression operation."
+        }
+      ],
+      "note": "BZip2DecompressionState is the dedicated mutable decoder-state object consumed only by BZip2Decompressor."
+    },
+    {
+      "proposal_id": "SEMPROP_FE310F95E6B1C0087258",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001119",
+      "owner_logical_id": "CLIENT_CLASS_001119",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/x/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Stream",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_buffer_shape",
+          "detail": "rs/x/e owns a byte[] payload and mutable offset plus bit-position/checksum-style state, and exposes the broad primitive read/write surface used throughout config, archive and packet decoding."
+        },
+        {
+          "family": "exact_protocol_surface",
+          "detail": "Methods cover byte/short/int/long variants, signed/unsigned forms, strings, bulk byte transfers, smart/variable-length values, bit access and cryptographic/RSA-style transforms."
+        },
+        {
+          "family": "exact_client_consumers",
+          "detail": "StreamLoader, definitions, animation/image loaders and client networking construct this class directly over byte arrays and advance its public offset field while decoding structured data."
+        }
+      ],
+      "note": "Stream is the conservative classic-client name for the byte-buffer/offset primitive codec used across archives, configs and networking."
+    }
+  ],
+  "unresolved": []
+}
