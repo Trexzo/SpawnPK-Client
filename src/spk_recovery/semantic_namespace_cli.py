@@ -42,10 +42,6 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="rename Java-source-illegal member names with stable non-semantic fallback names",
     )
-    p.add_argument(
-        "--member-fallback-name-prefix",
-        default="Recovered_",
-    )
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args(argv)
 
@@ -58,8 +54,6 @@ def main(argv: list[str] | None = None) -> int:
             target_package=args.target_package,
             source_safe_fallback=args.source_safe_fallback,
             fallback_name_prefix=args.fallback_name_prefix,
-            source_safe_member_fallback=args.source_safe_member_fallback,
-            member_fallback_name_prefix=args.member_fallback_name_prefix,
         )
         out = args.out_dir.resolve()
         write_json(manifest, out / "semantic-namespace.json")
