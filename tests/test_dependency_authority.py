@@ -32,7 +32,7 @@ class DependencyAuthorityTests(unittest.TestCase):
             report = scan_dependency_authority(jar)
 
             self.assertEqual(report["project_class_count"], 1)
-            self.assertEqual(report["external_class_count"], 2)
+            self.assertEqual(report["non_project_class_count"], 2)
             self.assertEqual(
                 report["maven_coordinates"],
                 [
@@ -48,7 +48,7 @@ class DependencyAuthorityTests(unittest.TestCase):
             )
             namespaces = {
                 row["namespace"]: row["class_count"]
-                for row in report["external_namespaces"]
+                for row in report["non_project_namespaces"]
             }
             self.assertEqual(namespaces["com/example"], 1)
             self.assertEqual(namespaces["tools/Probe.class"], 1)
@@ -66,13 +66,13 @@ class DependencyAuthorityTests(unittest.TestCase):
 
             report = compare_external_class_surfaces(left, right)
 
-            self.assertEqual(report["common_external_class_count"], 2)
+            self.assertEqual(report["common_non_project_class_count"], 2)
             self.assertEqual(
-                report["byte_identical_common_external_class_count"],
+                report["byte_identical_common_non_project_class_count"],
                 2,
             )
             self.assertEqual(
-                report["different_common_external_class_count"],
+                report["different_common_non_project_class_count"],
                 0,
             )
 
@@ -87,7 +87,7 @@ class DependencyAuthorityTests(unittest.TestCase):
             report = compare_external_class_surfaces(left, right)
 
             self.assertEqual(
-                report["different_common_external_classes"],
+                report["different_common_non_project_classes"],
                 ["com/example/Lib.class"],
             )
 
