@@ -11,6 +11,7 @@ from typing import Any
 import zipfile
 
 from .indexer import index_jar
+from .javac_diagnostics import classify_javac_diagnostics
 from .progressive_compile import (
     ProgressiveCompileError,
     _verify_authority,
@@ -313,6 +314,7 @@ def clean_project_rebuild(
 
     status = "compile_failed"
     diagnostic = ""
+    javac_diagnostic_classification: dict[str, Any] | None = None
     missing: list[str] = []
     unexpected: list[str] = []
     rebuilt_sha: str | None = None
@@ -357,8 +359,12 @@ def clean_project_rebuild(
             stderr=subprocess.PIPE,
             text=True,
         )
+        raw_diagnostic = proc.stdout + proc.stderr
+        javac_diagnostic_classification = (
+            classify_javac_diagnostics(raw_diagnostic)
+        )
         diagnostic = _diagnostic(
-            proc.stdout + proc.stderr,
+            raw_diagnostic,
             source_root=source_root,
             work_root=work_root,
         )
@@ -405,6 +411,11 @@ def clean_project_rebuild(
         "status": status,
         "dependency_capsule_sha256": dependency_sha,
         "rebuilt_jar_sha256": rebuilt_sha,
+        "javac_diagnostic_report_id": (
+            javac_diagnostic_classification["report_id"]
+            if javac_diagnostic_classification is not None
+            else None
+        ),
     }
     rebuild_id = (
         "CLEANBUILD_"
@@ -444,6 +455,22 @@ def clean_project_rebuild(
         "compiler": {
             "javac": javac_probe,
             "target_release": release,
+            "diagnostic_classification": (
+                {
+                    "report_id": javac_diagnostic_classification[
+                        "report_id"
+                    ],
+                    "input_sha256": javac_diagnostic_classification[
+                        "input_sha256"
+                    ],
+                    "summary": javac_diagnostic_classification[
+                        "summary"
+                    ],
+                    "identifiers_included": False,
+                }
+                if javac_diagnostic_classification is not None
+                else None
+            ),
         },
         "dependency_capsule": {
             "path": "dependency-capsule.jar",
