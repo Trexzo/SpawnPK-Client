@@ -190,7 +190,10 @@ def _project_source_files(
 def _generated_classes(root: Path) -> dict[str, bytes]:
     return {
         path.relative_to(root).as_posix(): path.read_bytes()
-        for path in sorted(\n            root.rglob("*.class"),\n            key=lambda path: path.relative_to(root).as_posix(),\n        )
+        for path in sorted(
+            root.rglob("*.class"),
+            key=lambda path: path.relative_to(root).as_posix(),
+        )
     }
 
 
