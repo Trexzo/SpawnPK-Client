@@ -295,6 +295,58 @@ class CleanRebuildTests(unittest.TestCase):
             ) as z:
                 self.assertIn(fallback_class, set(z.namelist()))
 
+    def test_compile_failure_embeds_redacted_javac_classification(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                source,
+                readable,
+                recovered,
+                readiness,
+                readable_manifest,
+                authority,
+            ) = self._fixture(root)
+
+            target = source / "rs" / "A.java"
+            target.write_text(
+                "package rs; public class A { "
+                "public int value() { return missingValue; } }\n",
+                encoding="utf-8",
+            )
+            tree_sha = _tree_sha(source)
+            recovered["source_tree_sha256"] = tree_sha
+            readiness["source_tree_sha256"] = tree_sha
+
+            report = clean_project_rebuild(
+                recovered,
+                readiness,
+                readable_manifest,
+                readable,
+                authority,
+                source,
+                out_dir=root / "out",
+                source_prefixes=["rs/"],
+            )
+
+            self.assertEqual(report["status"], "compile_failed")
+            self.assertEqual(
+                report["project_classes"]["binary_fallback_count"],
+                0,
+            )
+            classified = report["compiler"]["diagnostic_classification"]
+            self.assertIsNotNone(classified)
+            self.assertFalse(classified["identifiers_included"])
+            self.assertTrue(
+                classified["report_id"].startswith("JAVACDIAG_")
+            )
+            self.assertEqual(
+                classified["summary"]["cannot_find_symbol"]["count"],
+                1,
+            )
+            serialized = str(classified)
+            self.assertNotIn("missingValue", serialized)
+            self.assertNotIn(str(target), serialized)
+
     def test_old_fallback_manifest_without_project_prefixes_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
