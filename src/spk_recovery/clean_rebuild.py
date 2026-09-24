@@ -411,11 +411,6 @@ def clean_project_rebuild(
         "status": status,
         "dependency_capsule_sha256": dependency_sha,
         "rebuilt_jar_sha256": rebuilt_sha,
-        "javac_diagnostic_report_id": (
-            javac_diagnostic_classification["report_id"]
-            if javac_diagnostic_classification is not None
-            else None
-        ),
     }
     rebuild_id = (
         "CLEANBUILD_"
