@@ -75,6 +75,33 @@ class JavacDiagnosticClassificationTests(unittest.TestCase):
             report["diagnostics"][1]["symbol_id"],
         )
 
+    def test_public_pseudonyms_are_ordinal_not_identifier_hashes(self):
+        raw = (
+            "/x/A.java:1: error: cannot find symbol\n"
+            "  symbol:   method a(int)\n"
+            "  location: class b\n"
+            "/x/B.java:2: error: cannot find symbol\n"
+            "  symbol:   method a(int)\n"
+            "  location: class c\n"
+        )
+
+        report = classify_javac_diagnostics(raw)
+        first, second = report["diagnostics"]
+
+        self.assertEqual(first["file_id"], "JFILE_000001")
+        self.assertEqual(second["file_id"], "JFILE_000002")
+        self.assertEqual(first["symbol_id"], "JSYM_000001")
+        self.assertEqual(second["symbol_id"], "JSYM_000001")
+        self.assertEqual(first["location_id"], "JLOC_000001")
+        self.assertEqual(second["location_id"], "JLOC_000002")
+
+        # Public identity tokens must not be raw-identifier fingerprints.
+        # The old implementation emitted 16 hex characters after each
+        # prefix, which is enumerable for low-entropy obfuscated names.
+        self.assertNotRegex(first["symbol_id"], r"^JSYM_[0-9A-F]{16}$")
+        self.assertNotRegex(first["location_id"], r"^JLOC_[0-9A-F]{16}$")
+        self.assertNotRegex(first["file_id"], r"^JFILE_[0-9A-F]{16}$")
+
     def test_windows_paths_and_other_categories(self):
         raw = (
             "C:\\work\\src\\rs\\A.java:42: error: incompatible types: int cannot be converted to String\n"
