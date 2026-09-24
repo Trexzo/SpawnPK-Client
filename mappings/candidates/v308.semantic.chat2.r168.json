@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/eventbus/DeferredEventBus",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DeferredEventBus",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal name is rs/eventbus/DeferredEventBus; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_deferred_semantics",
+          "detail": "The class extends EventBus, forwards register/unregister to one backing EventBus, queues post(Object) calls in a ConcurrentLinkedQueue, and replay() drains the queue into the backing EventBus."
+        },
+        {
+          "family": "exact_live_wiring",
+          "detail": "Exact class-reference scanning finds DeferredEventBus used by the injection/runtime layer, establishing this as live infrastructure rather than an unused helper."
+        }
+      ],
+      "note": "DeferredEventBus is an exact surviving class name and its queue/replay behavior matches the name directly. Confidence is 1.0."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/eventbus/EventBus",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EventBus",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal name is rs/eventbus/EventBus; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_subscriber_registration",
+          "detail": "register(Object) scans declared methods for the exact rs/eventbus/Subscribe annotation, validates one non-primitive event parameter and void return, builds priority-sorted Subscriber records, and stores them by event class."
+        },
+        {
+          "family": "exact_dispatch",
+          "detail": "post(Object) selects subscribers by the event's exact runtime class, invokes each subscriber in priority order, and routes subscriber exceptions through the configured exception handler."
+        },
+        {
+          "family": "exact_live_consumers",
+          "detail": "Exact class-reference scanning finds EventBus referenced from Client plus UI/plugin/overlay/network/runtime classes across the v308 project."
+        }
+      ],
+      "note": "EventBus is an exact surviving class name with complete register/unregister/post event-dispatch semantics. Confidence is 1.0."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/eventbus/EventBus$Subscriber",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EventBusSubscriber",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_nested_identity",
+          "detail": "The exact nested binary name is EventBus$Subscriber; the surviving simple nested name is Subscriber."
+        },
+        {
+          "family": "exact_record_shape",
+          "detail": "The class stores subscriber object, reflective Method, float priority, and optional Consumer<Object> lambda; invoke(Object) dispatches through the lambda when present or reflectively invokes the stored method otherwise."
+        },
+        {
+          "family": "exact_eventbus_ownership",
+          "detail": "EventBus constructs, sorts, unregisters and invokes only this nested subscriber record."
+        }
+      ],
+      "note": "EventBusSubscriber preserves the exact nested Subscriber noun while making the owner explicit as a top-level semantic identifier. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/eventbus/Subscribe",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Subscribe",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 annotation internal name is rs/eventbus/Subscribe; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_annotation_contract",
+          "detail": "Subscribe is a runtime-retained, documented METHOD-target annotation with one float priority() element defaulting to 0.0."
+        },
+        {
+          "family": "exact_eventbus_use",
+          "detail": "EventBus.register(Object) discovers this exact annotation reflectively and uses priority() to order subscribers."
+        },
+        {
+          "family": "exact_live_use",
+          "detail": "Exact class-reference scanning finds Subscribe annotations across multiple UI/plugin/game subsystem classes."
+        }
+      ],
+      "note": "Subscribe is an exact surviving annotation name and contract. Confidence is 1.0."
+    }
+  ],
+  "conflicts": []
+}
