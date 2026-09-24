@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 4,
+  "review_id": "SEMREVIEW_5BD02F94F01767ABDBEE",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_267DECE552645054150E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000281",
+      "owner_logical_id": "CLIENT_CLASS_000281",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/u",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ContainableFrame",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_frame_shape",
+          "detail": "The class extends JFrame and is the exact frame instantiated and owned by ClientUI for the live game window."
+        },
+        {
+          "family": "exact_monitor_containment",
+          "detail": "In ALWAYS containment mode, overridden setLocation/setBounds clamp the frame to its active GraphicsConfiguration bounds; monitor/device/inset calculations also constrain maximized and transformed bounds."
+        },
+        {
+          "family": "exact_sidebar_resize_behavior",
+          "detail": "Dedicated width-add/remove methods are called by ClientUI when toolbar/sidebar/plugin panels appear or disappear and apply FrameResizeMode plus monitor-edge logic before changing frame bounds."
+        },
+        {
+          "family": "exact_mode_ownership",
+          "detail": "The frame directly stores both FrameResizeMode and FrameContainmentMode state and applies them in its positioning/sizing paths."
+        }
+      ],
+      "note": "ContainableFrame is fixed by exact JFrame role plus monitor-containment and sidebar-aware sizing behavior. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_9F88494938A142C3C9D8",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000282",
+      "owner_logical_id": "CLIENT_CLASS_000282",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/u$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FrameContainmentMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_constants",
+          "detail": "The enum preserves exact constants ALWAYS, RESIZING and NEVER."
+        },
+        {
+          "family": "exact_frame_consumer",
+          "detail": "ContainableFrame stores this enum and checks it in frame-location/bounds and panel-width adjustment logic; ALWAYS directly clamps the frame to the current graphics-device bounds while NEVER bypasses related edge handling."
+        },
+        {
+          "family": "exact_window_config",
+          "detail": "The live window-settings config returns the RESIZING value as its default containment behavior."
+        }
+      ],
+      "note": "FrameContainmentMode follows exact surviving enum constants and their direct monitor-containment behavior in ContainableFrame. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_A173BF863DF21B8F74E4",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001096",
+      "owner_logical_id": "CLIENT_CLASS_001096",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientUI",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_top_level_ui",
+          "detail": "The class owns the live Client, ConfigManager/window settings, EventBus, ContainableFrame, game applet panel, navigation toolbar/sidebar panels and current plugin panel."
+        },
+        {
+          "family": "exact_frame_lifecycle",
+          "detail": "Its Swing initialization creates ContainableFrame, applies icon/title/tray/window-decoration state, embeds the client, restores window/sidebar state, and shows/manages the main game window."
+        },
+        {
+          "family": "exact_sidebar_navigation",
+          "detail": "It handles NavigationButtonAdded/Removed events, exact 'Open SideBar'/'Close SideBar' controls, CardLayout plugin-panel switching, and calls ContainableFrame width-add/remove methods as side content changes."
+        },
+        {
+          "family": "exact_config_keys",
+          "detail": "The class preserves exact UI persistence keys 'runelite', 'clientBounds', 'clientMaximized' and 'clientSidebarClosed'."
+        },
+        {
+          "family": "exact_shutdown_focus",
+          "detail": "It posts ClientShutdown through EventBus, waits for consumers, stops the client, and owns window attention/focus/cursor behavior."
+        }
+      ],
+      "note": "ClientUI is fixed by exact ownership of the main client frame, game canvas, sidebar/navigation/plugin panels, persisted window state and shutdown lifecycle. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_EDA45C631DF77328D27E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000283",
+      "owner_logical_id": "CLIENT_CLASS_000283",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/v",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FrameResizeMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_constants",
+          "detail": "The enum preserves exact constants KEEP_WINDOW_SIZE and KEEP_GAME_SIZE with exact display strings 'Keep window size' and 'Keep game size'."
+        },
+        {
+          "family": "exact_frame_consumer",
+          "detail": "ContainableFrame stores this enum and branches on it in the width-add/remove methods used when UI side content changes."
+        },
+        {
+          "family": "exact_size_semantics",
+          "detail": "KEEP_WINDOW_SIZE preserves the frame size where possible while KEEP_GAME_SIZE expands/contracts the frame with sidebar/plugin width so the game-content size is retained."
+        }
+      ],
+      "note": "FrameResizeMode is fixed by exact enum names/display text and the ContainableFrame width-adjustment semantics. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}
