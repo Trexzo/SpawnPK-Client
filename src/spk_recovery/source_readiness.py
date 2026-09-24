@@ -43,7 +43,10 @@ _JDK_ROOTS = {
 
 
 def _stable_tree_digest(root: Path) -> tuple[str, list[Path], int]:
-    files = sorted(\n        root.rglob("*.java"),\n        key=lambda path: path.relative_to(root).as_posix(),\n    )
+    files = sorted(
+        root.rglob("*.java"),
+        key=lambda path: path.relative_to(root).as_posix(),
+    )
     h = hashlib.sha256()
     total_bytes = 0
     for path in files:
