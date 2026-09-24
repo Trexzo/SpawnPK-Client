@@ -28,7 +28,7 @@ def _write_json(doc: dict[str, Any], path: Path) -> None:
 
 
 def _source_tree_digest(root: Path) -> tuple[str, int, int]:
-    files = sorted(root.rglob("*.java"))
+    files = sorted(\n        root.rglob("*.java"),\n        key=lambda path: path.relative_to(root).as_posix(),\n    )
     h = hashlib.sha256()
     total_bytes = 0
     for path in files:
