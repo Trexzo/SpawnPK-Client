@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NavigationButtonManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_navigation_registry",
+          "detail": "The class owns a Set<NavigationButton> and an EventBus; registration ignores an already-present button and unregistration only acts when the button was registered."
+        },
+        {
+          "family": "exact_added_event",
+          "detail": "Successful registration posts exact rs/runelite/events/NavigationButtonAdded carrying the same NavigationButton instance."
+        },
+        {
+          "family": "exact_removed_event",
+          "detail": "Successful unregistration posts exact rs/runelite/events/NavigationButtonRemoved carrying the same NavigationButton instance."
+        },
+        {
+          "family": "exact_clientui_consumer",
+          "detail": "R147 ClientUI subscribes to those exact added/removed events to install or remove buttons from ClientToolbar/ClientTitleToolbar and to add/remove associated PluginPanel content."
+        }
+      ],
+      "note": "NavigationButtonManager is fixed by its exact NavigationButton registry and EventBus add/remove event contract consumed by ClientUI. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginPanelStack",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_panel_base",
+          "detail": "The class extends R148 PluginPanel with the non-scroll-wrapped constructor and owns a CardLayout plus the current PluginPanel."
+        },
+        {
+          "family": "exact_push_behavior",
+          "detail": "Its panel-selection method pushes a new PluginPanel when absent, shows it by identity-hash card key, and if a requested panel already exists deeper in the stack removes panels above it."
+        },
+        {
+          "family": "exact_pop_behavior",
+          "detail": "Its pop method reveals the previous PluginPanel and removes the current top panel, with exact assertion text 'Cannot pop last component' preventing removal of the root panel."
+        },
+        {
+          "family": "exact_lifecycle_propagation",
+          "detail": "When active, panel transitions call PluginPanel deactivate/activate hooks; PluginPanelStack's own J_()/K_() lifecycle methods propagate to the current child."
+        }
+      ],
+      "note": "PluginPanelStack is fixed by exact CardLayout push/pop semantics over PluginPanel instances plus lifecycle propagation. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}
