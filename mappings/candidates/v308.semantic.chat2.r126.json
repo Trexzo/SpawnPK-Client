@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/b/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GladiatorsVindicationWorldEventInterfacePacketHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers rs/n/c/b/d directly as exact ScriptPacket ID 10."
+        },
+        {
+          "family": "exact_recovered_interface_target",
+          "detail": "The handler controls rs/n/c/b/a, already recovered in R3 as GladiatorsVindicationWorldEventInterface from the exact title \"Gladiator's Vindication (World Event)\", event-duration/progress vocabulary and event/task resources."
+        },
+        {
+          "family": "exact_complete_selector_surface",
+          "detail": "All selector branches 0 through 10 stay on the recovered world-event interface: reset and populate event task/option rows, update progress and visibility, select the current event option, rebuild/reflow the dynamic option list, update scroll position, clear current selection, and update the selected option's dynamic text."
+        },
+        {
+          "family": "exact_event_progress_protocol",
+          "detail": "Selector 2 reads a packet integer as percent-hundredths, scales it across the 367-pixel progress surface, and rewrites widget 57222 with the exact 'event/task 2' resource."
+        },
+        {
+          "family": "exact_event_widget_state",
+          "detail": "Selectors target the same 56997-57223 interface widget range and rs/n/c/b state used by the recovered World Event surface; exact target strings/resources include event/task, event/task 1-3, 'Event duration ends in:', progress bar text, selectable buttons and option text."
+        }
+      ],
+      "note": "GladiatorsVindicationWorldEventInterfacePacketHandler is descriptive exact-behavior recovery for ScriptPacket 10. Every selector is anchored to the already-recovered GladiatorsVindicationWorldEventInterface and its dynamic task/progress/selection widgets. Confidence is 0.998."
+    }
+  ],
+  "conflicts": []
+}
