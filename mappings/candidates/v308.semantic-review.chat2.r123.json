@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_9352C6F0A9D8EE075D3C",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_CBC32F6EAE0F44342404",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000654",
+      "owner_logical_id": "CLIENT_CLASS_000654",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/d/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaidInterfacePacketHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers rs/n/c/d/d directly as exact ScriptPacket ID 41."
+        },
+        {
+          "family": "exact_complete_selector_surface",
+          "detail": "Every meaningful selector branch in the handler is raid-interface state: selectors 0-7 dispatch only into rs/n/c/d raid UI classes/widgets, while selectors 15-22 control raid overlays, raid timers/points, raid affliction/interface state, or the raid difficulty requirement dropdown. Selectors 8-14 and 16 have no unrelated behavior."
+        },
+        {
+          "family": "exact_raid_interface_targets",
+          "detail": "The targeted rs/n/c/d subsystem independently preserves raid-specific strings/resources including 'Invocations', 'Party', 'Join party', 'Raid Type & Difficulty', 'Chambers of Xeric', 'Theatre of Blood', 'Raid Difficulty', 'Raid Selection', raid difficulty names, and raids/* assets."
+        },
+        {
+          "family": "exact_raid_overlay_consumers",
+          "detail": "The handler constructs and manages rs/l/f/a/g/a, whose exact surviving identity literal is 'RaidPartyOverlay' with 'Your points:' and 'Time:' state, plus sibling raid overlays including the surviving 'RaidTheatreBar' literal; selectors 18-20 update that live overlay's visibility, timer and points."
+        },
+        {
+          "family": "exact_raid_requirement_state",
+          "detail": "Selector 22 updates the raid difficulty dropdown at interface 32430 using the surviving requirement vocabulary 'Adept (Req. 10+ ...)', 'Expert (Req. 50+ ...)', 'Master (Req. 100+ ...)' and default suffix 'raids', while selector 21 toggles the same rs/n/c/d raid-interface state."
+        }
+      ],
+      "note": "RaidInterfacePacketHandler is descriptive exact-behavior recovery for ScriptPacket 41. Its complete meaningful selector surface is confined to the exact raid interface/overlay subsystem; no surviving original class identifier is claimed. Confidence is 0.998."
+    }
+  ],
+  "unresolved": []
+}
