@@ -47,6 +47,21 @@ class CleanRebuildCliTests(unittest.TestCase):
                                 "method/arity_1": 400,
                                 "variable": 280,
                             },
+                            "symbol_clusters": [
+                                {
+                                    "symbol_id": "JSYM_TEST",
+                                    "symbol_kind": "method",
+                                    "symbol_shape": "method/arity_1",
+                                    "count": 300,
+                                }
+                            ],
+                            "location_clusters": [
+                                {
+                                    "location_id": "JLOC_TEST",
+                                    "location_kind": "class",
+                                    "count": 500,
+                                }
+                            ],
                         },
                         "clusters": [],
                     },
@@ -88,6 +103,14 @@ class CleanRebuildCliTests(unittest.TestCase):
         self.assertIn("javac_cannot_find_symbol=680", text)
         self.assertIn(
             'javac_cannot_find_symbol_kinds_json={"method":400,"variable":280}',
+            text,
+        )
+        self.assertIn(
+            '"symbol_id":"JSYM_TEST"',
+            text,
+        )
+        self.assertIn(
+            '"location_id":"JLOC_TEST"',
             text,
         )
         self.assertNotIn("source_path", text)
