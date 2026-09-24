@@ -42,6 +42,39 @@ class JavacDiagnosticClassificationTests(unittest.TestCase):
             self.assertNotIn("location", row)
             self.assertTrue(row["file_id"].startswith("JFILE_"))
 
+    def test_pseudonymous_symbol_clusters_preserve_concentration(self):
+        raw = (
+            "/x/A.java:1: error: cannot find symbol\n"
+            "  symbol:   method hidden(int)\n"
+            "  location: class A\n"
+            "/x/B.java:2: error: cannot find symbol\n"
+            "  symbol:   method hidden(int)\n"
+            "  location: class B\n"
+            "/x/C.java:3: error: cannot find symbol\n"
+            "  symbol:   method other(int)\n"
+            "  location: class C\n"
+        )
+
+        report = classify_javac_diagnostics(raw)
+        clusters = report["summary"]["cannot_find_symbol"][
+            "symbol_clusters"
+        ]
+
+        self.assertEqual([row["count"] for row in clusters], [2, 1])
+        self.assertTrue(clusters[0]["symbol_id"].startswith("JSYM_"))
+        self.assertEqual(clusters[0]["symbol_kind"], "method")
+        self.assertEqual(clusters[0]["symbol_shape"], "method/arity_1")
+        self.assertNotIn("hidden", str(clusters))
+        self.assertNotIn("other", str(clusters))
+        self.assertNotEqual(
+            report["diagnostics"][0]["cluster_id"],
+            report["diagnostics"][1]["cluster_id"],
+        )
+        self.assertEqual(
+            report["diagnostics"][0]["symbol_id"],
+            report["diagnostics"][1]["symbol_id"],
+        )
+
     def test_windows_paths_and_other_categories(self):
         raw = (
             "C:\\work\\src\\rs\\A.java:42: error: incompatible types: int cannot be converted to String\n"
