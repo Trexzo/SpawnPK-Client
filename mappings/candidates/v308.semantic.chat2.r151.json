@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/q/a/a/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CustomMagicPresentationPacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers rs/q/a/a/a/a directly as exact ScriptPacket ID 32."
+        },
+        {
+          "family": "exact_spell_presentation",
+          "detail": "Selector 2 rewrites the exact Ancient/custom-magic presentation widgets for Blood vs Infernal barrage/blitz, including magic/on sprites, spell names and level-description text."
+        },
+        {
+          "family": "exact_input_presentation",
+          "detail": "Selector 4 places the Client into text-input presentation state using the packet-provided prompt String, clearing the current input buffer and enabling the corresponding input-mode flags."
+        },
+        {
+          "family": "exact_remaining_state_surface",
+          "detail": "Selectors 1, 3, 6, 7 and 8 write scalar/flag/runtime presentation state; selector 5 reads three bytes but performs no observable mutation. The complete selector range is 1-8 and no branch dispatches to an unrelated packet family."
+        },
+        {
+          "family": "server_application_protocol_authority",
+          "detail": "The preserved R84 application-protocol authority explicitly classifies subtype 32 as a 'server-controlled presentation/state layer for custom magic' and separately lists 'custom magic presentation toggles' as exact enough to implement client-side while keeping custom-magic combat effects server-owned."
+        },
+        {
+          "family": "server_producer_corollary",
+          "detail": "The preserved ApplicationUiService exposes only customMagic* subtype-32 producers: scalar CT/DX, Blood-vs-Infernal mode, prompt, no-op 5, flag 6, five-scalar state and flag 8."
+        }
+      ],
+      "note": "CustomMagicPresentationPacketHandler is descriptive exact-behavior recovery for ScriptPacket 32. Earlier Chat 2 batches deliberately withheld a name because several broad Client fields lacked a common noun; preserved R84 application-protocol authority now independently classifies the entire subtype as a custom-magic presentation/state layer. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}
