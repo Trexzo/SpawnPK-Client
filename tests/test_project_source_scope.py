@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 import hashlib
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from types import SimpleNamespace
 import tempfile
 import unittest
 from unittest.mock import patch
 import zipfile
 
-from spk_recovery.decompiler import DecompilerError, run_decompiler
+from spk_recovery.decompiler import (
+    DecompilerError,
+    _dedupe_exact_path_spellings,
+    run_decompiler,
+)
 from spk_recovery.source_workspace import (
     SourceWorkspaceError,
     _selection_digest,
@@ -112,6 +116,97 @@ class ProjectScopedSourceWorkspaceTests(unittest.TestCase):
             self.assertEqual(result["java_file_count"], 2)
 
 
+    def test_project_only_case_collision_requires_case_sensitive_filesystem(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = root / "readable.jar"
+            with zipfile.ZipFile(jar, "w") as z:
+                z.writestr("rs/A.class", b"upper")
+                z.writestr("rs/a.class", b"lower")
+            manifest = {
+                "schema_version": 1,
+                "kind": "readable_client_build_manifest",
+                "status": "complete",
+                "verification_pass": True,
+                "output_sha256": _sha(jar),
+                "source_sha256": "a" * 64,
+                "namespace_id": "SEMNS_TEST",
+                "class_plan_digest": "b" * 64,
+                "member_plan_digest": "c" * 64,
+                "build_id": "v308",
+                "project_source_prefixes": ["rs/"],
+            }
+            tool = root / "procyon.jar"
+            tool.write_bytes(b"tool")
+
+            with patch(
+                "spk_recovery.source_workspace."
+                "_filesystem_supports_case_distinct_names",
+                return_value=False,
+            ):
+                with self.assertRaisesRegex(
+                    SourceWorkspaceError,
+                    "case-sensitive output directory",
+                ):
+                    build_source_workspace(
+                        manifest,
+                        jar,
+                        tool,
+                        expected_decompiler_sha256="d" * 64,
+                        engine="procyon",
+                        out_dir=root / "out",
+                        project_only=True,
+                    )
+
+
+    def test_project_only_rejects_incomplete_procyon_materialization(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar, manifest = self._readable(root)
+            tool = root / "procyon.jar"
+            tool.write_bytes(b"tool")
+
+            def fake_decompiler(*args, **kwargs):
+                out = kwargs["out_dir"]
+                (out / "rs").mkdir(parents=True, exist_ok=True)
+                (out / "rs" / "A.java").write_text(
+                    "package rs; public class A {}\n",
+                    encoding="utf-8",
+                )
+                return {
+                    "schema_version": 1,
+                    "kind": "decompiler_result",
+                    "engine": "procyon",
+                    "input_sha256": _sha(jar),
+                    "decompiler_sha256": "d" * 64,
+                    "java_file_count": 1,
+                    "output_directory": str(out),
+                    "input_mode": "class_files",
+                    "selected_class_file_count": 2,
+                    "batch_count": 1,
+                    "stdout": "",
+                    "stderr": "",
+                }
+
+            with patch(
+                "spk_recovery.source_workspace.run_decompiler",
+                side_effect=fake_decompiler,
+            ):
+                with self.assertRaisesRegex(
+                    SourceWorkspaceError,
+                    "did not materialize one Java source unit",
+                ):
+                    build_source_workspace(
+                        manifest,
+                        jar,
+                        tool,
+                        expected_decompiler_sha256="d" * 64,
+                        engine="procyon",
+                        out_dir=root / "out",
+                        project_only=True,
+                    )
+
+
     def test_project_only_refuses_archive_root_prefix(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -167,6 +262,26 @@ class ProjectScopedSourceWorkspaceTests(unittest.TestCase):
 
 
 class SelectiveDecompilerTests(unittest.TestCase):
+    def test_exact_path_dedupe_preserves_windows_case_distinctions(self):
+        upper = PureWindowsPath("C:/stage/rs/A.class")
+        lower = PureWindowsPath("C:/stage/rs/a.class")
+
+        # This is the exact regression: pathlib Windows path equality folds
+        # case, so the old set[Path] implementation retained only one.
+        self.assertEqual(len({upper, lower}), 1)
+
+        result = _dedupe_exact_path_spellings(
+            [lower, upper, upper]
+        )
+
+        self.assertEqual(
+            [path.as_posix() for path in result],
+            [
+                "C:/stage/rs/A.class",
+                "C:/stage/rs/a.class",
+            ],
+        )
+
     def test_procyon_class_inputs_are_deterministically_batched(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
