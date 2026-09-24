@@ -22,7 +22,10 @@ def _sha256_file(path: Path) -> str:
 
 
 def _source_tree_digest(root: Path) -> tuple[str, list[Path]]:
-    files = sorted(\n        root.rglob("*.java"),\n        key=lambda path: path.relative_to(root).as_posix(),\n    )
+    files = sorted(
+        root.rglob("*.java"),
+        key=lambda path: path.relative_to(root).as_posix(),
+    )
     h = hashlib.sha256()
     for path in files:
         rel = path.relative_to(root).as_posix().encode("utf-8")
@@ -88,7 +91,10 @@ def _copy_tree_unique(
     dst: Path,
 ) -> int:
     count = 0
-    for path in sorted(\n        src.rglob("*.class"),\n        key=lambda path: path.relative_to(src).as_posix(),\n    ):
+    for path in sorted(
+        src.rglob("*.class"),
+        key=lambda path: path.relative_to(src).as_posix(),
+    ):
         rel = path.relative_to(src)
         target = dst / rel
         target.parent.mkdir(parents=True, exist_ok=True)
