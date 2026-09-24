@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import tempfile
 from typing import Any
@@ -109,6 +110,41 @@ def _selection_digest(entries: list[str]) -> str:
     return h.hexdigest()
 
 
+def _casefold_collision_groups(values: list[str]) -> list[list[str]]:
+    groups: dict[str, list[str]] = {}
+    for value in values:
+        groups.setdefault(value.casefold(), []).append(value)
+    return [
+        sorted(group)
+        for group in groups.values()
+        if len(set(group)) > 1
+    ]
+
+
+def _filesystem_supports_case_distinct_names(root: Path) -> bool:
+    """Probe whether one directory can hold names differing only by case."""
+    root.mkdir(parents=True, exist_ok=True)
+    upper = root / ".spk-case-probe-A"
+    lower = root / ".spk-case-probe-a"
+    try:
+        upper.write_bytes(b"UPPER")
+        lower.write_bytes(b"lower")
+        if upper.read_bytes() != b"UPPER":
+            return False
+        if lower.read_bytes() != b"lower":
+            return False
+        try:
+            return not os.path.samefile(str(upper), str(lower))
+        except OSError:
+            return False
+    finally:
+        for path in (upper, lower):
+            try:
+                os.unlink(str(path))
+            except FileNotFoundError:
+                pass
+
+
 def _extract_class_context(
     readable_jar: Path,
     root: Path,
@@ -117,6 +153,20 @@ def _extract_class_context(
     selected: list[str] = []
     with zipfile.ZipFile(readable_jar) as z:
         infos = sorted(z.infolist(), key=lambda info: info.filename)
+        class_entries = [
+            info.filename
+            for info in infos
+            if not info.is_dir() and info.filename.endswith(".class")
+        ]
+        collisions = _casefold_collision_groups(class_entries)
+        if collisions and not _filesystem_supports_case_distinct_names(root):
+            raise SourceWorkspaceError(
+                "project-only Procyon resolver context contains "
+                "case-distinct class paths, but the staging filesystem is "
+                "case-insensitive. Use a case-sensitive output directory. "
+                f"collision_groups={len(collisions)} "
+                f"sample={collisions[:3]!r}"
+            )
         for info in infos:
             name = info.filename
             if info.is_dir() or not name.endswith(".class"):
@@ -219,7 +269,8 @@ def build_source_workspace(
                 )
             project_prefixes = _project_prefixes(readable_manifest)
             with tempfile.TemporaryDirectory(
-                prefix="spk-project-decompile-"
+                prefix=".spk-project-decompile-",
+                dir=out_dir,
             ) as td:
                 class_files, selected_entries = _extract_class_context(
                     readable_jar,
@@ -227,6 +278,24 @@ def build_source_workspace(
                     project_prefixes,
                 )
                 selection_sha = _selection_digest(selected_entries)
+                selected_collisions = _casefold_collision_groups(
+                    [
+                        str(Path(name).with_suffix(".java")).replace("\\", "/")
+                        for name in selected_entries
+                    ]
+                )
+                if (
+                    selected_collisions
+                    and not _filesystem_supports_case_distinct_names(source_dir)
+                ):
+                    raise SourceWorkspaceError(
+                        "project-only Procyon output contains case-distinct "
+                        "Java source paths, but the source filesystem is "
+                        "case-insensitive. Use a case-sensitive output "
+                        "directory. "
+                        f"collision_groups={len(selected_collisions)} "
+                        f"sample={selected_collisions[:3]!r}"
+                    )
                 result = run_decompiler(
                     readable_jar,
                     decompiler_jar,
@@ -236,6 +305,22 @@ def build_source_workspace(
                     clean_out=False,
                     input_class_files=class_files,
                 )
+                expected_count = len(selected_entries)
+                actual_inputs = int(
+                    result.get("selected_class_file_count", -1)
+                )
+                if actual_inputs != expected_count:
+                    raise SourceWorkspaceError(
+                        "project-only Procyon selected input count drifted: "
+                        f"{actual_inputs} != {expected_count}"
+                    )
+                actual_sources = int(result.get("java_file_count", -1))
+                if actual_sources != expected_count:
+                    raise SourceWorkspaceError(
+                        "project-only Procyon did not materialize one Java "
+                        "source unit per selected top-level class: "
+                        f"{actual_sources} != {expected_count}"
+                    )
         else:
             result = run_decompiler(
                 readable_jar,
