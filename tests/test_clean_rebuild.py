@@ -347,6 +347,53 @@ class CleanRebuildTests(unittest.TestCase):
             self.assertNotIn("missingValue", serialized)
             self.assertNotIn(str(target), serialized)
 
+    def test_compile_failure_classification_exceeds_default_javac_error_cap(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                source,
+                readable,
+                recovered,
+                readiness,
+                readable_manifest,
+                authority,
+            ) = self._fixture(root)
+
+            missing = " + ".join(
+                f"missingValue{index}" for index in range(120)
+            )
+            target = source / "rs" / "A.java"
+            target.write_text(
+                "package rs; public class A { "
+                f"public int value() {{ return {missing}; }} }}\n",
+                encoding="utf-8",
+            )
+            tree_sha = _tree_sha(source)
+            recovered["source_tree_sha256"] = tree_sha
+            readiness["source_tree_sha256"] = tree_sha
+
+            report = clean_project_rebuild(
+                recovered,
+                readiness,
+                readable_manifest,
+                readable,
+                authority,
+                source,
+                out_dir=root / "out",
+                source_prefixes=["rs/"],
+            )
+
+            classified = report["compiler"]["diagnostic_classification"]
+            self.assertEqual(report["status"], "compile_failed")
+            self.assertEqual(
+                classified["summary"]["cannot_find_symbol"]["count"],
+                120,
+            )
+            self.assertEqual(
+                classified["summary"]["total_errors"],
+                120,
+            )
+
     def test_cleanbuild_id_is_independent_of_diagnostic_absolute_paths(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
