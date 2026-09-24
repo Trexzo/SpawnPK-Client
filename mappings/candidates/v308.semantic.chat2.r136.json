@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ControlOptionsAttackSettingsInterface",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_child_root",
+          "detail": "rs/n/c/f builds and populates exact interface root 35112 as a 13-child panel, rather than rebuilding the root-35000 Control Options menu."
+        },
+        {
+          "family": "exact_attack_settings_content",
+          "detail": "The panel's own exact text is '<u>Player attack options', '<u>NPC/Bot attack options' and '<tab=20><img=14> Always right-click clan members', with 'Select option' on the clan-member toggle."
+        },
+        {
+          "family": "exact_parent_interface_join",
+          "detail": "R5 independently resolves rs/n/c/ai as ControlOptionsInterface from the exact title 'Control Options Menu'. That class creates the shared attack-option dropdown widgets 35091/35096 and 35102/35107 used by rs/n/c/f."
+        },
+        {
+          "family": "exact_widget_reuse",
+          "detail": "Root 35112 embeds the parent ControlOptionsInterface dropdown widgets 35091/35096/35102/35107 alongside its own headings/toggle 35113-35116; rs/n/c/ai runtime layout logic also moves those same shared widgets in and out of root 35112."
+        },
+        {
+          "family": "exact_registration_order",
+          "detail": "The exact interface-builder registry initializes rs/n/c/ai first and rs/n/c/f later, matching a dedicated child settings surface layered onto the already-built Control Options widget family rather than a second unrelated menu."
+        }
+      ],
+      "note": "ControlOptionsAttackSettingsInterface is descriptive exact-behavior recovery for root 35112, the dedicated player/NPC attack-option and clan-member right-click child surface of the reviewed ControlOptionsInterface. No original source identifier is claimed; confidence is 0.998."
+    }
+  ],
+  "conflicts": []
+}

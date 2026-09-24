@@ -128,28 +128,27 @@ Blocker:
 
 No self-identifying content. Too generic for semantic promotion.
 
-### `rs/n/c/f` — `CLIENT_CLASS_000659`
+### `rs/n/c/f` — `CLIENT_CLASS_000659` — RESOLVED
 
-Evidence:
+The responsibility boundary is now exact:
 
-- player attack options;
-- NPC/bot attack options;
-- always right-click clan members;
-- Select option.
+- `rs/n/c/f` builds child root **35112** with 13 children;
+- its own text is Player attack options, NPC/Bot attack options and
+  Always right-click clan members;
+- the R5 `ControlOptionsInterface` owns parent root **35000**;
+- root 35112 embeds the parent-created attack dropdown widgets
+  **35091/35096/35102/35107**;
+- parent runtime layout code also moves/hides those same widgets inside root 35112;
+- exact registration builds `rs/n/c/ai` first and `rs/n/c/f` later.
 
-Additional exact-v308 relationship evidence:
+This proves a dedicated attack/clan settings child interface rather than a second full
+Control Options menu or an unrelated patch.
 
-- R5 `ControlOptionsInterface` / `rs/n/c/ai` builds the main **35000** menu first;
-- `rs/n/c/f` is registered later;
-- `f` writes a subset of the same widget IDs used by `ai`, including
-  **35091, 35096, 35102, 35107, 35112-35116**.
+Moved to R136 as:
 
-Current conclusion:
+`ControlOptionsAttackSettingsInterface`
 
-`f` is a later control-options attack/clan subsection or patch, not a second full
-Control Options interface. It remains blocked because the exact responsibility boundary
-(subsection builder vs post-build patch) is not yet proven strongly enough for a stable
-semantic class name.
+Review ID: `SEMREVIEW_E9153D754ABB6B3C9812`.
 
 ## Trust rule
 
