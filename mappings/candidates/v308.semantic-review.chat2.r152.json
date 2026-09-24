@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_4D081ABE7A8E9C4DCC3C",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_F422BD6E7388C972642A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000351",
+      "owner_logical_id": "CLIENT_CLASS_000351",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/B",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PixelBlender",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_single_primitive",
+          "detail": "rs/l/B contains no instance state and only one substantive static primitive. It writes or alpha-composites one source color into one destination index of an int[] pixel buffer, preserving/combining ARGB alpha when required."
+        },
+        {
+          "family": "exact_gpu_boundary",
+          "detail": "The primitive branches on rs/k/e.a(), whose class is independently recovered by R87 as GpuRenderer. When the GPU path is inactive it directly writes the supplied software pixel; when active it preserves/computes alpha and blends RGB channels against the existing destination pixel."
+        },
+        {
+          "family": "exact_rendering_inheritance",
+          "detail": "The only direct subclasses are the recovered rendering/image classes IndexedImage, DrawingArea, Rasterizer3D and Sprite. No non-rendering class extends rs/l/B."
+        },
+        {
+          "family": "exact_pixel_consumers",
+          "detail": "Inherited calls are used repeatedly by IndexedImage and Sprite pixel-copy/draw paths, while the class contributes no geometry, clipping, image-loading or triangle state of its own. This fixes the responsibility at pixel blending rather than a broader rasterizer role."
+        }
+      ],
+      "note": "PixelBlender is a conservative semantic name for the stateless shared ARGB pixel-compositing base used by the core software image/raster classes. It intentionally avoids the broader RasterizerBase label because rs/l/B itself owns only the GPU-aware pixel blend/write primitive. Confidence is 0.998."
+    }
+  ],
+  "unresolved": []
+}
