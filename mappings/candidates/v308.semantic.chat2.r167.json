@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DragAndDropReorderPane",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_surviving_name",
+          "detail": "setLayout throws the exact literal 'DragAndDropReorderPane only supports DragAndDropReorderLayoutManager', directly preserving the pane role noun in v308."
+        },
+        {
+          "family": "exact_swing_role",
+          "detail": "The class extends JLayeredPane, installs its dedicated vertical reorder layout and one shared mouse listener/motion listener, and promotes the actively dragged child into DRAG_LAYER before restoring it to DEFAULT_LAYER."
+        },
+        {
+          "family": "exact_reorder_behavior",
+          "detail": "Drag motion tracks the grabbed child, compares it against sibling midpoints, updates the target component position, revalidates layout, and on release notifies registered reorder listeners with the moved Component."
+        },
+        {
+          "family": "exact_family_boundary",
+          "detail": "Exact class-reference scanning finds no project class outside rs/ui/components/g and its nested helpers referencing this family, so the proposal is deliberately limited to a reusable Swing component rather than a higher-level screen."
+        }
+      ],
+      "note": "DragAndDropReorderPane follows an exact surviving v308 component name and complete reorder behavior. It is a reusable Swing primitive; no higher-level product feature ownership is claimed. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/g$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DragAndDropReorderLayoutManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_surviving_name",
+          "detail": "The enclosing pane's exact exception names its only supported layout as DragAndDropReorderLayoutManager."
+        },
+        {
+          "family": "exact_layout_type",
+          "detail": "The nested class extends BoxLayout with Y_AXIS, making the component stack vertical."
+        },
+        {
+          "family": "exact_drag_layout_behavior",
+          "detail": "During layout it temporarily restores the dragged child to DEFAULT_LAYER, performs BoxLayout layout, then puts that child back into DRAG_LAYER and restores its free-drag screen location."
+        }
+      ],
+      "note": "DragAndDropReorderLayoutManager is fixed by the exact surviving layout name plus its BoxLayout/Y_AXIS implementation. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/g$b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DragAndDropReorderMouseHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_mouse_role",
+          "detail": "The nested class extends MouseAdapter and is installed as both MouseListener and MouseMotionListener on DragAndDropReorderPane."
+        },
+        {
+          "family": "exact_drag_lifecycle",
+          "detail": "mousePressed records the left-button origin when more than one child exists; mouseDragged waits for DragSource.getDragThreshold(), begins or updates reordering, and mouseReleased finalizes the drag."
+        },
+        {
+          "family": "exact_owner_boundary",
+          "detail": "Every action delegates exclusively into DragAndDropReorderPane private drag/reorder methods and touches no unrelated client state."
+        }
+      ],
+      "note": "DragAndDropReorderMouseHandler is a descriptive helper name for the pane's exclusive MouseAdapter drag controller. No original nested-class identifier is claimed. Confidence is 0.998."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/g$c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DragAndDropReorderListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_listener_shape",
+          "detail": "The nested public interface is a single-method functional interface whose only argument is the reordered java.awt.Component."
+        },
+        {
+          "family": "exact_registration",
+          "detail": "DragAndDropReorderPane exposes add/remove methods for a List of this interface."
+        },
+        {
+          "family": "exact_notification",
+          "detail": "When a drag completes, the pane iterates every registered listener and invokes the interface with the moved Component."
+        }
+      ],
+      "note": "DragAndDropReorderListener is descriptive exact-behavior recovery for the pane's one-method reorder callback interface. Confidence is 0.998."
+    }
+  ],
+  "conflicts": []
+}
