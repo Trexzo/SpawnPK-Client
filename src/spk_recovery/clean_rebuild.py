@@ -321,7 +321,8 @@ def clean_project_rebuild(
     rebuilt_index_summary: dict[str, Any] | None = None
 
     with tempfile.TemporaryDirectory(
-        prefix="spk-clean-rebuild-"
+        prefix=".spk-clean-rebuild-",
+        dir=out_dir,
     ) as td:
         work_root = Path(td)
         classes = work_root / "classes"
