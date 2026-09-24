@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_7FE5D78DE62940533EAE",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_9ED6CCA3818E3FA57BA0",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000589",
+      "owner_logical_id": "CLIENT_CLASS_000589",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aN",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PkRatingsInterfacePacketHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers ScriptPacket ID 16 from rs/n/c/aM.c; exact v308 initializes that field with concrete handler rs/n/c/aN."
+        },
+        {
+          "family": "exact_complete_selector_surface",
+          "detail": "Selector 0 resets rs/n/c/aM list counters and clears all 50 row widgets from 40405 upward; selector 1 reads row/type/selectable/text data and delegates to rs/n/c/aM.b(...); selector 2 reads an index plus String and updates the matching row through rs/n/c/aM.k(...)."
+        },
+        {
+          "family": "exact_target_root",
+          "detail": "All packet mutations stay inside the 40403 PK Ratings root/list that exact GameframeNavigationInterface routes to from the 'PK Ratings' action."
+        },
+        {
+          "family": "exact_no_cross_domain_write",
+          "detail": "The handler has no branch outside rs/n/c/aM-owned counters, row widgets and helper methods."
+        }
+      ],
+      "note": "PkRatingsInterfacePacketHandler is descriptive exact-behavior recovery for ScriptPacket 16. Its complete selector surface controls only the exact root-40403 PK Ratings interface; confidence is 0.998."
+    },
+    {
+      "proposal_id": "SEMPROP_A9633F8D57C440531599",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000588",
+      "owner_logical_id": "CLIENT_CLASS_000588",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aM",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PkRatingsInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_parent_route",
+          "detail": "R8 GameframeNavigationInterface exact click routing maps 'PK Ratings' directly to interface root 40403."
+        },
+        {
+          "family": "exact_widget_root",
+          "detail": "rs/n/c/aM.a() directly creates root 40403, attaches the shared gameframe/navigation shell, and owns the scroll/list widget 40404 plus row widgets starting at 40405."
+        },
+        {
+          "family": "exact_list_shape",
+          "detail": "The builder allocates a fixed 50-row list, uses exact action text 'Select', lays rows vertically in the 40404 scroll container, and initializes row text/state through rs/n/c/aM helpers."
+        },
+        {
+          "family": "exact_packet_binding",
+          "detail": "The class initializes its ScriptPacket handler field with rs/n/c/aN, which R115 registers as exact ScriptPacket ID 16."
+        }
+      ],
+      "note": "PkRatingsInterface is resolved by the same exact route-to-root method used in R8: PK Ratings routes to 40403 and rs/n/c/aM directly owns that root/list. The readable name is descriptive, not an original source identifier; confidence is 0.995."
+    }
+  ],
+  "unresolved": []
+}
