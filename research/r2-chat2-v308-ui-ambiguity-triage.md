@@ -34,27 +34,23 @@ This is sufficient to move the class out of ambiguity triage into R7 as:
 
 Review ID: `SEMREVIEW_9D3D080DCFC1237F346E`.
 
-### `rs/n/c/ac` — `CLIENT_CLASS_000604`
+### `rs/n/c/ac` — `CLIENT_CLASS_000604` — RESOLVED
 
-Evidence:
+R122 later supplied the missing root/runtime evidence:
 
-- item search;
-- tabs;
+- exact root **36000**;
 - item-list title/description placeholders;
-- Deposit/Remove 1/5/10/All;
-- deposit all to bank/inventory.
+- five tab controls;
+- search input/results;
+- Remove/Deposit 1/5/10/All;
+- deposit-all bank/inventory actions;
+- ScriptPacket 14 exclusively controls the same 36000-series list/search state.
 
-Blocker:
+Moved to R122 as:
 
-The class combines searchable-list and transfer semantics. Exact strings do not establish
-whether this is a reusable item-list component, a bank/deposit surface, or a specific
-higher-level content interface.
+`ItemListInterface`
 
-Required next evidence:
-
-- exact interface root IDs and parent callers;
-- dynamic item/container IDs;
-- call sites that supply the title/content.
+Review ID: `SEMREVIEW_761085F0BAEBCC13F99B`.
 
 ### `rs/n/c/d/a` — `CLIENT_CLASS_000651` — RESOLVED
 
@@ -99,23 +95,24 @@ The missing parent/root evidence is now exact:
 
 Moved to R8 as `AccountInformationInterface`.
 
-### `rs/n/c/ak` — `CLIENT_CLASS_000612`
+### `rs/n/c/ak` — `CLIENT_CLASS_000612` — RESOLVED
 
-Evidence:
+Exact root ownership resolves the earlier resource ambiguity:
 
-- Home teleport;
-- Edgeville teleport;
-- Bounty teleport;
-- Close Window.
+- the class builds root **48999**;
+- its only content actions are Home teleport, Edgeville teleport and Bounty teleport;
+- the only other action is Close Window;
+- there is no construction state or construction behavior in the class;
+- exact dependency analysis finds no project caller beyond the interface registry.
 
-Counter-evidence:
+The `construction/sprite` and `LOGS/ICON` paths are therefore presentation reuse, not the
+semantic owner.
 
-- class also loads `construction/sprite` and `LOGS/ICON`.
+Moved to R137 as:
 
-Blocker:
+`TeleportShortcutInterface`
 
-The literal role looks like a teleport shortcut menu but resource context suggests reuse or
-a construction-adjacent surface. Do not choose a content name until ownership is proven.
+Review ID: `SEMREVIEW_C6CFB2BCCB39A2EFAC37`.
 
 ### `rs/n/c/aA` — `CLIENT_CLASS_000576`
 
