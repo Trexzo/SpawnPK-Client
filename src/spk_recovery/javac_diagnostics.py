@@ -117,6 +117,22 @@ def classify_javac_diagnostics(
     raw_sha = hashlib.sha256(raw_text.encode("utf-8")).hexdigest()
     lines = clean.splitlines()
 
+    # Public pseudonyms intentionally use deterministic per-report ordinals
+    # instead of unkeyed hashes of raw identifiers. Many recovered/obfuscated
+    # names are low entropy, so a plain hash would be enumerable and would not
+    # provide meaningful redaction.
+    file_aliases: dict[str, str] = {}
+    symbol_aliases: dict[tuple[str, str], str] = {}
+    location_aliases: dict[tuple[str, str], str] = {}
+
+    def alias(table: dict[Any, str], key: Any, prefix: str) -> str:
+        current = table.get(key)
+        if current is not None:
+            return current
+        current = f"{prefix}_{len(table) + 1:06d}"
+        table[key] = current
+        return current
+
     rows: list[dict[str, Any]] = []
     i = 0
     while i < len(lines):
@@ -148,6 +164,26 @@ def classify_javac_diagnostics(
                 location_value = location.group("value")
             j += 1
 
+        file_id = alias(file_aliases, path, "JFILE")
+        symbol_id = (
+            alias(
+                symbol_aliases,
+                (symbol_kind, symbol_value or ""),
+                "JSYM",
+            )
+            if symbol_kind is not None
+            else None
+        )
+        location_id = (
+            alias(
+                location_aliases,
+                (location_kind, location_value or ""),
+                "JLOC",
+            )
+            if location_kind is not None
+            else None
+        )
+
         shape = _symbol_shape(symbol_kind, symbol_value)
         shape_material = {
             "category": category,
@@ -157,16 +193,8 @@ def classify_javac_diagnostics(
         }
         identity_material = {
             **shape_material,
-            "symbol_value": symbol_value or "",
-            "location_value": location_value or "",
-        }
-        symbol_material = {
-            "kind": symbol_kind or "none",
-            "value": symbol_value or "",
-        }
-        location_material = {
-            "kind": location_kind or "none",
-            "value": location_value or "",
+            "symbol_id": symbol_id or "none",
+            "location_id": location_id or "none",
         }
         row: dict[str, Any] = {
             "category": category,
@@ -179,17 +207,9 @@ def classify_javac_diagnostics(
             "cluster_id": (
                 "JDC_" + _stable_digest(identity_material)[:16].upper()
             ),
-            "symbol_id": (
-                "JSYM_" + _stable_digest(symbol_material)[:16].upper()
-                if symbol_kind is not None
-                else None
-            ),
-            "location_id": (
-                "JLOC_" + _stable_digest(location_material)[:16].upper()
-                if location_kind is not None
-                else None
-            ),
-            "file_id": "JFILE_" + hashlib.sha256(path.encode("utf-8")).hexdigest()[:16].upper(),
+            "symbol_id": symbol_id,
+            "location_id": location_id,
+            "file_id": file_id,
             "line": line,
         }
         if include_identifiers:
