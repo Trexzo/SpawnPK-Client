@@ -112,7 +112,7 @@ class Chat2SemanticReviewR6Tests(unittest.TestCase):
         self.assertEqual(actual["unresolved"], [])
         self.assertEqual(
             actual["review_id"],
-            "SEMREVIEW_F4BDFF8D5BAB20E1AD4B",
+            "SEMREVIEW_3E29870ADC1A4856A558",
         )
         self.assertEqual(actual, expected)
 
@@ -132,6 +132,7 @@ class Chat2SemanticReviewR6Tests(unittest.TestCase):
             "VotePointShopInterface": "CLIENT_CLASS_000606",
             "DuelTypeSelectionInterface": "CLIENT_CLASS_000550",
             "StandardCombatSpellsInterface": "CLIENT_CLASS_000660",
+            "AdventureBookInterfacePacketHandler": "CLIENT_CLASS_000650",
         }
         for name, stable_id in expected.items():
             self.assertEqual(
@@ -165,6 +166,7 @@ class Chat2SemanticReviewR6Tests(unittest.TestCase):
 
         self.assertEqual(len(current_names), 10)
         self.assertTrue(prior_names.isdisjoint(current_names))
+        self.assertNotIn("ChapterRewardClaimInterface", current_names)
 
 
 if __name__ == "__main__":

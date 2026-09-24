@@ -12,7 +12,7 @@ alter Main/Core's accepted 39-name R2 authority.
 - candidate classes: **10**
 - resolved proposals: **10**
 - unresolved: **0**
-- review ID: `SEMREVIEW_F4BDFF8D5BAB20E1AD4B`
+- review ID: `SEMREVIEW_3E29870ADC1A4856A558`
 - fields/methods proposed: **0**
 
 ## Candidates
@@ -27,7 +27,7 @@ alter Main/Core's accepted 39-name R2 authority.
 | `rs/n/c/ae` | `CLIENT_CLASS_000606` | `VotePointShopInterface` |
 | `rs/n/c/af` | `CLIENT_CLASS_000607` | `ItemSpawnSearchInterface` |
 | `rs/n/c/aj` | `CLIENT_CLASS_000611` | `FeaturesToolsInterface` |
-| `rs/n/c/d` | `CLIENT_CLASS_000650` | `ChapterRewardClaimInterface` |
+| `rs/n/c/d` | `CLIENT_CLASS_000650` | `AdventureBookInterfacePacketHandler` |
 | `rs/n/c/g` | `CLIENT_CLASS_000660` | `StandardCombatSpellsInterface` |
 
 ## Exact evidence
@@ -40,11 +40,32 @@ alter Main/Core's accepted 39-name R2 authority.
 - `Select a duel type..` with Standard/Whip variants;
 - `Event Brawl` active/start countdown status;
 - VP-priced item listings with vote resources;
-- chapter claim/reward text;
+- ScriptPacket 22 registration plus Adventure Book reset/populate/finalize, chapter claim/reward state and progress updates;
 - standard combat spell content plus `magic/on*` and `magic/off*` assets.
 
 Where a class has no formal title, the proposed name remains deliberately role-based and
 conservative.
+
+## R135 audit correction
+
+A later exact ScriptPacket audit found that the original R6 proposal for
+`CLIENT_CLASS_000650` / `rs/n/c/d` was misclassified.
+
+The class itself extends the ScriptPacket handler base and is registered as exact
+ScriptPacket **22** through `rs/n/c/c.bL`. Its selector surface drives the already-reviewed
+R2 `AdventureBookInterface` (`rs/n/c/c`): reset/finalize, chapter/task population,
+chapter-reward claim state, progress state and same-screen presentation effects.
+
+Therefore:
+
+- old non-canonical proposal: `ChapterRewardClaimInterface`;
+- old review ID: `SEMREVIEW_F4BDFF8D5BAB20E1AD4B`;
+- corrected proposal: `AdventureBookInterfacePacketHandler`;
+- corrected review ID: `SEMREVIEW_3E29870ADC1A4856A558`;
+- old R6 review/proposal identity is superseded and must not be used for acceptance.
+
+This correction does not promote the class; it repairs only Chat 2's non-canonical research
+artifact before any Main/Core acceptance.
 
 ## Acceptance boundary
 

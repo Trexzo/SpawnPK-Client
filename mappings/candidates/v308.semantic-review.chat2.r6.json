@@ -5,7 +5,7 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 10,
-  "review_id": "SEMREVIEW_F4BDFF8D5BAB20E1AD4B",
+  "review_id": "SEMREVIEW_3E29870ADC1A4856A558",
   "proposals": [
     {
       "proposal_id": "SEMPROP_14D36409B440720F2DD1",
@@ -58,28 +58,6 @@
         }
       ],
       "note": "Exact voting surface."
-    },
-    {
-      "proposal_id": "SEMPROP_29CA2E6CC0E1AEB07BE0",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000650",
-      "owner_logical_id": "CLIENT_CLASS_000650",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/n/c/d",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "ChapterRewardClaimInterface",
-      "confidence": 0.975,
-      "evidence": [
-        {
-          "family": "exact_literal_role",
-          "detail": "Exact text says 'Complete the chapter to claim these items.', CLAIM, and 'You've claimed these rewards!'."
-        }
-      ],
-      "note": "Generic chapter-reward claim role avoids inferring which higher-level chapter system owns it."
     },
     {
       "proposal_id": "SEMPROP_40FFC2B7D2CEB8503D5E",
@@ -210,6 +188,44 @@
         }
       ],
       "note": "Name follows the exact Features / Tools heading and broad shortcut-menu role."
+    },
+    {
+      "proposal_id": "SEMPROP_A7207CBEB61C4ECEC637",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000650",
+      "owner_logical_id": "CLIENT_CLASS_000650",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AdventureBookInterfacePacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_identity",
+          "detail": "rs/n/c/d extends the R115 ScriptPacketHandler base, and R115 ScriptPacketDispatcher registers the concrete rs/n/c/d instance as exact ScriptPacket ID 22 through rs/n/c/c.bL."
+        },
+        {
+          "family": "exact_adventure_book_target",
+          "detail": "Selectors 0, 2 and 3 call only rs/n/c/c AdventureBookInterface state: reset, finalize/rebuild, and append chapter/task rows with category, text, item pairs, progress values and completion state."
+        },
+        {
+          "family": "exact_claim_state",
+          "detail": "Selector 7 controls the Adventure Book chapter-reward claim widgets 30390/30391/30393 with exact states 'Complete the chapter to claim these items.', '@yel@CLAIM!' and '@gre@You've claimed these rewards!'."
+        },
+        {
+          "family": "exact_progress_state",
+          "detail": "Selector 8 writes the paired rs/n/c/c AdventureBookInterface progress integers bJ/bK; selectors 5 and 6 emit only presentation effects at the same Adventure Book screen geometry."
+        },
+        {
+          "family": "exact_existing_semantic_target",
+          "detail": "R2 independently resolves rs/n/c/c as AdventureBookInterface from exact 'Next chapter', 'Previous chapter', 'Chapter Progress', 'Claim rewards', 'Tips & Information', 'Teleport to Task' and 'Claim reward' presentation evidence."
+        }
+      ],
+      "note": "Corrected after exact ScriptPacket audit: rs/n/c/d is the ScriptPacket 22 handler for the already-reviewed AdventureBookInterface, not an interface builder. AdventureBookInterfacePacketHandler is fixed by the handler superclass/registration and complete Adventure Book reset/populate/claim/progress surface. Confidence is 0.999."
     },
     {
       "proposal_id": "SEMPROP_CFAD6312C76A716EF483",

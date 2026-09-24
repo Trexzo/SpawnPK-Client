@@ -257,15 +257,31 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "ChapterRewardClaimInterface",
-      "confidence": 0.975,
+      "proposed_name": "AdventureBookInterfacePacketHandler",
+      "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_literal_role",
-          "detail": "Exact text says 'Complete the chapter to claim these items.', CLAIM, and 'You've claimed these rewards!'."
+          "family": "exact_scriptpacket_identity",
+          "detail": "rs/n/c/d extends the R115 ScriptPacketHandler base, and R115 ScriptPacketDispatcher registers the concrete rs/n/c/d instance as exact ScriptPacket ID 22 through rs/n/c/c.bL."
+        },
+        {
+          "family": "exact_adventure_book_target",
+          "detail": "Selectors 0, 2 and 3 call only rs/n/c/c AdventureBookInterface state: reset, finalize/rebuild, and append chapter/task rows with category, text, item pairs, progress values and completion state."
+        },
+        {
+          "family": "exact_claim_state",
+          "detail": "Selector 7 controls the Adventure Book chapter-reward claim widgets 30390/30391/30393 with exact states 'Complete the chapter to claim these items.', '@yel@CLAIM!' and '@gre@You've claimed these rewards!'."
+        },
+        {
+          "family": "exact_progress_state",
+          "detail": "Selector 8 writes the paired rs/n/c/c AdventureBookInterface progress integers bJ/bK; selectors 5 and 6 emit only presentation effects at the same Adventure Book screen geometry."
+        },
+        {
+          "family": "exact_existing_semantic_target",
+          "detail": "R2 independently resolves rs/n/c/c as AdventureBookInterface from exact 'Next chapter', 'Previous chapter', 'Chapter Progress', 'Claim rewards', 'Tips & Information', 'Teleport to Task' and 'Claim reward' presentation evidence."
         }
       ],
-      "note": "Generic chapter-reward claim role avoids inferring which higher-level chapter system owns it."
+      "note": "Corrected after exact ScriptPacket audit: rs/n/c/d is the ScriptPacket 22 handler for the already-reviewed AdventureBookInterface, not an interface builder. AdventureBookInterfacePacketHandler is fixed by the handler superclass/registration and complete Adventure Book reset/populate/claim/progress surface. Confidence is 0.999."
     }
   ],
   "conflicts": []
