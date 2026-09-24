@@ -149,18 +149,46 @@ def classify_javac_diagnostics(
             j += 1
 
         shape = _symbol_shape(symbol_kind, symbol_value)
-        cluster_material = {
+        shape_material = {
             "category": category,
             "symbol_kind": symbol_kind or "none",
             "symbol_shape": shape,
             "location_kind": location_kind or "none",
+        }
+        identity_material = {
+            **shape_material,
+            "symbol_value": symbol_value or "",
+            "location_value": location_value or "",
+        }
+        symbol_material = {
+            "kind": symbol_kind or "none",
+            "value": symbol_value or "",
+        }
+        location_material = {
+            "kind": location_kind or "none",
+            "value": location_value or "",
         }
         row: dict[str, Any] = {
             "category": category,
             "symbol_kind": symbol_kind,
             "symbol_shape": shape,
             "location_kind": location_kind,
-            "cluster_id": "JDC_" + _stable_digest(cluster_material)[:16].upper(),
+            "shape_cluster_id": (
+                "JDS_" + _stable_digest(shape_material)[:16].upper()
+            ),
+            "cluster_id": (
+                "JDC_" + _stable_digest(identity_material)[:16].upper()
+            ),
+            "symbol_id": (
+                "JSYM_" + _stable_digest(symbol_material)[:16].upper()
+                if symbol_kind is not None
+                else None
+            ),
+            "location_id": (
+                "JLOC_" + _stable_digest(location_material)[:16].upper()
+                if location_kind is not None
+                else None
+            ),
             "file_id": "JFILE_" + hashlib.sha256(path.encode("utf-8")).hexdigest()[:16].upper(),
             "line": line,
         }
@@ -183,6 +211,35 @@ def classify_javac_diagnostics(
     location_kinds = Counter((row["location_kind"] or "none") for row in cannot)
     symbol_shapes = Counter(row["symbol_shape"] for row in cannot)
     cluster_counts = Counter(row["cluster_id"] for row in rows)
+    shape_cluster_counts = Counter(
+        row["shape_cluster_id"] for row in rows
+    )
+    cannot_symbol_clusters: dict[str, dict[str, Any]] = {}
+    cannot_location_clusters: dict[str, dict[str, Any]] = {}
+    for row in cannot:
+        symbol_id = row.get("symbol_id")
+        if symbol_id is not None:
+            bucket = cannot_symbol_clusters.setdefault(
+                symbol_id,
+                {
+                    "symbol_id": symbol_id,
+                    "symbol_kind": row["symbol_kind"],
+                    "symbol_shape": row["symbol_shape"],
+                    "count": 0,
+                },
+            )
+            bucket["count"] += 1
+        location_id = row.get("location_id")
+        if location_id is not None:
+            bucket = cannot_location_clusters.setdefault(
+                location_id,
+                {
+                    "location_id": location_id,
+                    "location_kind": row["location_kind"],
+                    "count": 0,
+                },
+            )
+            bucket["count"] += 1
 
     public_rows = [
         {
@@ -190,7 +247,10 @@ def classify_javac_diagnostics(
             "symbol_kind": row["symbol_kind"],
             "symbol_shape": row["symbol_shape"],
             "location_kind": row["location_kind"],
+            "shape_cluster_id": row["shape_cluster_id"],
             "cluster_id": row["cluster_id"],
+            "symbol_id": row["symbol_id"],
+            "location_id": row["location_id"],
             "file_id": row["file_id"],
             "line": row["line"],
         }
@@ -214,11 +274,26 @@ def classify_javac_diagnostics(
                 "symbol_kinds": dict(sorted(symbol_kinds.items())),
                 "location_kinds": dict(sorted(location_kinds.items())),
                 "symbol_shapes": dict(sorted(symbol_shapes.items())),
+                "symbol_clusters": sorted(
+                    cannot_symbol_clusters.values(),
+                    key=lambda row: (-int(row["count"]), row["symbol_id"]),
+                ),
+                "location_clusters": sorted(
+                    cannot_location_clusters.values(),
+                    key=lambda row: (-int(row["count"]), row["location_id"]),
+                ),
             },
             "clusters": [
                 {"cluster_id": key, "count": value}
                 for key, value in sorted(
                     cluster_counts.items(),
+                    key=lambda item: (-item[1], item[0]),
+                )
+            ],
+            "shape_clusters": [
+                {"shape_cluster_id": key, "count": value}
+                for key, value in sorted(
+                    shape_cluster_counts.items(),
                     key=lambda item: (-item[1], item[0]),
                 )
             ],
