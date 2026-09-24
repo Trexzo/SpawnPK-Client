@@ -111,6 +111,22 @@ def main(argv: list[str] | None = None) -> int:
                 separators=(",", ":"),
             )
         )
+        print(
+            "javac_cannot_find_symbol_top_clusters_json="
+            + json.dumps(
+                cannot.get("symbol_clusters", [])[:20],
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+        )
+        print(
+            "javac_cannot_find_symbol_top_locations_json="
+            + json.dumps(
+                cannot.get("location_clusters", [])[:20],
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+        )
     print(f"out_dir={args.out_dir.resolve()}")
     return 0 if report["status"] == "complete" else 3
 
