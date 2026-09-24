@@ -62,7 +62,7 @@ def _stable_digest(value: Any) -> str:
 
 
 def _source_tree_digest(root: Path) -> tuple[str, int, int]:
-    files = sorted(root.rglob("*.java"))
+    files = sorted(\n        root.rglob("*.java"),\n        key=lambda path: path.relative_to(root).as_posix(),\n    )
     h = hashlib.sha256()
     total_bytes = 0
     for path in files:
@@ -1438,7 +1438,7 @@ def normalize_procyon_source(
 
     try:
         with zipfile.ZipFile(readable_jar) as z:
-            for path in sorted(source_root.rglob("*.java")):
+            for path in sorted(\n                source_root.rglob("*.java"),\n                key=lambda path: path.relative_to(source_root).as_posix(),\n            ):
                 action = _normalize_synthetic_class(
                     source_root=source_root,
                     path=path,
@@ -1465,7 +1465,7 @@ def normalize_procyon_source(
             f"readable JAR is invalid: {readable_jar}"
         ) from exc
 
-    for path in sorted(source_root.rglob("*.java")):
+    for path in sorted(\n        source_root.rglob("*.java"),\n        key=lambda path: path.relative_to(source_root).as_posix(),\n    ):
         actions.extend(
             _normalize_discarded_strings(
                 source_root=source_root,
