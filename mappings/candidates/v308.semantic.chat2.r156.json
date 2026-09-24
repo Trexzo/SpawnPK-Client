@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/d/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoginUpdateLinkMouseHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_login_owner",
+          "detail": "rs/l/d/c, already reviewed as LoginScreen, constructs rs/l/d/d directly inside LoginScreen.run() and installs it on the launcher JFrame with addMouseListener."
+        },
+        {
+          "family": "exact_single_action",
+          "detail": "rs/l/d/d extends java.awt.event.MouseAdapter and its only overridden action is mousePressed; outside the exact hitbox gate it returns without side effects."
+        },
+        {
+          "family": "exact_update_hitbox",
+          "detail": "The handler accepts clicks only while the Client login screen is active and the mouse lies in the fixed latest-update region x=10..132, y=460..485."
+        },
+        {
+          "family": "exact_update_url",
+          "detail": "The accepted click invokes Client.f with the exact URL https://spawnpk.net/forums/index.php?/forum/10-updates/, the same SpawnPK updates forum consumed by R155 LoginUpdateFetcher."
+        },
+        {
+          "family": "exact_family_join",
+          "detail": "R155 independently proves rs/l/d/e is LoginUpdateFetcher owned by the same LoginScreen and same updates-forum URL, so rs/l/d/d is the input-side link handler for that exact login update presentation rather than a generic browser launcher."
+        }
+      ],
+      "note": "LoginUpdateLinkMouseHandler is fixed by direct LoginScreen construction, JFrame MouseListener registration, the exact latest-update hitbox and the same SpawnPK updates-forum URL used by LoginUpdateFetcher. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}
