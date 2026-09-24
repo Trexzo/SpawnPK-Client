@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_589B61E23E23DCA823B1",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_14C5C8D61A6A7863DFC6",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000451",
+      "owner_logical_id": "CLIENT_CLASS_000451",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/a/c/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BossBarOverlayPacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers rs/l/f/a/c/b directly as exact ScriptPacket ID 7."
+        },
+        {
+          "family": "exact_overlay_identity",
+          "detail": "The handler exclusively owns rs/l/f/a/c/a, whose constructor preserves the exact identity literal 'BossBarOverlay' and default percentage text '100%'."
+        },
+        {
+          "family": "exact_complete_selector_surface",
+          "detail": "After lazily constructing and attaching the overlay, every implemented selector mutates only that BossBarOverlay instance. Selector 1 resets/toggles it, selector 2 updates two integer state values, selectors 4 and 7 update current/max progress and derived percentage state, selector 5 updates a String field, and selector 6 updates an icon-prefixed numeric String. Selector 3 has no branch."
+        },
+        {
+          "family": "exact_progress_protocol",
+          "detail": "Selectors 4 and 7 read current and maximum integers, derive a clamped 0/100-or-ratio percentage, and store the resulting progress plus formatted current/max/percentage strings directly on BossBarOverlay."
+        },
+        {
+          "family": "exact_overlay_text_protocol",
+          "detail": "The packet also writes BossBarOverlay display Strings directly, including the surviving '<img=381>...' format used by selector 6, without touching any unrelated Client subsystem."
+        }
+      ],
+      "note": "BossBarOverlayPacketHandler is fixed by exact ScriptPacket ID 7, the surviving BossBarOverlay identity literal, and an exclusive whole-class write surface into that overlay. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}
