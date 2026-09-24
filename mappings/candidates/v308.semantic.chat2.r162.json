@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InfoBox",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_family_base",
+          "detail": "The class is the common abstract base consumed by R11 InfoBoxManager and extended by the already-reviewed BoostInfoBox, CounterInfoBox, StatusInfoBox and TimerInfoBox concrete classes."
+        },
+        {
+          "family": "exact_infobox_contract",
+          "detail": "It owns the shared InfoBox identity/group strings, primary/scaled images, priority, sprite-source type, menu entries, timeout state and visibility/presentation metadata used by InfoBoxManager."
+        },
+        {
+          "family": "exact_manager_api",
+          "detail": "R11 InfoBoxManager lifecycle methods accept/return rs/ui/a/c directly, log exact Adding/Removed InfoBox operations, detach/merge groups and render each instance through InfoBox overlays."
+        },
+        {
+          "family": "exact_packet_target",
+          "detail": "R117 InfoBoxPacketHandler resolves existing rs/ui/a/c instances through InfoBoxManager and creates compatible concrete subclasses under the same lifecycle contract."
+        }
+      ],
+      "note": "InfoBox is fixed by its role as the common abstract base for all already-reviewed concrete InfoBox types and the exact InfoBoxManager/InfoBoxPacketHandler lifecycle. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/a/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InfoBoxSpriteType",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_enum_constants",
+          "detail": "The enum preserves exactly ITEM_SPRITE and CACHE_SPRITE."
+        },
+        {
+          "family": "exact_infobox_owner",
+          "detail": "rs/ui/a/c InfoBox stores this enum directly as shared image-source state and defaults a new InfoBox to CACHE_SPRITE."
+        },
+        {
+          "family": "exact_packet_assignment",
+          "detail": "R117 InfoBoxPacketHandler chooses ITEM_SPRITE versus CACHE_SPRITE when constructing packet-driven InfoBoxes according to the incoming icon source."
+        },
+        {
+          "family": "exact_render_scaling",
+          "detail": "InfoBoxManager branches on CACHE_SPRITE when choosing the icon size/scaling envelope before storing the rendered InfoBox image."
+        }
+      ],
+      "note": "InfoBoxSpriteType is descriptive exact recovery for the ITEM_SPRITE/CACHE_SPRITE source contract stored on InfoBox and consumed by packet creation/render scaling. Confidence is 0.998."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/a/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InfoBoxOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_overlay_base",
+          "detail": "The class extends the shared overlay base rs/l/f/g and owns a live List<rs/ui/a/c> of InfoBoxes plus rendering/orientation state."
+        },
+        {
+          "family": "exact_manager_construction",
+          "detail": "InfoBoxManager constructs this exact class for InfoBox groups, registers it with the overlay manager/event bus and maintains group-to-overlay mappings."
+        },
+        {
+          "family": "exact_literal_identity",
+          "detail": "InfoBoxManager preserves the exact default group name InfoBoxOverlay and treats it specially as Default Group when creating/managing rs/ui/a/g instances."
+        },
+        {
+          "family": "exact_render_surface",
+          "detail": "The overlay iterates InfoBoxes, filters expired/hidden entries, builds rendered components, performs hover/menu interaction and lays them out using the shared overlay system."
+        },
+        {
+          "family": "exact_persistence_binding",
+          "detail": "InfoBoxManager persists per-group orientation under the exact settings namespace infoboxoverlay and applies that orientation when constructing this overlay."
+        }
+      ],
+      "note": "InfoBoxOverlay is fixed by the exact InfoBoxOverlay default-group literal, overlay inheritance and direct InfoBoxManager construction/rendering contract. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/a/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InfoBoxPriority",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_enum_constants",
+          "detail": "The enum preserves exactly HIGH, MED, NONE and LOW."
+        },
+        {
+          "family": "exact_infobox_owner",
+          "detail": "rs/ui/a/c InfoBox stores this enum as shared metadata, defaults it to NONE and exposes direct getter/setter methods."
+        },
+        {
+          "family": "exact_ordering_contract",
+          "detail": "InfoBoxManager's canonical InfoBox comparator compares this enum first, then the InfoBox group/name String, making the enum the primary ordering priority."
+        },
+        {
+          "family": "exact_runtime_assignment",
+          "detail": "Live InfoBox producers explicitly assign levels such as LOW, demonstrating active priority use rather than dead metadata."
+        }
+      ],
+      "note": "InfoBoxPriority is descriptive exact recovery for the HIGH/MED/NONE/LOW enum stored on InfoBox and used as InfoBoxManager's primary ordering key. Confidence is 0.998."
+    }
+  ],
+  "conflicts": []
+}
