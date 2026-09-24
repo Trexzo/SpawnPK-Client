@@ -347,6 +347,66 @@ class CleanRebuildTests(unittest.TestCase):
             self.assertNotIn("missingValue", serialized)
             self.assertNotIn(str(target), serialized)
 
+    def test_cleanbuild_id_is_independent_of_diagnostic_absolute_paths(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                source,
+                readable,
+                recovered,
+                readiness,
+                readable_manifest,
+                authority,
+            ) = self._fixture(root)
+
+            failing = (
+                "package rs; public class A { "
+                "public int value() { return missingValue; } }\n"
+            )
+            (source / "rs" / "A.java").write_text(
+                failing,
+                encoding="utf-8",
+            )
+            tree_sha = _tree_sha(source)
+            recovered["source_tree_sha256"] = tree_sha
+            readiness["source_tree_sha256"] = tree_sha
+
+            source2 = root / "other-absolute-source-root"
+            shutil.copytree(source, source2)
+
+            first = clean_project_rebuild(
+                recovered,
+                readiness,
+                readable_manifest,
+                readable,
+                authority,
+                source,
+                out_dir=root / "out-1",
+                source_prefixes=["rs/"],
+            )
+            second = clean_project_rebuild(
+                recovered,
+                readiness,
+                readable_manifest,
+                readable,
+                authority,
+                source2,
+                out_dir=root / "out-2",
+                source_prefixes=["rs/"],
+            )
+
+            self.assertEqual(first["status"], "compile_failed")
+            self.assertEqual(second["status"], "compile_failed")
+            self.assertEqual(first["rebuild_id"], second["rebuild_id"])
+            self.assertNotEqual(
+                first["compiler"]["diagnostic_classification"][
+                    "input_sha256"
+                ],
+                second["compiler"]["diagnostic_classification"][
+                    "input_sha256"
+                ],
+            )
+
     def test_old_fallback_manifest_without_project_prefixes_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
