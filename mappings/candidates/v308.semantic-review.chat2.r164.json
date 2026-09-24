@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_53C7F8CEB55D068C25EE",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_5C3DB819918AD26DD00B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000296",
+      "owner_logical_id": "CLIENT_CLASS_000296",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/i/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ChatMessageClassifier",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_chat_channel_constants",
+          "detail": "The class is a static chat classification utility whose integer constants are consumed by the gameframe chat-button renderer for the exact All/Game/Public/Private/Clan/Trade/News/Yell channel surfaces."
+        },
+        {
+          "family": "exact_message_reclassification",
+          "detail": "Its a(String,int) method reclassifies base chat messages into exact News, Yell and Clan-chat message types using surviving markers/text: '<img=2><shad=FFFF3F><col=FE610C> News: </shad></col>', '<y>', '<c>', 'Please wait at least ... each yell message!' and 'Clan Chat channel-mate'."
+        },
+        {
+          "family": "exact_marker_normalization",
+          "detail": "Its b(String,int) method removes the exact '<c>' and '<y>' transport/display markers only for the corresponding Clan and Yell message types."
+        },
+        {
+          "family": "exact_chat_filtering",
+          "detail": "Its c(String,int) method decides chat-line eligibility for base/news/yell/clan categories, including filtering generic system phrases and news-trigger vocabulary such as 'received', 'successfully enchanted', 'has killed', 'killstreak', 'has encountered' and 'just captured'."
+        },
+        {
+          "family": "exact_consumers",
+          "detail": "Only rs/Client and rs/i/b consume the class. rs/Client uses the constants in chat rendering/filter logic; rs/i/b uses them while rendering exact gameframe chat channel buttons, fixing the responsibility to chat/message classification rather than general text processing."
+        }
+      ],
+      "note": "ChatMessageClassifier is descriptive exact-behavior recovery for the static chat type/channel classification utility. The entire class is confined to chat constants, message reclassification, marker normalization and filtering; confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}
