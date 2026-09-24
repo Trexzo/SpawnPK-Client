@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_062C81B911F3212CB010",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_20BE02929E0D3E390504",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000409",
+      "owner_logical_id": "CLIENT_CLASS_000409",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/e/a/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ScreenFadeOverlay",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_fullscreen_render",
+          "detail": "The overlay renders a full-screen rectangle across Client width/height using color value 0 and a time-varying alpha, with no text, sprite or world-coordinate target."
+        },
+        {
+          "family": "exact_fade_timing",
+          "detail": "Packet-controlled duration q is multiplied by 1000 ms; elapsed time is converted to a 0..255 alpha ramp and the overlay resets itself when the ramp reaches either bound."
+        },
+        {
+          "family": "exact_direction_behavior",
+          "detail": "Positive mode increases alpha from transparent toward opaque black; negative mode computes 255 minus the same ramp, producing the inverse fade from opaque black toward transparent."
+        },
+        {
+          "family": "exact_overlay_registration",
+          "detail": "The central rs/l/e/f overlay framework owns rs/l/e/a/k as its static h overlay and registers it during overlay initialization."
+        }
+      ],
+      "note": "ScreenFadeOverlay is descriptive exact-behavior recovery for the full-screen black alpha-ramp overlay. It does not claim an original developer identifier; confidence is 0.998."
+    },
+    {
+      "proposal_id": "SEMPROP_CC14B012D086DDE1D64B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000410",
+      "owner_logical_id": "CLIENT_CLASS_000410",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/e/a/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ScreenFadeOverlayPacketHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers ScriptPacket ID 26 from rs/l/e/a/k.p; exact v308 initializes that field with concrete handler rs/l/e/a/l."
+        },
+        {
+          "family": "exact_complete_packet_surface",
+          "detail": "The handler reads exactly two integers. The first selects fade mode; packet value 2 is normalized to -1, otherwise the value is preserved. The second is the fade duration."
+        },
+        {
+          "family": "exact_target_write",
+          "detail": "The handler delegates those two values only to rs/l/e/a/k.a(mode,duration), which stores fade direction/duration and resets the fade start timestamp."
+        },
+        {
+          "family": "exact_no_cross_domain_write",
+          "detail": "No widget, Client gameplay state or second overlay is touched; the whole handler surface is the ScreenFadeOverlay transition control."
+        }
+      ],
+      "note": "ScreenFadeOverlayPacketHandler is descriptive exact-behavior recovery for ScriptPacket 26. The handler only selects screen-fade direction and duration; confidence is 0.998."
+    }
+  ],
+  "unresolved": []
+}
