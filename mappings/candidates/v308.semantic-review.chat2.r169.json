@@ -1,0 +1,552 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 18,
+  "review_id": "SEMREVIEW_8BF377A25B58438FF825",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_0EBAD8E0028EE18E9676",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000838",
+      "owner_logical_id": "CLIENT_CLASS_000838",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/events/ConfigChanged",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigChanged",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal class name is rs/runelite/events/ConfigChanged; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_event_payload",
+          "detail": "group/profile/key/oldValue/newValue configuration-change payload."
+        },
+        {
+          "family": "exact_eventbus_namespace",
+          "detail": "The class lives in the exact rs/runelite/events event API consumed by the recovered EventBus/Subscribe infrastructure and live client/plugin/UI producers or consumers."
+        }
+      ],
+      "note": "ConfigChanged is an exact surviving v308 event-class name. R169 records the existing readable API name rather than inferring a replacement. Confidence is 1.0."
+    },
+    {
+      "proposal_id": "SEMPROP_14AAC469B729994125A5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000850",
+      "owner_logical_id": "CLIENT_CLASS_000850",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/events/PluginChanged",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginChanged",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal class name is rs/runelite/events/PluginChanged; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_event_payload",
+          "detail": "final plugin reference plus loaded boolean payload."
+        },
+        {
+          "family": "exact_eventbus_namespace",
+          "detail": "The class lives in the exact rs/runelite/events event API consumed by the recovered EventBus/Subscribe infrastructure and live client/plugin/UI producers or consumers."
+        }
+      ],
+      "note": "PluginChanged is an exact surviving v308 event-class name. R169 records the existing readable API name rather than inferring a replacement. Confidence is 1.0."
+    },
+    {
+      "proposal_id": "SEMPROP_173B59E0950F129379A5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000842",
+      "owner_logical_id": "CLIENT_CLASS_000842",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/events/MenuBuild",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MenuBuild",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal class name is rs/runelite/events/MenuBuild; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_event_payload",
+          "detail": "singleton menu-build payload with tooltip,row,menuId and four menu command integers."
+        },
+        {
+          "family": "exact_eventbus_namespace",
+          "detail": "The class lives in the exact rs/runelite/events event API consumed by the recovered EventBus/Subscribe infrastructure and live client/plugin/UI producers or consumers."
+        }
+      ],
+      "note": "MenuBuild is an exact surviving v308 event-class name. R169 records the existing readable API name rather than inferring a replacement. Confidence is 1.0."
+    },
+    {
+      "proposal_id": "SEMPROP_1BFC3DCA334791B414AD",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000841",
+      "owner_logical_id": "CLIENT_CLASS_000841",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/events/GameStateChanged",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GameStateChanged",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal class name is rs/runelite/events/GameStateChanged; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_event_payload",
+          "detail": "single GameState payload using recovered rs/runelite/a/c GameState."
+        },
+        {
+          "family": "exact_eventbus_namespace",
+          "detail": "The class lives in the exact rs/runelite/events event API consumed by the recovered EventBus/Subscribe infrastructure and live client/plugin/UI producers or consumers."
+        }
+      ],
+      "note": "GameStateChanged is an exact surviving v308 event-class name. R169 records the existing readable API name rather than inferring a replacement. Confidence is 1.0."
+    },
+    {
+      "proposal_id": "SEMPROP_3C601923548718C73118",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000846",
+      "owner_logical_id": "CLIENT_CLASS_000846",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/events/NavigationButtonRemoved",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NavigationButtonRemoved",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal class name is rs/runelite/events/NavigationButtonRemoved; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_event_payload",
+          "detail": "final NavigationButton payload for sidebar/navigation removal."
+        },
+        {
+          "family": "exact_eventbus_namespace",
+          "detail": "The class lives in the exact rs/runelite/events event API consumed by the recovered EventBus/Subscribe infrastructure and live client/plugin/UI producers or consumers."
+        }
+      ],
+      "note": "NavigationButtonRemoved is an exact surviving v308 event-class name. R169 records the existing readable API name rather than inferring a replacement. Confidence is 1.0."
+    },
+    {
+      "proposal_id": "SEMPROP_50ADC22A0D62B9453072",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000852",
+      "owner_logical_id": "CLIENT_CLASS_000852",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/events/SkillLevelChanged",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SkillLevelChanged",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal class name is rs/runelite/events/SkillLevelChanged; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_event_payload",
+          "detail": "skillId,experience,currentLevel,maximumLevel payload."
+        },
+        {
+          "family": "exact_eventbus_namespace",
+          "detail": "The class lives in the exact rs/runelite/events event API consumed by the recovered EventBus/Subscribe infrastructure and live client/plugin/UI producers or consumers."
+        }
+      ],
+      "note": "SkillLevelChanged is an exact surviving v308 event-class name. R169 records the existing readable API name rather than inferring a replacement. Confidence is 1.0."
+    },
+    {
+      "proposal_id": "SEMPROP_5B4CF76D2BE8E753240A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000843",
+      "owner_logical_id": "CLIENT_CLASS_000843",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/events/MenuHover",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MenuHover",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal class name is rs/runelite/events/MenuHover; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_event_payload",
+          "detail": "singleton menu-hover payload with tooltip,row,menuId and four menu command integers."
+        },
+        {
+          "family": "exact_eventbus_namespace",
+          "detail": "The class lives in the exact rs/runelite/events event API consumed by the recovered EventBus/Subscribe infrastructure and live client/plugin/UI producers or consumers."
+        }
+      ],
+      "note": "MenuHover is an exact surviving v308 event-class name. R169 records the existing readable API name rather than inferring a replacement. Confidence is 1.0."
+    },
+    {
+      "proposal_id": "SEMPROP_7DF7E013D969AF079ADC",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000845",
+      "owner_logical_id": "CLIENT_CLASS_000845",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/events/NavigationButtonAdded",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NavigationButtonAdded",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal class name is rs/runelite/events/NavigationButtonAdded; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_event_payload",
+          "detail": "final NavigationButton payload for sidebar/navigation insertion."
+        },
+        {
+          "family": "exact_eventbus_namespace",
+          "detail": "The class lives in the exact rs/runelite/events event API consumed by the recovered EventBus/Subscribe infrastructure and live client/plugin/UI producers or consumers."
+        }
+      ],
+      "note": "NavigationButtonAdded is an exact surviving v308 event-class name. R169 records the existing readable API name rather than inferring a replacement. Confidence is 1.0."
+    },
+    {
+      "proposal_id": "SEMPROP_85F5E023D1F168EF50E8",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000839",
+      "owner_logical_id": "CLIENT_CLASS_000839",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/events/EntityInteraction",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EntityInteraction",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal class name is rs/runelite/events/EntityInteraction; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_event_payload",
+          "detail": "entity reference plus combat boolean interaction payload."
+        },
+        {
+          "family": "exact_eventbus_namespace",
+          "detail": "The class lives in the exact rs/runelite/events event API consumed by the recovered EventBus/Subscribe infrastructure and live client/plugin/UI producers or consumers."
+        }
+      ],
+      "note": "EntityInteraction is an exact surviving v308 event-class name. R169 records the existing readable API name rather than inferring a replacement. Confidence is 1.0."
+    },
+    {
+      "proposal_id": "SEMPROP_8B99F6F39DCB55980A41",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000847",
+      "owner_logical_id": "CLIENT_CLASS_000847",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/events/NotificationFired",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NotificationFired",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal class name is rs/runelite/events/NotificationFired; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_event_payload",
+          "detail": "final message plus TrayIcon.MessageType notification payload."
+        },
+        {
+          "family": "exact_eventbus_namespace",
+          "detail": "The class lives in the exact rs/runelite/events event API consumed by the recovered EventBus/Subscribe infrastructure and live client/plugin/UI producers or consumers."
+        }
+      ],
+      "note": "NotificationFired is an exact surviving v308 event-class name. R169 records the existing readable API name rather than inferring a replacement. Confidence is 1.0."
+    },
+    {
+      "proposal_id": "SEMPROP_949D67E3DD8303D10B79",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000835",
+      "owner_logical_id": "CLIENT_CLASS_000835",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/events/ChatMessage",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ChatMessage",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal class name is rs/runelite/events/ChatMessage; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_event_payload",
+          "detail": "private String message; exact get/set message payload; referenced by live chat paths."
+        },
+        {
+          "family": "exact_eventbus_namespace",
+          "detail": "The class lives in the exact rs/runelite/events event API consumed by the recovered EventBus/Subscribe infrastructure and live client/plugin/UI producers or consumers."
+        }
+      ],
+      "note": "ChatMessage is an exact surviving v308 event-class name. R169 records the existing readable API name rather than inferring a replacement. Confidence is 1.0."
+    },
+    {
+      "proposal_id": "SEMPROP_C8695D6C2C4FDF9B7440",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000851",
+      "owner_logical_id": "CLIENT_CLASS_000851",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/events/PrivateChatMessage",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PrivateChatMessage",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal class name is rs/runelite/events/PrivateChatMessage; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_event_payload",
+          "detail": "sender plus message private-chat payload."
+        },
+        {
+          "family": "exact_eventbus_namespace",
+          "detail": "The class lives in the exact rs/runelite/events event API consumed by the recovered EventBus/Subscribe infrastructure and live client/plugin/UI producers or consumers."
+        }
+      ],
+      "note": "PrivateChatMessage is an exact surviving v308 event-class name. R169 records the existing readable API name rather than inferring a replacement. Confidence is 1.0."
+    },
+    {
+      "proposal_id": "SEMPROP_D03B759E1433ABC3C63F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000849",
+      "owner_logical_id": "CLIENT_CLASS_000849",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/events/ObjectInteraction",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ObjectInteraction",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal class name is rs/runelite/events/ObjectInteraction; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_event_payload",
+          "detail": "object id,x,y,z,hash interaction payload."
+        },
+        {
+          "family": "exact_eventbus_namespace",
+          "detail": "The class lives in the exact rs/runelite/events event API consumed by the recovered EventBus/Subscribe infrastructure and live client/plugin/UI producers or consumers."
+        }
+      ],
+      "note": "ObjectInteraction is an exact surviving v308 event-class name. R169 records the existing readable API name rather than inferring a replacement. Confidence is 1.0."
+    },
+    {
+      "proposal_id": "SEMPROP_D282C78706070F0A2274",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000837",
+      "owner_logical_id": "CLIENT_CLASS_000837",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/events/ClientStartUp",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientStartUp",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal class name is rs/runelite/events/ClientStartUp; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_event_payload",
+          "detail": "zero-payload startup signal class with exact surviving name."
+        },
+        {
+          "family": "exact_eventbus_namespace",
+          "detail": "The class lives in the exact rs/runelite/events event API consumed by the recovered EventBus/Subscribe infrastructure and live client/plugin/UI producers or consumers."
+        }
+      ],
+      "note": "ClientStartUp is an exact surviving v308 event-class name. R169 records the existing readable API name rather than inferring a replacement. Confidence is 1.0."
+    },
+    {
+      "proposal_id": "SEMPROP_EB18A2E026414DE6DAED",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000836",
+      "owner_logical_id": "CLIENT_CLASS_000836",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/events/ClientShutdown",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientShutdown",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal class name is rs/runelite/events/ClientShutdown; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_event_payload",
+          "detail": "owns Queue<Future<?>> shutdown tasks plus waitFor/waitForAllConsumers lifecycle helpers."
+        },
+        {
+          "family": "exact_eventbus_namespace",
+          "detail": "The class lives in the exact rs/runelite/events event API consumed by the recovered EventBus/Subscribe infrastructure and live client/plugin/UI producers or consumers."
+        }
+      ],
+      "note": "ClientShutdown is an exact surviving v308 event-class name. R169 records the existing readable API name rather than inferring a replacement. Confidence is 1.0."
+    },
+    {
+      "proposal_id": "SEMPROP_F06F67BAB800F65BB7DD",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000848",
+      "owner_logical_id": "CLIENT_CLASS_000848",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/events/NpcSpawned",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcSpawned",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal class name is rs/runelite/events/NpcSpawned; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_event_payload",
+          "detail": "single NPC payload with exact get/set accessors."
+        },
+        {
+          "family": "exact_eventbus_namespace",
+          "detail": "The class lives in the exact rs/runelite/events event API consumed by the recovered EventBus/Subscribe infrastructure and live client/plugin/UI producers or consumers."
+        }
+      ],
+      "note": "NpcSpawned is an exact surviving v308 event-class name. R169 records the existing readable API name rather than inferring a replacement. Confidence is 1.0."
+    },
+    {
+      "proposal_id": "SEMPROP_F21948214777677F4705",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000840",
+      "owner_logical_id": "CLIENT_CLASS_000840",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/events/FocusChanged",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FocusChanged",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal class name is rs/runelite/events/FocusChanged; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_event_payload",
+          "detail": "single focused boolean payload."
+        },
+        {
+          "family": "exact_eventbus_namespace",
+          "detail": "The class lives in the exact rs/runelite/events event API consumed by the recovered EventBus/Subscribe infrastructure and live client/plugin/UI producers or consumers."
+        }
+      ],
+      "note": "FocusChanged is an exact surviving v308 event-class name. R169 records the existing readable API name rather than inferring a replacement. Confidence is 1.0."
+    },
+    {
+      "proposal_id": "SEMPROP_F4E02395401156F3BFA0",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000844",
+      "owner_logical_id": "CLIENT_CLASS_000844",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/events/MenuOpened",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MenuOpened",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal class name is rs/runelite/events/MenuOpened; the semantic name survives verbatim."
+        },
+        {
+          "family": "exact_event_payload",
+          "detail": "zero-payload menu-open signal class."
+        },
+        {
+          "family": "exact_eventbus_namespace",
+          "detail": "The class lives in the exact rs/runelite/events event API consumed by the recovered EventBus/Subscribe infrastructure and live client/plugin/UI producers or consumers."
+        }
+      ],
+      "note": "MenuOpened is an exact surviving v308 event-class name. R169 records the existing readable API name rather than inferring a replacement. Confidence is 1.0."
+    }
+  ],
+  "unresolved": []
+}
