@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/y",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ProgressBar",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_progress_state",
+          "detail": "The class owns exactly two integer values interpreted as maximum and current progress. Its percentage method returns current * 100 / maximum, with the maximum clamped to at least 1 by the setter."
+        },
+        {
+          "family": "exact_progress_rendering",
+          "detail": "paintComponent computes current * width / maximum, paints the unfilled segment with a darker derived background color, then paints the filled segment from x=0 using the foreground color."
+        },
+        {
+          "family": "exact_component_geometry",
+          "detail": "The JPanel is configured as a thin 4-pixel-high component with unbounded maximum width, matching a reusable horizontal progress bar rather than a feature-specific panel."
+        },
+        {
+          "family": "exact_single_live_consumer",
+          "detail": "The only project class referencing this component is R14 TradingPostListingPanel. That panel sets foreground color plus maximum/current listing values, queries the percentage for tooltip text, and places the component at BorderLayout.SOUTH."
+        }
+      ],
+      "note": "ProgressBar is descriptive exact-behavior recovery for a generic horizontal progress component. The implementation is feature-agnostic even though exact v308 currently has one live consumer in TradingPostListingPanel. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}
