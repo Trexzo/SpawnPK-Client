@@ -56,23 +56,25 @@ Required next evidence:
 - dynamic item/container IDs;
 - call sites that supply the title/content.
 
-### `rs/n/c/d/a` — `CLIENT_CLASS_000651`
+### `rs/n/c/d/a` — `CLIENT_CLASS_000651` — RESOLVED
 
-Evidence:
+The previously missing parent/root evidence is now exact:
 
-- `Public / Join`;
-- `Select tab`;
-- `raids/sprite 1..4`.
+- the class appends one shared raid shell to roots **32300, 32297, 32299, 32298 and 32600**;
+- that shell owns `Party`, `Public / Join`, `Invocations` and `Select tab`;
+- exact resources include `raids/tabactive`, `raids/tabinactive` and
+  `raids/tabdisabled`;
+- the composed roots are populated by the separately recovered
+  `RaidPartyHubInterface`, `RaidPartyListInterface` and `AfflictionTomesInterface`;
+- R123 ScriptPacket 41 updates the same class's live navigation/tab state.
 
-Blocker:
+This distinguishes a reusable raid navigation shell from a page-specific content builder.
 
-R3 already identifies distinct raid party list/hub/invitation/tome surfaces. This class is
-clearly raid navigation, but current evidence is insufficient to distinguish a tab bar,
-navigation shell, or reusable raid header.
+Moved to R135 as:
 
-Required next evidence:
+`RaidNavigationInterface`
 
-- parent/child IDs and callers from R3 raid classes.
+Review ID: `SEMREVIEW_2C4368F6B1F9C2755E43`.
 
 ### `rs/n/c/Y` — `CLIENT_CLASS_000571` — RESOLVED
 

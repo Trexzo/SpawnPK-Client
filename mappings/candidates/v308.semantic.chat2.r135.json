@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/d/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaidNavigationInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_shared_shell_build",
+          "detail": "rs/n/c/d/a builds the same raid navigation shell around exact roots 32300, 32297, 32299, 32298 and 32600. The shell contains 'Party', 'Public / Join', 'Invocations' and three 'Select tab' controls over raids/bg."
+        },
+        {
+          "family": "exact_tab_resources",
+          "detail": "The class loads exact raid navigation resources raids/tabactive, raids/tabinactive and raids/tabdisabled plus raids/sprite 1-4 and raids/owner, then updates the active/disabled tab sprites and label colors through one shared tab-selection method."
+        },
+        {
+          "family": "exact_recovered_children",
+          "detail": "Its initialization composes the shell with already-reviewed raid content: rs/n/c/d/c RaidPartyHubInterface, rs/n/c/d/b RaidPartyListInterface and rs/n/c/d/e AfflictionTomesInterface, proving that the class is shared navigation rather than a duplicate content interface."
+        },
+        {
+          "family": "exact_root_composition",
+          "detail": "The class wraps multiple distinct raid content roots through rs/n/d/c containers, finalizes each composite tree, and registers raid overlay consumers at widgets 32317, 32465 and 32486. This is a cross-surface shell/controller role, not one page's body."
+        },
+        {
+          "family": "exact_packet_state",
+          "detail": "R123 ScriptPacket 41 directly updates rs/n/c/d/a state and calls its tab-selection refresh path, independently confirming that this class owns live raid navigation/tab state."
+        }
+      ],
+      "note": "RaidNavigationInterface is descriptive exact-behavior recovery for the shared tabbed shell used across the recovered raid party/list/invocation surfaces. The role is fixed by multi-root composition, exact tab resources/labels and ScriptPacket 41 state updates; no original source identifier is claimed. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}
