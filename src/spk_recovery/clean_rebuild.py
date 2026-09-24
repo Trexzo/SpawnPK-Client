@@ -335,6 +335,8 @@ def clean_project_rebuild(
             "-encoding",
             "UTF-8",
             "-Xlint:none",
+            "-Xmaxerrs",
+            "10000",
             "-sourcepath",
             str(empty_sourcepath),
             "-classpath",
