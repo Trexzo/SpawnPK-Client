@@ -10,6 +10,8 @@ import zipfile
 
 from spk_recovery.clean_rebuild import (
     CleanRebuildError,
+    _remap_javac_diagnostics,
+    _stage_javac_sources,
     clean_project_rebuild,
 )
 from spk_recovery.progressive_compile import _probe_javac
@@ -22,6 +24,60 @@ def _sha(path: Path) -> str:
 
 def _tree_sha(root: Path) -> str:
     return source_tree_digest(root)[0]
+
+
+class CleanRebuildSourceStagingTests(unittest.TestCase):
+    def test_staging_preserves_bytes_and_uses_case_unique_paths(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source_root = root / "source"
+            left = source_root / "left" / "A.java"
+            right = source_root / "right" / "a.java"
+            left.parent.mkdir(parents=True)
+            right.parent.mkdir(parents=True)
+
+            left.write_bytes(
+                b"package sample; public class A {}\n"
+            )
+            right.write_bytes(
+                b"package sample; public class a {}\n"
+            )
+
+            staged, mapping = _stage_javac_sources(
+                [left, right],
+                source_root,
+                root / "staged",
+            )
+
+            self.assertEqual(len(staged), 2)
+            self.assertEqual(staged[0].name, "A.java")
+            self.assertEqual(staged[1].name, "a.java")
+            self.assertEqual(
+                staged[0].read_bytes(),
+                left.read_bytes(),
+            )
+            self.assertEqual(
+                staged[1].read_bytes(),
+                right.read_bytes(),
+            )
+            self.assertEqual(
+                len({str(p).casefold() for p in staged}),
+                2,
+            )
+
+            raw = (
+                f"{staged[0]}:1: error: first\n"
+                f"{staged[1]}:2: error: second\n"
+            )
+            remapped = _remap_javac_diagnostics(
+                raw,
+                mapping,
+            )
+
+            self.assertIn(str(left), remapped)
+            self.assertIn(str(right), remapped)
+            self.assertNotIn(str(staged[0]), remapped)
+            self.assertNotIn(str(staged[1]), remapped)
 
 
 @unittest.skipUnless(shutil.which("javac"), "javac required")
