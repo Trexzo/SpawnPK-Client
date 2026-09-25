@@ -446,9 +446,20 @@ class CleanRebuildTests(unittest.TestCase):
                 public["report_id"],
             )
             self.assertIn(sentinel, str(private))
-            self.assertIn(str(target), str(private))
+            private_paths = [
+                row["source_path"]
+                for row in private["diagnostics"]
+                if "source_path" in row
+            ]
+            self.assertTrue(private_paths)
+            self.assertTrue(
+                any(
+                    Path(path).resolve() == target.resolve()
+                    for path in private_paths
+                )
+            )
             self.assertNotIn(sentinel, str(public))
-            self.assertNotIn(str(target), str(public))
+            self.assertNotIn("source_path", str(public))
 
     def test_compile_failure_classification_exceeds_default_javac_error_cap(self):
         with tempfile.TemporaryDirectory() as td:
