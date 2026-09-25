@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/c/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodDiamondFuserOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_existing_interface_binding",
+          "detail": "The renderer exits unless Client.cH equals rs/n/c/j.c; R5 already resolves rs/n/c/j as BloodDiamondFuserInterface from the exact title 'Blood Diamond Fuser' and the text 'Fuse items to sacrifice them into blood diamonds!'."
+        },
+        {
+          "family": "exact_live_client_ownership",
+          "detail": "Client constructs exactly one rs/l/c/a instance into its live field y during startup, and the main rendering path invokes that instance's render method every frame."
+        },
+        {
+          "family": "exact_packet_population",
+          "detail": "A live Client decode path for selector/value 13 parses exactly four comma-separated integers and forwards them to rs/l/c/a.a(int,int,int,int), populating one of three runtime fuser entries."
+        },
+        {
+          "family": "exact_item_rendering",
+          "detail": "The overlay resolves each populated entry's item id through rs/d/k.a(...), lazily builds the item sprite and draws it at one of the three fixed Blood Diamond Fuser slot positions, together with quantity/value text using Client.g(int)."
+        },
+        {
+          "family": "exact_interface_geometry",
+          "detail": "The class hardcodes exactly three two-point slot coordinate pairs and uses the same centered/fixed-mode offsets as the Blood Diamond Fuser screen; it does not render on any other interface."
+        }
+      ],
+      "note": "BloodDiamondFuserOverlay is fixed by the already-reviewed BloodDiamondFuserInterface identity, exclusive interface-root guard, live Client ownership, exact three-slot geometry and packet-fed item rendering. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/c/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodDiamondFuserItemEntry",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_record_shape",
+          "detail": "rs/l/c/c is a four-field runtime entry with one cached item sprite plus three integers; its constructor accepts three integers and the owning BloodDiamondFuserOverlay is its only exact consumer."
+        },
+        {
+          "family": "exact_item_identity",
+          "detail": "The overlay uses entry.b() as the item-definition id passed to rs/d/k.a(...), then caches the resulting item sprite back onto the entry."
+        },
+        {
+          "family": "exact_display_values",
+          "detail": "The overlay uses the remaining two integer getters as the two numeric display values rendered beside the item slot, with one value controlling item-quantity display and the other rendered against the shared Blood Diamond/Fuser presentation sprite."
+        },
+        {
+          "family": "exact_packet_source",
+          "detail": "The live Client packet/value-13 path supplies these entry values directly from a four-integer comma-separated payload before the overlay renders them on BloodDiamondFuserInterface."
+        }
+      ],
+      "note": "BloodDiamondFuserItemEntry is descriptive exact-behavior recovery for the fuser overlay's item-id/sprite/two-value runtime slot record. The broader entry role is exact; the two numeric subroles remain intentionally unnamed. Confidence is 0.997."
+    }
+  ],
+  "conflicts": []
+}
