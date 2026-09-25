@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/f/a/c/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BountyOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_self_label",
+          "detail": "The exact constructor passes the surviving literal 'BountyOverlay' into the overlay-name setter before configuring its render stage, priority/position and component geometry."
+        },
+        {
+          "family": "exact_bounty_assets",
+          "detail": "The class loads and renders the exact resource family 'popups/bh record bg', 'popups/bh target bg', 'popups/bh target bg cursed', 'popups/bhcompact1', 'popups/bhcompact2', 'popups/bh maximimize', 'popups/bh combat' and dynamic 'popups/bh skull' sprites."
+        },
+        {
+          "family": "exact_bounty_actions",
+          "detail": "The class emits the exact command grammar ::bhtask, ::bhtaskinfo, ::bhtaskskip and ::skipbh and exposes matching hover actions including 'Receive task', 'Task info', 'Skip target' and 'Skip bounty hunter task'."
+        },
+        {
+          "family": "exact_bounty_presentation",
+          "detail": "Its own presentation state renders bounty target/search status plus exact labels such as 'Target:', 'Kills:', 'Time Left:' and 'Risk:', with compact/maximized UI modes and searching animation strings."
+        }
+      ],
+      "note": "BountyOverlay is not an invented descriptive name: the exact class itself preserves the literal 'BountyOverlay', independently corroborated by its bh asset paths, commands and bounty-specific UI state. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}
