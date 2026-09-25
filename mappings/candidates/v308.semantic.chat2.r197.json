@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/h/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientShortcutKeyHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_key_event_surface",
+          "detail": "The class accepts java.awt.event.KeyEvent in both public key-event methods and dispatches behavior by exact key codes, establishing a keyboard-shortcut responsibility rather than a generic command sender."
+        },
+        {
+          "family": "exact_client_command_shortcuts",
+          "detail": "Exact key branches enqueue client commands including '::tm', '::home', '::opentp', '::loot', '::bank', '::clogs' and '::e', subject to login/open-interface guards."
+        },
+        {
+          "family": "exact_widget_shortcuts",
+          "detail": "A second key-event path sends exact widget-click opcode 185 actions to interface/component ids 38976, 26012, 26016, 5294 and 38980, and directly invokes the bank interface helper for one guarded shortcut."
+        },
+        {
+          "family": "exact_state_guards",
+          "detail": "Shortcut availability is gated by current interface root, login/client state, recent-input state and a local enabled flag; the class stores the Client instance and owns the full shortcut gating/dispatch lifecycle."
+        },
+        {
+          "family": "exact_command_transport",
+          "detail": "Queued textual shortcuts are emitted through the client's command packet path (opcode 103), while widget shortcuts use the client's widget-click packet path (opcode 185), covering the two exact shortcut transport forms used by the class."
+        }
+      ],
+      "note": "ClientShortcutKeyHandler is fixed by its complete KeyEvent surface, exact command shortcuts, exact widget-click shortcuts and state guards. It is broader than any one command and narrower than a global key-listener manager. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}
