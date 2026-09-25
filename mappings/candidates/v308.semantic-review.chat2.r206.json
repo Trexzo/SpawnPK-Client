@@ -1,0 +1,46 @@
+{
+  "canonical": false,
+  "kind": "semantic_review_set",
+  "proposal_count": 1,
+  "proposals": [
+    {
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "detail": "The exact v308 class-reference scan finds rs/l/f/a/g/b consumed externally only by rs/n/c/d/d. That handler carries the exact literal 'raids' and owns the adjacent already-reviewed RaidPartyOverlay and RaidTheatreBar components, independently fixing the subsystem as raids.",
+          "family": "exact_raids_only_consumer"
+        },
+        {
+          "detail": "Its two-integer update method stores current and total values, computes current / total * 100.0, and formats the centered display as 'current / total @yel@(percent%)'.",
+          "family": "exact_progress_state"
+        },
+        {
+          "detail": "The draw path renders a fixed 500 x 18 bar, computes the filled width as ceil(500 * (percent / 100)), draws background and filled regions, then centers the current/total/percent text over the bar.",
+          "family": "exact_progress_render"
+        },
+        {
+          "detail": "In rs/n/c/d/d, operation 15 registers this component alongside the raid theatre bar, while operation 17 reads two integers and calls its current/total update method before applying its boolean color/style mode.",
+          "family": "exact_packet_update_and_registration"
+        }
+      ],
+      "note": "RaidProgressBar is fixed by the exact raids-only consumer, raid-overlay sibling ownership, current/total percentage state, fixed-width progress-bar rendering and packet-fed update path. The name is descriptive exact-behavior recovery, not a claim about the original source identifier. Confidence is 0.999.",
+      "owner_logical_id": "CLIENT_CLASS_000465",
+      "proposal_id": "SEMPROP_72DEC2E5BC0DB9F2DFF4",
+      "proposed_name": "RaidProgressBar",
+      "source_build": "v308",
+      "source_coordinate": {
+        "descriptor": null,
+        "name": null,
+        "owner": "rs/l/f/a/g/b"
+      },
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "stable_id": "CLIENT_CLASS_000465",
+      "target_kind": "class"
+    }
+  ],
+  "review_id": "SEMREVIEW_2EB868EB5DFC9004D925",
+  "schema_version": 1,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "unresolved": []
+}
