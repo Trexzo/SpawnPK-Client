@@ -13,6 +13,7 @@ from spk_recovery.clean_rebuild import (
     clean_project_rebuild,
 )
 from spk_recovery.progressive_compile import _probe_javac
+from spk_recovery.source_digest import source_tree_digest
 
 
 def _sha(path: Path) -> str:
@@ -20,16 +21,7 @@ def _sha(path: Path) -> str:
 
 
 def _tree_sha(root: Path) -> str:
-    files = sorted(root.rglob("*.java"))
-    h = hashlib.sha256()
-    for path in files:
-        rel = path.relative_to(root).as_posix().encode("utf-8")
-        data = path.read_bytes()
-        h.update(len(rel).to_bytes(4, "big"))
-        h.update(rel)
-        h.update(len(data).to_bytes(8, "big"))
-        h.update(data)
-    return h.hexdigest()
+    return source_tree_digest(root)[0]
 
 
 @unittest.skipUnless(shutil.which("javac"), "javac required")
@@ -135,10 +127,7 @@ class CleanRebuildTests(unittest.TestCase):
             "decompiler_sha256": "e" * 64,
             "source_tree_sha256": tree_sha,
             "java_file_count": 3,
-            "source_bytes": sum(
-                p.stat().st_size
-                for p in recovered_root.rglob("*.java")
-            ),
+            "source_bytes": source_tree_digest(recovered_root)[2],
             "source_directory": "src",
         }
         readiness = {
