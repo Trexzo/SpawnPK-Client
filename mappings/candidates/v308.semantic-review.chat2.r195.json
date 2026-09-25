@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_948493F4C27B142BD65D",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_CAFB5CAF65A173C1FE61",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000968",
+      "owner_logical_id": "CLIENT_CLASS_000968",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/t/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TradingPostListingImageLoader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_listing_panel_trigger",
+          "detail": "Reviewed TradingPostListingPanel creates rs/s/t/f only when TradingPostPlugin has no cached image for the current reviewed TradingPostListing item id; no other class or purpose constructs this helper in the listing path."
+        },
+        {
+          "family": "exact_listing_model_pairing",
+          "detail": "rs/s/t/f stores exactly one TradingPostListing record and one TradingPostListingPanel, and uses only the listing's item-id getter to request the missing image."
+        },
+        {
+          "family": "exact_plugin_image_source",
+          "detail": "Its loop asks reviewed TradingPostPlugin for the item image by listing item id; a missing image returns true to retry, while a resolved image terminates the loop."
+        },
+        {
+          "family": "exact_bounded_retry",
+          "detail": "The helper waits until the client is in its loaded state, increments an internal attempt counter, and stops after three attempts rather than owning any general image-cache lifecycle."
+        },
+        {
+          "family": "exact_swing_sink",
+          "detail": "When an image resolves, the helper schedules one SwingUtilities.invokeLater callback that sets only the TradingPostListingPanel item-image JLabel to a new ImageIcon; it has no unrelated UI or network behavior."
+        }
+      ],
+      "note": "TradingPostListingImageLoader is fixed by exclusive TradingPostListingPanel construction, reviewed TradingPostListing item-id input, reviewed TradingPostPlugin image lookup, bounded retry behavior and one Swing icon sink. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}
