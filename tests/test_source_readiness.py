@@ -5,6 +5,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
+from spk_recovery.source_digest import source_tree_digest
 from spk_recovery.source_readiness import (
     SourceReadinessError,
     audit_source_workspace,
@@ -12,16 +13,7 @@ from spk_recovery.source_readiness import (
 
 
 def _tree_digest(root: Path) -> str:
-    files = sorted(root.rglob("*.java"))
-    h = hashlib.sha256()
-    for path in files:
-        rel = path.relative_to(root).as_posix().encode("utf-8")
-        data = path.read_bytes()
-        h.update(len(rel).to_bytes(4, "big"))
-        h.update(rel)
-        h.update(len(data).to_bytes(8, "big"))
-        h.update(data)
-    return h.hexdigest()
+    return source_tree_digest(root)[0]
 
 
 def _manifest(root: Path) -> dict:
@@ -40,7 +32,7 @@ def _manifest(root: Path) -> dict:
         "decompiler_sha256": "e" * 64,
         "source_tree_sha256": _tree_digest(root),
         "java_file_count": len(files),
-        "source_bytes": sum(p.stat().st_size for p in files),
+        "source_bytes": source_tree_digest(root)[2],
         "source_directory": "src",
     }
 
