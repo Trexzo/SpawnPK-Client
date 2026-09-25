@@ -1,0 +1,102 @@
+{
+  "canonical": false,
+  "kind": "semantic_review_set",
+  "proposal_count": 3,
+  "proposals": [
+    {
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "detail": "The class extends the exact reviewed ScriptPacketHandler base rs/q/a/a/a and holds only the singleton NpcDefinitionSpriteOverlay target.",
+          "family": "exact_script_packet_base"
+        },
+        {
+          "detail": "Operation 0 clears/resets the overlay target; operation 1 reads exactly five integers and calls the overlay add-mapping path; operation 2 reads one integer and removes that NPC-definition mapping.",
+          "family": "exact_operation_grammar"
+        },
+        {
+          "detail": "NpcDefinitionSpriteOverlay self-registers its live instance into this handler during construction, and the handler's packet operations mutate only that overlay.",
+          "family": "exact_overlay_link"
+        }
+      ],
+      "note": "NpcDefinitionSpriteOverlayPacketHandler is fixed by the ScriptPacketHandler inheritance and its exclusive reset/add-five-int/remove-one-int mutation grammar for NpcDefinitionSpriteOverlay. Confidence is 0.999.",
+      "owner_logical_id": "CLIENT_CLASS_000460",
+      "proposal_id": "SEMPROP_2E558B3B0B73C8243017",
+      "proposed_name": "NpcDefinitionSpriteOverlayPacketHandler",
+      "source_build": "v308",
+      "source_coordinate": {
+        "descriptor": null,
+        "name": null,
+        "owner": "rs/l/f/a/e/b"
+      },
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "stable_id": "CLIENT_CLASS_000460",
+      "target_kind": "class"
+    },
+    {
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "detail": "The exact constructor binds the component to rs/l/f/a.i; the surviving rs/l/f/a enum fixes field i as NPC_2D_STAGE. The actor-bound superclass stores rs/a/j plus its rs/d/d definition before rendering.",
+          "family": "exact_npc_2d_render_stage"
+        },
+        {
+          "detail": "The renderer keys its mapping by currentActor.aG.x. rs/d/d is loaded from exact resources npc.dat and npc.idx, and both rs/d/d definition factories assign their requested integer index directly into field x, fixing the key as the NPC definition id.",
+          "family": "exact_npc_definition_key"
+        },
+        {
+          "detail": "For a matching definition id, the renderer reads one sprite index plus three offsets, projects NPC world x/y/height with those offsets, then draws Client.fE[spriteIndex] at the projected screen coordinates.",
+          "family": "exact_sprite_projection"
+        },
+        {
+          "detail": "The component owns only an int-keyed mapping table for these entries and exposes deterministic add, remove and clear operations; it has no unrelated domain state.",
+          "family": "exact_mapping_lifecycle"
+        }
+      ],
+      "note": "NpcDefinitionSpriteOverlay is descriptive exact-behavior recovery for the NPC_2D_STAGE renderer keyed by NPC definition id and drawing configured client sprites with world-coordinate offsets. Confidence is 0.999.",
+      "owner_logical_id": "CLIENT_CLASS_000458",
+      "proposal_id": "SEMPROP_664F25102958D31599F1",
+      "proposed_name": "NpcDefinitionSpriteOverlay",
+      "source_build": "v308",
+      "source_coordinate": {
+        "descriptor": null,
+        "name": null,
+        "owner": "rs/l/f/a/e/a"
+      },
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "stable_id": "CLIENT_CLASS_000458",
+      "target_kind": "class"
+    },
+    {
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "detail": "The nested record stores exactly four payload integers and no independent behavior: the parent renderer consumes the first as Client.fE sprite index and the remaining three as x, y and height/world-z projection offsets.",
+          "family": "exact_four_integer_record"
+        },
+        {
+          "detail": "The entry is constructed only by NpcDefinitionSpriteOverlay when adding one NPC-definition mapping and is consumed only by that renderer's NPC_2D_STAGE draw path.",
+          "family": "exact_parent_exclusive_use"
+        }
+      ],
+      "note": "NpcDefinitionSpriteOverlayEntry is the exact immutable-purpose mapping payload {sprite index, x offset, y offset, height offset} used by NpcDefinitionSpriteOverlay. Confidence is 0.999.",
+      "owner_logical_id": "CLIENT_CLASS_000459",
+      "proposal_id": "SEMPROP_725E440BDECFB9257BC9",
+      "proposed_name": "NpcDefinitionSpriteOverlayEntry",
+      "source_build": "v308",
+      "source_coordinate": {
+        "descriptor": null,
+        "name": null,
+        "owner": "rs/l/f/a/e/a$a"
+      },
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "stable_id": "CLIENT_CLASS_000459",
+      "target_kind": "class"
+    }
+  ],
+  "review_id": "SEMREVIEW_327E2DAE5E23C1568D05",
+  "schema_version": 1,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "unresolved": []
+}
