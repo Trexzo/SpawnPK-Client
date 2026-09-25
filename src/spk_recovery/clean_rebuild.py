@@ -11,8 +11,7 @@ from typing import Any
 import zipfile
 
 from .indexer import index_jar
-from .javac_diagnostics import classify_javac_diagnostics
-from .progressive_compile import (
+from .javac_diagnostics import (\n    classify_javac_diagnostics,\n    write_javac_diagnostic_report,\n)\nfrom .progressive_compile import (
     ProgressiveCompileError,
     _verify_authority,
 )
@@ -337,6 +336,7 @@ def clean_project_rebuild(
     out_dir: Path,
     javac_command: str = "javac",
     source_prefixes: list[str] | None = None,
+    private_diagnostic_report_out: Path | None = None,
 ) -> dict[str, Any]:
     source_root = source_root.resolve()
     readable_jar = readable_jar.resolve()
@@ -453,6 +453,22 @@ def clean_project_rebuild(
         javac_diagnostic_classification = (
             classify_javac_diagnostics(remapped_diagnostic)
         )
+        if private_diagnostic_report_out is not None:
+            private_classification = classify_javac_diagnostics(
+                remapped_diagnostic,
+                include_identifiers=True,
+            )
+            if (
+                private_classification["report_id"]
+                != javac_diagnostic_classification["report_id"]
+            ):
+                raise CleanRebuildError(
+                    "private/public javac diagnostic authority drifted"
+                )
+            write_javac_diagnostic_report(
+                private_classification,
+                private_diagnostic_report_out,
+            )
         diagnostic = _diagnostic(
             remapped_diagnostic,
             source_root=source_root,
