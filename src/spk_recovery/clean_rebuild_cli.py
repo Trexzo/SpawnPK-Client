@@ -29,6 +29,14 @@ def main(argv: list[str] | None = None) -> int:
         action="append",
         dest="source_prefixes",
     )
+    p.add_argument(
+        "--private-diagnostic-report-out",
+        type=Path,
+        help=(
+            "write a private identifier-bearing javac classification report; "
+            "never commit this artifact"
+        ),
+    )
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args(argv)
 
@@ -43,6 +51,9 @@ def main(argv: list[str] | None = None) -> int:
             out_dir=args.out_dir,
             javac_command=args.javac_command,
             source_prefixes=args.source_prefixes,
+            private_diagnostic_report_out=(
+                args.private_diagnostic_report_out
+            ),
         )
     except (
         CleanRebuildError,
@@ -126,6 +137,11 @@ def main(argv: list[str] | None = None) -> int:
                 sort_keys=True,
                 separators=(",", ":"),
             )
+        )
+    if args.private_diagnostic_report_out is not None:
+        print(
+            "private_diagnostic_report_out="
+            f"{args.private_diagnostic_report_out.resolve()}"
         )
     print(f"out_dir={args.out_dir.resolve()}")
     return 0 if report["status"] == "complete" else 3
