@@ -23,26 +23,26 @@ class JavacVariableTriageTests(unittest.TestCase):
 
         sources = {
             "Own.java": (
-                "package t; public class Own { public int own; }\n"
+                "package t; public class Own { public int ownSecretField; }\n"
             ),
             "Base.java": (
                 "package t; public class Base { "
-                "protected static int inherited; }\n"
+                "protected static int inheritedSecretField; }\n"
             ),
             "Child.java": (
                 "package t; public class Child extends Base {}\n"
             ),
             "Iface.java": (
-                "package t; public interface Iface { int ifaceField = 1; }\n"
+                "package t; public interface Iface { int ifaceSecretField = 1; }\n"
             ),
             "Impl.java": (
                 "package t; public class Impl implements Iface {}\n"
             ),
             "I1.java": (
-                "package t; public interface I1 { int dup = 1; }\n"
+                "package t; public interface I1 { int dupSecretField = 1; }\n"
             ),
             "I2.java": (
-                "package t; public interface I2 { int dup = 2; }\n"
+                "package t; public interface I2 { int dupSecretField = 2; }\n"
             ),
             "Both.java": (
                 "package t; public class Both implements I1, I2 {}\n"
@@ -86,19 +86,19 @@ class JavacVariableTriageTests(unittest.TestCase):
             raw = "".join(
                 [
                     f"{source / 'Own.java'}:1: error: cannot find symbol\n"
-                    "  symbol:   variable own\n"
+                    "  symbol:   variable ownSecretField\n"
                     "  location: class Own\n",
                     f"{source / 'Child.java'}:1: error: cannot find symbol\n"
-                    "  symbol:   variable inherited\n"
+                    "  symbol:   variable inheritedSecretField\n"
                     "  location: class Child\n",
                     f"{source / 'Impl.java'}:1: error: cannot find symbol\n"
-                    "  symbol:   variable ifaceField\n"
+                    "  symbol:   variable ifaceSecretField\n"
                     "  location: class Impl\n",
                     f"{source / 'Both.java'}:1: error: cannot find symbol\n"
-                    "  symbol:   variable dup\n"
+                    "  symbol:   variable dupSecretField\n"
                     "  location: class Both\n",
                     f"{source / 'Child.java'}:2: error: cannot find symbol\n"
-                    "  symbol:   variable absent\n"
+                    "  symbol:   variable absentSecretField\n"
                     "  location: class Child\n",
                 ]
             )
@@ -138,10 +138,10 @@ class JavacVariableTriageTests(unittest.TestCase):
 
             serialized = json.dumps(public, sort_keys=True)
             for raw_name in (
-                "own",
-                "inherited",
-                "ifaceField",
-                "absent",
+                "ownSecretField",
+                "inheritedSecretField",
+                "ifaceSecretField",
+                "absentSecretField",
                 "t/Own",
                 "t/Base",
             ):
@@ -152,23 +152,23 @@ class JavacVariableTriageTests(unittest.TestCase):
                 for row in private["diagnostics"]
             }
             self.assertEqual(
-                private_by_symbol["own"]["proof_class"],
+                private_by_symbol["ownSecretField"]["proof_class"],
                 "current_class_exact_field",
             )
             self.assertEqual(
-                private_by_symbol["inherited"]["matches"][0]["owner"],
+                private_by_symbol["inheritedSecretField"]["matches"][0]["owner"],
                 "t/Base",
             )
             self.assertEqual(
-                private_by_symbol["ifaceField"]["matches"][0]["owner"],
+                private_by_symbol["ifaceSecretField"]["matches"][0]["owner"],
                 "t/Iface",
             )
             self.assertEqual(
-                private_by_symbol["dup"]["proof_class"],
+                private_by_symbol["dupSecretField"]["proof_class"],
                 "hierarchy_exact_field_ambiguous",
             )
             self.assertEqual(
-                len(private_by_symbol["dup"]["matches"]),
+                len(private_by_symbol["dupSecretField"]["matches"]),
                 2,
             )
 
@@ -178,7 +178,7 @@ class JavacVariableTriageTests(unittest.TestCase):
             source_root, source, jar = self._fixture(root)
             raw = (
                 f"{source / 'Own.java'}:1: error: cannot find symbol\n"
-                "  symbol:   variable own\n"
+                "  symbol:   variable ownSecretField\n"
                 "  location: class Own\n"
             )
             diagnostics = classify_javac_diagnostics(raw)
