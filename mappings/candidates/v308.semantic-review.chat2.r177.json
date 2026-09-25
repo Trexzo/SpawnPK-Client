@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_3ABFDCFBEC9729E7A9EE",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_0A3F02B085051C6EDA63",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001033",
+      "owner_logical_id": "CLIENT_CLASS_001033",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/c/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RuneLiteSubstanceSkin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_superclass",
+          "detail": "The class directly extends org.pushingpixels.substance.api.SubstanceSkin."
+        },
+        {
+          "family": "exact_display_name",
+          "detail": "getDisplayName() returns the exact surviving string 'RuneLite'."
+        },
+        {
+          "family": "exact_color_scheme_resource",
+          "detail": "The constructor loads the exact resource 'RuneLite.colorschemes' and resolves named schemes including RuneLite Active, Border, Enabled, Highlight, Inner, Mark Active, Separator, Tab Border, Watermark, Header Border/Watermark and decoration schemes."
+        },
+        {
+          "family": "exact_skin_registration",
+          "detail": "The constructor registers those RuneLite schemes into Substance decoration-area, mark, border and watermark bundles, defining the client-specific Swing skin rather than a generic color helper."
+        }
+      ],
+      "note": "RuneLiteSubstanceSkin is fixed by the SubstanceSkin superclass, exact RuneLite display name and RuneLite.colorschemes resource. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_14133B1FF09F8C788BA0",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001034",
+      "owner_logical_id": "CLIENT_CLASS_001034",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/c/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RuneLiteSquareButtonShaper",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_family_ownership",
+          "detail": "The class stores its enclosing rs/ui/c/a RuneLiteSubstanceSkin instance and is constructed only as part of that skin family."
+        },
+        {
+          "family": "exact_superclass",
+          "detail": "It extends org.pushingpixels.substance.api.shaper.ClassicButtonShaper."
+        },
+        {
+          "family": "exact_shape_behavior",
+          "detail": "Its only behavior override is getCornerRadius(AbstractButton,float), which always returns 0.0f, producing square button corners for the RuneLite skin."
+        }
+      ],
+      "note": "RuneLiteSquareButtonShaper is descriptive exact-behavior recovery for the dedicated zero-corner ClassicButtonShaper owned by RuneLiteSubstanceSkin. Confidence is 0.998."
+    },
+    {
+      "proposal_id": "SEMPROP_328DD80F346E12C8A027",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001035",
+      "owner_logical_id": "CLIENT_CLASS_001035",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/c/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RuneLiteSubstanceLookAndFeel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_superclass",
+          "detail": "The class directly extends org.pushingpixels.substance.api.SubstanceLookAndFeel."
+        },
+        {
+          "family": "exact_skin_binding",
+          "detail": "Its constructor creates exactly one rs/ui/c/a instance and passes that RuneLiteSubstanceSkin directly to the SubstanceLookAndFeel superclass constructor."
+        },
+        {
+          "family": "exact_family_identity",
+          "detail": "The bound skin returns display name 'RuneLite' and loads RuneLite.colorschemes, making this wrapper the exact RuneLite Substance look-and-feel entry point."
+        }
+      ],
+      "note": "RuneLiteSubstanceLookAndFeel is fixed by the SubstanceLookAndFeel superclass and direct construction/binding of RuneLiteSubstanceSkin. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}
