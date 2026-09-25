@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import Counter
 import hashlib
 import json
-from pathlib import Path
+from pathlib import Path, PurePath
 import re
 from typing import Any
 
@@ -46,6 +46,11 @@ _JDK_ROOTS = {
 
 def _stable_tree_digest(root: Path) -> tuple[str, list[Path], int]:
     return source_tree_digest(root)
+
+
+def _exact_source_key(root: PurePath, path: PurePath) -> str:
+    """Return the exact case-preserving relative source authority key."""
+    return path.relative_to(root).as_posix()
 
 
 def _code_mask_and_depths(text: str) -> tuple[str, list[int]]:
@@ -239,7 +244,7 @@ def audit_source_workspace(
     file_text: dict[str, str] = {}
     file_packages: dict[str, str | None] = {}
     for path in files:
-        rel = path.relative_to(source_root).as_posix()
+        rel = _exact_source_key(source_root, path)
         text = path.read_text(encoding="utf-8", errors="replace")
         file_text[rel] = text
         match = _PACKAGE_RE.search(text)
@@ -250,7 +255,7 @@ def audit_source_workspace(
             project_roots.add(package.split(".")[0])
 
     for path in files:
-        rel = path.relative_to(source_root).as_posix()
+        rel = _exact_source_key(source_root, path)
         text = file_text[rel]
         package = file_packages[rel]
         imports = sorted(set(_IMPORT_RE.findall(text)))
