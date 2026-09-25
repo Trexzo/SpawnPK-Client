@@ -9,6 +9,7 @@ import unittest
 import zipfile
 
 from spk_recovery.indexer import index_jar
+from spk_recovery.source_digest import source_tree_digest
 from spk_recovery.source_rewrite_acceptance import (
     SourceRewriteAcceptanceError,
     accept_rewritten_source,
@@ -16,18 +17,8 @@ from spk_recovery.source_rewrite_acceptance import (
 
 
 def _tree_digest(root: Path) -> tuple[str, int, int]:
-    files = sorted(root.rglob("*.java"))
-    h = hashlib.sha256()
-    total = 0
-    for path in files:
-        rel = path.relative_to(root).as_posix().encode("utf-8")
-        data = path.read_bytes()
-        h.update(len(rel).to_bytes(4, "big"))
-        h.update(rel)
-        h.update(len(data).to_bytes(8, "big"))
-        h.update(data)
-        total += len(data)
-    return h.hexdigest(), len(files), total
+    digest, files, total = source_tree_digest(root)
+    return digest, len(files), total
 
 
 def _jar(classes: Path, out: Path) -> None:
