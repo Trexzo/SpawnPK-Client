@@ -7,6 +7,8 @@ from pathlib import Path
 import re
 from typing import Any
 
+from .source_digest import source_tree_digest
+
 
 class SourceReadinessError(ValueError):
     pass
@@ -43,21 +45,7 @@ _JDK_ROOTS = {
 
 
 def _stable_tree_digest(root: Path) -> tuple[str, list[Path], int]:
-    files = sorted(
-        root.rglob("*.java"),
-        key=lambda path: path.relative_to(root).as_posix(),
-    )
-    h = hashlib.sha256()
-    total_bytes = 0
-    for path in files:
-        rel = path.relative_to(root).as_posix().encode("utf-8")
-        data = path.read_bytes()
-        h.update(len(rel).to_bytes(4, "big"))
-        h.update(rel)
-        h.update(len(data).to_bytes(8, "big"))
-        h.update(data)
-        total_bytes += len(data)
-    return h.hexdigest(), files, total_bytes
+    return source_tree_digest(root)
 
 
 def _code_mask_and_depths(text: str) -> tuple[str, list[int]]:
