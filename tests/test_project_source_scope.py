@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import struct
 from pathlib import Path, PureWindowsPath
 from types import SimpleNamespace
 import tempfile
@@ -15,6 +16,8 @@ from spk_recovery.decompiler import (
 )
 from spk_recovery.source_workspace import (
     SourceWorkspaceError,
+    _filesystem_supports_case_distinct_names,
+    _selected_case_collision_report,
     _selection_digest,
     build_source_workspace,
 )
@@ -22,6 +25,116 @@ from spk_recovery.source_workspace import (
 
 def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _minimal_class(internal_name: str) -> bytes:
+    def utf8(value: str) -> bytes:
+        raw = value.encode("utf-8")
+        return b"\x01" + struct.pack(">H", len(raw)) + raw
+
+    cp = b"".join(
+        [
+            utf8(internal_name),
+            b"\x07\x00\x01",
+            utf8("java/lang/Object"),
+            b"\x07\x00\x03",
+        ]
+    )
+    return b"".join(
+        [
+            b"\xCA\xFE\xBA\xBE",
+            struct.pack(">HHH", 0, 52, 5),
+            cp,
+            struct.pack(
+                ">HHHHHHH",
+                0x0021,
+                2,
+                4,
+                0,
+                0,
+                0,
+                0,
+            ),
+        ]
+    )
+
+
+class CaseCollisionIdentityTests(unittest.TestCase):
+    def test_distinct_case_types_are_bound_to_exact_internal_names(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = root / "readable.jar"
+            with zipfile.ZipFile(jar, "w") as z:
+                z.writestr("rs/A.class", _minimal_class("rs/A"))
+                z.writestr("rs/a.class", _minimal_class("rs/a"))
+
+            report = _selected_case_collision_report(
+                jar,
+                ["rs/A.class", "rs/a.class"],
+            )
+
+            self.assertEqual(report["collision_group_count"], 1)
+            self.assertEqual(
+                report["classification_counts"],
+                {"distinct_case_types": 1},
+            )
+            rows = report["groups"][0]["entries"]
+            self.assertEqual(
+                [row["internal_name"] for row in rows],
+                ["rs/A", "rs/a"],
+            )
+            self.assertTrue(
+                all(row["entry_matches_internal_name"] for row in rows)
+            )
+
+    def test_exact_alias_entries_are_not_treated_as_distinct_types(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = root / "readable.jar"
+            alias = _minimal_class("rs/a")
+            with zipfile.ZipFile(jar, "w") as z:
+                z.writestr("rs/A.class", alias)
+                z.writestr("rs/a.class", alias)
+
+            report = _selected_case_collision_report(
+                jar,
+                ["rs/A.class", "rs/a.class"],
+            )
+
+            self.assertEqual(
+                report["classification_counts"],
+                {"exact_alias_entries": 1},
+            )
+
+    def test_distinct_case_types_detect_identical_source_conflation(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "src"
+            if not _filesystem_supports_case_distinct_names(source):
+                self.skipTest(
+                    "test filesystem cannot represent case-distinct names"
+                )
+
+            jar = root / "readable.jar"
+            with zipfile.ZipFile(jar, "w") as z:
+                z.writestr("rs/A.class", _minimal_class("rs/A"))
+                z.writestr("rs/a.class", _minimal_class("rs/a"))
+
+            (source / "rs").mkdir(parents=True, exist_ok=True)
+            duplicated = b"package rs; public class a {}\n"
+            (source / "rs" / "A.java").write_bytes(duplicated)
+            (source / "rs" / "a.java").write_bytes(duplicated)
+
+            report = _selected_case_collision_report(
+                jar,
+                ["rs/A.class", "rs/a.class"],
+                source,
+            )
+
+            self.assertEqual(
+                report["classification_counts"],
+                {"distinct_case_types_source_conflated": 1},
+            )
 
 
 class ProjectScopedSourceWorkspaceTests(unittest.TestCase):
