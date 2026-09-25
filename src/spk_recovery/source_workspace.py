@@ -15,6 +15,7 @@ from .source_normalization import (
     SourceNormalizationError,
     normalize_procyon_source,
 )
+from .source_readiness import _PACKAGE_RE, _top_level_type_names
 
 
 class SourceWorkspaceError(ValueError):
@@ -141,6 +142,8 @@ def _selected_case_collision_report(
     readable_jar: Path,
     selected_entries: list[str],
     source_dir: Path | None = None,
+    *,
+    phase: str = "bytecode_preflight",
 ) -> dict[str, Any]:
     """Classify casefold-colliding source targets against exact class identity.
 
@@ -179,6 +182,9 @@ def _selected_case_collision_report(
                 source_exists = False
                 source_sha: str | None = None
                 source_bytes: int | None = None
+                declared_package: str | None = None
+                top_level_types: list[str] = []
+                source_identity_matches_internal_name: bool | None = None
 
                 if source_dir is not None and expected_source is not None:
                     source_path = source_dir / Path(expected_source)
@@ -187,6 +193,34 @@ def _selected_case_collision_report(
                         source_data = source_path.read_bytes()
                         source_sha = hashlib.sha256(source_data).hexdigest()
                         source_bytes = len(source_data)
+                        source_text = source_data.decode(
+                            "utf-8",
+                            errors="replace",
+                        )
+                        package_match = _PACKAGE_RE.search(source_text)
+                        declared_package = (
+                            package_match.group(1)
+                            if package_match
+                            else None
+                        )
+                        top_level_types = _top_level_type_names(
+                            source_text,
+                            public_only=False,
+                        )
+                        expected_package = (
+                            internal_name.rpartition("/")[0].replace("/", ".")
+                            if internal_name
+                            else ""
+                        )
+                        expected_simple_name = (
+                            internal_name.rpartition("/")[2]
+                            if internal_name
+                            else ""
+                        )
+                        source_identity_matches_internal_name = (
+                            (declared_package or "") == expected_package
+                            and expected_simple_name in top_level_types
+                        )
 
                 entries.append(
                     {
@@ -202,6 +236,11 @@ def _selected_case_collision_report(
                         "source_exists": source_exists,
                         "source_sha256": source_sha,
                         "source_bytes": source_bytes,
+                        "declared_package": declared_package,
+                        "top_level_types": top_level_types,
+                        "source_identity_matches_internal_name": (
+                            source_identity_matches_internal_name
+                        ),
                     }
                 )
 
@@ -254,10 +293,19 @@ def _selected_case_collision_report(
                     classification = "distinct_case_types"
                 elif not all(row["source_exists"] for row in entries):
                     classification = "distinct_case_types_missing_source"
+                elif not all(
+                    row["source_identity_matches_internal_name"] is True
+                    for row in entries
+                ):
+                    classification = (
+                        "distinct_case_types_source_identity_mismatch"
+                    )
                 elif len(source_shas) != len(entries):
                     classification = "distinct_case_types_source_conflated"
                 else:
-                    classification = "distinct_case_types_preserved"
+                    classification = (
+                        "distinct_case_types_source_identity_preserved"
+                    )
             else:
                 classification = "mixed_case_collision_identity"
 
@@ -279,6 +327,7 @@ def _selected_case_collision_report(
         counts[key] = counts.get(key, 0) + 1
 
     material = {
+        "phase": phase,
         "selected_class_count": len(selected_entries),
         "collision_group_count": len(rows),
         "classification_counts": dict(sorted(counts.items())),
@@ -305,7 +354,7 @@ def _selected_case_collision_report(
 
 def _case_collision_report_passes(report: dict[str, Any]) -> bool:
     allowed = {
-        "distinct_case_types_preserved",
+        "distinct_case_types_source_identity_preserved",
     }
     return all(
         row.get("classification") in allowed
@@ -467,6 +516,7 @@ def build_source_workspace(
                 pre_case_report = _selected_case_collision_report(
                     readable_jar,
                     selected_entries,
+                    phase="bytecode_preflight",
                 )
                 _write_json(
                     pre_case_report,
@@ -501,24 +551,25 @@ def build_source_workspace(
                         f"{actual_sources} != {expected_count}"
                     )
 
-                case_report = _selected_case_collision_report(
+                raw_case_report = _selected_case_collision_report(
                     readable_jar,
                     selected_entries,
                     source_dir,
+                    phase="raw_procyon",
                 )
                 _write_json(
-                    case_report,
-                    out_dir / "case-collision-report.json",
+                    raw_case_report,
+                    out_dir / "case-collision-raw-procyon.json",
                 )
-                if not _case_collision_report_passes(case_report):
-                    counts = case_report.get(
+                if not _case_collision_report_passes(raw_case_report):
+                    counts = raw_case_report.get(
                         "classification_counts",
                         {},
                     )
                     raise SourceWorkspaceError(
-                        "project-only Procyon case-collision identity gate "
-                        "failed; inspect case-collision-report.json. "
-                        f"collision_groups={case_report.get('collision_group_count')} "
+                        "project-only Procyon raw source identity gate "
+                        "failed; inspect case-collision-raw-procyon.json. "
+                        f"collision_groups={raw_case_report.get('collision_group_count')} "
                         f"classifications={counts}"
                     )
         else:
@@ -546,6 +597,30 @@ def build_source_workspace(
             normalization_report,
             out_dir / "source-normalization.json",
         )
+        if project_only and selected_entries:
+            normalized_case_report = _selected_case_collision_report(
+                readable_jar,
+                selected_entries,
+                source_dir,
+                phase="post_normalization",
+            )
+            _write_json(
+                normalized_case_report,
+                out_dir / "case-collision-post-normalization.json",
+            )
+            if not _case_collision_report_passes(
+                normalized_case_report
+            ):
+                counts = normalized_case_report.get(
+                    "classification_counts",
+                    {},
+                )
+                raise SourceWorkspaceError(
+                    "project-only normalized source identity gate failed; "
+                    "inspect case-collision-post-normalization.json. "
+                    f"collision_groups={normalized_case_report.get('collision_group_count')} "
+                    f"classifications={counts}"
+                )
 
     tree_sha, java_count, source_bytes = _source_tree_digest(source_dir)
     if java_count != int(result.get("java_file_count", -1)):
