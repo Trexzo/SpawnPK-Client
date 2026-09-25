@@ -11,7 +11,11 @@ from typing import Any
 import zipfile
 
 from .indexer import index_jar
-from .javac_diagnostics import (\n    classify_javac_diagnostics,\n    write_javac_diagnostic_report,\n)\nfrom .progressive_compile import (
+from .javac_diagnostics import (
+    classify_javac_diagnostics,
+    write_javac_diagnostic_report,
+)
+from .progressive_compile import (
     ProgressiveCompileError,
     _verify_authority,
 )
