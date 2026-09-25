@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_A24A3EDEADBED527A066",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_17448A0390485D15FDEE",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000894",
+      "owner_logical_id": "CLIENT_CLASS_000894",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/c/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DeveloperToolsPluginPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_plugin_navigation",
+          "detail": "Reviewed DeveloperToolsPlugin obtains rs/s/c/g from the injector, builds a navigation button titled exactly 'Developer Tools' with devtools_icon.png, binds rs/s/c/g as that button's PluginPanel, and registers the button with ClientUI."
+        },
+        {
+          "family": "exact_panel_base",
+          "detail": "rs/s/c/g directly extends the reviewed plugin-panel base rs/ui/m and contains only the Developer Tools navigation/card UI state."
+        },
+        {
+          "family": "exact_recolor_tab",
+          "detail": "The panel binds the reviewed DeveloperToolsSidebarPanel to an exact tab labeled 'Recolor models' with palette.png."
+        },
+        {
+          "family": "exact_interfaces_tab",
+          "detail": "The second panel card is created from the DeveloperToolsPlugin configuration component and bound to an exact tab labeled 'Interfaces' with interface.png."
+        },
+        {
+          "family": "exact_panel_lifecycle",
+          "detail": "Its activation/deactivation hooks delegate only to the currently selected child PluginPanel, while tab switches use one CardLayout and the two exact Developer Tools cards; no unrelated feature is hosted."
+        }
+      ],
+      "note": "DeveloperToolsPluginPanel is fixed by the exact 'Developer Tools' navigation registration, PluginPanel base and exclusive Recolor models/Interfaces card surface. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_C3D773AA7366D6739891",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000895",
+      "owner_logical_id": "CLIENT_CLASS_000895",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/c/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DevToolsWidgetType",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_binding",
+          "detail": "Reviewed InterfaceDeveloperToolsConfig exposes the exact option key showTypes / title 'Display widget types' as Set<rs/s/c/h>, defaulting to Set.of(rs/s/c/h.values())."
+        },
+        {
+          "family": "exact_enum_labels",
+          "detail": "The enum preserves seven exact values: SCROLL, BTN, TXT, RECT, SPRT, DRPDWN and INV, each carrying the client widget-type id used by the interface system plus a presentation color."
+        },
+        {
+          "family": "exact_overlay_mapping",
+          "detail": "Reviewed DevToolsWidgetOverlay maps each live widget's exact type integer through rs/s/c/h's static id-to-enum map and filters it through the configured Display widget types Set."
+        },
+        {
+          "family": "exact_display_record_type",
+          "detail": "Reviewed DevToolsWidgetDisplay stores rs/s/c/h directly in its field represented by the surviving self-identifying toString component 'type=…'."
+        }
+      ],
+      "note": "DevToolsWidgetType is fixed by the exact 'Display widget types' config binding, surviving widget-type abbreviations and direct DevToolsWidgetOverlay/WidgetDisplay use. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}
