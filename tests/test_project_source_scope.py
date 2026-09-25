@@ -106,7 +106,7 @@ class CaseCollisionIdentityTests(unittest.TestCase):
                 {"exact_alias_entries": 1},
             )
 
-    def test_distinct_case_types_detect_identical_source_conflation(self):
+    def test_distinct_case_types_detect_wrong_source_identity(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             source = root / "src"
@@ -129,6 +129,92 @@ class CaseCollisionIdentityTests(unittest.TestCase):
                 jar,
                 ["rs/A.class", "rs/a.class"],
                 source,
+            )
+
+            self.assertEqual(
+                report["classification_counts"],
+                {"distinct_case_types_source_identity_mismatch": 1},
+            )
+
+
+    def test_distinct_case_types_require_exact_source_declarations(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "src"
+            if not _filesystem_supports_case_distinct_names(source):
+                self.skipTest(
+                    "test filesystem cannot represent case-distinct names"
+                )
+
+            jar = root / "readable.jar"
+            with zipfile.ZipFile(jar, "w") as z:
+                z.writestr("rs/A.class", _minimal_class("rs/A"))
+                z.writestr("rs/a.class", _minimal_class("rs/a"))
+
+            (source / "rs").mkdir(parents=True, exist_ok=True)
+            (source / "rs" / "A.java").write_text(
+                "package rs; public class A { int x = 1; }\n",
+                encoding="utf-8",
+            )
+            (source / "rs" / "a.java").write_text(
+                "package rs; public class a { int x = 2; }\n",
+                encoding="utf-8",
+            )
+
+            report = _selected_case_collision_report(
+                jar,
+                ["rs/A.class", "rs/a.class"],
+                source,
+                phase="raw_procyon",
+            )
+
+            self.assertEqual(
+                report["classification_counts"],
+                {
+                    "distinct_case_types_source_identity_preserved": 1
+                },
+            )
+            self.assertTrue(
+                all(
+                    row["source_identity_matches_internal_name"] is True
+                    for row in report["groups"][0]["entries"]
+                )
+            )
+
+    def test_distinct_case_types_detect_true_source_conflation(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "src"
+            if not _filesystem_supports_case_distinct_names(source):
+                self.skipTest(
+                    "test filesystem cannot represent case-distinct names"
+                )
+
+            jar = root / "readable.jar"
+            with zipfile.ZipFile(jar, "w") as z:
+                z.writestr("rs/A.class", _minimal_class("rs/A"))
+                z.writestr("rs/a.class", _minimal_class("rs/a"))
+
+            (source / "rs").mkdir(parents=True, exist_ok=True)
+            same = (
+                "package rs; "
+                "class A { int x = 1; } "
+                "class a { int x = 2; }\n"
+            )
+            (source / "rs" / "A.java").write_text(
+                same,
+                encoding="utf-8",
+            )
+            (source / "rs" / "a.java").write_text(
+                same,
+                encoding="utf-8",
+            )
+
+            report = _selected_case_collision_report(
+                jar,
+                ["rs/A.class", "rs/a.class"],
+                source,
+                phase="raw_procyon",
             )
 
             self.assertEqual(
