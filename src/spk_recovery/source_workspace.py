@@ -8,6 +8,7 @@ import tempfile
 from typing import Any
 import zipfile
 
+from .classfile import ClassFormatError, parse_class
 from .decompiler import DecompilerError, run_decompiler, sha256_file
 from .source_digest import source_tree_digest
 from .source_normalization import (
@@ -134,6 +135,182 @@ def _filesystem_supports_case_distinct_names(root: Path) -> bool:
                 os.unlink(str(path))
             except FileNotFoundError:
                 pass
+
+
+def _selected_case_collision_report(
+    readable_jar: Path,
+    selected_entries: list[str],
+    source_dir: Path | None = None,
+) -> dict[str, Any]:
+    """Classify casefold-colliding source targets against exact class identity.
+
+    The report binds every colliding archive entry to its exact classfile
+    SHA-256 and parsed JVM this_class internal name.  When source_dir is
+    supplied, it also verifies whether Procyon materialized distinct source
+    bytes at each exact internal-name-derived Java path.
+    """
+    groups = _casefold_collision_groups(selected_entries)
+    rows: list[dict[str, Any]] = []
+
+    with zipfile.ZipFile(readable_jar) as z:
+        for group in groups:
+            entries: list[dict[str, Any]] = []
+            parse_failed = False
+
+            for entry in group:
+                data = z.read(entry)
+                class_sha = hashlib.sha256(data).hexdigest()
+                internal_name: str | None = None
+                parse_error: str | None = None
+
+                try:
+                    parsed = parse_class(data)
+                    internal_name = parsed.name
+                except (ClassFormatError, ValueError, IndexError) as exc:
+                    parse_failed = True
+                    parse_error = f"{type(exc).__name__}: {exc}"
+
+                entry_internal_name = entry[:-6]
+                expected_source = (
+                    f"{internal_name}.java"
+                    if internal_name
+                    else None
+                )
+                source_exists = False
+                source_sha: str | None = None
+                source_bytes: int | None = None
+
+                if source_dir is not None and expected_source is not None:
+                    source_path = source_dir / Path(expected_source)
+                    source_exists = source_path.is_file()
+                    if source_exists:
+                        source_data = source_path.read_bytes()
+                        source_sha = hashlib.sha256(source_data).hexdigest()
+                        source_bytes = len(source_data)
+
+                entries.append(
+                    {
+                        "entry": entry,
+                        "entry_sha256": class_sha,
+                        "entry_internal_name": entry_internal_name,
+                        "internal_name": internal_name,
+                        "entry_matches_internal_name": (
+                            internal_name == entry_internal_name
+                        ),
+                        "parse_error": parse_error,
+                        "expected_source_path": expected_source,
+                        "source_exists": source_exists,
+                        "source_sha256": source_sha,
+                        "source_bytes": source_bytes,
+                    }
+                )
+
+            class_shas = {
+                str(row["entry_sha256"])
+                for row in entries
+            }
+            internal_names = {
+                str(row["internal_name"])
+                for row in entries
+                if row["internal_name"] is not None
+            }
+            source_shas = {
+                str(row["source_sha256"])
+                for row in entries
+                if row["source_sha256"] is not None
+            }
+
+            exact_entry_identity = (
+                not parse_failed
+                and all(
+                    row["entry_matches_internal_name"]
+                    for row in entries
+                )
+            )
+            distinct_case_types = (
+                exact_entry_identity
+                and len(internal_names) == len(entries)
+                and len(
+                    {
+                        name.casefold()
+                        for name in internal_names
+                    }
+                ) == 1
+            )
+            exact_alias = (
+                not parse_failed
+                and len(class_shas) == 1
+                and len(internal_names) == 1
+            )
+
+            if parse_failed:
+                classification = "class_parse_failure"
+            elif exact_alias:
+                classification = "exact_alias_entries"
+            elif not exact_entry_identity:
+                classification = "entry_internal_identity_mismatch"
+            elif distinct_case_types:
+                if source_dir is None:
+                    classification = "distinct_case_types"
+                elif not all(row["source_exists"] for row in entries):
+                    classification = "distinct_case_types_missing_source"
+                elif len(source_shas) != len(entries):
+                    classification = "distinct_case_types_source_conflated"
+                else:
+                    classification = "distinct_case_types_preserved"
+            else:
+                classification = "mixed_case_collision_identity"
+
+            rows.append(
+                {
+                    "casefold_key": group[0].casefold(),
+                    "entry_count": len(entries),
+                    "unique_class_sha256_count": len(class_shas),
+                    "unique_internal_name_count": len(internal_names),
+                    "unique_source_sha256_count": len(source_shas),
+                    "classification": classification,
+                    "entries": entries,
+                }
+            )
+
+    counts: dict[str, int] = {}
+    for row in rows:
+        key = str(row["classification"])
+        counts[key] = counts.get(key, 0) + 1
+
+    material = {
+        "selected_class_count": len(selected_entries),
+        "collision_group_count": len(rows),
+        "classification_counts": dict(sorted(counts.items())),
+        "groups": rows,
+    }
+    report_id = (
+        "SRCCASE_"
+        + hashlib.sha256(
+            json.dumps(
+                material,
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=False,
+            ).encode("utf-8")
+        ).hexdigest()[:20].upper()
+    )
+    return {
+        "schema_version": 1,
+        "kind": "project_source_case_collision_report",
+        "report_id": report_id,
+        **material,
+    }
+
+
+def _case_collision_report_passes(report: dict[str, Any]) -> bool:
+    allowed = {
+        "distinct_case_types_preserved",
+    }
+    return all(
+        row.get("classification") in allowed
+        for row in report.get("groups", [])
+    )
 
 
 def _extract_class_context(
@@ -287,6 +464,15 @@ def build_source_workspace(
                         f"collision_groups={len(selected_collisions)} "
                         f"sample={selected_collisions[:3]!r}"
                     )
+                pre_case_report = _selected_case_collision_report(
+                    readable_jar,
+                    selected_entries,
+                )
+                _write_json(
+                    pre_case_report,
+                    out_dir / "case-collision-preflight.json",
+                )
+
                 result = run_decompiler(
                     readable_jar,
                     decompiler_jar,
@@ -296,6 +482,8 @@ def build_source_workspace(
                     clean_out=False,
                     input_class_files=class_files,
                 )
+                _write_json(result, out_dir / "decompiler-result.json")
+
                 expected_count = len(selected_entries)
                 actual_inputs = int(
                     result.get("selected_class_file_count", -1)
@@ -311,6 +499,27 @@ def build_source_workspace(
                         "project-only Procyon did not materialize one Java "
                         "source unit per selected top-level class: "
                         f"{actual_sources} != {expected_count}"
+                    )
+
+                case_report = _selected_case_collision_report(
+                    readable_jar,
+                    selected_entries,
+                    source_dir,
+                )
+                _write_json(
+                    case_report,
+                    out_dir / "case-collision-report.json",
+                )
+                if not _case_collision_report_passes(case_report):
+                    counts = case_report.get(
+                        "classification_counts",
+                        {},
+                    )
+                    raise SourceWorkspaceError(
+                        "project-only Procyon case-collision identity gate "
+                        "failed; inspect case-collision-report.json. "
+                        f"collision_groups={case_report.get('collision_group_count')} "
+                        f"classifications={counts}"
                     )
         else:
             result = run_decompiler(
