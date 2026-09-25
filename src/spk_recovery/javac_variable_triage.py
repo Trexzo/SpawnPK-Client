@@ -51,10 +51,26 @@ def _relative_source_path(
         # Windows drive/root spelling may differ in case.  Preserve the exact
         # suffix spelling from javac; that suffix is the source authority.
         rel = value[len(prefix):]
-    elif not Path(source_path).is_absolute():
-        rel = value.lstrip("./")
+    elif Path(source_path).is_absolute():
+        # Windows temp paths can mix 8.3 short names (RUNNER~1) with the
+        # long canonical spelling returned by Path.resolve().  Resolve both
+        # sides before giving up on a path that is physically inside root.
+        try:
+            resolved_value = _normal_path(
+                str(Path(source_path).resolve())
+            )
+        except OSError:
+            return None
+        if resolved_value.startswith(prefix):
+            rel = resolved_value[len(prefix):]
+        elif resolved_value.casefold().startswith(
+            prefix.casefold()
+        ):
+            rel = resolved_value[len(prefix):]
+        else:
+            return None
     else:
-        return None
+        rel = value.lstrip("./")
 
     pure = PurePosixPath(rel)
     if (
