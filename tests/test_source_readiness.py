@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import hashlib
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 import tempfile
 import unittest
 
 from spk_recovery.source_digest import source_tree_digest
 from spk_recovery.source_readiness import (
     SourceReadinessError,
+    _exact_source_key,
     audit_source_workspace,
 )
 
@@ -38,6 +39,26 @@ def _manifest(root: Path) -> dict:
 
 
 class SourceReadinessTests(unittest.TestCase):
+    def test_windows_case_distinct_sources_use_exact_string_cache_keys(self):
+        root = PureWindowsPath("C:/workspace/src")
+        upper = PureWindowsPath("C:/workspace/src/rs/A/c.java")
+        lower = PureWindowsPath("C:/workspace/src/rs/a/c.java")
+
+        # This is the underlying Windows regression: pathlib keys fold case.
+        self.assertEqual(upper, lower)
+        self.assertEqual(len({upper: "upper", lower: "lower"}), 1)
+
+        upper_key = _exact_source_key(root, upper)
+        lower_key = _exact_source_key(root, lower)
+
+        self.assertEqual(upper_key, "rs/A/c.java")
+        self.assertEqual(lower_key, "rs/a/c.java")
+        self.assertNotEqual(upper_key, lower_key)
+        self.assertEqual(
+            len({upper_key: "upper", lower_key: "lower"}),
+            2,
+        )
+
     def test_inventory_and_external_imports(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
