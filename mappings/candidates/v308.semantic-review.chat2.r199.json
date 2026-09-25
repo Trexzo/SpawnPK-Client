@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_34B97388290790B025D2",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_E19A5C77247B8909500F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000102",
+      "owner_logical_id": "CLIENT_CLASS_000102",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/cache/osrs/util/OsrsMapDependencyScanner",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OsrsMapDependencyScanner",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_surviving_class_name",
+          "detail": "The exact v308 internal class name is rs/cache/osrs/util/OsrsMapDependencyScanner; the readable semantic name survives verbatim rather than being reconstructed."
+        },
+        {
+          "family": "exact_command_line_contract",
+          "detail": "The class preserves the exact usage string 'Usage: OsrsMapDependencyScanner [cache-directory] [maps.yaml] [report.txt]' and reports exit semantics for clean scans, dependency findings and incomplete setup/error states."
+        },
+        {
+          "family": "exact_dependency_scan_role",
+          "detail": "Exact strings describe an 'OSRS map dependency scan', missing definitions, missing sequences, missing or invalid frame/keyframe files, landscape decode errors, spawned objects and recursive dependencyObject findings."
+        },
+        {
+          "family": "exact_cache_and_config_inputs",
+          "detail": "The scanner reads cache paths/main_file_cache, maps YAML, osrs_config/loc.dat + loc.idx and client override/config YAML sources, and owns the nested cache-reader/finding/landscape-consumer types recovered in R100-R101."
+        },
+        {
+          "family": "exact_report_output",
+          "detail": "It writes the default report path dumps/osrs-map-dependencies.txt, preserves report-safety checks, and emits a findings report grouped by region/root object/dependency together with clean-scan text 'No missing dependencies found.'."
+        }
+      ],
+      "note": "OsrsMapDependencyScanner is an exact surviving v308 class name. Its CLI usage, cache/map inputs, recursive object/animation dependency checks and report output all match the surviving identifier. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}
