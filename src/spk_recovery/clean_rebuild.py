@@ -11,6 +11,7 @@ from typing import Any
 import zipfile
 
 from .indexer import index_jar
+from .javac_diagnostics import classify_javac_diagnostics
 from .progressive_compile import (
     ProgressiveCompileError,
     _verify_authority,
@@ -189,7 +190,10 @@ def _project_source_files(
 def _generated_classes(root: Path) -> dict[str, bytes]:
     return {
         path.relative_to(root).as_posix(): path.read_bytes()
-        for path in sorted(root.rglob("*.class"))
+        for path in sorted(
+            root.rglob("*.class"),
+            key=lambda path: path.relative_to(root).as_posix(),
+        )
     }
 
 
@@ -249,6 +253,77 @@ def _rebuild_jar(
         entries[name] = data
 
     _write_stored_zip(out, entries)
+
+
+def _stage_javac_sources(
+    source_files: list[Path],
+    source_root: Path,
+    staging_root: Path,
+) -> tuple[list[Path], dict[str, str]]:
+    """Stage explicit javac inputs under case-unique physical parents.
+
+    Windows javac/file-manager paths can still fold case even when the
+    underlying NTFS directory is case-sensitive.  Distinct authoritative
+    sources such as rs/A.java and rs/a.java are therefore staged under
+    unique ordinal parents while preserving the original filename and bytes.
+
+    The Java package/type declarations remain untouched.  All sources are
+    still passed explicitly to javac, so package semantics come from source
+    declarations rather than the physical staging directory.
+    """
+    staging_root.mkdir(parents=True, exist_ok=True)
+
+    staged: list[Path] = []
+    diagnostic_map: dict[str, str] = {}
+
+    for index, source in enumerate(source_files):
+        rel = source.relative_to(source_root).as_posix()
+        target = (
+            staging_root
+            / f"{index:06d}"
+            / source.name
+        )
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(source.read_bytes())
+
+        staged.append(target)
+
+        original = str(source)
+        diagnostic_map[str(target)] = original
+        diagnostic_map[target.as_posix()] = original
+
+    if len(staged) != len(source_files):
+        raise CleanRebuildError(
+            "javac source staging count drifted"
+        )
+
+    casefolded = {
+        str(path).casefold()
+        for path in staged
+    }
+    if len(casefolded) != len(staged):
+        raise CleanRebuildError(
+            "javac source staging did not eliminate casefold collisions"
+        )
+
+    return staged, diagnostic_map
+
+
+def _remap_javac_diagnostics(
+    text: str,
+    diagnostic_map: dict[str, str],
+) -> str:
+    value = text
+    for staged in sorted(
+        diagnostic_map,
+        key=len,
+        reverse=True,
+    ):
+        value = value.replace(
+            staged,
+            diagnostic_map[staged],
+        )
+    return value
 
 
 def clean_project_rebuild(
@@ -313,13 +388,15 @@ def clean_project_rebuild(
 
     status = "compile_failed"
     diagnostic = ""
+    javac_diagnostic_classification: dict[str, Any] | None = None
     missing: list[str] = []
     unexpected: list[str] = []
     rebuilt_sha: str | None = None
     rebuilt_index_summary: dict[str, Any] | None = None
 
     with tempfile.TemporaryDirectory(
-        prefix="spk-clean-rebuild-"
+        prefix=".spk-clean-rebuild-",
+        dir=out_dir,
     ) as td:
         work_root = Path(td)
         classes = work_root / "classes"
@@ -328,11 +405,19 @@ def clean_project_rebuild(
         empty_sourcepath.mkdir()
         args_path = work_root / "javac.args"
 
+        staged_source_files, diagnostic_map = _stage_javac_sources(
+            source_files,
+            source_root,
+            work_root / "source-inputs",
+        )
+
         args = [
             "-proc:none",
             "-encoding",
             "UTF-8",
             "-Xlint:none",
+            "-Xmaxerrs",
+            "10000",
             "-sourcepath",
             str(empty_sourcepath),
             "-classpath",
@@ -342,7 +427,10 @@ def clean_project_rebuild(
         ]
         if release is not None:
             args.extend(["--release", str(release)])
-        args.extend(str(path) for path in source_files)
+        args.extend(
+            str(path)
+            for path in staged_source_files
+        )
         args_path.write_text(
             "\n".join(_arg(value) for value in args) + "\n",
             encoding="utf-8",
@@ -357,8 +445,16 @@ def clean_project_rebuild(
             stderr=subprocess.PIPE,
             text=True,
         )
+        raw_diagnostic = proc.stdout + proc.stderr
+        remapped_diagnostic = _remap_javac_diagnostics(
+            raw_diagnostic,
+            diagnostic_map,
+        )
+        javac_diagnostic_classification = (
+            classify_javac_diagnostics(remapped_diagnostic)
+        )
         diagnostic = _diagnostic(
-            proc.stdout + proc.stderr,
+            remapped_diagnostic,
             source_root=source_root,
             work_root=work_root,
         )
@@ -440,10 +536,29 @@ def clean_project_rebuild(
             "prefixes": prefixes,
             "project_source_files": len(source_files),
             "all_workspace_java_files": len(all_files),
+            "javac_input_transport": (
+                "case_unique_staged_explicit_sources"
+            ),
         },
         "compiler": {
             "javac": javac_probe,
             "target_release": release,
+            "diagnostic_classification": (
+                {
+                    "report_id": javac_diagnostic_classification[
+                        "report_id"
+                    ],
+                    "input_sha256": javac_diagnostic_classification[
+                        "input_sha256"
+                    ],
+                    "summary": javac_diagnostic_classification[
+                        "summary"
+                    ],
+                    "identifiers_included": False,
+                }
+                if javac_diagnostic_classification is not None
+                else None
+            ),
         },
         "dependency_capsule": {
             "path": "dependency-capsule.jar",

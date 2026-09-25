@@ -10,9 +10,12 @@ import zipfile
 
 from spk_recovery.clean_rebuild import (
     CleanRebuildError,
+    _remap_javac_diagnostics,
+    _stage_javac_sources,
     clean_project_rebuild,
 )
 from spk_recovery.progressive_compile import _probe_javac
+from spk_recovery.source_digest import source_tree_digest
 
 
 def _sha(path: Path) -> str:
@@ -20,16 +23,61 @@ def _sha(path: Path) -> str:
 
 
 def _tree_sha(root: Path) -> str:
-    files = sorted(root.rglob("*.java"))
-    h = hashlib.sha256()
-    for path in files:
-        rel = path.relative_to(root).as_posix().encode("utf-8")
-        data = path.read_bytes()
-        h.update(len(rel).to_bytes(4, "big"))
-        h.update(rel)
-        h.update(len(data).to_bytes(8, "big"))
-        h.update(data)
-    return h.hexdigest()
+    return source_tree_digest(root)[0]
+
+
+class CleanRebuildSourceStagingTests(unittest.TestCase):
+    def test_staging_preserves_bytes_and_uses_case_unique_paths(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source_root = root / "source"
+            left = source_root / "left" / "A.java"
+            right = source_root / "right" / "a.java"
+            left.parent.mkdir(parents=True)
+            right.parent.mkdir(parents=True)
+
+            left.write_bytes(
+                b"package sample; public class A {}\n"
+            )
+            right.write_bytes(
+                b"package sample; public class a {}\n"
+            )
+
+            staged, mapping = _stage_javac_sources(
+                [left, right],
+                source_root,
+                root / "staged",
+            )
+
+            self.assertEqual(len(staged), 2)
+            self.assertEqual(staged[0].name, "A.java")
+            self.assertEqual(staged[1].name, "a.java")
+            self.assertEqual(
+                staged[0].read_bytes(),
+                left.read_bytes(),
+            )
+            self.assertEqual(
+                staged[1].read_bytes(),
+                right.read_bytes(),
+            )
+            self.assertEqual(
+                len({str(p).casefold() for p in staged}),
+                2,
+            )
+
+            raw = (
+                f"{staged[0]}:1: error: first\n"
+                f"{staged[1]}:2: error: second\n"
+            )
+            remapped = _remap_javac_diagnostics(
+                raw,
+                mapping,
+            )
+
+            self.assertIn(str(left), remapped)
+            self.assertIn(str(right), remapped)
+            self.assertNotIn(str(staged[0]), remapped)
+            self.assertNotIn(str(staged[1]), remapped)
 
 
 @unittest.skipUnless(shutil.which("javac"), "javac required")
@@ -135,10 +183,7 @@ class CleanRebuildTests(unittest.TestCase):
             "decompiler_sha256": "e" * 64,
             "source_tree_sha256": tree_sha,
             "java_file_count": 3,
-            "source_bytes": sum(
-                p.stat().st_size
-                for p in recovered_root.rglob("*.java")
-            ),
+            "source_bytes": source_tree_digest(recovered_root)[2],
             "source_directory": "src",
         }
         readiness = {
@@ -294,6 +339,165 @@ class CleanRebuildTests(unittest.TestCase):
                 root / "out" / "rebuilt-client.jar"
             ) as z:
                 self.assertIn(fallback_class, set(z.namelist()))
+
+    def test_compile_failure_embeds_redacted_javac_classification(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                source,
+                readable,
+                recovered,
+                readiness,
+                readable_manifest,
+                authority,
+            ) = self._fixture(root)
+
+            target = source / "rs" / "A.java"
+            target.write_text(
+                "package rs; public class A { "
+                "public int value() { return missingValue; } }\n",
+                encoding="utf-8",
+            )
+            tree_sha = _tree_sha(source)
+            recovered["source_tree_sha256"] = tree_sha
+            readiness["source_tree_sha256"] = tree_sha
+
+            report = clean_project_rebuild(
+                recovered,
+                readiness,
+                readable_manifest,
+                readable,
+                authority,
+                source,
+                out_dir=root / "out",
+                source_prefixes=["rs/"],
+            )
+
+            self.assertEqual(report["status"], "compile_failed")
+            self.assertEqual(
+                report["project_classes"]["binary_fallback_count"],
+                0,
+            )
+            classified = report["compiler"]["diagnostic_classification"]
+            self.assertIsNotNone(classified)
+            self.assertFalse(classified["identifiers_included"])
+            self.assertTrue(
+                classified["report_id"].startswith("JAVACDIAG_")
+            )
+            self.assertEqual(
+                classified["summary"]["cannot_find_symbol"]["count"],
+                1,
+            )
+            serialized = str(classified)
+            self.assertNotIn("missingValue", serialized)
+            self.assertNotIn(str(target), serialized)
+
+    def test_compile_failure_classification_exceeds_default_javac_error_cap(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                source,
+                readable,
+                recovered,
+                readiness,
+                readable_manifest,
+                authority,
+            ) = self._fixture(root)
+
+            missing = " + ".join(
+                f"missingValue{index}" for index in range(120)
+            )
+            target = source / "rs" / "A.java"
+            target.write_text(
+                "package rs; public class A { "
+                f"public int value() {{ return {missing}; }} }}\n",
+                encoding="utf-8",
+            )
+            tree_sha = _tree_sha(source)
+            recovered["source_tree_sha256"] = tree_sha
+            readiness["source_tree_sha256"] = tree_sha
+
+            report = clean_project_rebuild(
+                recovered,
+                readiness,
+                readable_manifest,
+                readable,
+                authority,
+                source,
+                out_dir=root / "out",
+                source_prefixes=["rs/"],
+            )
+
+            classified = report["compiler"]["diagnostic_classification"]
+            self.assertEqual(report["status"], "compile_failed")
+            self.assertEqual(
+                classified["summary"]["cannot_find_symbol"]["count"],
+                120,
+            )
+            self.assertEqual(
+                classified["summary"]["total_errors"],
+                120,
+            )
+
+    def test_cleanbuild_id_is_independent_of_diagnostic_absolute_paths(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                source,
+                readable,
+                recovered,
+                readiness,
+                readable_manifest,
+                authority,
+            ) = self._fixture(root)
+
+            failing = (
+                "package rs; public class A { "
+                "public int value() { return missingValue; } }\n"
+            )
+            (source / "rs" / "A.java").write_text(
+                failing,
+                encoding="utf-8",
+            )
+            tree_sha = _tree_sha(source)
+            recovered["source_tree_sha256"] = tree_sha
+            readiness["source_tree_sha256"] = tree_sha
+
+            source2 = root / "other-absolute-source-root"
+            shutil.copytree(source, source2)
+
+            first = clean_project_rebuild(
+                recovered,
+                readiness,
+                readable_manifest,
+                readable,
+                authority,
+                source,
+                out_dir=root / "out-1",
+                source_prefixes=["rs/"],
+            )
+            second = clean_project_rebuild(
+                recovered,
+                readiness,
+                readable_manifest,
+                readable,
+                authority,
+                source2,
+                out_dir=root / "out-2",
+                source_prefixes=["rs/"],
+            )
+
+            self.assertEqual(first["status"], "compile_failed")
+            self.assertEqual(second["status"], "compile_failed")
+            self.assertEqual(first["rebuild_id"], second["rebuild_id"])
+            self.assertNotEqual(
+                first["compiler"]["diagnostic_classification"][
+                    "input_sha256"
+                ],
+                second["compiler"]["diagnostic_classification"][
+                    "input_sha256"
+                ],
+            )
 
     def test_old_fallback_manifest_without_project_prefixes_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:

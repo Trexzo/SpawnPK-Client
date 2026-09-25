@@ -77,6 +77,56 @@ def main(argv: list[str] | None = None) -> int:
             "rebuilt_jar_sha256="
             f"{report['rebuilt_client']['sha256']}"
         )
+    diagnostic = report["compiler"].get(
+        "diagnostic_classification"
+    )
+    if diagnostic is not None:
+        summary = diagnostic["summary"]
+        cannot = summary["cannot_find_symbol"]
+        print(f"javac_diagnostic_report_id={diagnostic['report_id']}")
+        print(f"javac_total_errors={summary['total_errors']}")
+        print(f"javac_affected_files={summary['affected_files']}")
+        print(
+            "javac_categories_json="
+            + json.dumps(
+                summary["categories"],
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+        )
+        print(f"javac_cannot_find_symbol={cannot['count']}")
+        print(
+            "javac_cannot_find_symbol_kinds_json="
+            + json.dumps(
+                cannot["symbol_kinds"],
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+        )
+        print(
+            "javac_cannot_find_symbol_shapes_json="
+            + json.dumps(
+                cannot["symbol_shapes"],
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+        )
+        print(
+            "javac_cannot_find_symbol_top_clusters_json="
+            + json.dumps(
+                cannot.get("symbol_clusters", [])[:20],
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+        )
+        print(
+            "javac_cannot_find_symbol_top_locations_json="
+            + json.dumps(
+                cannot.get("location_clusters", [])[:20],
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+        )
     print(f"out_dir={args.out_dir.resolve()}")
     return 0 if report["status"] == "complete" else 3
 

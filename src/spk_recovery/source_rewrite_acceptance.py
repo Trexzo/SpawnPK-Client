@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from .source_digest import source_tree_digest
 from .build_authority import (
     BuildAuthorityError,
     build_build_authority,
@@ -28,18 +29,8 @@ class SourceRewriteAcceptanceError(ValueError):
 
 
 def _source_tree_digest(root: Path) -> tuple[str, int, int]:
-    files = sorted(root.rglob("*.java"))
-    h = hashlib.sha256()
-    total = 0
-    for path in files:
-        rel = path.relative_to(root).as_posix().encode("utf-8")
-        data = path.read_bytes()
-        h.update(len(rel).to_bytes(4, "big"))
-        h.update(rel)
-        h.update(len(data).to_bytes(8, "big"))
-        h.update(data)
-        total += len(data)
-    return h.hexdigest(), len(files), total
+    digest, files, total = source_tree_digest(root)
+    return digest, len(files), total
 
 
 def _write_json(doc: dict[str, Any], out: Path) -> None:
