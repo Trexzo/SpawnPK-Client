@@ -10,24 +10,15 @@ import subprocess
 import tempfile
 from typing import Any
 
+from .source_digest import source_tree_digest
 
 class SourceRewriteError(ValueError):
     pass
 
 
 def _source_tree_digest(root: Path) -> tuple[str, int, int]:
-    files = sorted(root.rglob("*.java"))
-    h = hashlib.sha256()
-    total_bytes = 0
-    for path in files:
-        rel = path.relative_to(root).as_posix().encode("utf-8")
-        data = path.read_bytes()
-        h.update(len(rel).to_bytes(4, "big"))
-        h.update(rel)
-        h.update(len(data).to_bytes(8, "big"))
-        h.update(data)
-        total_bytes += len(data)
-    return h.hexdigest(), len(files), total_bytes
+    digest, files, total_bytes = source_tree_digest(root)
+    return digest, len(files), total_bytes
 
 
 def _helper_source() -> Path:
