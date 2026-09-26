@@ -4,6 +4,7 @@ from collections import Counter
 import hashlib
 import json
 from pathlib import Path, PurePosixPath
+import re
 from typing import Any
 import zipfile
 
@@ -13,6 +14,200 @@ from .source_digest import source_tree_digest
 
 class JavacVariableTriageError(ValueError):
     pass
+
+
+_PACKAGE_RE = re.compile(
+    r"(?m)^\\s*package\\s+([A-Za-z_$][\\w$]*(?:\\.[A-Za-z_$][\\w$]*)*)\\s*;"
+)
+_IMPORT_RE = re.compile(
+    r"(?m)^\\s*import\\s+(?!static\\s+)"
+    r"([A-Za-z_$][\\w$]*(?:\\.[A-Za-z_$][\\w$]*)*)(\\.\\*)?\\s*;"
+)
+_VARIABLE_LOCATION_RE = re.compile(
+    r"^.+?\\s+of\\s+type\\s+(.+?)\\s*$"
+)
+
+
+def _erase_type_arguments(value: str) -> str:
+    out: list[str] = []
+    depth = 0
+    for ch in value.strip():
+        if ch == "<":
+            depth += 1
+            continue
+        if ch == ">":
+            depth = max(0, depth - 1)
+            continue
+        if depth == 0:
+            out.append(ch)
+    return "".join(out).strip()
+
+
+def _normalize_type_token(value: str) -> str | None:
+    token = _erase_type_arguments(value)
+    while token.endswith("[]"):
+        token = token[:-2].strip()
+
+    if token.startswith("? extends "):
+        token = token[len("? extends "):].strip()
+    elif token.startswith("? super "):
+        token = token[len("? super "):].strip()
+
+    if token in {
+        "",
+        "?",
+        "boolean",
+        "byte",
+        "short",
+        "int",
+        "long",
+        "char",
+        "float",
+        "double",
+        "void",
+    }:
+        return None
+
+    # Javac sometimes renders captured/intersection types.  Do not guess.
+    if (
+        token.startswith("capture#")
+        or " & " in token
+        or " | " in token
+    ):
+        return None
+
+    return token
+
+
+def _source_type_context(
+    source_root: Path,
+    rel: str,
+) -> tuple[str | None, dict[str, str], list[str]]:
+    path = source_root / Path(rel)
+    text = path.read_text(
+        encoding="utf-8",
+        errors="replace",
+    )
+
+    package_match = _PACKAGE_RE.search(text)
+    package = package_match.group(1) if package_match else None
+
+    explicit: dict[str, str] = {}
+    wildcards: list[str] = []
+    for match in _IMPORT_RE.finditer(text):
+        dotted = match.group(1)
+        is_wildcard = bool(match.group(2))
+        if is_wildcard:
+            wildcards.append(dotted)
+        else:
+            explicit[dotted.rsplit(".", 1)[-1]] = dotted
+
+    return package, explicit, wildcards
+
+
+def _candidate_internal_names_for_type(
+    classes: dict[str, dict[str, Any]],
+    type_token: str,
+    *,
+    package: str | None,
+    explicit_imports: dict[str, str],
+    wildcard_imports: list[str],
+) -> list[str]:
+    token = _normalize_type_token(type_token)
+    if token is None:
+        return []
+
+    # Already qualified.  Try exact dotted->internal first, including nested
+    # class spelling where javac may use Outer.Inner.
+    direct = token.replace(".", "/")
+    direct_candidates: list[str] = []
+    if direct in classes:
+        direct_candidates.append(direct)
+
+    parts = token.split(".")
+    for split in range(1, len(parts)):
+        left = "/".join(parts[:split])
+        right = "$".join(parts[split:])
+        candidate = left + "/" + right
+        if candidate in classes:
+            direct_candidates.append(candidate)
+
+    if direct_candidates:
+        return sorted(set(direct_candidates))
+
+    simple = parts[-1]
+    candidates: set[str] = set()
+
+    imported = explicit_imports.get(parts[0])
+    if imported is not None:
+        imported_parts = imported.split(".")
+        suffix = parts[1:]
+        dotted = "/".join(imported_parts)
+        if suffix:
+            dotted = dotted + "$" + "$".join(suffix)
+        if dotted in classes:
+            candidates.add(dotted)
+
+    if package:
+        same = package.replace(".", "/") + "/" + token.replace(".", "$")
+        if same in classes:
+            candidates.add(same)
+
+    java_lang = "java/lang/" + token.replace(".", "$")
+    if java_lang in classes:
+        candidates.add(java_lang)
+
+    for wildcard in wildcard_imports:
+        candidate = wildcard.replace(".", "/") + "/" + token.replace(".", "$")
+        if candidate in classes:
+            candidates.add(candidate)
+
+    # Fail-closed fallback: only accept a globally unique simple/nested match.
+    global_matches = [
+        name
+        for name in classes
+        if _simple_name(name) == simple
+    ]
+    if len(global_matches) == 1:
+        candidates.add(global_matches[0])
+
+    return sorted(candidates)
+
+
+def _variable_location_owner(
+    classes: dict[str, dict[str, Any]],
+    source_root: Path,
+    rel: str,
+    location_value: str | None,
+) -> tuple[str | None, list[str], str]:
+    if not location_value:
+        return None, [], "variable_location_missing"
+
+    match = _VARIABLE_LOCATION_RE.match(location_value.strip())
+    if match is None:
+        return None, [], "variable_location_malformed"
+
+    type_token = match.group(1).strip()
+    normalized = _normalize_type_token(type_token)
+    if normalized is None:
+        return None, [], "variable_location_type_unsupported"
+
+    package, explicit, wildcards = _source_type_context(
+        source_root,
+        rel,
+    )
+    candidates = _candidate_internal_names_for_type(
+        classes,
+        normalized,
+        package=package,
+        explicit_imports=explicit,
+        wildcard_imports=wildcards,
+    )
+    if len(candidates) == 1:
+        return candidates[0], candidates, "variable_location_owner_exact"
+    if len(candidates) > 1:
+        return None, candidates, "variable_location_owner_ambiguous"
+    return None, [], "variable_location_owner_unbound"
 
 
 def _stable_digest(value: Any) -> str:
@@ -361,17 +556,16 @@ def analyze_unresolved_variables(
         owner_candidates: list[str] = []
         matches: list[dict[str, Any]] = []
 
+        owner_resolution = None
         if top_owner is None:
             proof_class = "source_path_unbound"
-        else:
+        elif top_owner not in classes:
+            proof_class = "source_owner_missing"
+        elif location_kind in {"class", "interface"}:
             owner, owner_candidates = _diagnostic_owner(
                 classes,
                 top_owner,
-                (
-                    str(location_kind)
-                    if location_kind is not None
-                    else None
-                ),
+                str(location_kind),
                 (
                     str(location_value)
                     if location_value is not None
@@ -379,20 +573,40 @@ def analyze_unresolved_variables(
                 ),
             )
             if owner is None:
-                if top_owner not in classes:
-                    proof_class = "source_owner_missing"
-                elif location_kind not in {"class", "interface"}:
-                    proof_class = "unsupported_location_kind"
-                elif len(owner_candidates) > 1:
+                if len(owner_candidates) > 1:
                     proof_class = "diagnostic_owner_ambiguous"
                 else:
                     proof_class = "diagnostic_owner_unbound"
+            else:
+                owner_resolution = "source_class_location"
+                proof_class, matches = _field_matches(
+                    classes,
+                    owner,
+                    symbol,
+                )
+        elif location_kind == "variable":
+            owner, owner_candidates, owner_resolution = (
+                _variable_location_owner(
+                    classes,
+                    source_root,
+                    rel,
+                    (
+                        str(location_value)
+                        if location_value is not None
+                        else None
+                    ),
+                )
+            )
+            if owner is None:
+                proof_class = owner_resolution
             else:
                 proof_class, matches = _field_matches(
                     classes,
                     owner,
                     symbol,
                 )
+        else:
+            proof_class = "unsupported_location_kind"
 
         public = {
             "file_id": diagnostic.get("file_id"),
@@ -400,6 +614,7 @@ def analyze_unresolved_variables(
             "location_id": diagnostic.get("location_id"),
             "line": diagnostic.get("line"),
             "location_kind": location_kind,
+            "owner_resolution": owner_resolution,
             "proof_class": proof_class,
             "match_count": len(matches),
         }
@@ -470,6 +685,7 @@ def analyze_unresolved_variables(
                 "location_id",
                 "line",
                 "location_kind",
+                "owner_resolution",
                 "proof_class",
                 "match_count",
                 "match_relation",
