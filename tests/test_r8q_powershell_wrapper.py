@@ -32,11 +32,11 @@ class R8QPowerShellWrapperTests(unittest.TestCase):
             'spk_recovery.r8q_source_entry_gate_cli',
             text,
         )
+        self.assertTrue(
+            all(ord(ch) < 128 for ch in text),
+            "Windows PowerShell 5.1 wrapper must remain ASCII-only",
+        )
 
-    @unittest.skipUnless(
-        shutil.which("pwsh"),
-        "PowerShell parser unavailable",
-    )
     def test_wrapper_parses_with_powershell_ast(self):
         root = Path(__file__).resolve().parents[1]
         script = root / "scripts" / "Invoke-R8QExactSourceEntryGate.ps1"
@@ -52,8 +52,15 @@ class R8QPowerShellWrapperTests(unittest.TestCase):
             "exit 1 }; exit 0"
         )
 
+        shell = (
+            shutil.which("powershell.exe")
+            or shutil.which("pwsh")
+        )
+        if shell is None:
+            self.skipTest("PowerShell parser unavailable")
+
         proc = subprocess.run(
-            ["pwsh", "-NoProfile", "-Command", command],
+            [shell, "-NoProfile", "-Command", command],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
