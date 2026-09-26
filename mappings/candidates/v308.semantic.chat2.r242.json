@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/o/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HighlightedNpc",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_self_identity",
+          "detail": "Exact v308 toString starts HighlightedNpc(npc= and enumerates highlightColor, fillColor, hull, tile, trueTile, swTile, swTrueTile, outline, name, nameOnMinimap, borderWidth, outlineFeather and render."
+        },
+        {
+          "family": "exact_value_shape",
+          "detail": "The immutable value object owns the NPC, highlight/fill colors, render-style booleans, border width, outline feather and Predicate<NPC>, matching the emitted self-identity field-for-field."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite net.runelite.client.game.npcoverlay.HighlightedNpc has the same Lombok @Value/@Builder field set and defaults, including fill color alpha 50, borderWidth 2.0f and render Predicate<NPC>."
+        }
+      ],
+      "note": "The surviving Lombok-generated toString directly identifies HighlightedNpc; source comparison independently matches every field. Confidence 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/o/a$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HighlightedNpcBuilder",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_self_identity",
+          "detail": "Exact nested-builder toString starts HighlightedNpc.HighlightedNpcBuilder(npc= and exposes the same builder members as the enclosing value object."
+        },
+        {
+          "family": "exact_builder_shape",
+          "detail": "The class has fluent setters for NPC, two colors, render booleans, border width, outline feather and Predicate<NPC>, then builds rs/s/o/a."
+        }
+      ],
+      "note": "Flattened semantic name preserves the exact surviving nested identity HighlightedNpc.HighlightedNpcBuilder. Confidence 0.999."
+    }
+  ],
+  "conflicts": []
+}
