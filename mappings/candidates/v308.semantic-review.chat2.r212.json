@@ -11,7 +11,6 @@
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "source_coordinate": {
-        "kind": "class",
         "owner": "rs/l/f/a/b/a",
         "name": null,
         "descriptor": null
@@ -46,7 +45,6 @@
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "source_coordinate": {
-        "kind": "class",
         "owner": "rs/l/f/a/b/b",
         "name": null,
         "descriptor": null
@@ -77,7 +75,6 @@
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "source_coordinate": {
-        "kind": "class",
         "owner": "rs/l/f/a/b/c",
         "name": null,
         "descriptor": null
