@@ -150,6 +150,14 @@ def main(argv: list[str] | None = None) -> int:
         )
     )
     print(
+        "source_form_target_loaded_counts="
+        + json.dumps(
+            summary["source_form_target_loaded_counts"],
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    print(
         "capsule_release_classifications="
         + json.dumps(
             summary["capsule_release_classifications"],
