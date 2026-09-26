@@ -75,14 +75,14 @@ class Chat2SemanticReviewR188Tests(unittest.TestCase):
         actual = resolve_semantic_candidates(_class_lineage(), _member_lineage(), candidates)
         self.assertEqual(actual["proposal_count"], 1)
         self.assertEqual(actual["unresolved"], [])
-        self.assertEqual(actual["review_id"], "SEMREVIEW_73D519AD690F5B911806")
+        self.assertEqual(actual["review_id"], "SEMREVIEW_95BC6E624B359474EB6B")
         self.assertEqual(actual, expected)
 
     def test_r188_expected_stable_id(self):
         review = _load("mappings/candidates/v308.semantic-review.chat2.r188.json")
         self.assertEqual(
             {row["proposed_name"]: row["stable_id"] for row in review["proposals"]},
-            {"GroundMarkersOverlay": "CLIENT_CLASS_000909"},
+            {"GroundMarkerOverlay": "CLIENT_CLASS_000909"},
         )
 
     def test_r188_name_and_owner_do_not_overlap_prior_reviews(self):

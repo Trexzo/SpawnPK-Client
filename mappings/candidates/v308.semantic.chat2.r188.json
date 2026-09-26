@@ -18,27 +18,23 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "GroundMarkersOverlay",
+      "proposed_name": "GroundMarkerOverlay",
       "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_plugin_pairing",
-          "detail": "rs/s/f/c stores only reviewed GroundMarkersConfig rs/s/f/b and GroundMarkersPlugin rs/s/f/d; the plugin supplies its live marker collection directly to the overlay."
+          "family": "exact_overlay_behavior",
+          "detail": "Exact v308 rs/s/f/c extends Overlay, injects GroundMarkersConfig/GroundMarkersPlugin, iterates the plugin ColorTileMarker collection, filters by plane, falls back to the configured marker color, and renders each marked tile with a BasicStroke built from borderWidth."
         },
         {
-          "family": "exact_marker_render_loop",
-          "detail": "Its render method iterates the plugin's ColorTileMarker collection, skips markers not on the current Client plane, resolves each marker's optional color/label, and renders that marker's world tile."
+          "family": "exact_draw_tile_fingerprint",
+          "detail": "The private draw path uses MAX_DRAW_DISTANCE=32, WorldPoint distance, LocalPoint conversion, canvas-tile polygon rendering with configured fill opacity, and optional label rendering guarded by Strings.isNullOrEmpty."
         },
         {
-          "family": "exact_ground_marker_config",
-          "detail": "The overlay consumes the reviewed config's border width, fill opacity and default marker color, builds the tile polygon and draws optional marker labels using the shared overlay helpers."
-        },
-        {
-          "family": "exact_role_boundary",
-          "detail": "The class extends the shared overlay base and has no state or behavior outside Ground Markers rendering; adjacent rs/s/f/e is only a Gson TypeToken<List<GroundMarkerPoint>> and is deliberately excluded."
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite GroundMarkerOverlay at 68c819924cfd6bfb4848c71f74c121109f289d5a has the same MAX_DRAW_DISTANCE=32, injected config/plugin pairing, ColorTileMarker iteration, plane/color fallback logic, border-width stroke, fill-opacity polygon and optional label path."
         }
       ],
-      "note": "GroundMarkersOverlay is fixed by exclusive GroundMarkersPlugin/Config ownership and a complete ColorTileMarker render loop. Confidence is 0.999; serialization TypeToken helpers remain unnamed."
+      "note": "GroundMarkerOverlay supersedes the earlier descriptive plural GroundMarkersOverlay label; exact v308 control flow and historical RuneLite source match nearly statement-for-statement. Confidence 0.999."
     }
   ],
   "conflicts": []
