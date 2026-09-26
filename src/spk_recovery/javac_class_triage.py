@@ -305,6 +305,7 @@ def analyze_unresolved_classes(
     )
 
     rows: list[dict[str, Any]] = []
+    missing_candidate_evidence: dict[str, dict[str, Any]] = {}
     for diagnostic in diagnostic_report.get("diagnostics", []):
         if (
             diagnostic.get("category") != "cannot_find_symbol"
@@ -393,6 +394,14 @@ def analyze_unresolved_classes(
                 else:
                     source_materialization = (
                         "missing_exact_declaration"
+                    )
+                    missing_candidate_evidence.setdefault(
+                        candidate,
+                        {
+                            "structure": candidate_structure,
+                            "kind": candidate_kind,
+                            "synthetic": candidate_synthetic,
+                        },
                     )
             elif len(candidate_pool) > 1:
                 if source_declared_candidate_count == 0:
@@ -493,34 +502,7 @@ def analyze_unresolved_classes(
             and row["candidate_synthetic"]
         )
     )
-    missing_candidate_rows: dict[str, dict[str, Any]] = {}
-    for row in rows:
-        if (
-            row["source_materialization"]
-            != "missing_exact_declaration"
-        ):
-            continue
-        private_candidates = (
-            row.get("visible_candidates")
-            or row.get("global_candidates")
-            or []
-        )
-        if len(private_candidates) == 1:
-            candidate = private_candidates[0]
-        else:
-            # Public mode intentionally lacks identities.  Reconstruct the
-            # same unique key from the already-resolved candidate metadata
-            # by stable symbol identity; an exact-visible class symbol has
-            # one candidate per symbol spelling.
-            candidate = "symbol:" + str(row.get("symbol_id") or "none")
-        missing_candidate_rows.setdefault(
-            candidate,
-            {
-                "structure": row["candidate_structure"],
-                "kind": row["candidate_kind"],
-                "synthetic": row["candidate_synthetic"],
-            },
-        )
+    missing_candidate_rows = missing_candidate_evidence
 
     missing_unique_structure = Counter(
         value["structure"]
