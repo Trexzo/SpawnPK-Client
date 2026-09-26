@@ -726,6 +726,19 @@ def analyze_unresolved_variables(
         rows.append(public)
 
     proof_counts = Counter(row["proof_class"] for row in rows)
+    owner_resolution_counts = Counter(
+        str(row.get("owner_resolution") or "none")
+        for row in rows
+    )
+    bytecode_proven_field_count = (
+        proof_counts.get("current_class_exact_field", 0)
+        + proof_counts.get("inherited_exact_field", 0)
+    )
+    ambiguous_field_count = (
+        proof_counts.get("current_class_field_ambiguous", 0)
+        + proof_counts.get("hierarchy_exact_field_ambiguous", 0)
+        + proof_counts.get("variable_location_owner_ambiguous", 0)
+    )
     symbol_buckets: dict[str, dict[str, Any]] = {}
     for row in rows:
         symbol_id = str(row.get("symbol_id") or "none")
@@ -805,6 +818,15 @@ def analyze_unresolved_variables(
         "summary": {
             "variable_diagnostic_count": len(rows),
             "proof_classes": dict(sorted(proof_counts.items())),
+            "owner_resolutions": dict(
+                sorted(owner_resolution_counts.items())
+            ),
+            "bytecode_proven_field_diagnostic_count": (
+                bytecode_proven_field_count
+            ),
+            "ambiguous_field_diagnostic_count": (
+                ambiguous_field_count
+            ),
             "symbol_clusters": clusters,
         },
         "diagnostics": rows,
