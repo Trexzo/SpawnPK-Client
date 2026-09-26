@@ -427,9 +427,10 @@ def stage_missing_class_recovery(
             }
         )
 
-    tree_sha, java_count, source_bytes = source_tree_digest(
+    tree_sha, staged_files, source_bytes = source_tree_digest(
         source_dir
     )
+    java_count = len(staged_files)
     stage_material = {
         "plan_id": private_plan["plan_id"],
         "decompiler_sha256": result["decompiler_sha256"],
