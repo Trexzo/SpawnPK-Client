@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/c/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SceneOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scene_overlay_constants",
+          "detail": "Exact v308 rs/s/c/f extends Overlay and reproduces the RuneLite SceneOverlay color palette and geometry constants: map-square green, chunk-border blue, movement colors (141,220,26)/(73,122,18), line-of-sight (204,42,219), interacting cyan, local tile size 128, chunk size 8, map-square size 64, border cull 16, stroke width 4 and interacting shift -16."
+        },
+        {
+          "family": "exact_scene_geometry_behavior",
+          "detail": "The class renders scene/map-square grid geometry from LocalPoint/WorldPoint coordinates, labels map squares, and draws local scene diagnostics under the Developer Tools configuration, matching the SceneOverlay role rather than a generic plugin overlay."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite SceneOverlay at 68c819924cfd6bfb4848c71f74c121109f289d5a has the same overlay superclass, distinctive six-color palette, 128/8/64/16/4/-16 geometry constants and scene-grid diagnostics. SpawnPK extends the interaction/mouse tooling but preserves the source identity."
+        }
+      ],
+      "note": "SceneOverlay is anchored by the distinctive RuneLite constant set and scene-geometry behavior, not package proximity. Confidence 0.999."
+    }
+  ],
+  "conflicts": []
+}
