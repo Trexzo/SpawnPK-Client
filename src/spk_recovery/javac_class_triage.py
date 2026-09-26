@@ -208,6 +208,41 @@ def _source_declared_types(
     return declared, owners
 
 
+def _readable_structure(
+    row: dict[str, Any],
+) -> str:
+    inner_outer = row.get("inner_outer_name")
+    inner_simple = row.get("inner_simple_name")
+    enclosing = row.get("enclosing_class_name")
+
+    if enclosing:
+        if inner_simple:
+            return "named_local"
+        return "anonymous_or_local_unnamed"
+    if inner_outer:
+        if inner_simple:
+            return "named_member"
+        return "anonymous_member_metadata"
+    if "$" in str(row.get("name", "")):
+        return "dollar_named_without_inner_metadata"
+    return "top_level"
+
+
+def _readable_kind(
+    row: dict[str, Any],
+) -> str:
+    access = int(row.get("access", 0))
+    if access & 0x2000:
+        return "annotation"
+    if access & 0x4000:
+        return "enum"
+    if access & 0x0200:
+        return "interface"
+    if "Record" in row.get("attributes", []):
+        return "record"
+    return "class"
+
+
 def analyze_unresolved_classes(
     diagnostic_report: dict[str, Any],
     readable_jar: Path,
@@ -293,6 +328,9 @@ def analyze_unresolved_classes(
         global_candidates: list[str] = []
         source_materialization = "not_applicable"
         source_declared_candidate_count = 0
+        candidate_structure = "not_applicable"
+        candidate_kind = "not_applicable"
+        candidate_synthetic = False
 
         if rel is None:
             proof_class = "source_path_unbound"
@@ -341,6 +379,15 @@ def analyze_unresolved_classes(
             )
             if len(candidate_pool) == 1:
                 candidate = candidate_pool[0]
+                class_row = classes.get(candidate)
+                if class_row is not None:
+                    candidate_structure = _readable_structure(
+                        class_row
+                    )
+                    candidate_kind = _readable_kind(class_row)
+                    candidate_synthetic = bool(
+                        int(class_row.get("access", 0)) & 0x1000
+                    )
                 if candidate in source_declared:
                     source_materialization = "declared_exact"
                 else:
@@ -377,6 +424,9 @@ def analyze_unresolved_classes(
             "source_declared_candidate_count": (
                 source_declared_candidate_count
             ),
+            "candidate_structure": candidate_structure,
+            "candidate_kind": candidate_kind,
+            "candidate_synthetic": candidate_synthetic,
         }
         if include_identifiers:
             public.update(
@@ -422,6 +472,70 @@ def analyze_unresolved_classes(
             == "missing_exact_declaration"
         )
     )
+    missing_structure_diagnostics = Counter(
+        row["candidate_structure"]
+        for row in rows
+        if row["source_materialization"]
+        == "missing_exact_declaration"
+    )
+    missing_kind_diagnostics = Counter(
+        row["candidate_kind"]
+        for row in rows
+        if row["source_materialization"]
+        == "missing_exact_declaration"
+    )
+    missing_synthetic_diagnostic_count = sum(
+        1
+        for row in rows
+        if (
+            row["source_materialization"]
+            == "missing_exact_declaration"
+            and row["candidate_synthetic"]
+        )
+    )
+    missing_candidate_rows: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        if (
+            row["source_materialization"]
+            != "missing_exact_declaration"
+        ):
+            continue
+        private_candidates = (
+            row.get("visible_candidates")
+            or row.get("global_candidates")
+            or []
+        )
+        if len(private_candidates) == 1:
+            candidate = private_candidates[0]
+        else:
+            # Public mode intentionally lacks identities.  Reconstruct the
+            # same unique key from the already-resolved candidate metadata
+            # by stable symbol identity; an exact-visible class symbol has
+            # one candidate per symbol spelling.
+            candidate = "symbol:" + str(row.get("symbol_id") or "none")
+        missing_candidate_rows.setdefault(
+            candidate,
+            {
+                "structure": row["candidate_structure"],
+                "kind": row["candidate_kind"],
+                "synthetic": row["candidate_synthetic"],
+            },
+        )
+
+    missing_unique_structure = Counter(
+        value["structure"]
+        for value in missing_candidate_rows.values()
+    )
+    missing_unique_kind = Counter(
+        value["kind"]
+        for value in missing_candidate_rows.values()
+    )
+    missing_unique_synthetic_count = sum(
+        1
+        for value in missing_candidate_rows.values()
+        if value["synthetic"]
+    )
+
     symbol_buckets: dict[str, dict[str, Any]] = {}
     for row in rows:
         symbol_id = str(row.get("symbol_id") or "none")
@@ -432,12 +546,20 @@ def analyze_unresolved_classes(
                 "count": 0,
                 "files": set(),
                 "proof_classes": Counter(),
+                "source_materialization": Counter(),
+                "candidate_structures": Counter(),
             },
         )
         bucket["count"] += 1
         if row.get("file_id") is not None:
             bucket["files"].add(str(row["file_id"]))
         bucket["proof_classes"][row["proof_class"]] += 1
+        bucket["source_materialization"][
+            row["source_materialization"]
+        ] += 1
+        bucket["candidate_structures"][
+            row["candidate_structure"]
+        ] += 1
 
     clusters = []
     for bucket in symbol_buckets.values():
@@ -448,6 +570,14 @@ def analyze_unresolved_classes(
                 "affected_files": len(bucket["files"]),
                 "proof_classes": dict(
                     sorted(bucket["proof_classes"].items())
+                ),
+                "source_materialization": dict(
+                    sorted(
+                        bucket["source_materialization"].items()
+                    )
+                ),
+                "candidate_structures": dict(
+                    sorted(bucket["candidate_structures"].items())
                 ),
             }
         )
@@ -470,6 +600,9 @@ def analyze_unresolved_classes(
                 "visibility_channel_count",
                 "source_materialization",
                 "source_declared_candidate_count",
+                "candidate_structure",
+                "candidate_kind",
+                "candidate_synthetic",
             )
         }
         for row in rows
@@ -507,6 +640,27 @@ def analyze_unresolved_classes(
             ),
             "visible_exact_source_missing_count": (
                 visible_exact_source_missing_count
+            ),
+            "missing_declaration_structure_diagnostics": dict(
+                sorted(missing_structure_diagnostics.items())
+            ),
+            "missing_declaration_kind_diagnostics": dict(
+                sorted(missing_kind_diagnostics.items())
+            ),
+            "missing_declaration_synthetic_diagnostic_count": (
+                missing_synthetic_diagnostic_count
+            ),
+            "missing_declaration_unique_class_count": (
+                len(missing_candidate_rows)
+            ),
+            "missing_unique_class_structures": dict(
+                sorted(missing_unique_structure.items())
+            ),
+            "missing_unique_class_kinds": dict(
+                sorted(missing_unique_kind.items())
+            ),
+            "missing_unique_synthetic_class_count": (
+                missing_unique_synthetic_count
             ),
             "repair_candidate_diagnostic_count": (
                 proof_counts.get("readable_class_not_java_visible", 0)
