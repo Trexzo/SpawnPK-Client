@@ -65,6 +65,26 @@ def main(argv: list[str] | None = None) -> int:
         )
     )
     print(
+        "source_materialization="
+        + json.dumps(
+            summary["source_materialization"],
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    print(
+        "source_declared_type_count="
+        f"{summary['source_declared_type_count']}"
+    )
+    print(
+        "visible_exact_source_declared_count="
+        f"{summary['visible_exact_source_declared_count']}"
+    )
+    print(
+        "visible_exact_source_missing_count="
+        f"{summary['visible_exact_source_missing_count']}"
+    )
+    print(
         "repair_candidate_diagnostic_count="
         f"{summary['repair_candidate_diagnostic_count']}"
     )
