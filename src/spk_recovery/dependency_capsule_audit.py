@@ -308,6 +308,14 @@ def _classify_javac_probe(
         (probe_name, "<PROBE_CLASS>"),
     ):
         diagnostic = diagnostic.replace(old, new)
+
+    # javac -verbose includes wall-clock timing values which are not
+    # semantic evidence and vary across otherwise identical runs.
+    diagnostic = re.sub(
+        r"(?<![A-Za-z0-9_])\d+(?:\.\d+)?ms\b",
+        "<TIME>",
+        diagnostic,
+    )
     lines = sorted(
         {
             int(match.group(1))
