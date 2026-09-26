@@ -260,6 +260,15 @@ def analyze_unresolved_variables(
             "--include-identifiers"
         )
 
+    frontier_id = diagnostic_report.get("frontier_id")
+    if (
+        not isinstance(frontier_id, str)
+        or not frontier_id.startswith("JAVACFRONTIER_")
+    ):
+        raise JavacVariableTriageError(
+            "javac diagnostic report lacks stable frontier authority"
+        )
+
     readable_jar = readable_jar.resolve()
     source_root = source_root.resolve()
     if not readable_jar.is_file():
@@ -423,10 +432,7 @@ def analyze_unresolved_variables(
         for row in rows
     ]
     material = {
-        "diagnostic_report_id": diagnostic_report.get("report_id"),
-        "diagnostic_input_sha256": diagnostic_report.get(
-            "input_sha256"
-        ),
+        "diagnostic_frontier_id": frontier_id,
         "readable_jar_sha256": jar_sha,
         "source_tree_sha256": tree_sha,
         "rows": public_rows,
@@ -439,6 +445,7 @@ def analyze_unresolved_variables(
             + _stable_digest(material)[:20].upper()
         ),
         "diagnostic_report_id": diagnostic_report.get("report_id"),
+        "diagnostic_frontier_id": frontier_id,
         "diagnostic_input_sha256": diagnostic_report.get(
             "input_sha256"
         ),
