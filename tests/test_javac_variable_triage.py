@@ -47,6 +47,25 @@ class JavacVariableTriageTests(unittest.TestCase):
             "Both.java": (
                 "package t; public class Both implements I1, I2 {}\n"
             ),
+            "Receiver.java": (
+                "package t; public class Receiver { "
+                "public int recvSecretField; }\n"
+            ),
+            "ReceiverChild.java": (
+                "package t; public class ReceiverChild extends Receiver {}\n"
+            ),
+            "UseReceiver.java": (
+                "package t; public class UseReceiver { "
+                "Receiver receiver; ReceiverChild child; }\n"
+            ),
+            "Imported.java": (
+                "package p; public class Imported { "
+                "public int importedSecretField; }\n"
+            ),
+            "UseImported.java": (
+                "package t; import p.Imported; "
+                "public class UseImported { Imported imported; }\n"
+            ),
         }
         for name, text in sources.items():
             (source / name).write_text(text, encoding="utf-8")
@@ -170,6 +189,113 @@ class JavacVariableTriageTests(unittest.TestCase):
             self.assertEqual(
                 len(private_by_symbol["dupSecretField"]["matches"]),
                 2,
+            )
+
+    def test_variable_location_resolves_same_package_receiver_and_hierarchy(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source_root, source, jar = self._fixture(root)
+
+            raw = "".join(
+                [
+                    f"{source / 'UseReceiver.java'}:1: error: cannot find symbol\n"
+                    "  symbol:   variable recvSecretField\n"
+                    "  location: variable receiver of type Receiver\n",
+                    f"{source / 'UseReceiver.java'}:2: error: cannot find symbol\n"
+                    "  symbol:   variable recvSecretField\n"
+                    "  location: variable child of type ReceiverChild\n",
+                ]
+            )
+            diagnostics = classify_javac_diagnostics(
+                raw,
+                include_identifiers=True,
+            )
+            report = analyze_unresolved_variables(
+                diagnostics,
+                jar,
+                source_root,
+                include_identifiers=True,
+            )
+
+            self.assertEqual(
+                report["summary"]["proof_classes"],
+                {
+                    "current_class_exact_field": 1,
+                    "inherited_exact_field": 1,
+                },
+            )
+            rows = report["diagnostics"]
+            self.assertEqual(
+                rows[0]["owner_resolution"],
+                "variable_location_owner_exact",
+            )
+            self.assertEqual(
+                rows[0]["diagnostic_owner"],
+                "t/Receiver",
+            )
+            self.assertEqual(
+                rows[1]["diagnostic_owner"],
+                "t/ReceiverChild",
+            )
+
+    def test_variable_location_resolves_explicit_import(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source_root, source, jar = self._fixture(root)
+
+            raw = (
+                f"{source / 'UseImported.java'}:1: error: cannot find symbol\n"
+                "  symbol:   variable importedSecretField\n"
+                "  location: variable imported of type Imported\n"
+            )
+            diagnostics = classify_javac_diagnostics(
+                raw,
+                include_identifiers=True,
+            )
+            report = analyze_unresolved_variables(
+                diagnostics,
+                jar,
+                source_root,
+                include_identifiers=True,
+            )
+
+            row = report["diagnostics"][0]
+            self.assertEqual(
+                row["proof_class"],
+                "current_class_exact_field",
+            )
+            self.assertEqual(
+                row["diagnostic_owner"],
+                "p/Imported",
+            )
+            self.assertEqual(
+                row["owner_resolution"],
+                "variable_location_owner_exact",
+            )
+
+    def test_variable_location_malformed_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source_root, source, jar = self._fixture(root)
+
+            raw = (
+                f"{source / 'UseReceiver.java'}:1: error: cannot find symbol\n"
+                "  symbol:   variable recvSecretField\n"
+                "  location: variable receiver\n"
+            )
+            diagnostics = classify_javac_diagnostics(
+                raw,
+                include_identifiers=True,
+            )
+            report = analyze_unresolved_variables(
+                diagnostics,
+                jar,
+                source_root,
+            )
+
+            self.assertEqual(
+                report["summary"]["proof_classes"],
+                {"variable_location_malformed": 1},
             )
 
     def test_triage_id_uses_stable_frontier_not_raw_report_id(self):
