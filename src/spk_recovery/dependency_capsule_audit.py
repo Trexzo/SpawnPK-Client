@@ -4,6 +4,7 @@ from collections import Counter
 import hashlib
 import json
 import re
+import shutil
 from pathlib import Path
 import subprocess
 import tempfile
@@ -165,7 +166,21 @@ def _run_javap_probe(
     internal: str,
 ) -> dict[str, Any]:
     javac_path = Path(javac_command)
-    name = "javap.exe" if javac_path.suffix.lower() == ".exe" else "javap"
+    if not javac_path.is_absolute():
+        resolved = shutil.which(javac_command)
+        if resolved is None:
+            return {
+                "classification": "javap_unavailable",
+                "exit_code": None,
+                "diagnostic_sha256": None,
+            }
+        javac_path = Path(resolved)
+
+    name = (
+        "javap.exe"
+        if javac_path.suffix.lower() == ".exe"
+        else "javap"
+    )
     javap = javac_path.with_name(name)
     if not javap.is_file():
         return {
