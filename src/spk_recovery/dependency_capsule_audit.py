@@ -162,22 +162,55 @@ def _source_name_profile(
 def _probe_source(
     internal_name: str,
     index: int,
+    *,
+    source_form: str,
 ) -> tuple[str, str]:
     dotted = internal_name.replace("/", ".")
-    simple = dotted.rsplit(".", 1)[-1]
-    probe = f"SpkDependencyProbe{index:03d}"
-    source = (
-        f"import {dotted};\n"
-        f"public class {probe} {{\n"
-        f"    public {simple} value;\n"
-        f"}}\n"
-    )
+    parts = dotted.split(".")
+    simple = parts[-1]
+    package = ".".join(parts[:-1])
+    suffix = {
+        "import_simple": "Import",
+        "qualified_type": "Qualified",
+        "same_package_simple": "SamePackage",
+    }.get(source_form)
+    if suffix is None:
+        raise DependencyCapsuleAuditError(
+            "unsupported javac source probe form: "
+            + source_form
+        )
+
+    probe = f"SpkDependencyProbe{suffix}{index:03d}"
+    if source_form == "import_simple":
+        source = (
+            f"import {dotted};\n"
+            f"public class {probe} {{\n"
+            f"    public {simple} value;\n"
+            f"}}\n"
+        )
+    elif source_form == "qualified_type":
+        source = (
+            f"public class {probe} {{\n"
+            f"    public {dotted} value;\n"
+            f"}}\n"
+        )
+    else:
+        prefix = f"package {package};\n" if package else ""
+        source = (
+            prefix
+            + f"public class {probe} {{\n"
+            + f"    public {simple} value;\n"
+            + "}\n"
+        )
     return probe, source
 
 
 _JAVAC_LINE_RE = re.compile(
-    r"^[^:\n]+:(\\d+):(?:\\d+:)?\\s+error:",
+    r"^.*?:(\d+):(?:(\d+):)?\s*(?:error:|compiler\.err\.)",
     re.MULTILINE,
+)
+_JAVAC_DIAGNOSTIC_KEY_RE = re.compile(
+    r"\b(compiler\.(?:err|warn|note|misc)\.[A-Za-z0-9_.-]+)"
 )
 
 
@@ -197,7 +230,7 @@ def _classify_javac_probe(
     probe_dir: Path,
     internal: str,
     probe_name: str,
-) -> tuple[str, str, list[int]]:
+) -> tuple[str, str, list[int], list[str]]:
     diagnostic = (
         proc.stdout + proc.stderr
     ).replace("\r\n", "\n").replace("\r", "\n")
@@ -219,6 +252,9 @@ def _classify_javac_probe(
             for match in _JAVAC_LINE_RE.finditer(diagnostic)
         }
     )
+    diagnostic_keys = sorted(
+        set(_JAVAC_DIAGNOSTIC_KEY_RE.findall(diagnostic))
+    )
 
     if proc.returncode == 0 and generated.is_file():
         classification = "javac_resolves_exact_class"
@@ -233,7 +269,7 @@ def _classify_javac_probe(
     else:
         classification = "javac_other_failure"
 
-    return classification, diagnostic, lines
+    return classification, diagnostic, lines, diagnostic_keys
 
 
 def _run_javac_probe(
@@ -245,10 +281,12 @@ def _run_javac_probe(
     root: Path,
     release: int | None,
     label: str,
+    source_form: str,
 ) -> dict[str, Any]:
     probe_name, source_text = _probe_source(
         internal,
         index,
+        source_form=source_form,
     )
     probe_dir = root / f"{index:03d}-{label}"
     probe_dir.mkdir()
@@ -263,6 +301,7 @@ def _run_javac_probe(
         "-encoding",
         "UTF-8",
         "-Xlint:none",
+        "-XDrawDiagnostics",
         "-classpath",
         str(classpath),
         "-d",
@@ -279,7 +318,12 @@ def _run_javac_probe(
         text=True,
     )
     generated = out / (probe_name + ".class")
-    classification, diagnostic, lines = _classify_javac_probe(
+    (
+        classification,
+        diagnostic,
+        lines,
+        diagnostic_keys,
+    ) = _classify_javac_probe(
         proc,
         generated,
         probe_dir=probe_dir,
@@ -293,6 +337,8 @@ def _run_javac_probe(
             diagnostic.encode("utf-8")
         ),
         "error_lines": lines,
+        "diagnostic_keys": diagnostic_keys,
+        "source_form": source_form,
     }
 
 
@@ -431,24 +477,7 @@ def audit_dependency_capsule(
             class_major = _class_major(capsule_bytes)
             source_name_profile = _source_name_profile(internal)
 
-            capsule_release_probe = {
-                "classification": "not_run",
-                "exit_code": None,
-                "diagnostic_sha256": None,
-                "error_lines": [],
-            }
-            capsule_default_probe = {
-                "classification": "not_run",
-                "exit_code": None,
-                "diagnostic_sha256": None,
-                "error_lines": [],
-            }
-            readable_release_probe = {
-                "classification": "not_run",
-                "exit_code": None,
-                "diagnostic_sha256": None,
-                "error_lines": [],
-            }
+            source_form_probes: dict[str, dict[str, Any]] = {}
             javap_probe = {
                 "classification": "not_run",
                 "exit_code": None,
@@ -456,33 +485,52 @@ def audit_dependency_capsule(
             }
 
             if capsule_present:
-                capsule_release_probe = _run_javac_probe(
-                    javac_command=javac_command,
-                    classpath=dependency_capsule,
-                    internal=internal,
-                    index=index,
-                    root=root,
-                    release=release,
-                    label="capsule-release",
-                )
-                capsule_default_probe = _run_javac_probe(
-                    javac_command=javac_command,
-                    classpath=dependency_capsule,
-                    internal=internal,
-                    index=index,
-                    root=root,
-                    release=None,
-                    label="capsule-default",
-                )
-                readable_release_probe = _run_javac_probe(
-                    javac_command=javac_command,
-                    classpath=readable_jar,
-                    internal=internal,
-                    index=index,
-                    root=root,
-                    release=release,
-                    label="readable-release",
-                )
+                for source_form in (
+                    "import_simple",
+                    "qualified_type",
+                    "same_package_simple",
+                ):
+                    source_form_probes[source_form] = {
+                        "capsule_release": _run_javac_probe(
+                            javac_command=javac_command,
+                            classpath=dependency_capsule,
+                            internal=internal,
+                            index=index,
+                            root=root,
+                            release=release,
+                            label=(
+                                source_form
+                                + "-capsule-release"
+                            ),
+                            source_form=source_form,
+                        ),
+                        "capsule_default": _run_javac_probe(
+                            javac_command=javac_command,
+                            classpath=dependency_capsule,
+                            internal=internal,
+                            index=index,
+                            root=root,
+                            release=None,
+                            label=(
+                                source_form
+                                + "-capsule-default"
+                            ),
+                            source_form=source_form,
+                        ),
+                        "readable_release": _run_javac_probe(
+                            javac_command=javac_command,
+                            classpath=readable_jar,
+                            internal=internal,
+                            index=index,
+                            root=root,
+                            release=release,
+                            label=(
+                                source_form
+                                + "-readable-release"
+                            ),
+                            source_form=source_form,
+                        ),
+                    }
                 javap_probe = _run_javap_probe(
                     javac_command=javac_command,
                     classpath=dependency_capsule,
@@ -496,9 +544,40 @@ def audit_dependency_capsule(
                 "byte_identical": byte_identical,
                 "class_major": class_major,
                 "source_name_profile": source_name_profile,
-                "capsule_release_probe": capsule_release_probe,
-                "capsule_default_probe": capsule_default_probe,
-                "readable_release_probe": readable_release_probe,
+                "source_form_probes": source_form_probes,
+                "capsule_release_probe": source_form_probes.get(
+                    "import_simple",
+                    {},
+                ).get("capsule_release", {
+                    "classification": "not_run",
+                    "exit_code": None,
+                    "diagnostic_sha256": None,
+                    "error_lines": [],
+                    "diagnostic_keys": [],
+                    "source_form": "import_simple",
+                }),
+                "capsule_default_probe": source_form_probes.get(
+                    "import_simple",
+                    {},
+                ).get("capsule_default", {
+                    "classification": "not_run",
+                    "exit_code": None,
+                    "diagnostic_sha256": None,
+                    "error_lines": [],
+                    "diagnostic_keys": [],
+                    "source_form": "import_simple",
+                }),
+                "readable_release_probe": source_form_probes.get(
+                    "import_simple",
+                    {},
+                ).get("readable_release", {
+                    "classification": "not_run",
+                    "exit_code": None,
+                    "diagnostic_sha256": None,
+                    "error_lines": [],
+                    "diagnostic_keys": [],
+                    "source_form": "import_simple",
+                }),
                 "javap_probe": javap_probe,
             }
             if include_identifiers:
@@ -545,6 +624,42 @@ def audit_dependency_capsule(
         for failure in row["source_name_profile"]["failures"]
     )
 
+    source_form_classifications: dict[str, dict[str, Counter[str]]] = {}
+    source_form_diagnostic_keys: dict[str, dict[str, Counter[str]]] = {}
+    for source_form in (
+        "import_simple",
+        "qualified_type",
+        "same_package_simple",
+    ):
+        source_form_classifications[source_form] = {}
+        source_form_diagnostic_keys[source_form] = {}
+        for channel in (
+            "capsule_release",
+            "capsule_default",
+            "readable_release",
+        ):
+            probes = [
+                row["source_form_probes"].get(
+                    source_form,
+                    {},
+                ).get(channel)
+                for row in rows
+            ]
+            valid = [
+                probe
+                for probe in probes
+                if isinstance(probe, dict)
+            ]
+            source_form_classifications[source_form][channel] = Counter(
+                str(probe.get("classification"))
+                for probe in valid
+            )
+            source_form_diagnostic_keys[source_form][channel] = Counter(
+                key
+                for probe in valid
+                for key in probe.get("diagnostic_keys", [])
+            )
+
     public_rows = [
         {
             key: row[key]
@@ -555,6 +670,7 @@ def audit_dependency_capsule(
                 "byte_identical",
                 "class_major",
                 "source_name_profile",
+                "source_form_probes",
                 "capsule_release_probe",
                 "capsule_default_probe",
                 "readable_release_probe",
@@ -624,6 +740,24 @@ def audit_dependency_capsule(
                     0,
                 )
             ),
+            "source_form_classifications": {
+                source_form: {
+                    channel: dict(sorted(counter.items()))
+                    for channel, counter in channels.items()
+                }
+                for source_form, channels in sorted(
+                    source_form_classifications.items()
+                )
+            },
+            "source_form_diagnostic_keys": {
+                source_form: {
+                    channel: dict(sorted(counter.items()))
+                    for channel, counter in channels.items()
+                }
+                for source_form, channels in sorted(
+                    source_form_diagnostic_keys.items()
+                )
+            },
             "capsule_release_classifications": dict(
                 sorted(capsule_release_classifications.items())
             ),
