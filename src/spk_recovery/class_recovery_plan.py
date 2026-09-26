@@ -205,9 +205,15 @@ def build_class_recovery_plan(
         }
 
         existing = unique.get(candidate)
+        stable_evidence = {
+            key: value
+            for key, value in evidence.items()
+            if key != "access_class"
+        }
         if existing is None:
             unique[candidate] = {
-                **evidence,
+                **stable_evidence,
+                "access_classes": {access_class},
                 "diagnostic_count": 1,
                 "symbol_ids": {str(row.get("symbol_id"))},
                 "file_ids": {str(row.get("file_id"))},
@@ -216,12 +222,14 @@ def build_class_recovery_plan(
         else:
             comparable = {
                 key: existing[key]
-                for key in evidence
+                for key in stable_evidence
             }
-            if comparable != evidence:
+            if comparable != stable_evidence:
                 raise ClassRecoveryPlanError(
-                    "candidate evidence drifted across diagnostics"
+                    "candidate responsibility evidence drifted "
+                    "across diagnostics"
                 )
+            existing["access_classes"].add(access_class)
             existing["diagnostic_count"] += 1
             existing["symbol_ids"].add(str(row.get("symbol_id")))
             existing["file_ids"].add(str(row.get("file_id")))
@@ -230,10 +238,10 @@ def build_class_recovery_plan(
         row["responsibility"]
         for row in unique.values()
     )
-    access_counts = Counter(
-        row["access_class"]
-        for row in unique.values()
-    )
+    access_counts = Counter()
+    for row in unique.values():
+        for access_class in row["access_classes"]:
+            access_counts[access_class] += 1
     structure_counts = Counter(
         row["candidate_structure"]
         for row in unique.values()
@@ -254,8 +262,8 @@ def build_class_recovery_plan(
             }
             and row["candidate_structure"] == "top_level"
             and not row["candidate_synthetic"]
-            and row["access_class"]
-            != "package_inaccessible"
+            and "package_inaccessible"
+            not in row["access_classes"]
         )
     ]
 
@@ -280,7 +288,9 @@ def build_class_recovery_plan(
                 "candidate_kind": row["candidate_kind"],
                 "candidate_synthetic": row["candidate_synthetic"],
                 "project_scoped": row["project_scoped"],
-                "access_class": row["access_class"],
+                "access_classes": sorted(
+                    row["access_classes"]
+                ),
                 "responsibility": row["responsibility"],
                 "expected_source_exists": row[
                     "expected_source_exists"
