@@ -85,6 +85,38 @@ def main(argv: list[str] | None = None) -> int:
         f"{summary['visible_exact_source_missing_count']}"
     )
     print(
+        "missing_declaration_unique_class_count="
+        f"{summary['missing_declaration_unique_class_count']}"
+    )
+    print(
+        "missing_declaration_structure_diagnostics="
+        + json.dumps(
+            summary["missing_declaration_structure_diagnostics"],
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    print(
+        "missing_unique_class_structures="
+        + json.dumps(
+            summary["missing_unique_class_structures"],
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    print(
+        "missing_unique_class_kinds="
+        + json.dumps(
+            summary["missing_unique_class_kinds"],
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    print(
+        "missing_unique_synthetic_class_count="
+        f"{summary['missing_unique_synthetic_class_count']}"
+    )
+    print(
         "repair_candidate_diagnostic_count="
         f"{summary['repair_candidate_diagnostic_count']}"
     )
