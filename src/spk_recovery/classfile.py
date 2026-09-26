@@ -68,6 +68,7 @@ class ParsedClass:
     access: int
     super_name: str | None
     interfaces: list[str]
+    class_references: list[str]
     utf8_strings: list[str]
     literal_strings: list[str]
     numeric_constants: list[int | float]
@@ -204,6 +205,13 @@ def parse_class(data: bytes) -> ParsedClass:
             enclosing_class_name = class_name(_u2(af))
             _u2(af)
 
+    class_references = sorted(
+        {
+            utf8(x[1])
+            for x in cp
+            if x and x[0] == 7
+        }
+    )
     utf8_values = [x[1] for x in cp if x and x[0] == 1]
     literal_strings: list[str] = []
     numeric: list[int | float] = []
@@ -225,6 +233,7 @@ def parse_class(data: bytes) -> ParsedClass:
         access=access,
         super_name=class_name(super_class),
         interfaces=interfaces,
+        class_references=class_references,
         utf8_strings=utf8_values,
         literal_strings=literal_strings,
         numeric_constants=numeric,
