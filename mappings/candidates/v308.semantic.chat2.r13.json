@@ -18,23 +18,23 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "PluginConfigurationPanel",
-      "confidence": 0.992,
+      "proposed_name": "ConfigPanel",
+      "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_structural_role",
-          "detail": "Class extends the side-panel base and builds plugin configuration controls from config descriptors/items, including checkboxes, spinners, enum selectors, text controls and color controls."
+          "family": "exact_config_editor_surface",
+          "detail": "Exact v308 extends PluginPanel and builds selected-plugin configuration controls from ConfigDescriptor items/sections, including booleans, numeric fields, enums, strings, colors, keybinds and reset/back controls."
         },
         {
-          "family": "exact_literal_role",
-          "detail": "Exact UI text includes 'Are you sure you want to reset this plugin's configuration?' and config_back_icon.png."
+          "family": "exact_source_literals",
+          "detail": "The class uniquely owns config_back_icon.png/config_edit_icon.png and the reset-confirmation text; it is the provider-created panel opened for a PluginConfigurationDescriptor."
         },
         {
-          "family": "exact_pairing_role",
-          "detail": "Panel directly consumes rs/s/b/n PluginConfigurationDescriptor and is created/provided by the Plugin Hub panel."
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite runelite-client ConfigPanel at 68c819924cfd6bfb4848c71f74c121109f289d5a has the same PluginPanel role, descriptor-driven control construction, icon resources, reset flow and integration with PluginListPanel."
         }
       ],
-      "note": "Role describes the selected-plugin configuration editor; not claimed as an original identifier."
+      "note": "ConfigPanel supersedes the earlier descriptive PluginConfigurationPanel label; exact source identity is now anchored by RuneLite class role/resources. Confidence 0.999."
     },
     {
       "schema_version": 1,
@@ -76,19 +76,23 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "PluginHubPluginEntry",
-      "confidence": 0.992,
+      "proposed_name": "PluginListItem",
+      "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_structural_role",
-          "detail": "JPanel row holds the Plugin Hub panel, one PluginConfigurationDescriptor, search tokens, pin toggle and enable/disable toggle."
+          "family": "exact_list_item_shape",
+          "detail": "Exact v308 extends JPanel and implements SearchablePlugin, owns PluginConfigurationDescriptor, keyword list, pin toggle and PluginToggleButton, and is instantiated as each row in rs/s/b/q."
         },
         {
-          "family": "exact_literal_role",
-          "detail": "Exact UI text includes Configure, Edit plugin configuration, Pin plugin, Unpin plugin, pluginhub and config_edit_icon.png."
+          "family": "exact_source_literals",
+          "detail": "The class uniquely contains star_on.png, Pin plugin, Unpin plugin, Configure, Edit plugin configuration and pluginhub search-token behavior."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite PluginListItem at 68c819924cfd6bfb4848c71f74c121109f289d5a has the same JPanel/SearchablePlugin shape, star-pin icons, plugin config row actions, keyword construction and enable/config controls."
         }
       ],
-      "note": "Entry is intentionally used instead of row/panel to describe one plugin item in the Hub list."
+      "note": "PluginListItem supersedes the earlier descriptive PluginHubPluginEntry label; exact source identity is anchored by RuneLite row structure and unique resources. Confidence 0.999."
     },
     {
       "schema_version": 1,
@@ -103,19 +107,23 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "PluginHubPanel",
-      "confidence": 0.995,
+      "proposed_name": "PluginListPanel",
+      "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_literal_role",
-          "detail": "Exact title text is 'Plugin Hub'; runtime strings include plugin start/stop error messages and pinnedPlugins."
+          "family": "exact_plugin_list_panel_shape",
+          "detail": "Exact v308 extends PluginPanel and owns ConfigManager, PluginManager, ConfigPanel provider, fake PluginConfigurationDescriptors, MultiplexingPluginPanel, search field, scroll pane, fixed-width list panel and List<rs/s/b/o>."
         },
         {
-          "family": "exact_structural_role",
-          "detail": "Class extends the side-panel base, owns the filtered plugin descriptor/list-entry collection, scroll pane, filtering controls and PluginChanged event handler."
+          "family": "exact_persistence_and_filtering",
+          "detail": "The class uniquely owns pinnedPlugins persistence, rebuild/refresh/filter flows, plugin start/stop handling, search integration and configuration-panel opening."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite PluginListPanel at 68c819924cfd6bfb4848c71f74c121109f289d5a has the same plugin/config manager ownership, fake descriptor list, muxer/search/list UI, pinnedPlugins persistence and PluginSearch-driven filtering. SpawnPK's fork omits some later external-plugin dependencies but preserves source identity."
         }
       ],
-      "note": "Main Plugin Hub side-panel role."
+      "note": "PluginListPanel supersedes the earlier PluginHubPanel label; the title/UI domain was descriptive, while exact structure and RuneLite source fix the actual class name. Confidence 0.999."
     },
     {
       "schema_version": 1,
@@ -130,19 +138,23 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "PluginEnableToggleButton",
-      "confidence": 0.995,
+      "proposed_name": "PluginToggleButton",
+      "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_literal_role",
-          "detail": "Exact button HTML contains 'Enable plugin', 'Disable plugin' and 'Plugin conflicts:'."
+          "family": "exact_toggle_shape",
+          "detail": "Exact v308 extends JToggleButton, owns on/off switch images and conflict text, updates its tooltip on ItemEvent changes, and exposes the conflict-list setter consumed by ConfigPanel/PluginListItem."
         },
         {
-          "family": "exact_structural_role",
-          "detail": "Class directly extends JToggleButton and reacts to ItemEvent changes while tracking conflict text."
+          "family": "exact_source_literals",
+          "detail": "Exact strings include Enable plugin, Disable plugin and Plugin conflicts:, matching the dedicated config UI toggle rather than a Plugin-Hub-specific abstraction."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite PluginToggleButton at 68c819924cfd6bfb4848c71f74c121109f289d5a has the same JToggleButton superclass, switcher image construction, tooltip state, conflict formatting and preferred sizing."
         }
       ],
-      "note": "Name describes the exact toggle role rather than a broader Plugin Hub component."
+      "note": "PluginToggleButton supersedes PluginEnableToggleButton with the exact RuneLite source identity. Confidence 0.999."
     },
     {
       "schema_version": 1,

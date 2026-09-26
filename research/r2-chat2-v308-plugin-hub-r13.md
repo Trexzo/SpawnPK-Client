@@ -1,55 +1,67 @@
-# Chat 2 — exact-v308 Plugin Hub / Item Search / Trading Post semantics R13
+# Chat 2 — exact-v308 configuration/plugin-list semantics R13 (source-corrected)
 
 Exact client authority:
 
 `854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`
 
-R13 is another separate non-canonical class-only semantic review batch. It does not alter
-Main/Core's accepted R2 semantic authority or prior Chat 2 review batches.
+This document supersedes the original descriptive R13 labels for four configuration UI
+classes after exact RuneLite source identities were recovered.
 
-## Deterministic review result
+## Corrected deterministic review
 
 - candidate classes: **10**
 - resolved proposals: **10**
 - unresolved: **0**
-- review ID: `SEMREVIEW_D9B003FC41F9A1D776D9`
+- corrected review ID: `SEMREVIEW_3A84CE667D865C655D92`
+- superseded review ID: `SEMREVIEW_D9B003FC41F9A1D776D9`
 - field/method proposals: **0**
 
-## Plugin Hub / configuration
+## Corrected configuration identities
 
-| Raw class | Stable ID | Candidate semantic |
+| Raw class | Stable ID | Corrected source identity |
 | --- | --- | --- |
-| `rs/s/b/a` | `CLIENT_CLASS_000861` | `PluginConfigurationPanel` |
+| `rs/s/b/a` | `CLIENT_CLASS_000861` | `ConfigPanel` |
 | `rs/s/b/n` | `CLIENT_CLASS_000874` | `PluginConfigurationDescriptor` |
-| `rs/s/b/o` | `CLIENT_CLASS_000875` | `PluginHubPluginEntry` |
-| `rs/s/b/q` | `CLIENT_CLASS_000877` | `PluginHubPanel` |
-| `rs/s/b/u` | `CLIENT_CLASS_000881` | `PluginEnableToggleButton` |
+| `rs/s/b/o` | `CLIENT_CLASS_000875` | `PluginListItem` |
+| `rs/s/b/q` | `CLIENT_CLASS_000877` | `PluginListPanel` |
+| `rs/s/b/u` | `CLIENT_CLASS_000881` | `PluginToggleButton` |
 
-Strong exact evidence includes the literal title `Plugin Hub`, exact pin/configure/enable
-UI text, direct descriptor/config-panel references and the exact self-identifying
-`PluginConfigurationDescriptor(...)` toString form.
+The unchanged `PluginConfigurationDescriptor` already self-identifies in its exact
+toString form.
 
-## Item ID Search
+### ConfigPanel
 
-- `rs/s/g/a` -> `ItemIdSearchPanel`
-- `rs/s/g/b` -> `ItemIdSearchPlugin`
+Exact v308 builds descriptor-driven config controls and uniquely owns the configuration
+back/edit resources and reset-confirmation flow. RuneLite source at `68c819924cfd6bfb4848c71f74c121109f289d5a` confirms
+the source identity `ConfigPanel`.
 
-The runtime class has exact title `Item ID Search`, config key `itemsearch`, panel/nav
-ownership and `search.png`. The paired panel owns the search field/results area and exact
-login/database/minimum-query validation text.
+### PluginListItem
 
-## Trading Post
+Exact v308 is a JPanel implementing SearchablePlugin with one plugin descriptor, keyword
+tokens, star pin control, config action and plugin toggle. The unique `star_on.png`,
+`Pin plugin`, `Unpin plugin` and `Edit plugin configuration` literals match RuneLite
+`PluginListItem`.
 
-- `rs/s/t/g` -> `TradingPostListingsPanel`
-- `rs/s/t/h` -> `TradingPostPanel`
-- `rs/s/t/i` -> `TradingPostPlugin`
+### PluginListPanel
 
-The top-level panel combines exact tabs `Your Listings` and `Search`, where the search side
-is the already reviewed R11 `TradingPostSearchPanel`. The listings panel has exact no-listing
-account text, while the runtime plugin has exact title/config/navigation strings
-`Trading Post`, `tradepost` and `Trading post`.
+Exact v308 owns plugin/config managers, fake descriptors, the muxer, search box, scrolling
+list, pinned-plugin persistence and filtering/rebuild lifecycle. The unique
+`pinnedPlugins` key and whole-class surface match RuneLite `PluginListPanel`.
+
+### PluginToggleButton
+
+Exact v308 is the reusable on/off JToggleButton with switcher images, conflict text and
+Enable/Disable tooltips, matching RuneLite `PluginToggleButton`.
+
+The older names `PluginConfigurationPanel`, `PluginHubPluginEntry`,
+`PluginHubPanel`, and `PluginEnableToggleButton` were reasonable descriptive labels
+but are now superseded by stronger source-name evidence.
+
+## Other R13 proposals
+
+Item ID Search and Trading Post proposals are unchanged.
 
 ## Acceptance boundary
 
-Chat 2 does not promote R13. Main/Core may accept any desired subset only through an explicit
-`semantic_acceptance_spec` bound to `SEMREVIEW_D9B003FC41F9A1D776D9`.
+Chat 2 does not promote corrected R13. Main/Core may accept proposals only through an
+explicit `semantic_acceptance_spec` bound to `SEMREVIEW_3A84CE667D865C655D92`.
