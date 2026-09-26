@@ -153,6 +153,10 @@ class JavacDiagnosticClassificationTests(unittest.TestCase):
         )
         self.assertNotEqual(first["input_sha256"], changed["input_sha256"])
         self.assertNotEqual(first["report_id"], changed["report_id"])
+        self.assertEqual(first["frontier_id"], changed["frontier_id"])
+        self.assertTrue(
+            first["frontier_id"].startswith("JAVACFRONTIER_")
+        )
 
     def test_ansi_and_crlf_are_parseable_but_raw_sha_is_exact(self):
         raw = (
