@@ -5,7 +5,7 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 9,
-  "review_id": "SEMREVIEW_0D067AB471D25E575699",
+  "review_id": "SEMREVIEW_CAD36DBCFCA2573C4FD7",
   "proposals": [
     {
       "proposal_id": "SEMPROP_3C7AC1BBE22E12C38783",
@@ -28,6 +28,32 @@
         }
       ],
       "note": "Broad combat-overlay config name intentionally covers opponent, boss and bounty-hunter overlay settings."
+    },
+    {
+      "proposal_id": "SEMPROP_4E31082E33B722391352",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000887",
+      "owner_logical_id": "CLIENT_CLASS_000887",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/c/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DevToolsConfig",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_identity",
+          "detail": "Exact v308 rs/s/c/a extends the Config interface, is annotated with config group devtools, and owns the Developer Tools settings including interface/widget inspection, scene info, color options and always-on-top controls."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite DevToolsConfig at 68c819924cfd6bfb4848c71f74c121109f289d5a is the devtools Config consumed by DevToolsPlugin. SpawnPK extends that configuration surface with interface-specific tooling while preserving the source class identity."
+        }
+      ],
+      "note": "DevToolsConfig supersedes the earlier descriptive InterfaceDeveloperToolsConfig label; exact config-group identity and historical RuneLite provenance fix the source name. Confidence 0.999."
     },
     {
       "proposal_id": "SEMPROP_59E4D5DDED17426214F4",
@@ -116,28 +142,6 @@
         }
       ],
       "note": "Exact NPC highlight configuration role."
-    },
-    {
-      "proposal_id": "SEMPROP_A991FB51C99329AB5CC0",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000887",
-      "owner_logical_id": "CLIENT_CLASS_000887",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/s/c/a",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "InterfaceDeveloperToolsConfig",
-      "confidence": 0.985,
-      "evidence": [
-        {
-          "family": "exact_literal_role",
-          "detail": "Exact options include Dev settings for interfaces, Dev tools for interfaces, Interface Builder, Interface Tools, widget IDs/types, scene info and color options."
-        }
-      ],
-      "note": "Developer-tool configuration centered on interface/widget inspection."
     },
     {
       "proposal_id": "SEMPROP_BD1774D5AEA85BC95A94",

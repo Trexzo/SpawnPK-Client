@@ -110,7 +110,7 @@ class Chat2SemanticReviewR10Tests(unittest.TestCase):
         self.assertEqual(actual["unresolved"], [])
         self.assertEqual(
             actual["review_id"],
-            "SEMREVIEW_0A7899AD6B7C9AC5BE83",
+            "SEMREVIEW_8ED0E0C3CD22F26B35F6",
         )
         self.assertEqual(actual, expected)
 
@@ -131,7 +131,7 @@ class Chat2SemanticReviewR10Tests(unittest.TestCase):
             "TileIndicatorsPlugin": "CLIENT_CLASS_000960",
             "InteractHighlightPlugin": "CLIENT_CLASS_000921",
             "CombatOverlaysPlugin": "CLIENT_CLASS_000856",
-            "DeveloperToolsPlugin": "CLIENT_CLASS_000889",
+            "DevToolsPlugin": "CLIENT_CLASS_000889",
             "TimersInfoboxPlugin": "CLIENT_CLASS_000917",
         }
         for name, stable_id in expected.items():

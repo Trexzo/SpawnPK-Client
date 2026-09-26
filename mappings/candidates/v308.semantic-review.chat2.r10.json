@@ -5,7 +5,7 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 8,
-  "review_id": "SEMREVIEW_0A7899AD6B7C9AC5BE83",
+  "review_id": "SEMREVIEW_8ED0E0C3CD22F26B35F6",
   "proposals": [
     {
       "proposal_id": "SEMPROP_137A82FC730FA075CE68",
@@ -32,6 +32,32 @@
         }
       ],
       "note": "Runtime/plugin role is supported by exact descriptor text plus direct config reference."
+    },
+    {
+      "proposal_id": "SEMPROP_2A5C6AC114133725D247",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000889",
+      "owner_logical_id": "CLIENT_CLASS_000889",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/c/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DevToolsPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_plugin_shape",
+          "detail": "Exact v308 rs/s/c/c extends Plugin, has the Developer Tools/devtools/panel descriptor, consumes the devtools config, creates devtools_icon.png navigation, and registers its developer/widget and scene overlays."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite DevToolsPlugin at 68c819924cfd6bfb4848c71f74c121109f289d5a has the same Developer Tools descriptor, DevToolsConfig pairing, client-toolbar navigation lifecycle, devtools_icon.png resource and developer-overlay ownership."
+        }
+      ],
+      "note": "DevToolsPlugin supersedes the descriptive DeveloperToolsPlugin label; exact plugin lifecycle/resources plus RuneLite source provenance fix the source identity. Confidence 0.999."
     },
     {
       "proposal_id": "SEMPROP_3DD785AEF0B96F66C864",
@@ -107,32 +133,6 @@
         {
           "family": "exact_pairing",
           "detail": "Class directly references R4 rs/s/j/a KeyRemappingConfig."
-        }
-      ],
-      "note": "Runtime/plugin role is supported by exact descriptor text plus direct config reference."
-    },
-    {
-      "proposal_id": "SEMPROP_979D07A45E0DE36A2105",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000889",
-      "owner_logical_id": "CLIENT_CLASS_000889",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/s/c/c",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "DeveloperToolsPlugin",
-      "confidence": 0.995,
-      "evidence": [
-        {
-          "family": "exact_literal_role",
-          "detail": "Exact runtime/plugin descriptor text identifies 'Developer Tools'. Runtime plugin descriptor is self-identifying."
-        },
-        {
-          "family": "exact_pairing",
-          "detail": "Class directly references R4 rs/s/c/a InterfaceDeveloperToolsConfig."
         }
       ],
       "note": "Runtime/plugin role is supported by exact descriptor text plus direct config reference."

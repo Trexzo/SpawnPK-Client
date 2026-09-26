@@ -64,15 +64,19 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "InterfaceDeveloperToolsConfig",
-      "confidence": 0.985,
+      "proposed_name": "DevToolsConfig",
+      "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_literal_role",
-          "detail": "Exact options include Dev settings for interfaces, Dev tools for interfaces, Interface Builder, Interface Tools, widget IDs/types, scene info and color options."
+          "family": "exact_config_identity",
+          "detail": "Exact v308 rs/s/c/a extends the Config interface, is annotated with config group devtools, and owns the Developer Tools settings including interface/widget inspection, scene info, color options and always-on-top controls."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite DevToolsConfig at 68c819924cfd6bfb4848c71f74c121109f289d5a is the devtools Config consumed by DevToolsPlugin. SpawnPK extends that configuration surface with interface-specific tooling while preserving the source class identity."
         }
       ],
-      "note": "Developer-tool configuration centered on interface/widget inspection."
+      "note": "DevToolsConfig supersedes the earlier descriptive InterfaceDeveloperToolsConfig label; exact config-group identity and historical RuneLite provenance fix the source name. Confidence 0.999."
     },
     {
       "schema_version": 1,

@@ -207,19 +207,19 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "DeveloperToolsPlugin",
-      "confidence": 0.995,
+      "proposed_name": "DevToolsPlugin",
+      "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_literal_role",
-          "detail": "Exact runtime/plugin descriptor text identifies 'Developer Tools'. Runtime plugin descriptor is self-identifying."
+          "family": "exact_plugin_shape",
+          "detail": "Exact v308 rs/s/c/c extends Plugin, has the Developer Tools/devtools/panel descriptor, consumes the devtools config, creates devtools_icon.png navigation, and registers its developer/widget and scene overlays."
         },
         {
-          "family": "exact_pairing",
-          "detail": "Class directly references R4 rs/s/c/a InterfaceDeveloperToolsConfig."
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite DevToolsPlugin at 68c819924cfd6bfb4848c71f74c121109f289d5a has the same Developer Tools descriptor, DevToolsConfig pairing, client-toolbar navigation lifecycle, devtools_icon.png resource and developer-overlay ownership."
         }
       ],
-      "note": "Runtime/plugin role is supported by exact descriptor text plus direct config reference."
+      "note": "DevToolsPlugin supersedes the descriptive DeveloperToolsPlugin label; exact plugin lifecycle/resources plus RuneLite source provenance fix the source identity. Confidence 0.999."
     }
   ],
   "conflicts": []
