@@ -5,10 +5,10 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 1,
-  "review_id": "SEMREVIEW_DD66FE413150F4F4C6A4",
+  "review_id": "SEMREVIEW_9C381CF759C8D9528363",
   "proposals": [
     {
-      "proposal_id": "SEMPROP_1253E4C2811A59A9407C",
+      "proposal_id": "SEMPROP_8C18220DA038113C69E2",
       "target_kind": "class",
       "stable_id": "CLIENT_CLASS_001093",
       "owner_logical_id": "CLIENT_CLASS_001093",
@@ -19,27 +19,31 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "ProgressBar",
+      "proposed_name": "ThinProgressBar",
       "confidence": 0.999,
       "evidence": [
         {
           "family": "exact_progress_state",
-          "detail": "The class owns exactly two integer values interpreted as maximum and current progress. Its percentage method returns current * 100 / maximum, with the maximum clamped to at least 1 by the setter."
+          "detail": "The class owns exactly two integer values: maximumValue initialized/clamped to at least 1 and current value. Its percentage method returns current * 100 / maximum."
         },
         {
           "family": "exact_progress_rendering",
-          "detail": "paintComponent computes current * width / maximum, paints the unfilled segment with a darker derived background color, then paints the filled segment from x=0 using the foreground color."
+          "detail": "paintComponent computes current * width / maximum, paints the unfilled segment with the darker derived background color and the filled segment from x=0 using the foreground color."
         },
         {
           "family": "exact_component_geometry",
-          "detail": "The JPanel is configured as a thin 4-pixel-high component with unbounded maximum width, matching a reusable horizontal progress bar rather than a feature-specific panel."
+          "detail": "The JPanel is configured with unbounded maximum width and a fixed 4-pixel height for maximum, minimum, preferred and current size."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 67496933120316f33bfc480f1a1c67c897cb82b9 ThinProgressBar has exactly the same two-int state, four-pixel geometry, foreground/background behavior, percentage calculation and paintComponent implementation."
         },
         {
           "family": "exact_single_live_consumer",
-          "detail": "The only project class referencing this component is R14 TradingPostListingPanel. That panel sets foreground color plus maximum/current listing values, queries the percentage for tooltip text, and places the component at BorderLayout.SOUTH."
+          "detail": "Exact v308 TradingPostListingPanel places this component at BorderLayout.SOUTH, writes listing maximum/current values and reads its percentage for listing status text."
         }
       ],
-      "note": "ProgressBar is descriptive exact-behavior recovery for a generic horizontal progress component. The implementation is feature-agnostic even though exact v308 currently has one live consumer in TradingPostListingPanel. Confidence is 0.999."
+      "note": "ThinProgressBar is the corrected exact RuneLite source name. R166 previously used descriptive ProgressBar before the wider upstream UI source audit exposed both RuneLite ProgressBar and ThinProgressBar as distinct classes. Confidence remains 0.999."
     }
   ],
   "unresolved": []
