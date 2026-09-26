@@ -384,8 +384,13 @@ def _load_classes(readable_jar: Path) -> dict[str, dict[str, Any]]:
                 )
             classes[parsed.name] = {
                 "name": parsed.name,
+                "access": parsed.access,
+                "attributes": list(parsed.attributes),
                 "super_name": parsed.super_name,
                 "interfaces": list(parsed.interfaces),
+                "inner_outer_name": parsed.inner_outer_name,
+                "inner_simple_name": parsed.inner_simple_name,
+                "enclosing_class_name": parsed.enclosing_class_name,
                 "fields": [
                     {
                         "name": str(field.get("name", "")),
