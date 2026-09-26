@@ -172,6 +172,51 @@ class JavacVariableTriageTests(unittest.TestCase):
                 2,
             )
 
+    def test_triage_id_uses_stable_frontier_not_raw_report_id(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source_root, source, jar = self._fixture(root)
+            raw = (
+                f"{source / 'Own.java'}:1: error: cannot find symbol\n"
+                "  symbol:   variable ownSecretField\n"
+                "  location: class Own\n"
+            )
+
+            first_diag = classify_javac_diagnostics(
+                raw,
+                include_identifiers=True,
+            )
+            second_diag = classify_javac_diagnostics(
+                raw + "\n",
+                include_identifiers=True,
+            )
+
+            self.assertNotEqual(
+                first_diag["report_id"],
+                second_diag["report_id"],
+            )
+            self.assertEqual(
+                first_diag["frontier_id"],
+                second_diag["frontier_id"],
+            )
+
+            first = analyze_unresolved_variables(
+                first_diag,
+                jar,
+                source_root,
+            )
+            second = analyze_unresolved_variables(
+                second_diag,
+                jar,
+                source_root,
+            )
+
+            self.assertEqual(first["report_id"], second["report_id"])
+            self.assertEqual(
+                first["diagnostic_frontier_id"],
+                second["diagnostic_frontier_id"],
+            )
+
     def test_requires_identifier_opt_in_diagnostic_report(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
