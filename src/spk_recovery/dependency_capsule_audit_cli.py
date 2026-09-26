@@ -78,6 +78,38 @@ def main(argv: list[str] | None = None) -> int:
         )
     )
     print(
+        "source_name_classifications="
+        + json.dumps(
+            summary["source_name_classifications"],
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    print(
+        "source_name_failure_shapes="
+        + json.dumps(
+            summary["source_name_failure_shapes"],
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    print(
+        "source_name_failure_roles="
+        + json.dumps(
+            summary["source_name_failure_roles"],
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    print(
+        "source_spellable_count="
+        f"{summary['source_spellable_count']}"
+    )
+    print(
+        "source_unspellable_count="
+        f"{summary['source_unspellable_count']}"
+    )
+    print(
         "capsule_release_classifications="
         + json.dumps(
             summary["capsule_release_classifications"],
