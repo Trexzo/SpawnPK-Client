@@ -567,6 +567,14 @@ class CleanRebuildTests(unittest.TestCase):
                     "input_sha256"
                 ],
             )
+            self.assertEqual(
+                first["compiler"]["diagnostic_classification"][
+                    "frontier_id"
+                ],
+                second["compiler"]["diagnostic_classification"][
+                    "frontier_id"
+                ],
+            )
 
     def test_old_fallback_manifest_without_project_prefixes_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
