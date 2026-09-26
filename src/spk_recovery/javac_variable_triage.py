@@ -239,6 +239,47 @@ def _field_matches(
     return "hierarchy_exact_field_ambiguous", inherited
 
 
+def _frontier_id_from_report(
+    diagnostic_report: dict[str, Any],
+) -> str:
+    diagnostics = diagnostic_report.get("diagnostics")
+    if not isinstance(diagnostics, list):
+        raise JavacVariableTriageError(
+            "javac diagnostic report lacks diagnostic rows"
+        )
+
+    public_rows = []
+    for row in diagnostics:
+        if not isinstance(row, dict):
+            raise JavacVariableTriageError(
+                "javac diagnostic row is not an object"
+            )
+        try:
+            public_rows.append(
+                {
+                    "category": row["category"],
+                    "symbol_kind": row["symbol_kind"],
+                    "symbol_shape": row["symbol_shape"],
+                    "location_kind": row["location_kind"],
+                    "shape_cluster_id": row["shape_cluster_id"],
+                    "cluster_id": row["cluster_id"],
+                    "symbol_id": row["symbol_id"],
+                    "location_id": row["location_id"],
+                    "file_id": row["file_id"],
+                    "line": row["line"],
+                }
+            )
+        except KeyError as exc:
+            raise JavacVariableTriageError(
+                "javac diagnostic row lacks public frontier fields"
+            ) from exc
+
+    return (
+        "JAVACFRONTIER_"
+        + _stable_digest({"rows": public_rows})[:20].upper()
+    )
+
+
 def analyze_unresolved_variables(
     diagnostic_report: dict[str, Any],
     readable_jar: Path,
@@ -260,13 +301,20 @@ def analyze_unresolved_variables(
             "--include-identifiers"
         )
 
+    derived_frontier_id = _frontier_id_from_report(
+        diagnostic_report
+    )
     frontier_id = diagnostic_report.get("frontier_id")
-    if (
+    frontier_derived_from_legacy_report = frontier_id is None
+    if frontier_id is None:
+        frontier_id = derived_frontier_id
+    elif (
         not isinstance(frontier_id, str)
         or not frontier_id.startswith("JAVACFRONTIER_")
+        or frontier_id != derived_frontier_id
     ):
         raise JavacVariableTriageError(
-            "javac diagnostic report lacks stable frontier authority"
+            "javac diagnostic frontier authority is invalid"
         )
 
     readable_jar = readable_jar.resolve()
@@ -446,6 +494,9 @@ def analyze_unresolved_variables(
         ),
         "diagnostic_report_id": diagnostic_report.get("report_id"),
         "diagnostic_frontier_id": frontier_id,
+        "diagnostic_frontier_derived_from_legacy_report": (
+            frontier_derived_from_legacy_report
+        ),
         "diagnostic_input_sha256": diagnostic_report.get(
             "input_sha256"
         ),
