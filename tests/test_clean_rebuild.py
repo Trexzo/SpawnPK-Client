@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path
 import shutil
 import subprocess
@@ -392,6 +393,78 @@ class CleanRebuildTests(unittest.TestCase):
             self.assertNotIn("missingValue", serialized)
             self.assertNotIn(str(target), serialized)
 
+    def test_private_diagnostic_report_is_explicit_and_public_stays_redacted(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                source,
+                readable,
+                recovered,
+                readiness,
+                readable_manifest,
+                authority,
+            ) = self._fixture(root)
+
+            target = source / "rs" / "A.java"
+            sentinel = "missingPrivateSentinel"
+            target.write_text(
+                "package rs; public class A { "
+                f"public int value() {{ return {sentinel}; }} }}\n",
+                encoding="utf-8",
+            )
+            tree_sha = _tree_sha(source)
+            recovered["source_tree_sha256"] = tree_sha
+            readiness["source_tree_sha256"] = tree_sha
+
+            private_out = root / "private-javac.json"
+            report = clean_project_rebuild(
+                recovered,
+                readiness,
+                readable_manifest,
+                readable,
+                authority,
+                source,
+                out_dir=root / "out",
+                source_prefixes=["rs/"],
+                private_diagnostic_report_out=private_out,
+            )
+
+            self.assertEqual(report["status"], "compile_failed")
+            self.assertTrue(private_out.is_file())
+
+            private = json.loads(
+                private_out.read_text(encoding="utf-8")
+            )
+            public = report["compiler"][
+                "diagnostic_classification"
+            ]
+
+            self.assertTrue(private["identifiers_included"])
+            self.assertFalse(public["identifiers_included"])
+            self.assertEqual(
+                private["report_id"],
+                public["report_id"],
+            )
+            self.assertEqual(
+                private["frontier_id"],
+                public["frontier_id"],
+            )
+            self.assertIn(sentinel, str(private))
+            private_paths = [
+                row["source_path"]
+                for row in private["diagnostics"]
+                if "source_path" in row
+            ]
+            self.assertTrue(private_paths)
+            self.assertTrue(
+                any(
+                    Path(path).resolve() == target.resolve()
+                    for path in private_paths
+                )
+            )
+            self.assertNotIn(sentinel, str(public))
+            self.assertNotIn("source_path", str(public))
+
     def test_compile_failure_classification_exceeds_default_javac_error_cap(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -496,6 +569,14 @@ class CleanRebuildTests(unittest.TestCase):
                 ],
                 second["compiler"]["diagnostic_classification"][
                     "input_sha256"
+                ],
+            )
+            self.assertEqual(
+                first["compiler"]["diagnostic_classification"][
+                    "frontier_id"
+                ],
+                second["compiler"]["diagnostic_classification"][
+                    "frontier_id"
                 ],
             )
 

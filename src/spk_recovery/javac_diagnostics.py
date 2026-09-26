@@ -276,6 +276,9 @@ def classify_javac_diagnostics(
         }
         for row in rows
     ]
+    frontier_material = {
+        "rows": public_rows,
+    }
     material = {
         "input_sha256": raw_sha,
         "rows": public_rows,
@@ -284,6 +287,10 @@ def classify_javac_diagnostics(
         "schema_version": 1,
         "kind": "javac_diagnostic_classification_report",
         "report_id": "JAVACDIAG_" + _stable_digest(material)[:20].upper(),
+        "frontier_id": (
+            "JAVACFRONTIER_"
+            + _stable_digest(frontier_material)[:20].upper()
+        ),
         "input_sha256": raw_sha,
         "summary": {
             "total_errors": len(rows),
