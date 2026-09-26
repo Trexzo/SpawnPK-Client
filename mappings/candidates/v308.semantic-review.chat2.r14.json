@@ -5,7 +5,7 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 13,
-  "review_id": "SEMREVIEW_10B38C13D2C28216E473",
+  "review_id": "SEMREVIEW_327683188A4DACD87309",
   "proposals": [
     {
       "proposal_id": "SEMPROP_00D3972F3633FD449FA4",
@@ -60,6 +60,32 @@
       "note": "SearchResultPanel reflects one rendered sale-history/search result row."
     },
     {
+      "proposal_id": "SEMPROP_1E1700C884957EE6156C",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000867",
+      "owner_logical_id": "CLIENT_CLASS_000867",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/b/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_plugin_descriptor",
+          "detail": "Exact v308 plugin descriptor identifies the hidden Configuration plugin, and the class extends the plugin base, owns PluginListPanel/TopLevelConfigPanel providers, creates config_icon.png navigation, and opens configuration from overlay-menu actions."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite ConfigPlugin at 68c819924cfd6bfb4848c71f74c121109f289d5a has the same hidden Configuration descriptor, toolbar/navigation lifecycle, PluginListPanel and TopLevelConfigPanel providers, config_icon.png resource, fake RuneLite/Chat Color descriptors, and overlay-config opening flow."
+        }
+      ],
+      "note": "ConfigPlugin supersedes the earlier descriptive ConfigurationPlugin label; exact RuneLite source identity is now anchored by class role, providers, resource and overlay-config behavior. Confidence 0.999."
+    },
+    {
       "proposal_id": "SEMPROP_351E24A5B4043C9EF367",
       "target_kind": "class",
       "stable_id": "CLIENT_CLASS_000930",
@@ -84,6 +110,36 @@
         }
       ],
       "note": "Panel role is structurally exact within the Notes plugin."
+    },
+    {
+      "proposal_id": "SEMPROP_38571520B54F1A1F4C14",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000883",
+      "owner_logical_id": "CLIENT_CLASS_000883",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/b/w",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TopLevelConfigPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_top_level_panel_shape",
+          "detail": "Exact v308 extends the PluginPanel base and owns CardLayout/content state, EventBus, PluginListPanel, MaterialTabGroup/MaterialTab integration, activation state and dynamic child panel registration/removal."
+        },
+        {
+          "family": "exact_source_literals",
+          "detail": "The class owns Configuration plus config_icon_lg.png and switches among configuration/profile/plugin-hub style top-level tabs while forwarding openConfigurationPanel/openWithFilter into PluginListPanel."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite TopLevelConfigPanel at 68c819924cfd6bfb4848c71f74c121109f289d5a has the same PluginPanel/CardLayout/EventBus/MaterialTabGroup structure, Configuration tab using config_icon_lg.png, provider-backed dynamic tabs, activation forwarding and PluginListPanel open/filter methods."
+        }
+      ],
+      "note": "TopLevelConfigPanel supersedes PluginConfigurationRootPanel; exact RuneLite source identity is anchored by the full tab/card/event-bus structure and matching resource/forwarding surface. Confidence 0.999."
     },
     {
       "proposal_id": "SEMPROP_496786CD54C8FD6F0F4E",
@@ -162,32 +218,6 @@
         }
       ],
       "note": "Plugin name is exact from the runtime descriptor; English class suffix reflects its plugin-base role."
-    },
-    {
-      "proposal_id": "SEMPROP_8E1D8AF40D17E405402C",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000883",
-      "owner_logical_id": "CLIENT_CLASS_000883",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/s/b/w",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "PluginConfigurationRootPanel",
-      "confidence": 0.985,
-      "evidence": [
-        {
-          "family": "exact_structural_role",
-          "detail": "Class extends rs/ui/m, owns a CardLayout, EventBus, PluginHubPanel and dynamic child panels/providers."
-        },
-        {
-          "family": "exact_literal_role",
-          "detail": "Class carries the title \"Configuration\" and config_icon_lg.png, and registers/unregisters configuration pages."
-        }
-      ],
-      "note": "RootPanel distinguishes this multi-page container from the per-plugin PluginConfigurationPanel already reviewed in R13."
     },
     {
       "proposal_id": "SEMPROP_982D0B36402DB09512EF",
@@ -292,32 +322,6 @@
         }
       ],
       "note": "Plugin name is exact from the runtime descriptor."
-    },
-    {
-      "proposal_id": "SEMPROP_DE15B9B9C9AE04FE68DD",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000867",
-      "owner_logical_id": "CLIENT_CLASS_000867",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/s/b/g",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "ConfigurationPlugin",
-      "confidence": 0.995,
-      "evidence": [
-        {
-          "family": "exact_plugin_descriptor",
-          "detail": "Runtime plugin descriptor is a=\"Configuration\", b=\"configs\" and marks the plugin enabled/configuration-facing."
-        },
-        {
-          "family": "exact_structural_role",
-          "detail": "Class extends rs/s/a and owns providers for PluginHubPanel / configuration root UI plus config_icon.png navigation."
-        }
-      ],
-      "note": "Configuration is the exact plugin title; suffix reflects plugin-base role."
     },
     {
       "proposal_id": "SEMPROP_F1E3EF1A9F4F40680A73",

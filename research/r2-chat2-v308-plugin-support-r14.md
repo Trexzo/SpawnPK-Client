@@ -79,3 +79,17 @@ relative-time presentation and Trading Post assets.
 
 Chat 2 does not promote R14. Main/Core may accept any desired subset only through an explicit
 `semantic_acceptance_spec` bound to `SEMREVIEW_10B38C13D2C28216E473`.
+
+
+## Source-identity correction after R238
+
+A later historical-source audit of the exact same v308 configuration package supersedes two
+descriptive R14 labels without changing R14's proposal count:
+
+- `CLIENT_CLASS_000867`: `ConfigurationPlugin` -> `ConfigPlugin`
+- `CLIENT_CLASS_000883`: `PluginConfigurationRootPanel` -> `TopLevelConfigPanel`
+
+Source authority: RuneLite `68c819924cfd6bfb4848c71f74c121109f289d5a`.
+
+The corrected R14 review is `SEMREVIEW_327683188A4DACD87309`.
+The old review `SEMREVIEW_10B38C13D2C28216E473` is superseded.

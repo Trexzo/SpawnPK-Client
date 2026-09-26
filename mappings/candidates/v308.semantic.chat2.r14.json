@@ -180,19 +180,19 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "ConfigurationPlugin",
-      "confidence": 0.995,
+      "proposed_name": "ConfigPlugin",
+      "confidence": 0.999,
       "evidence": [
         {
           "family": "exact_plugin_descriptor",
-          "detail": "Runtime plugin descriptor is a=\"Configuration\", b=\"configs\" and marks the plugin enabled/configuration-facing."
+          "detail": "Exact v308 plugin descriptor identifies the hidden Configuration plugin, and the class extends the plugin base, owns PluginListPanel/TopLevelConfigPanel providers, creates config_icon.png navigation, and opens configuration from overlay-menu actions."
         },
         {
-          "family": "exact_structural_role",
-          "detail": "Class extends rs/s/a and owns providers for PluginHubPanel / configuration root UI plus config_icon.png navigation."
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite ConfigPlugin at 68c819924cfd6bfb4848c71f74c121109f289d5a has the same hidden Configuration descriptor, toolbar/navigation lifecycle, PluginListPanel and TopLevelConfigPanel providers, config_icon.png resource, fake RuneLite/Chat Color descriptors, and overlay-config opening flow."
         }
       ],
-      "note": "Configuration is the exact plugin title; suffix reflects plugin-base role."
+      "note": "ConfigPlugin supersedes the earlier descriptive ConfigurationPlugin label; exact RuneLite source identity is now anchored by class role, providers, resource and overlay-config behavior. Confidence 0.999."
     },
     {
       "schema_version": 1,
@@ -207,19 +207,23 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "PluginConfigurationRootPanel",
-      "confidence": 0.985,
+      "proposed_name": "TopLevelConfigPanel",
+      "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_structural_role",
-          "detail": "Class extends rs/ui/m, owns a CardLayout, EventBus, PluginHubPanel and dynamic child panels/providers."
+          "family": "exact_top_level_panel_shape",
+          "detail": "Exact v308 extends the PluginPanel base and owns CardLayout/content state, EventBus, PluginListPanel, MaterialTabGroup/MaterialTab integration, activation state and dynamic child panel registration/removal."
         },
         {
-          "family": "exact_literal_role",
-          "detail": "Class carries the title \"Configuration\" and config_icon_lg.png, and registers/unregisters configuration pages."
+          "family": "exact_source_literals",
+          "detail": "The class owns Configuration plus config_icon_lg.png and switches among configuration/profile/plugin-hub style top-level tabs while forwarding openConfigurationPanel/openWithFilter into PluginListPanel."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite TopLevelConfigPanel at 68c819924cfd6bfb4848c71f74c121109f289d5a has the same PluginPanel/CardLayout/EventBus/MaterialTabGroup structure, Configuration tab using config_icon_lg.png, provider-backed dynamic tabs, activation forwarding and PluginListPanel open/filter methods."
         }
       ],
-      "note": "RootPanel distinguishes this multi-page container from the per-plugin PluginConfigurationPanel already reviewed in R13."
+      "note": "TopLevelConfigPanel supersedes PluginConfigurationRootPanel; exact RuneLite source identity is anchored by the full tab/card/event-bus structure and matching resource/forwarding surface. Confidence 0.999."
     },
     {
       "schema_version": 1,

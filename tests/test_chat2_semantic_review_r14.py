@@ -115,7 +115,7 @@ class Chat2SemanticReviewR14Tests(unittest.TestCase):
         self.assertEqual(actual["unresolved"], [])
         self.assertEqual(
             actual["review_id"],
-            "SEMREVIEW_10B38C13D2C28216E473",
+            "SEMREVIEW_327683188A4DACD87309",
         )
         self.assertEqual(actual, expected)
 
@@ -130,8 +130,8 @@ class Chat2SemanticReviewR14Tests(unittest.TestCase):
         }
 
         expected = {
-            "ConfigurationPlugin": "CLIENT_CLASS_000867",
-            "PluginConfigurationRootPanel": "CLIENT_CLASS_000883",
+            "ConfigPlugin": "CLIENT_CLASS_000867",
+            "TopLevelConfigPanel": "CLIENT_CLASS_000883",
             "IntegerConfigFormatter": "CLIENT_CLASS_000884",
             "LoadoutsPlugin": "CLIENT_CLASS_000925",
             "NotesConfig": "CLIENT_CLASS_000929",
