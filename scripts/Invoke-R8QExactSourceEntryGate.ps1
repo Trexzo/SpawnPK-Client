@@ -119,5 +119,5 @@ Write-Host ""
 Write-Host "PUBLIC_AUDIT=$Out"
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Green
-Write-Host " R8Q EXACT SOURCE-ENTRY GATE — PASS" -ForegroundColor Green
+Write-Host " R8Q EXACT SOURCE-ENTRY GATE - PASS" -ForegroundColor Green
 Write-Host "============================================" -ForegroundColor Green
