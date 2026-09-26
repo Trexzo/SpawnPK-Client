@@ -111,7 +111,7 @@ class Chat2SemanticReviewR4Tests(unittest.TestCase):
         self.assertEqual(actual["unresolved"], [])
         self.assertEqual(
             actual["review_id"],
-            "SEMREVIEW_B5D3292DF13F6740DF26",
+            "SEMREVIEW_DE8D18FF905B89D02488",
         )
         self.assertEqual(actual, expected)
 
@@ -138,7 +138,7 @@ class Chat2SemanticReviewR4Tests(unittest.TestCase):
             "CLIENT_CLASS_000944",
         )
         self.assertEqual(
-            by_name["TileIndicatorConfig"]["stable_id"],
+            by_name["TileIndicatorsConfig"]["stable_id"],
             "CLIENT_CLASS_000958",
         )
 

@@ -21,7 +21,7 @@ Tile Indicators plugin package.
 
 ## Exact render surface
 
-R4 already recovered `TileIndicatorConfig`; R10 recovered `TileIndicatorsPlugin`.
+R4 already recovered `TileIndicatorsConfig`; R10 recovered `TileIndicatorsPlugin`.
 
 The remaining live class stores only that config and renders exactly the three option groups
 named by it:

@@ -5,7 +5,7 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 9,
-  "review_id": "SEMREVIEW_B5D3292DF13F6740DF26",
+  "review_id": "SEMREVIEW_DE8D18FF905B89D02488",
   "proposals": [
     {
       "proposal_id": "SEMPROP_3C7AC1BBE22E12C38783",
@@ -126,28 +126,6 @@
       "note": "Self-identifying remapping configuration role."
     },
     {
-      "proposal_id": "SEMPROP_619203A885EDE3BCB7EF",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000958",
-      "owner_logical_id": "CLIENT_CLASS_000958",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/s/r/a",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "TileIndicatorConfig",
-      "confidence": 0.985,
-      "evidence": [
-        {
-          "family": "exact_literal_role",
-          "detail": "Exact option groups are Current Tile, Destination Tile and Hovered Tile with highlight/fill colors and border widths."
-        }
-      ],
-      "note": "Exact tile-indicator configuration role."
-    },
-    {
       "proposal_id": "SEMPROP_BD1774D5AEA85BC95A94",
       "target_kind": "class",
       "stable_id": "CLIENT_CLASS_000918",
@@ -168,6 +146,32 @@
         }
       ],
       "note": "Name reflects the shared status/timer/counter infobox configuration surface."
+    },
+    {
+      "proposal_id": "SEMPROP_D1E1E9B3F488DFF79074",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000958",
+      "owner_logical_id": "CLIENT_CLASS_000958",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/r/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TileIndicatorsConfig",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_identity",
+          "detail": "Exact v308 rs/s/r/a is the tileindicators Config for destination, hovered and current-tile sections, with the same highlight/fill/border controls consumed by TileIndicatorsOverlay."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite TileIndicatorsConfig at 68c819924cfd6bfb4848c71f74c121109f289d5a has the same three configuration sections and matching destination/hovered/current tile settings; the plural source identity is preserved by the v308 fork."
+        }
+      ],
+      "note": "TileIndicatorsConfig supersedes the descriptive singular TileIndicatorConfig label; exact config surface and historical RuneLite source fix the source name. Confidence 0.999."
     },
     {
       "proposal_id": "SEMPROP_D801C60285CA54754F93",

@@ -8,6 +8,6 @@ Historical RuneLite source at `68c819924cfd6bfb4848c71f74c121109f289d5a`, plus t
 
 - `rs/s/o/d` / `CLIENT_CLASS_000944`: `NpcHighlightConfig` -> `NpcIndicatorsConfig`
 
-R9 already had the source-correct runtime identity `NpcIndicatorsPlugin`; its pairing evidence is updated to reference `NpcIndicatorsConfig`. Because R9's proposal/name/confidence are unchanged, its review ID remains `SEMREVIEW_45033AF6496AE782988D`.
+R9 already had the source-correct runtime identity `NpcIndicatorsPlugin`; its pairing evidence is updated to reference `NpcIndicatorsConfig`. The NPC Indicators proposal itself is unchanged; after later source corrections elsewhere in R9, the current R9 review is `SEMREVIEW_F015AA6B979CF43ECBE6`.
 
-The corrected R4 review is `SEMREVIEW_B5D3292DF13F6740DF26`. R4 proposal count remains **9**. No semantic acceptance is performed.
+The corrected R4 review is `SEMREVIEW_DE8D18FF905B89D02488`. R4 proposal count remains **9**. No semantic acceptance is performed.

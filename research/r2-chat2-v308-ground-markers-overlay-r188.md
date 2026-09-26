@@ -23,8 +23,8 @@ the reviewed Ground Markers plugin.
 
 The class extends the shared overlay base and stores only:
 
-- reviewed `GroundMarkersConfig`;
-- reviewed `GroundMarkersPlugin`.
+- reviewed `GroundMarkerConfig`;
+- reviewed `GroundMarkerPlugin`.
 
 Its render method requests the plugin's live `ColorTileMarker` collection, then for each
 marker:

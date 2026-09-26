@@ -164,15 +164,19 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "TileIndicatorConfig",
-      "confidence": 0.985,
+      "proposed_name": "TileIndicatorsConfig",
+      "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_literal_role",
-          "detail": "Exact option groups are Current Tile, Destination Tile and Hovered Tile with highlight/fill colors and border widths."
+          "family": "exact_config_identity",
+          "detail": "Exact v308 rs/s/r/a is the tileindicators Config for destination, hovered and current-tile sections, with the same highlight/fill/border controls consumed by TileIndicatorsOverlay."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite TileIndicatorsConfig at 68c819924cfd6bfb4848c71f74c121109f289d5a has the same three configuration sections and matching destination/hovered/current tile settings; the plural source identity is preserved by the v308 fork."
         }
       ],
-      "note": "Exact tile-indicator configuration role."
+      "note": "TileIndicatorsConfig supersedes the descriptive singular TileIndicatorConfig label; exact config surface and historical RuneLite source fix the source name. Confidence 0.999."
     },
     {
       "schema_version": 1,

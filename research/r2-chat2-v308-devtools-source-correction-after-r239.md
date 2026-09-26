@@ -12,7 +12,7 @@ Historical RuneLite source at `68c819924cfd6bfb4848c71f74c121109f289d5a` resolve
 Exact v308 anchors the correction through the `devtools` config group, Developer Tools plugin descriptor, config/plugin pairing, client-toolbar lifecycle, `devtools_icon.png`, and developer-overlay registration.
 
 - intermediate corrected R4 review: `SEMREVIEW_CAD36DBCFCA2573C4FD7`
-- current corrected R4 review after the later NPC Indicators source correction: `SEMREVIEW_B5D3292DF13F6740DF26`
+- current corrected R4 review after the later NPC Indicators source correction: `SEMREVIEW_DE8D18FF905B89D02488`
 - corrected R10 review: `SEMREVIEW_8ED0E0C3CD22F26B35F6`
 
 No semantic acceptance is performed.

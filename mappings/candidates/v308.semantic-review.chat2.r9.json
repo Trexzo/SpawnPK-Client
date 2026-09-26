@@ -5,7 +5,7 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 9,
-  "review_id": "SEMREVIEW_45033AF6496AE782988D",
+  "review_id": "SEMREVIEW_F015AA6B979CF43ECBE6",
   "proposals": [
     {
       "proposal_id": "SEMPROP_03BC3615390C88B5E8DC",
@@ -34,7 +34,7 @@
       "note": "Name follows the exact plugin title."
     },
     {
-      "proposal_id": "SEMPROP_0C25FF8775CD6AE2C224",
+      "proposal_id": "SEMPROP_2ABE082266CA0FC1631B",
       "target_kind": "class",
       "stable_id": "CLIENT_CLASS_000910",
       "owner_logical_id": "CLIENT_CLASS_000910",
@@ -45,41 +45,19 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "GroundMarkersPlugin",
-      "confidence": 0.995,
+      "proposed_name": "GroundMarkerPlugin",
+      "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_literal_role",
-          "detail": "Exact strings include Ground Markers, Shift-key tile marking, Unmark, Label, Reset all, Tile label and Tile marker color."
+          "family": "exact_plugin_identity",
+          "detail": "Exact v308 rs/s/f/d owns the Ground Markers plugin lifecycle, groundMarker persistence, Shift-key tile mark/unmark/label/color actions and GroundMarkerConfig pairing."
         },
         {
-          "family": "exact_pairing",
-          "detail": "Class directly references rs/s/f/b GroundMarkersConfig."
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite GroundMarkerPlugin at 68c819924cfd6bfb4848c71f74c121109f289d5a has the same Ground Markers descriptor, groundMarker persistence, Shift-key tile actions, config pairing and marker reload lifecycle."
         }
       ],
-      "note": "Ground-markers runtime/plugin role."
-    },
-    {
-      "proposal_id": "SEMPROP_0DB85F9B1BA99F15B195",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000903",
-      "owner_logical_id": "CLIENT_CLASS_000903",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/s/e/d",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "GpuConfig",
-      "confidence": 0.995,
-      "evidence": [
-        {
-          "family": "exact_literal_role",
-          "detail": "Exact options include GPU enablement, Anti Aliasing, Anisotropic Filtering, Colorblindness Correction, Smooth banding, Stretched Mode, UI scaling and Vsync Mode."
-        }
-      ],
-      "note": "GPU/stretched-mode configuration role is explicit from option text."
+      "note": "GroundMarkerPlugin supersedes the descriptive plural GroundMarkersPlugin label; historical RuneLite provenance fixes the source identity. Confidence 0.999."
     },
     {
       "proposal_id": "SEMPROP_58AF0A206F7EA87B06E6",
@@ -132,6 +110,32 @@
         }
       ],
       "note": "Notification-alert configuration role is explicit from options and runtime pairing."
+    },
+    {
+      "proposal_id": "SEMPROP_8E7E61F95975D70AFF58",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000908",
+      "owner_logical_id": "CLIENT_CLASS_000908",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/f/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GroundMarkerConfig",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_identity",
+          "detail": "Exact v308 rs/s/f/b is the groundMarker Config consumed by rs/s/f/d and exposes marker color, minimap drawing, import/export, border width and fill opacity."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite GroundMarkerConfig at 68c819924cfd6bfb4848c71f74c121109f289d5a has the same groundMarker group and matching marker-color/minimap/import-export/border/fill surface."
+        }
+      ],
+      "note": "GroundMarkerConfig supersedes the descriptive plural GroundMarkersConfig label; exact config group/surface and historical RuneLite source fix the source identity. Confidence 0.999."
     },
     {
       "proposal_id": "SEMPROP_95C5347B7EF380DE6664",
@@ -208,30 +212,30 @@
       "note": "Desktop settings-panel role is explicit from rendered labels."
     },
     {
-      "proposal_id": "SEMPROP_E10A8B3459A06395BA7B",
+      "proposal_id": "SEMPROP_E09294331580AC97197C",
       "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000908",
-      "owner_logical_id": "CLIENT_CLASS_000908",
+      "stable_id": "CLIENT_CLASS_000903",
+      "owner_logical_id": "CLIENT_CLASS_000903",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "source_coordinate": {
-        "owner": "rs/s/f/b",
+        "owner": "rs/s/e/d",
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "GroundMarkersConfig",
-      "confidence": 0.995,
+      "proposed_name": "GpuPluginConfig",
+      "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_literal_role",
-          "detail": "Exact options include marked tile color/border/fill opacity, Draw tiles on minimap, and Import/Export/Clear world-map options."
+          "family": "exact_config_identity",
+          "detail": "Exact v308 rs/s/e/d is ConfigGroup gpu and exposes GPU enablement, smooth banding, anti-aliasing, anisotropic filtering, colorblind correction, UI scaling and Vsync controls."
         },
         {
-          "family": "exact_pairing",
-          "detail": "Runtime class rs/s/f/d directly references this config class."
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite GpuPluginConfig at 68c819924cfd6bfb4848c71f74c121109f289d5a is the gpu Config paired with GpuPlugin and shares the smooth-banding, anti-aliasing, anisotropic, colorblind, UI-scaling and Vsync configuration identity; SpawnPK carries an older/forked stretched-mode surface."
         }
       ],
-      "note": "Ground-marker configuration role."
+      "note": "GpuPluginConfig supersedes the descriptive GpuConfig label; exact gpu group plus historical RuneLite plugin-config provenance fix the source identity. Confidence 0.999."
     }
   ],
   "unresolved": []

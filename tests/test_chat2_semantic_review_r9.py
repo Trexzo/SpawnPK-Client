@@ -111,7 +111,7 @@ class Chat2SemanticReviewR9Tests(unittest.TestCase):
         self.assertEqual(actual["unresolved"], [])
         self.assertEqual(
             actual["review_id"],
-            "SEMREVIEW_45033AF6496AE782988D",
+            "SEMREVIEW_F015AA6B979CF43ECBE6",
         )
         self.assertEqual(actual, expected)
 
@@ -126,14 +126,14 @@ class Chat2SemanticReviewR9Tests(unittest.TestCase):
         }
 
         expected = {
-            "GroundMarkersConfig": "CLIENT_CLASS_000908",
-            "GroundMarkersPlugin": "CLIENT_CLASS_000910",
+            "GroundMarkerConfig": "CLIENT_CLASS_000908",
+            "GroundMarkerPlugin": "CLIENT_CLASS_000910",
             "MenuEntrySwapperConfig": "CLIENT_CLASS_000927",
             "MenuEntrySwapperPlugin": "CLIENT_CLASS_000928",
             "NotificationAlertsConfig": "CLIENT_CLASS_000935",
             "NotificationAlertsPlugin": "CLIENT_CLASS_000936",
             "NpcIndicatorsPlugin": "CLIENT_CLASS_000945",
-            "GpuConfig": "CLIENT_CLASS_000903",
+            "GpuPluginConfig": "CLIENT_CLASS_000903",
             "GpuSettingsPanel": "CLIENT_CLASS_000203",
         }
         for name, stable_id in expected.items():

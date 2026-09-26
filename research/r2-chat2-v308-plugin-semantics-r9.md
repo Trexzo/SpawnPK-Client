@@ -12,16 +12,16 @@ infrastructure. It remains a separate non-canonical class-only review batch.
 - candidate classes: **9**
 - resolved proposals: **9**
 - unresolved: **0**
-- review ID: `SEMREVIEW_45033AF6496AE782988D`
+- review ID: `SEMREVIEW_F015AA6B979CF43ECBE6`
 
 ## Candidates
 
 | Raw class | Stable ID | Candidate semantic |
 | --- | --- | --- |
 | `rs/gui/a/a` | `CLIENT_CLASS_000203` | `GpuSettingsPanel` |
-| `rs/s/e/d` | `CLIENT_CLASS_000903` | `GpuConfig` |
-| `rs/s/f/b` | `CLIENT_CLASS_000908` | `GroundMarkersConfig` |
-| `rs/s/f/d` | `CLIENT_CLASS_000910` | `GroundMarkersPlugin` |
+| `rs/s/e/d` | `CLIENT_CLASS_000903` | `GpuPluginConfig` |
+| `rs/s/f/b` | `CLIENT_CLASS_000908` | `GroundMarkerConfig` |
+| `rs/s/f/d` | `CLIENT_CLASS_000910` | `GroundMarkerPlugin` |
 | `rs/s/l/b` | `CLIENT_CLASS_000927` | `MenuEntrySwapperConfig` |
 | `rs/s/l/c` | `CLIENT_CLASS_000928` | `MenuEntrySwapperPlugin` |
 | `rs/s/n/a` | `CLIENT_CLASS_000935` | `NotificationAlertsConfig` |
@@ -54,4 +54,9 @@ This means the Plugin/Config distinction is not inferred solely from nearby pack
 ## Acceptance boundary
 
 Chat 2 does not promote R9. Main/Core may accept any subset only through an explicit
-`semantic_acceptance_spec` bound to `SEMREVIEW_45033AF6496AE782988D`.
+`semantic_acceptance_spec` bound to `SEMREVIEW_F015AA6B979CF43ECBE6`.
+
+
+## Source-identity corrections after R243
+
+Historical RuneLite source plus exact-v308 group/runtime parity fixes three earlier descriptive R9 labels: `GroundMarkerConfig`, `GroundMarkerPlugin`, and `GpuPluginConfig`. Proposal count remains **9** and no semantic acceptance is performed.
