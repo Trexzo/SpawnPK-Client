@@ -76,6 +76,101 @@ class NamespaceCollisionProofTests(unittest.TestCase):
                 report["candidates"][0]["collision_depths"],
                 [2, 3],
             )
+            self.assertEqual(
+                report["summary"][
+                    "simulated_candidate_collision_count"
+                ],
+                0,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "simulated_new_collision_node_count"
+                ],
+                0,
+            )
+            self.assertTrue(
+                report["summary"]["remap_plan_topology_safe"]
+            )
+
+    def test_nested_binary_family_is_planned_with_owner(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._jar(
+                root,
+                [
+                    "a/b",
+                    "a/b$Inner",
+                    "a/b$Inner$Deep",
+                    "a/b/c/Target",
+                ],
+            )
+            public = prove_namespace_collisions(
+                self._plan(["a/b/c/Target"]),
+                jar,
+            )
+            private = prove_namespace_collisions(
+                self._plan(["a/b/c/Target"]),
+                jar,
+                include_identifiers=True,
+            )
+
+            self.assertEqual(
+                public["summary"][
+                    "planned_colliding_class_rename_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                public["summary"][
+                    "planned_binary_class_rename_count"
+                ],
+                3,
+            )
+            self.assertEqual(
+                public["summary"][
+                    "planned_nested_binary_class_rename_count"
+                ],
+                2,
+            )
+            self.assertEqual(
+                public["collision_plan"][0][
+                    "rename_family_class_count"
+                ],
+                3,
+            )
+            self.assertEqual(
+                len(private["collision_plan"][0]["rename_family"]),
+                3,
+            )
+            self.assertTrue(
+                public["summary"]["remap_plan_topology_safe"]
+            )
+
+    def test_existing_destination_is_refused(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            owner = "a/b"
+            suffix = __import__("hashlib").sha256(
+                owner.encode("utf-8")
+            ).hexdigest()[:8]
+            destination = owner + "__spk_type_" + suffix
+            jar = self._jar(
+                root,
+                [
+                    owner,
+                    destination,
+                    "a/b/c/Target",
+                ],
+            )
+
+            with self.assertRaisesRegex(
+                Exception,
+                "rename destination already exists",
+            ):
+                prove_namespace_collisions(
+                    self._plan(["a/b/c/Target"]),
+                    jar,
+                )
 
     def test_unrelated_candidate_is_not_falsely_proven(self):
         with tempfile.TemporaryDirectory() as td:
