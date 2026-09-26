@@ -152,6 +152,22 @@ class JavacVariableTriageTests(unittest.TestCase):
                 public["summary"]["variable_diagnostic_count"],
                 5,
             )
+            self.assertEqual(
+                public["summary"][
+                    "bytecode_proven_field_diagnostic_count"
+                ],
+                3,
+            )
+            self.assertEqual(
+                public["summary"][
+                    "ambiguous_field_diagnostic_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                public["summary"]["owner_resolutions"],
+                {"source_class_location": 5},
+            )
             self.assertEqual(public["report_id"], private["report_id"])
             self.assertFalse(public["identifiers_included"])
             self.assertTrue(private["identifiers_included"])
