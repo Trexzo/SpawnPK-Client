@@ -280,18 +280,28 @@ def _classify_javac_probe(
     generated: Path,
     *,
     probe_dir: Path,
+    classpath: Path,
     internal: str,
     probe_name: str,
-) -> tuple[str, str, list[int], list[str]]:
+) -> tuple[str, str, list[int], list[str], bool]:
     diagnostic = (
         proc.stdout + proc.stderr
     ).replace("\r\n", "\n").replace("\r", "\n")
+
+    entry = internal + ".class"
+    entry_windows = internal.replace("/", "\\") + ".class"
+    target_class_loaded = (
+        entry in diagnostic
+        or entry_windows in diagnostic
+    )
 
     dotted = internal.replace("/", ".")
     simple = dotted.rsplit(".", 1)[-1]
     for old, new in (
         (str(probe_dir), "<PROBE>"),
         (probe_dir.as_posix(), "<PROBE>"),
+        (str(classpath), "<CLASSPATH>"),
+        (classpath.as_posix(), "<CLASSPATH>"),
         (dotted, "<TYPE>"),
         (internal, "<TYPE_INTERNAL>"),
         (simple, "<TYPE_SIMPLE>"),
@@ -321,7 +331,13 @@ def _classify_javac_probe(
     else:
         classification = "javac_other_failure"
 
-    return classification, diagnostic, lines, diagnostic_keys
+    return (
+        classification,
+        diagnostic,
+        lines,
+        diagnostic_keys,
+        target_class_loaded,
+    )
 
 
 def _run_javac_probe(
@@ -354,6 +370,7 @@ def _run_javac_probe(
         "UTF-8",
         "-Xlint:none",
         "-XDrawDiagnostics",
+        "-verbose",
         "-classpath",
         str(classpath),
         "-d",
@@ -387,10 +404,12 @@ def _run_javac_probe(
         diagnostic,
         lines,
         diagnostic_keys,
+        target_class_loaded,
     ) = _classify_javac_probe(
         proc,
         generated,
         probe_dir=probe_dir,
+        classpath=classpath,
         internal=internal,
         probe_name=probe_name,
     )
@@ -403,6 +422,7 @@ def _run_javac_probe(
         "error_lines": lines,
         "diagnostic_keys": diagnostic_keys,
         "source_form": source_form,
+        "target_class_loaded": target_class_loaded,
     }
 
 
@@ -623,6 +643,7 @@ def audit_dependency_capsule(
                     "error_lines": [],
                     "diagnostic_keys": [],
                     "source_form": "import_simple",
+                    "target_class_loaded": False,
                 }),
                 "capsule_default_probe": source_form_probes.get(
                     "import_simple",
@@ -634,6 +655,7 @@ def audit_dependency_capsule(
                     "error_lines": [],
                     "diagnostic_keys": [],
                     "source_form": "import_simple",
+                    "target_class_loaded": False,
                 }),
                 "readable_release_probe": source_form_probes.get(
                     "import_simple",
@@ -645,6 +667,7 @@ def audit_dependency_capsule(
                     "error_lines": [],
                     "diagnostic_keys": [],
                     "source_form": "import_simple",
+                    "target_class_loaded": False,
                 }),
                 "javap_probe": javap_probe,
             }
@@ -762,6 +785,32 @@ def audit_dependency_capsule(
                 for key in probe.get("diagnostic_keys", [])
             )
 
+    source_form_target_loaded_counts = {
+        source_form: {
+            channel: sum(
+                1
+                for row in rows
+                if row["source_form_probes"].get(
+                    source_form,
+                    {},
+                ).get(
+                    channel,
+                    {},
+                ).get("target_class_loaded") is True
+            )
+            for channel in (
+                "capsule_release",
+                "capsule_default",
+                "readable_release",
+            )
+        }
+        for source_form in (
+            "import_simple",
+            "qualified_type",
+            "same_package_simple",
+        )
+    }
+
     public_rows = [
         {
             key: row[key]
@@ -874,6 +923,9 @@ def audit_dependency_capsule(
                     source_form_diagnostic_keys.items()
                 )
             },
+            "source_form_target_loaded_counts": (
+                source_form_target_loaded_counts
+            ),
             "capsule_release_classifications": dict(
                 sorted(capsule_release_classifications.items())
             ),
