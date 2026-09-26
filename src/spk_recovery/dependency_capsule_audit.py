@@ -317,7 +317,19 @@ def _run_javac_probe(
         stderr=subprocess.PIPE,
         text=True,
     )
-    generated = out / (probe_name + ".class")
+    if (
+        source_form == "same_package_simple"
+        and "/" in internal
+    ):
+        package_parts = internal.split("/")[:-1]
+        generated = (
+            out
+            / Path(*package_parts)
+            / (probe_name + ".class")
+        )
+    else:
+        generated = out / (probe_name + ".class")
+
     (
         classification,
         diagnostic,
