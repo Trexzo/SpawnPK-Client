@@ -1,0 +1,76 @@
+{
+  "canonical": false,
+  "kind": "semantic_review_set",
+  "proposal_count": 2,
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_28C52FE1672008DE0951",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000424",
+      "owner_logical_id": "CLIENT_CLASS_000424",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/e/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ExperienceDropEntry",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_entry_state",
+          "detail": "Each exact-v308 rs/l/e/d instance stores one accumulated numeric amount, a List<Integer> of contributing skill ids, screen offset/alpha state and one fade-phase flag."
+        },
+        {
+          "family": "exact_manager_ownership",
+          "detail": "The class is constructed and consumed only by rs/l/e/e, whose renderer maps the stored skill ids to the exact skills/<id> icon set and renders the accumulated amount with a leading '+'."
+        },
+        {
+          "family": "exact_combination_behavior",
+          "detail": "Rapid compatible updates merge their amount into the most recent entry and append previously absent skill ids, proving that the list represents skills contributing to one combined experience drop."
+        }
+      ],
+      "note": "ExperienceDropEntry is descriptive exact-behavior recovery for one animated/combined skill experience drop. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_6E63DB4F7337B4AE56AC",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000425",
+      "owner_logical_id": "CLIENT_CLASS_000425",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/e/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ExperienceDropManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_skill_icon_surface",
+          "detail": "The constructor loads exactly 23 13x13 sprites from skills/<id>, and every active drop renders the sprites indexed by that drop's stored skill-id list."
+        },
+        {
+          "family": "exact_amount_rendering",
+          "detail": "The update/render pass formats every drop as '+' plus its accumulated amount (using the client numeric formatter for larger values), then renders that amount alongside its skill icons."
+        },
+        {
+          "family": "exact_queue_animation_lifecycle",
+          "detail": "The class owns active and queued ExperienceDropEntry lists, combines compatible updates arriving within 650 ms, waits for vertical spacing before promotion, animates/fades entries and removes expired drops."
+        },
+        {
+          "family": "exact_client_skill_update_call",
+          "detail": "The live Client skill-update path invokes rs/l/e/e.a(skillIndex, newValue-oldValue) only for a positive delta, directly tying this manager to per-skill experience gains."
+        }
+      ],
+      "note": "ExperienceDropManager is descriptive exact-behavior recovery for the complete 23-skill gain-drop queue/render lifecycle. Confidence is 0.999."
+    }
+  ],
+  "review_id": "SEMREVIEW_CBA61CC93BAF1D34A929",
+  "schema_version": 1,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "unresolved": []
+}
