@@ -143,6 +143,20 @@ class DependencyCapsuleAuditTests(unittest.TestCase):
                 1,
             )
             self.assertEqual(
+                report["summary"]["package_depths"],
+                {"1": 1},
+            )
+            self.assertEqual(
+                report["summary"]["default_package_count"],
+                0,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "class_signature_attribute_count"
+                ],
+                0,
+            )
+            self.assertEqual(
                 report["summary"][
                     "capsule_release_resolved_count"
                 ],
@@ -271,6 +285,15 @@ class DependencyCapsuleAuditTests(unittest.TestCase):
                 release=9,
             )
             summary = report["summary"]
+
+            self.assertEqual(
+                summary["package_depths"],
+                {"0": 1},
+            )
+            self.assertEqual(
+                summary["default_package_count"],
+                1,
+            )
 
             self.assertEqual(
                 summary["source_form_classifications"][
