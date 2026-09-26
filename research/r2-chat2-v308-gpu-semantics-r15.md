@@ -12,7 +12,7 @@ Main/Core's accepted R2 semantic authority or prior R3-R14 review batches.
 - candidate classes: **5**
 - resolved proposals: **5**
 - unresolved: **0**
-- review ID: `SEMREVIEW_ED182A9515E49F3482BC`
+- review ID: `SEMREVIEW_9F64F82DCFBF8C7A97EF`
 - field/method proposals: **0**
 
 ## GPU plugin
@@ -31,7 +31,7 @@ The live `GpuConfig` interface provides exact return-type bindings:
 
 - `antiAliasingMode` / `Anti Aliasing` -> `rs/k/a/a` -> `AntiAliasingMode`
 - `colorBlindMode` / `Colorblindness Correction` -> `rs/k/a/b` -> `ColorBlindMode`
-- `vsyncMode` / `Vsync Mode` -> `rs/k/a/c` -> `VsyncMode`
+- `vsyncMode` / `Vsync Mode` -> `rs/k/a/c` -> `SyncMode`
 - `uiScalingMode` / `UI scaling mode` -> `rs/s/e/e` -> `UiScalingMode`
 
 Exact enum constants further corroborate the roles:
@@ -39,12 +39,12 @@ Exact enum constants further corroborate the roles:
 - AntiAliasingMode: `DISABLED`, `MSAA_2`, `MSAA_4`, `MSAA_8`, `MSAA_16`
 - ColorBlindMode: `NONE`, `PROTANOPE`, `DEUTERANOPE`, `TRITANOPE`
 - UiScalingMode: `NEAREST`, `LINEAR`, `CATMULL_ROM`, `MITCHELL`
-- VsyncMode includes `ADAPTIVE` and is bound directly by the config method.
+- SyncMode: `OFF`, `ON`, `ADAPTIVE`; RuneLite source preserves the same `GpuPluginConfig.SyncMode` identity.
 
-The duplicate-looking `rs/s/e/a` colorblind enum is deliberately not proposed here because
+R15 now uses the stronger upstream-exact `SyncMode` source identity rather than the earlier descriptive `VsyncMode` label.\n\nThe duplicate-looking `rs/s/e/a` colorblind enum is deliberately not proposed here because
 the live `GpuConfig` return type for `colorBlindMode` is `rs/k/a/b`, not that class.
 
 ## Acceptance boundary
 
 Chat 2 does not promote R15. Main/Core may accept any desired subset only through an explicit
-`semantic_acceptance_spec` bound to `SEMREVIEW_ED182A9515E49F3482BC`.
+`semantic_acceptance_spec` bound to `SEMREVIEW_9F64F82DCFBF8C7A97EF`.

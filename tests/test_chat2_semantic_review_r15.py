@@ -107,7 +107,7 @@ class Chat2SemanticReviewR15Tests(unittest.TestCase):
         self.assertEqual(actual["unresolved"], [])
         self.assertEqual(
             actual["review_id"],
-            "SEMREVIEW_ED182A9515E49F3482BC",
+            "SEMREVIEW_9F64F82DCFBF8C7A97EF",
         )
         self.assertEqual(actual, expected)
 
@@ -126,7 +126,7 @@ class Chat2SemanticReviewR15Tests(unittest.TestCase):
                 "GpuPlugin": "CLIENT_CLASS_000902",
                 "AntiAliasingMode": "CLIENT_CLASS_000315",
                 "ColorBlindMode": "CLIENT_CLASS_000316",
-                "VsyncMode": "CLIENT_CLASS_000317",
+                "SyncMode": "CLIENT_CLASS_000317",
                 "UiScalingMode": "CLIENT_CLASS_000905",
             },
         )

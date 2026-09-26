@@ -42,9 +42,6 @@ Therefore the stronger historical/source-name candidate for
 
 ## Boundary
 
-This is research/correction evidence only. Chat 2 does not mutate R15's historical review,
-does not create a duplicate semantic review for the same stable ID, and does not promote
-the corrected name canonically.
+This correction is now folded directly into R15 on the Chat 2 branch: `CLIENT_CLASS_000317` remains the same stable owner, while its reviewed semantic name is `SyncMode`. The corrected R15 review ID is `SEMREVIEW_9F64F82DCFBF8C7A97EF`.
 
-Main/Core can use this note if/when reviewing R15 acceptance or a future explicit semantic
-correction mechanism.
+No duplicate semantic batch was created and Chat 2 still performs no canonical acceptance.

@@ -99,7 +99,7 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "VsyncMode",
+      "proposed_name": "SyncMode",
       "confidence": 0.999,
       "evidence": [
         {
@@ -108,10 +108,14 @@
         },
         {
           "family": "exact_enum_role",
-          "detail": "Enum includes ADAPTIVE plus the other synchronization modes used by GPU configuration."
+          "detail": "Exact v308 enum constants are OFF, ON and ADAPTIVE."
+        },
+        {
+          "family": "upstream_runelite_source_identity",
+          "detail": "RuneLite GpuPluginConfig preserves this exact OFF/ON/ADAPTIVE enum under the source name SyncMode, and vsyncMode() returns that type."
         }
       ],
-      "note": "Name follows the exact GpuConfig binding."
+      "note": "Source identity corrected from the earlier descriptive VsyncMode label to RuneLite-exact SyncMode."
     },
     {
       "schema_version": 1,

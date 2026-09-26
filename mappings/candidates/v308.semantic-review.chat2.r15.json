@@ -5,8 +5,38 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 5,
-  "review_id": "SEMREVIEW_ED182A9515E49F3482BC",
+  "review_id": "SEMREVIEW_9F64F82DCFBF8C7A97EF",
   "proposals": [
+    {
+      "proposal_id": "SEMPROP_35C789B8B2F6DC35CA17",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000317",
+      "owner_logical_id": "CLIENT_CLASS_000317",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/k/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SyncMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_binding",
+          "detail": "GpuConfig method annotated key vsyncMode / title Vsync Mode returns this enum type."
+        },
+        {
+          "family": "exact_enum_role",
+          "detail": "Exact v308 enum constants are OFF, ON and ADAPTIVE."
+        },
+        {
+          "family": "upstream_runelite_source_identity",
+          "detail": "RuneLite GpuPluginConfig preserves this exact OFF/ON/ADAPTIVE enum under the source name SyncMode, and vsyncMode() returns that type."
+        }
+      ],
+      "note": "Source identity corrected from the earlier descriptive VsyncMode label to RuneLite-exact SyncMode."
+    },
     {
       "proposal_id": "SEMPROP_41B34742DBF70527DB5F",
       "target_kind": "class",
@@ -32,32 +62,6 @@
         }
       ],
       "note": "Plugin role is exact from hierarchy and runtime descriptor/config ownership."
-    },
-    {
-      "proposal_id": "SEMPROP_7BB495287DDA17000B44",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000317",
-      "owner_logical_id": "CLIENT_CLASS_000317",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/k/a/c",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "VsyncMode",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_config_binding",
-          "detail": "GpuConfig method annotated key vsyncMode / title Vsync Mode returns this enum type."
-        },
-        {
-          "family": "exact_enum_role",
-          "detail": "Enum includes ADAPTIVE plus the other synchronization modes used by GPU configuration."
-        }
-      ],
-      "note": "Name follows the exact GpuConfig binding."
     },
     {
       "proposal_id": "SEMPROP_931819A05B390EA9B786",
