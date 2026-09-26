@@ -11,21 +11,13 @@ from spk_recovery.source_name_acceptance import (
     build_source_rename_plan,
 )
 from spk_recovery.source_name_review import resolve_source_name_candidates
+from spk_recovery.source_digest import source_tree_digest
 from spk_recovery.source_rewrite import rewrite_source_workspace
 from spk_recovery.source_symbols import build_source_symbol_inventory
 
 
 def _tree_digest(root: Path) -> str:
-    files = sorted(root.rglob("*.java"))
-    h = hashlib.sha256()
-    for path in files:
-        rel = path.relative_to(root).as_posix().encode("utf-8")
-        data = path.read_bytes()
-        h.update(len(rel).to_bytes(4, "big"))
-        h.update(rel)
-        h.update(len(data).to_bytes(8, "big"))
-        h.update(data)
-    return h.hexdigest()
+    return source_tree_digest(root)[0]
 
 
 def _class_lineage():
@@ -176,7 +168,7 @@ public class A {
             "decompiler_sha256": "1" * 64,
             "source_tree_sha256": digest,
             "java_file_count": 1,
-            "source_bytes": java.stat().st_size,
+            "source_bytes": source_tree_digest(source_root)[2],
             "source_directory": "src",
         }
         inventory = build_source_symbol_inventory(

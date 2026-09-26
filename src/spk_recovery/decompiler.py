@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -18,6 +19,45 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: f.read(1024 * 1024), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def _dedupe_exact_path_spellings(paths: list[Path]) -> list[Path]:
+    """Deduplicate path spellings without applying platform case folding.
+
+    pathlib.WindowsPath equality is case-insensitive.  Using a set[Path] here
+    therefore collapses distinct class files such as A.class and a.class even
+    when they live on a case-sensitive Windows directory.  Archive/JVM names
+    are case-sensitive, so preserve the exact supplied spelling instead.
+    """
+    by_exact_spelling: dict[str, Path] = {}
+    for path in paths:
+        key = str(path)
+        by_exact_spelling.setdefault(key, path)
+    return sorted(
+        by_exact_spelling.values(),
+        key=lambda path: path.as_posix(),
+    )
+
+
+def _casefold_alias_pairs(paths: list[Path]) -> list[tuple[Path, Path]]:
+    """Return case-distinct spellings that resolve to one filesystem object."""
+    groups: dict[str, list[Path]] = {}
+    for path in paths:
+        groups.setdefault(os.path.normcase(str(path)), []).append(path)
+
+    aliases: list[tuple[Path, Path]] = []
+    for group in groups.values():
+        if len(group) < 2:
+            continue
+        first = group[0]
+        for other in group[1:]:
+            try:
+                same = os.path.samefile(str(first), str(other))
+            except OSError:
+                same = False
+            if same and str(first) != str(other):
+                aliases.append((first, other))
+    return aliases
 
 
 def run_decompiler(
@@ -70,9 +110,11 @@ def run_decompiler(
             raise DecompilerError("max_command_chars must be an integer >= 1024")
         if not isinstance(max_batch_classes, int) or max_batch_classes < 1:
             raise DecompilerError("max_batch_classes must be an integer >= 1")
-        class_files = sorted(
-            {Path(path).resolve() for path in input_class_files},
-            key=lambda path: path.as_posix(),
+        class_files = _dedupe_exact_path_spellings(
+            [
+                Path(os.path.abspath(str(Path(path))))
+                for path in input_class_files
+            ]
         )
         if not class_files:
             raise DecompilerError("selective class-file input must not be empty")
@@ -81,6 +123,18 @@ def run_decompiler(
             raise DecompilerError(
                 "selective class-file input contains missing files: "
                 + repr([str(path) for path in missing[:10]])
+            )
+        aliases = _casefold_alias_pairs(class_files)
+        if aliases:
+            sample = [
+                (str(left), str(right))
+                for left, right in aliases[:5]
+            ]
+            raise DecompilerError(
+                "selective class-file inputs contain case-distinct archive "
+                "paths that collapsed to the same filesystem object; use a "
+                "case-sensitive staging directory. sample="
+                + repr(sample)
             )
 
     if out_dir.exists():

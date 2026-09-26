@@ -1,16 +1,23 @@
 from __future__ import annotations
 
 import hashlib
-from pathlib import Path
+import struct
+from pathlib import Path, PureWindowsPath
 from types import SimpleNamespace
 import tempfile
 import unittest
 from unittest.mock import patch
 import zipfile
 
-from spk_recovery.decompiler import DecompilerError, run_decompiler
+from spk_recovery.decompiler import (
+    DecompilerError,
+    _dedupe_exact_path_spellings,
+    run_decompiler,
+)
 from spk_recovery.source_workspace import (
     SourceWorkspaceError,
+    _filesystem_supports_case_distinct_names,
+    _selected_case_collision_report,
     _selection_digest,
     build_source_workspace,
 )
@@ -18,6 +25,202 @@ from spk_recovery.source_workspace import (
 
 def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _minimal_class(internal_name: str) -> bytes:
+    def utf8(value: str) -> bytes:
+        raw = value.encode("utf-8")
+        return b"\x01" + struct.pack(">H", len(raw)) + raw
+
+    cp = b"".join(
+        [
+            utf8(internal_name),
+            b"\x07\x00\x01",
+            utf8("java/lang/Object"),
+            b"\x07\x00\x03",
+        ]
+    )
+    return b"".join(
+        [
+            b"\xCA\xFE\xBA\xBE",
+            struct.pack(">HHH", 0, 52, 5),
+            cp,
+            struct.pack(
+                ">HHHHHHH",
+                0x0021,
+                2,
+                4,
+                0,
+                0,
+                0,
+                0,
+            ),
+        ]
+    )
+
+
+class CaseCollisionIdentityTests(unittest.TestCase):
+    def test_distinct_case_types_are_bound_to_exact_internal_names(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = root / "readable.jar"
+            with zipfile.ZipFile(jar, "w") as z:
+                z.writestr("rs/A.class", _minimal_class("rs/A"))
+                z.writestr("rs/a.class", _minimal_class("rs/a"))
+
+            report = _selected_case_collision_report(
+                jar,
+                ["rs/A.class", "rs/a.class"],
+            )
+
+            self.assertEqual(report["collision_group_count"], 1)
+            self.assertEqual(
+                report["classification_counts"],
+                {"distinct_case_types": 1},
+            )
+            rows = report["groups"][0]["entries"]
+            self.assertEqual(
+                [row["internal_name"] for row in rows],
+                ["rs/A", "rs/a"],
+            )
+            self.assertTrue(
+                all(row["entry_matches_internal_name"] for row in rows)
+            )
+
+    def test_exact_alias_entries_are_not_treated_as_distinct_types(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = root / "readable.jar"
+            alias = _minimal_class("rs/a")
+            with zipfile.ZipFile(jar, "w") as z:
+                z.writestr("rs/A.class", alias)
+                z.writestr("rs/a.class", alias)
+
+            report = _selected_case_collision_report(
+                jar,
+                ["rs/A.class", "rs/a.class"],
+            )
+
+            self.assertEqual(
+                report["classification_counts"],
+                {"exact_alias_entries": 1},
+            )
+
+    def test_distinct_case_types_detect_wrong_source_identity(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "src"
+            if not _filesystem_supports_case_distinct_names(source):
+                self.skipTest(
+                    "test filesystem cannot represent case-distinct names"
+                )
+
+            jar = root / "readable.jar"
+            with zipfile.ZipFile(jar, "w") as z:
+                z.writestr("rs/A.class", _minimal_class("rs/A"))
+                z.writestr("rs/a.class", _minimal_class("rs/a"))
+
+            (source / "rs").mkdir(parents=True, exist_ok=True)
+            duplicated = b"package rs; public class a {}\n"
+            (source / "rs" / "A.java").write_bytes(duplicated)
+            (source / "rs" / "a.java").write_bytes(duplicated)
+
+            report = _selected_case_collision_report(
+                jar,
+                ["rs/A.class", "rs/a.class"],
+                source,
+            )
+
+            self.assertEqual(
+                report["classification_counts"],
+                {"distinct_case_types_source_identity_mismatch": 1},
+            )
+
+
+    def test_distinct_case_types_require_exact_source_declarations(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "src"
+            if not _filesystem_supports_case_distinct_names(source):
+                self.skipTest(
+                    "test filesystem cannot represent case-distinct names"
+                )
+
+            jar = root / "readable.jar"
+            with zipfile.ZipFile(jar, "w") as z:
+                z.writestr("rs/A.class", _minimal_class("rs/A"))
+                z.writestr("rs/a.class", _minimal_class("rs/a"))
+
+            (source / "rs").mkdir(parents=True, exist_ok=True)
+            (source / "rs" / "A.java").write_text(
+                "package rs; public class A { int x = 1; }\n",
+                encoding="utf-8",
+            )
+            (source / "rs" / "a.java").write_text(
+                "package rs; public class a { int x = 2; }\n",
+                encoding="utf-8",
+            )
+
+            report = _selected_case_collision_report(
+                jar,
+                ["rs/A.class", "rs/a.class"],
+                source,
+                phase="raw_procyon",
+            )
+
+            self.assertEqual(
+                report["classification_counts"],
+                {
+                    "distinct_case_types_source_identity_preserved": 1
+                },
+            )
+            self.assertTrue(
+                all(
+                    row["source_identity_matches_internal_name"] is True
+                    for row in report["groups"][0]["entries"]
+                )
+            )
+
+    def test_distinct_case_types_detect_true_source_conflation(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "src"
+            if not _filesystem_supports_case_distinct_names(source):
+                self.skipTest(
+                    "test filesystem cannot represent case-distinct names"
+                )
+
+            jar = root / "readable.jar"
+            with zipfile.ZipFile(jar, "w") as z:
+                z.writestr("rs/A.class", _minimal_class("rs/A"))
+                z.writestr("rs/a.class", _minimal_class("rs/a"))
+
+            (source / "rs").mkdir(parents=True, exist_ok=True)
+            same = (
+                "package rs; "
+                "class A { int x = 1; } "
+                "class a { int x = 2; }\n"
+            )
+            (source / "rs" / "A.java").write_text(
+                same,
+                encoding="utf-8",
+            )
+            (source / "rs" / "a.java").write_text(
+                same,
+                encoding="utf-8",
+            )
+
+            report = _selected_case_collision_report(
+                jar,
+                ["rs/A.class", "rs/a.class"],
+                source,
+                phase="raw_procyon",
+            )
+
+            self.assertEqual(
+                report["classification_counts"],
+                {"distinct_case_types_source_conflated": 1},
+            )
 
 
 class ProjectScopedSourceWorkspaceTests(unittest.TestCase):
@@ -112,6 +315,97 @@ class ProjectScopedSourceWorkspaceTests(unittest.TestCase):
             self.assertEqual(result["java_file_count"], 2)
 
 
+    def test_project_only_case_collision_requires_case_sensitive_filesystem(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = root / "readable.jar"
+            with zipfile.ZipFile(jar, "w") as z:
+                z.writestr("rs/A.class", b"upper")
+                z.writestr("rs/a.class", b"lower")
+            manifest = {
+                "schema_version": 1,
+                "kind": "readable_client_build_manifest",
+                "status": "complete",
+                "verification_pass": True,
+                "output_sha256": _sha(jar),
+                "source_sha256": "a" * 64,
+                "namespace_id": "SEMNS_TEST",
+                "class_plan_digest": "b" * 64,
+                "member_plan_digest": "c" * 64,
+                "build_id": "v308",
+                "project_source_prefixes": ["rs/"],
+            }
+            tool = root / "procyon.jar"
+            tool.write_bytes(b"tool")
+
+            with patch(
+                "spk_recovery.source_workspace."
+                "_filesystem_supports_case_distinct_names",
+                return_value=False,
+            ):
+                with self.assertRaisesRegex(
+                    SourceWorkspaceError,
+                    "case-sensitive output directory",
+                ):
+                    build_source_workspace(
+                        manifest,
+                        jar,
+                        tool,
+                        expected_decompiler_sha256="d" * 64,
+                        engine="procyon",
+                        out_dir=root / "out",
+                        project_only=True,
+                    )
+
+
+    def test_project_only_rejects_incomplete_procyon_materialization(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar, manifest = self._readable(root)
+            tool = root / "procyon.jar"
+            tool.write_bytes(b"tool")
+
+            def fake_decompiler(*args, **kwargs):
+                out = kwargs["out_dir"]
+                (out / "rs").mkdir(parents=True, exist_ok=True)
+                (out / "rs" / "A.java").write_text(
+                    "package rs; public class A {}\n",
+                    encoding="utf-8",
+                )
+                return {
+                    "schema_version": 1,
+                    "kind": "decompiler_result",
+                    "engine": "procyon",
+                    "input_sha256": _sha(jar),
+                    "decompiler_sha256": "d" * 64,
+                    "java_file_count": 1,
+                    "output_directory": str(out),
+                    "input_mode": "class_files",
+                    "selected_class_file_count": 2,
+                    "batch_count": 1,
+                    "stdout": "",
+                    "stderr": "",
+                }
+
+            with patch(
+                "spk_recovery.source_workspace.run_decompiler",
+                side_effect=fake_decompiler,
+            ):
+                with self.assertRaisesRegex(
+                    SourceWorkspaceError,
+                    "did not materialize one Java source unit",
+                ):
+                    build_source_workspace(
+                        manifest,
+                        jar,
+                        tool,
+                        expected_decompiler_sha256="d" * 64,
+                        engine="procyon",
+                        out_dir=root / "out",
+                        project_only=True,
+                    )
+
+
     def test_project_only_refuses_archive_root_prefix(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -167,6 +461,26 @@ class ProjectScopedSourceWorkspaceTests(unittest.TestCase):
 
 
 class SelectiveDecompilerTests(unittest.TestCase):
+    def test_exact_path_dedupe_preserves_windows_case_distinctions(self):
+        upper = PureWindowsPath("C:/stage/rs/A.class")
+        lower = PureWindowsPath("C:/stage/rs/a.class")
+
+        # This is the exact regression: pathlib Windows path equality folds
+        # case, so the old set[Path] implementation retained only one.
+        self.assertEqual(len({upper, lower}), 1)
+
+        result = _dedupe_exact_path_spellings(
+            [lower, upper, upper]
+        )
+
+        self.assertEqual(
+            [path.as_posix() for path in result],
+            [
+                "C:/stage/rs/A.class",
+                "C:/stage/rs/a.class",
+            ],
+        )
+
     def test_procyon_class_inputs_are_deterministically_batched(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

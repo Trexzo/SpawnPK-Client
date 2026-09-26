@@ -8,6 +8,8 @@ import subprocess
 import tempfile
 from typing import Any
 
+from .source_digest import source_tree_digest
+
 
 class ProgressiveCompileError(ValueError):
     pass
@@ -22,16 +24,8 @@ def _sha256_file(path: Path) -> str:
 
 
 def _source_tree_digest(root: Path) -> tuple[str, list[Path]]:
-    files = sorted(root.rglob("*.java"))
-    h = hashlib.sha256()
-    for path in files:
-        rel = path.relative_to(root).as_posix().encode("utf-8")
-        data = path.read_bytes()
-        h.update(len(rel).to_bytes(4, "big"))
-        h.update(rel)
-        h.update(len(data).to_bytes(8, "big"))
-        h.update(data)
-    return h.hexdigest(), files
+    digest, files, _total_bytes = source_tree_digest(root)
+    return digest, files
 
 
 def _probe_javac(command: str) -> dict[str, Any]:
@@ -88,7 +82,10 @@ def _copy_tree_unique(
     dst: Path,
 ) -> int:
     count = 0
-    for path in sorted(src.rglob("*.class")):
+    for path in sorted(
+        src.rglob("*.class"),
+        key=lambda path: path.relative_to(src).as_posix(),
+    ):
         rel = path.relative_to(src)
         target = dst / rel
         target.parent.mkdir(parents=True, exist_ok=True)

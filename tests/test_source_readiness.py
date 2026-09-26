@@ -1,27 +1,20 @@
 from __future__ import annotations
 
 import hashlib
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 import tempfile
 import unittest
 
+from spk_recovery.source_digest import source_tree_digest
 from spk_recovery.source_readiness import (
     SourceReadinessError,
+    _exact_source_key,
     audit_source_workspace,
 )
 
 
 def _tree_digest(root: Path) -> str:
-    files = sorted(root.rglob("*.java"))
-    h = hashlib.sha256()
-    for path in files:
-        rel = path.relative_to(root).as_posix().encode("utf-8")
-        data = path.read_bytes()
-        h.update(len(rel).to_bytes(4, "big"))
-        h.update(rel)
-        h.update(len(data).to_bytes(8, "big"))
-        h.update(data)
-    return h.hexdigest()
+    return source_tree_digest(root)[0]
 
 
 def _manifest(root: Path) -> dict:
@@ -40,12 +33,32 @@ def _manifest(root: Path) -> dict:
         "decompiler_sha256": "e" * 64,
         "source_tree_sha256": _tree_digest(root),
         "java_file_count": len(files),
-        "source_bytes": sum(p.stat().st_size for p in files),
+        "source_bytes": source_tree_digest(root)[2],
         "source_directory": "src",
     }
 
 
 class SourceReadinessTests(unittest.TestCase):
+    def test_windows_case_distinct_sources_use_exact_string_cache_keys(self):
+        root = PureWindowsPath("C:/workspace/src")
+        upper = PureWindowsPath("C:/workspace/src/rs/A/c.java")
+        lower = PureWindowsPath("C:/workspace/src/rs/a/c.java")
+
+        # This is the underlying Windows regression: pathlib keys fold case.
+        self.assertEqual(upper, lower)
+        self.assertEqual(len({upper: "upper", lower: "lower"}), 1)
+
+        upper_key = _exact_source_key(root, upper)
+        lower_key = _exact_source_key(root, lower)
+
+        self.assertEqual(upper_key, "rs/A/c.java")
+        self.assertEqual(lower_key, "rs/a/c.java")
+        self.assertNotEqual(upper_key, lower_key)
+        self.assertEqual(
+            len({upper_key: "upper", lower_key: "lower"}),
+            2,
+        )
+
     def test_inventory_and_external_imports(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

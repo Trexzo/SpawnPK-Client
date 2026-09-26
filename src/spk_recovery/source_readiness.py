@@ -3,9 +3,11 @@ from __future__ import annotations
 from collections import Counter
 import hashlib
 import json
-from pathlib import Path
+from pathlib import Path, PurePath
 import re
 from typing import Any
+
+from .source_digest import source_tree_digest
 
 
 class SourceReadinessError(ValueError):
@@ -43,18 +45,12 @@ _JDK_ROOTS = {
 
 
 def _stable_tree_digest(root: Path) -> tuple[str, list[Path], int]:
-    files = sorted(root.rglob("*.java"))
-    h = hashlib.sha256()
-    total_bytes = 0
-    for path in files:
-        rel = path.relative_to(root).as_posix().encode("utf-8")
-        data = path.read_bytes()
-        h.update(len(rel).to_bytes(4, "big"))
-        h.update(rel)
-        h.update(len(data).to_bytes(8, "big"))
-        h.update(data)
-        total_bytes += len(data)
-    return h.hexdigest(), files, total_bytes
+    return source_tree_digest(root)
+
+
+def _exact_source_key(root: PurePath, path: PurePath) -> str:
+    """Return the exact case-preserving relative source authority key."""
+    return path.relative_to(root).as_posix()
 
 
 def _code_mask_and_depths(text: str) -> tuple[str, list[int]]:
@@ -240,22 +236,28 @@ def audit_source_workspace(
     issues: list[dict[str, Any]] = []
 
     # Pass 1 establishes project package roots.
-    file_text: dict[Path, str] = {}
-    file_packages: dict[Path, str | None] = {}
+    #
+    # Never key these caches by Path on Windows: WindowsPath equality/hash
+    # folds case, so distinct source units such as rs/A/c.java and
+    # rs/a/c.java alias in dicts even on a case-sensitive NTFS directory.
+    # The exact relative POSIX spelling is the source authority key.
+    file_text: dict[str, str] = {}
+    file_packages: dict[str, str | None] = {}
     for path in files:
+        rel = _exact_source_key(source_root, path)
         text = path.read_text(encoding="utf-8", errors="replace")
-        file_text[path] = text
+        file_text[rel] = text
         match = _PACKAGE_RE.search(text)
         package = match.group(1) if match else None
-        file_packages[path] = package
+        file_packages[rel] = package
         if package:
             package_counts[package] += 1
             project_roots.add(package.split(".")[0])
 
     for path in files:
-        text = file_text[path]
-        rel = path.relative_to(source_root).as_posix()
-        package = file_packages[path]
+        rel = _exact_source_key(source_root, path)
+        text = file_text[rel]
+        package = file_packages[rel]
         imports = sorted(set(_IMPORT_RE.findall(text)))
         public_types = _top_level_type_names(
             text,
