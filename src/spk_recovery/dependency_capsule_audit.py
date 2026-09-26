@@ -3,11 +3,14 @@ from __future__ import annotations
 from collections import Counter
 import hashlib
 import json
+import re
 from pathlib import Path
 import subprocess
 import tempfile
 from typing import Any
 import zipfile
+
+from .classfile import ClassFormatError, parse_class
 
 
 class DependencyCapsuleAuditError(ValueError):
@@ -51,6 +54,155 @@ def _probe_source(
         f"}}\n"
     )
     return probe, source
+
+
+_JAVAC_LINE_RE = re.compile(
+    r"^[^:\n]+:(\\d+):(?:\\d+:)?\\s+error:",
+    re.MULTILINE,
+)
+
+
+def _class_major(data: bytes | None) -> int | None:
+    if data is None:
+        return None
+    try:
+        return int(parse_class(data).major)
+    except (ClassFormatError, ValueError):
+        return None
+
+
+def _classify_javac_probe(
+    proc: subprocess.CompletedProcess[str],
+    generated: Path,
+) -> tuple[str, str, list[int]]:
+    diagnostic = (
+        proc.stdout + proc.stderr
+    ).replace("\r\n", "\n").replace("\r", "\n")
+    lines = sorted(
+        {
+            int(match.group(1))
+            for match in _JAVAC_LINE_RE.finditer(diagnostic)
+        }
+    )
+
+    if proc.returncode == 0 and generated.is_file():
+        classification = "javac_resolves_exact_class"
+    elif "bad class file" in diagnostic.lower():
+        classification = "javac_bad_class_file"
+    elif "cannot access" in diagnostic.lower():
+        classification = "javac_cannot_access_class"
+    elif "does not exist" in diagnostic.lower():
+        classification = "javac_package_or_class_missing"
+    elif "cannot find symbol" in diagnostic.lower():
+        classification = "javac_cannot_find_symbol"
+    else:
+        classification = "javac_other_failure"
+
+    return classification, diagnostic, lines
+
+
+def _run_javac_probe(
+    *,
+    javac_command: str,
+    classpath: Path,
+    internal: str,
+    index: int,
+    root: Path,
+    release: int | None,
+    label: str,
+) -> dict[str, Any]:
+    probe_name, source_text = _probe_source(
+        internal,
+        index,
+    )
+    probe_dir = root / f"{index:03d}-{label}"
+    probe_dir.mkdir()
+    source = probe_dir / (probe_name + ".java")
+    out = probe_dir / "classes"
+    out.mkdir()
+    source.write_text(source_text, encoding="utf-8")
+
+    command = [
+        javac_command,
+        "-proc:none",
+        "-encoding",
+        "UTF-8",
+        "-Xlint:none",
+        "-classpath",
+        str(classpath),
+        "-d",
+        str(out),
+    ]
+    if release is not None:
+        command.extend(["--release", str(release)])
+    command.append(str(source))
+
+    proc = subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    generated = out / (probe_name + ".class")
+    classification, diagnostic, lines = _classify_javac_probe(
+        proc,
+        generated,
+    )
+    return {
+        "classification": classification,
+        "exit_code": proc.returncode,
+        "diagnostic_sha256": _sha256(
+            diagnostic.encode("utf-8")
+        ),
+        "error_lines": lines,
+    }
+
+
+def _run_javap_probe(
+    *,
+    javac_command: str,
+    classpath: Path,
+    internal: str,
+) -> dict[str, Any]:
+    javac_path = Path(javac_command)
+    name = "javap.exe" if javac_path.suffix.lower() == ".exe" else "javap"
+    javap = javac_path.with_name(name)
+    if not javap.is_file():
+        return {
+            "classification": "javap_unavailable",
+            "exit_code": None,
+            "diagnostic_sha256": None,
+        }
+
+    dotted = internal.replace("/", ".")
+    proc = subprocess.run(
+        [
+            str(javap),
+            "-classpath",
+            str(classpath),
+            dotted,
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    diagnostic = (
+        proc.stdout + proc.stderr
+    ).replace("\r\n", "\n").replace("\r", "\n")
+    if proc.returncode == 0:
+        classification = "javap_resolves_exact_class"
+    elif "class not found" in diagnostic.lower():
+        classification = "javap_class_not_found"
+    else:
+        classification = "javap_other_failure"
+
+    return {
+        "classification": classification,
+        "exit_code": proc.returncode,
+        "diagnostic_sha256": _sha256(
+            diagnostic.encode("utf-8")
+        ),
+    }
 
 
 def audit_dependency_capsule(
@@ -115,73 +267,76 @@ def audit_dependency_capsule(
                 and readable_bytes == capsule_bytes
             )
 
-            probe_exit: int | None = None
-            probe_classified = "not_run"
-            probe_diagnostic_sha256: str | None = None
+            class_major = _class_major(capsule_bytes)
+
+            capsule_release_probe = {
+                "classification": "not_run",
+                "exit_code": None,
+                "diagnostic_sha256": None,
+                "error_lines": [],
+            }
+            capsule_default_probe = {
+                "classification": "not_run",
+                "exit_code": None,
+                "diagnostic_sha256": None,
+                "error_lines": [],
+            }
+            readable_release_probe = {
+                "classification": "not_run",
+                "exit_code": None,
+                "diagnostic_sha256": None,
+                "error_lines": [],
+            }
+            javap_probe = {
+                "classification": "not_run",
+                "exit_code": None,
+                "diagnostic_sha256": None,
+            }
 
             if capsule_present:
-                probe_name, source_text = _probe_source(
-                    internal,
-                    index,
+                capsule_release_probe = _run_javac_probe(
+                    javac_command=javac_command,
+                    classpath=dependency_capsule,
+                    internal=internal,
+                    index=index,
+                    root=root,
+                    release=release,
+                    label="capsule-release",
                 )
-                probe_dir = root / f"{index:03d}"
-                probe_dir.mkdir()
-                source = probe_dir / (probe_name + ".java")
-                out = probe_dir / "classes"
-                out.mkdir()
-                source.write_text(source_text, encoding="utf-8")
-
-                command = [
-                    javac_command,
-                    "-proc:none",
-                    "-encoding",
-                    "UTF-8",
-                    "-Xlint:none",
-                    "-classpath",
-                    str(dependency_capsule),
-                    "-d",
-                    str(out),
-                ]
-                if release is not None:
-                    command.extend(["--release", str(release)])
-                command.append(str(source))
-
-                proc = subprocess.run(
-                    command,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
+                capsule_default_probe = _run_javac_probe(
+                    javac_command=javac_command,
+                    classpath=dependency_capsule,
+                    internal=internal,
+                    index=index,
+                    root=root,
+                    release=None,
+                    label="capsule-default",
                 )
-                probe_exit = proc.returncode
-                diagnostic = (
-                    proc.stdout + proc.stderr
-                ).replace("\r\n", "\n").replace("\r", "\n")
-                probe_diagnostic_sha256 = _sha256(
-                    diagnostic.encode("utf-8")
+                readable_release_probe = _run_javac_probe(
+                    javac_command=javac_command,
+                    classpath=readable_jar,
+                    internal=internal,
+                    index=index,
+                    root=root,
+                    release=release,
+                    label="readable-release",
                 )
-
-                generated = out / (probe_name + ".class")
-                if proc.returncode == 0 and generated.is_file():
-                    probe_classified = "javac_resolves_exact_class"
-                elif "bad class file" in diagnostic.lower():
-                    probe_classified = "javac_bad_class_file"
-                elif "cannot access" in diagnostic.lower():
-                    probe_classified = "javac_cannot_access_class"
-                elif "does not exist" in diagnostic.lower():
-                    probe_classified = "javac_package_or_class_missing"
-                elif "cannot find symbol" in diagnostic.lower():
-                    probe_classified = "javac_cannot_find_symbol"
-                else:
-                    probe_classified = "javac_other_failure"
+                javap_probe = _run_javap_probe(
+                    javac_command=javac_command,
+                    classpath=dependency_capsule,
+                    internal=internal,
+                )
 
             row = {
                 "candidate_id": candidate.get("candidate_id"),
                 "readable_present": readable_present,
                 "capsule_present": capsule_present,
                 "byte_identical": byte_identical,
-                "probe_classification": probe_classified,
-                "probe_exit_code": probe_exit,
-                "probe_diagnostic_sha256": probe_diagnostic_sha256,
+                "class_major": class_major,
+                "capsule_release_probe": capsule_release_probe,
+                "capsule_default_probe": capsule_default_probe,
+                "readable_release_probe": readable_release_probe,
+                "javap_probe": javap_probe,
             }
             if include_identifiers:
                 row.update(
@@ -192,8 +347,24 @@ def audit_dependency_capsule(
                 )
             rows.append(row)
 
-    classifications = Counter(
-        row["probe_classification"]
+    capsule_release_classifications = Counter(
+        row["capsule_release_probe"]["classification"]
+        for row in rows
+    )
+    capsule_default_classifications = Counter(
+        row["capsule_default_probe"]["classification"]
+        for row in rows
+    )
+    readable_release_classifications = Counter(
+        row["readable_release_probe"]["classification"]
+        for row in rows
+    )
+    javap_classifications = Counter(
+        row["javap_probe"]["classification"]
+        for row in rows
+    )
+    major_versions = Counter(
+        str(row["class_major"])
         for row in rows
     )
 
@@ -205,9 +376,11 @@ def audit_dependency_capsule(
                 "readable_present",
                 "capsule_present",
                 "byte_identical",
-                "probe_classification",
-                "probe_exit_code",
-                "probe_diagnostic_sha256",
+                "class_major",
+                "capsule_release_probe",
+                "capsule_default_probe",
+                "readable_release_probe",
+                "javap_probe",
             )
         }
         for row in rows
@@ -248,11 +421,41 @@ def audit_dependency_capsule(
             "byte_identical_count": sum(
                 bool(row["byte_identical"]) for row in rows
             ),
-            "probe_classifications": dict(
-                sorted(classifications.items())
+            "class_major_versions": dict(
+                sorted(major_versions.items())
             ),
-            "javac_resolved_count": classifications.get(
-                "javac_resolves_exact_class",
+            "capsule_release_classifications": dict(
+                sorted(capsule_release_classifications.items())
+            ),
+            "capsule_default_classifications": dict(
+                sorted(capsule_default_classifications.items())
+            ),
+            "readable_release_classifications": dict(
+                sorted(readable_release_classifications.items())
+            ),
+            "javap_classifications": dict(
+                sorted(javap_classifications.items())
+            ),
+            "capsule_release_resolved_count": (
+                capsule_release_classifications.get(
+                    "javac_resolves_exact_class",
+                    0,
+                )
+            ),
+            "capsule_default_resolved_count": (
+                capsule_default_classifications.get(
+                    "javac_resolves_exact_class",
+                    0,
+                )
+            ),
+            "readable_release_resolved_count": (
+                readable_release_classifications.get(
+                    "javac_resolves_exact_class",
+                    0,
+                )
+            ),
+            "javap_resolved_count": javap_classifications.get(
+                "javap_resolves_exact_class",
                 0,
             ),
         },
