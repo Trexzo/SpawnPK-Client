@@ -63,7 +63,8 @@ class JavacVariableTriageTests(unittest.TestCase):
                 "public int importedSecretField; }\n"
             ),
             "UseImported.java": (
-                "package t; import p.Imported; "
+                "package t;\n"
+                "import p.Imported;\n"
                 "public class UseImported { Imported imported; }\n"
             ),
         }
@@ -278,14 +279,15 @@ class JavacVariableTriageTests(unittest.TestCase):
             root = Path(td)
             source_root, source, jar = self._fixture(root)
 
-            use_missing = source / "UseMissing.java"
+            use_missing = source / "UseReceiver.java"
             use_missing.write_text(
-                "package t; import external.missing.MissingType; "
-                "public class UseMissing { MissingType value; }\n",
+                "package t;\n"
+                "import external.missing.MissingType;\n"
+                "public class UseReceiver { MissingType value; }\n",
                 encoding="utf-8",
             )
             raw = (
-                f"{use_missing}:1: error: cannot find symbol\n"
+                f"{use_missing}:3: error: cannot find symbol\n"
                 "  symbol:   variable missingField\n"
                 "  location: variable value of type MissingType\n"
             )
@@ -311,14 +313,14 @@ class JavacVariableTriageTests(unittest.TestCase):
             root = Path(td)
             source_root, source, jar = self._fixture(root)
 
-            no_import = source / "UseNoImport.java"
+            no_import = source / "UseReceiver.java"
             no_import.write_text(
-                "package t; public class UseNoImport { "
-                "Imported value; }\n",
+                "package t;\n"
+                "public class UseReceiver { Imported value; }\n",
                 encoding="utf-8",
             )
             raw = (
-                f"{no_import}:1: error: cannot find symbol\n"
+                f"{no_import}:2: error: cannot find symbol\n"
                 "  symbol:   variable importedSecretField\n"
                 "  location: variable value of type Imported\n"
             )
