@@ -41,6 +41,124 @@ def _jar_entries(path: Path) -> dict[str, bytes]:
         }
 
 
+_JAVA_KEYWORDS = {
+    "abstract",
+    "assert",
+    "boolean",
+    "break",
+    "byte",
+    "case",
+    "catch",
+    "char",
+    "class",
+    "const",
+    "continue",
+    "default",
+    "do",
+    "double",
+    "else",
+    "enum",
+    "extends",
+    "final",
+    "finally",
+    "float",
+    "for",
+    "goto",
+    "if",
+    "implements",
+    "import",
+    "instanceof",
+    "int",
+    "interface",
+    "long",
+    "native",
+    "new",
+    "package",
+    "private",
+    "protected",
+    "public",
+    "return",
+    "short",
+    "static",
+    "strictfp",
+    "super",
+    "switch",
+    "synchronized",
+    "this",
+    "throw",
+    "throws",
+    "transient",
+    "try",
+    "void",
+    "volatile",
+    "while",
+    "_",
+}
+
+
+def _java_identifier_shape(value: str) -> str:
+    if not value:
+        return "empty"
+    if value in _JAVA_KEYWORDS:
+        return "keyword"
+    first = value[0]
+    if not (
+        first == "$"
+        or first == "_"
+        or first.isalpha()
+    ):
+        return "invalid_start"
+    if any(
+        not (
+            ch == "$"
+            or ch == "_"
+            or ch.isalpha()
+            or ch.isdigit()
+        )
+        for ch in value[1:]
+    ):
+        return "invalid_part"
+    return "identifier"
+
+
+def _source_name_profile(
+    internal_name: str,
+) -> dict[str, Any]:
+    package_parts = internal_name.split("/")[:-1]
+    simple = internal_name.rsplit("/", 1)[-1]
+    parts = [*package_parts, simple]
+    shapes = [_java_identifier_shape(part) for part in parts]
+    failures = [
+        {
+            "segment_index": index,
+            "segment_role": (
+                "class"
+                if index == len(parts) - 1
+                else "package"
+            ),
+            "shape": shape,
+        }
+        for index, shape in enumerate(shapes)
+        if shape != "identifier"
+    ]
+    if not failures:
+        classification = "source_spellable"
+    elif any(
+        row["shape"] == "keyword"
+        for row in failures
+    ):
+        classification = "source_unspellable_keyword"
+    else:
+        classification = "source_unspellable_identifier"
+
+    return {
+        "classification": classification,
+        "segment_count": len(parts),
+        "failure_count": len(failures),
+        "failures": failures,
+    }
+
+
 def _probe_source(
     internal_name: str,
     index: int,
@@ -311,6 +429,7 @@ def audit_dependency_capsule(
             )
 
             class_major = _class_major(capsule_bytes)
+            source_name_profile = _source_name_profile(internal)
 
             capsule_release_probe = {
                 "classification": "not_run",
@@ -376,6 +495,7 @@ def audit_dependency_capsule(
                 "capsule_present": capsule_present,
                 "byte_identical": byte_identical,
                 "class_major": class_major,
+                "source_name_profile": source_name_profile,
                 "capsule_release_probe": capsule_release_probe,
                 "capsule_default_probe": capsule_default_probe,
                 "readable_release_probe": readable_release_probe,
@@ -410,6 +530,20 @@ def audit_dependency_capsule(
         str(row["class_major"])
         for row in rows
     )
+    source_name_classifications = Counter(
+        row["source_name_profile"]["classification"]
+        for row in rows
+    )
+    source_name_failure_shapes = Counter(
+        failure["shape"]
+        for row in rows
+        for failure in row["source_name_profile"]["failures"]
+    )
+    source_name_failure_roles = Counter(
+        failure["segment_role"]
+        for row in rows
+        for failure in row["source_name_profile"]["failures"]
+    )
 
     public_rows = [
         {
@@ -420,6 +554,7 @@ def audit_dependency_capsule(
                 "capsule_present",
                 "byte_identical",
                 "class_major",
+                "source_name_profile",
                 "capsule_release_probe",
                 "capsule_default_probe",
                 "readable_release_probe",
@@ -466,6 +601,28 @@ def audit_dependency_capsule(
             ),
             "class_major_versions": dict(
                 sorted(major_versions.items())
+            ),
+            "source_name_classifications": dict(
+                sorted(source_name_classifications.items())
+            ),
+            "source_name_failure_shapes": dict(
+                sorted(source_name_failure_shapes.items())
+            ),
+            "source_name_failure_roles": dict(
+                sorted(source_name_failure_roles.items())
+            ),
+            "source_spellable_count": (
+                source_name_classifications.get(
+                    "source_spellable",
+                    0,
+                )
+            ),
+            "source_unspellable_count": (
+                len(rows)
+                - source_name_classifications.get(
+                    "source_spellable",
+                    0,
+                )
             ),
             "capsule_release_classifications": dict(
                 sorted(capsule_release_classifications.items())
