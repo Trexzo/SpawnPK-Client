@@ -110,6 +110,30 @@ def main(argv: list[str] | None = None) -> int:
         f"{summary['source_unspellable_count']}"
     )
     print(
+        "package_depths="
+        + json.dumps(
+            summary["package_depths"],
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    print(
+        "default_package_count="
+        f"{summary['default_package_count']}"
+    )
+    print(
+        "class_signature_attribute_count="
+        f"{summary['class_signature_attribute_count']}"
+    )
+    print(
+        "field_signature_attribute_count="
+        f"{summary['field_signature_attribute_count']}"
+    )
+    print(
+        "method_signature_attribute_count="
+        f"{summary['method_signature_attribute_count']}"
+    )
+    print(
         "source_form_classifications="
         + json.dumps(
             summary["source_form_classifications"],
