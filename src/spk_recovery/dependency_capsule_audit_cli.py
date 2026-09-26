@@ -110,6 +110,22 @@ def main(argv: list[str] | None = None) -> int:
         f"{summary['source_unspellable_count']}"
     )
     print(
+        "source_form_classifications="
+        + json.dumps(
+            summary["source_form_classifications"],
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    print(
+        "source_form_diagnostic_keys="
+        + json.dumps(
+            summary["source_form_diagnostic_keys"],
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    print(
         "capsule_release_classifications="
         + json.dumps(
             summary["capsule_release_classifications"],
