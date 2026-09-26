@@ -184,6 +184,26 @@ class JavacClassTriageTests(unittest.TestCase):
                 report["diagnostics"][0]["source_materialization"],
                 "missing_exact_declaration",
             )
+            self.assertEqual(
+                report["diagnostics"][0]["candidate_structure"],
+                "top_level",
+            )
+            self.assertEqual(
+                report["diagnostics"][0]["candidate_kind"],
+                "class",
+            )
+            self.assertEqual(
+                report["summary"][
+                    "missing_declaration_unique_class_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "missing_unique_class_structures"
+                ],
+                {"top_level": 1},
+            )
 
     def test_visible_readable_nested_missing_from_source_is_detected(self):
         with tempfile.TemporaryDirectory() as td:
@@ -228,6 +248,71 @@ class JavacClassTriageTests(unittest.TestCase):
             self.assertEqual(
                 report["diagnostics"][0]["source_materialization"],
                 "missing_exact_declaration",
+            )
+            self.assertEqual(
+                report["diagnostics"][0]["candidate_structure"],
+                "named_member",
+            )
+            self.assertEqual(
+                report["summary"][
+                    "missing_unique_class_structures"
+                ],
+                {"named_member": 1},
+            )
+
+    def test_repeated_missing_class_diagnostics_count_one_unique_identity(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            src, t, jar = self._fixture(root)
+            (t / "Same.java").unlink()
+
+            raw = "".join(
+                [
+                    f"{t / 'Use.java'}:3: error: cannot find symbol\n"
+                    "  symbol:   class Same\n"
+                    "  location: class Use\n",
+                    f"{t / 'Use.java'}:4: error: cannot find symbol\n"
+                    "  symbol:   class Same\n"
+                    "  location: class Use\n",
+                ]
+            )
+            diagnostic = classify_javac_diagnostics(
+                raw,
+                include_identifiers=True,
+            )
+            report = analyze_unresolved_classes(
+                diagnostic,
+                jar,
+                src,
+            )
+
+            self.assertEqual(
+                report["summary"]["class_diagnostic_count"],
+                2,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "visible_exact_source_missing_count"
+                ],
+                2,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "missing_declaration_unique_class_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "missing_declaration_structure_diagnostics"
+                ],
+                {"top_level": 2},
+            )
+            self.assertEqual(
+                report["summary"][
+                    "missing_unique_class_structures"
+                ],
+                {"top_level": 1},
             )
 
     def test_readable_but_not_visible_is_repair_candidate(self):
