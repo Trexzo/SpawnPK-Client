@@ -105,6 +105,49 @@ def _source_type_context(
     return package, explicit, wildcards
 
 
+def _receiver_type_profile(
+    value: str,
+) -> tuple[str | None, int, str | None]:
+    token = _erase_type_arguments(value)
+    array_dimensions = 0
+    while token.endswith("[]"):
+        token = token[:-2].strip()
+        array_dimensions += 1
+
+    if token.startswith("? extends "):
+        token = token[len("? extends "):].strip()
+    elif token.startswith("? super "):
+        token = token[len("? super "):].strip()
+
+    if token in {
+        "",
+        "?",
+    }:
+        return None, array_dimensions, "unknown"
+
+    if token in {
+        "boolean",
+        "byte",
+        "short",
+        "int",
+        "long",
+        "char",
+        "float",
+        "double",
+        "void",
+    }:
+        return None, array_dimensions, "primitive"
+
+    if token.startswith("capture#"):
+        return None, array_dimensions, "capture"
+    if " & " in token:
+        return None, array_dimensions, "intersection"
+    if " | " in token:
+        return None, array_dimensions, "union"
+
+    return token, array_dimensions, None
+
+
 def _candidate_internal_names_for_type(
     classes: dict[str, dict[str, Any]],
     type_token: str,
@@ -112,17 +155,27 @@ def _candidate_internal_names_for_type(
     package: str | None,
     explicit_imports: dict[str, str],
     wildcard_imports: list[str],
-) -> list[str]:
-    token = _normalize_type_token(type_token)
-    if token is None:
-        return []
+    top_owner: str | None = None,
+) -> tuple[list[str], str]:
+    token, array_dimensions, unsupported = _receiver_type_profile(
+        type_token
+    )
+    if unsupported is not None:
+        return [], (
+            "variable_location_type_unsupported_"
+            + unsupported
+        )
+    assert token is not None
 
-    # Already qualified.  Try exact dotted->internal first, including nested
-    # class spelling where javac may use Outer.Inner.
+    if array_dimensions:
+        return [], "variable_location_array_receiver"
+
+    candidates: set[str] = set()
+
+    # A genuinely qualified JVM-visible name is exact without imports.
     direct = token.replace(".", "/")
-    direct_candidates: list[str] = []
     if direct in classes:
-        direct_candidates.append(direct)
+        candidates.add(direct)
 
     parts = token.split(".")
     for split in range(1, len(parts)):
@@ -130,48 +183,64 @@ def _candidate_internal_names_for_type(
         right = "$".join(parts[split:])
         candidate = left + "/" + right
         if candidate in classes:
-            direct_candidates.append(candidate)
+            candidates.add(candidate)
 
-    if direct_candidates:
-        return sorted(set(direct_candidates))
+    # A nested class declared by the current source top-level owner is
+    # visible without an import.
+    if top_owner:
+        nested = top_owner + "$" + token.replace(".", "$")
+        if nested in classes:
+            candidates.add(nested)
 
-    simple = parts[-1]
-    candidates: set[str] = set()
-
+    # Explicit imports are authoritative Java visibility evidence.
     imported = explicit_imports.get(parts[0])
     if imported is not None:
-        imported_parts = imported.split(".")
+        imported_internal = imported.replace(".", "/")
         suffix = parts[1:]
-        dotted = "/".join(imported_parts)
         if suffix:
-            dotted = dotted + "$" + "$".join(suffix)
-        if dotted in classes:
-            candidates.add(dotted)
+            imported_internal += "$" + "$".join(suffix)
+        if imported_internal in classes:
+            candidates.add(imported_internal)
+        elif not candidates:
+            return [], "variable_location_explicit_import_owner_absent"
 
+    # Same-package types are visible without imports.
     if package:
         same = package.replace(".", "/") + "/" + token.replace(".", "$")
         if same in classes:
             candidates.add(same)
 
+    # java.lang is implicitly imported by Java.
     java_lang = "java/lang/" + token.replace(".", "$")
     if java_lang in classes:
         candidates.add(java_lang)
 
+    # Wildcard imports may provide the type.  Multiple matches remain
+    # ambiguous; we never choose one by global uniqueness.
     for wildcard in wildcard_imports:
-        candidate = wildcard.replace(".", "/") + "/" + token.replace(".", "$")
+        candidate = (
+            wildcard.replace(".", "/")
+            + "/"
+            + token.replace(".", "$")
+        )
         if candidate in classes:
             candidates.add(candidate)
 
-    # Fail-closed fallback: only accept a globally unique simple/nested match.
-    global_matches = [
-        name
-        for name in classes
-        if _simple_name(name) == simple
-    ]
-    if len(global_matches) == 1:
-        candidates.add(global_matches[0])
+    resolved = sorted(candidates)
+    if len(resolved) == 1:
+        return resolved, "variable_location_owner_exact"
+    if len(resolved) > 1:
+        return resolved, "variable_location_owner_ambiguous"
 
-    return sorted(candidates)
+    # Classify why exact Java-visible resolution failed without exposing
+    # the raw type token in the public report.
+    if "." in token:
+        return [], "variable_location_qualified_owner_absent"
+    if wildcard_imports:
+        return [], "variable_location_wildcard_or_local_owner_unbound"
+    if package:
+        return [], "variable_location_same_package_or_java_lang_unbound"
+    return [], "variable_location_simple_owner_unbound"
 
 
 def _variable_location_owner(
@@ -179,6 +248,7 @@ def _variable_location_owner(
     source_root: Path,
     rel: str,
     location_value: str | None,
+    field_name: str,
 ) -> tuple[str | None, list[str], str]:
     if not location_value:
         return None, [], "variable_location_missing"
@@ -188,26 +258,38 @@ def _variable_location_owner(
         return None, [], "variable_location_malformed"
 
     type_token = match.group(1).strip()
-    normalized = _normalize_type_token(type_token)
-    if normalized is None:
-        return None, [], "variable_location_type_unsupported"
+    normalized, array_dimensions, unsupported = _receiver_type_profile(
+        type_token
+    )
+
+    if array_dimensions:
+        if field_name == "length":
+            return None, [], "array_length_pseudo_field"
+        return None, [], "array_receiver_no_exact_field"
+
+    if unsupported is not None:
+        return None, [], (
+            "variable_location_type_unsupported_"
+            + unsupported
+        )
+    assert normalized is not None
 
     package, explicit, wildcards = _source_type_context(
         source_root,
         rel,
     )
-    candidates = _candidate_internal_names_for_type(
+    top_owner = rel[:-5] if rel.endswith(".java") else None
+    candidates, resolution = _candidate_internal_names_for_type(
         classes,
         normalized,
         package=package,
         explicit_imports=explicit,
         wildcard_imports=wildcards,
+        top_owner=top_owner,
     )
     if len(candidates) == 1:
-        return candidates[0], candidates, "variable_location_owner_exact"
-    if len(candidates) > 1:
-        return None, candidates, "variable_location_owner_ambiguous"
-    return None, [], "variable_location_owner_unbound"
+        return candidates[0], candidates, resolution
+    return None, candidates, resolution
 
 
 def _stable_digest(value: Any) -> str:
@@ -595,6 +677,7 @@ def analyze_unresolved_variables(
                         if location_value is not None
                         else None
                     ),
+                    symbol,
                 )
             )
             if owner is None:
