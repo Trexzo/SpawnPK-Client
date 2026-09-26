@@ -1,144 +1,73 @@
-# Chat 2 — exact-v308 interface arrow subsystem R211
+# Chat 2 — R211 interface-arrow duplicate-owner correction
 
 Exact client authority:
 
 `854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`
 
-R211 is a non-canonical class-only review for the server-driven blinking interface-arrow
-subsystem.
+## Correction
 
-It was prepared after R206, then renumbered onto the live branch after concurrent Chat 2
-work advanced the same branch through R207-R210. No concurrent commit was overwritten.
+R211 does **not** retain a semantic review.
 
-## Deterministic review result
+The attempted R211 batch targeted the exact interface-arrow family:
 
-- candidate classes: **4**
-- resolved proposals: **4**
-- unresolved: **0**
-- review ID: `SEMREVIEW_172D2E1C9E486A022AD0`
-- field/method proposals: **0**
+- `rs/l/f/a/i/b` / `CLIENT_CLASS_000470`
+- `rs/l/f/a/i/d` / `CLIENT_CLASS_000472`
+- `rs/l/f/a/i/e` / `CLIENT_CLASS_000473`
+- `rs/l/f/a/i/g` / `CLIENT_CLASS_000475`
 
-## Stable IDs
+Those owners were already reviewed in **R138**, review:
 
-- `rs/l/f/a/i/b` -> `CLIENT_CLASS_000470` -> `InterfaceArrowOverlay`
-- `rs/l/f/a/i/d` -> `CLIENT_CLASS_000472` -> `InterfaceArrowPacketHandler`
-- `rs/l/f/a/i/e` -> `CLIENT_CLASS_000473` -> `InterfaceArrowDirection`
-- `rs/l/f/a/i/g` -> `CLIENT_CLASS_000475` -> `InterfaceArrowTarget`
+`SEMREVIEW_53E67568D36705B68452`
 
-The IDs come from the exact v308 sorted `rs/**.class` seed-lineage ordering. R211 does not
-name the synthetic enum-switch helpers or the currently unreferenced small value record.
+with retained names:
 
-## Exact arrow resource identity
+- `InterfaceArrowOverlay`
+- `InterfaceArrowPacketHandler`
+- `InterfaceArrowDirection`
+- `InterfaceArrowSection`
 
-The exact client initializes four sprites:
+The R211 no-overlap test correctly failed. Chat 2 must not create a second semantic review
+for those stable owners.
 
-- `orbs/arrow`
-- `orbs/arrow 2`
-- `orbs/arrow 3`
-- `orbs/arrow 4`
+## New corroborating evidence recovered during R211
 
-`InterfaceArrowDirection` preserves exactly:
+The exact-v308 audit still adds useful provenance to the existing R138 identities:
 
-- `LEFT`
-- `RIGHT`
-- `UP`
-- `DOWN`
+- the overlay blink path is explicitly gated by `Client.ff % 20 < 10`;
+- Adventure Book creates a claim pointer on widget `30390` with direction `DOWN`
+  and offsets `(35, -30)`, then marks it auto-dismissable;
+- ScriptPacket 24 operations were re-confirmed as clear/create/section-or-target/default-widget
+  placement operations;
+- the main gameframe path consumes the six-value section state while the arrow blink phase
+  is active and draws the RIGHT arrow by the corresponding sidebar/gameframe destination;
+- the developer-command path independently accepts an interface widget plus
+  `InterfaceArrowDirection.valueOf(...)` and creates the same overlay.
 
-and maps those enum values to the four arrow sprites.
-
-`InterfaceArrowOverlay` stores one direction plus x/y offsets and draws the selected arrow
-sprite at the live widget-render position plus those offsets.
-
-## Exact blinking overlay behavior
-
-`InterfaceArrowOverlay` extends the live render-component base `rs/l/f/b/d`.
-
-It is registered through `rs/l/f/e` against a widget id.
-
-Its draw path checks:
-
-`Client.ff % 20 < 10`
-
-before drawing, so the pointer is visible for half of every 20-tick cycle and hidden for
-the other half.
-
-The subsystem has explicit create, active, clear and auto-dismiss state.
-
-## Exact Adventure Book consumer
-
-The exact `AdventureBookInterfacePacketHandler` uses this subsystem when a chapter reward
-becomes claimable.
-
-It creates an arrow on widget `30390` with:
-
-- direction: `DOWN`
-- x offset: `35`
-- y offset: `-30`
-
-and marks it auto-dismissable.
-
-This independently proves the class is a UI guidance/pointer overlay, not a decorative
-arrow sprite abstraction.
-
-## Exact ScriptPacket 24 handler
-
-The exact ScriptPacket registry `rs/q/a/a/b` registers:
-
-`rs/l/f/a/i/d`
-
-at packet id **24**.
-
-Its operations control only this subsystem:
-
-- op **0** — clear the live interface arrow;
-- op **1** — create an arrow from widget id, direction and offsets;
-- op **3** — select an `InterfaceArrowTarget`;
-- op **4** — derive a default pointer placement from a widget and create the arrow.
-
-That fixes `rs/l/f/a/i/d` as `InterfaceArrowPacketHandler`.
-
-## Exact target enum
-
-`InterfaceArrowTarget` preserves exactly six enum literals:
+The R211 draft called `rs/l/f/a/i/g` `InterfaceArrowTarget`. R138 already names it
+`InterfaceArrowSection`, grounded in the exact enum literals:
 
 - `ACHIEVEMENT`
-- `INVENTORY`
 - `EQUIPMENT`
+- `INVENTORY`
 - `MAGIC`
-- `SETTINGS`
 - `MISC`
+- `SETTINGS`
 
-ScriptPacket 24 op 3 maps selectors onto these values.
+R211 therefore does **not** supersede that name. If Main/Core ever prefers `Target` over
+`Section`, that must be an explicit correction to R138, not a duplicate semantic owner.
 
-The main client gameframe renderer consumes the selected target while the arrow blink phase
-is active and draws the RIGHT arrow sprite beside the corresponding sidebar/gameframe
-location when that target is not already selected.
+## Retained R211 status
 
-This is target UI-area state, separate from the arrow's geometric direction.
+- retained semantic candidate file: **none**
+- retained semantic review file: **none**
+- retained semantic test: **none**
+- retained review ID: **none**
+- new proposal count: **0**
+- unresolved: **0**
 
-## Developer-command corroboration
-
-The exact client command processor also accepts a widget id plus
-`InterfaceArrowDirection.valueOf(...)`, derives offsets from widget dimensions, creates
-the overlay and marks it auto-dismissable.
-
-This is corroborating evidence only; the ScriptPacket and Adventure Book consumers already
-fix the runtime semantics.
-
-## Naming boundary
-
-All four R211 names are descriptive exact-behavior recovery at **0.999** confidence.
-
-They do not claim original source identifiers.
-
-R211 deliberately withholds:
-
-- `rs/l/f/a/i/a` — small currently unreferenced direction/int value record;
-- `rs/l/f/a/i/c` and `rs/l/f/a/i/f` — compiler-generated enum switch helpers.
-
-No field or method proposals are added.
+The research note is retained so the additional exact evidence and withholding reason are
+not lost.
 
 ## Acceptance boundary
 
-Chat 2 does not promote R211. Main/Core may accept any subset only through an explicit
-`semantic_acceptance_spec` bound to `SEMREVIEW_172D2E1C9E486A022AD0`.
+R211 performs no semantic acceptance and creates no acceptance spec.
