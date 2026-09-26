@@ -70,16 +70,60 @@ def main(argv: list[str] | None = None) -> int:
         f"{summary['byte_identical_count']}"
     )
     print(
-        "probe_classifications="
+        "class_major_versions="
         + json.dumps(
-            summary["probe_classifications"],
+            summary["class_major_versions"],
             sort_keys=True,
             separators=(",", ":"),
         )
     )
     print(
-        "javac_resolved_count="
-        f"{summary['javac_resolved_count']}"
+        "capsule_release_classifications="
+        + json.dumps(
+            summary["capsule_release_classifications"],
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    print(
+        "capsule_default_classifications="
+        + json.dumps(
+            summary["capsule_default_classifications"],
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    print(
+        "readable_release_classifications="
+        + json.dumps(
+            summary["readable_release_classifications"],
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    print(
+        "javap_classifications="
+        + json.dumps(
+            summary["javap_classifications"],
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    print(
+        "capsule_release_resolved_count="
+        f"{summary['capsule_release_resolved_count']}"
+    )
+    print(
+        "capsule_default_resolved_count="
+        f"{summary['capsule_default_resolved_count']}"
+    )
+    print(
+        "readable_release_resolved_count="
+        f"{summary['readable_release_resolved_count']}"
+    )
+    print(
+        "javap_resolved_count="
+        f"{summary['javap_resolved_count']}"
     )
     print(f"identifiers_included={report['identifiers_included']}")
     print(f"out={args.out}")
