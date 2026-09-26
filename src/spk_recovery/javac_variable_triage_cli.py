@@ -60,6 +60,22 @@ def main(argv: list[str] | None = None) -> int:
             separators=(",", ":"),
         )
     )
+    print(
+        "owner_resolutions="
+        + json.dumps(
+            summary["owner_resolutions"],
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    print(
+        "bytecode_proven_field_diagnostic_count="
+        f"{summary['bytecode_proven_field_diagnostic_count']}"
+    )
+    print(
+        "ambiguous_field_diagnostic_count="
+        f"{summary['ambiguous_field_diagnostic_count']}"
+    )
     print(f"identifiers_included={report['identifiers_included']}")
     print(f"out={args.out}")
     return 0
