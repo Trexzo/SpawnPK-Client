@@ -1,0 +1,80 @@
+{
+  "canonical": false,
+  "kind": "semantic_review_set",
+  "proposal_count": 2,
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_08DC7191218AAA7CE478",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000422",
+      "owner_logical_id": "CLIENT_CLASS_000422",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/e/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CommandConsoleEntry",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_console_ownership",
+          "detail": "Exact-v308 class references show rs/l/e/b is constructed and consumed only by rs/l/e/c, the command-console controller/renderer."
+        },
+        {
+          "family": "exact_entry_state",
+          "detail": "Each instance stores a raw String plus creation timestamp and an optional preformatted display String; its sole accessor selects the display override when present and otherwise returns the raw text."
+        },
+        {
+          "family": "exact_history_construction",
+          "detail": "CommandConsole creates entries for submitted commands with System.currentTimeMillis(), formats visible history with the exact 'hh:mm a' timestamp pattern, and also creates '~' sentinel entries for already-formatted console lines."
+        }
+      ],
+      "note": "CommandConsoleEntry is descriptive exact-behavior recovery for one stored command/output line in the exact-v308 command console. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_3F3D49C12BE1E561472B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000423",
+      "owner_logical_id": "CLIENT_CLASS_000423",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/e/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CommandConsole",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_activation_and_input",
+          "detail": "Client input toggles rs/l/e/c directly on key code 96 (backtick), then diverts typed characters plus left/right cursor editing and up/down history navigation into this class while it is active."
+        },
+        {
+          "family": "exact_command_execution",
+          "detail": "On Enter the class normalizes the command around the exact '::' prefix, invokes the reviewed local ClientCommandProcessor path when available, and otherwise writes exact C2S103 command transport through the client packet stream."
+        },
+        {
+          "family": "exact_console_rendering",
+          "detail": "Its render path draws a dedicated 320x100 translucent panel, the exact '>' prompt, blinking '|' cursor, current editable command text, and the stored CommandConsoleEntry history."
+        },
+        {
+          "family": "exact_history_and_console_text",
+          "detail": "The class keeps bounded visible/history lists, supports the exact 'clear' command, timestamps submitted lines with 'hh:mm a', and preserves special yell/news color formatting for rendered console text."
+        },
+        {
+          "family": "exact_runtime_consumers",
+          "detail": "Client, the low-level keyboard path and both game render orchestrators directly consult this instance; the key-remapping plugin also suppresses its own hotkeys while the console is open."
+        }
+      ],
+      "note": "CommandConsole is fixed by direct backtick activation, command editing/history, C2S103/local-command execution and a dedicated rendered console surface. Confidence is 0.999."
+    }
+  ],
+  "review_id": "SEMREVIEW_70C98BE24E8894C7D70C",
+  "schema_version": 1,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "unresolved": []
+}
