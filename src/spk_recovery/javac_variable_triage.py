@@ -17,14 +17,14 @@ class JavacVariableTriageError(ValueError):
 
 
 _PACKAGE_RE = re.compile(
-    r"(?m)^\\s*package\\s+([A-Za-z_$][\\w$]*(?:\\.[A-Za-z_$][\\w$]*)*)\\s*;"
+    r"(?m)^\s*package\s+([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)\s*;"
 )
 _IMPORT_RE = re.compile(
-    r"(?m)^\\s*import\\s+(?!static\\s+)"
-    r"([A-Za-z_$][\\w$]*(?:\\.[A-Za-z_$][\\w$]*)*)(\\.\\*)?\\s*;"
+    r"(?m)^\s*import\s+(?!static\s+)"
+    r"([A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)*)(\.\*)?\s*;"
 )
 _VARIABLE_LOCATION_RE = re.compile(
-    r"^.+?\\s+of\\s+type\\s+(.+?)\\s*$"
+    r"^.+?\s+of\s+type\s+(.+?)\s*$"
 )
 
 
