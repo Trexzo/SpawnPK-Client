@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InteractiveModelHighlight",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_model_polygon_state",
+          "detail": "Each exact-v308 rs/l/e/j instance stores one projected java.awt.Polygon, its backing target Object, normal/active outline and fill colors, one interaction/picking integer and a boolean active-hover state."
+        },
+        {
+          "family": "exact_model_projection_producers",
+          "detail": "Renderable NPC rendering and the already-reviewed EditorNpcEntity/EditorPlayerEntity paths construct the polygon through the exact rs/a/h Model polygon-projection method, then wrap that model polygon in this class."
+        },
+        {
+          "family": "exact_mouse_hit_testing",
+          "detail": "The Model render/picking path retrieves the record by interaction id, clears its active flag, tests Polygon.contains against the live mouse coordinates and sets the flag when the polygon is hit; the stored interaction id can replace the ordinary model-picking id."
+        },
+        {
+          "family": "exact_highlight_rendering",
+          "detail": "The shared client renderer iterates these records and draws each polygon with the record's state-dependent outline/fill colors; Editor Kit consumers also branch on the same active flag for entity selection/deletion interaction."
+        }
+      ],
+      "note": "InteractiveModelHighlight is descriptive exact-behavior recovery for the model-derived polygon record that participates in mouse hit-testing and state-dependent polygon highlighting. It does not claim an original developer identifier. Confidence is 0.998."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InteractiveModelHighlightRegistry",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_client_singleton",
+          "detail": "Client constructs exactly one rs/l/e/k instance and exposes it as the global holder consumed by Scene traversal, Model picking, Renderable/Editor Kit producers and the shared polygon renderer."
+        },
+        {
+          "family": "exact_typed_collections",
+          "detail": "The instance owns three int-keyed Trove maps whose values are exclusively rs/l/e/j InteractiveModelHighlight records; the live primary map is populated by Renderable and Editor Kit model-polygon producers."
+        },
+        {
+          "family": "exact_frame_lifecycle",
+          "detail": "Scene traversal clears the primary/live highlight maps before rebuilding scene presentation, while the shared renderer reads the primary map and draws every surviving model highlight for the frame."
+        },
+        {
+          "family": "exact_picking_lookup",
+          "detail": "Model rendering resolves highlight records from this registry by the same interaction id used by client picking, performs Polygon.contains mouse testing and updates the record's active state before ordinary picking proceeds."
+        }
+      ],
+      "note": "InteractiveModelHighlightRegistry is descriptive exact-behavior recovery for the client-global int-keyed holder of interactive model polygon highlighlights. Two auxiliary maps and a static id set are retained by exact v308 but do not justify a narrower product-specific noun. Confidence is 0.997."
+    }
+  ],
+  "conflicts": []
+}
