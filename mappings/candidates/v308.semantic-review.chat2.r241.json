@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_95BC6E624B359474EB6B",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_89C1BDE184DD6442E36E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000909",
+      "owner_logical_id": "CLIENT_CLASS_000909",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/f/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GroundMarkerOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_overlay_behavior",
+          "detail": "Exact v308 rs/s/f/c extends Overlay, injects GroundMarkersConfig/GroundMarkersPlugin, iterates the plugin ColorTileMarker collection, filters by plane, falls back to the configured marker color, and renders each marked tile with a BasicStroke built from borderWidth."
+        },
+        {
+          "family": "exact_draw_tile_fingerprint",
+          "detail": "The private draw path uses MAX_DRAW_DISTANCE=32, WorldPoint distance, LocalPoint conversion, canvas-tile polygon rendering with configured fill opacity, and optional label rendering guarded by Strings.isNullOrEmpty."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite GroundMarkerOverlay at 68c819924cfd6bfb4848c71f74c121109f289d5a has the same MAX_DRAW_DISTANCE=32, injected config/plugin pairing, ColorTileMarker iteration, plane/color fallback logic, border-width stroke, fill-opacity polygon and optional label path."
+        }
+      ],
+      "note": "The exact-v308 control flow and constants match RuneLite GroundMarkerOverlay nearly statement-for-statement; source identity is not inferred from package adjacency. Confidence 0.999."
+    }
+  ],
+  "unresolved": []
+}
