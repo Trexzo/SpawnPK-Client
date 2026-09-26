@@ -137,15 +137,19 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "NpcHighlightConfig",
-      "confidence": 0.985,
+      "proposed_name": "NpcIndicatorsConfig",
+      "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_literal_role",
-          "detail": "Exact options include NPCs to Highlight, Highlight hull/outline/tile/true tile, Draw names above NPC, Ignore pets, render style, colors, feather and border width."
+          "family": "exact_config_identity",
+          "detail": "Exact v308 rs/s/o/d extends Config, uses config group npcindicators, and exposes NPC highlight names/colors plus hull, tile, true-tile, south-west tile, outline, name, border-width, outline-feather and render-style controls."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite NpcIndicatorsConfig at 68c819924cfd6bfb4848c71f74c121109f289d5a uses the same npcindicators configuration identity and is paired with NpcIndicatorsPlugin; the v308 fork preserves that source identity while carrying its expanded highlight controls."
         }
       ],
-      "note": "Exact NPC highlight configuration role."
+      "note": "NpcIndicatorsConfig supersedes the earlier descriptive NpcHighlightConfig label; exact npcindicators group identity and RuneLite source provenance fix the source name. Confidence 0.999."
     },
     {
       "schema_version": 1,

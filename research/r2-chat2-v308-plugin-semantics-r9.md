@@ -36,7 +36,7 @@ references for four groups:
 - `rs/s/n/b` -> `rs/s/n/a`
 - `rs/s/f/d` -> `rs/s/f/b`
 - `rs/s/l/c` -> `rs/s/l/b`
-- `rs/s/o/e` -> R4 `rs/s/o/d` / `NpcHighlightConfig`
+- `rs/s/o/e` -> R4 `rs/s/o/d` / `NpcIndicatorsConfig`
 
 This means the Plugin/Config distinction is not inferred solely from nearby package names.
 

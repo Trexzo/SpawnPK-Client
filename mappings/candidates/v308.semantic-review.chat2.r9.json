@@ -102,7 +102,7 @@
         },
         {
           "family": "exact_pairing",
-          "detail": "Class directly references rs/s/o/d, reviewed in R4 as NpcHighlightConfig."
+          "detail": "Class directly references rs/s/o/d, reviewed in R4 as NpcIndicatorsConfig."
         }
       ],
       "note": "Runtime NPC-indicators role."

@@ -17,7 +17,7 @@ self-identifying enough to support conservative semantic names.
 - candidate classes: **9**
 - resolved proposals: **9**
 - unresolved: **0**
-- review ID: `SEMREVIEW_0D067AB471D25E575699`
+- review ID: `SEMREVIEW_B5D3292DF13F6740DF26`
 - field/method proposals: **0**
 
 ## Candidates
@@ -25,12 +25,12 @@ self-identifying enough to support conservative semantic names.
 | Raw class | Stable ID | Candidate semantic |
 | --- | --- | --- |
 | `rs/s/a/a` | `CLIENT_CLASS_000855` | `CombatOverlayConfig` |
-| `rs/s/c/a` | `CLIENT_CLASS_000887` | `InterfaceDeveloperToolsConfig` |
+| `rs/s/c/a` | `CLIENT_CLASS_000887` | `DevToolsConfig` |
 | `rs/s/d/a` | `CLIENT_CLASS_000897` | `EntityHiderConfig` |
 | `rs/s/h/b` | `CLIENT_CLASS_000918` | `StatusInfoboxConfig` |
 | `rs/s/i/a` | `CLIENT_CLASS_000919` | `InteractionHighlightConfig` |
 | `rs/s/j/a` | `CLIENT_CLASS_000922` | `KeyRemappingConfig` |
-| `rs/s/o/d` | `CLIENT_CLASS_000944` | `NpcHighlightConfig` |
+| `rs/s/o/d` | `CLIENT_CLASS_000944` | `NpcIndicatorsConfig` |
 | `rs/s/r/a` | `CLIENT_CLASS_000958` | `TileIndicatorConfig` |
 | `rs/s/s/a` | `CLIENT_CLASS_000961` | `TooltipConfig` |
 
@@ -57,4 +57,14 @@ as original developer class identifiers.
 
 Chat 2 does not promote these proposals. Main/Core must explicitly accept any desired subset
 through a `semantic_acceptance_spec` tied to
-`SEMREVIEW_0D067AB471D25E575699`.
+`SEMREVIEW_B5D3292DF13F6740DF26`.
+
+
+## Source-identity corrections after R242
+
+Historical RuneLite source plus exact-v308 config-group/runtime pairing supersedes two descriptive R4 labels:
+
+- `CLIENT_CLASS_000887`: `InterfaceDeveloperToolsConfig` -> `DevToolsConfig`
+- `CLIENT_CLASS_000944`: `NpcHighlightConfig` -> `NpcIndicatorsConfig`
+
+The corrected deterministic R4 review is `SEMREVIEW_B5D3292DF13F6740DF26`. Proposal count remains **9** and no semantic acceptance is performed.

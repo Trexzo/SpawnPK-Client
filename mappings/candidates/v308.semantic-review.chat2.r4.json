@@ -5,7 +5,7 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 9,
-  "review_id": "SEMREVIEW_CAD36DBCFCA2573C4FD7",
+  "review_id": "SEMREVIEW_B5D3292DF13F6740DF26",
   "proposals": [
     {
       "proposal_id": "SEMPROP_3C7AC1BBE22E12C38783",
@@ -28,6 +28,32 @@
         }
       ],
       "note": "Broad combat-overlay config name intentionally covers opponent, boss and bounty-hunter overlay settings."
+    },
+    {
+      "proposal_id": "SEMPROP_3EA119C8462103D4B8A1",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000944",
+      "owner_logical_id": "CLIENT_CLASS_000944",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/o/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcIndicatorsConfig",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_identity",
+          "detail": "Exact v308 rs/s/o/d extends Config, uses config group npcindicators, and exposes NPC highlight names/colors plus hull, tile, true-tile, south-west tile, outline, name, border-width, outline-feather and render-style controls."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite NpcIndicatorsConfig at 68c819924cfd6bfb4848c71f74c121109f289d5a uses the same npcindicators configuration identity and is paired with NpcIndicatorsPlugin; the v308 fork preserves that source identity while carrying its expanded highlight controls."
+        }
+      ],
+      "note": "NpcIndicatorsConfig supersedes the earlier descriptive NpcHighlightConfig label; exact npcindicators group identity and RuneLite source provenance fix the source name. Confidence 0.999."
     },
     {
       "proposal_id": "SEMPROP_4E31082E33B722391352",
@@ -120,28 +146,6 @@
         }
       ],
       "note": "Exact tile-indicator configuration role."
-    },
-    {
-      "proposal_id": "SEMPROP_683677EA207DDFF446CE",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000944",
-      "owner_logical_id": "CLIENT_CLASS_000944",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/s/o/d",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "NpcHighlightConfig",
-      "confidence": 0.985,
-      "evidence": [
-        {
-          "family": "exact_literal_role",
-          "detail": "Exact options include NPCs to Highlight, Highlight hull/outline/tile/true tile, Draw names above NPC, Ignore pets, render style, colors, feather and border width."
-        }
-      ],
-      "note": "Exact NPC highlight configuration role."
     },
     {
       "proposal_id": "SEMPROP_BD1774D5AEA85BC95A94",
