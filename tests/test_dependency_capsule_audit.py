@@ -222,6 +222,12 @@ class DependencyCapsuleAuditTests(unittest.TestCase):
                         ][source_form][channel],
                         {},
                     )
+                    self.assertEqual(
+                        report["summary"][
+                            "source_form_target_loaded_counts"
+                        ][source_form][channel],
+                        1,
+                    )
 
     def test_source_forms_distinguish_default_package_import_artifact(self):
         with tempfile.TemporaryDirectory() as td:
@@ -312,6 +318,24 @@ class DependencyCapsuleAuditTests(unittest.TestCase):
                     "import_simple"
                 ]["capsule_release"],
                 {"javac_resolves_exact_class": 1},
+            )
+            self.assertEqual(
+                summary["source_form_target_loaded_counts"][
+                    "qualified_type"
+                ]["capsule_release"],
+                1,
+            )
+            self.assertEqual(
+                summary["source_form_target_loaded_counts"][
+                    "same_package_simple"
+                ]["capsule_release"],
+                1,
+            )
+            self.assertEqual(
+                summary["source_form_target_loaded_counts"][
+                    "import_simple"
+                ]["capsule_release"],
+                0,
             )
             import_keys = summary[
                 "source_form_diagnostic_keys"
