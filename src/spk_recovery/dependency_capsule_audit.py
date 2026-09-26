@@ -75,10 +75,26 @@ def _class_major(data: bytes | None) -> int | None:
 def _classify_javac_probe(
     proc: subprocess.CompletedProcess[str],
     generated: Path,
+    *,
+    probe_dir: Path,
+    internal: str,
+    probe_name: str,
 ) -> tuple[str, str, list[int]]:
     diagnostic = (
         proc.stdout + proc.stderr
     ).replace("\r\n", "\n").replace("\r", "\n")
+
+    dotted = internal.replace("/", ".")
+    simple = dotted.rsplit(".", 1)[-1]
+    for old, new in (
+        (str(probe_dir), "<PROBE>"),
+        (probe_dir.as_posix(), "<PROBE>"),
+        (dotted, "<TYPE>"),
+        (internal, "<TYPE_INTERNAL>"),
+        (simple, "<TYPE_SIMPLE>"),
+        (probe_name, "<PROBE_CLASS>"),
+    ):
+        diagnostic = diagnostic.replace(old, new)
     lines = sorted(
         {
             int(match.group(1))
@@ -148,6 +164,9 @@ def _run_javac_probe(
     classification, diagnostic, lines = _classify_javac_probe(
         proc,
         generated,
+        probe_dir=probe_dir,
+        internal=internal,
+        probe_name=probe_name,
     )
     return {
         "classification": classification,
@@ -204,6 +223,15 @@ def _run_javap_probe(
     diagnostic = (
         proc.stdout + proc.stderr
     ).replace("\r\n", "\n").replace("\r", "\n")
+    for old, new in (
+        (dotted, "<TYPE>"),
+        (internal, "<TYPE_INTERNAL>"),
+        (dotted.rsplit(".", 1)[-1], "<TYPE_SIMPLE>"),
+        (str(classpath), "<CLASSPATH>"),
+        (classpath.as_posix(), "<CLASSPATH>"),
+    ):
+        diagnostic = diagnostic.replace(old, new)
+
     if proc.returncode == 0:
         classification = "javap_resolves_exact_class"
     elif "class not found" in diagnostic.lower():
