@@ -171,11 +171,16 @@ def plan_namespace_remap_impact(
         class_reference_values = set(parsed.class_references)
 
         for value in parsed.utf8_strings:
-            if (
-                value in old_names
-                and value in class_reference_values
-            ):
-                continue
+            if value in class_reference_values:
+                if value in old_names:
+                    continue
+                if any(
+                    value.startswith(old + "/")
+                    for old in old_names
+                ):
+                    # A package descendant remains under the original
+                    # package path when the colliding class node is renamed.
+                    continue
 
             symbolic = _descriptor_signature_hits(
                 value,
