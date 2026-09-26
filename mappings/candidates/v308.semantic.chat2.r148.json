@@ -49,7 +49,7 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "ClientToolbar",
+      "proposed_name": "ClientPluginToolbar",
       "confidence": 0.999,
       "evidence": [
         {
@@ -67,9 +67,13 @@
         {
           "family": "exact_clientui_consumer",
           "detail": "R147 ClientUI adds ordinary NavigationButton components to this toolbar on NavigationButtonAdded and removes them on NavigationButtonRemoved."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite 96036d17d0f14f2bd20fb174054fe6f46570b613 contains net.runelite.client.ui.ClientPluginToolbar with the same vertical JToolBar superclass, 36x503 sizing, sorted NavigationButton->Component map, tab/priority/tooltip ordering, separator boundary and rebuild-on-add/remove behavior."
         }
       ],
-      "note": "ClientToolbar is fixed by its vertical NavigationButton toolbar shape and direct ClientUI navigation-event ownership. Confidence is 0.999."
+      "note": "ClientPluginToolbar is exact historical RuneLite source-name recovery at confidence 0.999. The earlier descriptive ClientToolbar name is superseded; RuneLite ClientToolbar is the separate rs/ui/e registration service corrected in R149."
     },
     {
       "schema_version": 1,

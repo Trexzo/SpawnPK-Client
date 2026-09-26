@@ -5,42 +5,8 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 4,
-  "review_id": "SEMREVIEW_904385EDA852ACED380C",
+  "review_id": "SEMREVIEW_5E513F483820AC87D2EB",
   "proposals": [
-    {
-      "proposal_id": "SEMPROP_0F78D21B0D4CB4ED797E",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_001027",
-      "owner_logical_id": "CLIENT_CLASS_001027",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/ui/b",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "ClientToolbar",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_toolbar_shape",
-          "detail": "The class extends vertical JToolBar, is non-floatable, and has exact 36x503 base dimensions."
-        },
-        {
-          "family": "exact_navigation_button_map",
-          "detail": "It maintains a sorted Map<NavigationButton, Component>; add/remove operations rebuild the visible toolbar from that map."
-        },
-        {
-          "family": "exact_navigation_ordering",
-          "detail": "Navigation buttons are ordered by their toolbar-section flag, priority and title; the rebuild inserts glue/separator between the two button groups."
-        },
-        {
-          "family": "exact_clientui_consumer",
-          "detail": "R147 ClientUI adds ordinary NavigationButton components to this toolbar on NavigationButtonAdded and removes them on NavigationButtonRemoved."
-        }
-      ],
-      "note": "ClientToolbar is fixed by its vertical NavigationButton toolbar shape and direct ClientUI navigation-event ownership. Confidence is 0.999."
-    },
     {
       "proposal_id": "SEMPROP_51A052A1F76C51A673B5",
       "target_kind": "class",
@@ -104,6 +70,44 @@
         }
       ],
       "note": "PluginPanel is fixed by its shared plugin-side-panel layout plus NavigationButton ownership and ClientUI activation/deactivation lifecycle. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_844AE6578F95F008C0E7",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001027",
+      "owner_logical_id": "CLIENT_CLASS_001027",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientPluginToolbar",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_toolbar_shape",
+          "detail": "The class extends vertical JToolBar, is non-floatable, and has exact 36x503 base dimensions."
+        },
+        {
+          "family": "exact_navigation_button_map",
+          "detail": "It maintains a sorted Map<NavigationButton, Component>; add/remove operations rebuild the visible toolbar from that map."
+        },
+        {
+          "family": "exact_navigation_ordering",
+          "detail": "Navigation buttons are ordered by their toolbar-section flag, priority and title; the rebuild inserts glue/separator between the two button groups."
+        },
+        {
+          "family": "exact_clientui_consumer",
+          "detail": "R147 ClientUI adds ordinary NavigationButton components to this toolbar on NavigationButtonAdded and removes them on NavigationButtonRemoved."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite 96036d17d0f14f2bd20fb174054fe6f46570b613 contains net.runelite.client.ui.ClientPluginToolbar with the same vertical JToolBar superclass, 36x503 sizing, sorted NavigationButton->Component map, tab/priority/tooltip ordering, separator boundary and rebuild-on-add/remove behavior."
+        }
+      ],
+      "note": "ClientPluginToolbar is exact historical RuneLite source-name recovery at confidence 0.999. The earlier descriptive ClientToolbar name is superseded; RuneLite ClientToolbar is the separate rs/ui/e registration service corrected in R149."
     },
     {
       "proposal_id": "SEMPROP_BBDBCC90F3427D6D0CCF",

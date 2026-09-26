@@ -18,7 +18,7 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "NavigationButtonManager",
+      "proposed_name": "ClientToolbar",
       "confidence": 0.999,
       "evidence": [
         {
@@ -36,9 +36,13 @@
         {
           "family": "exact_clientui_consumer",
           "detail": "R147 ClientUI subscribes to those exact added/removed events to install or remove buttons from ClientToolbar/ClientTitleToolbar and to add/remove associated PluginPanel content."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite 96036d17d0f14f2bd20fb174054fe6f46570b613 contains net.runelite.client.ui.ClientToolbar with the same EventBus field, HashSet<NavigationButton> registry, idempotent addNavigation, conditional removeNavigation and exact NavigationButtonAdded/NavigationButtonRemoved event posting contract."
         }
       ],
-      "note": "NavigationButtonManager is fixed by its exact NavigationButton registry and EventBus add/remove event contract consumed by ClientUI. Confidence is 0.999."
+      "note": "ClientToolbar is exact historical RuneLite source-name recovery at confidence 0.999. The former descriptive NavigationButtonManager label is superseded."
     },
     {
       "schema_version": 1,
