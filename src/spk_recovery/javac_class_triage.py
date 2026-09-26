@@ -17,6 +17,11 @@ from .javac_variable_triage import (
     _stable_digest,
 )
 from .source_digest import source_tree_digest
+from .source_readiness import (
+    _PACKAGE_RE as _READINESS_PACKAGE_RE,
+    _TOP_TYPE_RE,
+    _code_mask_and_depths,
+)
 
 
 class JavacClassTriageError(ValueError):
@@ -121,6 +126,88 @@ def _global_class_candidates(
     return sorted(matches)
 
 
+def _brace_pairs(masked: str) -> dict[int, int]:
+    stack: list[int] = []
+    pairs: dict[int, int] = {}
+    for index, ch in enumerate(masked):
+        if ch == "{":
+            stack.append(index)
+        elif ch == "}" and stack:
+            start = stack.pop()
+            pairs[start] = index
+    return pairs
+
+
+def _source_declared_types(
+    source_root: Path,
+) -> tuple[set[str], dict[str, str]]:
+    declared: set[str] = set()
+    owners: dict[str, str] = {}
+
+    for path in sorted(
+        source_root.rglob("*.java"),
+        key=lambda p: p.relative_to(source_root).as_posix(),
+    ):
+        rel = path.relative_to(source_root).as_posix()
+        text = path.read_text(
+            encoding="utf-8",
+            errors="replace",
+        )
+        package_match = _READINESS_PACKAGE_RE.search(text)
+        package = package_match.group(1) if package_match else ""
+        masked, _depths = _code_mask_and_depths(text)
+        pairs = _brace_pairs(masked)
+
+        declarations: list[dict[str, Any]] = []
+        for match in _TOP_TYPE_RE.finditer(masked):
+            body_start = masked.find("{", match.end())
+            if body_start < 0:
+                continue
+            body_end = pairs.get(body_start)
+            if body_end is None:
+                continue
+
+            parent = None
+            for candidate in declarations:
+                if (
+                    candidate["body_start"] < match.start()
+                    < candidate["body_end"]
+                ):
+                    if (
+                        parent is None
+                        or candidate["body_start"]
+                        > parent["body_start"]
+                    ):
+                        parent = candidate
+
+            name = match.group(1)
+            if parent is None:
+                internal = (
+                    package.replace(".", "/") + "/" + name
+                    if package
+                    else name
+                )
+            else:
+                internal = parent["internal"] + "$" + name
+
+            declarations.append(
+                {
+                    "internal": internal,
+                    "body_start": body_start,
+                    "body_end": body_end,
+                }
+            )
+            if internal in owners and owners[internal] != rel:
+                raise JavacClassTriageError(
+                    "source declaration identity collision: "
+                    + internal
+                )
+            owners[internal] = rel
+            declared.add(internal)
+
+    return declared, owners
+
+
 def analyze_unresolved_classes(
     diagnostic_report: dict[str, Any],
     readable_jar: Path,
@@ -178,6 +265,9 @@ def analyze_unresolved_classes(
     )
     jar_sha = _sha256_file(readable_jar)
     classes = _load_classes(readable_jar)
+    source_declared, source_declared_files = _source_declared_types(
+        source_root
+    )
 
     rows: list[dict[str, Any]] = []
     for diagnostic in diagnostic_report.get("diagnostics", []):
@@ -201,6 +291,8 @@ def analyze_unresolved_classes(
         visible: list[str] = []
         channels: list[str] = []
         global_candidates: list[str] = []
+        source_materialization = "not_applicable"
+        source_declared_candidate_count = 0
 
         if rel is None:
             proof_class = "source_path_unbound"
@@ -237,6 +329,40 @@ def analyze_unresolved_classes(
                 else:
                     proof_class = "class_absent_from_readable"
 
+            candidate_pool = (
+                visible
+                if visible
+                else global_candidates
+            )
+            source_declared_candidate_count = sum(
+                1
+                for candidate in candidate_pool
+                if candidate in source_declared
+            )
+            if len(candidate_pool) == 1:
+                candidate = candidate_pool[0]
+                if candidate in source_declared:
+                    source_materialization = "declared_exact"
+                else:
+                    source_materialization = (
+                        "missing_exact_declaration"
+                    )
+            elif len(candidate_pool) > 1:
+                if source_declared_candidate_count == 0:
+                    source_materialization = (
+                        "ambiguous_none_declared"
+                    )
+                elif source_declared_candidate_count == 1:
+                    source_materialization = (
+                        "ambiguous_one_declared"
+                    )
+                else:
+                    source_materialization = (
+                        "ambiguous_multiple_declared"
+                    )
+            elif proof_class == "class_absent_from_readable":
+                source_materialization = "readable_absent"
+
         public: dict[str, Any] = {
             "file_id": diagnostic.get("file_id"),
             "symbol_id": diagnostic.get("symbol_id"),
@@ -247,6 +373,10 @@ def analyze_unresolved_classes(
             "visible_candidate_count": len(visible),
             "global_candidate_count": len(global_candidates),
             "visibility_channel_count": len(channels),
+            "source_materialization": source_materialization,
+            "source_declared_candidate_count": (
+                source_declared_candidate_count
+            ),
         }
         if include_identifiers:
             public.update(
@@ -258,12 +388,40 @@ def analyze_unresolved_classes(
                     "visible_candidates": visible,
                     "visibility_channels": channels,
                     "global_candidates": global_candidates,
+                    "source_declared_candidate_files": {
+                        candidate: source_declared_files.get(candidate)
+                        for candidate in (
+                            visible or global_candidates
+                        )
+                        if candidate in source_declared_files
+                    },
                     "location": diagnostic.get("location"),
                 }
             )
         rows.append(public)
 
     proof_counts = Counter(row["proof_class"] for row in rows)
+    materialization_counts = Counter(
+        row["source_materialization"]
+        for row in rows
+    )
+    visible_exact_source_declared_count = sum(
+        1
+        for row in rows
+        if (
+            row["proof_class"] == "java_visible_exact_class"
+            and row["source_materialization"] == "declared_exact"
+        )
+    )
+    visible_exact_source_missing_count = sum(
+        1
+        for row in rows
+        if (
+            row["proof_class"] == "java_visible_exact_class"
+            and row["source_materialization"]
+            == "missing_exact_declaration"
+        )
+    )
     symbol_buckets: dict[str, dict[str, Any]] = {}
     for row in rows:
         symbol_id = str(row.get("symbol_id") or "none")
@@ -310,6 +468,8 @@ def analyze_unresolved_classes(
                 "visible_candidate_count",
                 "global_candidate_count",
                 "visibility_channel_count",
+                "source_materialization",
+                "source_declared_candidate_count",
             )
         }
         for row in rows
@@ -338,6 +498,16 @@ def analyze_unresolved_classes(
         "summary": {
             "class_diagnostic_count": len(rows),
             "proof_classes": dict(sorted(proof_counts.items())),
+            "source_materialization": dict(
+                sorted(materialization_counts.items())
+            ),
+            "source_declared_type_count": len(source_declared),
+            "visible_exact_source_declared_count": (
+                visible_exact_source_declared_count
+            ),
+            "visible_exact_source_missing_count": (
+                visible_exact_source_missing_count
+            ),
             "repair_candidate_diagnostic_count": (
                 proof_counts.get("readable_class_not_java_visible", 0)
             ),
