@@ -41,10 +41,11 @@ class R8QPowerShellWrapperTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1]
         script = root / "scripts" / "Invoke-R8QExactSourceEntryGate.ps1"
 
+        escaped = str(script).replace("'", "''")
         command = (
             "$errors = $null; "
             "[System.Management.Automation.Language.Parser]::ParseFile("
-            f"'{str(script).replace("'", "''")}', "
+            "'" + escaped + "', "
             "[ref]$null, [ref]$errors) | Out-Null; "
             "if ($errors.Count -ne 0) { "
             "$errors | ForEach-Object { Write-Error $_.Message }; "
