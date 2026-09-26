@@ -217,6 +217,66 @@ class JavacVariableTriageTests(unittest.TestCase):
                 second["diagnostic_frontier_id"],
             )
 
+    def test_legacy_private_report_derives_same_stable_frontier(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source_root, source, jar = self._fixture(root)
+            raw = (
+                f"{source / 'Own.java'}:1: error: cannot find symbol\n"
+                "  symbol:   variable ownSecretField\n"
+                "  location: class Own\n"
+            )
+            diagnostic = classify_javac_diagnostics(
+                raw,
+                include_identifiers=True,
+            )
+            expected_frontier = diagnostic["frontier_id"]
+            legacy = dict(diagnostic)
+            legacy.pop("frontier_id")
+
+            report = analyze_unresolved_variables(
+                legacy,
+                jar,
+                source_root,
+            )
+
+            self.assertEqual(
+                report["diagnostic_frontier_id"],
+                expected_frontier,
+            )
+            self.assertTrue(
+                report[
+                    "diagnostic_frontier_derived_from_legacy_report"
+                ]
+            )
+
+    def test_tampered_frontier_id_is_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source_root, source, jar = self._fixture(root)
+            raw = (
+                f"{source / 'Own.java'}:1: error: cannot find symbol\n"
+                "  symbol:   variable ownSecretField\n"
+                "  location: class Own\n"
+            )
+            diagnostic = classify_javac_diagnostics(
+                raw,
+                include_identifiers=True,
+            )
+            diagnostic["frontier_id"] = (
+                "JAVACFRONTIER_" + "0" * 20
+            )
+
+            with self.assertRaisesRegex(
+                ValueError,
+                "frontier authority is invalid",
+            ):
+                analyze_unresolved_variables(
+                    diagnostic,
+                    jar,
+                    source_root,
+                )
+
     def test_requires_identifier_opt_in_diagnostic_report(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
