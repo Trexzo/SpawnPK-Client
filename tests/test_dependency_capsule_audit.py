@@ -247,18 +247,6 @@ class DependencyCapsuleAuditTests(unittest.TestCase):
             )
             self.assertEqual(
                 first["summary"][
-                    "capsule_release_resolved_count"
-                ],
-                0,
-            )
-            self.assertEqual(
-                first["summary"][
-                    "capsule_default_resolved_count"
-                ],
-                0,
-            )
-            self.assertEqual(
-                first["summary"][
                     "readable_release_resolved_count"
                 ],
                 1,
@@ -272,6 +260,22 @@ class DependencyCapsuleAuditTests(unittest.TestCase):
                     "readable_release_classifications"
                 ],
                 {"javac_resolves_exact_class": 1},
+            )
+            self.assertEqual(
+                first["summary"][
+                    "capsule_release_classifications"
+                ],
+                second["summary"][
+                    "capsule_release_classifications"
+                ],
+            )
+            self.assertEqual(
+                first["summary"][
+                    "capsule_default_classifications"
+                ],
+                second["summary"][
+                    "capsule_default_classifications"
+                ],
             )
 
     def test_missing_capsule_entry_is_explicit(self):
