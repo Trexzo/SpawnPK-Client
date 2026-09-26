@@ -12,12 +12,12 @@ reviewed NPC Indicators plugin.
 - candidate classes: **1**
 - resolved proposals: **1**
 - unresolved: **0**
-- review ID: `SEMREVIEW_235A3BDCAF9E0F68D3A5`
+- review ID: `SEMREVIEW_3848C69231F9A9D6A054`
 - field/method proposals: **0**
 
 ## Stable ID
 
-`rs/s/o/c` -> `CLIENT_CLASS_000942` -> `NpcIndicatorsOverlay`
+`rs/s/o/c` -> `CLIENT_CLASS_000943` -> `NpcIndicatorsOverlay`
 
 ## Exact plugin ownership
 
@@ -50,8 +50,8 @@ No non-NPC subsystem is touched.
 ## Excluded sibling
 
 `rs/s/o/b` is a separate NPC snapshot/cache-like record storing name/id/coordinate and
-WorldPoint-list state. Its higher-level identity is not yet specific enough for a semantic
-proposal, so R189 deliberately leaves it unnamed.
+WorldPoint-list state. Its source identity was recovered later as `MemorizedNpc` in R243; R189 predates that
+review and therefore does not duplicate it.
 
 ## Confidence boundary
 
@@ -63,4 +63,4 @@ the reviewed `HighlightedNpc` render model.
 ## Acceptance boundary
 
 R189 remains class-only and non-canonical. Main/Core may accept the proposal only through an
-explicit `semantic_acceptance_spec` bound to `SEMREVIEW_235A3BDCAF9E0F68D3A5`.
+explicit `semantic_acceptance_spec` bound to `SEMREVIEW_3848C69231F9A9D6A054`.

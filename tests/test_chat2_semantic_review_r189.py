@@ -10,7 +10,7 @@ SHA = (
 )
 ROOT = Path(__file__).resolve().parents[1]
 
-CLASS_COORDS = [("CLIENT_CLASS_000942", "rs/s/o/c")]
+CLASS_COORDS = [("CLIENT_CLASS_000943", "rs/s/o/c")]
 
 
 def _class_lineage():
@@ -66,14 +66,14 @@ class Chat2SemanticReviewR189Tests(unittest.TestCase):
         actual = resolve_semantic_candidates(_class_lineage(), _member_lineage(), candidates)
         self.assertEqual(actual["proposal_count"], 1)
         self.assertEqual(actual["unresolved"], [])
-        self.assertEqual(actual["review_id"], "SEMREVIEW_235A3BDCAF9E0F68D3A5")
+        self.assertEqual(actual["review_id"], "SEMREVIEW_3848C69231F9A9D6A054")
         self.assertEqual(actual, expected)
 
     def test_r189_expected_stable_id(self):
         review = _load("mappings/candidates/v308.semantic-review.chat2.r189.json")
         self.assertEqual(
             {row["proposed_name"]: row["stable_id"] for row in review["proposals"]},
-            {"NpcIndicatorsOverlay": "CLIENT_CLASS_000942"},
+            {"NpcIndicatorsOverlay": "CLIENT_CLASS_000943"},
         )
 
     def test_r189_name_and_owner_do_not_overlap_prior_reviews(self):
