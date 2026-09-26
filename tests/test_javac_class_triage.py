@@ -101,6 +101,24 @@ class JavacClassTriageTests(unittest.TestCase):
                 imported["summary"]["proof_classes"],
                 {"java_visible_exact_class": 1},
             )
+            self.assertEqual(
+                same["summary"][
+                    "visible_exact_source_declared_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                same["summary"][
+                    "visible_exact_source_missing_count"
+                ],
+                0,
+            )
+            self.assertEqual(
+                imported["summary"][
+                    "visible_exact_source_declared_count"
+                ],
+                1,
+            )
 
     def test_same_source_nested_is_visible(self):
         with tempfile.TemporaryDirectory() as td:
@@ -130,6 +148,86 @@ class JavacClassTriageTests(unittest.TestCase):
             self.assertEqual(
                 report["diagnostics"][0]["visible_candidates"],
                 ["t/Outer$Inner"],
+            )
+            self.assertEqual(
+                report["diagnostics"][0]["source_materialization"],
+                "declared_exact",
+            )
+
+    def test_visible_readable_top_level_missing_from_source_is_detected(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            src, t, jar = self._fixture(root)
+
+            gone = t / "Same.java"
+            gone.unlink()
+
+            report = self._run(src, t, jar, "Same")
+
+            self.assertEqual(
+                report["summary"]["proof_classes"],
+                {"java_visible_exact_class": 1},
+            )
+            self.assertEqual(
+                report["summary"][
+                    "visible_exact_source_declared_count"
+                ],
+                0,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "visible_exact_source_missing_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["diagnostics"][0]["source_materialization"],
+                "missing_exact_declaration",
+            )
+
+    def test_visible_readable_nested_missing_from_source_is_detected(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            src, t, jar = self._fixture(root)
+
+            outer = t / "Outer.java"
+            outer.write_text(
+                "package t; public class Outer {}\n",
+                encoding="utf-8",
+            )
+            raw = (
+                f"{outer}:1: error: cannot find symbol\n"
+                "  symbol:   class Inner\n"
+                "  location: class Outer\n"
+            )
+            diagnostic = classify_javac_diagnostics(
+                raw,
+                include_identifiers=True,
+            )
+            report = analyze_unresolved_classes(
+                diagnostic,
+                jar,
+                src,
+                include_identifiers=True,
+            )
+
+            self.assertEqual(
+                report["summary"]["proof_classes"],
+                {"java_visible_exact_class": 1},
+            )
+            self.assertEqual(
+                report["summary"][
+                    "visible_exact_source_missing_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["diagnostics"][0]["visible_candidates"],
+                ["t/Outer$Inner"],
+            )
+            self.assertEqual(
+                report["diagnostics"][0]["source_materialization"],
+                "missing_exact_declaration",
             )
 
     def test_readable_but_not_visible_is_repair_candidate(self):
