@@ -273,6 +273,109 @@ class JavacVariableTriageTests(unittest.TestCase):
                 "variable_location_owner_exact",
             )
 
+    def test_variable_location_absent_explicit_import_is_classified(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source_root, source, jar = self._fixture(root)
+
+            use_missing = source / "UseMissing.java"
+            use_missing.write_text(
+                "package t; import external.missing.MissingType; "
+                "public class UseMissing { MissingType value; }\n",
+                encoding="utf-8",
+            )
+            raw = (
+                f"{use_missing}:1: error: cannot find symbol\n"
+                "  symbol:   variable missingField\n"
+                "  location: variable value of type MissingType\n"
+            )
+            diagnostics = classify_javac_diagnostics(
+                raw,
+                include_identifiers=True,
+            )
+            report = analyze_unresolved_variables(
+                diagnostics,
+                jar,
+                source_root,
+            )
+
+            self.assertEqual(
+                report["summary"]["proof_classes"],
+                {
+                    "variable_location_explicit_import_owner_absent": 1
+                },
+            )
+
+    def test_variable_location_does_not_use_global_unique_name_guess(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source_root, source, jar = self._fixture(root)
+
+            no_import = source / "UseNoImport.java"
+            no_import.write_text(
+                "package t; public class UseNoImport { "
+                "Imported value; }\n",
+                encoding="utf-8",
+            )
+            raw = (
+                f"{no_import}:1: error: cannot find symbol\n"
+                "  symbol:   variable importedSecretField\n"
+                "  location: variable value of type Imported\n"
+            )
+            diagnostics = classify_javac_diagnostics(
+                raw,
+                include_identifiers=True,
+            )
+            report = analyze_unresolved_variables(
+                diagnostics,
+                jar,
+                source_root,
+            )
+
+            self.assertEqual(
+                report["summary"]["proof_classes"],
+                {
+                    "variable_location_same_package_or_java_lang_unbound": 1
+                },
+            )
+
+    def test_array_and_primitive_receiver_failures_are_explicit(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source_root, source, jar = self._fixture(root)
+
+            raw = "".join(
+                [
+                    f"{source / 'UseReceiver.java'}:1: error: cannot find symbol\n"
+                    "  symbol:   variable bogusField\n"
+                    "  location: variable values of type Receiver[]\n",
+                    f"{source / 'UseReceiver.java'}:2: error: cannot find symbol\n"
+                    "  symbol:   variable length\n"
+                    "  location: variable values of type Receiver[]\n",
+                    f"{source / 'UseReceiver.java'}:3: error: cannot find symbol\n"
+                    "  symbol:   variable bogusField\n"
+                    "  location: variable value of type int\n",
+                ]
+            )
+            diagnostics = classify_javac_diagnostics(
+                raw,
+                include_identifiers=True,
+            )
+            report = analyze_unresolved_variables(
+                diagnostics,
+                jar,
+                source_root,
+            )
+
+            self.assertEqual(
+                report["summary"]["proof_classes"],
+                {
+                    "array_length_pseudo_field": 1,
+                    "array_receiver_no_exact_field": 1,
+                    "variable_location_type_unsupported_primitive": 1,
+                },
+            )
+
     def test_variable_location_malformed_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
