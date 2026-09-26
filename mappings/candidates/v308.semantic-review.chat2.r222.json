@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_3EDCD5721A8A23544C73",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_FA98ABABD3781227460F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000809",
+      "owner_logical_id": "CLIENT_CLASS_000809",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AABB",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_six_getter_interface",
+          "detail": "Exact v308 rs/runelite/a/a is an interface with exactly six abstract int getters and no unrelated methods; rs/a/i is its six-int concrete model-bounds implementation."
+        },
+        {
+          "family": "exact_model_bounds_join",
+          "detail": "The only recovered concrete implementation is populated by Model from three axis centers and three half-extents and cached by orientation, directly binding the interface to axis-aligned model bounds."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream commit 5dffa0133efcf32e5e0c7e488dbf24ef5f781630 introduced net.runelite.api.AABB as an interface with exactly getCenterX(), getCenterY(), getCenterZ(), getExtremeX(), getExtremeY() and getExtremeZ(), matching the six-method exact-v308 interface."
+        }
+      ],
+      "note": "AABB is recovered at confidence 0.999 as an upstream source-name match for the exact six-getter RuneLite API interface. Corrected R32 now names the concrete rs/a/i implementation ModelAABB, avoiding a duplicate and preserving the source-proven noun for this interface."
+    }
+  ],
+  "unresolved": []
+}

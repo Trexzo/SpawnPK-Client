@@ -5,10 +5,10 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 1,
-  "review_id": "SEMREVIEW_F5DD2732F728A2946B02",
+  "review_id": "SEMREVIEW_FC24DE0B8A0F2CAF799C",
   "proposals": [
     {
-      "proposal_id": "SEMPROP_0B9E8DFA9594EE5A8031",
+      "proposal_id": "SEMPROP_E4204F44044713ABAD56",
       "target_kind": "class",
       "stable_id": "CLIENT_CLASS_000072",
       "owner_logical_id": "CLIENT_CLASS_000072",
@@ -19,7 +19,7 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "AABB",
+      "proposed_name": "ModelAABB",
       "confidence": 0.999,
       "evidence": [
         {
@@ -32,10 +32,10 @@
         },
         {
           "family": "exact_value_shape",
-          "detail": "rs/a/i contains exactly six integer values with six direct getters and implements the matching six-coordinate rs.runelite.a.a interface, with no unrelated state."
+          "detail": "rs/a/i contains exactly six integer values with six direct getters, carries no unrelated state, and is the exact concrete implementation of rs/runelite/a/a, whose RuneLite API source identity is AABB."
         }
       ],
-      "note": "AABB is the conservative modern semantic name for this exact axis-aligned model-bounds value object; it does not claim recovery of an original developer identifier."
+      "note": "ModelAABB is the corrected descriptive name for the exact six-int model-bounds implementation. The older R32 name AABB is superseded because exact upstream RuneLite source proves that AABB is the implemented API interface rs/runelite/a/a. Confidence remains 0.999."
     }
   ],
   "unresolved": []
