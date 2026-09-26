@@ -8,12 +8,62 @@ import unittest
 import zipfile
 
 from spk_recovery.dependency_capsule_audit import (
+    _source_name_profile,
     audit_dependency_capsule,
 )
 
 
 @unittest.skipUnless(shutil.which("javac"), "javac required")
 class DependencyCapsuleAuditTests(unittest.TestCase):
+    def test_source_name_profile_accepts_ordinary_binary_name(self):
+        self.assertEqual(
+            _source_name_profile("com/example/Fallback"),
+            {
+                "classification": "source_spellable",
+                "segment_count": 3,
+                "failure_count": 0,
+                "failures": [],
+            },
+        )
+
+    def test_source_name_profile_rejects_keyword_segments(self):
+        profile = _source_name_profile("com/if/Fallback")
+        self.assertEqual(
+            profile["classification"],
+            "source_unspellable_keyword",
+        )
+        self.assertEqual(
+            profile["failures"],
+            [
+                {
+                    "segment_index": 1,
+                    "segment_role": "package",
+                    "shape": "keyword",
+                }
+            ],
+        )
+
+        class_keyword = _source_name_profile("com/example/do")
+        self.assertEqual(
+            class_keyword["classification"],
+            "source_unspellable_keyword",
+        )
+        self.assertEqual(
+            class_keyword["failures"][0]["segment_role"],
+            "class",
+        )
+
+    def test_source_name_profile_rejects_illegal_identifier_spelling(self):
+        profile = _source_name_profile("com/bad-name/Fallback")
+        self.assertEqual(
+            profile["classification"],
+            "source_unspellable_identifier",
+        )
+        self.assertEqual(
+            profile["failures"][0]["shape"],
+            "invalid_part",
+        )
+
     def _fixture(self, root: Path):
         src = root / "src" / "dep"
         src.mkdir(parents=True)
