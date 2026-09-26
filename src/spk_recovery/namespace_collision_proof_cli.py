@@ -76,6 +76,26 @@ def main(argv: list[str] | None = None) -> int:
         f"{summary['planned_colliding_class_rename_count']}"
     )
     print(
+        "planned_binary_class_rename_count="
+        f"{summary['planned_binary_class_rename_count']}"
+    )
+    print(
+        "planned_nested_binary_class_rename_count="
+        f"{summary['planned_nested_binary_class_rename_count']}"
+    )
+    print(
+        "simulated_candidate_collision_count="
+        f"{summary['simulated_candidate_collision_count']}"
+    )
+    print(
+        "simulated_new_collision_node_count="
+        f"{summary['simulated_new_collision_node_count']}"
+    )
+    print(
+        "remap_plan_topology_safe="
+        f"{summary['remap_plan_topology_safe']}"
+    )
+    print(
         "identifiers_included="
         f"{report['identifiers_included']}"
     )
