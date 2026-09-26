@@ -445,6 +445,10 @@ class CleanRebuildTests(unittest.TestCase):
                 private["report_id"],
                 public["report_id"],
             )
+            self.assertEqual(
+                private["frontier_id"],
+                public["frontier_id"],
+            )
             self.assertIn(sentinel, str(private))
             private_paths = [
                 row["source_path"]
