@@ -73,7 +73,7 @@
           "detail": "Model rendering resolves highlight records from this registry by the same interaction id used by client picking, performs Polygon.contains mouse testing and updates the record's active state before ordinary picking proceeds."
         }
       ],
-      "note": "InteractiveModelHighlightRegistry is descriptive exact-behavior recovery for the client-global int-keyed holder of interactive model polygon highlighlights. Two auxiliary maps and a static id set are retained by exact v308 but do not justify a narrower product-specific noun. Confidence is 0.997."
+      "note": "InteractiveModelHighlightRegistry is descriptive exact-behavior recovery for the client-global int-keyed holder of interactive model polygon highlights. Two auxiliary maps and a static id set are retained by exact v308 but do not justify a narrower product-specific noun. Confidence is 0.997."
     }
   ],
   "conflicts": []
