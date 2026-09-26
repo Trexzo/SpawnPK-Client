@@ -159,6 +159,58 @@ def _source_name_profile(
     }
 
 
+def _class_metadata_profile(
+    data: bytes | None,
+) -> dict[str, Any]:
+    if data is None:
+        return {
+            "parseable": False,
+            "package_depth": None,
+            "default_package": None,
+            "class_signature_attribute": None,
+            "field_signature_attribute_count": None,
+            "method_signature_attribute_count": None,
+            "super_present": None,
+            "interface_count": None,
+        }
+
+    try:
+        parsed = parse_class(data)
+    except (ClassFormatError, ValueError):
+        return {
+            "parseable": False,
+            "package_depth": None,
+            "default_package": None,
+            "class_signature_attribute": None,
+            "field_signature_attribute_count": None,
+            "method_signature_attribute_count": None,
+            "super_present": None,
+            "interface_count": None,
+        }
+
+    package_depth = max(0, parsed.name.count("/"))
+    return {
+        "parseable": True,
+        "package_depth": package_depth,
+        "default_package": package_depth == 0,
+        "class_signature_attribute": (
+            "Signature" in parsed.attributes
+        ),
+        "field_signature_attribute_count": sum(
+            1
+            for field in parsed.fields
+            if "Signature" in field.get("attributes", [])
+        ),
+        "method_signature_attribute_count": sum(
+            1
+            for method in parsed.methods
+            if "Signature" in method.get("attributes", [])
+        ),
+        "super_present": parsed.super_name is not None,
+        "interface_count": len(parsed.interfaces),
+    }
+
+
 def _probe_source(
     internal_name: str,
     index: int,
@@ -488,6 +540,9 @@ def audit_dependency_capsule(
 
             class_major = _class_major(capsule_bytes)
             source_name_profile = _source_name_profile(internal)
+            class_metadata_profile = _class_metadata_profile(
+                capsule_bytes
+            )
 
             source_form_probes: dict[str, dict[str, Any]] = {}
             javap_probe = {
@@ -556,6 +611,7 @@ def audit_dependency_capsule(
                 "byte_identical": byte_identical,
                 "class_major": class_major,
                 "source_name_profile": source_name_profile,
+                "class_metadata_profile": class_metadata_profile,
                 "source_form_probes": source_form_probes,
                 "capsule_release_probe": source_form_probes.get(
                     "import_simple",
@@ -635,6 +691,40 @@ def audit_dependency_capsule(
         for row in rows
         for failure in row["source_name_profile"]["failures"]
     )
+    package_depths = Counter(
+        str(row["class_metadata_profile"]["package_depth"])
+        for row in rows
+    )
+    default_package_count = sum(
+        1
+        for row in rows
+        if row["class_metadata_profile"]["default_package"] is True
+    )
+    class_signature_count = sum(
+        1
+        for row in rows
+        if row["class_metadata_profile"][
+            "class_signature_attribute"
+        ] is True
+    )
+    field_signature_attribute_count = sum(
+        int(
+            row["class_metadata_profile"][
+                "field_signature_attribute_count"
+            ]
+            or 0
+        )
+        for row in rows
+    )
+    method_signature_attribute_count = sum(
+        int(
+            row["class_metadata_profile"][
+                "method_signature_attribute_count"
+            ]
+            or 0
+        )
+        for row in rows
+    )
 
     source_form_classifications: dict[str, dict[str, Counter[str]]] = {}
     source_form_diagnostic_keys: dict[str, dict[str, Counter[str]]] = {}
@@ -682,6 +772,7 @@ def audit_dependency_capsule(
                 "byte_identical",
                 "class_major",
                 "source_name_profile",
+                "class_metadata_profile",
                 "source_form_probes",
                 "capsule_release_probe",
                 "capsule_default_probe",
@@ -751,6 +842,19 @@ def audit_dependency_capsule(
                     "source_spellable",
                     0,
                 )
+            ),
+            "package_depths": dict(
+                sorted(package_depths.items())
+            ),
+            "default_package_count": default_package_count,
+            "class_signature_attribute_count": (
+                class_signature_count
+            ),
+            "field_signature_attribute_count": (
+                field_signature_attribute_count
+            ),
+            "method_signature_attribute_count": (
+                method_signature_attribute_count
             ),
             "source_form_classifications": {
                 source_form: {
