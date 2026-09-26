@@ -26,7 +26,14 @@ class DependencyCapsuleAuditTests(unittest.TestCase):
         classes = root / "classes"
         classes.mkdir()
         proc = subprocess.run(
-            ["javac", "-d", str(classes), str(source)],
+            [
+                "javac",
+                "--release",
+                "9",
+                "-d",
+                str(classes),
+                str(source),
+            ],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
@@ -66,7 +73,7 @@ class DependencyCapsuleAuditTests(unittest.TestCase):
                 readable,
                 capsule,
                 javac_command="javac",
-                release=None,
+                release=9,
             )
 
             self.assertEqual(
@@ -86,12 +93,48 @@ class DependencyCapsuleAuditTests(unittest.TestCase):
                 1,
             )
             self.assertEqual(
-                report["summary"]["javac_resolved_count"],
+                report["summary"][
+                    "capsule_release_resolved_count"
+                ],
                 1,
             )
             self.assertEqual(
-                report["summary"]["probe_classifications"],
+                report["summary"][
+                    "capsule_default_resolved_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "readable_release_resolved_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"]["javap_resolved_count"],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "capsule_release_classifications"
+                ],
                 {"javac_resolves_exact_class": 1},
+            )
+            self.assertEqual(
+                report["summary"][
+                    "capsule_default_classifications"
+                ],
+                {"javac_resolves_exact_class": 1},
+            )
+            self.assertEqual(
+                report["summary"][
+                    "readable_release_classifications"
+                ],
+                {"javac_resolves_exact_class": 1},
+            )
+            self.assertEqual(
+                report["summary"]["javap_classifications"],
+                {"javap_resolves_exact_class": 1},
             )
 
     def test_missing_capsule_entry_is_explicit(self):
@@ -127,7 +170,25 @@ class DependencyCapsuleAuditTests(unittest.TestCase):
                 0,
             )
             self.assertEqual(
-                report["summary"]["probe_classifications"],
+                report["summary"][
+                    "capsule_release_classifications"
+                ],
+                {"not_run": 1},
+            )
+            self.assertEqual(
+                report["summary"][
+                    "capsule_default_classifications"
+                ],
+                {"not_run": 1},
+            )
+            self.assertEqual(
+                report["summary"][
+                    "readable_release_classifications"
+                ],
+                {"not_run": 1},
+            )
+            self.assertEqual(
+                report["summary"]["javap_classifications"],
                 {"not_run": 1},
             )
 
