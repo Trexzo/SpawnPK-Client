@@ -53,7 +53,7 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "FrameContainmentMode",
+      "proposed_name": "Mode",
       "confidence": 0.999,
       "evidence": [
         {
@@ -67,9 +67,13 @@
         {
           "family": "exact_window_config",
           "detail": "The live window-settings config returns the RESIZING value as its default containment behavior."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite current source net.runelite.client.ui.ContainableFrame declares nested enum Mode with exact constants ALWAYS, RESIZING and NEVER, matching rs/gui/u$a and its direct use by the recovered ContainableFrame."
         }
       ],
-      "note": "FrameContainmentMode follows exact surviving enum constants and their direct monitor-containment behavior in ContainableFrame. Confidence is 0.999."
+      "note": "Mode is exact RuneLite source-name recovery for ContainableFrame.Mode at confidence 0.999; the earlier descriptive FrameContainmentMode name is superseded."
     },
     {
       "schema_version": 1,
@@ -84,7 +88,7 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "FrameResizeMode",
+      "proposed_name": "ExpandResizeType",
       "confidence": 0.999,
       "evidence": [
         {
@@ -98,9 +102,13 @@
         {
           "family": "exact_size_semantics",
           "detail": "KEEP_WINDOW_SIZE preserves the frame size where possible while KEEP_GAME_SIZE expands/contracts the frame with sidebar/plugin width so the game-content size is retained."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite current source net.runelite.client.config.ExpandResizeType declares exact constants KEEP_WINDOW_SIZE(\"Keep window size\") and KEEP_GAME_SIZE(\"Keep game size\"), matching rs/gui/v constants, labels and ClientUI resize behavior."
         }
       ],
-      "note": "FrameResizeMode is fixed by exact enum names/display text and the ContainableFrame width-adjustment semantics. Confidence is 0.999."
+      "note": "ExpandResizeType is exact RuneLite source-name recovery at confidence 0.999 from the enum constants, visible labels and ClientUI resize contract; the earlier descriptive FrameResizeMode name is superseded."
     },
     {
       "schema_version": 1,

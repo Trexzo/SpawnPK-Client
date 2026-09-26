@@ -12,14 +12,14 @@ monitor-containment types it owns.
 - candidate classes: **4**
 - resolved proposals: **4**
 - unresolved: **0**
-- review ID: `SEMREVIEW_5BD02F94F01767ABDBEE`
+- review ID: `SEMREVIEW_4DBAC5B72C88997906D7`
 - field/method proposals: **0**
 
 ## Stable IDs
 
 - `rs/gui/u` -> `CLIENT_CLASS_000281` -> `ContainableFrame`
-- `rs/gui/u$a` -> `CLIENT_CLASS_000282` -> `FrameContainmentMode`
-- `rs/gui/v` -> `CLIENT_CLASS_000283` -> `FrameResizeMode`
+- `rs/gui/u$a` -> `CLIENT_CLASS_000282` -> `Mode`
+- `rs/gui/v` -> `CLIENT_CLASS_000283` -> `ExpandResizeType`
 - `rs/ui/f` -> `CLIENT_CLASS_001096` -> `ClientUI`
 
 ## ClientUI
@@ -75,7 +75,7 @@ The class also:
 - handles side-content width growth/shrink;
 - keeps minimum frame size synchronized with the active layout.
 
-## FrameContainmentMode
+## Mode
 
 `rs/gui/u$a` preserves exact enum constants:
 
@@ -87,7 +87,7 @@ The live window-settings config defaults to `RESIZING`.
 
 `ContainableFrame` uses the enum directly in location/bounds and edge-adjustment behavior.
 
-## FrameResizeMode
+## ExpandResizeType
 
 `rs/gui/v` preserves exact constants and exact visible labels:
 
@@ -103,10 +103,17 @@ the same size.
 
 ## Naming boundary
 
-The names describe exact surviving responsibilities and enum semantics. They are not claimed
-as recovered original identifiers.
+ContainableFrame, its nested Mode enum, ExpandResizeType and ClientUI now all have direct RuneLite source-name provenance. Exact v308 remains runtime authority.
 
 ## Acceptance boundary
 
 Chat 2 does not promote R147. Main/Core may accept any subset only through an explicit
 `semantic_acceptance_spec` bound to `SEMREVIEW_5BD02F94F01767ABDBEE`.
+
+## Post-R232 source-name correction
+
+Historical/current RuneLite source upgrades two earlier descriptive enum labels without changing R147's proposal count:
+
+- `CLIENT_CLASS_000282` / `rs/gui/u$a`: `FrameContainmentMode` -> `Mode`; old proposal `SEMPROP_9F88494938A142C3C9D8`, corrected `SEMPROP_04999A9E37826EE68154`.
+- `CLIENT_CLASS_000283` / `rs/gui/v`: `FrameResizeMode` -> `ExpandResizeType`; old proposal `SEMPROP_EDA45C631DF77328D27E`, corrected `SEMPROP_7212C29EF03DF43A8C5D`.
+- old review `SEMREVIEW_5BD02F94F01767ABDBEE` -> corrected review `SEMREVIEW_4DBAC5B72C88997906D7`.
