@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_FD1DEEC1C24C0042C027",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_971BD960B329774A2674",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000880",
+      "owner_logical_id": "CLIENT_CLASS_000880",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/b/t",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginSearch",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_search_pipeline",
+          "detail": "Exact v308 exposes static search(Collection<T extends rs/s/b/v>, String), lowercases and splits the query on spaces, filters via the client text-term matcher, sorts with a query-dependent comparator, and collects to a List."
+        },
+        {
+          "family": "exact_null_safe_comparator",
+          "detail": "Blank-query ordering is pinned-first then searchable name with nullsLast wrappers; nonblank ordering prioritizes exact name match, counts containment matches across name and keyword pieces, then pinned state and name, with the same reverse/null-safe comparator structure."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite runelite-client PluginSearch at 68c819924cfd6bfb4848c71f74c121109f289d5a matches the exact v308 class algorithm: Splitter configuration, search pipeline, null-safe comparator chain, stream(Iterable) helper and containsOrIsContainedBy helper. Later RuneLite adds installs() ordering, which v308 does not have."
+        }
+      ],
+      "note": "PluginSearch is recovered at confidence 0.999 from an exact historical RuneLite source/algorithm match."
+    },
+    {
+      "proposal_id": "SEMPROP_B303408670C219C0722A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000882",
+      "owner_logical_id": "CLIENT_CLASS_000882",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/b/v",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SearchablePlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_shape",
+          "detail": "Exact v308 is an interface with String name accessor, List<String> keyword accessor, and one default boolean method returning false."
+        },
+        {
+          "family": "exact_plugin_search_consumer",
+          "detail": "rs/s/b/t PluginSearch consumes the name, keywords and default boolean as getSearchableName/getKeywords/isPinned equivalents throughout its exact comparator/filter logic."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite SearchablePlugin at 68c819924cfd6bfb4848c71f74c121109f289d5a has exactly getSearchableName(), getKeywords(), and default isPinned() returning false. Later RuneLite adds installs(), which is absent from exact v308."
+        }
+      ],
+      "note": "SearchablePlugin is recovered at confidence 0.999 from an exact historical RuneLite source interface match."
+    }
+  ],
+  "unresolved": []
+}
