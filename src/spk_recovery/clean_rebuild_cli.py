@@ -95,6 +95,7 @@ def main(argv: list[str] | None = None) -> int:
         summary = diagnostic["summary"]
         cannot = summary["cannot_find_symbol"]
         print(f"javac_diagnostic_report_id={diagnostic['report_id']}")
+        print(f"javac_frontier_id={diagnostic['frontier_id']}")
         print(f"javac_total_errors={summary['total_errors']}")
         print(f"javac_affected_files={summary['affected_files']}")
         print(
