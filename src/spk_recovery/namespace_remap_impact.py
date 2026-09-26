@@ -168,7 +168,15 @@ def plan_namespace_remap_impact(
 
         literal_values = set(parsed.literal_strings)
 
+        class_reference_values = set(parsed.class_references)
+
         for value in parsed.utf8_strings:
+            if (
+                value in old_names
+                and value in class_reference_values
+            ):
+                continue
+
             symbolic = _descriptor_signature_hits(
                 value,
                 old_names,
