@@ -153,8 +153,8 @@ class DependencyCapsuleAuditTests(unittest.TestCase):
             )
             fallback_source = dep / "Fallback.java"
             fallback_source.write_text(
-                "package dep; public class Fallback { "
-                "public missing.Missing value; }\n",
+                "package dep; public class Fallback "
+                "extends missing.Missing {}\n",
                 encoding="utf-8",
             )
 
