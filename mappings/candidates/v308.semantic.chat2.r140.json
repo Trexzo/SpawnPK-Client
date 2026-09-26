@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemDialogueInterface",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_dialogue_root",
+          "detail": "The class owns exact root 30700. Client groups 30700 with roots 4882, 4887, 4893 and 4900 in the same space-to-continue set; pressing space while any of those roots is active sends the same continue action using packet/button value 4907."
+        },
+        {
+          "family": "exact_multiline_layout",
+          "detail": "Root 30700 composes text widgets 6181, 6182, 6183 and 6184 plus widget 4892. Its packet-driven layout supports one, two, three or four Strings and repositions the active lines before finalizing the same root."
+        },
+        {
+          "family": "exact_item_content_slot",
+          "detail": "The class embeds widget 14171 and configures it through rs/n/c/A.a(...), whose exact implementation resolves rs/d/k.f(itemId) and uses that definition's model-scale data when constructing the widget content. The default build also configures 14171 with item id 21235."
+        },
+        {
+          "family": "exact_confirmation_component_reuse",
+          "detail": "The item content slot reuses the already-reviewed ConfirmationInterface widget family for presentation/layout, but root 30700 itself is placed in the separate space-to-continue root family; the class therefore represents an item-bearing dialogue surface rather than another confirmation prompt."
+        }
+      ],
+      "note": "ItemDialogueInterface is descriptive exact-behavior recovery for root 30700: a space-to-continue multi-line dialogue surface with an item-definition-backed content slot. It does not claim a reward, unlock or specific NPC domain that exact v308 does not prove. Confidence is 0.998."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemDialogueInterfacePacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers the singleton rs/n/c/a/a.e as exact ScriptPacket ID 33; rs/n/c/a/a's static initializer constructs rs/n/c/a/b into that field."
+        },
+        {
+          "family": "exact_complete_selector_surface",
+          "detail": "Selector 0 rebuilds the item-dialogue root; selector 1 configures the item content slot from packet values; selector 2 writes one to four packet Strings into widgets 6181-6184 and reflows their layout; selector 3 triggers only same-screen presentation particles; selector 4 resets/reflows the same interface."
+        },
+        {
+          "family": "exact_single_subsystem_target",
+          "detail": "All interface mutations target rs/n/c/a/a root 30700, its 6181-6184/4892 children, or its embedded 14171 content slot. The particle branch writes only presentation effects through the shared overlay particle manager and does not mutate another gameplay subsystem."
+        }
+      ],
+      "note": "ItemDialogueInterfacePacketHandler is fixed by exact ScriptPacket 33 and a complete selector surface confined to the recovered ItemDialogueInterface plus same-screen presentation effects. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

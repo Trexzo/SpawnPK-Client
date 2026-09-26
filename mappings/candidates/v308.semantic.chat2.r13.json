@@ -1,0 +1,288 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginConfigurationPanel",
+      "confidence": 0.992,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends the side-panel base and builds plugin configuration controls from config descriptors/items, including checkboxes, spinners, enum selectors, text controls and color controls."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact UI text includes 'Are you sure you want to reset this plugin's configuration?' and config_back_icon.png."
+        },
+        {
+          "family": "exact_pairing_role",
+          "detail": "Panel directly consumes rs/s/b/n PluginConfigurationDescriptor and is created/provided by the Plugin Hub panel."
+        }
+      ],
+      "note": "Role describes the selected-plugin configuration editor; not claimed as an original identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginConfigurationDescriptor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact toString constant begins 'PluginConfigurationDescriptor(name=' and includes description, tags, plugin, config, configDescriptor and conflicts."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Final value-style class stores plugin/config metadata, tags, conflicts and plugin/config descriptor references with equals/hashCode/toString."
+        }
+      ],
+      "note": "Name follows the exact self-identifying toString form."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginHubPluginEntry",
+      "confidence": 0.992,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "JPanel row holds the Plugin Hub panel, one PluginConfigurationDescriptor, search tokens, pin toggle and enable/disable toggle."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact UI text includes Configure, Edit plugin configuration, Pin plugin, Unpin plugin, pluginhub and config_edit_icon.png."
+        }
+      ],
+      "note": "Entry is intentionally used instead of row/panel to describe one plugin item in the Hub list."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginHubPanel",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title text is 'Plugin Hub'; runtime strings include plugin start/stop error messages and pinnedPlugins."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends the side-panel base, owns the filtered plugin descriptor/list-entry collection, scroll pane, filtering controls and PluginChanged event handler."
+        }
+      ],
+      "note": "Main Plugin Hub side-panel role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b/u",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginEnableToggleButton",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact button HTML contains 'Enable plugin', 'Disable plugin' and 'Plugin conflicts:'."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class directly extends JToggleButton and reacts to ItemEvent changes while tracking conflict text."
+        }
+      ],
+      "note": "Name describes the exact toggle role rather than a broader Plugin Hub component."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/g/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemIdSearchPanel",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact UI text includes Search plus validation messages requiring at least three letters, login state and a loaded item database."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends the side-panel base and owns a search JTextField, result JTextArea, scroll pane and asynchronous search guard."
+        },
+        {
+          "family": "exact_pairing_role",
+          "detail": "Directly paired with rs/s/g/b whose exact plugin title is 'Item ID Search'."
+        }
+      ],
+      "note": "Panel role is tied to the exact Item ID Search plugin."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/g/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemIdSearchPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact plugin strings include 'Enable the Item ID Search Panel', title 'Item ID Search', config key 'itemsearch', 'panel' and search.png."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends the runtime plugin base, owns ItemIdSearchPanel and a navigation button, and has start/stop lifecycle methods."
+        }
+      ],
+      "note": "Plugin role follows exact title/config/resource evidence."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/t/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TradingPostListingsPanel",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include 'No listings detected' and 'No trading post listings were found on your account.' plus OFFERS_PANEL and ERROR_PANEL."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "JPanel owns card/layout state and a collection of trading-post listing rows, and is used as the 'Your Listings' tab."
+        }
+      ],
+      "note": "Account-owned listings surface inside the Trading Post panel."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/t/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TradingPostPanel",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact tab labels are 'Your Listings' and 'Search'."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends the side-panel base and combines the already reviewed TradingPostSearchPanel with the account listings panel through tab controls."
+        }
+      ],
+      "note": "Top-level Trading Post side-panel container."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/t/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TradingPostPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact runtime strings include title 'Trading Post', config key 'tradepost' and navigation label 'Trading post'."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends the runtime plugin base, owns TradingPostPanel, Client, navigation button and image cache, with start/stop and GameStateChanged handling."
+        }
+      ],
+      "note": "Plugin role follows exact runtime title/config/panel pairing."
+    }
+  ],
+  "conflicts": []
+}

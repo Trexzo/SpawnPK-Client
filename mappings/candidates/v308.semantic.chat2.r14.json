@@ -1,0 +1,361 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/k/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutsPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_plugin_descriptor",
+          "detail": "Runtime plugin descriptor is a=\"Loadouts\", b=\"loadouts\", c=\"Set up and switch between loadouts\", d=[\"panel\"]."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends the plugin base rs/s/a and owns NavigationButton/UI references including LoadoutFolderPanel plus ldt_icon.png."
+        }
+      ],
+      "note": "Plugin name is exact from the runtime descriptor; English class suffix reflects its plugin-base role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/m/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NotesConfig",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_config_descriptor",
+          "detail": "Interface extends the config base and has config group annotation a=\"notes\"."
+        },
+        {
+          "family": "exact_config_item",
+          "detail": "Its getter/setter pair is annotated with config item key b=\"notesData\"."
+        }
+      ],
+      "note": "Config role is exact from the config group and item annotations."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/m/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NotesPanel",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends the client panel base rs/ui/m, owns JTextArea + UndoManager and is injected/installed by the Notes plugin."
+        },
+        {
+          "family": "exact_behavior",
+          "detail": "Panel wires undoable edits, Ctrl+Z/Ctrl+Y, text loading and NotesConfig persistence."
+        }
+      ],
+      "note": "Panel role is structurally exact within the Notes plugin."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/m/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NotesUndoAction",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends AbstractAction, holds the NotesPanel and calls UndoManager.canUndo()/undo()."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Failure logging says \"Notes Document Unable To Undo: …\"."
+        }
+      ],
+      "note": "Action role follows exact UndoManager behavior."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/m/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NotesRedoAction",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends AbstractAction, holds the NotesPanel and calls UndoManager.canRedo()/redo()."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Failure logging says \"Notes Document Unable To Redo: …\"."
+        }
+      ],
+      "note": "Action role follows exact UndoManager behavior."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/m/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NotesPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_plugin_descriptor",
+          "detail": "Runtime plugin descriptor is a=\"Notes\", b=\"notes\", c=\"Enable the Notes panel\", d=[\"panel\"]."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends rs/s/a, injects NotesConfig and NotesPanel, creates notes_icon.png navigation and activates/deactivates the panel."
+        }
+      ],
+      "note": "Plugin name is exact from the runtime descriptor."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigurationPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_plugin_descriptor",
+          "detail": "Runtime plugin descriptor is a=\"Configuration\", b=\"configs\" and marks the plugin enabled/configuration-facing."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends rs/s/a and owns providers for PluginHubPanel / configuration root UI plus config_icon.png navigation."
+        }
+      ],
+      "note": "Configuration is the exact plugin title; suffix reflects plugin-base role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b/w",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginConfigurationRootPanel",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends rs/ui/m, owns a CardLayout, EventBus, PluginHubPanel and dynamic child panels/providers."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Class carries the title \"Configuration\" and config_icon_lg.png, and registers/unregisters configuration pages."
+        }
+      ],
+      "note": "RootPanel distinguishes this multi-page container from the per-plugin PluginConfigurationPanel already reviewed in R13."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b/x",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IntegerConfigFormatter",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Final class extends JFormattedTextField.AbstractFormatter and implements stringToValue/valueToString."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Validation error is exactly \"… is not an integer.\"."
+        }
+      ],
+      "note": "Formatter name follows exact integer-only conversion behavior in the configuration UI."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/n/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DesktopNotificationService",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "family": "exact_platform_behavior",
+          "detail": "Class implements desktop notification delivery through TrayIcon, terminal-notifier, notify-send and osascript paths with sound/focus timing."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include display notification with title, error sending notification, terminal-notifier -help and Linux/macOS launcher commands."
+        }
+      ],
+      "note": "Service is deliberately broader than plugin because this class is the delivery helper used by notification configuration/plugin code."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/t/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TradingPostCurrency",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_enum_role",
+          "detail": "Class is an enum with GOLD and CASH_BAGS constants, display names Gold/Bags, numeric metadata and gold.png/bags.png icons."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Trading Post listing UI reads this enum for value/icon presentation."
+        }
+      ],
+      "note": "Currency is the exact value-domain role of the two Trading Post payment types."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/t/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TradingPostListingPanel",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends JPanel, is owned by TradingPostPlugin and renders one rs/s/t/c listing model with labels/cards/context actions."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact listing strings include \"Price each:\", \"Received:\" and \"Sold: … / …\"."
+        }
+      ],
+      "note": "ListingPanel reflects one account-listing card/status panel, distinct from the R13 listings collection panel."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/t/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TradingPostSearchResultPanel",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends JPanel and is constructed from Trading Post item image/name/id/quantity/price/currency/timestamp inputs."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact row presentation includes relative-time strings, price/quantity HTML formatting, ge_icon.png and time.png."
+        }
+      ],
+      "note": "SearchResultPanel reflects one rendered sale-history/search result row."
+    }
+  ],
+  "conflicts": []
+}

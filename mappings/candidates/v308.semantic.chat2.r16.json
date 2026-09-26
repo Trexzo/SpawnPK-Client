@@ -1,0 +1,361 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Alpha",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_descriptor_role",
+          "detail": "ConfigItemDescriptor stores this method annotation in its field rendered as alpha=... by the surviving self-identifying toString."
+        },
+        {
+          "family": "exact_annotation_shape",
+          "detail": "Runtime annotation targets METHOD and has no configuration payload beyond marker presence."
+        }
+      ],
+      "note": "Marker annotation name follows the exact alpha metadata role exposed by ConfigItemDescriptor."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Config",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Public marker interface is the direct superinterface of exact configuration interfaces such as GpuConfig and NotesConfig."
+        },
+        {
+          "family": "exact_manager_contract",
+          "detail": "ConfigManager methods accept/return rs/e/b configuration proxies and inspect ConfigGroup metadata."
+        }
+      ],
+      "note": "Config is the conservative framework-level marker role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigDescriptor",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class stores one ConfigGroup annotation plus collections of ConfigSectionDescriptor and ConfigItemDescriptor objects."
+        },
+        {
+          "family": "exact_manager_flow",
+          "detail": "ConfigManager constructs/returns this aggregate when describing a configuration interface."
+        }
+      ],
+      "note": "Aggregate descriptor name follows its exact group/section/item contents."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigGroup",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "ConfigInvocationHandler contains the surviving diagnostic \"Configuration proxy class {} has no @ConfigGroup!\"."
+        },
+        {
+          "family": "exact_annotation_shape",
+          "detail": "Runtime TYPE annotation exposes one String group value and annotates reviewed config interfaces such as group gpu."
+        }
+      ],
+      "note": "Name is directly corroborated by surviving diagnostic text."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigInvocationHandler",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class implements java.lang.reflect.InvocationHandler and proxies configuration-interface method calls through ConfigManager."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Diagnostics explicitly discuss configuration proxy classes, @ConfigGroup, @ConfigItem, cache misses and unmarshalling."
+        }
+      ],
+      "note": "Invocation-handler suffix follows the exact Java proxy role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigItem",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "ConfigInvocationHandler contains the surviving diagnostic \"Configuration method {} has no @ConfigItem!\"."
+        },
+        {
+          "family": "exact_annotation_shape",
+          "detail": "Runtime METHOD annotation carries position, key, display name, description, hidden/section metadata used by config interfaces."
+        }
+      ],
+      "note": "Name is directly corroborated by surviving diagnostic text."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigManager",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class owns EventBus, ConfigStore and ConfigInvocationHandler; creates configuration proxies and descriptors and reads/writes serialized group/key values."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact diagnostics include \"Not a config group\", default configuration values, profile save/load and config.properties handling."
+        }
+      ],
+      "note": "Manager name follows the broad exact configuration lifecycle it owns."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigObject",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Common interface implemented by ConfigItemDescriptor and ConfigSectionDescriptor."
+        },
+        {
+          "family": "exact_contract_role",
+          "detail": "Its three methods expose the shared String/String/int name-description-position contract used to sort/render config objects."
+        }
+      ],
+      "note": "ConfigObject is a conservative abstraction name for the exact common descriptor contract."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigSection",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_descriptor_role",
+          "detail": "ConfigSectionDescriptor stores this FIELD annotation and renders it in the surviving toString form ConfigSectionDescriptor(key=..., section=...)."
+        },
+        {
+          "family": "exact_annotation_shape",
+          "detail": "Runtime FIELD annotation carries section name/description/position plus optional closed state."
+        }
+      ],
+      "note": "Name is directly fixed by the self-identifying descriptor relationship."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FlashNotification",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_binding",
+          "detail": "Notification config item key flashNotification / title Flash / description \"Flashes the game frame as a notification\" returns this enum type."
+        },
+        {
+          "family": "exact_enum_role",
+          "detail": "Enum constants are DISABLED, FLASH_TWO_SECONDS, FLASH_UNTIL_CANCELLED, SOLID_TWO_SECONDS and SOLID_UNTIL_CANCELLED."
+        }
+      ],
+      "note": "Enum name follows the exact notification config binding and values."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Range",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_descriptor_role",
+          "detail": "ConfigItemDescriptor stores this METHOD annotation in its field rendered as range=... by the surviving self-identifying toString."
+        },
+        {
+          "family": "exact_annotation_shape",
+          "detail": "Runtime METHOD annotation exposes two integer bounds with default extrema."
+        }
+      ],
+      "note": "Range is exact from bound semantics and descriptor role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RequestFocusType",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_binding",
+          "detail": "Notification config item key notificationRequestFocus / title Request focus / description \"Configures the window focus request type on notification\" returns this enum type."
+        },
+        {
+          "family": "exact_enum_role",
+          "detail": "Enum constants survive as FORCE, OFF and REQUEST."
+        }
+      ],
+      "note": "Type name follows the exact config description and enum choices."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Units",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_descriptor_role",
+          "detail": "ConfigItemDescriptor stores this METHOD annotation in its field rendered as units=... by the surviving self-identifying toString."
+        },
+        {
+          "family": "exact_annotation_shape",
+          "detail": "Annotation defines unit constants such as \"ms\", \"s\", \" ticks\", \" mins\", \"px\" and \"%\"."
+        }
+      ],
+      "note": "Units is exact from the annotation constants and descriptor role."
+    }
+  ],
+  "conflicts": []
+}

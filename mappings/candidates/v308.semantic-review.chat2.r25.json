@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 4,
+  "review_id": "SEMREVIEW_A05277CD19C58676274E",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_23B91870D52B11FE81FA",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000082",
+      "owner_logical_id": "CLIENT_CLASS_000082",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/cache/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Decompressor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Exact-v308 class owns one data RandomAccessFile, one index RandomAccessFile, a store id and a 520-byte sector buffer; index entries are six bytes and data sectors carry the classic eight-byte header plus up to 512 payload bytes."
+        },
+        {
+          "family": "exact_io_role",
+          "detail": "Read/write methods validate file id, chunk number, next sector and store id, then follow/allocate linked 520-byte sectors."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Classic 317 source names the byte-for-byte equivalent cache sector store Decompressor, with the same RandomAccessFile constructor and 520/512-byte format."
+        }
+      ],
+      "note": "Pinned SpawnPK v308 cache-sector implementation is primary authority; historical source corroborates the inherited name."
+    },
+    {
+      "proposal_id": "SEMPROP_86470FCDE40001F0F5E7",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000981",
+      "owner_logical_id": "CLIENT_CLASS_000981",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/t",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Node",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Exact-v308 base node stores a long key plus previous/next Node links and unlinks itself by splicing those primary links."
+        },
+        {
+          "family": "exact_dependency_role",
+          "detail": "NodeList uses this exact type as its sentinel and iteration element; NodeSub extends it directly."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Classic client source exposes the same keyed primary doubly-linked element as Node."
+        }
+      ],
+      "note": "Name is fixed by primary linked-node contract and classic lineage."
+    },
+    {
+      "proposal_id": "SEMPROP_B411CCD72675BFC1D0A0",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000288",
+      "owner_logical_id": "CLIENT_CLASS_000288",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NodeList",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Exact-v308 class owns a sentinel Node and supports head/tail insertion, pop, forward iteration, reverse iteration and full unlink/clear behavior."
+        },
+        {
+          "family": "exact_dependency_role",
+          "detail": "OnDemandFetcher owns multiple instances for requested/pending/completed request queues."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Classic clients expose the same sentinel-node queue/deque helper as NodeList, including insert and forward/reverse traversal semantics."
+        }
+      ],
+      "note": "NodeList preserves the inherited class identity while describing its exact deque-like behavior."
+    },
+    {
+      "proposal_id": "SEMPROP_E11AE64DF5544ADA3BBE",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000050",
+      "owner_logical_id": "CLIENT_CLASS_000050",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NodeSub",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Exact-v308 class extends Node and adds a second pair of NodeSub links plus a separate unlink operation for that secondary chain."
+        },
+        {
+          "family": "exact_dependency_role",
+          "detail": "OnDemandData extends this class, matching the classic secondary-list request-node hierarchy."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Classic 317 source names the structurally identical Node subclass NodeSub and exposes prevNodeSub/nextNodeSub plus unlinkSub()."
+        }
+      ],
+      "note": "Name is fixed by the second linked-list layer and classic hierarchy."
+    }
+  ],
+  "unresolved": []
+}

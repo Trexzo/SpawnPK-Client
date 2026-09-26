@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_2C02DF701BB8B1FC8FAF",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_B9B9989135C96B51D6EA",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000009",
+      "owner_logical_id": "CLIENT_CLASS_000009",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/A/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorGsonAdapter",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_contract",
+          "detail": "rs/A/f implements the Gson JsonSerializer<Color> and JsonDeserializer<Color> contracts directly for java.awt.Color."
+        },
+        {
+          "family": "exact_serialization_shape",
+          "detail": "Serialization writes a JSON object containing the exact key value from Color.getRGB(), plus falpha=0.0; deserialization requires an object with value and reconstructs java.awt.Color from that integer."
+        },
+        {
+          "family": "exact_runtime_registration",
+          "detail": "The client Guice/Gson module rs/p/b constructs rs/A/f and registers it as the type adapter for java.awt.Color before creating the shared Gson instance."
+        },
+        {
+          "family": "exact_runtime_consumer",
+          "detail": "That shared Gson instance is bound by the module and consumed by the configuration/plugin infrastructure, so this adapter is live runtime configuration serialization rather than an isolated helper."
+        }
+      ],
+      "note": "ColorGsonAdapter is the conservative semantic name for this exact java.awt.Color Gson serializer/deserializer. It does not claim a verbatim original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_E51EF389A42E35EB24EE",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000018",
+      "owner_logical_id": "CLIENT_CLASS_000018",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/A/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MacOSWindowUtil",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_platform_api",
+          "detail": "rs/A/o is entirely built around com.apple.eawt Application and FullScreenUtilities APIs and first gates fullscreen setup on the client's macOS platform enum."
+        },
+        {
+          "family": "exact_fullscreen_role",
+          "detail": "Its JFrame helper installs R21 OSXFullScreenAdapter, enables native fullscreen, and preserves the exact diagnostic \"Enabled fullscreen on macOS\"."
+        },
+        {
+          "family": "exact_focus_attention_role",
+          "detail": "The two no-arg helpers call Application.requestUserAttention(true) and Application.requestForeground(true), preserving the exact diagnostics \"Requested user attention on macOS\" and \"Forced focus on macOS\"."
+        },
+        {
+          "family": "exact_runtime_consumers",
+          "detail": "The live UI shell rs/ui/f calls the attention/focus helpers for notification focus behavior, while the GUI frame path calls the fullscreen/focus helper; this is active platform-window plumbing."
+        }
+      ],
+      "note": "MacOSWindowUtil is the conservative semantic name for this exact macOS fullscreen, focus and user-attention helper. It does not claim a verbatim original developer identifier."
+    }
+  ],
+  "unresolved": []
+}

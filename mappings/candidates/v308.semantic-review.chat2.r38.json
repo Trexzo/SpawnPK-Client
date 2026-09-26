@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 4,
+  "review_id": "SEMREVIEW_5BA47168303B5A8002D7",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_6BD22A4B72E68242367D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000053",
+      "owner_logical_id": "CLIENT_CLASS_000053",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/a/a/a$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelElementType",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "The enum has exactly two surviving constants: TRIANGLE and VERTEX."
+        },
+        {
+          "family": "exact_size_binding",
+          "detail": "ModelWorkspace maps TRIANGLE to its current face/triangle count and VERTEX to its current vertex count when allocating slot arrays."
+        }
+      ],
+      "note": "ModelElementType directly reflects the surviving TRIANGLE/VERTEX enum vocabulary."
+    },
+    {
+      "proposal_id": "SEMPROP_B02FF399801316FDBECE",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000055",
+      "owner_logical_id": "CLIENT_CLASS_000055",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/a/a/a$c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelArrayType",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "The enum has exactly three surviving constants: INT_ARRAY, FLAG_ARRAY and BYTE_ARRAY."
+        },
+        {
+          "family": "exact_allocation_dispatch",
+          "detail": "ModelWorkspace dispatches on this enum to allocate int[], boolean[] or byte[] storage for a ModelArraySlot."
+        }
+      ],
+      "note": "ModelArrayType directly reflects the surviving array-storage enum vocabulary."
+    },
+    {
+      "proposal_id": "SEMPROP_BBE45656D701F6E68C21",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000052",
+      "owner_logical_id": "CLIENT_CLASS_000052",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/a/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelWorkspace",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_model_consumer",
+          "detail": "Model construction receives this object as its reusable allocation context, sets the current vertex/face counts, and obtains model vertex, face, color, priority, alpha, group and particle arrays from it."
+        },
+        {
+          "family": "exact_reuse_role",
+          "detail": "The class owns a slot-keyed HashMap of reusable int[], boolean[] and byte[] arrays plus reusable VertexNormalBuffer and FaceNormalBuffer objects; count changes invalidate or resize workspace state."
+        },
+        {
+          "family": "exact_nested_vocabulary",
+          "detail": "Its nested enums preserve TRIANGLE/VERTEX element categories, INT_ARRAY/FLAG_ARRAY/BYTE_ARRAY storage kinds, and model-specific slots including FACE_X, VERT_X, PRIORITIES, ALPHAS, COLOR and PARTICLES."
+        }
+      ],
+      "note": "ModelWorkspace names the reusable model-decoding/render-preparation allocation context; it is a semantic role name rather than an original-identifier claim."
+    },
+    {
+      "proposal_id": "SEMPROP_C499BA2CDD85A721758E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000054",
+      "owner_logical_id": "CLIENT_CLASS_000054",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/a/a/a$b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelArraySlot",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "Surviving enum constants are model-array roles: FACE_X, FACE_Y, FACE_Z, COL_X, COL_Y, COL_Z, INFO, PRIORITIES, ALPHAS, COLOR, VERT_TRANS_GROUPS, VERT_GROUPS, VERT_X, VERT_Y, VERT_Z, PARTICLES and PARTICLE_PRIORITIES."
+        },
+        {
+          "family": "exact_slot_metadata",
+          "detail": "Each enum value carries one ModelElementType and one ModelArrayType, and ModelWorkspace uses the enum value itself as the HashMap key for allocating/reusing the corresponding array."
+        }
+      ],
+      "note": "ModelArraySlot is the conservative name for the typed key identifying one reusable model array role."
+    }
+  ],
+  "unresolved": []
+}

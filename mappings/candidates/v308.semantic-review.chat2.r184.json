@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_6EF898C70F9EB88FC1F1",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_9BD46AA77AD5D3770AA7",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000955",
+      "owner_logical_id": "CLIENT_CLASS_000955",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/q/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PvPTrackerSectionHeaderPanel",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_section_header_role",
+          "detail": "rs/s/q/b/b directly extends JPanel and is instantiated by PvPTrackerPanel twice with exact titles 'Current Fight' and 'Fight History (Filter by Usernames:)'; its constructor accepts only the section title plus a boolean enabling the history context menu."
+        },
+        {
+          "family": "exact_history_actions",
+          "detail": "When history actions are enabled the panel installs exact popup actions 'Copy Fight History Data', 'Import Fight History Data' and 'Remove All Fights', including exact import prompt 'Enter the fight history data you wish to import:' and destructive reset warning."
+        },
+        {
+          "family": "exact_plugin_wiring",
+          "detail": "The popup actions call only the reviewed PvPTrackerPlugin singleton: export/copy history, import supplied history text, or clear stored fights. No unrelated client subsystem is touched."
+        },
+        {
+          "family": "exact_panel_presentation",
+          "detail": "The class owns only header/section presentation: GridLayout row count derived from the boolean mode, RuneLite background/border styling, centered white title label and fixed 350px maximum width."
+        }
+      ],
+      "note": "PvPTrackerSectionHeaderPanel is a descriptive exact-behavior name for the reusable Current Fight / Fight History section header used by PvPTrackerPanel. No original source class name was recovered; confidence is 0.998."
+    },
+    {
+      "proposal_id": "SEMPROP_D698821AFDD5F466AF86",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000956",
+      "owner_logical_id": "CLIENT_CLASS_000956",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/q/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PvPTrackerFilterDocumentListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_listener_shape",
+          "detail": "rs/s/q/c implements javax.swing.event.DocumentListener and all three callbacks changedUpdate/removeUpdate/insertUpdate delegate to one private update method."
+        },
+        {
+          "family": "exact_filter_pipeline",
+          "detail": "The private update method reads the owned JTextField text and sends it directly to the reviewed PvPTrackerPlugin filter/update method, then asks the reviewed PvPTrackerPanel to refresh when the text is not the empty-prefix case."
+        },
+        {
+          "family": "exact_owner_graph",
+          "detail": "The class owns exactly three references: PvPTrackerPlugin, the filter JTextField and PvPTrackerPanel. Its constructor receives exactly those three objects and it has no unrelated state."
+        },
+        {
+          "family": "upstream_behavioral_correspondence",
+          "detail": "The pinned/upstream PvP Performance Tracker panel uses a DocumentListener on the fight-filter text field to propagate text changes into plugin filter state and schedule panel refresh. This corroborates responsibility but does not supply an original helper-class name."
+        }
+      ],
+      "note": "PvPTrackerFilterDocumentListener is descriptive exact-behavior recovery for the dedicated fight-filter text DocumentListener. Its whole class surface is one filter-update pipeline; confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}

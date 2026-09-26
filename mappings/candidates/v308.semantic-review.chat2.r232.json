@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_0B5B74A6D55CAADC04D6",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_DD6A01E5FCB243587BC7",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001100",
+      "owner_logical_id": "CLIENT_CLASS_001100",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DynamicGridLayout",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_gridlayout_shape",
+          "detail": "Exact v308 extends java.awt.GridLayout with the no-arg, rows/cols and rows/cols/hgap/vgap constructors and overrides preferredLayoutSize, minimumLayoutSize and layoutContainer."
+        },
+        {
+          "family": "exact_dynamic_sizing_algorithm",
+          "detail": "The implementation calculates per-column widths and per-row heights from child preferred/minimum dimensions, scales preferred child sizes to the current parent area, then places unequal-sized cells with the same inset/gap traversal as RuneLite DynamicGridLayout."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 6e74752caa80fe9cb96cd9b37207e171fa525f07 net.runelite.client.ui.DynamicGridLayout has the same constructors, synchronized tree-lock sizing methods, scaling factors, per-row/column max arrays, layout traversal and shared calculateSize helper."
+        }
+      ],
+      "note": "DynamicGridLayout is recovered at confidence 0.999 from an exact upstream source-name and layout-algorithm match."
+    }
+  ],
+  "unresolved": []
+}

@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_8523ED886552313C398D",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_07EF5056F790CF5D39E7",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000461",
+      "owner_logical_id": "CLIENT_CLASS_000461",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/a/f/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OverlayParticle",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_particle_command_join",
+          "detail": "The exact client developer command 'particle' obtains rs/l/f/e.g(), the live rs/l/f/a/f/c manager, and emits this rs/l/f/a/f/a record family through it; this independently fixes the abstraction as particles rather than generic rectangles."
+        },
+        {
+          "family": "exact_render_state",
+          "detail": "Each instance owns x/y position, original position, width/height, packed color, alpha, lifetime, movement direction and animation parameters, and renders itself as one alpha-blended colored rectangle."
+        },
+        {
+          "family": "exact_motion_lifecycle",
+          "detail": "The update path moves x according to the exact LEFT/RIGHT direction enum, applies vertical motion/curve state, fades alpha over its randomized finite lifetime and exposes expiry when elapsed time reaches that lifetime."
+        },
+        {
+          "family": "exact_ui_reuse",
+          "detail": "The same record is emitted by multiple UI subsystems including Donation Shopping Cart particle presentation, raid-affliction UI, item-dialogue effects and mailbox effects, proving it is a shared overlay particle rather than a domain-specific cart/raid object."
+        }
+      ],
+      "note": "OverlayParticle is descriptive exact-behavior recovery for the shared UI-overlay particle record. The exact developer command 'particle', finite movement/fade lifecycle and cross-subsystem UI reuse distinguish it from R50's separate world/scene Particle. Confidence is 0.998."
+    },
+    {
+      "proposal_id": "SEMPROP_0F78351DD90FE4C4EFCB",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000462",
+      "owner_logical_id": "CLIENT_CLASS_000462",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/a/f/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OverlayParticleDirection",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "The enum preserves exactly two constants: RIGHT and LEFT."
+        },
+        {
+          "family": "exact_particle_motion_consumer",
+          "detail": "OverlayParticle stores this enum directly and its update loop increases x for RIGHT and decreases x for LEFT; OverlayParticleManager assigns the directions when emitting mirrored particle groups."
+        }
+      ],
+      "note": "OverlayParticleDirection follows the exact surviving RIGHT/LEFT enum literals and their exclusive use by OverlayParticle horizontal movement. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_16A2E7C1242D671151E5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000463",
+      "owner_logical_id": "CLIENT_CLASS_000463",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/a/f/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OverlayParticleManager",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_particle_command_join",
+          "detail": "The exact client developer command 'particle' calls rs/l/f/e.g() and invokes this class's four-argument emission helper twice with explicit count/position/color values."
+        },
+        {
+          "family": "exact_overlay_contract",
+          "detail": "The class extends the live overlay renderer base, owns active and removal particle lists, renders/updates every OverlayParticle each frame, moves expired particles to the removal list and clears them deterministically."
+        },
+        {
+          "family": "exact_emission_policy",
+          "detail": "Its emission helper creates four directional groups per request, alternates LEFT/RIGHT movement, configures vertical motion, size, alpha and color, and caps the active list at 1000 particles."
+        },
+        {
+          "family": "exact_cross_subsystem_reuse",
+          "detail": "Exact bytecode references the manager/particle family from Donation Shopping Cart, raid-affliction, item-dialogue, mailbox and client developer-command paths, establishing one reusable UI-overlay particle manager."
+        }
+      ],
+      "note": "OverlayParticleManager is descriptive exact-behavior recovery for the shared live overlay renderer/emitter reached by the exact developer command 'particle' and reused across multiple UI subsystems. Confidence is 0.998."
+    }
+  ],
+  "unresolved": []
+}

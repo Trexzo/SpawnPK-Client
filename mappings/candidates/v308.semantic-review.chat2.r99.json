@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_44B92BC956ED596303D4",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_C7F08E7F333BD0872F8D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000328",
+      "owner_logical_id": "CLIENT_CLASS_000328",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/k/c/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GpuParticleMeshBuilder",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_stateless_geometry_role",
+          "detail": "The class is stateless apart from reusable static output arrays and a write cursor; both public methods accept center X/Y/Z, radius/size and packed color and return packed X/Y/Z/color particle vertices."
+        },
+        {
+          "family": "exact_full_mesh",
+          "detail": "The full-detail method writes 216 ints = 54 vertices = 18 triangles around the supplied center, using the supplied radius symmetrically across all three axes."
+        },
+        {
+          "family": "exact_reduced_mesh",
+          "detail": "The reduced-detail method writes 72 ints = 18 vertices = 6 triangles around the same center/radius contract."
+        },
+        {
+          "family": "exact_detail_selection",
+          "detail": "R87 GpuRenderer and R96 ModelPusher both select reduced geometry when their boolean detail selector is true (6 triangles / 18 vertices) and full geometry when false (18 triangles / 54 vertices), then append the returned packed ints directly to GpuIntBuffer."
+        },
+        {
+          "family": "exact_particle_consumer",
+          "detail": "Both consuming paths operate on R98 GpuParticleInstance values and derive center position, particle size and packed particle color/alpha immediately before invoking this helper, fixing the geometry domain as GPU particle mesh emission."
+        }
+      ],
+      "note": "GpuParticleMeshBuilder is descriptive exact-behavior recovery. Exact v308 proves a stateless full/reduced particle mesh builder used only by the GPU particle rendering paths; no surviving original public source identifier was found."
+    }
+  ],
+  "unresolved": []
+}

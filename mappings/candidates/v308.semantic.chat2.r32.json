@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/a/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelAABB",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_bounds_construction",
+          "detail": "Model method l(int) rotates every vertex for the requested angle, tracks exact min/max X/Y/Z values, then constructs rs/a/i from the three midpoint coordinates and three half-extents."
+        },
+        {
+          "family": "exact_rendering_behavior",
+          "detail": "The X/Z half-extents are clamped to at least 32 and receive an additional 8 units when the model padding flag is set; the resulting object is cached by model angle for later render/picking use."
+        },
+        {
+          "family": "exact_value_shape",
+          "detail": "rs/a/i contains exactly six integer values with six direct getters, carries no unrelated state, and is the exact concrete implementation of rs/runelite/a/a, whose RuneLite API source identity is AABB."
+        }
+      ],
+      "note": "ModelAABB is the corrected descriptive name for the exact six-int model-bounds implementation. The older R32 name AABB is superseded because exact upstream RuneLite source proves that AABB is the implemented API interface rs/runelite/a/a. Confidence remains 0.999."
+    }
+  ],
+  "conflicts": []
+}

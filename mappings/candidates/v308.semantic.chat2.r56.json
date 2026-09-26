@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RSInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_global_interface_table",
+          "detail": "The main loader allocates the static rs/n/e[] interface table from the decoded interface count plus expansion capacity, then constructs and stores each interface by numeric id."
+        },
+        {
+          "family": "exact_archive_stream_loader",
+          "detail": "The loader consumes R29 StreamLoader and Stream objects, decodes parent/interface ids and then branches by interface type to populate dimensions, children, sprites, fonts, models, inventory slots, scripts/comparisons and interaction metadata."
+        },
+        {
+          "family": "exact_widget_surface",
+          "detail": "The class owns child-id/position arrays, item-id/amount arrays, Sprite and font/model references, action arrays, text/tooltip strings, spell/action metadata, scroll/layout state and numerous static builders for custom interfaces."
+        },
+        {
+          "family": "surviving_ui_literals",
+          "detail": "Exact v308 literals include interface-facing defaults/actions such as \"Ok\", \"Select\", \"Continue\", \"Close\", spell casting text, prayer sprites and equipment/interface resource names."
+        }
+      ],
+      "note": "RSInterface preserves the classic client semantic identity of the global widget/interface definition object. Exact v308 loader/state behavior is primary authority."
+    }
+  ],
+  "conflicts": []
+}

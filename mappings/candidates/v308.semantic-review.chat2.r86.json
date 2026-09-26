@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_D1F558732D8E7A698664",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_680D2362DFFEA7ACE365",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000318",
+      "owner_logical_id": "CLIENT_CLASS_000318",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/k/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GpuRuntimeSettings",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_gpu_config_binding",
+          "detail": "R15 GpuPlugin copies live GpuConfig values directly into rs/k/b static state, including R15 AntiAliasingMode, ColorBlindMode and VsyncMode plus UI scaling and GPU feature flags."
+        },
+        {
+          "family": "exact_runtime_transition_role",
+          "detail": "rs/k/b performs the actual GPU enable/disable transitions, preserving the exact strings \"Initializing GPU - please wait.\", \"Disabling GPU - please wait.\", \"::gpuflagon\" and \"::gpuflagoff\", and creates/tears down the live GPU renderer objects through Client."
+        },
+        {
+          "family": "exact_persistence_identity",
+          "detail": "The class owns the exact gpu.properties persistence path and the SaveGpuSettings task, with persisted stretch_width and stretch_height values loaded through java.util.Properties."
+        },
+        {
+          "family": "exact_runtime_consumers",
+          "detail": "Direct exact-v308 consumers include Client, RSApplet, R15 GpuPlugin and the GPU renderer stack; configuration changes update this class and trigger renderer transitions through it."
+        }
+      ],
+      "note": "GpuRuntimeSettings is a deliberately descriptive semantic name for the static GPU runtime settings/control bridge between R15 GpuConfig and the live renderer. It does not claim a verbatim original developer identifier."
+    }
+  ],
+  "unresolved": []
+}

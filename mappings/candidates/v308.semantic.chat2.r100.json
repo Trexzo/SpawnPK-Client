@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/osrs/util/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OsrsSequenceOverrideLoader",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_inheritance",
+          "detail": "The class extends R80 SequenceDefinitionConfigLoader, so its decoded value type and YAML semantics are fixed independently of its scanner-specific role."
+        },
+        {
+          "family": "exact_scanner_resource",
+          "detail": "Its only public load method resolves configs/anims.yaml relative to OsrsMapDependencyScanner's configured source root and parses that YAML through the scanner's YAML loader."
+        },
+        {
+          "family": "exact_override_rebuild",
+          "detail": "The method clears the inherited typed sequence-definition map, iterates every YAML ID, decodes each entry with the inherited sequence-definition decoder, and repopulates only absent IDs."
+        },
+        {
+          "family": "exact_owner",
+          "detail": "The instance is an inner scanner helper captured by OsrsMapDependencyScanner and is used specifically for the scanner's statement that it consumes client animation overrides and configs/*.yaml rather than serialized production configs."
+        }
+      ],
+      "note": "OsrsSequenceOverrideLoader is descriptive exact-behavior recovery for the scanner-specific sequence override adapter. No surviving original source noun was found; confidence is 0.997."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/osrs/util/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OsrsObjectOverrideLoader",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_inheritance",
+          "detail": "The class extends R80 ObjectDefinitionConfigLoader, fixing the underlying object-definition YAML decoder and typed override-map responsibility."
+        },
+        {
+          "family": "exact_scanner_resource",
+          "detail": "Its public load method resolves configs/objects.yaml relative to OsrsMapDependencyScanner's source root and rebuilds the inherited object-definition override map from scanner YAML data."
+        },
+        {
+          "family": "exact_osrs_filter",
+          "detail": "Entries are included only when explicitly marked osrs or when revision-forcing metadata is present; ordinary non-OSRS entries are skipped."
+        },
+        {
+          "family": "exact_definition_mode_switch",
+          "detail": "For each accepted entry the loader selects the OSRS versus ordinary ObjectDefinition mode and the corresponding paired definition byte arrays supplied by the scanner, then decodes the exact object override."
+        },
+        {
+          "family": "exact_fail_closed_bounds",
+          "detail": "The loader rejects override IDs outside the active ObjectDefinition table with the exact diagnostic family 'Object override outside definition table', preventing silent scanner-only definition expansion."
+        }
+      ],
+      "note": "OsrsObjectOverrideLoader is descriptive exact-behavior recovery for the scanner-specific OSRS object override adapter. No surviving original source noun was found; confidence is 0.997."
+    }
+  ],
+  "conflicts": []
+}

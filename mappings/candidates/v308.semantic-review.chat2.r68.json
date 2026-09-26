@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_3C6B16405A7D17754AA5",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_766FB27B6A0D654DB2D6",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001109",
+      "owner_logical_id": "CLIENT_CLASS_001109",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/w/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SoundEnvelope",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_segment_decode",
+          "detail": "rs/w/a decodes a waveform/form byte plus start/end values, then decodes a variable number of envelope segment durations and amplitudes from Stream."
+        },
+        {
+          "family": "exact_runtime_sampling",
+          "detail": "Its reset method clears envelope cursor/step state, and its sample(int totalSamples) method advances through decoded segments and linearly interpolates the current amplitude over the requested sample span."
+        },
+        {
+          "family": "exact_audio_dependency",
+          "detail": "rs/w/b SoundFilter accepts this type during filter decoding so a changing filter envelope can modulate the decoded filter parameters."
+        }
+      ],
+      "note": "SoundEnvelope is the conservative semantic name for this decoded multi-segment audio envelope; it does not claim a verbatim original identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_BDAABC6D5A75992F4B55",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001110",
+      "owner_logical_id": "CLIENT_CLASS_001110",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/w/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SoundFilter",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_biquad_structure",
+          "detail": "rs/w/b owns two filter banks with up to four pole pairs each, per-bank frequency/attenuation parameter arrays, static float coefficient work arrays and exported fixed-point coefficients."
+        },
+        {
+          "family": "exact_coefficient_math",
+          "detail": "Coefficient generation interpolates attenuation, converts encoded pitch to angular frequency, recursively constructs cascaded second-order filter coefficients and applies the global gain to bank 0."
+        },
+        {
+          "family": "exact_decode_contract",
+          "detail": "Its Stream decoder reads the packed pair counts, start/end global gain, per-stage frequency/attenuation values and optional alternate values, and delegates modulation-segment decoding to rs/w/a SoundEnvelope."
+        }
+      ],
+      "note": "SoundFilter is the conservative semantic name for this two-bank audio filter/coefficient generator; it does not claim a verbatim original identifier."
+    }
+  ],
+  "unresolved": []
+}

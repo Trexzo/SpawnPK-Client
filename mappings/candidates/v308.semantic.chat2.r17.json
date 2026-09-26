@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Plugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Abstract base implements Guice Module, owns Injector lifecycle hooks, and all reviewed runtime plugin classes directly extend it."
+        },
+        {
+          "family": "exact_manager_role",
+          "detail": "PluginManager stores/manages rs/s/a instances and logs exact lifecycle messages such as \"Plugin {} is now running/stopped\"."
+        },
+        {
+          "family": "exact_descriptor_role",
+          "detail": "Base name accessor reads the runtime rs/s/e descriptor annotation from its concrete class."
+        }
+      ],
+      "note": "Plugin is fixed by hierarchy, manager lifecycle and descriptor ownership."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginClassLoader",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends URLClassLoader, is constructed from a plugin File plus parent ClassLoader, and falls back to that parent when local class lookup fails."
+        },
+        {
+          "family": "exact_framework_role",
+          "detail": "Class sits directly in the plugin framework package beside Plugin/PluginManager/PluginDescriptor."
+        }
+      ],
+      "note": "ClassLoader suffix follows exact URLClassLoader behavior; role is plugin-scoped."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginDependencies",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_annotation_shape",
+          "detail": "Runtime TYPE annotation contains an array of rs/s/d dependency annotations."
+        },
+        {
+          "family": "exact_repeatable_role",
+          "detail": "rs/s/d is declared @Repeatable with rs/s/c as its container annotation."
+        }
+      ],
+      "note": "Plural container name follows exact repeatable-annotation structure."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginDependency",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_annotation_shape",
+          "detail": "Runtime TYPE annotation exposes Class<? extends rs/s/a>, directly constraining dependencies to Plugin subclasses."
+        },
+        {
+          "family": "exact_manager_role",
+          "detail": "PluginManager reads this annotation while constructing dependency graphs and throws on unmet dependencies."
+        }
+      ],
+      "note": "Singular dependency name follows exact repeatable dependency semantics."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginDescriptor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "PluginManager diagnostics explicitly say \"Class {} has plugin descriptor, but is not a plugin\" and \"Class {} is a plugin, but has no plugin descriptor\"."
+        },
+        {
+          "family": "exact_annotation_shape",
+          "detail": "Runtime TYPE annotation carries title/group/description, string arrays and lifecycle/visibility booleans used by plugin classes."
+        },
+        {
+          "family": "exact_base_role",
+          "detail": "Plugin base reads this annotation to derive its display name."
+        }
+      ],
+      "note": "Name is directly corroborated by surviving PluginManager diagnostics."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginInstantiationException",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_exception_role",
+          "detail": "Exception wraps plugin construction, Guice child-injector creation, start/stop failures and dependency-graph errors in PluginManager."
+        },
+        {
+          "family": "exact_manager_role",
+          "detail": "PluginManager throws/catches this type around plugin instantiation and lifecycle transitions."
+        }
+      ],
+      "note": "InstantiationException reflects the framework's exact construction/lifecycle failure boundary."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RuneLiteConfig",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_group",
+          "detail": "Interface extends Config and is annotated with ConfigGroup value \"runelite\"."
+        },
+        {
+          "family": "exact_config_surface",
+          "detail": "Items cover notificationSettings, overlaySettings, windowSettings, client behavior, hotkeys, focus requests and notification flash modes."
+        }
+      ],
+      "note": "Name follows the exact root config group identifier and broad RuneLite client settings surface."
+    }
+  ],
+  "conflicts": []
+}

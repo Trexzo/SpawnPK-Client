@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/u/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CurveExtrapolationMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_curve_boundary_binding",
+          "detail": "AnimationCurve decodes two rs/u/i values directly before its keyframes and stores them separately as the modes used when sampling below the first keyframe and above the last keyframe."
+        },
+        {
+          "family": "exact_extrapolation_behavior",
+          "detail": "Out-of-range curve evaluation switches on these modes to choose endpoint hold or alternate repeated/cyclic, offset and reflected/ping-pong style extrapolation paths before re-evaluating the curve."
+        },
+        {
+          "family": "exact_enum_shape",
+          "detail": "rs/u/i is an enum-like five-instance value set resolved from one encoded integer and has no state or consumers outside this curve boundary/extrapolation role."
+        }
+      ],
+      "note": "CurveExtrapolationMode is a conservative semantic recovery name for the exact v308 pre/post-keyframe curve behavior enum; it does not claim a verbatim original developer identifier."
+    }
+  ],
+  "conflicts": []
+}

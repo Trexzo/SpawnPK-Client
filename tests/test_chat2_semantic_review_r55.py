@@ -1,0 +1,142 @@
+import json
+from pathlib import Path
+import unittest
+
+from spk_recovery.semantic_review import resolve_semantic_candidates
+
+SHA = (
+    "854f26ff9f134b0317572e7ac1688e6f"
+    "40a231d5a4c66f8db5d655b7f45ce7c6"
+)
+ROOT = Path(__file__).resolve().parents[1]
+
+CLASS_COORDS = [
+    ("CLIENT_CLASS_000354", "rs/l/E"),
+    ("CLIENT_CLASS_000355", "rs/l/F"),
+    ("CLIENT_CLASS_000360", "rs/l/K"),
+    ("CLIENT_CLASS_000363", "rs/l/a"),
+    ("CLIENT_CLASS_000383", "rs/l/c"),
+    ("CLIENT_CLASS_000397", "rs/l/e"),
+    ("CLIENT_CLASS_000497", "rs/l/h"),
+]
+
+
+def _class_lineage():
+    classes = []
+    for logical_id, internal_name in CLASS_COORDS:
+        classes.append(
+            {
+                "logical_id": logical_id,
+                "semantic_name": None,
+                "semantic_status": "UNKNOWN",
+                "semantic_confidence": 0.0,
+                "lineage": [
+                    {
+                        "build_id": "v308",
+                        "internal_name": internal_name,
+                        "entry_path": internal_name + ".class",
+                        "entry_sha256": "b" * 64,
+                        "structural_sha256": "c" * 64,
+                        "relation": "BASELINE",
+                        "confidence": 1.0,
+                        "provenance": [
+                            {
+                                "authority": "EXACT_CURRENT_CLIENT",
+                                "source": "chat2-r55-fixture",
+                            }
+                        ],
+                    }
+                ],
+                "semantic_provenance": [],
+            }
+        )
+    return {
+        "schema_version": 1,
+        "namespace": "spawnpk-client",
+        "id_format": "CLIENT_CLASS_%06d",
+        "baseline_build_id": "v308",
+        "builds": [
+            {
+                "build_id": "v308",
+                "build_number": 308,
+                "sha256": SHA,
+                "source_name": "client(6).jar",
+                "authority": "EXACT_CURRENT_CLIENT",
+            }
+        ],
+        "classes": classes,
+        "unresolved": [],
+    }
+
+
+def _member_lineage():
+    return {
+        "schema_version": 1,
+        "kind": "member_lineage",
+        "class_namespace": "spawnpk-client",
+        "baseline_build_id": "v308",
+        "source_sha256": SHA,
+        "members": [],
+        "unresolved": [],
+    }
+
+
+def _load(relative):
+    return json.loads((ROOT / relative).read_text(encoding="utf-8"))
+
+
+class Chat2SemanticReviewR55Tests(unittest.TestCase):
+    def test_r55_resolves_deterministically(self):
+        candidates = _load("mappings/candidates/v308.semantic.chat2.r55.json")
+        expected = _load("mappings/candidates/v308.semantic-review.chat2.r55.json")
+        actual = resolve_semantic_candidates(
+            _class_lineage(), _member_lineage(), candidates
+        )
+        self.assertEqual(actual["proposal_count"], 7)
+        self.assertEqual(actual["unresolved"], [])
+        self.assertEqual(
+            actual["review_id"],
+            "SEMREVIEW_B14A4F72F6EC3A5BCF9E",
+        )
+        self.assertEqual(actual, expected)
+
+    def test_r55_expected_stable_ids(self):
+        review = _load("mappings/candidates/v308.semantic-review.chat2.r55.json")
+        self.assertEqual(
+            {row["proposed_name"]: row["stable_id"] for row in review["proposals"]},
+            {
+                "Rasterizer3D": "CLIENT_CLASS_000354",
+                "Sprite": "CLIENT_CLASS_000355",
+                "TextDrawingArea": "CLIENT_CLASS_000360",
+                "IndexedImage": "CLIENT_CLASS_000363",
+                "DrawingArea": "CLIENT_CLASS_000383",
+                "RSImageProducer": "CLIENT_CLASS_000397",
+                "RSFont": "CLIENT_CLASS_000497",
+            },
+        )
+
+    def test_r55_names_and_owners_do_not_overlap_prior_reviews(self):
+        current = _load("mappings/candidates/v308.semantic-review.chat2.r55.json")
+        names = {row["proposed_name"] for row in current["proposals"]}
+        owners = {row["source_coordinate"]["owner"] for row in current["proposals"]}
+
+        prior_names = set()
+        prior_owners = set()
+        for batch in range(2, 55):
+            path = ROOT / "mappings" / "candidates" / f"v308.semantic-review.chat2.r{batch}.json"
+            if not path.is_file():
+                continue
+            prior = json.loads(path.read_text(encoding="utf-8"))
+            prior_names.update(row["proposed_name"] for row in prior["proposals"])
+            prior_owners.update(
+                row["source_coordinate"]["owner"]
+                for row in prior["proposals"]
+                if row["target_kind"] == "class"
+            )
+
+        self.assertTrue(names.isdisjoint(prior_names))
+        self.assertTrue(owners.isdisjoint(prior_owners))
+
+
+if __name__ == "__main__":
+    unittest.main()

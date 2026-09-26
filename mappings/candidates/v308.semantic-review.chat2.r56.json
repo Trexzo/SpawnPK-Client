@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_42DD35214AC4AE229B6C",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_EACF02B2D302BA2F34A5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000684",
+      "owner_logical_id": "CLIENT_CLASS_000684",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RSInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_global_interface_table",
+          "detail": "The main loader allocates the static rs/n/e[] interface table from the decoded interface count plus expansion capacity, then constructs and stores each interface by numeric id."
+        },
+        {
+          "family": "exact_archive_stream_loader",
+          "detail": "The loader consumes R29 StreamLoader and Stream objects, decodes parent/interface ids and then branches by interface type to populate dimensions, children, sprites, fonts, models, inventory slots, scripts/comparisons and interaction metadata."
+        },
+        {
+          "family": "exact_widget_surface",
+          "detail": "The class owns child-id/position arrays, item-id/amount arrays, Sprite and font/model references, action arrays, text/tooltip strings, spell/action metadata, scroll/layout state and numerous static builders for custom interfaces."
+        },
+        {
+          "family": "surviving_ui_literals",
+          "detail": "Exact v308 literals include interface-facing defaults/actions such as \"Ok\", \"Select\", \"Continue\", \"Close\", spell casting text, prayer sprites and equipment/interface resource names."
+        }
+      ],
+      "note": "RSInterface preserves the classic client semantic identity of the global widget/interface definition object. Exact v308 loader/state behavior is primary authority."
+    }
+  ],
+  "unresolved": []
+}

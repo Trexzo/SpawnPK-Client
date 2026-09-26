@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_ED3BC2D9B327E06C3564",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_B4C7023468C99A7E4A2B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000901",
+      "owner_logical_id": "CLIENT_CLASS_000901",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/e/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GpuPluginPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_plugin_panel_base",
+          "detail": "rs/s/e/b directly extends the reviewed PluginPanel base rs/ui/m and stores only the reviewed GpuPlugin plus the plugin-hub/config component factory dependency."
+        },
+        {
+          "family": "exact_gpu_plugin_registration",
+          "detail": "Reviewed GpuPlugin rs/s/e/c obtains rs/s/e/b from the injector, builds a NavigationButton titled exactly 'GPU Mode' with gpu_icon.png, binds rs/s/e/b as that button's PluginPanel, and registers it with ClientUI."
+        },
+        {
+          "family": "exact_panel_rebuild",
+          "detail": "GpuPluginPanel overrides the PluginPanel activation hook J_(): it removes all content, asks the plugin configuration UI factory to build the component for the GpuPlugin instance, and adds that component as the sole panel content."
+        },
+        {
+          "family": "exact_role_boundary",
+          "detail": "The class does not own the separate desktop GPU Settings window rs/gui/a/a. Its responsibility is specifically the navigation/sidebar plugin panel for GPU Mode."
+        }
+      ],
+      "note": "GpuPluginPanel is fixed by PluginPanel inheritance, exact GPU Mode navigation registration and its one-purpose rebuild path around the reviewed GpuPlugin. Confidence is 0.999; the dead duplicate GPU enums remain deliberately unnamed."
+    }
+  ],
+  "unresolved": []
+}

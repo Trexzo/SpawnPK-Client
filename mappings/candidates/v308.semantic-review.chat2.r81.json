@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_B8D25FA5E0542C9A9585",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_873ED7B8C34D3CB33079",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000989",
+      "owner_logical_id": "CLIENT_CLASS_000989",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/t/a/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WanderingMerchantItemConfigLoader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_identity",
+          "detail": "The class is hard-wired to configs/wandering_merchant.yaml with compiled counterpart configs/w.bin."
+        },
+        {
+          "family": "exact_item_schema",
+          "detail": "It walks nested config sections under the exact key items, extracts integer id values and builds a static integer item-id set, with item-definition normalization for one linked-item case."
+        },
+        {
+          "family": "exact_runtime_consumer",
+          "detail": "The Client constructs and loads this config class directly during startup."
+        },
+        {
+          "family": "exact_render_consumer",
+          "detail": "Item hover rendering tests the loaded item-id set and, when the corresponding tooltip feature is enabled, appends the exact marker string \" <img=370>\" to matching item text."
+        }
+      ],
+      "note": "WanderingMerchantItemConfigLoader is the conservative semantic name for the exact wandering_merchant.yaml/w.bin item-set loader. It does not claim a verbatim original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_955FED3084EF6E39BFBD",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000987",
+      "owner_logical_id": "CLIENT_CLASS_000987",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/t/a/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MapConfigLoader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_identity",
+          "detail": "The class is hard-wired to configs/maps.yaml with compiled counterpart configs/m.bin."
+        },
+        {
+          "family": "exact_map_schema",
+          "detail": "Its per-entry decoder recognizes id, map, land, type, osid, group, forceroof and forceroofs, populating map/land index arrays plus OSRS, grouping and roof metadata."
+        },
+        {
+          "family": "exact_runtime_consumer",
+          "detail": "R24 OnDemandFetcher constructs this class during its cache/map-index initialization and passes its four map-index arrays directly into the loader."
+        },
+        {
+          "family": "exact_client_dataflow",
+          "detail": "The Client and OnDemandFetcher consume the loader's configured map groups and OSRS/map-id sets to choose map archives, group regions and switch OSRS map handling."
+        }
+      ],
+      "note": "MapConfigLoader is the conservative semantic name for the exact maps.yaml/m.bin map-index/config loader. It does not claim a verbatim original developer identifier."
+    }
+  ],
+  "unresolved": []
+}

@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_BFB4BC3B81C92AA0DCA1",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_6D5BC606DD72378614F4",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000101",
+      "owner_logical_id": "CLIENT_CLASS_000101",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/cache/osrs/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OsrsAssetState",
+      "confidence": 0.996,
+      "evidence": [
+        {
+          "family": "exact_static_state_shape",
+          "detail": "The class is a pure static holder: one boolean mode flag, one alternate rs/v[] model-header/cache array, and one alternate rs/k[][] animation-frame/cache matrix, with only trivial getters and setters."
+        },
+        {
+          "family": "exact_model_cache_switch",
+          "detail": "The model subsystem allocates the alternate rs/v[] array separately from its ordinary model-header array and selects between them through this class whenever the OSRS mode flag is active."
+        },
+        {
+          "family": "exact_animation_cache_switch",
+          "detail": "The animation/frame subsystem allocates an alternate rs/k[][] matrix, selects it through this class when OSRS mode is active, and contains surviving OSRS animation paths/diagnostics such as old_osrs_anims and 'Could not find OSRS animation file'."
+        },
+        {
+          "family": "exact_scoped_mode_usage",
+          "detail": "Multiple definition/model/animation call sites save or set the mode flag around OSRS-specific lookups and restore it afterward, while OnDemandFetcher tags requests from the same active mode."
+        }
+      ],
+      "note": "OsrsAssetState is descriptive exact-behavior recovery for the static OSRS mode plus alternate model/animation asset state. No surviving original source noun was found, so confidence is 0.996."
+    }
+  ],
+  "unresolved": []
+}

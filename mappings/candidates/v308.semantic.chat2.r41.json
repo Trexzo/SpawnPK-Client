@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/I",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SceneTileModel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scene_binding",
+          "detail": "R40 SceneTile (rs/H) owns rs/I in its dedicated modeled-tile surface slot, while rs/V Scene constructs rs/I only for tile shapes outside the two simple paint cases and stores it into that slot."
+        },
+        {
+          "family": "exact_mesh_construction",
+          "detail": "rs/I builds per-tile vertex coordinate arrays and triangle-index/color/texture arrays from fixed shape and rotation tables using the 128-unit tile grid, interpolated corner heights and overlay/underlay colors."
+        },
+        {
+          "family": "exact_rendering_role",
+          "detail": "Scene consumes rs/I vertex/face arrays as the non-flat tile geometry representation; the object also exposes shape/rotation metadata and textured-face data."
+        }
+      ],
+      "note": "SceneTileModel is the modern semantic name for the shaped/triangulated per-tile scene geometry object; this is not a claim of verbatim original-source naming."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/J",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SceneTilePaint",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scene_binding",
+          "detail": "R40 SceneTile (rs/H) owns rs/J in its dedicated simple-tile surface slot, and rs/V Scene constructs rs/J for the two simple tile cases before storing it directly into that slot."
+        },
+        {
+          "family": "exact_value_shape",
+          "detail": "rs/J is a compact immutable tile-surface record holding four corner colors, texture/overlay metadata and a flatness flag, with only three auxiliary mutable color fields used by the scene pipeline."
+        },
+        {
+          "family": "exact_rendering_role",
+          "detail": "Scene distinguishes rs/J from rs/I: rs/J represents the simple painted tile surface while rs/I represents shaped/triangulated tile geometry."
+        }
+      ],
+      "note": "SceneTilePaint is the modern semantic name for the simple painted per-tile surface object; this is not a claim of verbatim original-source naming."
+    }
+  ],
+  "conflicts": []
+}

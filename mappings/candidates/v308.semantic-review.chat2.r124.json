@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_2710F7C927590F200A4E",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_554BAAE33D243E406DCC",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000649",
+      "owner_logical_id": "CLIENT_CLASS_000649",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/c/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MailboxInterfacePacketHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers rs/n/c/c/e directly as exact ScriptPacket ID 31."
+        },
+        {
+          "family": "exact_mailbox_interface_target",
+          "detail": "The handler resolves only controllers owned by rs/n/c/c/a, independently recovered in R2 as MailboxInterface from exact Inbox/Mail Subject/delete-message/attached-item literals and misc/mail resources."
+        },
+        {
+          "family": "exact_inbox_protocol",
+          "detail": "Selectors 0, 1, 2, 5 and 7 operate on the mailbox inbox-list controller: reset/finalize list state, append String rows, update indexed row state, clear row selection state and select a packet-specified row. Its exact row-state enum preserves READ and UNREAD."
+        },
+        {
+          "family": "exact_attachment_claim_protocol",
+          "detail": "Selectors 3 and 4 operate on the mailbox attached-item/reward controller. The exact claim-state enum preserves EMPTY, UNCLAIMED and CLAIMED, and the same controller writes the exact message '@gre@Items have been claimed!'."
+        },
+        {
+          "family": "exact_complete_selector_surface",
+          "detail": "All selectors 0 through 7 stay within the mailbox interface domain or its presentation helpers. Selector 6 emits packet-triggered particles through the generic overlay particle manager at the mailbox reward-panel screen region but does not mutate a second Client subsystem."
+        }
+      ],
+      "note": "MailboxInterfacePacketHandler is descriptive exact-behavior recovery for ScriptPacket 31. Its complete selector surface controls the exact MailboxInterface inbox/read-state/attached-item claim presentation, with only a generic visual-effect helper outside the mailbox package. No surviving original class identifier is claimed. Confidence is 0.998."
+    }
+  ],
+  "unresolved": []
+}

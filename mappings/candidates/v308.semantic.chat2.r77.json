@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/s",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ObjectSpawnOverrideManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_override_registry",
+          "detail": "rs/d/s owns a static Map<String,rs/d/s$a> whose dynamic object packet keys are built exactly as x,y,plane, so one override is tracked per world tile/plane coordinate."
+        },
+        {
+          "family": "exact_packet_add_remove",
+          "detail": "The object-update packet removes a coordinate key and calls Client.a(x,y,-1,0,10,plane) to clear an object; its add path creates an rs/d/s$a record, stores it by coordinate and calls Client.a(x,y,objectId,rotation,type,plane)."
+        },
+        {
+          "family": "exact_bulk_remove",
+          "detail": "The packet's third action scans the registry for records with a requested object id, clears each matching object from the scene through the same Client.a spawn API and removes those registry entries."
+        },
+        {
+          "family": "exact_builtin_overrides",
+          "detail": "rs/d/s.a(Client) contains the client's large built-in table of fixed world-coordinate object additions, replacements and removals, all applied through the same six-argument object-spawn API."
+        }
+      ],
+      "note": "ObjectSpawnOverrideManager is the conservative semantic name for this exact built-in/dynamic object-spawn override registry and applicator; it does not claim a verbatim original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/s$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ObjectSpawnOverride",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_record_shape",
+          "detail": "rs/d/s$a is a six-int data record populated directly from the object-update packet before being placed in the manager's coordinate-keyed override map."
+        },
+        {
+          "family": "exact_spawn_application",
+          "detail": "The manager replays the record as Client.a(x,y,objectId,rotation,type,plane), while removal reuses its x/y/plane coordinates with object id -1."
+        },
+        {
+          "family": "exact_registry_identity",
+          "detail": "The record is stored only inside ObjectSpawnOverrideManager's x,y,plane registry and is iterated there for object-id based bulk removal."
+        }
+      ],
+      "note": "ObjectSpawnOverride is the conservative semantic name for this exact object-id/coordinate/type/rotation/plane override record; it does not claim a verbatim original developer identifier."
+    }
+  ],
+  "conflicts": []
+}

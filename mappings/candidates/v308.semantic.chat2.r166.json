@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/y",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ThinProgressBar",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_progress_state",
+          "detail": "The class owns exactly two integer values: maximumValue initialized/clamped to at least 1 and current value. Its percentage method returns current * 100 / maximum."
+        },
+        {
+          "family": "exact_progress_rendering",
+          "detail": "paintComponent computes current * width / maximum, paints the unfilled segment with the darker derived background color and the filled segment from x=0 using the foreground color."
+        },
+        {
+          "family": "exact_component_geometry",
+          "detail": "The JPanel is configured with unbounded maximum width and a fixed 4-pixel height for maximum, minimum, preferred and current size."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 67496933120316f33bfc480f1a1c67c897cb82b9 ThinProgressBar has exactly the same two-int state, four-pixel geometry, foreground/background behavior, percentage calculation and paintComponent implementation."
+        },
+        {
+          "family": "exact_single_live_consumer",
+          "detail": "Exact v308 TradingPostListingPanel places this component at BorderLayout.SOUTH, writes listing maximum/current values and reads its percentage for listing status text."
+        }
+      ],
+      "note": "ThinProgressBar is the corrected exact RuneLite source name. R166 previously used descriptive ProgressBar before the wider upstream UI source audit exposed both RuneLite ProgressBar and ThinProgressBar as distinct classes. Confidence remains 0.999."
+    }
+  ],
+  "conflicts": []
+}

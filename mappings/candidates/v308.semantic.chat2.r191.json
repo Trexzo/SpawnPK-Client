@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/i/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InteractHighlightOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_plugin_registration",
+          "detail": "Reviewed InteractHighlightPlugin rs/s/i/c stores rs/s/i/b as its only overlay, registers it with the live overlay manager during startup, clears its interaction state and unregisters it during shutdown."
+        },
+        {
+          "family": "exact_event_forwarding",
+          "detail": "InteractHighlightPlugin forwards only exact EntityInteraction and ObjectInteraction events into rs/s/i/b; no unrelated event family is delegated to this class."
+        },
+        {
+          "family": "exact_config_pairing",
+          "detail": "rs/s/i/b owns reviewed InteractionHighlightConfig rs/s/i/a, whose exact v308 options cover NPC attack/hover/interact, Object hover/interact, show-on-hover/interact, outline colors, feather and border width."
+        },
+        {
+          "family": "exact_hover_rendering",
+          "detail": "The overlay inspects the current hovered menu row and renders only a different NPC or object target when the corresponding config toggle is enabled, using the configured NPC/object hover colors and shared outline renderer."
+        },
+        {
+          "family": "exact_interaction_rendering",
+          "detail": "The overlay stores the current EntityInteraction/ObjectInteraction target, distinguishes NPC combat from non-combat interaction, applies the reviewed attack/interact colors, fades the highlight across its short lifetime, and clears state when the target expires or the player moves."
+        }
+      ],
+      "note": "InteractHighlightOverlay is fixed by exclusive InteractHighlightPlugin ownership, exact EntityInteraction/ObjectInteraction forwarding, and a whole-class NPC/object hover/attack/interact render surface driven by InteractionHighlightConfig. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

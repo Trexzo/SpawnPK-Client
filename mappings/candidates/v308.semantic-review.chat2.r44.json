@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 5,
+  "review_id": "SEMREVIEW_44CE9C7A13841A702A16",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_0418ABB70A9883154D2B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001012",
+      "owner_logical_id": "CLIENT_CLASS_001012",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/u/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AnimationCurve",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_keyframe_container",
+          "detail": "rs/u/g decodes an ordered array of rs/u/a Keyframe records, links adjacent entries and stores pre/post interpolation modes."
+        },
+        {
+          "family": "exact_interpolation_role",
+          "detail": "The class binary-searches keyframes by time, evaluates values between neighboring samples and implements cubic/Hermite-style coefficient solving plus extrapolation behavior."
+        },
+        {
+          "family": "exact_channel_usage",
+          "detail": "rs/u/b stores rs/u/g instances as transform/property channels and samples them at animation time to drive bone rotation, translation and scale."
+        }
+      ],
+      "note": "AnimationCurve is a conservative semantic recovery name for the exact v308 role; it does not claim a verbatim original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_2D6F732A81EFC2E6DBBB",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001007",
+      "owner_logical_id": "CLIENT_CLASS_001007",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/u/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "KeyframeAnimation",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "The loader rejects mismatched input with the surviving diagnostic \"Not a keyframe file!\" before constructing the animation object."
+        },
+        {
+          "family": "exact_skeleton_binding",
+          "detail": "rs/u/b owns a direct rs/K Skeleton reference and decodes curve channels indexed against Skeleton transform/bone structures."
+        },
+        {
+          "family": "exact_application_role",
+          "detail": "Its application methods evaluate animation curves for a time/frame value, compose rotation/translation/scale matrices and apply the result to rs/u/d bone records; Model consumes this path for skeletal animation."
+        }
+      ],
+      "note": "KeyframeAnimation is a conservative semantic recovery name for the exact v308 role; it does not claim a verbatim original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_645477CC080F10CA060B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001009",
+      "owner_logical_id": "CLIENT_CLASS_001009",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/u/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Bone",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_hierarchy",
+          "detail": "Each rs/u/d stores a parent index and resolved parent rs/u/d reference; rs/u/j resolves those references after loading the bone array."
+        },
+        {
+          "family": "exact_transform_role",
+          "detail": "The class owns bind/local transform matrices, lazily composed parent/global transforms and derived translation/rotation/scale vectors for multiple transform variants."
+        },
+        {
+          "family": "exact_animation_consumer",
+          "detail": "rs/u/b evaluates its animation channels into a matrix and writes the result to an rs/u/d, after which the bone exposes the composed transform used by the model skeleton path."
+        }
+      ],
+      "note": "Bone is a conservative semantic recovery name for the exact v308 role; it does not claim a verbatim original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_BBA62CB33D4124D7818A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001015",
+      "owner_logical_id": "CLIENT_CLASS_001015",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/u/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BoneHierarchy",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_bone_collection",
+          "detail": "rs/u/j owns an rs/u/d[] array, exposes bone count/index access and resolves every bone's parent reference from its stored parent index."
+        },
+        {
+          "family": "exact_skeleton_ownership",
+          "detail": "rs/K optionally owns one rs/u/j instance as its extended skeletal metadata block."
+        },
+        {
+          "family": "exact_animation_dispatch",
+          "detail": "rs/u/j applies one rs/u/b animation across its bone array, optionally filtered by a boolean mask, delegating each indexed transform into the corresponding Bone."
+        }
+      ],
+      "note": "BoneHierarchy is a conservative semantic recovery name for the exact v308 role; it does not claim a verbatim original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_D0F50EB7D223D55A107B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001006",
+      "owner_logical_id": "CLIENT_CLASS_001006",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/u/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Keyframe",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_curve_storage",
+          "detail": "rs/u/g decodes an ordered rs/u/a[] array, links each entry to its successor and uses each entry's integer time plus float value/tangent data during interpolation."
+        },
+        {
+          "family": "exact_value_shape",
+          "detail": "rs/u/a stores one integer sample position/time, one value float, four tangent/control floats and a next-key pointer; its decoder reads exactly that record shape from the stream."
+        }
+      ],
+      "note": "Keyframe is a conservative semantic recovery name for the exact v308 role; it does not claim a verbatim original developer identifier."
+    }
+  ],
+  "unresolved": []
+}

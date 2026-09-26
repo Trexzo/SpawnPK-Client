@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_F9DDD77407DE5A87FEFB",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_65E4A09427B687F1A381",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000996",
+      "owner_logical_id": "CLIENT_CLASS_000996",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/tools/TextPopupWindow$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TextSearchWindow",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_search_window_title",
+          "detail": "The nested JFrame sets the exact title 'Search for text', creates a JTextField and a JButton whose exact label is 'Search', fixing its role as the search window attached to TextPopupWindow."
+        },
+        {
+          "family": "exact_parent_surface",
+          "detail": "The class stores its enclosing exact-v308 TextPopupWindow instance and searches the parent window's JTextPane document rather than owning an unrelated text source."
+        },
+        {
+          "family": "exact_search_behavior",
+          "detail": "Its Search action lowercases the query and document text, scans from the stored search position with wraparound, scrolls the matching range into view, selects it through the JTextPane caret, and advances the next-search position."
+        },
+        {
+          "family": "exact_window_behavior",
+          "detail": "The class directly extends JFrame, uses FlowLayout, sets size 300x75, centers relative to the parent popup, makes Search the root pane default button, shows the window, and initializes search position from the parent's current caret position."
+        },
+        {
+          "family": "exact_cancel_behavior",
+          "detail": "The root pane binds Escape to the exact action key 'Cancel'; the bound helper disposes this JFrame, completing the dedicated search-window lifecycle."
+        }
+      ],
+      "note": "TextSearchWindow is descriptive exact-behavior recovery for TextPopupWindow's nested 'Search for text' JFrame. The original nested source identifier does not survive, so confidence is 0.998 rather than 1.0."
+    }
+  ],
+  "unresolved": []
+}

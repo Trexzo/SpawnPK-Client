@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/f/a/k/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AdventureBookChapterProgressRenderer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_adventure_book_registration",
+          "detail": "AdventureBookInterface rs/n/c/c owns a singleton rs/l/f/a/k/a, constructs it in its static initializer and registers it directly against widget 38388 immediately after creating the exact literal 'Chapter Progress' and the initial '0 / 5' progress text."
+        },
+        {
+          "family": "exact_chapter_progress_packet_join",
+          "detail": "AdventureBookInterfacePacketHandler rs/n/c/d ScriptPacket 22 operation 8 reads two integers into rs/n/c/c.bJ and bK; rs/l/f/a/k/a consumes exactly bJ / bK as its progress fraction and has no unrelated domain state."
+        },
+        {
+          "family": "exact_arc_render_behavior",
+          "detail": "The renderer obtains the live client BufferedImage Graphics2D, enables antialiasing and pure stroke control, then draws a green 3px Arc2D ring with extent -360 * (bJ / bK), giving a direct circular chapter-progress visualization."
+        },
+        {
+          "family": "exact_render_component_contract",
+          "detail": "The class extends the client render-component base rs/l/f/b/d and is registered/unregistered through rs/l/f/e using its inherited widget-position contract, proving it is a renderer component rather than Adventure Book data or packet state."
+        }
+      ],
+      "note": "AdventureBookChapterProgressRenderer is fixed by the exact AdventureBookInterface ownership/registration, the literal 'Chapter Progress' widget join, ScriptPacket 22 op-8 counters and the class's sole green Arc2D progress-ring behavior. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_75AAAF2DB6589C9AAFAB",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_8E8B362C8BAE8A3E76E2",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000947",
+      "owner_logical_id": "CLIENT_CLASS_000947",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/p/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PlayerOutlineOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_plugin_registration",
+          "detail": "Reviewed PlayerOutlinePlugin rs/s/p/d registers rs/s/p/b unconditionally as its primary overlay during startup and removes it during shutdown."
+        },
+        {
+          "family": "exact_player_target",
+          "detail": "The overlay render path reads Client.eR as rs/a/k, independently recovered in R30 as Player, obtains that player's Model and renders the configured outline around that exact local-player model."
+        },
+        {
+          "family": "exact_outline_config",
+          "detail": "The class owns reviewed PlayerOutlineConfig rs/s/p/a and consumes its exact outline color, feather and border-width settings when invoking the shared outline renderer."
+        },
+        {
+          "family": "exact_overlay_shape",
+          "detail": "rs/s/p/b extends the shared model-outline overlay base and has no unrelated state or rendering responsibility beyond outlining the local Player model."
+        }
+      ],
+      "note": "PlayerOutlineOverlay is fixed by unconditional PlayerOutlinePlugin registration, the exact R30 Player target and exclusive outline rendering through PlayerOutlineConfig. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_CD52C154EDE3D48CB454",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000948",
+      "owner_logical_id": "CLIENT_CLASS_000948",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/p/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PetOutlineOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_pet_outline_config_gate",
+          "detail": "Reviewed PlayerOutlinePlugin adds or removes rs/s/p/c solely according to the exact PlayerOutlineConfig key petOutline, including its ConfigChanged handling."
+        },
+        {
+          "family": "exact_npc_target",
+          "detail": "The overlay operates on rs/a/j, independently recovered in R30 as Npc, and inspects the bound NpcDefinition before rendering the configured model outline."
+        },
+        {
+          "family": "exact_plugin_pairing",
+          "detail": "rs/s/p/c is the only optional sibling overlay owned by PlayerOutlinePlugin; its lifecycle is paired directly with the petOutline setting while rs/s/p/b remains the always-registered player overlay."
+        },
+        {
+          "family": "exact_outline_config",
+          "detail": "The class owns the same reviewed PlayerOutlineConfig and uses its outline color, feather and border-width values for the optional pet/Npc outline path, with no unrelated rendering responsibility."
+        }
+      ],
+      "note": "PetOutlineOverlay is fixed by the exact petOutline lifecycle gate, Npc target type and exclusive PlayerOutlinePlugin ownership. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}

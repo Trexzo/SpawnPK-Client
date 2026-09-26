@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/a/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HalloweenEventChestOverlay",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_interface_root",
+          "detail": "The overlay visibility predicate returns true only when Client.cH == 60600, exactly the root built by R3 HalloweenEventChestInterface rs/n/c/N."
+        },
+        {
+          "family": "exact_widget_bridge",
+          "detail": "The overlay reads and renders exact widgets 60611, 60617, 60618, 60621 and 60625. Those same widgets are constructed by rs/n/c/N alongside exact 'Event Chest Tier I', 'Event Chest Tier II', 'Tier I - @yel@Halloween Event 2020', 'Roll', 'Exchange' and '@yel@Event Guide' presentation."
+        },
+        {
+          "family": "exact_overlay_text",
+          "detail": "The overlay itself preserves exact event-tier messages including '<img=81> You must roll all the items from the previous tier! <img=81>', ' <img=81> Locked!', '<img=46> @gre@You've completed this tier of the event! <img=46>' and '@gre@Congratulations! You've completed the entire event!'."
+        },
+        {
+          "family": "exact_overlay_registration",
+          "detail": "The central rs/l/e/f overlay initialization constructs rs/l/e/a/h directly and registers it as a live overlay; the class extends the overlay base rs/l/e/f and renders only on the Halloween Event Chest root."
+        }
+      ],
+      "note": "HalloweenEventChestOverlay is descriptive exact-behavior recovery for the live overlay bound exclusively to root 60600 and the exact Halloween Event Chest widget/text surface. No original source identifier is claimed; confidence is 0.998."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/a/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HalloweenEventChestOverlayPacketHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers ScriptPacket ID 4 from rs/l/e/a/h.D; exact v308 initializes that field with concrete handler rs/l/e/a/i."
+        },
+        {
+          "family": "exact_complete_selector_surface",
+          "detail": "Selectors 1 through 4 write only rs/l/e/a/h state or the same 606xx Halloween Event Chest widgets. Selector 1 rebuilds the completed-tier map; selector 2 updates tier/progress values and widget 60625; selector 3 updates tier selection, 60617/60618/60621 sprites and item text derived from widget 60611; selector 4 toggles overlay state."
+        },
+        {
+          "family": "exact_target_bridge",
+          "detail": "The target overlay is independently bound to Client.cH root 60600 and reads the same exact widgets built by HalloweenEventChestInterface."
+        },
+        {
+          "family": "exact_no_cross_domain_write",
+          "detail": "The handler's ItemDefinition lookup in selector 3 is used only to format the selected event-chest item text stored back on rs/l/e/a/h; no unrelated Client subsystem is mutated."
+        }
+      ],
+      "note": "HalloweenEventChestOverlayPacketHandler is descriptive exact-behavior recovery for ScriptPacket 4. Its complete selector surface controls only the exact root-60600 Halloween Event Chest overlay; confidence is 0.998."
+    }
+  ],
+  "conflicts": []
+}

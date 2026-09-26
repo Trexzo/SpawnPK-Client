@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_A499433BF6E1D5E1F0FB",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_1E7A7A97A7E34DD50E5F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000591",
+      "owner_logical_id": "CLIENT_CLASS_000591",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aP",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ShopTabInterfacePacketHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers ScriptPacket ID 17 from rs/n/c/aO.g; exact v308 initializes that field with concrete handler rs/n/c/aP."
+        },
+        {
+          "family": "exact_interface_identity",
+          "detail": "The target rs/n/c/aO is independently reviewed as ShopTabInterface and preserves exact strings 'Main stock', 'Right-click on shop', 'Select shop tab', and 'Tab 1' through 'Tab 5' plus the shop-tab widget family rooted at 41043."
+        },
+        {
+          "family": "exact_complete_selector_surface",
+          "detail": "Selector 0 resets tab 0 from rs/n/c/aO.c; selector 1 reads tab index plus a packet-sized String array and delegates to rs/n/c/aO.a(index, strings); selector 2 reads one integer and delegates to rs/n/c/aO.m(int). No selector touches another subsystem."
+        },
+        {
+          "family": "exact_target_ownership",
+          "detail": "Every mutation is performed through rs/n/c/aO static state/methods, fixing the handler responsibility to the recovered tabbed-shop interface."
+        }
+      ],
+      "note": "ShopTabInterfacePacketHandler is descriptive exact-behavior recovery for ScriptPacket 17. The complete three-selector surface delegates only into the exact ShopTabInterface; confidence is 0.998."
+    },
+    {
+      "proposal_id": "SEMPROP_7CC174F6A4DBDF749FDF",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000545",
+      "owner_logical_id": "CLIENT_CLASS_000545",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/A",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfirmationInterface",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_confirmation_text",
+          "detail": "The interface writes exact surviving strings 'Confirm', 'Cancel', '<img=25> Close window', and 'Please confirm your choice.' into its 14170-series widget tree."
+        },
+        {
+          "family": "exact_widget_surface",
+          "detail": "Its static layout/reset methods exclusively configure the 14170-series confirmation prompt widgets, including optional image/content slots and the confirm/cancel presentation."
+        },
+        {
+          "family": "exact_packet_binding",
+          "detail": "Its static ScriptPacket handler field is initialized with rs/n/c/B and registered by R115 ScriptPacketDispatcher as exact ScriptPacket ID 28."
+        },
+        {
+          "family": "exact_builder_role",
+          "detail": "The class extends the interface-builder base, initializes the confirmation surface in its builder entry point, and exposes only confirmation-layout/update helpers used by the packet handler."
+        }
+      ],
+      "note": "ConfirmationInterface is a descriptive class name grounded in exact Confirm/Cancel/'Please confirm your choice.' presentation and one dedicated 14170-series widget surface. No original source identifier is claimed; confidence is 0.998."
+    },
+    {
+      "proposal_id": "SEMPROP_7FAFFF07B2DC80CE5147",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000547",
+      "owner_logical_id": "CLIENT_CLASS_000547",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/B",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfirmationInterfacePacketHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers rs/n/c/A.c as ScriptPacket ID 28; exact v308 initializes that field with concrete handler rs/n/c/B."
+        },
+        {
+          "family": "exact_complete_selector_surface",
+          "detail": "Selectors 0 through 3 call only rs/n/c/A confirmation helpers or mutate the same confirmation widget 14172. Selector 0 toggles confirmation layout mode, selector 1 resets/rebuilds it, and selectors 2/3 configure image/content slots from packet dimensions plus a boolean flag."
+        },
+        {
+          "family": "exact_confirmation_target",
+          "detail": "The target rs/n/c/A preserves exact 'Confirm', 'Cancel', '<img=25> Close window', and 'Please confirm your choice.' strings in the same 14170-series widget tree."
+        },
+        {
+          "family": "exact_no_cross_domain_write",
+          "detail": "The only direct field write outside rs/n/c/A helper calls sets widget 14172.aT=1000 immediately after rs/n/c/A configures that same confirmation widget. No unrelated Client state is touched."
+        }
+      ],
+      "note": "ConfirmationInterfacePacketHandler is descriptive exact-behavior recovery for ScriptPacket 28. Its complete selector surface controls only the recovered ConfirmationInterface; confidence is 0.998."
+    }
+  ],
+  "unresolved": []
+}

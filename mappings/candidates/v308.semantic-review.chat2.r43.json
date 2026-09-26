@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_0192FC051C5A1EFC4605",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_EA2692105E8641D2A0F8",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000313",
+      "owner_logical_id": "CLIENT_CLASS_000313",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AnimationFrame",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_frame_value_shape",
+          "detail": "Each rs/k instance stores one rs/K definition, a transform count, transform-index array and parallel X/Y/Z transform arrays."
+        },
+        {
+          "family": "exact_decode_behavior",
+          "detail": "The rs/k loader decodes sparse transform flags, injects default transforms when required by the shared definition, and stores per-transform X/Y/Z values for one frame id."
+        },
+        {
+          "family": "exact_model_consumer",
+          "detail": "Model resolves rs/k by sequence/frame id and applies its transforms by indexing the attached rs/K definition, including blended-frame paths."
+        }
+      ],
+      "note": "AnimationFrame is the conservative semantic name for one sparse transform frame bound to a Skeleton; it avoids ambiguity with SequenceDefinition and does not claim a verbatim original identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_F35F78BB1B3CD7BED79D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000038",
+      "owner_logical_id": "CLIENT_CLASS_000038",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/K",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Skeleton",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_frame_loader_role",
+          "detail": "rs/k frame loading constructs one rs/K definition and assigns that same object to every decoded frame; rs/K supplies the transform-type array and label-group arrays used while each frame's sparse transforms are decoded."
+        },
+        {
+          "family": "exact_model_application_role",
+          "detail": "Model animation application reads rs.K transform types and label groups, then applies each frame's X/Y/Z values to the referenced vertex/face groups."
+        },
+        {
+          "family": "exact_definition_shape",
+          "detail": "rs/K is primarily an int[] transform-type table plus int[][] label groups, with optional extended skeletal metadata; it contains no per-frame transform values."
+        }
+      ],
+      "note": "Skeleton is the conservative modern semantic name for the shared transform-definition / label-group object. It is not a claim that the original developer used this exact identifier."
+    }
+  ],
+  "unresolved": []
+}

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_142F0F9C2756A947D982",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_40CAAB4E59AFFCF278F0",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001125",
+      "owner_logical_id": "CLIENT_CLASS_001125",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/z",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LegacySpotAnimationConfigLoader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_target_type",
+          "detail": "rs/z accepts and returns rs/d/x[]; R28 identifies rs/d/x as SpotAnimationDefinition."
+        },
+        {
+          "family": "exact_legacy_source",
+          "detail": "Its reader opens the hard-coded legacy graphic config path configs/old_g.dat beneath the client data root."
+        },
+        {
+          "family": "exact_patch_behavior",
+          "detail": "The file format uses \"graphic\", \"data:\", \"arr1:\" and \"arr2:\" records to overwrite SpotAnimationDefinition model/sequence/scale/rotation/light/recolor-related fields, and rebinds the linked SequenceDefinition."
+        }
+      ],
+      "note": "LegacySpotAnimationConfigLoader is the conservative semantic name for the exact old_g.dat SpotAnimationDefinition override loader."
+    },
+    {
+      "proposal_id": "SEMPROP_F7E6C94618CEC37BAD6B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001121",
+      "owner_logical_id": "CLIENT_CLASS_001121",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/y",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LegacySequenceConfigLoader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_target_type",
+          "detail": "rs/y accepts and returns rs/d/a[]; R28 identifies rs/d/a as SequenceDefinition."
+        },
+        {
+          "family": "exact_legacy_source",
+          "detail": "Its default loader opens the hard-coded config path configs/old_a.dat."
+        },
+        {
+          "family": "exact_patch_behavior",
+          "detail": "The loader clones the incoming SequenceDefinition array, parses sections introduced by the literal \"anim\", and rewrites sequence arrays/fields from arr1:, arr2: and other: records."
+        }
+      ],
+      "note": "LegacySequenceConfigLoader is the conservative semantic name for the exact old_a.dat SequenceDefinition override loader."
+    }
+  ],
+  "unresolved": []
+}

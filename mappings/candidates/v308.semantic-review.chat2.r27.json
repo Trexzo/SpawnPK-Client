@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_95A9F1C60A382FDF5546",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_2272C5C5C41DFCB72C3D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000818",
+      "owner_logical_id": "CLIENT_CLASS_000818",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RectangleUnion",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_inner_identity",
+          "detail": "Nested value type self-identifies as \"RectangleUnion.Rectangle(x1=…, y1=…, x2=…, y2=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Outer class is a static-only utility whose public operation accepts a list of rectangle records and returns a composite Shape representing their union."
+        }
+      ],
+      "note": "Outer utility name is fixed by the exact nested identity plus its union operation."
+    },
+    {
+      "proposal_id": "SEMPROP_2366C78C8585105159A9",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000821",
+      "owner_logical_id": "CLIENT_CLASS_000821",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/j$c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RectangleUnionRectangle",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"RectangleUnion.Rectangle(x1=…, y1=…, x2=…, y2=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Immutable nested value stores exactly x1, y1, x2 and y2 integer coordinates consumed by RectangleUnion."
+        }
+      ],
+      "note": "Flattened semantic name preserves the exact nested RectangleUnion.Rectangle identity."
+    }
+  ],
+  "unresolved": []
+}

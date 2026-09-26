@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/ak",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TeleportShortcutInterface",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_root_ownership",
+          "detail": "rs/n/c/ak builds exact root 48999 and fully populates its six-child surface; no other project class depends on this builder except the interface registry."
+        },
+        {
+          "family": "exact_teleport_actions",
+          "detail": "The only three content actions are the exact strings 'Edgeville teleport', 'Home teleport' and 'Bounty teleport', bound to widgets 48997, 48996 and 48995."
+        },
+        {
+          "family": "exact_surface_scope",
+          "detail": "The remaining widgets are presentation-only: one background/sprite and a standard 'Close Window' control. The class contains no construction-room names, build actions, object placement, room state or other construction semantics."
+        },
+        {
+          "family": "resource_role_boundary",
+          "detail": "Although the button sprites are loaded from the path 'construction/sprite' and the close icon from 'LOGS/ICON', those paths are only presentation resources here; every user-visible action on root 48999 is a teleport shortcut."
+        }
+      ],
+      "note": "TeleportShortcutInterface is descriptive exact-behavior recovery for root 48999, whose complete interactive content is Home, Edgeville and Bounty teleport shortcuts plus Close Window. Resource filenames are treated only as presentation evidence, not as a construction-domain claim. Confidence is 0.998."
+    }
+  ],
+  "conflicts": []
+}

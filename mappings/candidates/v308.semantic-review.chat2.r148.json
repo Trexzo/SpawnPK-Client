@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 4,
+  "review_id": "SEMREVIEW_904385EDA852ACED380C",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_0F78D21B0D4CB4ED797E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001027",
+      "owner_logical_id": "CLIENT_CLASS_001027",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientToolbar",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_toolbar_shape",
+          "detail": "The class extends vertical JToolBar, is non-floatable, and has exact 36x503 base dimensions."
+        },
+        {
+          "family": "exact_navigation_button_map",
+          "detail": "It maintains a sorted Map<NavigationButton, Component>; add/remove operations rebuild the visible toolbar from that map."
+        },
+        {
+          "family": "exact_navigation_ordering",
+          "detail": "Navigation buttons are ordered by their toolbar-section flag, priority and title; the rebuild inserts glue/separator between the two button groups."
+        },
+        {
+          "family": "exact_clientui_consumer",
+          "detail": "R147 ClientUI adds ordinary NavigationButton components to this toolbar on NavigationButtonAdded and removes them on NavigationButtonRemoved."
+        }
+      ],
+      "note": "ClientToolbar is fixed by its vertical NavigationButton toolbar shape and direct ClientUI navigation-event ownership. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_51A052A1F76C51A673B5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001016",
+      "owner_logical_id": "CLIENT_CLASS_001016",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_game_container",
+          "detail": "The class is a final JPanel whose constructor accepts the game Applet/Client component and adds it at BorderLayout.CENTER."
+        },
+        {
+          "family": "exact_client_dimensions",
+          "detail": "It fixes size, minimum size and preferred size to exact 765x503 client dimensions and uses a black background."
+        },
+        {
+          "family": "exact_clientui_ownership",
+          "detail": "R147 ClientUI constructs this panel directly around its live rs/Client instance before embedding it in the main window layout."
+        }
+      ],
+      "note": "ClientPanel is fixed by exclusive wrapping of the live game client at exact 765x503 dimensions inside ClientUI. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_5B3FFA3B34A991F061DE",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001104",
+      "owner_logical_id": "CLIENT_CLASS_001104",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_panel_base",
+          "detail": "The class extends JPanel and provides the shared 350/367-pixel plugin-panel layout, border, scroll pane and inner content panel used by client plugins."
+        },
+        {
+          "family": "exact_navigation_pairing",
+          "detail": "R12 NavigationButton stores an optional rs/ui/m panel; R147 ClientUI installs that panel in its CardLayout under the NavigationButton title."
+        },
+        {
+          "family": "exact_lifecycle_hooks",
+          "detail": "The base exposes paired lifecycle hooks J_()/K_(); ClientUI invokes them when activating and deactivating the currently displayed navigation panel."
+        },
+        {
+          "family": "exact_content_access",
+          "detail": "The class exposes the scroll pane to subclasses and the inner JPanel to ClientUI for sizing and card-container installation."
+        }
+      ],
+      "note": "PluginPanel is fixed by its shared plugin-side-panel layout plus NavigationButton ownership and ClientUI activation/deactivation lifecycle. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_BBDBCC90F3427D6D0CCF",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001032",
+      "owner_logical_id": "CLIENT_CLASS_001032",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientTitleToolbar",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_titlepane_placement",
+          "detail": "R147 ClientUI installs this panel into the window title pane as a trailing extra component when custom/undecorated window decoration is active."
+        },
+        {
+          "family": "exact_navigation_button_map",
+          "detail": "The class maintains a sorted Map<NavigationButton, Component> and rebuilds itself on button add/remove."
+        },
+        {
+          "family": "exact_title_navigation_split",
+          "detail": "ClientUI routes NavigationButtons flagged for the title area into this panel while routing ordinary buttons into ClientToolbar."
+        },
+        {
+          "family": "exact_ordering",
+          "detail": "Components are ordered by NavigationButton priority and title, matching the top/title navigation role."
+        }
+      ],
+      "note": "ClientTitleToolbar is fixed by direct title-pane placement and the exact NavigationButton subset routed into it by ClientUI. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}

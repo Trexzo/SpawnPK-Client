@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_68277D6628CE7C514BD0",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_0EE958442A711C75D9C3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000348",
+      "owner_logical_id": "CLIENT_CLASS_000348",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/k/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TextureManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_texture_array_contract",
+          "detail": "The class creates an OpenGL GL_TEXTURE_2D_ARRAY with exact texture size 128, eight mip levels, RGBA8 storage and one layer per client texture."
+        },
+        {
+          "family": "exact_texture_management",
+          "detail": "It checks all texture pixels are available, temporarily sets texture-provider brightness to 1.0, uploads converted RGBA bytes, generates mipmaps, configures nearest/mipmap filtering, clamps anisotropy and deletes the texture array."
+        },
+        {
+          "family": "exact_runtime_diagnostics",
+          "detail": "The upload path preserves the exact logger message \"Uploaded textures {}\" and texture-size/pixel failure handling."
+        },
+        {
+          "family": "exact_animation_contract",
+          "detail": "It computes two-float texture animation vectors from per-texture animation direction and speed, matching the GPU renderer texture animation input."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "The public RuneLite-derived GPU source preserves TextureManager with the same 128 texture size, GL texture-array lifecycle, anisotropic filtering, pixel conversion, animation-vector computation and diagnostics."
+        }
+      ],
+      "note": "TextureManager is corroborated by exact-v308 behavior/consumers and a matching public RuneLite-derived GPU class identity. Exact v308 remains the semantic authority."
+    },
+    {
+      "proposal_id": "SEMPROP_CD913C6CE324FDE3C97E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000344",
+      "owner_logical_id": "CLIENT_CLASS_000344",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/k/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ShaderException",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_exception_contract",
+          "detail": "The class extends java.lang.Exception and has exactly one String constructor delegating directly to Exception(String)."
+        },
+        {
+          "family": "exact_shader_consumer",
+          "detail": "R89 Shader constructs and throws this exact type when OpenGL shader creation fails, shader compilation returns an info log, program linking fails, or program validation fails."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "The public RuneLite-derived GPU source preserves ShaderException with the identical Exception superclass and one String constructor."
+        }
+      ],
+      "note": "ShaderException is corroborated by exact-v308 behavior/consumers and a matching public RuneLite-derived GPU class identity. Exact v308 remains the semantic authority."
+    }
+  ],
+  "unresolved": []
+}

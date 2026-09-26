@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 4,
+  "review_id": "SEMREVIEW_53E67568D36705B68452",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_15F30F23ACB72A7EF9E2",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000470",
+      "owner_logical_id": "CLIENT_CLASS_000470",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/a/i/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InterfaceArrowOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_arrow_rendering",
+          "detail": "The overlay renders one blinking direction-dependent sprite at its live overlay coordinates; the direction enum selects exact Client sprites loaded from 'orbs/arrow', 'orbs/arrow 2', 'orbs/arrow 3' and 'orbs/arrow 4'."
+        },
+        {
+          "family": "exact_widget_anchor",
+          "detail": "Its static widget-target helper accepts an exact interface widget ID, reads rs/n/e.H[widgetId] sprite dimensions, derives an offset, creates the arrow overlay on that widget and disables the explicit-coordinate mode."
+        },
+        {
+          "family": "exact_overlay_lifecycle",
+          "detail": "The class owns a single live overlay instance, removes any prior instance from the overlay manager before replacement, supports explicit layer/direction/x/y creation, and exposes the packet-controlled section state."
+        }
+      ],
+      "note": "InterfaceArrowOverlay is descriptive exact-behavior recovery for the live blinking arrow overlay that can be positioned explicitly or anchored to an exact interface widget. Exact arrow assets and widget anchoring fix the role; confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_4EAEE55CDF465944103E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000473",
+      "owner_logical_id": "CLIENT_CLASS_000473",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/a/i/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InterfaceArrowDirection",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "The enum constants survive exactly as LEFT, RIGHT, UP and DOWN."
+        },
+        {
+          "family": "exact_arrow_assets",
+          "detail": "Each direction returns one of the Client sprites loaded from exact resources 'orbs/arrow', 'orbs/arrow 2', 'orbs/arrow 3' and 'orbs/arrow 4'."
+        },
+        {
+          "family": "exact_packet_use",
+          "detail": "ScriptPacket 24 decodes its packet direction selector into this enum before constructing InterfaceArrowOverlay."
+        }
+      ],
+      "note": "InterfaceArrowDirection follows exact surviving direction enum constants plus their one-to-one arrow-sprite role. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_4F1DE3E04AFF2B3CCDBD",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000475",
+      "owner_logical_id": "CLIENT_CLASS_000475",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/a/i/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InterfaceArrowSection",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "The enum constants survive exactly as ACHIEVEMENT, EQUIPMENT, INVENTORY, MAGIC, MISC and SETTINGS."
+        },
+        {
+          "family": "exact_packet_use",
+          "detail": "ScriptPacket 24 selector 3 maps the packet section code directly to this enum and stores it on the live interface-arrow subsystem."
+        },
+        {
+          "family": "exact_ui_scope",
+          "detail": "All surviving enum values are top-level client interface sections rather than world/gameplay entities, fixing the enum as the arrow system's interface-section tag."
+        }
+      ],
+      "note": "InterfaceArrowSection is descriptive recovery for the exact ACHIEVEMENT/EQUIPMENT/INVENTORY/MAGIC/MISC/SETTINGS enum used by the live interface-arrow subsystem. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_65B6DA0BF4DCE080CFD3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000472",
+      "owner_logical_id": "CLIENT_CLASS_000472",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/a/i/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InterfaceArrowPacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers rs/l/f/a/i/d directly as exact ScriptPacket ID 24."
+        },
+        {
+          "family": "exact_complete_selector_surface",
+          "detail": "Selector 0 clears the arrow overlay; selector 1 creates it with packet layer, direction, x/y offsets and one boolean mode; selector 3 updates only the arrow-section enum; selector 4 anchors the arrow to one packet-specified interface widget ID."
+        },
+        {
+          "family": "exact_subsystem_target",
+          "detail": "Every implemented selector calls only rs/l/f/a/i/b InterfaceArrowOverlay helpers or the paired direction/section enums; there is no unrelated Client or gameplay-state branch."
+        }
+      ],
+      "note": "InterfaceArrowPacketHandler is fixed by ScriptPacket 24 and a complete selector surface confined to the recovered interface-arrow subsystem. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}

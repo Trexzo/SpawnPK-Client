@@ -1,0 +1,218 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 7,
+  "review_id": "SEMREVIEW_C1EFA86377CACA7467C3",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_18D6894916F471BA3ED5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001090",
+      "owner_logical_id": "CLIENT_CLASS_001090",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/v",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ProgressBar",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_progress_bar_shape",
+          "detail": "Exact v308 extends the recovered DimmableJPanel and owns maximum/value integers, List<Integer> marker positions, three JShadowedLabel-backed JLabels, center text and dimmed text."
+        },
+        {
+          "family": "exact_progress_rendering",
+          "detail": "It uses GridLayout(1,3), preferred size 100x16, green darker/brighter colors, renders filled percentage width plus future marker lines, then paints child labels."
+        },
+        {
+          "family": "exact_dimming_and_labels",
+          "detail": "setDimmed grays side labels and swaps the center label between center/dimmed text; setters for left/right/center/dimmed labels, maximum/value/positions match upstream."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 67496933120316f33bfc480f1a1c67c897cb82b9 ProgressBar has the same superclass, fields, constructor, rendering, dimming and setter surface."
+        }
+      ],
+      "note": "ProgressBar is recovered from an exact RuneLite source match at confidence 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_3D8E917C5FF2D4C4C0CB",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001059",
+      "owner_logical_id": "CLIENT_CLASS_001059",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorJButton",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_color_button_surface",
+          "detail": "Exact v308 extends JButton, preserves ALPHA_TEXT_CUTOFF=120 and CHECKER_SIZE=10, owns one Color, disables normal content fill, chooses black/white text from perceptive luminance and alpha, and paints a checkerboard beneath translucent colors."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 67496933120316f33bfc480f1a1c67c897cb82b9 ColorJButton has the same constants, constructor, luminance formula 0.299/0.587/0.114, checkerboard and paint behavior."
+        }
+      ],
+      "note": "ColorJButton is recovered from an exact RuneLite source match at confidence 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_454708DA402E530EA296",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001084",
+      "owner_logical_id": "CLIENT_CLASS_001084",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/r",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MouseDragEventForwarder",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_mouse_forwarding",
+          "detail": "Exact v308 extends MouseAdapter, stores one target Component and forwards mousePressed, mouseDragged and mouseReleased through one private helper."
+        },
+        {
+          "family": "exact_left_button_conversion",
+          "detail": "The helper gates on SwingUtilities.isLeftMouseButton, converts the source event to the target component and dispatches it."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 67496933120316f33bfc480f1a1c67c897cb82b9 MouseDragEventForwarder is method-for-method identical."
+        }
+      ],
+      "note": "MouseDragEventForwarder is recovered from an exact RuneLite source match at confidence 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_9E99F77B82BEDBFA689D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001089",
+      "owner_logical_id": "CLIENT_CLASS_001089",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/u",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginErrorPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_error_panel_shape",
+          "detail": "Exact v308 extends JPanel, owns exactly two final JLabel fields backed by JShadowedLabel, constructs the same transparent BorderLayout panel with 50/10/0/10 border and title/description styling."
+        },
+        {
+          "family": "exact_content_method",
+          "detail": "Its only public content method sets the title, wraps the description in centered HTML and makes the panel visible."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 67496933120316f33bfc480f1a1c67c897cb82b9 PluginErrorPanel has the same two labels, constructor and setContent(String,String) behavior."
+        }
+      ],
+      "note": "PluginErrorPanel is recovered from an exact RuneLite source match at confidence 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_AA7C85F853683CE36023",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001074",
+      "owner_logical_id": "CLIENT_CLASS_001074",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FlatTextField",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_flat_text_field_shape",
+          "detail": "Exact v308 extends JPanel, owns one JTextField, background/hover Colors and blocked flag, uses BorderLayout with 0/10/0/0 EmptyBorder, transparent borderless text field and forwards text/action/key/document/focus operations."
+        },
+        {
+          "family": "exact_hover_and_editability",
+          "detail": "The nested mouse adapter applies hover background unless blocked; setEditable inversely controls blocked and sets JTextField editable/focusable exactly as upstream."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 67496933120316f33bfc480f1a1c67c897cb82b9 FlatTextField has the same state, constructor styling, forwarding methods and hover/editability logic."
+        }
+      ],
+      "note": "FlatTextField is recovered from an exact RuneLite source match at confidence 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_C2E95AD2908035937415",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001020",
+      "owner_logical_id": "CLIENT_CLASS_001020",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InfoBoxComponent",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_infobox_component_shape",
+          "detail": "Exact v308 implements LayoutableRenderableEntity and preserves SEPARATOR=3, DEFAULT_SIZE=32, tooltip, bounds, preferred location/size, text/color/font/outline/background, BufferedImage and recovered InfoBox reference fields."
+        },
+        {
+          "family": "exact_render_flow",
+          "detail": "Its render method returns an empty Dimension without an image, selects the small RuneScape font below size 32, paints BackgroundComponent, centers the image, centers optional TextComponent caption and caches bounds."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 67496933120316f33bfc480f1a1c67c897cb82b9 InfoBoxComponent has the same constants, fields and render/getSize implementation."
+        }
+      ],
+      "note": "InfoBoxComponent is recovered from an exact RuneLite source match at confidence 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_D7184249CDD0235B971C",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001068",
+      "owner_logical_id": "CLIENT_CLASS_001068",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DimmableJPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_dimming_state",
+          "detail": "Exact v308 extends JPanel with dimmed flag plus dimmed/undimmed foreground and background Colors; setForeground/setBackground cache darker variants and getters select by dim state."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 67496933120316f33bfc480f1a1c67c897cb82b9 DimmableJPanel has the same five fields and set/get foreground/background plus setDimmed behavior."
+        }
+      ],
+      "note": "DimmableJPanel is recovered from an exact RuneLite source match at confidence 0.999."
+    }
+  ],
+  "unresolved": []
+}

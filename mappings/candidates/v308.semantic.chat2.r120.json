@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/q/a/a/a/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SentPrivateMessagePacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers rs/q/a/a/a/o directly as ScriptPacket ID 38."
+        },
+        {
+          "family": "exact_payload",
+          "detail": "The handler reads selector 1, one base-37 encoded long username and one message String, decodes/normalizes the username through rs/O, then inserts the message through Client.a(message,6,username)."
+        },
+        {
+          "family": "exact_chat_type",
+          "detail": "Exact v308 initializes rs/i/a.o to integer 6. The chat renderer's type-6 branch uses the surviving outgoing-private-message literals 'To <name>:' and 'To <name>'."
+        },
+        {
+          "family": "exact_private_channel",
+          "detail": "The same renderer applies private-chat visibility rules to type 6, while type 7 is the incoming private-chat event path; this independently fixes type 6 as the sent/outgoing private-message channel."
+        }
+      ],
+      "note": "SentPrivateMessagePacketHandler is fixed by ScriptPacket 38 inserting chat type 6, whose exact renderer is the outgoing 'To <name>' private-message channel."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LegacyItemDescriptionAppender",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_item_description_table",
+          "detail": "The class exposes one static String->String transform containing a hardcoded SpawnPK item-name table; every recognized item appends multi-line lore/effect text to the original display string and unrecognized items are returned unchanged."
+        },
+        {
+          "family": "exact_examples",
+          "detail": "Surviving exact entries include Killer's dagger, Adventurer's whip, Blood key, seasonal boost scrolls, holy shard/shard of balance, summer totem and multiple event consumables, each with embedded @yel@/@gre@/@or1@ color tags and line breaks."
+        },
+        {
+          "family": "exact_live_client_consumer",
+          "detail": "Client.a(int,String,boolean) invokes this transform directly in the item display/hover path when the boolean detail mode is active, using its result as the displayed item text before fallback to R72 ItemHoverDescriptionConfig."
+        },
+        {
+          "family": "exact_fallback_relationship",
+          "detail": "When this helper yields no special replacement under the active settings, the same client path falls back to R72's config-driven item hover description lookup, fixing this class as the older hardcoded description appender rather than a generic text utility."
+        }
+      ],
+      "note": "LegacyItemDescriptionAppender is descriptive exact-behavior recovery for the live hardcoded item-description fallback used by the client item display path. No surviving original source noun was found; confidence is 0.997."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/C",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RSApplet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_client_inheritance",
+          "detail": "The exact v308 rs/Client class extends rs/C directly, making rs/C the application/game-shell base rather than a feature helper."
+        },
+        {
+          "family": "exact_applet_loop_role",
+          "detail": "rs/C extends java.applet.Applet, implements Runnable plus component/focus/key/mouse/mouse-motion/mouse-wheel/window listeners, owns the frame/graphics/input state, runs the client loop and implements start/stop/destroy/update/paint lifecycle methods."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Classic RSApplet has the same Applet + Runnable + input/window listener role, owns the client frame/graphics shell and provides the game-loop/lifecycle surface inherited by Client."
+        }
+      ],
+      "note": "RSApplet is a non-canonical semantic recovery name grounded in exact v308 behavior; classic client source is corroborating lineage evidence only."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/E",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RSFrame",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_window_wrapper",
+          "detail": "rs/E extends JFrame and stores exactly one rs/C applet reference. Its sized constructor creates the visible top-level Jagex window around that applet."
+        },
+        {
+          "family": "exact_render_delegation",
+          "detail": "The frame delegates update(Graphics) and paint(Graphics) into its rs/C applet after the JFrame superclass call and routes cursor handling through the desktop window."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Classic RSFrame is the paired desktop-frame wrapper around RSApplet. v308 uses Swing JFrame rather than the older AWT Frame but preserves the same applet/window ownership role."
+        }
+      ],
+      "note": "RSFrame is a non-canonical semantic recovery name grounded in exact v308 behavior; classic client source is corroborating lineage evidence only."
+    }
+  ],
+  "conflicts": []
+}

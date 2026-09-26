@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/k/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelPusher",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_renderer_ownership",
+          "detail": "R87 GpuRenderer constructs rs/k/i as a separate sibling to R89 SceneUploader and invokes it directly for model-to-GPU staging, so the class is not the already-identified SceneUploader."
+        },
+        {
+          "family": "exact_push_contract",
+          "detail": "The class accepts the exact-v308 Model type plus GpuIntBuffer/GpuFloatBuffer staging objects, enforces the 6144-face cap, writes packed model vertex/color/UV data and exposes the same HSL override interpolation primitive used by the public GPU/HD model pushers."
+        },
+        {
+          "family": "exact_family_context",
+          "detail": "The surrounding rs/k/b/* classes are independently identified as the 117 HD BufferPool/ModelCache/ModelHasher/TempModelInfo lineage, placing rs/k/i in the same model-upload architecture."
+        },
+        {
+          "family": "historical_architecture_corroboration",
+          "detail": "117 HD source preserves a dedicated class named ModelPusher that is owned separately from SceneUploader and is responsible for converting Model data into GpuIntBuffer/GpuFloatBuffer staging data; older RuneLite revisions show the same pushModel logic before it was split out of SceneUploader."
+        }
+      ],
+      "note": "ModelPusher is supported by exact-v308 separate renderer ownership, model-staging behavior, and the independently recovered 117 HD model-cache family. Exact v308 remains the semantic authority."
+    }
+  ],
+  "conflicts": []
+}

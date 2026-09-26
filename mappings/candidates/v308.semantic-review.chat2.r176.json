@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 4,
+  "review_id": "SEMREVIEW_A4302A7164027FE8DF30",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_198C4E751C0442BF59B8",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000179",
+      "owner_logical_id": "CLIENT_CLASS_000179",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/g/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientClock",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_abstract_contract",
+          "detail": "rs/g/b is abstract and defines exactly two clock operations: reset via void a() and wait/advance via int a(int,int), returning the number of client cycles to process."
+        },
+        {
+          "family": "exact_client_factory",
+          "detail": "The base client rs/C stores this abstract type as its runtime clock and its exact factory be() constructs rs/g/d first, catching any Throwable and falling back to rs/g/c."
+        },
+        {
+          "family": "exact_main_loop_use",
+          "detail": "The base client main loop repeatedly calls ClientClock.a(cycleMillis, minimumSleep), uses the returned integer as the number of logic cycles to run, then renders once."
+        }
+      ],
+      "note": "ClientClock is fixed by the abstract reset/wait-for-cycles contract and direct ownership by the base client main loop. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_3009BAF68392648DB940",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000181",
+      "owner_logical_id": "CLIENT_CLASS_000181",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/g/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NanoClientClock",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_time_source",
+          "detail": "rs/g/d extends the abstract client clock and initializes/resets its primary timestamp exclusively from System.nanoTime()."
+        },
+        {
+          "family": "exact_cycle_scheduler",
+          "detail": "Its wait method computes target cycle duration in nanoseconds, sleeps against the next scheduled timestamp, advances by cycleMillis * 1,000,000 and caps catch-up cycles at 10."
+        },
+        {
+          "family": "exact_primary_factory_role",
+          "detail": "rs/C.be() attempts to construct this implementation first and returns it directly; only a thrown Throwable causes the millisecond clock fallback."
+        },
+        {
+          "family": "exact_runtime_mode_branch",
+          "detail": "The clock also contains a live-client branch using Launcher.n().o(), Client.au() and Client.cc while preserving the same nanosecond cycle scheduling responsibility."
+        }
+      ],
+      "note": "NanoClientClock is fixed by System.nanoTime scheduling and exact primary selection in rs/C.be(). Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_703979357179B32C14C6",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000180",
+      "owner_logical_id": "CLIENT_CLASS_000180",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/g/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MillisClientClock",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_time_source",
+          "detail": "rs/g/c extends the abstract client clock and uses System.currentTimeMillis through a synchronized monotonic-adjustment helper."
+        },
+        {
+          "family": "exact_smoothing_algorithm",
+          "detail": "The clock keeps a ten-entry long timestamp ring, derives a bounded 25..256 cycle-rate accumulator and minimum sleep delay, shifts prior samples when sleeping, and returns the number of accumulated client cycles."
+        },
+        {
+          "family": "exact_fallback_role",
+          "detail": "rs/C.be() instantiates this class only when construction of the nanosecond clock throws, making it the exact millisecond fallback implementation."
+        },
+        {
+          "family": "exact_sleep_dependency",
+          "detail": "Its wait path delegates millisecond sleeping to rs/g/e before advancing the fixed-point cycle accumulator."
+        }
+      ],
+      "note": "MillisClientClock is fixed by currentTimeMillis timing, ten-sample smoothing and exact fallback selection in rs/C.be(). Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_A2FA97055C57D4BEB1B2",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000182",
+      "owner_logical_id": "CLIENT_CLASS_000182",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/g/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SleepUtil",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_sleep_utility",
+          "detail": "rs/g/e contains one public static long-millisecond sleep operation and no other runtime state or responsibility."
+        },
+        {
+          "family": "exact_ten_millisecond_workaround",
+          "detail": "For positive delays divisible by 10, the helper sleeps delay-1 milliseconds and then 1 millisecond; otherwise it performs one Thread.sleep(delay), matching the timing clocks' shared sleep path."
+        },
+        {
+          "family": "exact_clock_consumers",
+          "detail": "Both rs/g/c and rs/g/d invoke this helper from their client-clock wait implementations; no unrelated exact-v308 consumer was found."
+        }
+      ],
+      "note": "SleepUtil is descriptive exact-behavior recovery for the clock family's shared millisecond Thread.sleep wrapper. Confidence is 0.998."
+    }
+  ],
+  "unresolved": []
+}

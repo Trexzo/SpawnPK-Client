@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/f/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OverlayDragHotkeyListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_hotkey_base",
+          "detail": "R20 fixes rs/A/i as HotkeyListener. rs/l/f/j extends that exact class and is constructed only by OverlayRenderer."
+        },
+        {
+          "family": "exact_config_join",
+          "detail": "OverlayRenderer passes RuneLiteConfig.x() as the keybind supplier; R17 fixes rs/s/h as RuneLiteConfig and x() is annotated dragHotkey / 'Drag Hotkey' / 'Configures the hotkey used to drag UI elements around'."
+        },
+        {
+          "family": "exact_renderer_state",
+          "detail": "On hotkey press the listener sets an OverlayRenderer boolean true. On release it clears that flag and invokes the renderer's drag-state reconciliation method."
+        },
+        {
+          "family": "exact_exclusive_ownership",
+          "detail": "Exact-v308 class references show rs/l/f/j is referenced only by OverlayRenderer plus itself."
+        }
+      ],
+      "note": "OverlayDragHotkeyListener is fixed by the reviewed HotkeyListener base, exact dragHotkey config metadata and exclusive OverlayRenderer state control. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/f/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OverlayUtil",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_static_render_helpers",
+          "detail": "The class is a stateless static utility for drawing/filling Shapes, rendering outlined text and selecting the shared overlay border Stroke."
+        },
+        {
+          "family": "exact_position_helpers",
+          "detail": "Its remaining static methods consume OverlayPosition plus Rectangle/Dimension state to adjust stacking rectangles and compute anchor offsets for fixed overlay positions."
+        },
+        {
+          "family": "exact_framework_consumers",
+          "detail": "Exact-v308 references are confined to Overlay and OverlayRenderer: the root delegates shared shape/text helpers to it and the renderer delegates OverlayPosition geometry to it."
+        },
+        {
+          "family": "exact_no_domain_state",
+          "detail": "The class has no subsystem/domain state; only static strokes, a translucent color and reusable rendering/positioning functions."
+        }
+      ],
+      "note": "OverlayUtil is descriptive exact-behavior recovery for the framework's stateless drawing and placement helper. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

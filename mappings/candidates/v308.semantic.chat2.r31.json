@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GraphicsObject",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_definition_binding",
+          "detail": "Class extends Renderable and binds directly to R28 SpotAnimationDefinition by spot-animation id; it also follows the linked SequenceDefinition frames."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Instance stores world/location/cycle state, current frame/time and finished state; its update method advances sequence frames and its model method applies the current spot-animation frame."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Role matches the classic stationary spot-animation / still-graphic entity; GraphicsObject is the modern semantic name for this exact scene object."
+        }
+      ],
+      "note": "GraphicsObject is chosen as the clear modern semantic name for the stationary spot-animation renderable."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/a/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GroundItem",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_item_binding",
+          "detail": "Class extends Renderable, stores item id and quantity, resolves R28 ItemDefinition by id and requests the quantity-aware item Model."
+        },
+        {
+          "family": "exact_client_role",
+          "detail": "Client constructs this type for items placed on ground/tile item lists."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Structure matches the classic ground-item renderable historically often named Item or ItemPile element; GroundItem avoids ambiguity with ItemDefinition."
+        }
+      ],
+      "note": "GroundItem distinguishes the world entity from the item definition/cache object."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/a/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Projectile",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_trajectory_role",
+          "detail": "Class extends Renderable and owns double-precision x/y/z position, horizontal/vertical velocity, speed and acceleration state."
+        },
+        {
+          "family": "exact_ballistic_math",
+          "detail": "Trajectory setup computes horizontal distance, per-tick velocities, vertical slope and acceleration; updates use atan2 for yaw/pitch and advance spot-animation sequence frames."
+        },
+        {
+          "family": "exact_definition_binding",
+          "detail": "Projectile rendering binds directly to R28 SpotAnimationDefinition and its SequenceDefinition."
+        }
+      ],
+      "note": "Projectile is fixed by the ballistic trajectory and spot-animation rendering behavior."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/a/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DynamicObject",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_object_binding",
+          "detail": "Class extends Renderable, stores object id/type/orientation/tile-height state and resolves R28 ObjectDefinition for model construction."
+        },
+        {
+          "family": "exact_animation_role",
+          "detail": "Optional SequenceDefinition state advances by client cycle time before model construction."
+        },
+        {
+          "family": "exact_morph_role",
+          "detail": "Class preserves varbit/config-driven morph metadata from ObjectDefinition and resolves the active object definition before rendering."
+        }
+      ],
+      "note": "DynamicObject reflects the exact animated/morphing world-object role."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EssenceBonusStatsOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_overlay_text",
+          "detail": "The overlay's own formatter preserves exactly 'Killcount: @yel@<n>', 'Drop rate: @gre@+<n>%' and 'Essence bonus: @gre@+<n>%', then renders those three lines on the HIGH overlay pass."
+        },
+        {
+          "family": "exact_visibility",
+          "detail": "Visibility is the instance boolean populated by its dedicated ScriptPacket handler; cleanup disables that flag."
+        },
+        {
+          "family": "exact_script_packet_binding",
+          "detail": "R115 ScriptPacketDispatcher registers this overlay's static handler instance as ScriptPacket ID 11."
+        },
+        {
+          "family": "exact_payload_state",
+          "detail": "ScriptPacket ID 11 selector 1 toggles visibility while selectors 2, 3 and 4 update the killcount, drop-rate and essence-bonus integer fields and immediately rebuild the corresponding display strings."
+        }
+      ],
+      "note": "EssenceBonusStatsOverlay is descriptive exact-behavior recovery for the live three-line Killcount/Drop rate/Essence bonus overlay driven by ScriptPacket 11. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EssenceBonusStatsPacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_framework",
+          "detail": "The class extends R115 ScriptPacketHandler and is registered by R115 ScriptPacketDispatcher as exact ScriptPacket ID 11 through the static handler field owned by EssenceBonusStatsOverlay."
+        },
+        {
+          "family": "exact_selector_protocol",
+          "detail": "The first payload integer selects cases 1..4: visibility, killcount, drop-rate bonus and essence bonus respectively."
+        },
+        {
+          "family": "exact_target",
+          "detail": "Every case writes directly into the singleton R116 EssenceBonusStatsOverlay fields; selectors 2..4 rebuild strings with exact icons 121, 130 and 275 plus Killcount/Drop rate/Essence bonus text."
+        }
+      ],
+      "note": "EssenceBonusStatsPacketHandler is fixed by exact ScriptPacket ID 11, its 1..4 selector protocol and exclusive writes to EssenceBonusStatsOverlay. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/a/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IngredientSaveChanceOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_text",
+          "detail": "The HIGH-layer renderer preserves the exact message 'You have a @gre@<n>% @whi@chance to save ingredients' followed by 'on failed attempts @or2@(consumes on save!)'."
+        },
+        {
+          "family": "exact_item_context",
+          "detail": "The overlay receives an item ID, resolves its ItemDefinition name and icon, and renders that item beside the ingredient-save message."
+        },
+        {
+          "family": "exact_live_visibility",
+          "detail": "The visibility predicate is exact client/interface state Client.cH == 31244; the draw path additionally requires the relevant live interface/state ID and nonzero chance/item data."
+        },
+        {
+          "family": "exact_script_packet_binding",
+          "detail": "Its static handler is registered by R115 ScriptPacketDispatcher as ScriptPacket ID 25."
+        }
+      ],
+      "note": "IngredientSaveChanceOverlay is fixed by exact visible text, item-definition context, live interface gating and ScriptPacket 25. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/a/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IngredientSaveChancePacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_framework",
+          "detail": "The class extends R115 ScriptPacketHandler and is registered as exact ScriptPacket ID 25 through IngredientSaveChanceOverlay's static handler field."
+        },
+        {
+          "family": "exact_payload",
+          "detail": "It reads the first integer directly into the overlay chance field; when that value is positive it reads a second integer as the associated item ID, otherwise it clears the item ID."
+        },
+        {
+          "family": "exact_target",
+          "detail": "After updating chance/item state it clears the cached item-name String so IngredientSaveChanceOverlay resolves the current ItemDefinition name on its next render."
+        }
+      ],
+      "note": "IngredientSaveChancePacketHandler is fixed by ScriptPacket ID 25 and its exact chance/item payload into IngredientSaveChanceOverlay. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/a/v",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TicketBonusStatsOverlay",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_live_packet_text",
+          "detail": "Its dedicated ScriptPacket ID 18 handler writes exact live display strings for Killcount, Drop rate and 'Ticket bonus' with icons 121, 130 and 281."
+        },
+        {
+          "family": "exact_overlay_render",
+          "detail": "The overlay renders the three packet-populated lines on the HIGH overlay pass while its packet-controlled boolean is active."
+        },
+        {
+          "family": "exact_script_packet_binding",
+          "detail": "R115 ScriptPacketDispatcher registers the overlay's static handler as ScriptPacket ID 18."
+        },
+        {
+          "family": "exact_reset_anomaly",
+          "detail": "The overlay's generic b() formatter still contains the older 'Essence bonus' template, but live ScriptPacket selector updates overwrite the third line with exact 'Ticket bonus' text; confidence is reduced to reflect this mixed lineage rather than hiding it."
+        }
+      ],
+      "note": "TicketBonusStatsOverlay is descriptive recovery for the live ScriptPacket-18 Killcount/Drop-rate/Ticket-bonus overlay. Confidence is 0.997 because its generic reset formatter retains an older Essence-bonus template."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/a/w",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TicketBonusStatsPacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_framework",
+          "detail": "The class extends R115 ScriptPacketHandler and is registered by R115 ScriptPacketDispatcher as exact ScriptPacket ID 18 through TicketBonusStatsOverlay's static handler field."
+        },
+        {
+          "family": "exact_selector_protocol",
+          "detail": "The first payload integer selects cases 1..4: visibility, killcount, drop-rate bonus and ticket bonus."
+        },
+        {
+          "family": "exact_live_strings",
+          "detail": "Selectors 2..4 update the overlay and build exact icon-prefixed strings '<img=121> Killcount', '<img=130> Drop rate' and '<img=281> Ticket bonus'."
+        }
+      ],
+      "note": "TicketBonusStatsPacketHandler is fixed by exact ScriptPacket ID 18 and its explicit Killcount/Drop rate/Ticket bonus payload contract. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

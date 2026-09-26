@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/B",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpawnLoadoutButtonFactory",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_identity",
+          "detail": "The class constructs one JButton with exact label 'Spawn Loadout', tooltip 'Spawn this loadout in-game', and loadout.png icon."
+        },
+        {
+          "family": "exact_listener_binding",
+          "detail": "The factory wires that button directly and exclusively to rs/gui/b/a/C using the owning loadout panel rs/gui/b/h."
+        },
+        {
+          "family": "exact_loadout_graph",
+          "detail": "The owner rs/gui/b/h belongs to the already-reviewed loadout UI graph; R143/R144 recover LoadoutDefinition, LoadoutManager, LoadoutFolder, LoadoutEquipmentSlot and related presentation classes."
+        }
+      ],
+      "note": "SpawnLoadoutButtonFactory is descriptive exact-behavior recovery from the literal button identity, icon and exclusive listener binding. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/C",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpawnLoadoutAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_binding",
+          "detail": "The class is the sole ActionListener attached by SpawnLoadoutButtonFactory to the exact 'Spawn Loadout' button."
+        },
+        {
+          "family": "exact_selected_loadout_gate",
+          "detail": "actionPerformed retrieves the selected LoadoutDefinition from the loadout manager and shows exact warning \"You don't have a loadout selected!\" when none is selected."
+        },
+        {
+          "family": "exact_spawn_protocol",
+          "detail": "For a selected loadout it serializes exact client command/state for items, equipment, pet, skills, spellbook and prayers, including '::item_loadout', '::equip_loadout', '::pet_loadout', '::skills_loadout', '::normalpray' and '::cursespray'."
+        },
+        {
+          "family": "exact_whole_loadout_surface",
+          "detail": "The action enumerates every inventory/loadout item, every LoadoutEquipmentSlot, the selected pet, skill values, LoadoutSpellbook and prayer mode, then writes only the corresponding loadout command fields before returning."
+        }
+      ],
+      "note": "SpawnLoadoutAction is descriptive exact-behavior recovery for the complete selected-loadout spawn action. No original source identifier was found; confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

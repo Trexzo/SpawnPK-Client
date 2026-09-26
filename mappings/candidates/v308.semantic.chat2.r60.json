@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RegionClipDumper",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_privileged_command_path",
+          "detail": "Client's privileged ::testregion command loads a target region, then calls rs/e.b() to write the captured data and rs/e.a() to clear the saved map/position cache."
+        },
+        {
+          "family": "exact_region_grouping",
+          "detail": "rs/e derives a region id from world coordinates using (x >> 6) * 256 + (y >> 6), deduplicates positions by x/y/plane, and groups records by that region id."
+        },
+        {
+          "family": "exact_clip_output",
+          "detail": "The class writes one binary file per captured region beneath the hard-coded ./clipdump/ root using DataOutputStream, then prints \"Dump successful!\"."
+        },
+        {
+          "family": "surviving_diagnostics",
+          "detail": "The class contains the diagnostics \"Cleared saved map and position cache!\", \"Dumping <n> regions..\", and \"Dump successful!\"."
+        }
+      ],
+      "note": "RegionClipDumper is the conservative semantic recovery name for the exact v308 ::testregion clip/map-position capture utility; it does not claim a verbatim original identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RegionClipRecord",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_record_shape",
+          "detail": "rs/e$a is a five-field value record containing four ints and one boolean, constructed directly from the worldX, worldY, plane, collisionFlags and object-blocking/collision metadata captured by rs/e."
+        },
+        {
+          "family": "exact_serialization_role",
+          "detail": "rs/e.b() iterates these records and serializes all four integer fields plus boolean state into each region clipdump file."
+        }
+      ],
+      "note": "RegionClipRecord is the conservative semantic recovery name for the value object serialized by RegionClipDumper."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_A2A2D557F097BBEE9A6F",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_1E1744237BE03C499B06",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000923",
+      "owner_logical_id": "CLIENT_CLASS_000923",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/j/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "KeyRemappingKeyListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_plugin_registration",
+          "detail": "Reviewed KeyRemappingPlugin rs/s/j/c stores rs/s/j/b as its key listener and registers/unregisters that exact instance with the client key-listener manager during plugin startup/shutdown."
+        },
+        {
+          "family": "exact_listener_shape",
+          "detail": "rs/s/j/b implements the client key-listener interface rs/g/a/a and defines only keyTyped, keyPressed and keyReleased entry points plus private helpers for the same keyboard flow."
+        },
+        {
+          "family": "exact_camera_remap",
+          "detail": "When the reviewed KeyRemappingConfig camera-remapping option is enabled, configured W/S/A/D-style Keybind values are translated to the arrow-key codes UP/DOWN/LEFT/RIGHT before the event continues."
+        },
+        {
+          "family": "exact_function_key_remap",
+          "detail": "When reviewed F-key remapping is enabled, configured keybinds are translated to F1 through F12 key codes. The listener records original-to-remapped key codes and restores the remapped code on keyReleased, while suppressing the original typed character when necessary."
+        },
+        {
+          "family": "exact_plugin_chat_key_path",
+          "detail": "The same listener owns the KeyRemappingPlugin keyboard path for entering/leaving the plugin-managed chat state: Enter/Escape/Backspace and slash/semicolon handling delegate into the reviewed plugin's Press Enter to Chat state rather than an unrelated subsystem."
+        }
+      ],
+      "note": "KeyRemappingKeyListener is fixed by exclusive KeyRemappingPlugin registration, the client key-listener interface, exact camera/F-key substitution and release restoration, plus the same plugin's chat-key state handling. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}

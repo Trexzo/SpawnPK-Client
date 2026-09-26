@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 4,
+  "review_id": "SEMREVIEW_6F08C520C82D4C28AF06",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_321AF26488EC5D829074",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000747",
+      "owner_logical_id": "CLIENT_CLASS_000747",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/q/a/a/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DropdownPacketHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers rs/q/a/a/a/b directly as ScriptPacket ID 40."
+        },
+        {
+          "family": "exact_dropdown_model",
+          "detail": "The handler targets rs/n/a/a/a, a custom RSInterface-derived selector whose option list is composed of rs/n/a/a/d value/display pairs and uses the surviving default label 'Select'."
+        },
+        {
+          "family": "exact_option_rebuild",
+          "detail": "Packet mode 1 reads the target interface id and option count, rebuilds the complete option list from packet Strings and optional display labels, installs it on the dropdown and selects the first display value."
+        },
+        {
+          "family": "exact_selection_update",
+          "detail": "Packet mode 2 reads interface id plus option index and updates the dropdown's selected display value from the existing option list; mode 0 invokes the dropdown subsystem reset/clear path."
+        }
+      ],
+      "note": "DropdownPacketHandler is descriptive exact-behavior recovery for ScriptPacket 40's custom dropdown option/selection protocol. The domain is exact; the English class noun is recovered, so confidence is 0.998."
+    },
+    {
+      "proposal_id": "SEMPROP_35052F6A3A1AC63C55E9",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000754",
+      "owner_logical_id": "CLIENT_CLASS_000754",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/q/a/a/a/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcDefinitionOverridePacketHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers rs/q/a/a/a/i directly as ScriptPacket ID 42."
+        },
+        {
+          "family": "exact_definition_target",
+          "detail": "All definition mutations resolve ids through rs/d/d.c(int), the independently recovered R28 NpcDefinition lookup."
+        },
+        {
+          "family": "exact_override_modes",
+          "detail": "One packet mode toggles NPC ids in a static HashSet; another writes the NpcDefinition P byte and resets Q/R to -1 when the value is nonpositive; a third forces P=-1 and writes packet-provided Q/R integers."
+        },
+        {
+          "family": "exact_runtime_mutation",
+          "detail": "The handler mutates the live cached NpcDefinition objects directly rather than constructing unrelated UI state, fixing its role as a runtime NPC-definition override handler even though the individual P/Q/R field semantics remain unnamed."
+        }
+      ],
+      "note": "NpcDefinitionOverridePacketHandler is deliberately broad: exact v308 proves ScriptPacket 42 mutates live NpcDefinition override state, but the individual P/Q/R field nouns are not asserted. Confidence is 0.998."
+    },
+    {
+      "proposal_id": "SEMPROP_7D8A73253B0E9072D560",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000757",
+      "owner_logical_id": "CLIENT_CLASS_000757",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/q/a/a/a/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MailCofferActionPromptPacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers rs/q/a/a/a/l directly as ScriptPacket ID 3."
+        },
+        {
+          "family": "exact_prompt_assets",
+          "detail": "The class constructs two prompt definitions using the exact labels/assets '<img=9> Claim' with misc/treasure + misc/treasure 2, and '<img=288> View' with misc/mail 7 + misc/mail 8."
+        },
+        {
+          "family": "exact_actions",
+          "detail": "The two prompt callbacks send the exact client commands ::claimcoffer and ::mail."
+        },
+        {
+          "family": "exact_packet_toggle",
+          "detail": "The packet reads a prompt selector where 1 chooses the coffer claim prompt and 2 chooses the mail prompt, plus a boolean enable flag, then adds/removes that exact prompt through the live prompt manager."
+        }
+      ],
+      "note": "MailCofferActionPromptPacketHandler is fixed by ScriptPacket ID 3 and the exact mail/coffer labels, sprite pairs, commands and enable/disable protocol."
+    },
+    {
+      "proposal_id": "SEMPROP_910AC1CB5A3166078CD8",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000756",
+      "owner_logical_id": "CLIENT_CLASS_000756",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/q/a/a/a/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ObjectSpawnOverridePacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers rs/q/a/a/a/k directly as ScriptPacket ID 2."
+        },
+        {
+          "family": "exact_r77_target",
+          "detail": "The handler reads operation data into R77 ObjectSpawnOverride/ObjectSpawnOverrideManager, whose exact x,y,plane registry and Client.a(x,y,objectId,rotation,type,plane) application semantics are independently reviewed."
+        },
+        {
+          "family": "exact_add_remove",
+          "detail": "Operation 0 removes the coordinate-keyed override and clears the live object with objectId -1; operation 1 builds a six-int ObjectSpawnOverride, stores it by x,y,plane key and immediately applies it to the live scene."
+        },
+        {
+          "family": "exact_bulk_remove",
+          "detail": "Operation 2 scans the override registry by object id, clears every matching live object and removes those registry entries."
+        }
+      ],
+      "note": "ObjectSpawnOverridePacketHandler is fixed by ScriptPacket ID 2 and its direct mutation of the independently recovered R77 object-spawn override subsystem."
+    }
+  ],
+  "unresolved": []
+}

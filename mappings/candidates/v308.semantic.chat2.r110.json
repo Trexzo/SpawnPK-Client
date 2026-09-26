@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/b/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EditorKitUtilityCommandHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_controller_dispatch",
+          "detail": "R107 EditorKitController directly invokes rs/l/b/a/a.a(originalCommand, commandName, args) for every entered Editor Kit command, immediately alongside its own global/entity command parser."
+        },
+        {
+          "family": "exact_command_vocabulary",
+          "detail": "The helper exclusively recognizes the utility/debug command family col/cols/color/colors, finditem, findnpc, itemdef, texture and textures."
+        },
+        {
+          "family": "exact_entity_color_tools",
+          "detail": "The color commands operate on the live EditorEntity list, reset or append selected color IDs to each applicable entity's color-selection list, rebuild the entity and report the resulting selected-color array through EditorKitController."
+        },
+        {
+          "family": "exact_definition_search_tools",
+          "detail": "finditem and findnpc scan live ItemDefinition/NpcDefinition tables up to 40000 IDs, support exclusion terms prefixed with '-', and emit matching name plus numeric ID through EditorKitController output."
+        },
+        {
+          "family": "exact_item_definition_debug",
+          "detail": "itemdef reset rebuilds the ItemDefinitionConfigLoader and definition caches, while itemdef <id> prints exact ItemDefinition model/rotation/offset/equipment/recolor/retexture fields to stdout before resetting the client model state."
+        },
+        {
+          "family": "exact_texture_tool",
+          "detail": "texture/textures opens the existing texture/debug UI state and emits the exact notification 'Textures opened' through EditorKitController."
+        }
+      ],
+      "note": "EditorKitUtilityCommandHandler is descriptive exact-behavior recovery for the live Editor Kit utility/debug command dispatcher. No surviving original source noun is asserted; confidence is 0.998."
+    }
+  ],
+  "conflicts": []
+}

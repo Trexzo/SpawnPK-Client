@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_92D4CB62913C3F67FCF8",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_B8E7F49D172ADC741EA5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000095",
+      "owner_logical_id": "CLIENT_CLASS_000095",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/cache/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CacheStoreSet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_store_set_shape",
+          "detail": "rs/cache/b owns one shared data RandomAccessFile, an array of exactly five index RandomAccessFiles, and an array of exactly five R25 Decompressor instances."
+        },
+        {
+          "family": "exact_initialization_contract",
+          "detail": "Its initializer opens one named data file and five index files using a shared index-prefix plus indices 0..4, then constructs Decompressor stores with store ids 1..5 over the shared data file and corresponding index file."
+        },
+        {
+          "family": "exact_consumer_role",
+          "detail": "R24 OnDemandFetcher owns four rs/cache/b instances and initializes them against main_file_cache.dat/main_file_cache.idx and main_file_osrs.dat/main_file_osrs.idx variants, then consumers index directly into the returned Decompressor[] stores."
+        },
+        {
+          "family": "exact_exposure",
+          "detail": "The only public getter returns the five-element Decompressor[] array, confirming this object is a grouped cache-store set rather than an individual store or update fetcher."
+        }
+      ],
+      "note": "CacheStoreSet is a conservative semantic recovery name for this grouped five-Decompressor cache-file wrapper; it deliberately avoids conflating the class with R24 OnDemandFetcher."
+    }
+  ],
+  "unresolved": []
+}

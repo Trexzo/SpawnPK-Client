@@ -1,0 +1,288 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aj",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FeaturesToolsInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact section heading is 'Features / Tools'; actions include voting, mail, donating, collection logs, drop searches, item-guide searches, Discord and Forums."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads gameframe/sprite 6."
+        }
+      ],
+      "note": "Name follows the exact Features / Tools heading and broad shortcut-menu role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "StandardCombatSpellsInterface",
+      "confidence": 0.975,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact spell content includes Air/Water/Earth/Fire surge, Iban Blast, Claws of Guthix, Flames of Zamorak and Saradomin strike with spell descriptions."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads magic/on* and magic/off* spell assets."
+        }
+      ],
+      "note": "Conservative component name avoids claiming the broader accepted MagicSpellbookInterface role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/af",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemSpawnSearchInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact text includes Click the search button, minimum search length, Results for, and Spawn this item."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads /gameframe/spawntabbar and bank/BANK resources."
+        }
+      ],
+      "note": "Role is the item-spawn search/results surface."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aU",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TeleportSelectionInterface",
+      "confidence": 0.98,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact controls include Select this teleport, Teleport #, Title of Location and Close Window."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads teleport/SPRITE."
+        }
+      ],
+      "note": "Generic teleport-selection name is deliberate because destination category is not proven."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aO",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ShopTabInterface",
+      "confidence": 0.98,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include Main stock, Right-click on shop, Select shop tab and Tab 1 through Tab 5."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads shop-associated presentation plus slayer/image resource."
+        }
+      ],
+      "note": "Conservative tabbed-shop role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/M",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "VotingInterface",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact text says 'Vote for us and receive rewards!' and lists Moparscape, RSPS-List, RuneLocus and TopG voting actions."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads misc/event."
+        }
+      ],
+      "note": "Exact voting surface."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/E",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DuelTypeSelectionInterface",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact text says 'Select a duel type..' with Standard duel, Whip + dds only and Whip only."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads gambling/SPRITE, popups/duel and teleport/SPRITE."
+        }
+      ],
+      "note": "Name follows the exact duel-type selection role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/Q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EventBrawlStatusInterface",
+      "confidence": 0.98,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include 'Event Brawl:', Active and Starts in.. countdown presentation."
+        }
+      ],
+      "note": "Status role is explicit; candidate avoids guessing a larger event-management responsibility."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/ae",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "VotePointShopInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include Item Sale Listings, item title/description, Select item, and Price: 500 VP."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads vote/SPRITE and vote/sprite assets."
+        }
+      ],
+      "note": "VP pricing plus vote assets identify a vote-point sale/shop surface."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AdventureBookInterfacePacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_identity",
+          "detail": "rs/n/c/d extends the R115 ScriptPacketHandler base, and R115 ScriptPacketDispatcher registers the concrete rs/n/c/d instance as exact ScriptPacket ID 22 through rs/n/c/c.bL."
+        },
+        {
+          "family": "exact_adventure_book_target",
+          "detail": "Selectors 0, 2 and 3 call only rs/n/c/c AdventureBookInterface state: reset, finalize/rebuild, and append chapter/task rows with category, text, item pairs, progress values and completion state."
+        },
+        {
+          "family": "exact_claim_state",
+          "detail": "Selector 7 controls the Adventure Book chapter-reward claim widgets 30390/30391/30393 with exact states 'Complete the chapter to claim these items.', '@yel@CLAIM!' and '@gre@You've claimed these rewards!'."
+        },
+        {
+          "family": "exact_progress_state",
+          "detail": "Selector 8 writes the paired rs/n/c/c AdventureBookInterface progress integers bJ/bK; selectors 5 and 6 emit only presentation effects at the same Adventure Book screen geometry."
+        },
+        {
+          "family": "exact_existing_semantic_target",
+          "detail": "R2 independently resolves rs/n/c/c as AdventureBookInterface from exact 'Next chapter', 'Previous chapter', 'Chapter Progress', 'Claim rewards', 'Tips & Information', 'Teleport to Task' and 'Claim reward' presentation evidence."
+        }
+      ],
+      "note": "Corrected after exact ScriptPacket audit: rs/n/c/d is the ScriptPacket 22 handler for the already-reviewed AdventureBookInterface, not an interface builder. AdventureBookInterfacePacketHandler is fixed by the handler superclass/registration and complete Adventure Book reset/populate/claim/progress surface. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

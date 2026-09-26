@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/o/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcIndicatorsOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_plugin_lifecycle",
+          "detail": "Reviewed NpcIndicatorsPlugin rs/s/o/e owns exactly one rs/s/o/c overlay field and registers/unregisters that instance through the live overlay manager in its plugin lifecycle."
+        },
+        {
+          "family": "exact_highlight_model",
+          "detail": "The overlay asks NpcIndicatorsPlugin for the reviewed HighlightedNpc value associated with its current R30 Npc target and renders only when such a highlight definition exists."
+        },
+        {
+          "family": "exact_render_surface",
+          "detail": "HighlightedNpc flags drive the complete overlay surface: model hull, tile, true tile, south-west tile variants, outline, overhead name and minimap-name rendering, using its exact highlight/fill colors, border width and feather."
+        },
+        {
+          "family": "exact_npc_target",
+          "detail": "The overlay base holds rs/a/j, independently recovered in R30 as Npc; it ignores invalid/hidden definitions and does not render any non-NPC domain."
+        }
+      ],
+      "note": "NpcIndicatorsOverlay is fixed by exclusive NpcIndicatorsPlugin ownership, HighlightedNpc consumption and a whole-class NPC highlight render surface. Confidence is 0.999; adjacent rs/s/o/b remains unnamed because its cache/snapshot role is less specific."
+    }
+  ],
+  "conflicts": []
+}
