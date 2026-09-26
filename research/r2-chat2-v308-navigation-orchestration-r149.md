@@ -12,13 +12,13 @@ NavigationButton / ClientUI / PluginPanel graph.
 - candidate classes: **2**
 - resolved proposals: **2**
 - unresolved: **0**
-- review ID: `SEMREVIEW_410CFE5335C7F4D7D4F0`
+- review ID: `SEMREVIEW_6E440D0AAE56E0CE650B`
 - field/method proposals: **0**
 
 ## Stable IDs
 
 - `rs/ui/e` -> `CLIENT_CLASS_001095` -> `NavigationButtonManager`
-- `rs/ui/k` -> `CLIENT_CLASS_001101` -> `PluginPanelStack`
+- `rs/ui/k` -> `CLIENT_CLASS_001101` -> `MultiplexingPluginPanel`
 
 R19 already recovered `rs/ui/l$a` as `NavigationButtonBuilder`, so R149 deliberately
 does not duplicate that class.
@@ -47,7 +47,7 @@ R147 `ClientUI` consumes these two events to:
 
 That fixes this class as the NavigationButton registration/event manager.
 
-## PluginPanelStack
+## MultiplexingPluginPanel
 
 `rs/ui/k` extends R148 `PluginPanel` and uses a `CardLayout`.
 
@@ -76,7 +76,13 @@ The exact assertion is:
 
 Its own activate/deactivate hooks forward directly to the current child panel.
 
+RuneLite source at `6610375cca74469040ebcf03613866f6b3360668` contains `net.runelite.client.ui.MultiplexingPluginPanel` with the same `PluginPanel(false)` constructor, `CardLayout`, active/current state, identity-hash card keys, push/pop behavior, lifecycle forwarding and exact `Cannot pop last component` assertion. This upgrades the earlier descriptive `PluginPanelStack` label to recovered source identity.
+
 ## Acceptance boundary
 
 Chat 2 does not promote R149. Main/Core may accept either proposal only through an explicit
 `semantic_acceptance_spec` bound to `SEMREVIEW_410CFE5335C7F4D7D4F0`.
+
+## R233 correction note
+
+The earlier R149 proposal `SEMPROP_089A22046632B2B2A74D` / review `SEMREVIEW_410CFE5335C7F4D7D4F0` used the descriptive name `PluginPanelStack`. The source match above supersedes it with proposal `SEMPROP_BCB1A62D0D24D1D49A52` and corrected review `SEMREVIEW_6E440D0AAE56E0CE650B`. Proposal count remains unchanged.

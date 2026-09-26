@@ -53,7 +53,7 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "PluginPanelStack",
+      "proposed_name": "MultiplexingPluginPanel",
       "confidence": 0.999,
       "evidence": [
         {
@@ -71,9 +71,13 @@
         {
           "family": "exact_lifecycle_propagation",
           "detail": "When active, panel transitions call PluginPanel deactivate/activate hooks; PluginPanelStack's own J_()/K_() lifecycle methods propagate to the current child."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite source at 6610375cca74469040ebcf03613866f6b3360668 contains net.runelite.client.ui.MultiplexingPluginPanel with the same PluginPanel(false) base constructor, CardLayout/current/active state, pushState/popState behavior, identity-hash card keys, lifecycle forwarding and exact 'Cannot pop last component' assertion."
         }
       ],
-      "note": "PluginPanelStack is fixed by exact CardLayout push/pop semantics over PluginPanel instances plus lifecycle propagation. Confidence is 0.999."
+      "note": "MultiplexingPluginPanel is source-name recovery at confidence 0.999: exact v308 matches RuneLite's class state, push/pop algorithm, lifecycle propagation and assertion text. The earlier descriptive PluginPanelStack name is superseded."
     }
   ],
   "conflicts": []

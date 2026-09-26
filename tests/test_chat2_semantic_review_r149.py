@@ -89,7 +89,7 @@ class Chat2SemanticReviewR149Tests(unittest.TestCase):
         )
         self.assertEqual(actual["proposal_count"], 2)
         self.assertEqual(actual["unresolved"], [])
-        self.assertEqual(actual["review_id"], "SEMREVIEW_410CFE5335C7F4D7D4F0")
+        self.assertEqual(actual["review_id"], "SEMREVIEW_6E440D0AAE56E0CE650B")
         self.assertEqual(actual, expected)
 
     def test_r149_expected_stable_ids(self):
@@ -98,7 +98,7 @@ class Chat2SemanticReviewR149Tests(unittest.TestCase):
             {row["proposed_name"]: row["stable_id"] for row in review["proposals"]},
             {
                 "NavigationButtonManager": "CLIENT_CLASS_001095",
-                "PluginPanelStack": "CLIENT_CLASS_001101",
+                "MultiplexingPluginPanel": "CLIENT_CLASS_001101",
             },
         )
 
