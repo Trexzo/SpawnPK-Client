@@ -1,103 +1,59 @@
-# Chat 2 — exact-v308 BountyOverlay R210
+# Chat 2 — R210 bounty overlay duplicate-owner correction
 
 Exact client authority:
 
 `854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`
 
-R210 is a separate non-canonical class-only review for the exact bounty-hunter overlay.
+## Correction
 
-## Deterministic review result
+R210 does **not** retain a semantic review.
 
-- candidate classes: **1**
-- resolved proposals: **1**
+The attempted R210 proposal targeted:
+
+- `rs/l/f/a/c/c`
+- `CLIENT_CLASS_000452`
+- proposed name `BountyOverlay`
+
+The exact-v308 evidence was strong, including the surviving self-label
+`BountyOverlay`, bounty-hunter assets, commands and presentation state.
+
+However, the owner was already reviewed in R3:
+
+- `rs/l/f/a/c/c`
+- `CLIENT_CLASS_000452`
+- prior proposal `BountyHunterOverlay`
+- R3 review `SEMREVIEW_1948F58DF9A849992F1A`
+
+The R210 no-overlap test correctly failed because Chat 2 must not create a second
+independent semantic proposal for the same stable class owner.
+
+## Retained evidence value
+
+The R210 audit still contributes useful corroboration:
+
+- exact constructor self-label: `BountyOverlay`;
+- exact `popups/bh ...` asset family;
+- exact bounty commands including `::bhtask`, `::bhtaskinfo`, `::bhtaskskip` and `::skipbh`;
+- exact labels including `Target:`, `Kills:`, `Time Left:` and `Risk:`.
+
+This strengthens the already-existing R3 identity but does not create a new proposal.
+
+If Main/Core later decides that the exact self-label warrants changing
+`BountyHunterOverlay` to `BountyOverlay`, that must be handled as an explicit correction
+of the existing R3 proposal/provenance, not as a duplicate R210 semantic owner.
+
+## Retained R210 status
+
+- retained semantic candidate file: **none**
+- retained semantic review file: **none**
+- retained semantic test: **none**
+- retained review ID: **none**
+- new proposal count: **0**
 - unresolved: **0**
-- review ID: `SEMREVIEW_CDC6A4C7D7DF2EF2A443`
-- field/method proposals: **0**
 
-## Stable ID
-
-- `rs/l/f/a/c/c` -> `CLIENT_CLASS_000452` -> `BountyOverlay`
-
-The stable ID was recomputed from the exact v308 sorted `rs/**.class` seed-lineage order.
-
-## Exact self-label
-
-The strongest evidence is inside the constructor itself.
-
-Immediately after the base overlay constructor and initial state setup, the exact class
-passes:
-
-`BountyOverlay`
-
-to its overlay-name setter.
-
-The semantic proposal therefore reuses a surviving exact class-facing label rather than
-inventing a name from neighboring packages.
-
-## Exact bounty-hunter assets
-
-The same class directly owns the bounty-hunter popup sprite family:
-
-- `popups/bh record bg`
-- `popups/bh target bg`
-- `popups/bh target bg cursed`
-- `popups/bhcompact1`
-- `popups/bhcompact2`
-- `popups/bh maximimize`
-- `popups/bh combat`
-- dynamic `popups/bh skull{n}`.
-
-This independently corroborates the self-label.
-
-## Exact actions
-
-The class sends exact bounty command strings:
-
-- `::bhtask`
-- `::bhtaskinfo`
-- `::bhtaskskip`
-- `::skipbh`.
-
-Its hover/interaction text includes:
-
-- `Receive task`
-- `Task info`
-- `Skip target`
-- `Skip bounty hunter task`
-- `Maximize`
-- `Minimize`
-- `Hide/show task`.
-
-These are native interactions of this class, not strings recovered from a separate
-configuration file.
-
-## Exact presentation state
-
-The renderer owns exact presentation labels/state including:
-
-- `Target:`
-- `Kills: @whi@{n}`
-- `Time Left: @whi@{value}`
-- `Risk: {value}`
-- `None`
-- `Searching`
-- `Searching.`
-- `Searching..`
-- `Searching...`.
-
-It implements compact/maximized presentation and direct hover controls over that state.
-
-## Naming boundary
-
-`BountyOverlay` is proposed at **0.999** confidence.
-
-Unlike most Chat 2 semantic names, the noun is preserved literally by the exact class
-itself. The 0.999 value still preserves the workflow distinction between exact binary
-evidence and canonical semantic acceptance.
-
-R210 adds no field or method proposals.
+The research note is retained so the exact evidence and reason for withholding are not
+lost.
 
 ## Acceptance boundary
 
-Chat 2 does not promote R210. Main/Core may accept it only through an explicit
-`semantic_acceptance_spec` bound to `SEMREVIEW_CDC6A4C7D7DF2EF2A443`.
+R210 performs no semantic acceptance and creates no acceptance spec.
