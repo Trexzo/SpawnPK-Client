@@ -36,6 +36,7 @@ def main(argv: list[str] | None = None) -> int:
     summary = report["summary"]
     print("SPK_JAVAC_DIAGNOSTICS_PASS")
     print(f"report_id={report['report_id']}")
+    print(f"frontier_id={report['frontier_id']}")
     print(f"input_sha256={report['input_sha256']}")
     print(f"total_errors={summary['total_errors']}")
     print(f"affected_files={summary['affected_files']}")
