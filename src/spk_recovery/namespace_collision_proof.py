@@ -84,6 +84,48 @@ def _proper_package_prefixes(internal: str) -> list[str]:
     ]
 
 
+def _rename_family(
+    classes: set[str],
+    owner: str,
+    destination: str,
+) -> dict[str, str]:
+    family: dict[str, str] = {}
+    prefix = owner + "$"
+    for internal in sorted(classes):
+        if internal == owner:
+            family[internal] = destination
+        elif internal.startswith(prefix):
+            suffix = internal[len(owner):]
+            family[internal] = destination + suffix
+    return family
+
+
+def _collision_nodes_for_classes(
+    classes: set[str],
+) -> dict[str, set[str]]:
+    out: dict[str, set[str]] = defaultdict(set)
+    for internal in classes:
+        for prefix in _proper_package_prefixes(internal):
+            if prefix in classes:
+                out[prefix].add(internal)
+    return out
+
+
+def _apply_rename_map(
+    classes: set[str],
+    rename_map: dict[str, str],
+) -> set[str]:
+    remapped = {
+        rename_map.get(internal, internal)
+        for internal in classes
+    }
+    if len(remapped) != len(classes):
+        raise NamespaceCollisionProofError(
+            "rename plan collapses distinct class identities"
+        )
+    return remapped
+
+
 def prove_namespace_collisions(
     private_plan: dict[str, Any],
     readable_jar: Path,
@@ -99,12 +141,9 @@ def prove_namespace_collisions(
     candidates = _candidate_names(private_plan)
     classes = _class_names(readable_jar)
 
-    collision_descendants: dict[str, set[str]] = defaultdict(set)
-    for internal in classes:
-        for prefix in _proper_package_prefixes(internal):
-            if prefix in classes:
-                collision_descendants[prefix].add(internal)
-
+    collision_descendants = _collision_nodes_for_classes(
+        classes
+    )
     collision_nodes = set(collision_descendants)
     candidate_rows: list[dict[str, Any]] = []
     private_rows: list[dict[str, Any]] = []
@@ -156,6 +195,8 @@ def prove_namespace_collisions(
 
     collision_plan_rows: list[dict[str, Any]] = []
     private_plan_rows: list[dict[str, Any]] = []
+    aggregate_rename_map: dict[str, str] = {}
+
     for index, node in enumerate(
         sorted(
             candidate_collision_nodes,
@@ -173,6 +214,22 @@ def prove_namespace_collisions(
             + "__spk_type_"
             + hashlib.sha256(node.encode("utf-8")).hexdigest()[:8]
         )
+        family = _rename_family(
+            classes,
+            node,
+            proposed,
+        )
+        if node not in family:
+            raise NamespaceCollisionProofError(
+                "colliding owner missing from rename family"
+            )
+        for old_name, new_name in family.items():
+            existing = aggregate_rename_map.get(old_name)
+            if existing is not None and existing != new_name:
+                raise NamespaceCollisionProofError(
+                    "overlapping collision rename families disagree"
+                )
+            aggregate_rename_map[old_name] = new_name
 
         public = {
             "collision_id": remap_id,
@@ -181,6 +238,8 @@ def prove_namespace_collisions(
             "affected_candidate_count": len(affected_candidates),
             "affected_candidate_ids": affected_candidates,
             "repair_strategy": "rename_colliding_class_node",
+            "rename_family_class_count": len(family),
+            "nested_binary_class_count": max(0, len(family) - 1),
             "requires_classfile_reference_rewrite": True,
             "requires_source_reference_rewrite": True,
         }
@@ -190,11 +249,56 @@ def prove_namespace_collisions(
                 **public,
                 "colliding_class_internal_name": node,
                 "proposed_internal_name": proposed,
+                "rename_family": [
+                    {
+                        "from": old_name,
+                        "to": new_name,
+                    }
+                    for old_name, new_name in sorted(
+                        family.items()
+                    )
+                ],
                 "descendant_classes": sorted(
                     collision_descendants[node]
                 ),
             }
         )
+
+    proposed_names = set(aggregate_rename_map.values())
+    untouched_names = classes - set(aggregate_rename_map)
+    destination_conflicts = sorted(
+        proposed_names & untouched_names
+    )
+    if destination_conflicts:
+        raise NamespaceCollisionProofError(
+            "rename destination already exists in readable JAR"
+        )
+
+    simulated_classes = _apply_rename_map(
+        classes,
+        aggregate_rename_map,
+    )
+    simulated_collisions = _collision_nodes_for_classes(
+        simulated_classes
+    )
+
+    simulated_candidate_collision_count = 0
+    for _candidate_id, internal in candidates:
+        remaining = [
+            prefix
+            for prefix in _proper_package_prefixes(internal)
+            if prefix in simulated_collisions
+        ]
+        if remaining:
+            simulated_candidate_collision_count += 1
+
+    newly_created_collision_nodes = sorted(
+        set(simulated_collisions)
+        - (
+            set(collision_nodes)
+            - set(candidate_collision_nodes)
+        )
+    )
 
     candidate_proven_count = sum(
         row["collision_proven"] for row in candidate_rows
@@ -240,6 +344,27 @@ def prove_namespace_collisions(
             ),
             "planned_colliding_class_rename_count": len(
                 collision_plan_rows
+            ),
+            "planned_binary_class_rename_count": len(
+                aggregate_rename_map
+            ),
+            "planned_nested_binary_class_rename_count": sum(
+                max(0, row["rename_family_class_count"] - 1)
+                for row in collision_plan_rows
+            ),
+            "rename_destination_conflict_count": len(
+                destination_conflicts
+            ),
+            "simulated_candidate_collision_count": (
+                simulated_candidate_collision_count
+            ),
+            "simulated_new_collision_node_count": len(
+                newly_created_collision_nodes
+            ),
+            "remap_plan_topology_safe": (
+                not destination_conflicts
+                and simulated_candidate_collision_count == 0
+                and not newly_created_collision_nodes
             ),
         },
         "candidates": candidate_rows,
