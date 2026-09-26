@@ -25,6 +25,7 @@ class CleanRebuildCliTests(unittest.TestCase):
             "compiler": {
                 "diagnostic_classification": {
                     "report_id": "JAVACDIAG_TEST",
+                    "frontier_id": "JAVACFRONTIER_TEST",
                     "input_sha256": "a" * 64,
                     "identifiers_included": False,
                     "summary": {
@@ -98,6 +99,7 @@ class CleanRebuildCliTests(unittest.TestCase):
         text = output.getvalue()
         self.assertEqual(code, 3)
         self.assertIn("javac_diagnostic_report_id=JAVACDIAG_TEST", text)
+        self.assertIn("javac_frontier_id=JAVACFRONTIER_TEST", text)
         self.assertIn("javac_total_errors=1288", text)
         self.assertIn("javac_affected_files=110", text)
         self.assertIn("javac_cannot_find_symbol=680", text)
