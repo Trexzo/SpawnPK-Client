@@ -421,16 +421,19 @@ def _run_javac_probe(
         internal=internal,
         probe_name=probe_name,
     )
-    return {
+    stable_diagnostic = {
         "classification": classification,
         "exit_code": proc.returncode,
-        "diagnostic_sha256": _sha256(
-            diagnostic.encode("utf-8")
-        ),
         "error_lines": lines,
         "diagnostic_keys": diagnostic_keys,
         "source_form": source_form,
         "target_class_loaded": target_class_loaded,
+    }
+    return {
+        **stable_diagnostic,
+        "diagnostic_sha256": _stable_digest(
+            stable_diagnostic
+        ),
     }
 
 
