@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MaterialTab",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_swing_type_shape",
+          "detail": "Exact v308 extends JLabel, owns two static Border values, one final JComponent content, a BooleanSupplier on-select hook and selected boolean, with String/ImageIcon constructors tied to rs/ui/components/b/e."
+        },
+        {
+          "family": "exact_tab_behavior",
+          "detail": "Its select path runs the BooleanSupplier veto, applies selected border/white foreground and flips selected=true; unselect applies the unselected border/gray foreground. Constructors install the same group-selection and hover listeners as RuneLite MaterialTab."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 6e74752caa80fe9cb96cd9b37207e171fa525f07 net.runelite.client.ui.components.materialtabs.MaterialTab has the same fields, constructors, select/unselect behavior, borders and hover/group listener structure."
+        }
+      ],
+      "note": "MaterialTab is an exact upstream source-name recovery at confidence 0.999; anonymous MouseAdapter helper classes remain intentionally unnamed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/b/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MaterialTabGroup",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_group_state",
+          "detail": "Exact v308 extends JPanel, owns one final display JPanel and one List<rs/ui/components/b/a>, with display and no-arg constructors, indexed tab lookup, add-tab and select-tab methods."
+        },
+        {
+          "family": "exact_selection_algorithm",
+          "detail": "Selection rejects absent/already-selected tabs, honors selectedTab.select() veto, replaces display content when present, revalidates/repaints, unselects all other tabs and returns true on success."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 6e74752caa80fe9cb96cd9b37207e171fa525f07 net.runelite.client.ui.components.materialtabs.MaterialTabGroup has the same display/list state, constructors, FlowLayout setup and getTab/addTab/select control flow."
+        }
+      ],
+      "note": "MaterialTabGroup is an exact upstream source-name recovery at confidence 0.999."
+    }
+  ],
+  "conflicts": []
+}
