@@ -111,6 +111,21 @@ class DescriptorShapeTests(unittest.TestCase):
         )
 
 
+class ConstantPoolReferenceTests(unittest.TestCase):
+    def test_class_references_are_exposed_exactly(self):
+        parsed = parse_class(
+            _minimal_nested_class_bytes(include_inner_classes=True)
+        )
+        self.assertEqual(
+            parsed.class_references,
+            [
+                "Outer",
+                "Outer$Inner",
+                "java/lang/Object",
+            ],
+        )
+
+
 class NestingMetadataTests(unittest.TestCase):
     def test_inner_classes_attribute_exposes_outer_owner(self):
         parsed = parse_class(
