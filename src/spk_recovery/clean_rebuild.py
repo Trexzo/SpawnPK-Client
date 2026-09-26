@@ -465,6 +465,8 @@ def clean_project_rebuild(
             if (
                 private_classification["report_id"]
                 != javac_diagnostic_classification["report_id"]
+                or private_classification["frontier_id"]
+                != javac_diagnostic_classification["frontier_id"]
             ):
                 raise CleanRebuildError(
                     "private/public javac diagnostic authority drifted"
@@ -567,6 +569,9 @@ def clean_project_rebuild(
                 {
                     "report_id": javac_diagnostic_classification[
                         "report_id"
+                    ],
+                    "frontier_id": javac_diagnostic_classification[
+                        "frontier_id"
                     ],
                     "input_sha256": javac_diagnostic_classification[
                         "input_sha256"
