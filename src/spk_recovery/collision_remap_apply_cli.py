@@ -20,6 +20,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("input_jar", type=Path)
     p.add_argument("output_jar", type=Path)
     p.add_argument("--report", type=Path, required=True)
+    p.add_argument(
+        "--include-identifiers",
+        action="store_true",
+    )
     args = p.parse_args(argv)
 
     try:
@@ -27,6 +31,7 @@ def main(argv: list[str] | None = None) -> int:
             args.private_remap_plan,
             args.input_jar,
             args.output_jar,
+            include_identifiers=args.include_identifiers,
         )
         write_collision_remap_application(
             report,
@@ -67,6 +72,9 @@ def main(argv: list[str] | None = None) -> int:
     print(
         "output_jar_sha256="
         f"{report['output_jar_sha256']}"
+    )
+    print(
+        f"identifiers_included={report['identifiers_included']}"
     )
     print(f"report={args.report}")
     return 0
