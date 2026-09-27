@@ -30,6 +30,7 @@ spk-namespace-collision-graph = "spk_recovery.namespace_collision_graph_cli:main
 spk-namespace-remap-boundary = "spk_recovery.namespace_remap_boundary_cli:main"
 spk-namespace-alias-plan = "spk_recovery.namespace_alias_plan_cli:main"
 spk-namespace-source-overlay = "spk_recovery.namespace_source_overlay_cli:main"
+spk-namespace-virtualized-compile = "spk_recovery.namespace_virtualized_compile_cli:main"
 spk-r8q-source-entry-gate = "spk_recovery.r8q_source_entry_gate_cli:main"
 spk-dependency-authority = "spk_recovery.dependency_authority:main"
 spk-dependency-artifact-proof = "spk_recovery.dependency_artifact_proof:main"
