@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 5,
+  "review_id": "SEMREVIEW_B4B0F8734AB3BC4D6FCE",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_02C85900204D4B5BA922",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000641",
+      "owner_logical_id": "CLIENT_CLASS_000641",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/c$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AdventureBookTaskTargetType",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "preserved_enum_constants",
+          "detail": "The exact-v308 enum constants are literally ITEM, NPC_HEAD and OBJ."
+        },
+        {
+          "family": "exact_parent_dispatch",
+          "detail": "AdventureBookInterface switches on this enum while materializing chapter/task targets and builds the corresponding item, NPC-head or object presentation."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 preserved enum constants and parent-interface behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_461D2A3EE965FEC8BEDC",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000546",
+      "owner_logical_id": "CLIENT_CLASS_000546",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/A$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfirmationDialogType",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "preserved_enum_constants",
+          "detail": "The exact-v308 enum constants are literally DEFAULT, DESTROY_ITEM and YES_NO."
+        },
+        {
+          "family": "parent_identity",
+          "detail": "The parent rs/n/c/A is already reviewed as ConfirmationInterface and preserves the exact title/action text 'Confirm', 'Please confirm your choice.', 'Cancel' and close-window controls."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 preserved enum constants and parent-interface behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_9EF65608288972899058",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000556",
+      "owner_logical_id": "CLIENT_CLASS_000556",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/J$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EventActivityViewerEntry",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_entry_shape",
+          "detail": "The object stores an activity name, icon prefix, duration and creation timestamp for one Event Activity Viewer row."
+        },
+        {
+          "family": "exact_countdown_format",
+          "detail": "Its formatter derives the remaining duration from System.currentTimeMillis and returns the activity icon/name with minute/second or hour/minute/second countdown text."
+        },
+        {
+          "family": "parent_identity",
+          "detail": "The enclosing rs/n/c/J is already reviewed as EventActivityViewerInterface and owns the list refreshed by the retained EventActivityViewerRefreshTask."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 preserved enum constants and parent-interface behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_F3B95C9756A8A460B7FE",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000647",
+      "owner_logical_id": "CLIENT_CLASS_000647",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/c/c$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AdventureBookRewardClaimStatus",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "preserved_enum_constants",
+          "detail": "The exact-v308 enum constants are literally EMPTY, UNCLAIMED and CLAIMED."
+        },
+        {
+          "family": "exact_claim_surface",
+          "detail": "The enclosing Adventure Book reward helper switches on the enum to toggle claim widgets and exact claimed text '@gre@Items have been claimed!'."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 preserved enum constants and parent-interface behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_FE6C93C7FA255AA27E1B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000645",
+      "owner_logical_id": "CLIENT_CLASS_000645",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/c/b$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InboxMessageReadStatus",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "preserved_enum_constants",
+          "detail": "The exact-v308 enum constants are literally UNREAD and READ."
+        },
+        {
+          "family": "exact_inbox_behavior",
+          "detail": "The enclosing inbox-list helper creates 'View inbox message' rows and uses this enum to toggle row color plus the unread <img=50> marker."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 preserved enum constants and parent-interface behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}
