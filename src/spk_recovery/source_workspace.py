@@ -418,6 +418,7 @@ def build_source_workspace(
     engine: str,
     out_dir: Path,
     project_only: bool = False,
+    collision_transform_report: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if (
         readable_manifest.get("schema_version") != 1
@@ -441,13 +442,83 @@ def build_source_workspace(
             f"readable client JAR does not exist: {readable_jar}"
         )
 
-    expected_input_sha = str(
+    base_readable_sha = str(
         readable_manifest.get("output_sha256", "")
     ).lower()
+
+    collision_derivation: dict[str, str] | None = None
+    expected_input_sha = base_readable_sha
+
+    if collision_transform_report is not None:
+        if (
+            collision_transform_report.get("schema_version") != 1
+            or collision_transform_report.get("kind")
+            != "namespace_collision_bytecode_transform"
+        ):
+            raise SourceWorkspaceError(
+                "unsupported collision transform report"
+            )
+
+        transform_input_sha = str(
+            collision_transform_report.get(
+                "input_jar_sha256",
+                "",
+            )
+        ).lower()
+        transform_output_sha = str(
+            collision_transform_report.get(
+                "output_jar_sha256",
+                "",
+            )
+        ).lower()
+
+        if transform_input_sha != base_readable_sha:
+            raise SourceWorkspaceError(
+                "collision transform input SHA does not match "
+                "readable build manifest"
+            )
+        if not transform_output_sha:
+            raise SourceWorkspaceError(
+                "collision transform report lacks output SHA"
+            )
+
+        required_derivation = {
+            "collision_transform_id": (
+                collision_transform_report.get("transform_id")
+            ),
+            "collision_plan_id": (
+                collision_transform_report.get("plan_id")
+            ),
+            "collision_report_id": (
+                collision_transform_report.get(
+                    "collision_report_id"
+                )
+            ),
+        }
+        if not all(
+            isinstance(value, str) and value
+            for value in required_derivation.values()
+        ):
+            raise SourceWorkspaceError(
+                "collision transform report lacks authority IDs"
+            )
+
+        collision_derivation = {
+            **required_derivation,
+            "base_readable_jar_sha256": base_readable_sha,
+        }
+        expected_input_sha = transform_output_sha
+
     actual_input_sha = sha256_file(readable_jar)
     if actual_input_sha.lower() != expected_input_sha:
+        if collision_transform_report is None:
+            raise SourceWorkspaceError(
+                "readable client SHA-256 does not match build manifest: "
+                f"{actual_input_sha} != {expected_input_sha}"
+            )
         raise SourceWorkspaceError(
-            "readable client SHA-256 does not match build manifest: "
+            "transformed readable client SHA-256 does not match "
+            "collision transform report: "
             f"{actual_input_sha} != {expected_input_sha}"
         )
 
@@ -646,6 +717,8 @@ def build_source_workspace(
         material["normalization_id"] = normalization_report[
             "normalization_id"
         ]
+    if collision_derivation is not None:
+        material["collision_derivation"] = collision_derivation
     raw = json.dumps(
         material,
         sort_keys=True,
@@ -687,6 +760,9 @@ def build_source_workspace(
             else None
         ),
     }
+    if collision_derivation is not None:
+        manifest.update(collision_derivation)
+
     _write_json(result, out_dir / "decompiler-result.json")
     _write_json(
         manifest,
