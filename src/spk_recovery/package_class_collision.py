@@ -178,6 +178,8 @@ def analyze_package_class_collisions(
             for row in profile.get("member_references", [])
         )
         for target in targets:
+            if holder == target:
+                continue
             referenced_by[target].add(holder)
 
     blocker_rows: list[dict[str, Any]] = []
