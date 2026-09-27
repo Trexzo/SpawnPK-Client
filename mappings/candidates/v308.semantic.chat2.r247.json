@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/t/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DefinitionConfigLoader",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_generic_loader_role",
+          "detail": "Exact v308 rs/t/c<T> extends rs/t/a, owns an int-keyed T cache plus the raw integer-to-map config corpus, reloads YAML/MessagePack data through the parent, and materializes each entry through abstract T a(int, Map<String,Object>)."
+        },
+        {
+          "family": "exact_subclass_family",
+          "detail": "The already reviewed R80 SequenceDefinitionConfigLoader, NpcDefinitionConfigLoader, SpotAnimationDefinitionConfigLoader, ItemDefinitionConfigLoader and ObjectDefinitionConfigLoader all extend this exact generic class."
+        },
+        {
+          "family": "exact_lookup_surface",
+          "detail": "The class exposes cached lookup by integer ID, existence testing, the underlying typed cache, and shared conversion helpers for byte, int-array, nested int-array and String-array config values."
+        }
+      ],
+      "note": "DefinitionConfigLoader is a conservative semantic recovery name for the exact generic superclass used by the reviewed definition config loaders; it does not claim a verbatim original developer identifier. Confidence 0.997."
+    }
+  ],
+  "conflicts": []
+}
