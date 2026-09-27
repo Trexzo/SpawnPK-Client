@@ -705,6 +705,14 @@ def _clean_project_rebuild_collision_derived(
 ) -> dict[str, Any]:
     source_root = source_root.resolve()
     readable_jar = readable_jar.resolve()
+    private_collision_plan_path = private_collision_plan_path.resolve()
+    if not private_collision_plan_path.is_file():
+        raise CleanRebuildError(
+            "private collision plan path does not exist"
+        )
+    private_collision_plan_sha256 = _sha256_file(
+        private_collision_plan_path
+    )
 
     try:
         all_files, javac_probe, release = _verify_authority(
@@ -877,6 +885,9 @@ def _clean_project_rebuild_collision_derived(
             "collision_transform_id"
         ],
         "collision_plan_id": derived["collision_plan_id"],
+        "private_collision_plan_sha256": (
+            private_collision_plan_sha256
+        ),
         "source_derivation": source_derivation,
     }
     rebuild_id = (
@@ -958,6 +969,9 @@ def _clean_project_rebuild_collision_derived(
                 "collision_transform_id"
             ],
             "collision_plan_id": derived["collision_plan_id"],
+            "private_collision_plan_sha256": (
+                private_collision_plan_sha256
+            ),
             "collision_report_id": derived[
                 "collision_report_id"
             ],
