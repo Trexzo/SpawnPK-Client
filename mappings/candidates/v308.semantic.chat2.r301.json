@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/H",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemSearchEnterAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_construction",
+          "detail": "ItemSearchSidebarPanel constructs rs/gui/H with itself and installs it directly on the live item-search JTextField through JTextField.addActionListener."
+        },
+        {
+          "family": "exact_dispatch",
+          "detail": "rs/gui/H.actionPerformed performs no independent work; it dispatches directly to the parent ItemSearchSidebarPanel private search routine."
+        },
+        {
+          "family": "exact_trigger_role",
+          "detail": "Because this listener is bound specifically to the search text field rather than the Search button, its concrete role is the Enter/action trigger for the item search."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Item Search text-field action wiring; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/I",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemSearchButtonAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_construction",
+          "detail": "ItemSearchSidebarPanel constructs rs/gui/I with itself and installs it directly on the JButton whose exact visible label is 'Search'."
+        },
+        {
+          "family": "exact_dispatch",
+          "detail": "rs/gui/I.actionPerformed performs no independent work; it dispatches directly to the same parent ItemSearchSidebarPanel private search routine."
+        },
+        {
+          "family": "exact_trigger_role",
+          "detail": "The listener is bound specifically to the Search button, distinguishing it from the sibling text-field Enter action listener."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Item Search button action wiring; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}
