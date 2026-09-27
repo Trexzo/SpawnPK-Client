@@ -34,6 +34,7 @@ spk-namespace-virtualized-compile = "spk_recovery.namespace_virtualized_compile_
 spk-r8q-source-entry-gate = "spk_recovery.r8q_source_entry_gate_cli:main"
 spk-namespace-collision = "spk_recovery.namespace_collision_cli:main"
 spk-namespace-collision-plan = "spk_recovery.namespace_collision_plan_cli:main"
+spk-collision-bytecode-remap = "spk_recovery.collision_bytecode_remap_cli:main"
 spk-package-class-collision = "spk_recovery.package_class_collision_cli:main"
 spk-package-class-remap-plan = "spk_recovery.package_class_remap_plan_cli:main"
 spk-collision-remap-apply = "spk_recovery.collision_remap_apply_cli:main"
