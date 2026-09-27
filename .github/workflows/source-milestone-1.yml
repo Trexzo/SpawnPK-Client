@@ -1,0 +1,109 @@
+name: Source Milestone 1
+
+on:
+  workflow_dispatch:
+    inputs:
+      authority_run_id:
+        description: GitHub Actions run containing the exact v308 authority bundle
+        required: true
+        type: string
+      authority_artifact_name:
+        description: Exact authority artifact name
+        required: true
+        default: spawnpk-v308-source-authority
+        type: string
+      authority_commit:
+        description: Exact SpawnPK-Client authority commit (40 hex)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  source-milestone:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install recovery tooling
+        run: python -m pip install -e .
+      - name: Validate exact authority commit
+        shell: bash
+        env:
+          AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+        run: |
+          set -euo pipefail
+          if ! [[ "$AUTHORITY_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "authority_commit must be an exact lowercase 40-hex commit" >&2
+            exit 2
+          fi
+          git cat-file -e "$AUTHORITY_COMMIT^{commit}"
+      - name: Download exact v308 authority bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.authority_artifact_name }}
+          path: authority
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.authority_run_id }}
+      - name: Validate authority bundle layout
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f authority/authority-index.json
+          test -f authority/readable-client-manifest.json
+          test -f authority/recovered-source-manifest.json
+          test -f authority/clean-rebuild.json
+          test -d authority/src
+      - name: Build Source Milestone 1 authority
+        shell: bash
+        env:
+          AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+        run: |
+          set -euo pipefail
+          mkdir -p source-m1
+          python -m spk_recovery.source_milestone_cli \
+            authority/authority-index.json \
+            authority/readable-client-manifest.json \
+            authority/recovered-source-manifest.json \
+            authority/clean-rebuild.json \
+            --authority-commit "$AUTHORITY_COMMIT" \
+            --expected-build-id v308 \
+            --out source-m1/SOURCE-MILESTONE.json
+      - name: Export deterministic source repository
+        run: |
+          set -euo pipefail
+          python -m spk_recovery.source_repository_export_cli \
+            source-m1/SOURCE-MILESTONE.json \
+            authority/src \
+            source-m1/repository
+      - name: Verify milestone and exported repository
+        shell: bash
+        env:
+          AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+        run: |
+          set -euo pipefail
+          python -m spk_recovery.source_milestone_verify_cli \
+            source-m1/SOURCE-MILESTONE.json \
+            authority/authority-index.json \
+            authority/readable-client-manifest.json \
+            authority/recovered-source-manifest.json \
+            authority/clean-rebuild.json \
+            --authority-commit "$AUTHORITY_COMMIT" \
+            --source-root authority/src \
+            --export-root source-m1/repository \
+            --out source-m1/SOURCE-MILESTONE-VERIFY.json
+      - name: Stage verification into publication artifact
+        run: cp source-m1/SOURCE-MILESTONE-VERIFY.json source-m1/repository/
+      - name: Upload gated source publication artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SpawnPK-Client-Source-M1
+          path: source-m1/repository
+          if-no-files-found: error
+          retention-days: 90
