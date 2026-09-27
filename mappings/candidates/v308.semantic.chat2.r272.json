@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aD",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodFountainPerkTreeInterface",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_title_role",
+          "detail": "Exact v308 owns the UI title '<img=186> Blood Fountain Perk Tree <img=186>' and the selected-perk/purchase state."
+        },
+        {
+          "family": "exact_perk_surface",
+          "detail": "The class contains the Blood Fountain perk catalogue including Blood vengeance, Blood whip, Rigour, Augury, Bloodlust, Bloodthirsty, Vampiric, Archaeologist, Treasure and War diamonds families."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Its interface construction is bound to fountain/sprite assets and perk-selection/purchase widgets with no unrelated UI domain."
+        }
+      ],
+      "note": "Descriptive exact-behavior name for the Blood Fountain perk-tree interface builder; confidence 0.998."
+    }
+  ]
+}
