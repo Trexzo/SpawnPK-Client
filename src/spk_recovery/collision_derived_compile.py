@@ -222,6 +222,7 @@ def compile_collision_derived_source(
     report_compile_failure: bool = False,
     private_diagnostic_report_out: Path | None = None,
     diagnostic_source_root: Path | None = None,
+    canonical_source_root: Path | None = None,
 ) -> dict[str, Any]:
     source_root = source_root.resolve()
     base_readable_jar = base_readable_jar.resolve()
@@ -232,6 +233,11 @@ def compile_collision_derived_source(
     diagnostic_root = (
         diagnostic_source_root.resolve()
         if diagnostic_source_root is not None
+        else source_root
+    )
+    canonical_root = (
+        canonical_source_root.resolve()
+        if canonical_source_root is not None
         else source_root
     )
 
@@ -251,6 +257,10 @@ def compile_collision_derived_source(
         raise CollisionDerivedCompileError(
             "diagnostic source root does not exist"
         )
+    if not canonical_root.is_dir():
+        raise CollisionDerivedCompileError(
+            "canonical source root does not exist"
+        )
     if out_dir.exists() and any(out_dir.iterdir()):
         raise CollisionDerivedCompileError(
             "compile output directory must be empty"
@@ -267,7 +277,7 @@ def compile_collision_derived_source(
     prefixes = _normalize_prefixes(project_prefixes)
     javac = _require_executable(javac_command)
     canonical_before_sha, canonical_files, canonical_bytes = (
-        source_tree_digest(source_root)
+        source_tree_digest(canonical_root)
     )
     if canonical_before_sha != recovered_manifest.get(
         "source_tree_sha256"
@@ -394,7 +404,7 @@ def compile_collision_derived_source(
             )
 
         canonical_after_sha, after_files, after_bytes = (
-            source_tree_digest(source_root)
+            source_tree_digest(canonical_root)
         )
         if (
             canonical_after_sha != canonical_before_sha
@@ -548,7 +558,7 @@ def compile_collision_derived_source(
     )
 
     canonical_after_sha, after_files, after_bytes = source_tree_digest(
-        source_root
+        canonical_root
     )
     if (
         canonical_after_sha != canonical_before_sha
