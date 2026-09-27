@@ -10,7 +10,9 @@ import unittest
 import zipfile
 
 from spk_recovery.clean_rebuild import (
+    CleanRebuildError,
     _dependency_capsule,
+    _derive_auto_namespace_alias_plan,
     clean_project_rebuild,
 )
 from spk_recovery.namespace_alias_plan import (
@@ -419,6 +421,155 @@ class CleanRebuildNamespaceVirtualizationTests(unittest.TestCase):
                 ".spk-clean-virtualized-source-",
                 str(private),
             )
+
+    def test_auto_alias_plan_matches_explicit_plan_authority(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                source,
+                readable,
+                recovered,
+                readiness,
+                readable_manifest,
+                authority,
+                explicit_plan,
+            ) = self._fixture(root)
+
+            explicit = clean_project_rebuild(
+                recovered,
+                readiness,
+                readable_manifest,
+                readable,
+                authority,
+                source,
+                out_dir=root / "explicit",
+                source_prefixes=["rs/"],
+                private_namespace_alias_plan=explicit_plan,
+            )
+            automatic = clean_project_rebuild(
+                recovered,
+                readiness,
+                readable_manifest,
+                readable,
+                authority,
+                source,
+                out_dir=root / "automatic",
+                source_prefixes=["rs/"],
+                auto_namespace_alias_plan=True,
+            )
+
+            self.assertEqual(explicit["status"], "complete")
+            self.assertEqual(automatic["status"], "complete")
+
+            explicit_transport = explicit["compile_transport"]
+            auto_transport = automatic["compile_transport"]
+
+            self.assertEqual(
+                explicit_transport["alias_plan_id"],
+                auto_transport["alias_plan_id"],
+            )
+            self.assertEqual(
+                explicit_transport["namespace_compile_id"],
+                auto_transport["namespace_compile_id"],
+            )
+            self.assertEqual(
+                explicit_transport["alias_plan"][
+                    "mapped_class_identity_count"
+                ],
+                auto_transport["alias_plan"][
+                    "mapped_class_identity_count"
+                ],
+            )
+            self.assertEqual(
+                explicit_transport["alias_plan"][
+                    "root_collision_node_count"
+                ],
+                auto_transport["alias_plan"][
+                    "root_collision_node_count"
+                ],
+            )
+            self.assertEqual(
+                explicit_transport["alias_plan_source"],
+                "explicit_private_plan",
+            )
+            self.assertEqual(
+                auto_transport["alias_plan_source"],
+                "auto_dependency_capsule",
+            )
+
+            # Compile/runtime artifacts are equivalent; report identity
+            # intentionally records the distinct provenance.
+            self.assertEqual(
+                explicit["rebuilt_client"]["sha256"],
+                automatic["rebuilt_client"]["sha256"],
+            )
+            self.assertEqual(
+                explicit["dependency_capsule"]["sha256"],
+                automatic["dependency_capsule"]["sha256"],
+            )
+            self.assertNotEqual(
+                explicit["rebuild_id"],
+                automatic["rebuild_id"],
+            )
+
+    def test_auto_plan_helper_refuses_zero_collision_capsule(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            src = root / "src" / "dep" / "Fallback.java"
+            src.parent.mkdir(parents=True)
+            src.write_text(
+                "package dep; public class Fallback {}\n",
+                encoding="utf-8",
+            )
+            classes = root / "classes"
+            self._compile([src], classes)
+
+            jar = root / "no-collision.jar"
+            with zipfile.ZipFile(
+                jar,
+                "w",
+                zipfile.ZIP_STORED,
+            ) as z:
+                z.write(
+                    classes / "dep" / "Fallback.class",
+                    "dep/Fallback.class",
+                )
+
+            with self.assertRaisesRegex(
+                CleanRebuildError,
+                "found no class/package collisions",
+            ):
+                _derive_auto_namespace_alias_plan(jar)
+
+    def test_explicit_and_auto_modes_are_mutually_exclusive(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                source,
+                readable,
+                recovered,
+                readiness,
+                readable_manifest,
+                authority,
+                plan,
+            ) = self._fixture(root)
+
+            with self.assertRaisesRegex(
+                CleanRebuildError,
+                "mutually exclusive",
+            ):
+                clean_project_rebuild(
+                    recovered,
+                    readiness,
+                    readable_manifest,
+                    readable,
+                    authority,
+                    source,
+                    out_dir=root / "invalid",
+                    source_prefixes=["rs/"],
+                    private_namespace_alias_plan=plan,
+                    auto_namespace_alias_plan=True,
+                )
 
     def test_virtualization_requires_explicit_plan(self):
         with tempfile.TemporaryDirectory() as td:
