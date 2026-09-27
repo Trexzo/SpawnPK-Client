@@ -8,6 +8,10 @@ import unittest
 import zipfile
 
 from spk_recovery.classfile import parse_class
+from spk_recovery.namespace_alias_plan import (
+    build_namespace_alias_plan,
+    reverse_alias_mapping,
+)
 from spk_recovery.classfile_utf8_remap import (
     ClassfileRemapError,
     assert_no_literal_alias_mentions,
@@ -173,12 +177,12 @@ class ClassfileUtf8RemapTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             collision = self._collision_jar(root)
-            alias = "spk_compile_alias/r8s/AliasA"
 
             bad_source = root / "bad" / "UseBad.java"
             bad_source.parent.mkdir()
             bad_source.write_text(
                 "public class UseBad { "
+                "public a root; "
                 "public a.b.C value; }\n",
                 encoding="utf-8",
             )
@@ -194,21 +198,37 @@ class ClassfileUtf8RemapTests(unittest.TestCase):
                 "collision fixture must be rejected by javac",
             )
 
+            alias_plan = build_namespace_alias_plan(
+                collision,
+                include_identifiers=True,
+            )
+            self.assertEqual(
+                set(alias_plan["mapping"]),
+                {"a/b/C"},
+            )
+            alias = alias_plan["mapping"]["a/b/C"]
+
             alias_jar = root / "alias.jar"
             remap_jar(
                 collision,
                 alias_jar,
-                {"a": alias},
+                alias_plan["mapping"],
             )
 
+            with zipfile.ZipFile(alias_jar) as z:
+                names = set(z.namelist())
+                self.assertIn("a.class", names)
+                self.assertIn(alias + ".class", names)
+                self.assertNotIn("a/b/C.class", names)
+
+            alias_dotted = alias.replace("/", ".")
             use_source = root / "use" / "Use.java"
             use_source.parent.mkdir()
             use_source.write_text(
                 "public class Use {\n"
                 "  public static void main(String[] args) {\n"
-                "    spk_compile_alias.r8s.AliasA x = "
-                "new spk_compile_alias.r8s.AliasA();\n"
-                "    a.b.C y = new a.b.C();\n"
+                "    a x = new a();\n"
+                f"    {alias_dotted} y = new {alias_dotted}();\n"
                 "    System.out.println(x.v + y.w);\n"
                 "  }\n"
                 "}\n",
@@ -237,7 +257,7 @@ class ClassfileUtf8RemapTests(unittest.TestCase):
 
             restored = remap_classfile_utf8(
                 generated,
-                {alias: "a"},
+                reverse_alias_mapping(alias_plan),
             )
             restored_dir = root / "restored"
             restored_dir.mkdir()
@@ -260,6 +280,12 @@ class ClassfileUtf8RemapTests(unittest.TestCase):
                 any(
                     value == "a"
                     or value == "La;"
+                    for value in parsed.utf8_strings
+                )
+            )
+            self.assertTrue(
+                any(
+                    "a/b/C" in value
                     for value in parsed.utf8_strings
                 )
             )
