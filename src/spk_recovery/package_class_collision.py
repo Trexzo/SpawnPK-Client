@@ -4,6 +4,7 @@ from collections import Counter, defaultdict
 import hashlib
 import json
 from pathlib import Path
+import re
 from typing import Any
 import zipfile
 
@@ -11,6 +12,7 @@ from .bytecode_profile import (
     BytecodeProfileError,
     profile_class_constant_pool_references,
 )
+from .classfile import ClassFormatError, parse_class
 
 
 class PackageClassCollisionError(ValueError):
@@ -43,6 +45,41 @@ def _proper_package_prefixes(internal_name: str) -> list[str]:
     ]
 
 
+_OBJECT_DESCRIPTOR_RE = re.compile(r"L([^;]+);")
+
+
+def _descriptor_references(descriptor: str) -> set[str]:
+    return {
+        match.group(1)
+        for match in _OBJECT_DESCRIPTOR_RE.finditer(descriptor)
+    }
+
+
+def _declared_type_references(data: bytes) -> set[str]:
+    try:
+        parsed = parse_class(data)
+    except ClassFormatError as exc:
+        raise PackageClassCollisionError(
+            f"class parse failed: {exc}"
+        ) from exc
+
+    refs: set[str] = set(parsed.interfaces)
+    if parsed.super_name is not None:
+        refs.add(parsed.super_name)
+
+    for field in parsed.fields:
+        refs.update(
+            _descriptor_references(str(field["descriptor"]))
+        )
+
+    for method in parsed.methods:
+        refs.update(
+            _descriptor_references(str(method["descriptor"]))
+        )
+
+    return refs
+
+
 def _jar_profiles(
     jar_path: Path,
 ) -> tuple[set[str], dict[str, dict[str, Any]]]:
@@ -63,9 +100,15 @@ def _jar_profiles(
                 data = archive.read(entry)
                 try:
                     profile = profile_class_constant_pool_references(data)
-                except BytecodeProfileError as exc:
+                    profile["declared_type_references"] = sorted(
+                        _declared_type_references(data)
+                    )
+                except (
+                    BytecodeProfileError,
+                    PackageClassCollisionError,
+                ) as exc:
                     raise PackageClassCollisionError(
-                        f"{entry}: constant-pool profile failed: {exc}"
+                        f"{entry}: class reference profile failed: {exc}"
                     ) from exc
 
                 if profile.get("internal_name") != internal:
@@ -176,6 +219,13 @@ def analyze_package_class_collisions(
         targets.update(
             str(row["owner"])
             for row in profile.get("member_references", [])
+        )
+        targets.update(
+            str(name)
+            for name in profile.get(
+                "declared_type_references",
+                [],
+            )
         )
         for target in targets:
             if holder == target:
