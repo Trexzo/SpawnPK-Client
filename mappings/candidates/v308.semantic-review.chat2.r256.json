@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 6,
+  "review_id": "SEMREVIEW_1B26C6ED1B96DA8816D3",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_160116F3179FE2385F41",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001081",
+      "owner_logical_id": "CLIENT_CLASS_001081",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IconTextFieldDocumentListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_listener_contract",
+          "detail": "Exact v308 class implements DocumentListener and all three document callbacks invoke the same IconTextField refresh helper."
+        }
+      ],
+      "note": "IconTextFieldDocumentListener is descriptive exact-behavior recovery for rs/ui/components/o; no verbatim original identifier is asserted."
+    },
+    {
+      "proposal_id": "SEMPROP_18EE6796F0B05DA3C81B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001079",
+      "owner_logical_id": "CLIENT_CLASS_001079",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IconTextFieldListDataListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_listener_contract",
+          "detail": "Exact v308 class implements ListDataListener; intervalAdded, intervalRemoved and contentsChanged all invoke the same IconTextField refresh helper."
+        }
+      ],
+      "note": "IconTextFieldListDataListener is descriptive exact-behavior recovery for rs/ui/components/m; no verbatim original identifier is asserted."
+    },
+    {
+      "proposal_id": "SEMPROP_84C7FE0B3B9B4A7FABCD",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001075",
+      "owner_logical_id": "CLIENT_CLASS_001075",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FlatTextFieldHoverListener",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_owner_role",
+          "detail": "Exact v308 class is a MouseAdapter owned only by reviewed FlatTextField."
+        },
+        {
+          "family": "exact_hover_behavior",
+          "detail": "mouseEntered applies the field's hover color when enabled; mouseExited restores its normal background color."
+        }
+      ],
+      "note": "FlatTextFieldHoverListener is descriptive exact-behavior recovery for rs/ui/components/j; no verbatim original identifier is asserted."
+    },
+    {
+      "proposal_id": "SEMPROP_BCD0A6B6978E98F5EDC0",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001078",
+      "owner_logical_id": "CLIENT_CLASS_001078",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IconTextFieldHoverListener",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_owner_role",
+          "detail": "Exact v308 MouseAdapter is owned by reviewed IconTextField and operates through its embedded FlatTextField."
+        },
+        {
+          "family": "exact_hover_behavior",
+          "detail": "mouseEntered propagates the hover color into the IconTextField/FlatTextField surface and mouseExited restores the normal background."
+        }
+      ],
+      "note": "IconTextFieldHoverListener is descriptive exact-behavior recovery for rs/ui/components/l; no verbatim original identifier is asserted."
+    },
+    {
+      "proposal_id": "SEMPROP_EA68A2F75269DB415D68",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001080",
+      "owner_logical_id": "CLIENT_CLASS_001080",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IconTextFieldPopupFocusListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_focus_behavior",
+          "detail": "Exact v308 FocusAdapter owns the IconTextField suggestion JPopupMenu and JList; focusLost hides the popup, clears selection and resets SubstanceListUI rollover state."
+        }
+      ],
+      "note": "IconTextFieldPopupFocusListener is descriptive exact-behavior recovery for rs/ui/components/n; no verbatim original identifier is asserted."
+    },
+    {
+      "proposal_id": "SEMPROP_F00596A09CF4ED2F7ED8",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001082",
+      "owner_logical_id": "CLIENT_CLASS_001082",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IconTextFieldButtonHoverListener",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_button_hover_behavior",
+          "detail": "Exact v308 MouseAdapter swaps a JButton foreground between supplied hover/normal colors on enter/exit."
+        },
+        {
+          "family": "exact_event_forwarding",
+          "detail": "Both hover callbacks forward the same mouse event to the IconTextField's embedded FlatTextField after updating the button color."
+        }
+      ],
+      "note": "IconTextFieldButtonHoverListener is descriptive exact-behavior recovery for rs/ui/components/p; no verbatim original identifier is asserted."
+    }
+  ],
+  "unresolved": []
+}
