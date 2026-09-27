@@ -286,6 +286,140 @@ class CleanRebuildNamespaceVirtualizationTests(unittest.TestCase):
             self.assertTrue(alias_jar.is_file())
             self.assertNotEqual(_sha(alias_jar), _sha(readable))
 
+    def test_virtualized_failure_preserves_only_remaining_frontier(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                source,
+                readable,
+                recovered,
+                readiness,
+                readable_manifest,
+                authority,
+                plan,
+            ) = self._fixture(root)
+
+            target = source / "rs" / "Use.java"
+            sentinel = "missingAfterNamespaceRecovery"
+            target.write_text(
+                target.read_text(encoding="utf-8").replace(
+                    "root.v + value.w",
+                    "root.v + value.w + " + sentinel,
+                ),
+                encoding="utf-8",
+            )
+            tree_sha, _files, _bytes = source_tree_digest(source)
+            recovered["source_tree_sha256"] = tree_sha
+            readiness["source_tree_sha256"] = tree_sha
+
+            legacy = clean_project_rebuild(
+                recovered,
+                readiness,
+                readable_manifest,
+                readable,
+                authority,
+                source,
+                out_dir=root / "legacy-fail",
+                source_prefixes=["rs/"],
+            )
+            self.assertEqual(legacy["status"], "compile_failed")
+
+            private_out = root / "private-virtualized-javac.json"
+            virtualized = clean_project_rebuild(
+                recovered,
+                readiness,
+                readable_manifest,
+                readable,
+                authority,
+                source,
+                out_dir=root / "virtualized-fail",
+                source_prefixes=["rs/"],
+                private_namespace_alias_plan=plan,
+                private_diagnostic_report_out=private_out,
+            )
+
+            self.assertEqual(
+                virtualized["status"],
+                "compile_failed",
+            )
+            self.assertFalse(virtualized["clean_project_build"])
+            self.assertIsNone(
+                virtualized["rebuilt_client"]["sha256"]
+            )
+            self.assertFalse(
+                (root / "virtualized-fail" / "rebuilt-client.jar").exists()
+            )
+            self.assertEqual(
+                virtualized["project_classes"]["generated_count"],
+                0,
+            )
+
+            public = virtualized["compiler"][
+                "diagnostic_classification"
+            ]
+            self.assertIsNotNone(public)
+            self.assertEqual(
+                public["summary"]["total_errors"],
+                1,
+            )
+            self.assertEqual(
+                public["summary"]["cannot_find_symbol"]["count"],
+                1,
+            )
+            self.assertEqual(
+                public["summary"]["cannot_find_symbol"][
+                    "symbol_kinds"
+                ],
+                {"variable": 1},
+            )
+            self.assertNotIn(sentinel, str(public))
+
+            transport = virtualized["compile_transport"]
+            self.assertEqual(
+                transport["status"],
+                "compile_failed",
+            )
+            self.assertEqual(
+                transport["compiler"][
+                    "diagnostic_classification"
+                ]["frontier_id"],
+                public["frontier_id"],
+            )
+            self.assertFalse(
+                transport["runtime_alias_dependency_allowed"]
+            )
+            self.assertEqual(
+                transport["restored_classes"]["class_count"],
+                0,
+            )
+
+            self.assertTrue(private_out.is_file())
+            private = json.loads(
+                private_out.read_text(encoding="utf-8")
+            )
+            self.assertTrue(private["identifiers_included"])
+            self.assertEqual(
+                private["report_id"],
+                public["report_id"],
+            )
+            self.assertEqual(
+                private["frontier_id"],
+                public["frontier_id"],
+            )
+            self.assertIn(sentinel, str(private))
+
+            private_paths = [
+                Path(row["source_path"]).resolve()
+                for row in private["diagnostics"]
+                if row.get("source_path")
+            ]
+            self.assertTrue(private_paths)
+            self.assertIn(target.resolve(), private_paths)
+            self.assertNotIn(
+                ".spk-clean-virtualized-source-",
+                str(private),
+            )
+
     def test_virtualization_requires_explicit_plan(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
