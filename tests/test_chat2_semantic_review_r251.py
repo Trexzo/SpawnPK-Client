@@ -25,7 +25,7 @@ def _class_lineage():
             "authority": "EXACT_CURRENT_CLIENT",
         }],
         "classes": [{
-            "logical_id": "CLIENT_CLASS_000976",
+            "logical_id": "CLIENT_CLASS_000977",
             "semantic_name": None,
             "semantic_status": "UNKNOWN",
             "semantic_confidence": 0.0,
@@ -73,14 +73,14 @@ class Chat2SemanticReviewR251Tests(unittest.TestCase):
         )
         self.assertEqual(actual["proposal_count"], 1)
         self.assertEqual(actual["unresolved"], [])
-        self.assertEqual(actual["review_id"], "SEMREVIEW_F0DA8783CD3E86807AA8")
+        self.assertEqual(actual["review_id"], "SEMREVIEW_E6D85BEC961E37A9DF3A")
         self.assertEqual(actual, expected)
 
     def test_r251_expected_stable_id(self):
         review = _load("mappings/candidates/v308.semantic-review.chat2.r251.json")
         self.assertEqual(
             {row["proposed_name"]: row["stable_id"] for row in review["proposals"]},
-            {"HardwareValidator": "CLIENT_CLASS_000976"},
+            {"HardwareValidator": "CLIENT_CLASS_000977"},
         )
 
     def test_r251_name_and_owner_do_not_overlap_prior_reviews(self):

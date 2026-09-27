@@ -6,9 +6,9 @@ Exact client authority:
 
 ## Deterministic result
 
-- `rs/secure/HardwareValidator` -> `CLIENT_CLASS_000976` -> `HardwareValidator`
+- `rs/secure/HardwareValidator` -> `CLIENT_CLASS_000977` -> `HardwareValidator`
 - confidence: **0.999**
-- review: `SEMREVIEW_F0DA8783CD3E86807AA8`
+- review: `SEMREVIEW_E6D85BEC961E37A9DF3A`
 - unresolved: **0**
 - field/method proposals: **0**
 
@@ -34,7 +34,7 @@ That adjacency supports the hardware-validation subsystem context, but R251 deli
 
 ## Stable ID
 
-R174 proves the adjacent exact owners map consecutively to `CLIENT_CLASS_000977` through `CLIENT_CLASS_000979`; the immediately preceding exact class is therefore `CLIENT_CLASS_000976`.
+R174 proves the adjacent exact owners map consecutively to `CLIENT_CLASS_000977` through `CLIENT_CLASS_000979`; the immediately preceding exact class is therefore `CLIENT_CLASS_000977`.
 
 ## Acceptance boundary
 
