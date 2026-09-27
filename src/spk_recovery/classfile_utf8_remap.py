@@ -283,12 +283,34 @@ def remap_jar(
 
     try:
         with zipfile.ZipFile(source) as z:
+            infos = [
+                info
+                for info in z.infolist()
+                if not info.is_dir()
+            ]
+            source_class_names = {
+                info.filename[:-6]
+                for info in infos
+                if (
+                    info.filename.endswith(".class")
+                    and not info.filename.startswith("META-INF/")
+                )
+            }
+            missing_sources = sorted(
+                old
+                for old in mapping
+                if old not in source_class_names
+            )
+            if missing_sources:
+                raise ClassfileRemapError(
+                    "remap source identities absent from JAR: "
+                    + str(len(missing_sources))
+                )
+
             for info in sorted(
-                z.infolist(),
+                infos,
                 key=lambda row: row.filename,
             ):
-                if info.is_dir():
-                    continue
                 name = info.filename
                 data = z.read(info)
 
@@ -374,4 +396,36 @@ def assert_no_literal_alias_mentions(
                 ):
                     raise ClassfileRemapError(
                         "generated class literal contains compile-only alias"
+                    )
+
+
+
+def assert_no_utf8_alias_references(
+    classfiles: Iterable[bytes],
+    aliases: Iterable[str],
+) -> None:
+    alias_values = tuple(sorted(set(aliases)))
+    for data in classfiles:
+        try:
+            parsed = parse_class(data)
+        except ClassFormatError as exc:
+            raise ClassfileRemapError(
+                f"generated class parse failed: {exc}"
+            ) from exc
+
+        for value in parsed.utf8_strings:
+            payload = value.encode(
+                "utf-8",
+                errors="surrogatepass",
+            )
+            for alias in alias_values:
+                old = alias.encode("ascii")
+                _ignored, count = _replace_identity(
+                    payload,
+                    old,
+                    old,
+                )
+                if count:
+                    raise ClassfileRemapError(
+                        "generated class retains compile-only alias reference"
                     )
