@@ -110,3 +110,49 @@ Publication itself is a separate action and remains forbidden until:
 4. the source-only bundle is built from that exact source authority.
 
 Until those conditions are satisfied, do not create or populate `Trexzo/SpawnPK-Client-Source`.
+
+## GitHub Actions publication gate
+
+The manual workflow `.github/workflows/source-milestone-1.yml` consumes one exact authority artifact from a prior GitHub Actions run. The artifact contract is:
+
+```text
+authority/
+  class-lineage.json
+  member-lineage.json
+  readable-client-manifest.json
+  recovered-source-manifest.json
+  clean-rebuild.json
+  recovery-release.json
+  release-verification.json
+  src/**/*.java
+```
+
+The workflow refuses a non-40-hex authority commit, requires that commit to be an ancestor of the workflow revision, rejects non-Java files inside the source authority root, builds the milestone manifest, exactly reproduces it, builds the source-only publication bundle, verifies every indexed file/provenance hash and exported source-tree authority, and uploads the verified result as an Actions artifact.
+
+The uploaded artifact layout is:
+
+```text
+source-m1/
+  SOURCE-MILESTONE.json
+  publication/
+    SOURCE-MILESTONE.json
+    BUNDLE.json
+    src/**/*.java
+    provenance/*.json
+  verification/
+    SOURCE-MILESTONE-VERIFICATION.json
+    SOURCE-BUNDLE-VERIFICATION.json
+```
+
+The workflow does **not** create, push to, or otherwise populate `Trexzo/SpawnPK-Client-Source`. Publication remains a separate action that is forbidden until the milestone and bundle verification both pass.
+
+## Bundle verification
+
+`spk-source-milestone verify-bundle` independently verifies an already-built publication bundle. It recomputes the canonical Java source-tree authority, requires the indexed file set to match exactly, verifies every indexed file SHA-256, verifies the provenance index, regenerates `SOURCE-PROVENANCE.json` from the embedded milestone, rejects unindexed or binary files, and optionally requires an external milestone manifest to match the embedded manifest exactly.
+
+Bundle verification reports use:
+
+- kind: `source_publication_bundle_verification`
+- ID prefix: `SRCBUNDLEVERIFY_`
+
+Publication bundle source files are emitted with canonical LF line endings and JSON metadata is emitted as deterministic UTF-8/LF bytes so the exported authority is stable across Windows and Linux.
