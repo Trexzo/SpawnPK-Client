@@ -50,12 +50,16 @@ def main(argv: list[str] | None = None) -> int:
         f"{summary['collision_node_count']}"
     )
     print(
+        "root_collision_node_count="
+        f"{summary['root_collision_node_count']}"
+    )
+    print(
         "mapped_class_identity_count="
         f"{summary['mapped_class_identity_count']}"
     )
     print(
-        "nested_class_count="
-        f"{summary['nested_class_count']}"
+        "mapped_nested_name_count="
+        f"{summary['mapped_nested_name_count']}"
     )
     print(
         "package_descendant_class_count="
