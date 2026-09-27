@@ -10,6 +10,7 @@ from spk_recovery.source_digest import source_tree_digest
 from spk_recovery.source_milestone import (
     SourceMilestoneError,
     build_source_milestone_manifest,
+    build_source_provenance_document,
     build_source_publication_bundle,
     verify_source_milestone_manifest,
 )
@@ -279,6 +280,62 @@ class SourceMilestoneTests(unittest.TestCase):
                     provenance_documents={},
                 )
 
+    def test_provenance_document_is_deterministic_and_explicit(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+
+            first = build_source_provenance_document(
+                manifest
+            )
+            second = build_source_provenance_document(
+                manifest
+            )
+
+            self.assertEqual(first, second)
+            self.assertTrue(
+                first["provenance_id"].startswith("SRCPROV_")
+            )
+            self.assertEqual(
+                first["authority"]["commit"],
+                "f" * 40,
+            )
+            self.assertEqual(
+                first["semantic_authority"]["review_ids"],
+                [
+                    "SEMREVIEW_CLASS",
+                    "SEMREVIEW_MEMBER",
+                ],
+            )
+            self.assertEqual(
+                first["source_authority"]["tree_sha256"],
+                fixture["source_tree_sha256"],
+            )
+            self.assertIn(
+                "does not claim",
+                first["semantic_name_statement"],
+            )
+
+    def test_bundle_refuses_provenance_override(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+
+            with self.assertRaisesRegex(
+                SourceMilestoneError,
+                "cannot be overridden",
+            ):
+                build_source_publication_bundle(
+                    manifest,
+                    source,
+                    Path(td) / "bundle",
+                    provenance_documents={
+                        "SOURCE-PROVENANCE.json": {},
+                    },
+                )
+
     def test_source_only_bundle_is_deterministic_and_excludes_binary(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -323,6 +380,24 @@ class SourceMilestoneTests(unittest.TestCase):
                     / "provenance"
                     / "recovery-release.json"
                 ).is_file()
+            )
+            provenance_path = (
+                root
+                / "bundle"
+                / "provenance"
+                / "SOURCE-PROVENANCE.json"
+            )
+            self.assertTrue(provenance_path.is_file())
+            provenance = json.loads(
+                provenance_path.read_text(encoding="utf-8")
+            )
+            self.assertEqual(
+                provenance["milestone_id"],
+                manifest["milestone_id"],
+            )
+            self.assertIn(
+                "SOURCE-PROVENANCE.json",
+                bundle["provenance_documents"],
             )
 
     def test_wrong_build_is_never_publishable(self):
