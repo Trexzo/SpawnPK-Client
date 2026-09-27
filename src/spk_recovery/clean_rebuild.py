@@ -395,33 +395,6 @@ def _clean_project_rebuild_legacy(
         dependency_jar,
     )
 
-    alias_plan_source = "explicit"
-    if private_namespace_alias_plan is None:
-        if not auto_namespace_alias:
-            raise CleanRebuildError(
-                "namespace virtualization requires an explicit alias plan "
-                "or auto namespace alias mode"
-            )
-        try:
-            private_namespace_alias_plan = build_namespace_alias_plan(
-                dependency_jar,
-                include_identifiers=True,
-            )
-        except NamespaceAliasPlanError as exc:
-            raise CleanRebuildError(str(exc)) from exc
-
-        mapped = int(
-            private_namespace_alias_plan.get("summary", {}).get(
-                "mapped_class_identity_count",
-                0,
-            )
-        )
-        if mapped <= 0:
-            raise CleanRebuildError(
-                "auto namespace alias mode found no class/package collisions"
-            )
-        alias_plan_source = "auto_dependency_capsule"
-
     expected = _expected_project_classes(
         readable_jar,
         prefixes,
@@ -754,6 +727,34 @@ def _clean_project_rebuild_virtualized(
         prefixes,
         dependency_jar,
     )
+
+    alias_plan_source = "explicit"
+    if private_namespace_alias_plan is None:
+        if not auto_namespace_alias:
+            raise CleanRebuildError(
+                "namespace virtualization requires an explicit alias plan "
+                "or auto namespace alias mode"
+            )
+        try:
+            private_namespace_alias_plan = build_namespace_alias_plan(
+                dependency_jar,
+                include_identifiers=True,
+            )
+        except NamespaceAliasPlanError as exc:
+            raise CleanRebuildError(str(exc)) from exc
+
+        mapped = int(
+            private_namespace_alias_plan.get("summary", {}).get(
+                "mapped_class_identity_count",
+                0,
+            )
+        )
+        if mapped <= 0:
+            raise CleanRebuildError(
+                "auto namespace alias mode found no class/package collisions"
+            )
+        alias_plan_source = "auto_dependency_capsule"
+
     expected = _expected_project_classes(
         readable_jar,
         prefixes,
