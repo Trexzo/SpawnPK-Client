@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_D778A6CE6774A91AA5F9",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_EB69E272A9435FDACD3F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000578",
+      "owner_logical_id": "CLIENT_CLASS_000578",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aC",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GameOptionsInterface",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_options_surface",
+          "detail": "Exact v308 owns the client options controls for brightness, resizable mode, split private chat, x10 hits, HP bar, hit marks, roofs, fog, left-click attack/magic, shift dropping, particles, broadcasts, combat overlay, pet visibility and other presentation/gameplay toggles."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "The class builds the options widget family from /Options/SPRITE, /options/SPRITE, /options2/SPRITE and options/sprite resources."
+        },
+        {
+          "family": "exact_toggle_contract",
+          "detail": "Its labels and actions are paired as direct option mutations such as Toggle-run, Toggle fog, Toggle roofs, Toggle particles, Toggle broadcasts, Toggle combat overlay and Prayer adjustments."
+        }
+      ],
+      "note": "Descriptive exact-behavior name for the full SpawnPK game-options interface builder; confidence 0.998."
+    }
+  ],
+  "unresolved": []
+}
