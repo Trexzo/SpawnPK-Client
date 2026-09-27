@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BankInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_ui_identity",
+          "detail": "Exact v308 builds the bank surface with the title \"The Bank of SpawnPK\" and bank/BANK plus bank/TAB resources."
+        },
+        {
+          "family": "exact_bank_controls",
+          "detail": "The class wires bank-specific controls including Search for item, Swap Withdraw Mode, Toggle note, carried/worn-item deposit, pet deposit, potion decanting, repair, and bank-tab selection."
+        },
+        {
+          "family": "exact_client_search_flow",
+          "detail": "Its static Client helper enters bank item-search mode and installs the exact prompt \"Enter name of item to search\"."
+        }
+      ],
+      "note": "Descriptive semantic recovery from the complete exact-v308 bank presentation surface; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aD",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodFountainPerkTreeInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_ui_identity",
+          "detail": "Exact v308 renders the title \"<img=186> Blood Fountain Perk Tree <img=186>\" and uses fountain/sprite resources."
+        },
+        {
+          "family": "exact_perk_domain",
+          "detail": "The class embeds the Blood Fountain perk catalog, including Blood vengeance, Blood whip, Bloodlust, Archaeologist, Bloodthirsty, Vampiric, Treasure hunter, Mercenary, Killjoy and related tiered perks."
+        },
+        {
+          "family": "exact_actions",
+          "detail": "The surface exposes explicit Purchase and Close actions and preserves selected-perk presentation text."
+        }
+      ],
+      "note": "Descriptive semantic recovery from the exact-v308 Blood Fountain perk-tree presentation; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aL",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaidingPartySetupInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_ui_identity",
+          "detail": "Exact v308 renders the literal \"Raiding Party Set-up\" and party controls for Start raid, Invite member, Remove member, Re-invite last players and Leave/disband party."
+        },
+        {
+          "family": "exact_raid_domain",
+          "detail": "The surface explicitly supports Chambers of Xeric and Theatre of Blood with Normal, Adept, Expert, Master and Grandmaster difficulty choices."
+        },
+        {
+          "family": "exact_party_state",
+          "detail": "The class presents selected raid, raid type/difficulty, party membership, requirements, possible drops/rewards and refresh state."
+        }
+      ],
+      "note": "Descriptive semantic recovery from the exact-v308 raid-party setup surface; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BossTeleportInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_ui_identity",
+          "detail": "Exact v308 renders \"Boss Teleportation Network\" / \"Bosses\" and thirteen selectable Teleport entries."
+        },
+        {
+          "family": "exact_boss_surface",
+          "detail": "The interface includes Name of Boss, Combat level, Combat zone, Wilderness level, Possible drops and rewards, Available achievements and View full drop table fields."
+        },
+        {
+          "family": "exact_actions",
+          "detail": "The surface exposes Select this teleport and Teleport to boss actions with teleport/SPRITE resources."
+        }
+      ],
+      "note": "Descriptive semantic recovery from the exact-v308 boss teleport presentation; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}
