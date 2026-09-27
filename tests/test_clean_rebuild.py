@@ -11,6 +11,7 @@ import zipfile
 
 from spk_recovery.clean_rebuild import (
     CleanRebuildError,
+    _clean_project_rebuild_legacy,
     _remap_javac_diagnostics,
     _stage_javac_sources,
     clean_project_rebuild,
@@ -229,6 +230,52 @@ class CleanRebuildTests(unittest.TestCase):
             readable_manifest,
             authority,
         )
+
+    def test_no_alias_plan_is_exact_legacy_path(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                source,
+                readable,
+                recovered,
+                readiness,
+                readable_manifest,
+                authority,
+            ) = self._fixture(root)
+
+            legacy = _clean_project_rebuild_legacy(
+                recovered,
+                readiness,
+                readable_manifest,
+                readable,
+                authority,
+                source,
+                out_dir=root / "legacy",
+                source_prefixes=["rs/"],
+            )
+            wrapped = clean_project_rebuild(
+                recovered,
+                readiness,
+                readable_manifest,
+                readable,
+                authority,
+                source,
+                out_dir=root / "wrapped",
+                source_prefixes=["rs/"],
+            )
+
+            self.assertEqual(legacy, wrapped)
+            self.assertNotIn("compile_transport", wrapped)
+
+            for name in (
+                "dependency-capsule.jar",
+                "rebuilt-client.jar",
+                "clean-rebuild.json",
+            ):
+                self.assertEqual(
+                    _sha(root / "legacy" / name),
+                    _sha(root / "wrapped" / name),
+                )
 
     def test_project_rebuild_has_zero_project_binary_fallback(self):
         with tempfile.TemporaryDirectory() as td:
