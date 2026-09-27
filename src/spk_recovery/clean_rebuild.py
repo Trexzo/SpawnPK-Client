@@ -665,12 +665,6 @@ def _clean_project_rebuild_virtualized(
     source_prefixes: list[str] | None = None,
     private_diagnostic_report_out: Path | None = None,
 ) -> dict[str, Any]:
-    if private_diagnostic_report_out is not None:
-        raise CleanRebuildError(
-            "private javac diagnostic export is not supported by the "
-            "namespace-virtualized clean-build path"
-        )
-
     source_root = source_root.resolve()
     readable_jar = readable_jar.resolve()
 
@@ -754,41 +748,57 @@ def _clean_project_rebuild_virtualized(
                 compile_root,
                 javac_command=javac_probe["resolved_path"],
                 release=int(release),
+                report_compile_failure=True,
+                private_diagnostic_report_out=(
+                    private_diagnostic_report_out
+                ),
             )
     except NamespaceVirtualizedCompileError as exc:
         raise CleanRebuildError(str(exc)) from exc
 
-    restored_root = compile_root / "restored-classes"
-    generated = _generated_classes(restored_root)
-    generated_set = set(generated)
-    missing = sorted(expected - generated_set)
-    unexpected = sorted(generated_set - expected)
-
-    status = "class_set_mismatch"
+    virtualized_status = virtualized.get("status", "complete")
+    generated: dict[str, bytes] = {}
+    missing: list[str] = []
+    unexpected: list[str] = []
     rebuilt_sha: str | None = None
     rebuilt_index_summary: dict[str, Any] | None = None
 
-    if not missing and not unexpected:
-        rebuilt_jar = out_dir / "rebuilt-client.jar"
-        _rebuild_jar(
-            readable_jar,
-            generated,
-            prefixes,
-            rebuilt_jar,
-        )
-        rebuilt_sha = _sha256_file(rebuilt_jar)
-        rebuilt_index = index_jar(rebuilt_jar)
-        rebuilt_index_summary = rebuilt_index["summary"]
-        if (
-            rebuilt_index["summary"][
-                "class_parse_error_count"
-            ]
-            != 0
-        ):
-            raise CleanRebuildError(
-                "rebuilt client contains class parse errors"
+    if virtualized_status == "compile_failed":
+        status = "compile_failed"
+    elif virtualized_status == "complete":
+        restored_root = compile_root / "restored-classes"
+        generated = _generated_classes(restored_root)
+        generated_set = set(generated)
+        missing = sorted(expected - generated_set)
+        unexpected = sorted(generated_set - expected)
+
+        status = "class_set_mismatch"
+        if not missing and not unexpected:
+            rebuilt_jar = out_dir / "rebuilt-client.jar"
+            _rebuild_jar(
+                readable_jar,
+                generated,
+                prefixes,
+                rebuilt_jar,
             )
-        status = "complete"
+            rebuilt_sha = _sha256_file(rebuilt_jar)
+            rebuilt_index = index_jar(rebuilt_jar)
+            rebuilt_index_summary = rebuilt_index["summary"]
+            if (
+                rebuilt_index["summary"][
+                    "class_parse_error_count"
+                ]
+                != 0
+            ):
+                raise CleanRebuildError(
+                    "rebuilt client contains class parse errors"
+                )
+            status = "complete"
+    else:
+        raise CleanRebuildError(
+            "unsupported namespace-virtualized compile status: "
+            + repr(virtualized_status)
+        )
 
     canonical_after = source_tree_digest(source_root)[0]
     if canonical_after != canonical_before:
@@ -854,7 +864,9 @@ def _clean_project_rebuild_virtualized(
         "compiler": {
             "javac": javac_probe,
             "target_release": release,
-            "diagnostic_classification": None,
+            "diagnostic_classification": virtualized[
+                "compiler"
+            ].get("diagnostic_classification"),
         },
         "dependency_capsule": {
             "path": "dependency-capsule.jar",
@@ -883,8 +895,10 @@ def _clean_project_rebuild_virtualized(
         "compile_transport": {
             "mode": "namespace_virtualized",
             "opt_in": True,
+            "status": virtualized_status,
             "namespace_compile_id": virtualized["compile_id"],
             "alias_plan_id": virtualized["alias_plan_id"],
+            "compiler": virtualized["compiler"],
             "compile_only_alias_dependency": virtualized[
                 "compile_only_alias_dependency"
             ],
@@ -901,10 +915,18 @@ def _clean_project_rebuild_virtualized(
         "clean_project_build": status == "complete",
         "all_dependencies_rebuilt_from_source": False,
         "note": (
-            "Project classes are rebuilt from recovered source with zero "
-            "project-binary fallback. Namespace aliases are compile-only; "
-            "the final runtime JAR retains original readable dependency "
-            "bytes and restored original JVM identities."
+            (
+                "Namespace virtualization completed compilation. Project "
+                "classes are rebuilt with zero project-binary fallback; "
+                "the runtime JAR retains original dependency bytes and "
+                "restored original JVM identities."
+            )
+            if status == "complete"
+            else (
+                "Namespace virtualization preserved the redacted javac "
+                "frontier without publishing alias runtime classes. No "
+                "rebuilt runtime JAR is emitted until compilation completes."
+            )
         ),
     }
     (out_dir / "clean-rebuild.json").write_text(
