@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_D8FB37267F2D64EE5859",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_0D0A3735ACE51F124429",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001107",
+      "owner_logical_id": "CLIENT_CLASS_001107",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/v/a$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AudioPan",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "Exact v308 rs/v/a$a is an enum whose three surviving constants are LEFT, RIGHT and NORMAL."
+        },
+        {
+          "family": "exact_pan_control",
+          "detail": "R66 Signlink compares this enum immediately after obtaining Java Sound FloatControl.Type.PAN; RIGHT sets +1.0f, LEFT sets -1.0f, and NORMAL leaves the neutral value unchanged."
+        },
+        {
+          "family": "exact_audio_consumer",
+          "detail": "The enum has no unrelated exact-v308 consumer; its observed use is the stereo pan control in Signlink audio playback."
+        }
+      ],
+      "note": "AudioPan is descriptive exact-behavior recovery fixed by preserved LEFT/RIGHT/NORMAL constants and FloatControl.Type.PAN consumption."
+    }
+  ],
+  "unresolved": []
+}
