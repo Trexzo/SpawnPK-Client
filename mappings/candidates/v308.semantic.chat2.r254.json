@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/tools/TextPopupWindow$b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HorizontallyScrollableTextPane",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_swing_supertype",
+          "detail": "Exact v308 class extends JTextPane and is instantiated exclusively as TextPopupWindow's central text component."
+        },
+        {
+          "family": "exact_scroll_behavior",
+          "detail": "getScrollableTracksViewportWidth() compares the UI preferred width with the parent viewport width and returns false when content is wider, enabling horizontal scrolling instead of forcing viewport-width tracking."
+        },
+        {
+          "family": "exact_preferred_size_behavior",
+          "detail": "getPreferredSize() delegates directly to the TextUI preferred-size calculation, preserving content-driven horizontal extent."
+        }
+      ],
+      "note": "HorizontallyScrollableTextPane is a descriptive exact-behavior recovery for rs/tools/TextPopupWindow$b; no verbatim original source identifier is asserted."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/tools/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TextAppender",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_interface_contract",
+          "detail": "Exact v308 interface has one operation accepting Document, SimpleAttributeSet and String and is the strategy invoked by TextPopupWindow whenever text is appended."
+        },
+        {
+          "family": "exact_strategy_implementations",
+          "detail": "The interface has the exact rs/tools/b plain implementation and rs/tools/c session-log formatting implementation."
+        }
+      ],
+      "note": "TextAppender is a descriptive exact-behavior recovery for rs/tools/a; no verbatim original source identifier is asserted."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/tools/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PlainTextAppender",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_append_behavior",
+          "detail": "Exact v308 implementation inserts the supplied String at Document.getLength() with the supplied attribute set and performs no other transformation."
+        },
+        {
+          "family": "exact_default_strategy",
+          "detail": "TextPopupWindow's static initializer constructs this class as its default TextAppender strategy."
+        }
+      ],
+      "note": "PlainTextAppender is a descriptive exact-behavior recovery for rs/tools/b; no verbatim original source identifier is asserted."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/tools/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SessionLogTextAppender",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_log_literals",
+          "detail": "Exact v308 implementation branches on surviving session-log text including 'Logged in', 'IP address', 'Unregistered' and emits a highlighted 'Logout' marker."
+        },
+        {
+          "family": "exact_formatting_behavior",
+          "detail": "It applies bold/background Swing attributes, alternates login colors, parses IP-address text, appends formatted content, and resets state after unregistration."
+        },
+        {
+          "family": "exact_strategy_role",
+          "detail": "It implements the same TextAppender contract consumed by TextPopupWindow rather than owning a separate rendering surface."
+        }
+      ],
+      "note": "SessionLogTextAppender is a descriptive exact-behavior recovery for rs/tools/c; no verbatim original source identifier is asserted."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/tools/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TextSearchToggleAction",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_key_binding",
+          "detail": "TextPopupWindow binds Ctrl+F to this exact AbstractAction through the text pane InputMap."
+        },
+        {
+          "family": "exact_toggle_behavior",
+          "detail": "The action creates and shows the reviewed TextSearchWindow when absent/hidden and otherwise invokes its hide/toggle method."
+        }
+      ],
+      "note": "TextSearchToggleAction is a descriptive exact-behavior recovery for rs/tools/d; no verbatim original source identifier is asserted."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/tools/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CaretVisibilityFocusListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_focus_behavior",
+          "detail": "Exact v308 FocusAdapter is registered on TextPopupWindow's text pane and its only focusGained action calls getCaret().setVisible(true)."
+        }
+      ],
+      "note": "CaretVisibilityFocusListener is a descriptive exact-behavior recovery for rs/tools/e; no verbatim original source identifier is asserted."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/tools/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TextSearchCloseAction",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_action_behavior",
+          "detail": "Exact v308 AbstractAction owns one TextSearchWindow reference and its only actionPerformed operation disposes that window."
+        }
+      ],
+      "note": "TextSearchCloseAction is a descriptive exact-behavior recovery for rs/tools/f; no verbatim original source identifier is asserted."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/tools/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TextSearchNextAction",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_search_behavior",
+          "detail": "Exact v308 ActionListener reads the TextSearchWindow query, lowercases it, scans the TextPopupWindow document from the maintained search offset, scrolls the match into view and selects the matching range."
+        },
+        {
+          "family": "exact_wrap_behavior",
+          "detail": "When the current offset plus query length exceeds document length, the listener resets the search offset to zero before continuing, implementing find-next wraparound."
+        }
+      ],
+      "note": "TextSearchNextAction is a descriptive exact-behavior recovery for rs/tools/g; no verbatim original source identifier is asserted."
+    }
+  ],
+  "conflicts": []
+}
