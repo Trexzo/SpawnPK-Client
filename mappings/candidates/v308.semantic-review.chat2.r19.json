@@ -5,7 +5,7 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 12,
-  "review_id": "SEMREVIEW_F6863DB52D922162613D",
+  "review_id": "SEMREVIEW_402B4C2AA42205916457",
   "proposals": [
     {
       "proposal_id": "SEMPROP_178B95A6670D55BE583B",
@@ -294,7 +294,7 @@
       "note": "Name is directly preserved in exact-v308 bytecode."
     },
     {
-      "proposal_id": "SEMPROP_B3E8EC6F4BED0BC5D29C",
+      "proposal_id": "SEMPROP_A542C4D21CEE7A35BDBB",
       "target_kind": "class",
       "stable_id": "CLIENT_CLASS_000912",
       "owner_logical_id": "CLIENT_CLASS_000912",
@@ -305,12 +305,12 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "JGroundMarkerPoint",
+      "proposed_name": "GroundMarkerPoint",
       "confidence": 0.999,
       "evidence": [
         {
           "family": "exact_literal_role",
-          "detail": "Surviving self-identifying toString is \"JGroundMarkerPoint(regionId=…, regionX=…, regionY=…, z=…, color=…, label=…)\"."
+          "detail": "Surviving self-identifying toString is \"GroundMarkerPoint(regionId=…, regionX=…, regionY=…, z=…, color=…, label=…)\"."
         },
         {
           "family": "exact_structural_role",
