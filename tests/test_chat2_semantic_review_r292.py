@@ -30,7 +30,7 @@ class Chat2SemanticReviewR292Tests(unittest.TestCase):
         expected=_load("mappings/candidates/v308.semantic-review.chat2.r292.json")
         self.assertEqual(actual["proposal_count"],5)
         self.assertEqual(actual["unresolved"],[])
-        self.assertEqual(actual["review_id"],"SEMREVIEW_B4B0F8734AB3BC4D6FCE")
+        self.assertEqual(actual["review_id"],"SEMREVIEW_8BB68EEC0B2BF650048C")
         self.assertEqual(actual,expected)
 
     def test_r292_expected_stable_ids(self):
@@ -40,7 +40,7 @@ class Chat2SemanticReviewR292Tests(unittest.TestCase):
             "EventActivityViewerEntry":"CLIENT_CLASS_000556",
             "AdventureBookTaskTargetType":"CLIENT_CLASS_000641",
             "InboxMessageReadStatus":"CLIENT_CLASS_000645",
-            "AdventureBookRewardClaimStatus":"CLIENT_CLASS_000647",
+            "MailAttachmentClaimStatus":"CLIENT_CLASS_000647",
         })
 
     def test_r292_names_and_owners_do_not_overlap_any_prior_review(self):

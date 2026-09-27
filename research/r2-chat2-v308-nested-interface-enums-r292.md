@@ -10,8 +10,8 @@ Exact client authority:
 - `rs/n/c/J$a` -> `CLIENT_CLASS_000556` -> `EventActivityViewerEntry`
 - `rs/n/c/c$a` -> `CLIENT_CLASS_000641` -> `AdventureBookTaskTargetType`
 - `rs/n/c/c/b$a` -> `CLIENT_CLASS_000645` -> `InboxMessageReadStatus`
-- `rs/n/c/c/c$a` -> `CLIENT_CLASS_000647` -> `AdventureBookRewardClaimStatus`
-- review: `SEMREVIEW_B4B0F8734AB3BC4D6FCE`
+- `rs/n/c/c/c$a` -> `CLIENT_CLASS_000647` -> `MailAttachmentClaimStatus`
+- review: `SEMREVIEW_8BB68EEC0B2BF650048C`
 - unresolved: **0**
 - member proposals: **0**
 
@@ -22,7 +22,7 @@ The enum constant names survive unobfuscated in exact v308:
 - confirmation type: `DEFAULT`, `DESTROY_ITEM`, `YES_NO`
 - Adventure Book target type: `ITEM`, `NPC_HEAD`, `OBJ`
 - inbox read state: `UNREAD`, `READ`
-- Adventure Book reward claim state: `EMPTY`, `UNCLAIMED`, `CLAIMED`
+- mail attachment claim state: `EMPTY`, `UNCLAIMED`, `CLAIMED`
 
 The Event Activity Viewer entry is not an enum, but its parent join is exact: it stores the activity label/icon plus duration/creation time and formats the live remaining countdown consumed by the already-reviewed Event Activity Viewer.
 

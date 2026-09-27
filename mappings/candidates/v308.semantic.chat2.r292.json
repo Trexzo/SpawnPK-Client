@@ -130,7 +130,7 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "AdventureBookRewardClaimStatus",
+      "proposed_name": "MailAttachmentClaimStatus",
       "confidence": 1,
       "evidence": [
         {
@@ -138,8 +138,8 @@
           "detail": "The exact-v308 enum constants are literally EMPTY, UNCLAIMED and CLAIMED."
         },
         {
-          "family": "exact_claim_surface",
-          "detail": "The enclosing Adventure Book reward helper switches on the enum to toggle claim widgets and exact claimed text '@gre@Items have been claimed!'."
+          "family": "exact_mail_attachment_surface",
+          "detail": "The enclosing rs/n/c/c/c controller toggles mail attachment/reward widgets and exact claimed text '@gre@Items have been claimed!'."
         }
       ],
       "note": "Descriptive semantic recovery from exact-v308 preserved enum constants and parent-interface behavior; original stripped source identifier is not claimed."

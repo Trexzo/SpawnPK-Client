@@ -5,7 +5,7 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 5,
-  "review_id": "SEMREVIEW_B4B0F8734AB3BC4D6FCE",
+  "review_id": "SEMREVIEW_8BB68EEC0B2BF650048C",
   "proposals": [
     {
       "proposal_id": "SEMPROP_02C85900204D4B5BA922",
@@ -29,6 +29,32 @@
         {
           "family": "exact_parent_dispatch",
           "detail": "AdventureBookInterface switches on this enum while materializing chapter/task targets and builds the corresponding item, NPC-head or object presentation."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 preserved enum constants and parent-interface behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_2E486A01EEED0779CA56",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000647",
+      "owner_logical_id": "CLIENT_CLASS_000647",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/c/c$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MailAttachmentClaimStatus",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "preserved_enum_constants",
+          "detail": "The exact-v308 enum constants are literally EMPTY, UNCLAIMED and CLAIMED."
+        },
+        {
+          "family": "exact_mail_attachment_surface",
+          "detail": "The enclosing rs/n/c/c/c controller toggles mail attachment/reward widgets and exact claimed text '@gre@Items have been claimed!'."
         }
       ],
       "note": "Descriptive semantic recovery from exact-v308 preserved enum constants and parent-interface behavior; original stripped source identifier is not claimed."
@@ -85,32 +111,6 @@
         {
           "family": "parent_identity",
           "detail": "The enclosing rs/n/c/J is already reviewed as EventActivityViewerInterface and owns the list refreshed by the retained EventActivityViewerRefreshTask."
-        }
-      ],
-      "note": "Descriptive semantic recovery from exact-v308 preserved enum constants and parent-interface behavior; original stripped source identifier is not claimed."
-    },
-    {
-      "proposal_id": "SEMPROP_F3B95C9756A8A460B7FE",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000647",
-      "owner_logical_id": "CLIENT_CLASS_000647",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/n/c/c/c$a",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "AdventureBookRewardClaimStatus",
-      "confidence": 1,
-      "evidence": [
-        {
-          "family": "preserved_enum_constants",
-          "detail": "The exact-v308 enum constants are literally EMPTY, UNCLAIMED and CLAIMED."
-        },
-        {
-          "family": "exact_claim_surface",
-          "detail": "The enclosing Adventure Book reward helper switches on the enum to toggle claim widgets and exact claimed text '@gre@Items have been claimed!'."
         }
       ],
       "note": "Descriptive semantic recovery from exact-v308 preserved enum constants and parent-interface behavior; original stripped source identifier is not claimed."
