@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GameHudRenderer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_post_scene_handoff",
+          "detail": "R303 GameSceneRenderer invokes rs/l/b/b.a(Client) after world-scene/camera rendering, fixing rs/l/b/b as the post-scene HUD/gameframe composition phase."
+        },
+        {
+          "family": "exact_interface_composition",
+          "detail": "The class repeatedly calls Client.a(int,int,rs/n/e,int), whose R302 authority delegates into InterfaceRenderer, to place active root/gameframe interfaces at resolved screen positions."
+        },
+        {
+          "family": "exact_hud_diagnostics",
+          "detail": "It renders exact client HUD/debug strings including 'RUNTIME INFORMATION', 'COORDINATE INFORMATION', FPS, memory, ping, mouse coordinates, region id and interface/item debug state."
+        },
+        {
+          "family": "exact_status_overlays",
+          "detail": "It renders system-update warning/countdown presentation, tournament/lobby status such as 'Waiting for more players' and 'Tournament starts in:', plus other live gameframe status surfaces."
+        },
+        {
+          "family": "exact_transient_presentation_join",
+          "detail": "The same post-scene pass advances exact presentation managers including hit-drop/pop-up state and the retained scrolling/sliding text manager before returning to GameSceneRenderer."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 post-scene HUD/gameframe composition behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}
