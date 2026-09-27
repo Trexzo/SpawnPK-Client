@@ -45,6 +45,15 @@ def main(argv: list[str] | None = None) -> int:
             "namespace virtualization; default clean rebuild remains legacy"
         ),
     )
+    p.add_argument(
+        "--auto-namespace-alias",
+        action="store_true",
+        help=(
+            "explicitly derive a private compile-only namespace alias plan "
+            "from the verified dependency capsule; mutually exclusive with "
+            "--namespace-alias-plan"
+        ),
+    )
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args(argv)
 
@@ -67,6 +76,7 @@ def main(argv: list[str] | None = None) -> int:
                 if args.namespace_alias_plan is not None
                 else None
             ),
+            auto_namespace_alias=args.auto_namespace_alias,
         )
     except (
         CleanRebuildError,
@@ -165,6 +175,10 @@ def main(argv: list[str] | None = None) -> int:
         print(
             "namespace_alias_plan_id="
             f"{transport['alias_plan_id']}"
+        )
+        print(
+            "namespace_alias_plan_source="
+            f"{transport['alias_plan_source']}"
         )
         print(
             "runtime_alias_dependency_allowed="
