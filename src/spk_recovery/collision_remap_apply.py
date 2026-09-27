@@ -324,14 +324,18 @@ def _remaining_old_references(
                         f"{entry}: verification parse failed: {exc}"
                     ) from exc
 
-                if parsed.name in old_names:
-                    rows.append(
-                        {
-                            "entry": entry,
-                            "kind": "class_identity",
-                            "old_internal_name": parsed.name,
-                        }
-                    )
+                for old in sorted(old_names):
+                    if (
+                        parsed.name == old
+                        or parsed.name.startswith(old + "$")
+                    ):
+                        rows.append(
+                            {
+                                "entry": entry,
+                                "kind": "class_identity",
+                                "old_internal_name": old,
+                            }
+                        )
 
                 refs = set(profile.get("class_references", []))
                 refs.update(
@@ -366,6 +370,25 @@ def _remaining_old_references(
                             "old_internal_name": old,
                         }
                     )
+
+                for utf8_value in parsed.utf8_strings:
+                    raw = utf8_value.encode(
+                        "utf-8",
+                        errors="surrogatepass",
+                    )
+                    rewritten, _events = _rewrite_utf8_value(
+                        raw,
+                        mapping,
+                    )
+                    if rewritten != raw:
+                        rows.append(
+                            {
+                                "entry": entry,
+                                "kind": "utf8_type_token",
+                                "old_internal_name": "redacted",
+                            }
+                        )
+                        break
     except zipfile.BadZipFile as exc:
         raise CollisionRemapApplyError(
             f"invalid output JAR: {jar_path}"
@@ -378,6 +401,8 @@ def apply_collision_remap_plan(
     private_plan_path: Path,
     input_jar: Path,
     output_jar: Path,
+    *,
+    include_identifiers: bool = False,
 ) -> dict[str, Any]:
     private_plan_path = private_plan_path.resolve()
     input_jar = input_jar.resolve()
@@ -502,12 +527,32 @@ def apply_collision_remap_plan(
             "output JAR missing requested remap target"
         )
 
+    public_changed_classes = [
+        {
+            "change_id": f"JCOLLISION_CHANGE_{index:03d}",
+            "old_sha256": row["old_sha256"],
+            "new_sha256": row["new_sha256"],
+            "utf8_change_count": row["utf8_change_count"],
+            "entry_moved": row["old_entry"] != row["new_entry"],
+        }
+        for index, row in enumerate(
+            sorted(
+                changed_classes,
+                key=lambda row: (
+                    row["old_entry"],
+                    row["new_entry"],
+                ),
+            ),
+            start=1,
+        )
+    ]
+
     material = {
         "remap_plan_id": plan["remap_plan_id"],
         "input_jar_sha256": _sha256_file(input_jar),
         "output_jar_sha256": _sha256_file(output_jar),
         "mapping_count": len(mapping),
-        "changed_classes": changed_classes,
+        "changed_classes": public_changed_classes,
     }
 
     return {
@@ -536,7 +581,12 @@ def apply_collision_remap_plan(
             "remaining_old_reference_count": 0,
             "verified_target_count": len(mapping),
         },
-        "changed_classes": changed_classes,
+        "changed_classes": (
+            changed_classes
+            if include_identifiers
+            else public_changed_classes
+        ),
+        "identifiers_included": include_identifiers,
     }
 
 
