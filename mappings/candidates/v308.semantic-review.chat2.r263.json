@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_1B80D625D128E2E2276B",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_0CA264ECA40A141DE8F3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000878",
+      "owner_logical_id": "CLIENT_CLASS_000878",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/b/r",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginListPanelEventBusMultiplexer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_multiplexer_subclass",
+          "detail": "Exact v308 rs/s/b/r extends the reviewed MultiplexingPluginPanel, captures one EventBus and one PluginListPanel, and overrides only the add/remove hooks."
+        },
+        {
+          "family": "exact_eventbus_hooks",
+          "detail": "The add hook calls EventBus.register on the incoming PluginPanel and the remove hook calls EventBus.unregister on that same panel."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite PluginListPanel constructs an anonymous MultiplexingPluginPanel(this) whose onAdd registers the PluginPanel with EventBus and whose onRemove unregisters it, matching v308 exactly."
+        }
+      ],
+      "note": "PluginListPanelEventBusMultiplexer is a descriptive source-parity name for RuneLite's anonymous MultiplexingPluginPanel subclass owned by PluginListPanel."
+    },
+    {
+      "proposal_id": "SEMPROP_5287E07880AD8667649E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000876",
+      "owner_logical_id": "CLIENT_CLASS_000876",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/b/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginListItemPopupMouseListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_popup_mouse_behavior",
+          "detail": "Exact v308 rs/s/b/p extends MouseAdapter, captures one JPopupMenu and one JLabel, converts the current screen pointer to the clicked component's coordinates, and shows the popup at that exact point."
+        },
+        {
+          "family": "exact_hover_behavior",
+          "detail": "The same adapter saves the label's current foreground on mouseEntered, applies the reviewed RuneLite brand color, and restores the saved foreground on mouseExited."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite PluginListItem.addLabelPopupMenu contains the same anonymous MouseAdapter with lastForeground, pointer conversion, popup show, BRAND_ORANGE hover and restore behavior."
+        }
+      ],
+      "note": "PluginListItemPopupMouseListener is a descriptive source-parity name for the anonymous popup/hover adapter inside PluginListItem."
+    },
+    {
+      "proposal_id": "SEMPROP_FB6D3BA1B0BF7530C8FD",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000879",
+      "owner_logical_id": "CLIENT_CLASS_000879",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/b/s",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginListPanelSearchDocumentListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_search_listener_behavior",
+          "detail": "Exact v308 rs/s/b/s implements DocumentListener, captures one reviewed PluginListPanel, and insertUpdate/removeUpdate/changedUpdate all invoke the same PluginListPanel search-refresh method."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite PluginListPanel installs an anonymous DocumentListener on the search bar whose three callbacks all call onSearchBarChanged(), exactly matching v308."
+        }
+      ],
+      "note": "PluginListPanelSearchDocumentListener is a descriptive source-parity name for the anonymous search-bar DocumentListener inside PluginListPanel."
+    }
+  ],
+  "unresolved": []
+}
