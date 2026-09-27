@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -48,7 +49,15 @@ def build_source_authority_bundle(
     clean_rebuild_report: dict[str, Any],
     source_root: Path,
     out_dir: Path,
+    *,
+    authority_commit: str,
 ) -> dict[str, Any]:
+    commit = authority_commit.strip().lower()
+    if not re.fullmatch(r"[0-9a-f]{40}", commit):
+        raise SourceAuthorityBundleError(
+            "authority commit must be an exact 40-hex Git commit"
+        )
+
     source_root = source_root.resolve()
     if not source_root.is_dir():
         raise SourceAuthorityBundleError(
@@ -137,6 +146,7 @@ def build_source_authority_bundle(
 
     material = {
         "build_id": "v308",
+        "authority_commit": commit,
         "authority_sha256": authority_sha,
         "readable_manifest_id": readable_manifest.get("manifest_id"),
         "workspace_id": recovered_manifest.get("workspace_id"),
