@@ -20,6 +20,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--decompiler-sha256", required=True)
     p.add_argument("--engine", choices=["cfr", "vineflower", "procyon"], required=True)
     p.add_argument("--project-only", action="store_true")
+    p.add_argument(
+        "--collision-transform-report",
+        type=Path,
+    )
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args(argv)
 
@@ -32,6 +36,11 @@ def main(argv: list[str] | None = None) -> int:
             engine=args.engine,
             out_dir=args.out_dir,
             project_only=args.project_only,
+            collision_transform_report=(
+                _load(args.collision_transform_report)
+                if args.collision_transform_report is not None
+                else None
+            ),
         )
     except (
         SourceWorkspaceError,
@@ -48,6 +57,19 @@ def main(argv: list[str] | None = None) -> int:
     print(f"engine={manifest['engine']}")
     print(f"java_file_count={manifest['java_file_count']}")
     print(f"source_tree_sha256={manifest['source_tree_sha256']}")
+    if "collision_transform_id" in manifest:
+        print(
+            "collision_transform_id="
+            f"{manifest['collision_transform_id']}"
+        )
+        print(
+            "collision_plan_id="
+            f"{manifest['collision_plan_id']}"
+        )
+        print(
+            "base_readable_jar_sha256="
+            f"{manifest['base_readable_jar_sha256']}"
+        )
     print(f"out_dir={args.out_dir.resolve()}")
     return 0
 
