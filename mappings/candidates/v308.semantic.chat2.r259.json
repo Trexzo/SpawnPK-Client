@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/t/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TradingPostListingInteractionListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_listing_mouse_behavior",
+          "detail": "Exact v308 rs/s/t/e extends MouseAdapter, owns only one TradingPostListingPanel, and on left-button mousePressed invokes the panel's reviewed click/action path."
+        },
+        {
+          "family": "exact_listing_hover_behavior",
+          "detail": "The same adapter handles mouseEntered/mouseExited by switching the panel-owned JPanel between the exact Trading Post hover and normal theme colors."
+        },
+        {
+          "family": "exact_owner_boundary",
+          "detail": "No unrelated exact-v308 consumer survives; the adapter is constructed and retained only by TradingPostListingPanel inside the reviewed Trading Post subsystem."
+        }
+      ],
+      "note": "TradingPostListingInteractionListener is a descriptive exact-behavior name for the panel-owned click/hover adapter. It does not claim a verbatim original anonymous-class identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/t/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TradingPostSearchResultHoverListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_search_result_hover_behavior",
+          "detail": "Exact v308 rs/s/t/n extends MouseAdapter, owns one TradingPostSearchResultPanel plus its JPanel list and base Color, and changes every listed panel to the exact hover color on mouseEntered."
+        },
+        {
+          "family": "exact_cursor_behavior",
+          "detail": "On mouseEntered it sets the reviewed search-result panel cursor to HAND_CURSOR (12); on mouseExited it restores every listed JPanel to the captured base color and resets DEFAULT_CURSOR (0)."
+        },
+        {
+          "family": "exact_owner_boundary",
+          "detail": "mouseReleased is intentionally empty and no unrelated exact-v308 consumer survives; the class is a bounded hover/cursor adapter for TradingPostSearchResultPanel."
+        }
+      ],
+      "note": "TradingPostSearchResultHoverListener is a descriptive exact-behavior name. It does not claim a verbatim original anonymous-class identifier."
+    }
+  ],
+  "conflicts": []
+}
