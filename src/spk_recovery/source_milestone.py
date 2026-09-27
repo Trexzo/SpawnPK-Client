@@ -141,6 +141,16 @@ def build_source_milestone_manifest(
 
     blockers: list[dict[str, str]] = []
 
+    build_id = str(
+        release_manifest.get("build_id") or ""
+    )
+    if build_id != "v308":
+        _block(
+            blockers,
+            gate="exact_authority",
+            reason="source_milestone_requires_exact_v308",
+        )
+
     authority_sha = str(
         release_manifest.get("authority_sha256") or ""
     ).lower()
@@ -341,7 +351,7 @@ def build_source_milestone_manifest(
         "authority_repository": authority_repository,
         "authority_commit": authority_commit,
         "authority_client_sha256": authority_sha,
-        "build_id": release_manifest.get("build_id"),
+        "build_id": build_id,
         "semantic_namespace_id": namespace_id,
         "class_plan_digest": class_plan_digest,
         "member_plan_digest": member_plan_digest,
