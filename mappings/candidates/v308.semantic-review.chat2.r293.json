@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_F8CEB5576A69E962C07D",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_7998168CB2FD0A0A3F9E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000646",
+      "owner_logical_id": "CLIENT_CLASS_000646",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/c/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MailAttachmentClaimController",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_claim_state_machine",
+          "detail": "The controller switches on EMPTY, UNCLAIMED and CLAIMED states from the retained MailAttachmentClaimStatus enum."
+        },
+        {
+          "family": "exact_claimed_text",
+          "detail": "CLAIMED state writes the exact text '@gre@Items have been claimed!' and toggles the corresponding attachment/claim widgets."
+        },
+        {
+          "family": "exact_mail_widget_scope",
+          "detail": "All mutations are confined to the same 321xx mail attachment/reward widget group used by MailInboxInterface."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 mail/inbox behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_916A78E62D662A8D372F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000644",
+      "owner_logical_id": "CLIENT_CLASS_000644",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/c/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InboxMessageListController",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_row_builder",
+          "detail": "The controller appends inbox rows with the exact action 'View inbox message', text content and hover/button widgets."
+        },
+        {
+          "family": "exact_read_state_join",
+          "detail": "It applies the retained InboxMessageReadStatus to row color and toggles the unread <img=50> marker."
+        },
+        {
+          "family": "exact_layout_join",
+          "detail": "Rows are inserted through the retained InterfaceLayoutManager and the controller finalizes scroll height from the accumulated inbox row count."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 mail/inbox behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_9CD7B059E37B835994D6",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000643",
+      "owner_logical_id": "CLIENT_CLASS_000643",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/c/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MailInboxInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_mail_surface",
+          "detail": "The class preserves exact mail UI strings including 'Inbox (35 / 35)', 'Mail Subject', sent/expiry timing text and 'No mail message selected!'."
+        },
+        {
+          "family": "exact_attachment_actions",
+          "detail": "Exact controls include delete message plus attached Items / Rewards with deposit-to-inventory and deposit-to-bank actions."
+        },
+        {
+          "family": "exact_mail_resources",
+          "detail": "The class owns the misc/mail resource family used throughout the inbox/message surface."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 mail/inbox behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}
