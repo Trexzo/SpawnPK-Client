@@ -34,6 +34,7 @@ spk-namespace-virtualized-compile = "spk_recovery.namespace_virtualized_compile_
 spk-r8q-source-entry-gate = "spk_recovery.r8q_source_entry_gate_cli:main"
 spk-package-class-collision = "spk_recovery.package_class_collision_cli:main"
 spk-package-class-remap-plan = "spk_recovery.package_class_remap_plan_cli:main"
+spk-collision-remap-apply = "spk_recovery.collision_remap_apply_cli:main"
 spk-dependency-authority = "spk_recovery.dependency_authority:main"
 spk-dependency-artifact-proof = "spk_recovery.dependency_artifact_proof:main"
 spk-dependency-retention = "spk_recovery.dependency_retention:main"
