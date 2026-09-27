@@ -148,6 +148,47 @@ def _remap_utf8_payload(
     return current, total
 
 
+def _constant_string_utf8_indexes(
+    data: bytes,
+) -> set[int]:
+    if len(data) < 10 or data[:4] != b"\xca\xfe\xba\xbe":
+        raise ClassfileRemapError("not a JVM classfile")
+
+    cp_count = struct.unpack_from(">H", data, 8)[0]
+    offset = 10
+    index = 1
+    string_utf8_indexes: set[int] = set()
+
+    while index < cp_count:
+        tag, offset = _u1(data, offset)
+
+        if tag == 1:
+            size, offset = _u2(data, offset)
+            _payload, offset = _take(data, offset, size)
+        elif tag in (3, 4):
+            _raw, offset = _take(data, offset, 4)
+        elif tag in (5, 6):
+            _raw, offset = _take(data, offset, 8)
+            index += 1
+        elif tag in (7, 16, 19, 20):
+            _raw, offset = _take(data, offset, 2)
+        elif tag == 8:
+            utf8_index, offset = _u2(data, offset)
+            string_utf8_indexes.add(utf8_index)
+        elif tag in (9, 10, 11, 12, 17, 18):
+            _raw, offset = _take(data, offset, 4)
+        elif tag == 15:
+            _raw, offset = _take(data, offset, 3)
+        else:
+            raise ClassfileRemapError(
+                f"unknown constant-pool tag {tag} at #{index}"
+            )
+
+        index += 1
+
+    return string_utf8_indexes
+
+
 def remap_classfile_utf8(
     data: bytes,
     mapping: dict[str, str],
@@ -165,6 +206,7 @@ def remap_classfile_utf8(
         )
 
     cp_count = struct.unpack_from(">H", data, 8)[0]
+    string_utf8_indexes = _constant_string_utf8_indexes(data)
     offset = 10
     out = bytearray(data[:10])
     index = 1
@@ -189,6 +231,11 @@ def remap_classfile_utf8(
                     "remapped UTF8 constant exceeds u2 length"
                 )
             if count:
+                if index in string_utf8_indexes:
+                    raise ClassfileRemapError(
+                        "refusing to rewrite class identity inside "
+                        "CONSTANT_String literal"
+                    )
                 changed_utf8_count += 1
                 replacement_count += count
             out += struct.pack(">H", len(remapped))
