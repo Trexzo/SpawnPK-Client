@@ -23,6 +23,10 @@ from .namespace_source_overlay import (
     NamespaceSourceOverlayError,
     build_namespace_source_overlay,
 )
+from .javac_diagnostics import (
+    classify_javac_diagnostics,
+    write_javac_diagnostic_report,
+)
 from .source_digest import source_tree_digest
 
 
@@ -125,6 +129,38 @@ def _validate_plan(
     return normalized
 
 
+def _remap_overlay_diagnostics(
+    text: str,
+    *,
+    overlay_root: Path,
+    source_root: Path,
+) -> str:
+    value = text.replace("\r\n", "\n").replace("\r", "\n")
+    replacements = [
+        (str(overlay_root), str(source_root)),
+        (overlay_root.as_posix(), source_root.as_posix()),
+    ]
+    for old, new in sorted(
+        replacements,
+        key=lambda item: len(item[0]),
+        reverse=True,
+    ):
+        value = value.replace(old, new)
+    return value
+
+
+def _public_diagnostic_summary(
+    report: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "report_id": report["report_id"],
+        "frontier_id": report["frontier_id"],
+        "input_sha256": report["input_sha256"],
+        "summary": report["summary"],
+        "identifiers_included": False,
+    }
+
+
 def compile_with_namespace_virtualization(
     private_alias_plan: dict[str, Any],
     source_root: Path,
@@ -134,6 +170,8 @@ def compile_with_namespace_virtualization(
     javac_command: str = "javac",
     release: int = 9,
     extra_classpath: list[Path] | None = None,
+    report_compile_failure: bool = False,
+    private_diagnostic_report_out: Path | None = None,
 ) -> dict[str, Any]:
     mapping = _validate_plan(private_alias_plan)
     reverse = reverse_alias_mapping(private_alias_plan)
@@ -232,11 +270,150 @@ def compile_with_namespace_virtualization(
             text=True,
         )
         if proc.returncode != 0:
-            raise NamespaceVirtualizedCompileError(
-                "namespace-virtualized javac failed:\n"
-                + proc.stdout
-                + proc.stderr
+            if not report_compile_failure:
+                raise NamespaceVirtualizedCompileError(
+                    "namespace-virtualized javac failed:\n"
+                    + proc.stdout
+                    + proc.stderr
+                )
+
+            remapped_diagnostic = _remap_overlay_diagnostics(
+                proc.stdout + proc.stderr,
+                overlay_root=overlay_root,
+                source_root=source_root,
             )
+            public_diagnostic = classify_javac_diagnostics(
+                remapped_diagnostic
+            )
+            if private_diagnostic_report_out is not None:
+                private_diagnostic = classify_javac_diagnostics(
+                    remapped_diagnostic,
+                    include_identifiers=True,
+                )
+                if (
+                    private_diagnostic["report_id"]
+                    != public_diagnostic["report_id"]
+                    or private_diagnostic["frontier_id"]
+                    != public_diagnostic["frontier_id"]
+                ):
+                    raise NamespaceVirtualizedCompileError(
+                        "private/public javac diagnostic authority drifted"
+                    )
+                write_javac_diagnostic_report(
+                    private_diagnostic,
+                    private_diagnostic_report_out,
+                )
+
+            canonical_after_sha, canonical_after_files, canonical_after_bytes = (
+                source_tree_digest(source_root)
+            )
+            if (
+                canonical_after_sha != canonical_before_sha
+                or len(canonical_after_files)
+                != len(canonical_before_files)
+                or canonical_after_bytes != canonical_before_bytes
+            ):
+                raise NamespaceVirtualizedCompileError(
+                    "canonical source changed during failed virtualized compile"
+                )
+
+            dependency_sha = _sha256_file(dependency_jar)
+            alias_sha = _sha256_file(alias_jar)
+            material = {
+                "alias_plan_id": private_alias_plan.get("plan_id"),
+                "canonical_source_tree_sha256": canonical_before_sha,
+                "dependency_jar_sha256": dependency_sha,
+                "alias_dependency_jar_sha256": alias_sha,
+                "overlay_id": overlay["overlay_id"],
+                "overlay_source_tree_sha256": overlay[
+                    "output_source_tree_sha256"
+                ],
+                "release": release,
+                "source_count": len(sources),
+                "status": "compile_failed",
+                "javac_frontier_id": public_diagnostic[
+                    "frontier_id"
+                ],
+            }
+            compile_id = (
+                "NSCOMPILE_"
+                + _stable_digest(material)[:20].upper()
+            )
+            report = {
+                "schema_version": 1,
+                "kind": "namespace_virtualized_compile",
+                "compile_id": compile_id,
+                "status": "compile_failed",
+                "alias_plan_id": private_alias_plan.get("plan_id"),
+                "canonical_source_tree_sha256": canonical_before_sha,
+                "canonical_source_tree_sha256_after": (
+                    canonical_after_sha
+                ),
+                "canonical_source_modified": False,
+                "dependency_jar_sha256": dependency_sha,
+                "compile_only_alias_dependency": {
+                    "path": "compile-alias-dependency.jar",
+                    "sha256": alias_sha,
+                    "runtime_allowed": False,
+                    "class_count": alias_stats["class_count"],
+                    "changed_class_count": alias_stats[
+                        "changed_class_count"
+                    ],
+                    "replacement_count": alias_stats[
+                        "replacement_count"
+                    ],
+                },
+                "overlay": {
+                    "overlay_id": overlay["overlay_id"],
+                    "input_source_tree_sha256": overlay[
+                        "input_source_tree_sha256"
+                    ],
+                    "output_source_tree_sha256": overlay[
+                        "output_source_tree_sha256"
+                    ],
+                    "changed_file_count": overlay[
+                        "changed_file_count"
+                    ],
+                    "replacement_count": overlay[
+                        "replacement_count"
+                    ],
+                },
+                "compiler": {
+                    "target_release": release,
+                    "source_count": len(sources),
+                    "javac_input_transport": "argfile",
+                    "exit_code": proc.returncode,
+                    "diagnostic_classification": (
+                        _public_diagnostic_summary(
+                            public_diagnostic
+                        )
+                    ),
+                },
+                "generated_alias_classes": {
+                    "class_count": 0,
+                    "tree_sha256": None,
+                    "total_bytes": 0,
+                },
+                "restored_classes": {
+                    "class_count": 0,
+                    "tree_sha256": None,
+                    "total_bytes": 0,
+                    "restore_replacement_count": 0,
+                    "alias_utf8_reference_count": 0,
+                    "alias_literal_reference_count": 0,
+                },
+                "runtime_alias_dependency_allowed": False,
+            }
+            (out_dir / "namespace-virtualized-compile.json").write_text(
+                json.dumps(
+                    report,
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            return report
 
         generated_sha, generated_files, generated_bytes = _class_tree(
             generated_dir
@@ -347,6 +524,7 @@ def compile_with_namespace_virtualization(
         "schema_version": 1,
         "kind": "namespace_virtualized_compile",
         "compile_id": compile_id,
+        "status": "complete",
         "alias_plan_id": private_alias_plan.get("plan_id"),
         "canonical_source_tree_sha256": canonical_before_sha,
         "canonical_source_tree_sha256_after": canonical_after_sha,
@@ -384,6 +562,7 @@ def compile_with_namespace_virtualization(
             "source_count": len(sources),
             "javac_input_transport": "argfile",
             "exit_code": 0,
+            "diagnostic_classification": None,
         },
         "generated_alias_classes": {
             "class_count": len(generated_files),
