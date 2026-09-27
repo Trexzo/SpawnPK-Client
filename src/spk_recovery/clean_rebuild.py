@@ -28,6 +28,10 @@ from .namespace_alias_plan import (
     NamespaceAliasPlanError,
     build_namespace_alias_plan,
 )
+from .collision_derived_compile import (
+    CollisionDerivedCompileError,
+    compile_collision_derived_source,
+)
 from .source_digest import source_tree_digest
 
 
@@ -685,6 +689,333 @@ def _copy_project_source_scope(
         target.write_bytes(source.read_bytes())
 
 
+def _clean_project_rebuild_collision_derived(
+    recovered_manifest: dict[str, Any],
+    source_readiness: dict[str, Any],
+    readable_manifest: dict[str, Any],
+    readable_jar: Path,
+    build_authority: dict[str, Any],
+    source_root: Path,
+    private_collision_plan_path: Path,
+    *,
+    out_dir: Path,
+    javac_command: str = "javac",
+    source_prefixes: list[str] | None = None,
+    private_diagnostic_report_out: Path | None = None,
+) -> dict[str, Any]:
+    source_root = source_root.resolve()
+    readable_jar = readable_jar.resolve()
+
+    try:
+        all_files, javac_probe, release = _verify_authority(
+            recovered_manifest,
+            source_readiness,
+            readable_manifest,
+            readable_jar,
+            build_authority,
+            source_root,
+            javac_command,
+        )
+        source_derivation = _workspace_readable_derivation(
+            recovered_manifest,
+            readable_manifest,
+        )
+    except ProgressiveCompileError as exc:
+        raise CleanRebuildError(str(exc)) from exc
+
+    if source_derivation is None:
+        raise CleanRebuildError(
+            "collision-derived compile requires derived source authority"
+        )
+
+    prefixes = _normalize_prefixes(
+        readable_manifest,
+        source_prefixes,
+    )
+    source_files = _project_source_files(
+        all_files,
+        source_root,
+        prefixes,
+    )
+    if not source_files:
+        raise CleanRebuildError(
+            "no project Java source matched the clean-build prefixes"
+        )
+
+    out_dir = out_dir.resolve()
+    if out_dir.exists() and any(out_dir.iterdir()):
+        raise CleanRebuildError(
+            "clean rebuild output directory must be empty"
+        )
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    canonical_before = source_tree_digest(source_root)[0]
+    if canonical_before != recovered_manifest.get(
+        "source_tree_sha256"
+    ):
+        raise CleanRebuildError(
+            "canonical source tree authority drifted before "
+            "collision-derived compile"
+        )
+
+    # Runtime dependency authority always comes from the original readable
+    # JAR.  The transformed dependency emitted by the compile transport is
+    # compile-only and is never packaged into the rebuilt client.
+    dependency_jar = out_dir / "dependency-capsule.jar"
+    dependency_sha, dependency_class_count = _dependency_capsule(
+        readable_jar,
+        prefixes,
+        dependency_jar,
+    )
+
+    expected = _expected_project_classes(
+        readable_jar,
+        prefixes,
+    )
+
+    compile_root = out_dir / "collision-derived-compile"
+
+    try:
+        with tempfile.TemporaryDirectory(
+            prefix=".spk-clean-collision-derived-source-",
+            dir=out_dir,
+        ) as td:
+            scoped_source_root = Path(td) / "project-source"
+            scoped_source_root.mkdir(parents=True)
+            _copy_project_source_scope(
+                source_files,
+                source_root,
+                scoped_source_root,
+            )
+
+            derived = compile_collision_derived_source(
+                recovered_manifest,
+                scoped_source_root,
+                readable_jar,
+                private_collision_plan_path,
+                prefixes,
+                compile_root,
+                javac_command=javac_probe["resolved_path"],
+                release=release,
+                report_compile_failure=True,
+                private_diagnostic_report_out=(
+                    private_diagnostic_report_out
+                ),
+                diagnostic_source_root=source_root,
+                canonical_source_root=source_root,
+            )
+    except CollisionDerivedCompileError as exc:
+        raise CleanRebuildError(str(exc)) from exc
+
+    derived_status = derived.get("status", "complete")
+    generated: dict[str, bytes] = {}
+    missing: list[str] = []
+    unexpected: list[str] = []
+    rebuilt_sha: str | None = None
+    rebuilt_index_summary: dict[str, Any] | None = None
+
+    if derived_status == "compile_failed":
+        status = "compile_failed"
+    elif derived_status == "complete":
+        restored_root = compile_root / "restored-classes"
+        generated = _generated_classes(restored_root)
+        generated_set = set(generated)
+        missing = sorted(expected - generated_set)
+        unexpected = sorted(generated_set - expected)
+
+        status = "class_set_mismatch"
+        if not missing and not unexpected:
+            rebuilt_jar = out_dir / "rebuilt-client.jar"
+            _rebuild_jar(
+                readable_jar,
+                generated,
+                prefixes,
+                rebuilt_jar,
+            )
+            rebuilt_sha = _sha256_file(rebuilt_jar)
+            rebuilt_index = index_jar(rebuilt_jar)
+            rebuilt_index_summary = rebuilt_index["summary"]
+            if (
+                rebuilt_index["summary"][
+                    "class_parse_error_count"
+                ]
+                != 0
+            ):
+                raise CleanRebuildError(
+                    "rebuilt client contains class parse errors"
+                )
+            status = "complete"
+    else:
+        raise CleanRebuildError(
+            "unsupported collision-derived compile status: "
+            + repr(derived_status)
+        )
+
+    canonical_after = source_tree_digest(source_root)[0]
+    if canonical_after != canonical_before:
+        raise CleanRebuildError(
+            "canonical recovered source changed during "
+            "collision-derived rebuild"
+        )
+
+    material = {
+        "workspace_id": recovered_manifest.get("workspace_id"),
+        "build_authority_id": build_authority.get("authority_id"),
+        "readable_jar_sha256": readable_manifest.get(
+            "output_sha256"
+        ),
+        "source_tree_sha256": recovered_manifest.get(
+            "source_tree_sha256"
+        ),
+        "prefixes": prefixes,
+        "status": status,
+        "dependency_capsule_sha256": dependency_sha,
+        "rebuilt_jar_sha256": rebuilt_sha,
+        "compile_transport": "collision_derived_remap",
+        "collision_compile_id": derived["compile_id"],
+        "collision_transform_id": derived[
+            "collision_transform_id"
+        ],
+        "collision_plan_id": derived["collision_plan_id"],
+        "source_derivation": source_derivation,
+    }
+    rebuild_id = (
+        "CLEANBUILD_"
+        + hashlib.sha256(
+            json.dumps(
+                material,
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=False,
+            ).encode("utf-8")
+        ).hexdigest()[:20].upper()
+    )
+
+    report = {
+        "schema_version": 1,
+        "kind": "clean_project_rebuild_report",
+        "rebuild_id": rebuild_id,
+        "status": status,
+        "workspace_id": recovered_manifest.get("workspace_id"),
+        "build_id": recovered_manifest.get("build_id"),
+        "source_authority_sha256": recovered_manifest.get(
+            "source_authority_sha256"
+        ),
+        "readable_jar_sha256": readable_manifest.get(
+            "output_sha256"
+        ),
+        "namespace_id": recovered_manifest.get("namespace_id"),
+        "source_tree_sha256": recovered_manifest.get(
+            "source_tree_sha256"
+        ),
+        "build_authority_id": build_authority.get("authority_id"),
+        "source_derivation": source_derivation,
+        "source_scope": {
+            "prefixes": prefixes,
+            "project_source_files": len(source_files),
+            "all_workspace_java_files": len(all_files),
+            "javac_input_transport": (
+                "collision_derived_remap_argfile"
+            ),
+        },
+        "compiler": {
+            "javac": javac_probe,
+            "target_release": release,
+            "diagnostic_classification": derived[
+                "compiler"
+            ].get("diagnostic_classification"),
+        },
+        "dependency_capsule": {
+            "path": "dependency-capsule.jar",
+            "sha256": dependency_sha,
+            "class_count": dependency_class_count,
+            "contains_project_classes": False,
+            "source": "verified_base_readable_non_project_classes",
+        },
+        "project_classes": {
+            "expected_count": len(expected),
+            "generated_count": len(generated),
+            "missing": missing,
+            "unexpected": unexpected,
+            "binary_fallback_count": 0,
+        },
+        "diagnostic": "",
+        "rebuilt_client": {
+            "path": (
+                "rebuilt-client.jar"
+                if rebuilt_sha is not None
+                else None
+            ),
+            "sha256": rebuilt_sha,
+            "index_summary": rebuilt_index_summary,
+        },
+        "compile_transport": {
+            "mode": "collision_derived_remap",
+            "opt_in": True,
+            "status": derived_status,
+            "collision_compile_id": derived["compile_id"],
+            "collision_transform_id": derived[
+                "collision_transform_id"
+            ],
+            "collision_plan_id": derived["collision_plan_id"],
+            "collision_report_id": derived[
+                "collision_report_id"
+            ],
+            "compiler": derived["compiler"],
+            "compile_only_transformed_readable": derived[
+                "compile_only_transformed_readable"
+            ],
+            "compile_only_transformed_dependency": derived[
+                "compile_only_transformed_dependency"
+            ],
+            "mapping": derived["mapping"],
+            "generated_transformed_classes": derived[
+                "generated_transformed_classes"
+            ],
+            "restored_classes": derived[
+                "restored_classes"
+            ],
+            "runtime_transformed_dependency_allowed": False,
+            "runtime_dependency_source": (
+                "original_verified_dependency_capsule"
+            ),
+            "canonical_source_tree_sha256_before": canonical_before,
+            "canonical_source_tree_sha256_after": canonical_after,
+            "canonical_source_modified": False,
+        },
+        "clean_project_build": status == "complete",
+        "all_dependencies_rebuilt_from_source": False,
+        "note": (
+            (
+                "Collision-derived source compiled against the exact "
+                "matching transformed dependency namespace. Generated "
+                "project references were restored to original JVM "
+                "dependency identities; runtime dependency bytes remain "
+                "the original verified readable authority."
+            )
+            if status == "complete"
+            else (
+                "Collision-derived compile preserved its redacted javac "
+                "frontier. No transformed dependency bytes are runtime "
+                "eligible, and no rebuilt runtime JAR is emitted until "
+                "compilation completes."
+            )
+        ),
+    }
+
+    (out_dir / "clean-rebuild.json").write_text(
+        json.dumps(
+            report,
+            indent=2,
+            sort_keys=True,
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return report
+
+
 def _clean_project_rebuild_virtualized(
     recovered_manifest: dict[str, Any],
     source_readiness: dict[str, Any],
@@ -1021,7 +1352,51 @@ def clean_project_rebuild(
     private_diagnostic_report_out: Path | None = None,
     private_namespace_alias_plan: dict[str, Any] | None = None,
     auto_namespace_alias: bool = False,
+    private_collision_plan_path: Path | None = None,
 ) -> dict[str, Any]:
+    try:
+        source_derivation = _workspace_readable_derivation(
+            recovered_manifest,
+            readable_manifest,
+        )
+    except ProgressiveCompileError as exc:
+        raise CleanRebuildError(str(exc)) from exc
+
+    if source_derivation is not None:
+        if (
+            private_namespace_alias_plan is not None
+            or auto_namespace_alias
+        ):
+            raise CleanRebuildError(
+                "collision-derived source requires the matching "
+                "blocker-remap compile transport; namespace alias "
+                "virtualization is not valid for this source authority"
+            )
+        if private_collision_plan_path is None:
+            raise CleanRebuildError(
+                "collision-derived source requires an explicit private "
+                "collision plan path"
+            )
+        return _clean_project_rebuild_collision_derived(
+            recovered_manifest,
+            source_readiness,
+            readable_manifest,
+            readable_jar,
+            build_authority,
+            source_root,
+            private_collision_plan_path,
+            out_dir=out_dir,
+            javac_command=javac_command,
+            source_prefixes=source_prefixes,
+            private_diagnostic_report_out=private_diagnostic_report_out,
+        )
+
+    if private_collision_plan_path is not None:
+        raise CleanRebuildError(
+            "collision plan transport was supplied for a non-derived "
+            "source workspace"
+        )
+
     if (
         private_namespace_alias_plan is not None
         and auto_namespace_alias
