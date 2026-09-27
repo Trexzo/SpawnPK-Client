@@ -56,6 +56,9 @@ spk-release-build = "spk_recovery.release_orchestrator_cli:main"
 spk-release-build-recovered = "spk_recovery.release_workspace_orchestrator_cli:main"
 spk-update-release = "spk_recovery.update_release_cli:main"
 spk-release-verify = "spk_recovery.release_verify_cli:main"
+spk-source-milestone = "spk_recovery.source_milestone_cli:main"
+spk-source-export = "spk_recovery.source_repository_export_cli:main"
+spk-source-milestone-verify = "spk_recovery.source_milestone_verify_cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
