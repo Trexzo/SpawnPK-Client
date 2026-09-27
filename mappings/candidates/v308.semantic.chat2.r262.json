@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigPanelSectionToggleMouseListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_section_toggle_behavior",
+          "detail": "Exact v308 rs/s/b/b extends MouseAdapter, captures ConfigPanel, one ConfigSectionDescriptor, one JButton and one JPanel, and its only mouseClicked path delegates those exact objects to ConfigPanel's section-toggle method."
+        },
+        {
+          "family": "exact_construction_boundary",
+          "detail": "ConfigPanel installs this adapter on the section heading JLabel while building one reviewed ConfigSectionDescriptor section; no unrelated exact-v308 consumer survives."
+        }
+      ],
+      "note": "ConfigPanelSectionToggleMouseListener is a descriptive exact-behavior name for the section-heading mouse adapter. It does not claim a verbatim anonymous-class identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigPanelTextCommitFocusListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_text_commit_behavior",
+          "detail": "Exact v308 rs/s/b/c extends FocusAdapter, captures one JTextComponent plus reviewed ConfigDescriptor and ConfigItemDescriptor values, and on focusLost delegates that exact state to ConfigPanel's config-commit path."
+        },
+        {
+          "family": "exact_construction_boundary",
+          "detail": "ConfigPanel creates the adapter immediately after populating the editable text component from the current config value; no unrelated consumer survives."
+        }
+      ],
+      "note": "ConfigPanelTextCommitFocusListener is a descriptive exact-behavior name for the text-component commit-on-focus-loss adapter."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigPanelColorPickerMouseListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_color_picker_behavior",
+          "detail": "Exact v308 rs/s/b/d extends MouseAdapter, captures the reviewed ColorJButton plus ConfigDescriptor/ConfigItemDescriptor state, and mouseClicked opens the reviewed RuneLite color picker using the button's current color and config-item label."
+        },
+        {
+          "family": "exact_color_commit_path",
+          "detail": "The picker callbacks update the ColorJButton presentation and route the accepted color back through ConfigPanel's config-write path; the adapter is exclusive to this color-config component."
+        }
+      ],
+      "note": "ConfigPanelColorPickerMouseListener is fixed by the complete color-picker open/update/commit path at confidence 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigPanelHotkeyCommitFocusListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_hotkey_commit_behavior",
+          "detail": "Exact v308 rs/s/b/e extends FocusAdapter, captures one reviewed HotkeyButton plus ConfigDescriptor and ConfigItemDescriptor values, and on focusLost delegates the binding state to ConfigPanel's config-commit path."
+        },
+        {
+          "family": "exact_construction_boundary",
+          "detail": "ConfigPanel creates this adapter while constructing a HotkeyButton from the current Keybind/ModifierlessKeybind config value; no unrelated exact-v308 consumer survives."
+        }
+      ],
+      "note": "ConfigPanelHotkeyCommitFocusListener is a descriptive exact-behavior name for the hotkey commit-on-focus-loss adapter."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigPanelListCommitFocusListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_list_commit_behavior",
+          "detail": "Exact v308 rs/s/b/f extends FocusAdapter, captures one JList plus ConfigDescriptor and ConfigItemDescriptor values, and on focusLost delegates the list selection state to ConfigPanel's config-commit path."
+        },
+        {
+          "family": "exact_construction_boundary",
+          "detail": "ConfigPanel installs this adapter on the enum/set multi-select JList after restoring selected indices from the current config value; no unrelated exact-v308 consumer survives."
+        }
+      ],
+      "note": "ConfigPanelListCommitFocusListener is a descriptive exact-behavior name for the list-selection commit-on-focus-loss adapter."
+    }
+  ],
+  "conflicts": []
+}
