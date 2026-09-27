@@ -752,6 +752,7 @@ def _clean_project_rebuild_virtualized(
                 private_diagnostic_report_out=(
                     private_diagnostic_report_out
                 ),
+                diagnostic_source_root=source_root,
             )
     except NamespaceVirtualizedCompileError as exc:
         raise CleanRebuildError(str(exc)) from exc
