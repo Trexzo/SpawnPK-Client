@@ -4,6 +4,7 @@ import argparse
 import json
 from pathlib import Path
 import sys
+import zipfile
 
 from .collision_bytecode_remap import (
     CollisionBytecodeRemapError,
