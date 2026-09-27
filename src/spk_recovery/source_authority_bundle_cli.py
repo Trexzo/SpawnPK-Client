@@ -23,6 +23,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("clean_rebuild_report", type=Path)
     p.add_argument("source_root", type=Path)
     p.add_argument("out_dir", type=Path)
+    p.add_argument("--authority-commit", required=True)
     args = p.parse_args(argv)
 
     try:
@@ -33,6 +34,7 @@ def main(argv: list[str] | None = None) -> int:
             _load(args.clean_rebuild_report),
             args.source_root,
             args.out_dir,
+            authority_commit=args.authority_commit,
         )
     except (
         SourceAuthorityBundleError,
