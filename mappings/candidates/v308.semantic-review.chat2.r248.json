@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_015DF1C2D5A96FC35B98",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_EC897FD765CE28080377",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000982",
+      "owner_logical_id": "CLIENT_CLASS_000982",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/t/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigDataMapper",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_serialization_surface",
+          "detail": "Exact v308 rs/t/a imports and uses MessagePackMapper plus SnakeYAML Yaml, DumperOptions and LoaderOptions together with file/input/output primitives, fixing a shared configuration serialization/mapping role rather than a concrete definition loader."
+        },
+        {
+          "family": "exact_read_write_role",
+          "detail": "The recovered source surface includes byte-array/output-stream, file writer/output stream, Files/OpenOption, Map/List and TypeReference machinery, consistent with bidirectional YAML/MessagePack config data loading and emission."
+        },
+        {
+          "family": "exact_subsystem_consumers",
+          "detail": "R247 DefinitionConfigLoader extends this exact class, and reviewed config loaders plus map/wandering-merchant loaders consume the same shared rs/t/a infrastructure; an exact-v308 asset probe independently validated the MessagePackMapper config path."
+        }
+      ],
+      "note": "ConfigDataMapper is a conservative descriptive recovery for the shared YAML/MessagePack mapping utility beneath the v308 config-loader stack. It does not claim a verbatim original developer identifier. Confidence 0.995."
+    }
+  ],
+  "unresolved": []
+}
