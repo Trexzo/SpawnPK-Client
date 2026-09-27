@@ -1,0 +1,271 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutFolderContextMenu",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_ui_literal",
+          "detail": "The class constructs a JPopupMenu titled \"Loadout folders\" with exact actions Create new folder, Rename, Move up, Move down and Delete."
+        },
+        {
+          "family": "reviewed_parent_dependency",
+          "detail": "Reviewed LoadoutFolderPanel calls this class directly to build and install its folder popup menu."
+        },
+        {
+          "family": "exact_resource_surface",
+          "detail": "The class loads folder/create/delete/edit/up/down GUI icons and attaches the corresponding action listeners."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Swing behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutFolderSelectAction",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_action_role",
+          "detail": "ActionListener clears popup item highlighting, highlights the chosen folder, selects that folder in the loadout-folder model and refreshes the panel."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Swing behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CreateLoadoutFolderAction",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_action_role",
+          "detail": "ActionListener opens the exact \"Name Your Folder\" frame with a text field and Create button, wiring the confirm listener."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Swing behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CreateLoadoutFolderConfirmAction",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_action_role",
+          "detail": "ActionListener reads the folder-name text field, adds that name to the loadout-folder model, then hides and disposes the create frame."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Swing behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/r",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RenameLoadoutFolderAction",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_action_role",
+          "detail": "ActionListener opens the exact \"Re-name Your Folder\" frame with a text field and Rename button, wiring the rename-confirm listener."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Swing behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/s",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RenameLoadoutFolderConfirmAction",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_action_role",
+          "detail": "ActionListener reads the replacement name and asks the folder model to rename the currently selected folder before closing the frame."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Swing behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/t",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MoveLoadoutFolderUpAction",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_action_role",
+          "detail": "ActionListener finds the folder immediately preceding the selected folder and swaps the selected folder toward that preceding key."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Swing behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/u",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MoveLoadoutFolderDownAction",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_action_role",
+          "detail": "ActionListener finds the folder immediately following the selected folder and swaps the selected folder toward that following key."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Swing behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/v",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DeleteLoadoutFolderAction",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_action_role",
+          "detail": "ActionListener opens a delete-confirmation frame for the selected folder, with affirmative and exact \"No, Nevermind.\" cancellation buttons."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Swing behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/w",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DeleteLoadoutFolderConfirmAction",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_action_role",
+          "detail": "ActionListener deletes the selected folder from the loadout-folder model and closes the confirmation frame."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Swing behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/x",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DeleteLoadoutFolderCancelAction",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_action_role",
+          "detail": "ActionListener performs no model mutation; it only hides and disposes the delete-confirmation frame."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Swing behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}
