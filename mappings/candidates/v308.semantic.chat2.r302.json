@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/b/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InterfaceRenderer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_client_delegate",
+          "detail": "Client exposes an interface-draw wrapper with signature (int,int,rs/n/e,int) that delegates directly and exclusively to rs/l/b/d.a(Client,int,int,rs/n/e,int)."
+        },
+        {
+          "family": "exact_recursive_widget_traversal",
+          "detail": "The renderer resolves child widgets from the rs/n/e interface table, applies parent offsets/scroll state and recursively invokes its own interface-render method for nested interface/container children."
+        },
+        {
+          "family": "exact_widget_draw_callback_join",
+          "detail": "During traversal it invokes the already-reviewed InterfaceDrawCallback on widgets that own one, passing the resolved screen x/y coordinates before continuing the concrete widget render path."
+        },
+        {
+          "family": "exact_widget_presentation",
+          "detail": "The same path performs clipping and renders live interface content including text, sprites, item/inventory/model surfaces, hover/selection state and exact widget-scoped presentation strings such as 'Click here to continue' and 'Please wait...'."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 central rs/n/e widget rendering behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}

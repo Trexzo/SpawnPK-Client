@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_4EF15DF506252869310E",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_A674F96C39CF624A2D70",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000382",
+      "owner_logical_id": "CLIENT_CLASS_000382",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/b/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InterfaceRenderer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_client_delegate",
+          "detail": "Client exposes an interface-draw wrapper with signature (int,int,rs/n/e,int) that delegates directly and exclusively to rs/l/b/d.a(Client,int,int,rs/n/e,int)."
+        },
+        {
+          "family": "exact_recursive_widget_traversal",
+          "detail": "The renderer resolves child widgets from the rs/n/e interface table, applies parent offsets/scroll state and recursively invokes its own interface-render method for nested interface/container children."
+        },
+        {
+          "family": "exact_widget_draw_callback_join",
+          "detail": "During traversal it invokes the already-reviewed InterfaceDrawCallback on widgets that own one, passing the resolved screen x/y coordinates before continuing the concrete widget render path."
+        },
+        {
+          "family": "exact_widget_presentation",
+          "detail": "The same path performs clipping and renders live interface content including text, sprites, item/inventory/model surfaces, hover/selection state and exact widget-scoped presentation strings such as 'Click here to continue' and 'Please wait...'."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 central rs/n/e widget rendering behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}
