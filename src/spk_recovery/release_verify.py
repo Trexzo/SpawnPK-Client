@@ -120,6 +120,7 @@ def verify_recovery_release(
     decompiler_jar: Path | None = None,
     source_root: Path | None = None,
     javac_command: str | None = None,
+    private_collision_plan_path: Path | None = None,
 ) -> dict[str, Any]:
     if (
         release_manifest.get("schema_version") != 1
@@ -151,6 +152,120 @@ def verify_recovery_release(
         expected=release_manifest,
         actual=recomputed,
     )
+
+    collision_plan_id = recovered_source_manifest.get(
+        "collision_plan_id"
+    )
+    collision_report_id = recovered_source_manifest.get(
+        "collision_report_id"
+    )
+    collision_transform_id = recovered_source_manifest.get(
+        "collision_transform_id"
+    )
+    base_readable_sha = recovered_source_manifest.get(
+        "base_readable_jar_sha256"
+    )
+    collision_derived = any(
+        value is not None
+        for value in (
+            collision_plan_id,
+            collision_report_id,
+            collision_transform_id,
+            base_readable_sha,
+        )
+    )
+
+    if collision_derived:
+        _check(
+            checks,
+            name="private_collision_plan_supplied",
+            expected=True,
+            actual=private_collision_plan_path is not None,
+        )
+        if private_collision_plan_path is not None:
+            path = private_collision_plan_path.resolve()
+            if not path.is_file():
+                raise RecoveryReleaseVerificationError(
+                    f"private collision plan does not exist: {path}"
+                )
+            try:
+                private_plan = json.loads(
+                    path.read_text(encoding="utf-8")
+                )
+            except (OSError, json.JSONDecodeError) as exc:
+                raise RecoveryReleaseVerificationError(
+                    "private collision plan is not valid JSON"
+                ) from exc
+
+            transport = clean_rebuild_report.get(
+                "compile_transport",
+                {},
+            )
+            if not isinstance(transport, dict):
+                transport = {}
+
+            private_sha = _sha256_file(path)
+
+            _check(
+                checks,
+                name="private_collision_plan_schema",
+                expected=(
+                    1,
+                    "class_package_namespace_collision_plan",
+                ),
+                actual=(
+                    private_plan.get("schema_version"),
+                    private_plan.get("kind"),
+                ),
+            )
+            _check(
+                checks,
+                name="private_collision_plan_id",
+                expected=collision_plan_id,
+                actual=private_plan.get("plan_id"),
+            )
+            _check(
+                checks,
+                name="private_collision_report_id",
+                expected=collision_report_id,
+                actual=private_plan.get("collision_report_id"),
+            )
+            _check(
+                checks,
+                name="private_collision_readable_sha256",
+                expected=base_readable_sha,
+                actual=private_plan.get("readable_jar_sha256"),
+            )
+            _check(
+                checks,
+                name="clean_collision_plan_id",
+                expected=collision_plan_id,
+                actual=transport.get("collision_plan_id"),
+            )
+            _check(
+                checks,
+                name="clean_collision_report_id",
+                expected=collision_report_id,
+                actual=transport.get("collision_report_id"),
+            )
+            _check(
+                checks,
+                name="clean_collision_transform_id",
+                expected=collision_transform_id,
+                actual=transport.get("collision_transform_id"),
+            )
+            _check(
+                checks,
+                name="private_collision_plan_sha256",
+                expected=transport.get(
+                    "private_collision_plan_sha256"
+                ),
+                actual=private_sha,
+            )
+    elif private_collision_plan_path is not None:
+        raise RecoveryReleaseVerificationError(
+            "private collision plan supplied for non-collision-derived release"
+        )
 
     if authority_jar is not None:
         path = authority_jar.resolve()
