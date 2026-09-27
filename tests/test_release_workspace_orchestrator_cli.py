@@ -78,11 +78,24 @@ class ReleaseWorkspaceOrchestratorCliTests(unittest.TestCase):
             ]
 
             output = io.StringIO()
-            with patch(
-                "spk_recovery.release_workspace_orchestrator_cli."
-                "build_existing_authority_release_from_workspace",
-                return_value=report,
-            ) as mocked, contextlib.redirect_stdout(output):
+            with (
+                patch(
+                    "spk_recovery.release_workspace_orchestrator_cli."
+                    "load_lineage",
+                    return_value={},
+                ),
+                patch(
+                    "spk_recovery.release_workspace_orchestrator_cli."
+                    "load_member_lineage",
+                    return_value={},
+                ),
+                patch(
+                    "spk_recovery.release_workspace_orchestrator_cli."
+                    "build_existing_authority_release_from_workspace",
+                    return_value=report,
+                ) as mocked,
+                contextlib.redirect_stdout(output),
+            ):
                 code = release_workspace_orchestrator_cli.main(args)
 
             self.assertEqual(code, 0)
