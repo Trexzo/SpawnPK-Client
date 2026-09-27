@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/source-publication-bundle.schema.json",
+  "title": "SpawnPK source publication bundle",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "bundle_id",
+    "milestone_id",
+    "source_tree_sha256",
+    "source_file_count",
+    "source_bytes",
+    "provenance_documents",
+    "file_sha256",
+    "contains_binary_artifacts",
+    "publication_repository"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "source_publication_bundle"},
+    "bundle_id": {
+      "type": "string",
+      "pattern": "^SRCBUNDLE_[0-9A-F]{20}$"
+    },
+    "milestone_id": {"type": ["string", "null"]},
+    "source_tree_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "source_file_count": {"type": "integer", "minimum": 1},
+    "source_bytes": {"type": "integer", "minimum": 1},
+    "provenance_documents": {"type": "object"},
+    "file_sha256": {"type": "object"},
+    "contains_binary_artifacts": {"const": false},
+    "publication_repository": {"type": ["string", "null"]}
+  },
+  "additionalProperties": false
+}

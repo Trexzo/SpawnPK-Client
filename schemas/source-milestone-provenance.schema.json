@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/source-milestone-provenance.schema.json",
+  "title": "SpawnPK source milestone provenance",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "provenance_id",
+    "milestone_id",
+    "publishable",
+    "authority",
+    "semantic_authority",
+    "recovery_authority",
+    "source_authority",
+    "class_set",
+    "publication_repository",
+    "semantic_name_statement"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "source_milestone_provenance"},
+    "provenance_id": {
+      "type": "string",
+      "pattern": "^SRCPROV_[0-9A-F]{20}$"
+    },
+    "milestone_id": {"type": ["string", "null"]},
+    "publishable": {"type": "boolean"},
+    "authority": {"type": "object"},
+    "semantic_authority": {"type": "object"},
+    "recovery_authority": {"type": "object"},
+    "source_authority": {"type": "object"},
+    "class_set": {"type": "object"},
+    "publication_repository": {"type": ["string", "null"]},
+    "semantic_name_statement": {"type": "string"}
+  },
+  "additionalProperties": false
+}
