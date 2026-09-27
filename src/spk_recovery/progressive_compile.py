@@ -101,6 +101,98 @@ def _copy_tree_unique(
     return count
 
 
+def _workspace_readable_derivation(
+    recovered_manifest: dict[str, Any],
+    readable_manifest: dict[str, Any],
+) -> dict[str, str] | None:
+    base_sha = str(
+        readable_manifest.get("output_sha256", "")
+    ).lower()
+    workspace_sha = str(
+        recovered_manifest.get("readable_jar_sha256", "")
+    ).lower()
+
+    if not base_sha:
+        raise ProgressiveCompileError(
+            "readable manifest lacks output SHA-256"
+        )
+    if not workspace_sha:
+        raise ProgressiveCompileError(
+            "recovered-source manifest lacks readable JAR SHA-256"
+        )
+
+    keys = (
+        "collision_transform_id",
+        "collision_plan_id",
+        "collision_report_id",
+        "base_readable_jar_sha256",
+    )
+    present = {
+        key: recovered_manifest.get(key)
+        for key in keys
+        if recovered_manifest.get(key) is not None
+    }
+
+    if not present:
+        if workspace_sha != base_sha:
+            raise ProgressiveCompileError(
+                "recovered-source readable JAR SHA-256 does not match "
+                "base readable manifest without collision derivation"
+            )
+        return None
+
+    if len(present) != len(keys):
+        missing = sorted(set(keys) - set(present))
+        raise ProgressiveCompileError(
+            "collision-derived recovered source has incomplete "
+            "derivation authority: missing " + repr(missing)
+        )
+
+    values = {
+        key: recovered_manifest.get(key)
+        for key in keys
+    }
+    for key in (
+        "collision_transform_id",
+        "collision_plan_id",
+        "collision_report_id",
+    ):
+        value = values[key]
+        if not isinstance(value, str) or not value:
+            raise ProgressiveCompileError(
+                "collision-derived recovered source has invalid "
+                f"{key}"
+            )
+
+    derived_base = str(
+        values["base_readable_jar_sha256"]
+    ).lower()
+    if derived_base != base_sha:
+        raise ProgressiveCompileError(
+            "collision-derived recovered source base readable SHA-256 "
+            "does not match readable manifest"
+        )
+    if workspace_sha == base_sha:
+        raise ProgressiveCompileError(
+            "collision-derived recovered source must bind a transformed "
+            "readable JAR distinct from the base readable authority"
+        )
+
+    return {
+        "collision_transform_id": str(
+            values["collision_transform_id"]
+        ),
+        "collision_plan_id": str(
+            values["collision_plan_id"]
+        ),
+        "collision_report_id": str(
+            values["collision_report_id"]
+        ),
+        "base_readable_jar_sha256": derived_base,
+        "source_derivation_readable_jar_sha256": workspace_sha,
+    }
+
+
 def _verify_authority(
     recovered_manifest: dict[str, Any],
     source_readiness: dict[str, Any],
@@ -144,6 +236,11 @@ def _verify_authority(
         raise ProgressiveCompileError(
             "unsupported build-authority manifest"
         )
+
+    _workspace_readable_derivation(
+        recovered_manifest,
+        readable_manifest,
+    )
 
     tree_sha, files = _source_tree_digest(source_root)
     expected_tree = str(
