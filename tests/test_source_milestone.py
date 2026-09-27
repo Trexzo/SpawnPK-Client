@@ -13,6 +13,7 @@ from spk_recovery.source_milestone import (
     build_source_provenance_document,
     build_source_publication_bundle,
     verify_source_milestone_manifest,
+    verify_source_publication_bundle,
 )
 
 
@@ -398,6 +399,112 @@ class SourceMilestoneTests(unittest.TestCase):
             self.assertIn(
                 "SOURCE-PROVENANCE.json",
                 bundle["provenance_documents"],
+            )
+
+    def test_publication_bundle_verifier_accepts_exact_bundle(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={
+                    "recovery-release.json": fixture[
+                        "release_manifest"
+                    ],
+                    "release-verification.json": fixture[
+                        "release_verification"
+                    ],
+                },
+            )
+
+            report = verify_source_publication_bundle(
+                bundle_root,
+                expected_manifest=manifest,
+            )
+            second = verify_source_publication_bundle(
+                bundle_root,
+                expected_manifest=manifest,
+            )
+
+            self.assertTrue(report["verified"])
+            self.assertEqual(report, second)
+            self.assertTrue(
+                report["verification_id"].startswith(
+                    "SRCBUNDLEVERIFY_"
+                )
+            )
+            self.assertTrue(
+                all(report["checks"].values())
+            )
+
+    def test_publication_bundle_verifier_rejects_source_tamper(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={},
+            )
+
+            target = bundle_root / "src" / "rs" / "A.java"
+            target.write_text(
+                "package rs; public class A { int drift; }\n",
+                encoding="utf-8",
+            )
+
+            report = verify_source_publication_bundle(
+                bundle_root,
+                expected_manifest=manifest,
+            )
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["source_tree_sha256_match"]
+            )
+            self.assertFalse(
+                report["checks"]["indexed_file_hashes_match"]
+            )
+
+    def test_publication_bundle_verifier_rejects_unindexed_binary(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={},
+            )
+
+            (bundle_root / "payload.jar").write_bytes(b"binary")
+
+            report = verify_source_publication_bundle(
+                bundle_root,
+                expected_manifest=manifest,
+            )
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["source_only_layout"]
+            )
+            self.assertFalse(
+                report["checks"]["indexed_file_set_match"]
             )
 
     def test_wrong_build_is_never_publishable(self):
