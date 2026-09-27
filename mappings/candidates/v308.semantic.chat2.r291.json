@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/D",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DuelPresetLoadInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_duel_actions",
+          "detail": "The class preserves the exact actions 'Load last duel' and 'Load last rules'."
+        },
+        {
+          "family": "exact_duel_resource",
+          "detail": "It loads the exact 'misc/duel load' resource, fixing the role as the duel preset/rules reload surface."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 self-identifying interface text/resources; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/G",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemEnchantmentChestInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_title",
+          "detail": "The exact-v308 title is '@or1@Item Enchantment Chest'."
+        },
+        {
+          "family": "exact_enchantment_flow",
+          "detail": "Exact controls and states include Enchantments, Attempt Enchantment, Preparing enchantment, Enchantment failed, Success, category selection, item selection, ingredients and success chance."
+        },
+        {
+          "family": "exact_resource_family",
+          "detail": "The class loads fountain, drops, achievements and teleport interface assets used by the enchantment chest surface."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 self-identifying interface text/resources; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/U",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PlayerIpUidMatcherInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_title",
+          "detail": "The exact title is 'Player IP / UID Matcher'."
+        },
+        {
+          "family": "exact_identity_actions",
+          "detail": "Exact controls expose IP Address, UID, geolocation, online/non-match/banned status, search-by-name and ordering by recent/total matches."
+        },
+        {
+          "family": "exact_admin_actions",
+          "detail": "The same interface exposes 'Ban this IP/UID', 'Ban *this* IP/UID' and 'Ban ALL', fixing the identity-matcher administration role."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 self-identifying interface text/resources; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClanSetupInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_clan_configuration",
+          "detail": "Exact fields/actions configure clan name, who can enter/talk/kick/mute/ban, and right-click rank options."
+        },
+        {
+          "family": "exact_rank_surface",
+          "detail": "The interface contains Recruit through General rank choices and optional co-owner privileges for General."
+        },
+        {
+          "family": "exact_clan_resources",
+          "detail": "The class uses clan sprite/close resources throughout the same configuration surface."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 self-identifying interface text/resources; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/s",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClanWarsSetupInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_title",
+          "detail": "The exact title is 'Clan Wars Setup: Challenging xxxx'."
+        },
+        {
+          "family": "exact_rules_surface",
+          "detail": "Exact selectors cover spellbooks, prayer restrictions, Staff of the Dead, freezing, kill targets and game modes such as Last team standing and Kill 'em all."
+        },
+        {
+          "family": "exact_arena_surface",
+          "detail": "The same class enumerates Clan Cup Arena and named arenas including Ethereal, Forsaken Quarry, Ghastly Swamp, Gridlock and Northleach Quell."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 self-identifying interface text/resources; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/v",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CollectionLogInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_title",
+          "detail": "The exact title is 'Collection Log <img=321>'."
+        },
+        {
+          "family": "exact_categories",
+          "detail": "The interface exposes Bosses, Boxes, Minigames and Other collection categories plus Select collection log."
+        },
+        {
+          "family": "exact_progress_rewards",
+          "detail": "Exact state includes collection name, obtained count, kill count, completion rewards and the reward text shown when a collection is completed."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 self-identifying interface text/resources; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}
