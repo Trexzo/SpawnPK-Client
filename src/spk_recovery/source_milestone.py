@@ -600,8 +600,8 @@ def build_source_provenance_document(
         ),
         "semantic_name_statement": (
             "Accepted semantic names are evidence-backed recovery "
-            "names. No field in this document claims an inferred "
-            "semantic identifier is the original developer name."
+            "names. This document does not claim an inferred semantic "
+            "identifier is the original developer name."
         ),
     }
 
