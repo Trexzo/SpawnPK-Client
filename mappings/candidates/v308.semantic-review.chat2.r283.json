@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 4,
+  "review_id": "SEMREVIEW_2CC55EC1F08E1BC9A757",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_2C1AD36D0BF6BEAC8F11",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000529",
+      "owner_logical_id": "CLIENT_CLASS_000529",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/a/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DropDownManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_global_dropdown_state",
+          "detail": "The class owns the shared dropdown sprites and singleton DropDownMenuPanel used by the exact-v308 interface system."
+        },
+        {
+          "family": "exact_open_close_contract",
+          "detail": "Opening validates that the requested interface is a DropDownComponent, binds it into the popup panel, marks the panel visible and records the open interface id in Client.cI; closing resets Client.cI to -1 and hides the panel."
+        },
+        {
+          "family": "exact_assets",
+          "detail": "Initialization loads the dropdown-specific assets 'misc/dd1' and 'misc/dd2', tying this utility directly to the dropdown subsystem."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 dropdown behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_4068266E2699317B0D3A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000527",
+      "owner_logical_id": "CLIENT_CLASS_000527",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/a/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DropDownComponent",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_option_model",
+          "detail": "The component owns a List of already-reviewed DropDownOption values, initializes each string option with tooltip 'Select', exposes the list and selected index, and updates its displayed text from the chosen option."
+        },
+        {
+          "family": "exact_interface_identity",
+          "detail": "The exact helper rejects non-matching interface ids with the literal 'The interface ID … is not a drop down component', fixing this class as the dropdown component itself."
+        },
+        {
+          "family": "exact_open_selection_flow",
+          "detail": "Selecting opcode-space entries relative to 32432 updates the selected option and, when a dropdown is open, invokes the shared dropdown manager close path."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 dropdown behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_55CA9E1A42623B84B7C0",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000528",
+      "owner_logical_id": "CLIENT_CLASS_000528",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/a/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DropDownMenuPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_popup_container",
+          "detail": "This live interface container owns the active DropDownComponent plus a fixed array of 25 DropDownOptionWidget rows and is toggled visible only while a dropdown is open."
+        },
+        {
+          "family": "exact_dropdown_rendering",
+          "detail": "Its renderer sizes and positions the popup from the active component, draws alternating row backgrounds/highlight state, and materializes option rows from that component's DropDownOption list."
+        },
+        {
+          "family": "exact_manager_join",
+          "detail": "The shared dropdown manager installs the active component into this panel on open and clears/hides the panel on close."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 dropdown behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_A645D9558699BD610A3F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000531",
+      "owner_logical_id": "CLIENT_CLASS_000531",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/a/a/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DropDownOptionWidget",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_row_factory",
+          "detail": "The static factory constructs an interface widget for one option row, assigns its interface id/text, fixed row height and dropdown-compatible interaction fields."
+        },
+        {
+          "family": "exact_active_dropdown_rendering",
+          "detail": "Its draw path resolves Client.cI to the active DropDownComponent and renders row highlight/background geometry using the active component's style and option count."
+        },
+        {
+          "family": "exact_panel_composition",
+          "detail": "DropDownMenuPanel owns a fixed array of 25 instances of this class, one per materialized dropdown option row."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 dropdown behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}
