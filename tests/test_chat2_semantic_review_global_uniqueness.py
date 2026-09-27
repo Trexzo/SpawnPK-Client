@@ -10,7 +10,7 @@ REVIEW_RE = re.compile(r"^v308\.semantic-review\.chat2\.r(\d+)\.json$")
 
 
 class Chat2SemanticReviewGlobalUniquenessTests(unittest.TestCase):
-    def test_post_seed_class_reviews_are_globally_unique(self):
+    def test_all_class_reviews_are_globally_unique(self):
         seen_names = {}
         seen_owners = {}
         seen_stable_ids = {}
@@ -19,7 +19,7 @@ class Chat2SemanticReviewGlobalUniquenessTests(unittest.TestCase):
         review_paths = []
         for path in CANDIDATES.glob("v308.semantic-review.chat2.r*.json"):
             match = REVIEW_RE.match(path.name)
-            if match and int(match.group(1)) >= 3:
+            if match and int(match.group(1)) >= 2:
                 review_paths.append((int(match.group(1)), path))
         review_paths.sort()
 
