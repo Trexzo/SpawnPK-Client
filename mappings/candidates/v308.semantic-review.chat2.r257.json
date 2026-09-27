@@ -1,0 +1,306 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 13,
+  "review_id": "SEMREVIEW_B852479D96D12B5DCBE2",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_392E362744D5B7E0E56E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001043",
+      "owner_logical_id": "CLIENT_CLASS_001043",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorValueDocumentFilter",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_numeric_filter",
+          "detail": "Exact v308 DocumentFilter reconstructs the replacement text, parses it as an integer, accepts only values 0 through 255, and beeps/refuses invalid or non-numeric input."
+        },
+        {
+          "family": "exact_owner_role",
+          "detail": "The filter is owned by reviewed ColorValuePanel, whose editable channel values are byte-range RGB/alpha components."
+        }
+      ],
+      "note": "ColorValueDocumentFilter is descriptive exact-behavior recovery for rs/ui/components/a/f; no verbatim original helper identifier is asserted."
+    },
+    {
+      "proposal_id": "SEMPROP_3C9DAF83CA37D3C8E5CD",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001057",
+      "owner_logical_id": "CLIENT_CLASS_001057",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/t",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorPickerFocusListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_focus_behavior",
+          "detail": "Exact v308 FocusAdapter is owned by RuneliteColorPicker and its only focusLost action invokes the picker's text/color commit helper."
+        }
+      ],
+      "note": "ColorPickerFocusListener is descriptive exact-behavior recovery for rs/ui/components/a/t; no verbatim original helper identifier is asserted."
+    },
+    {
+      "proposal_id": "SEMPROP_5C02058E54B7DB15C75E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001046",
+      "owner_logical_id": "CLIENT_CLASS_001046",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorValueSliderDragListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_drag_behavior",
+          "detail": "Exact v308 MouseMotionAdapter forwards mouseDragged X to reviewed ColorValueSlider's position/value update helper with live-update enabled."
+        }
+      ],
+      "note": "ColorValueSliderDragListener is descriptive exact-behavior recovery for rs/ui/components/a/i; no verbatim original helper identifier is asserted."
+    },
+    {
+      "proposal_id": "SEMPROP_61C23CE00399684F5E17",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001040",
+      "owner_logical_id": "CLIENT_CLASS_001040",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorPanelMouseListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_press_release_behavior",
+          "detail": "Exact v308 MouseAdapter forwards both mousePressed and mouseReleased X/Y coordinates to the same reviewed ColorPanel update helper with live-update enabled."
+        }
+      ],
+      "note": "ColorPanelMouseListener is descriptive exact-behavior recovery for rs/ui/components/a/c; no verbatim original helper identifier is asserted."
+    },
+    {
+      "proposal_id": "SEMPROP_847DA1A4F1E716E0193C",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001044",
+      "owner_logical_id": "CLIENT_CLASS_001044",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorValueFocusListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_focus_behavior",
+          "detail": "Exact v308 FocusAdapter is owned by ColorValuePanel and its only focusLost action invokes that panel's commit/normalization helper."
+        }
+      ],
+      "note": "ColorValueFocusListener is descriptive exact-behavior recovery for rs/ui/components/a/g; no verbatim original helper identifier is asserted."
+    },
+    {
+      "proposal_id": "SEMPROP_894E4AF37038A9B694C0",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001050",
+      "owner_logical_id": "CLIENT_CLASS_001050",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HuePanelMouseListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_press_release_behavior",
+          "detail": "Exact v308 MouseAdapter forwards both mousePressed and mouseReleased Y to reviewed HuePanel's hue-position update helper."
+        }
+      ],
+      "note": "HuePanelMouseListener is descriptive exact-behavior recovery for rs/ui/components/a/m; no verbatim original helper identifier is asserted."
+    },
+    {
+      "proposal_id": "SEMPROP_8A56D93F868D26E91EE7",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001056",
+      "owner_logical_id": "CLIENT_CLASS_001056",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/s",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HexColorDocumentFilter",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_hex_filter",
+          "detail": "Exact v308 DocumentFilter strips # and 0x prefixes, reconstructs candidate text through RuneliteColorPicker's document helper, validates it with the exact hexadecimal-color predicate, and beeps/refuses invalid input."
+        }
+      ],
+      "note": "HexColorDocumentFilter is descriptive exact-behavior recovery for rs/ui/components/a/s; no verbatim original helper identifier is asserted."
+    },
+    {
+      "proposal_id": "SEMPROP_8EC2F6F6E39F81433E8A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001053",
+      "owner_logical_id": "CLIENT_CLASS_001053",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RecentColorClickListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_click_behavior",
+          "detail": "Exact v308 MouseAdapter stores one Color and one Consumer<Color>; mouseClicked passes exactly that stored color to the consumer."
+        },
+        {
+          "family": "exact_owner_context",
+          "detail": "The helper is constructed by the reviewed RecentColors surface for clickable color swatches."
+        }
+      ],
+      "note": "RecentColorClickListener is descriptive exact-behavior recovery for rs/ui/components/a/p; no verbatim original helper identifier is asserted."
+    },
+    {
+      "proposal_id": "SEMPROP_A00472F4BD1B88778B02",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001055",
+      "owner_logical_id": "CLIENT_CLASS_001055",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/r",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PreviewColorSelectListener",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_preview_selection",
+          "detail": "Exact v308 MouseAdapter owns RuneliteColorPicker plus one reviewed PreviewPanel; mousePressed reads the preview color, optionally copies its alpha into ColorValuePanel, applies the color to the picker and refreshes picker state."
+        }
+      ],
+      "note": "PreviewColorSelectListener is descriptive exact-behavior recovery for rs/ui/components/a/r; no verbatim original helper identifier is asserted."
+    },
+    {
+      "proposal_id": "SEMPROP_E19B136DBF1E579FF0FB",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001058",
+      "owner_logical_id": "CLIENT_CLASS_001058",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/u",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorPickerWindowCloseListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_close_behavior",
+          "detail": "Exact v308 WindowAdapter commits picker state on windowClosing, invokes the optional final Color consumer, records a changed color in RecentColors, and clears ColorPickerManager's active-picker reference when it points at this picker."
+        }
+      ],
+      "note": "ColorPickerWindowCloseListener is descriptive exact-behavior recovery for rs/ui/components/a/u; no verbatim original helper identifier is asserted."
+    },
+    {
+      "proposal_id": "SEMPROP_F62D3C0486E4AE1431BC",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001049",
+      "owner_logical_id": "CLIENT_CLASS_001049",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HuePanelDragListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_drag_behavior",
+          "detail": "Exact v308 MouseMotionAdapter forwards mouseDragged Y to reviewed HuePanel's hue-position update helper."
+        }
+      ],
+      "note": "HuePanelDragListener is descriptive exact-behavior recovery for rs/ui/components/a/l; no verbatim original helper identifier is asserted."
+    },
+    {
+      "proposal_id": "SEMPROP_F88A5AE52C85B0B2F1B1",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001047",
+      "owner_logical_id": "CLIENT_CLASS_001047",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorValueSliderMouseListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_press_release_behavior",
+          "detail": "Exact v308 MouseAdapter forwards both mousePressed and mouseReleased X to the same ColorValueSlider update helper with live-update enabled."
+        }
+      ],
+      "note": "ColorValueSliderMouseListener is descriptive exact-behavior recovery for rs/ui/components/a/j; no verbatim original helper identifier is asserted."
+    },
+    {
+      "proposal_id": "SEMPROP_FE532819525C799F694C",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001039",
+      "owner_logical_id": "CLIENT_CLASS_001039",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorPanelDragListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_drag_behavior",
+          "detail": "Exact v308 MouseMotionAdapter forwards mouseDragged X/Y coordinates to reviewed ColorPanel's coordinate-to-color update helper with live-update enabled."
+        }
+      ],
+      "note": "ColorPanelDragListener is descriptive exact-behavior recovery for rs/ui/components/a/b; no verbatim original helper identifier is asserted."
+    }
+  ],
+  "unresolved": []
+}
