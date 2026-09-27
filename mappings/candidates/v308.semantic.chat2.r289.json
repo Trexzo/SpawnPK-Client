@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InventoryGridWidget",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_rsinterface_type",
+          "detail": "The constructor sets RSInterface type aI to 2 and allocates the item-id, amount and per-slot metadata arrays used by inventory-style widgets."
+        },
+        {
+          "family": "exact_grid_dimensions",
+          "detail": "The builder sizes the item/amount arrays from the requested slot count and exposes width/height-style grid sizing plus slot-spacing fields."
+        },
+        {
+          "family": "exact_global_registration",
+          "detail": "Instances register directly in the global RSInterface table under their interface id, making this a concrete inventory-grid widget rather than an external model."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 RSInterface widget-type behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InterfaceContainerWidget",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_container_role",
+          "detail": "The factory creates a zero-child RSInterface container, initializes child id/x/y arrays and exposes width/height plus scroll-height state."
+        },
+        {
+          "family": "exact_layout_manager_ownership",
+          "detail": "The class lazily owns the retained InterfaceLayoutManager and returns InterfaceLayoutEntry objects for child widgets by id."
+        },
+        {
+          "family": "exact_layout_commit",
+          "detail": "Its finalization method delegates to InterfaceLayoutManager to resolve and write child positions back into the owning RSInterface."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 RSInterface widget-type behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/a/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpriteWidget",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_rsinterface_type",
+          "detail": "The factory sets RSInterface type aI to 5, the exact sprite widget type, and installs the same Sprite reference into the normal and alternate sprite fields."
+        },
+        {
+          "family": "exact_sprite_dimensions",
+          "detail": "Width and height are initialized from the sprite's intrinsic dimensions and can be explicitly overridden through the fluent size method."
+        },
+        {
+          "family": "exact_sprite_only_surface",
+          "detail": "Unlike the clickable/hover builders in the same package, this class adds no action or tooltip state beyond the sprite widget itself."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 RSInterface widget-type behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/a/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TextWidget",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_rsinterface_type",
+          "detail": "The factory sets RSInterface type aI to 4 and stores the supplied text in the widget text field, matching the client's text-widget render path."
+        },
+        {
+          "family": "exact_text_configuration",
+          "detail": "Its fluent methods configure font selection, color, centered/aligned state, shadow state and text-action metadata including the exact default action string 'Select option'."
+        },
+        {
+          "family": "exact_font_table",
+          "detail": "The class owns the shared font array used to select the text renderer for these widgets."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 RSInterface widget-type behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}
