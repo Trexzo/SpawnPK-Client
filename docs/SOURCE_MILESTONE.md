@@ -111,12 +111,38 @@ Publication itself is a separate action and remains forbidden until:
 
 Until those conditions are satisfied, do not create or populate `Trexzo/SpawnPK-Client-Source`.
 
+## Source M1 authority artifact
+
+`spk-source-authority-artifact build` creates the only input layout accepted by the Source Milestone workflow. It requires the complete current release authority and runs the Source Milestone publishability preflight before writing anything.
+
+The artifact contains only:
+
+- `SOURCE-AUTHORITY-ARTIFACT.json`;
+- canonical JSON forms of class/member lineage and release/rebuild manifests;
+- canonical LF `.java` source under `src/`.
+
+It contains no client JAR, rebuilt JAR or classfile.
+
+The artifact manifest binds:
+
+- exact authority repository + 40-hex commit;
+- exact v308 client SHA-256;
+- preflight Source Milestone ID;
+- canonical source-tree SHA-256, file count and byte count;
+- exact SHA-256 for every authority JSON document;
+- exact SHA-256 for every payload file.
+
+`spk-source-authority-artifact verify` independently recomputes the payload file set/hashes and canonical source authority, then rebuilds the Source Milestone preflight from the packaged documents. Hash equality alone is not sufficient: semantic authority drift also fails verification.
+
+Authority artifact IDs use `SRCAUTHART_`; verifier IDs use `SRCAUTHVERIFY_`.
+
 ## GitHub Actions publication gate
 
 The manual workflow `.github/workflows/source-milestone-1.yml` consumes one exact authority artifact from a prior GitHub Actions run. The artifact contract is:
 
 ```text
 authority/
+  SOURCE-AUTHORITY-ARTIFACT.json
   class-lineage.json
   member-lineage.json
   readable-client-manifest.json
@@ -127,7 +153,7 @@ authority/
   src/**/*.java
 ```
 
-The workflow refuses a non-40-hex authority commit, requires that commit to be an ancestor of the workflow revision, rejects non-Java files inside the source authority root, builds the milestone manifest, exactly reproduces it, builds the source-only publication bundle, verifies every indexed file/provenance hash and exported source-tree authority, and uploads the verified result as an Actions artifact.
+The workflow refuses a non-40-hex authority commit and requires that commit to be an ancestor of the workflow revision. Before any milestone build, it independently verifies `SOURCE-AUTHORITY-ARTIFACT.json`: exact payload file set and hashes, Java-only source layout, canonical source-tree authority, exact authority commit, and a full semantic rebuild of the Source Milestone preflight. It then builds the milestone manifest, exactly reproduces it, builds the source-only publication bundle, verifies every indexed file/provenance hash and exported source-tree authority, and uploads the verified result as an Actions artifact.
 
 The uploaded artifact layout is:
 
@@ -140,6 +166,7 @@ source-m1/
     src/**/*.java
     provenance/*.json
   verification/
+    SOURCE-AUTHORITY-VERIFICATION.json
     SOURCE-MILESTONE-VERIFICATION.json
     SOURCE-BUNDLE-VERIFICATION.json
 ```
