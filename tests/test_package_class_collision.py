@@ -15,43 +15,16 @@ from spk_recovery.package_class_collision import (
 
 @unittest.skipUnless(shutil.which("javac"), "javac required")
 class PackageClassCollisionTests(unittest.TestCase):
-    def _fixture(self, root: Path):
-        src = root / "src"
-        blocker_dir = src / "a"
-        candidate_dir = src / "a" / "b" / "c"
-        blocker_dir.mkdir(parents=True)
-        candidate_dir.mkdir(parents=True)
-
-        blocker = blocker_dir / "b.java"
-        blocker.write_text(
-            "package a; public class b {}\n",
-            encoding="utf-8",
-        )
-
-        one = candidate_dir / "One.java"
-        one.write_text(
-            "package a.b.c; public class One {}\n",
-            encoding="utf-8",
-        )
-        two = candidate_dir / "Two.java"
-        two.write_text(
-            "package a.b.c; public class Two { "
-            "public a.b blocker; }\n",
-            encoding="utf-8",
-        )
-
-        classes = root / "classes"
-        classes.mkdir()
+    def _compile(self, sources: list[Path], out: Path):
+        out.mkdir(parents=True, exist_ok=True)
         proc = subprocess.run(
             [
                 "javac",
                 "--release",
                 "9",
                 "-d",
-                str(classes),
-                str(blocker),
-                str(one),
-                str(two),
+                str(out),
+                *map(str, sources),
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -63,13 +36,42 @@ class PackageClassCollisionTests(unittest.TestCase):
             proc.stdout + proc.stderr,
         )
 
+    def _fixture(self, root: Path):
+        blocker_src = root / "blocker-src" / "a"
+        candidate_src = root / "candidate-src" / "a" / "b" / "c"
+        blocker_src.mkdir(parents=True)
+        candidate_src.mkdir(parents=True)
+
+        blocker = blocker_src / "b.java"
+        blocker.write_text(
+            "package a; public class b {}\n",
+            encoding="utf-8",
+        )
+
+        one = candidate_src / "One.java"
+        one.write_text(
+            "package a.b.c; public class One {}\n",
+            encoding="utf-8",
+        )
+        two = candidate_src / "Two.java"
+        two.write_text(
+            "package a.b.c; public class Two {}\n",
+            encoding="utf-8",
+        )
+
+        blocker_classes = root / "blocker-classes"
+        candidate_classes = root / "candidate-classes"
+        self._compile([blocker], blocker_classes)
+        self._compile([one, two], candidate_classes)
+
         jar = root / "fixture.jar"
         with zipfile.ZipFile(jar, "w", zipfile.ZIP_STORED) as z:
-            for path in sorted(classes.rglob("*.class")):
-                z.write(
-                    path,
-                    path.relative_to(classes).as_posix(),
-                )
+            for classes in (blocker_classes, candidate_classes):
+                for path in sorted(classes.rglob("*.class")):
+                    z.write(
+                        path,
+                        path.relative_to(classes).as_posix(),
+                    )
 
         plan = {
             "schema_version": 1,
