@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/t/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigDataMapper",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_serialization_surface",
+          "detail": "Exact v308 rs/t/a imports and uses MessagePackMapper plus SnakeYAML Yaml, DumperOptions and LoaderOptions together with file/input/output primitives, fixing a shared configuration serialization/mapping role rather than a concrete definition loader."
+        },
+        {
+          "family": "exact_read_write_role",
+          "detail": "The recovered source surface includes byte-array/output-stream, file writer/output stream, Files/OpenOption, Map/List and TypeReference machinery, consistent with bidirectional YAML/MessagePack config data loading and emission."
+        },
+        {
+          "family": "exact_subsystem_consumers",
+          "detail": "R247 DefinitionConfigLoader extends this exact class, and reviewed config loaders plus map/wandering-merchant loaders consume the same shared rs/t/a infrastructure; an exact-v308 asset probe independently validated the MessagePackMapper config path."
+        }
+      ],
+      "note": "ConfigDataMapper is a conservative descriptive recovery for the shared YAML/MessagePack mapping utility beneath the v308 config-loader stack. It does not claim a verbatim original developer identifier. Confidence 0.995."
+    }
+  ],
+  "conflicts": []
+}
