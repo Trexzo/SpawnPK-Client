@@ -213,11 +213,11 @@ class NamespaceSourceOverlayTests(unittest.TestCase):
             canonical.mkdir()
             source = canonical / "Use.java"
             source.write_text(
-                "import a.b.C;\n"
                 "public class Use {\n"
                 "  public static void main(String[] args) {\n"
-                "    C value = new C();\n"
-                "    System.out.println(value.w);\n"
+                "    a root = new a();\n"
+                "    a.b.C value = new a.b.C();\n"
+                "    System.out.println(root.v + value.w);\n"
                 "  }\n"
                 "}\n",
                 encoding="utf-8",
@@ -311,7 +311,7 @@ class NamespaceSourceOverlayTests(unittest.TestCase):
                 0,
                 run.stdout + run.stderr,
             )
-            self.assertEqual(run.stdout.strip(), "3")
+            self.assertEqual(run.stdout.strip(), "5")
 
             self.assertEqual(
                 source_tree_digest(canonical),
