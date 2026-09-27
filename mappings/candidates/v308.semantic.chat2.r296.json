@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/c$b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AdventureBookTaskEntry",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_task_shape",
+          "detail": "The exact-v308 record stores AdventureBookTaskTargetType, a target id, primary/secondary task text, an int-pair array, current progress, goal progress and a completion boolean."
+        },
+        {
+          "family": "exact_progress_substitution",
+          "detail": "Its text formatter replaces the exact token '{prog}' with the current/goal progress pair."
+        },
+        {
+          "family": "exact_parent_rendering",
+          "detail": "AdventureBookInterface consumes the entry to select ITEM/NPC_HEAD/OBJ target rendering, choose incomplete/complete sprites from current-versus-goal/completion state, lay out one or two task lines, and materialize the entry's item-pair array."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Adventure Book task model behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}
