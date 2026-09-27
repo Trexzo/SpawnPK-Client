@@ -206,7 +206,7 @@ class NamespaceAliasPlanTests(unittest.TestCase):
                     "a/b/C",
                     (
                         "spk_compile_alias/r8s/"
-                        "deadbeefcafe/Existing"
+                        "hdeadbeefcafe/Existing"
                     ),
                 ],
             )
