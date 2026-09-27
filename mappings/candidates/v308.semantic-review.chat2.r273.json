@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_BE970351A4DEBF7D9618",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_2E591015F3BB051158FD",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000620",
+      "owner_logical_id": "CLIENT_CLASS_000620",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/ap$c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MagicSpellbook",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "Exact v308 enum constants are MODERN, LUNAR and ANCIENTS."
+        },
+        {
+          "family": "accepted_parent_dependency",
+          "detail": "Accepted MagicSpellbookInterface iterates this enum and dispatches its spellbook layout/update path by each value."
+        }
+      ],
+      "note": "The exact three spellbook literals and direct parent dispatch fix this enum's semantic identity."
+    },
+    {
+      "proposal_id": "SEMPROP_4BC2C6A46E3A95B2CC8A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000618",
+      "owner_logical_id": "CLIENT_CLASS_000618",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/ap$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MagicSpellCategory",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "Exact v308 enum constants are COMBAT, TELEPORT and UTILITY, proving a three-way magic-spell category domain."
+        },
+        {
+          "family": "accepted_parent_dependency",
+          "detail": "Accepted R2 MagicSpellbookInterface stores and compares this enum while filtering individual spell entries by category."
+        }
+      ],
+      "note": "Nested enum identity is fixed by exact category literals and its live role inside accepted MagicSpellbookInterface."
+    },
+    {
+      "proposal_id": "SEMPROP_EC9C25BAD5FAFE091647",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000619",
+      "owner_logical_id": "CLIENT_CLASS_000619",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/ap$b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MagicSpell",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "Exact v308 contains 41 spell constants including AIR_STRIKE, CONFUSE, WATER_STRIKE, FIRE_SURGE, HOME_TELEPORT and BOUNTY_TELEPORT."
+        },
+        {
+          "family": "exact_value_shape",
+          "detail": "Each enum value stores two ints plus MagicSpellCategory; constructor writes all three and a static lookup resolves a value by the first int."
+        },
+        {
+          "family": "accepted_parent_dependency",
+          "detail": "Accepted MagicSpellbookInterface resolves widget entries through this enum, reads its category, and compares its second int against the player's magic level."
+        }
+      ],
+      "note": "This is the individual spell enum used by the accepted spellbook interface; identity is direct rather than inferred from adjacency."
+    }
+  ],
+  "unresolved": []
+}
