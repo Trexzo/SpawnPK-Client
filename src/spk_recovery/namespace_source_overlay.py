@@ -334,9 +334,10 @@ def build_namespace_source_overlay(
             "overlay output directory must be empty"
         )
 
-    input_sha, input_count, input_bytes = source_tree_digest(
+    input_sha, input_files, input_bytes = source_tree_digest(
         source_root
     )
+    input_count = len(input_files)
 
     out_dir.mkdir(parents=True, exist_ok=True)
     overlay_root = out_dir / "src"
@@ -385,12 +386,16 @@ def build_namespace_source_overlay(
         shutil.rmtree(overlay_root, ignore_errors=True)
         raise
 
-    output_sha, output_count, output_bytes = source_tree_digest(
+    output_sha, output_files, output_bytes = source_tree_digest(
         overlay_root
     )
-    canonical_after_sha, canonical_after_count, canonical_after_bytes = (
-        source_tree_digest(source_root)
-    )
+    output_count = len(output_files)
+    (
+        canonical_after_sha,
+        canonical_after_files,
+        canonical_after_bytes,
+    ) = source_tree_digest(source_root)
+    canonical_after_count = len(canonical_after_files)
 
     if (
         canonical_after_sha != input_sha
