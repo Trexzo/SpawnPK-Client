@@ -34,6 +34,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--decompiler-jar", type=Path)
     p.add_argument("--source-root", type=Path)
     p.add_argument("--javac")
+    p.add_argument("--private-collision-plan", type=Path)
     p.add_argument("--out", type=Path, required=True)
     args = p.parse_args(argv)
 
@@ -57,6 +58,7 @@ def main(argv: list[str] | None = None) -> int:
             decompiler_jar=args.decompiler_jar,
             source_root=args.source_root,
             javac_command=args.javac,
+            private_collision_plan_path=args.private_collision_plan,
         )
         write_recovery_release_verification(
             report,
