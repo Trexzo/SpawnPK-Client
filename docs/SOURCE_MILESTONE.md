@@ -1,0 +1,112 @@
+# Source Milestone 1
+
+Source Milestone 1 is the publication gate for the recovered v308 Java source repository.
+
+The target publication repository is:
+
+`Trexzo/SpawnPK-Client-Source`
+
+That repository MUST NOT be created or populated until a source milestone manifest reports:
+
+```json
+"publishable": true
+```
+
+## Hard gates
+
+A milestone is publishable only when all of the following hold:
+
+1. The milestone is bound to one exact lowercase 40-hex `SpawnPK-Client` authority commit.
+2. The recovery authority is exactly build `v308`.
+3. The exact client authority SHA-256 links across readable, recovered-source, clean-rebuild, and release authority.
+4. Accepted class/member semantic naming intelligence is carried by the canonical lineage and its semantic provenance.
+5. The semantic namespace ID and class/member plan digests agree across the readable and recovered-source authorities.
+6. Deterministic source-safe fallback naming is enabled with a non-empty fallback prefix.
+7. The recovery release is ready and its reproducibility verification passes.
+8. The canonical Java source-tree SHA-256 matches the release authority.
+9. Clean project compilation completes.
+10. Project binary fallback count is exactly zero.
+11. Generated project classes exactly equal the expected project class set: no missing and no unexpected classes.
+
+A failed gate is recorded in `blockers`; it never gets silently downgraded.
+
+## Manifest
+
+The deterministic milestone manifest has:
+
+- kind: `source_milestone_manifest`
+- ID prefix: `SRCMILESTONE_`
+- source tree SHA-256, Java file count and source byte count
+- exact authority commit and exact client SHA-256
+- semantic namespace and class/member plan digests
+- accepted semantic review IDs recovered from canonical class/member provenance
+- fallback policy
+- recovered workspace, build authority, clean rebuild, release and release-verification IDs
+- collision-derived provenance when present
+- exact project class-set equality
+- publication target and deterministic export layout
+
+Semantic names are evidence-backed recovery names. The milestone does not claim inferred semantic identifiers are original developer identifiers.
+
+## Verification
+
+`spk-source-milestone verify` rebuilds the milestone manifest from its authority inputs and requires exact reproduction.
+
+Verification reports use:
+
+- kind: `source_milestone_verification`
+- ID prefix: `SRCMILEVERIFY_`
+
+Source-tree drift, authority drift, gate drift or provenance drift changes the recomputed manifest and fails exact verification.
+
+## Provenance document
+
+Every publication bundle generates:
+
+`provenance/SOURCE-PROVENANCE.json`
+
+This document is derived directly from the accepted milestone manifest. Callers cannot override it.
+
+It records:
+
+- exact authority repository, commit and client SHA-256
+- exact v308 build ID
+- semantic namespace, class/member plan digests and review IDs
+- deterministic fallback policy
+- recovered workspace, build authority, clean rebuild, release and release-verification IDs
+- collision provenance when present
+- canonical source-tree authority
+- exact project class-set status
+
+Provenance IDs use the prefix `SRCPROV_`.
+
+## Source-only publication bundle
+
+`spk-source-milestone bundle` refuses any manifest where `publishable` is false.
+
+The deterministic bundle contains only:
+
+```text
+SOURCE-MILESTONE.json
+BUNDLE.json
+src/**/*.java
+provenance/SOURCE-PROVENANCE.json
+provenance/*.json
+```
+
+Only `.java` files are copied from the source authority. Classfiles, JARs and unrelated workspace files are not copied.
+
+Bundle IDs use the prefix `SRCBUNDLE_`.
+
+## Publication boundary
+
+Framework code may be merged before an exact v308 milestone is publishable.
+
+Publication itself is a separate action and remains forbidden until:
+
+1. an exact v308 milestone manifest exists;
+2. `publishable=true`;
+3. exact milestone verification reports `verified=true` and `publishable=true`;
+4. the source-only bundle is built from that exact source authority.
+
+Until those conditions are satisfied, do not create or populate `Trexzo/SpawnPK-Client-Source`.
