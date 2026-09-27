@@ -51,6 +51,18 @@ def build_namespace_alias_plan(
         for name in classes
         if name in package_index
     )
+    collision_node_set = set(collision_nodes)
+    root_collision_nodes = [
+        name
+        for name in collision_nodes
+        if not any(
+            ancestor in collision_node_set
+            for ancestor in (
+                "/".join(name.split("/")[:i])
+                for i in range(1, len(name.split("/")))
+            )
+        )
+    ]
 
     readable_sha = _sha256_file(readable_jar)
     namespace_token = readable_sha[:12]
@@ -72,39 +84,55 @@ def build_namespace_alias_plan(
     private_nodes: list[dict[str, Any]] = []
     mapping: dict[str, str] = {}
 
-    for index, old in enumerate(
-        collision_nodes,
+    for index, collision_root in enumerate(
+        root_collision_nodes,
         start=1,
     ):
-        simple = old.rsplit("/", 1)[-1]
-        alias = (
-            alias_root
-            + f"/NODE_{index:04d}/"
-            + simple
-        )
-        if alias in classes or alias in mapping.values():
-            raise NamespaceAliasPlanError(
-                "generated alias identity collision"
-            )
-        mapping[old] = alias
-
-        nested = sorted(
-            name
-            for name in classes
-            if name.startswith(old + "$")
-        )
         descendants = sorted(
-            package_index.get(old, set())
+            package_index.get(collision_root, set())
         )
+        if not descendants:
+            raise NamespaceAliasPlanError(
+                "root collision node has no package descendants"
+            )
+
+        alias_package_root = (
+            alias_root
+            + f"/NODE_{index:04d}"
+        )
+        node_mapping: dict[str, str] = {}
+
+        for old in descendants:
+            relative = old[len(collision_root) + 1:]
+            alias = alias_package_root + "/" + relative
+            if alias in classes or alias in mapping.values():
+                raise NamespaceAliasPlanError(
+                    "generated alias identity collision"
+                )
+            mapping[old] = alias
+            node_mapping[old] = alias
 
         public = {
             "node_id": f"NSALIAS_NODE_{index:04d}",
-            "collision_depth": len(old.split("/")),
-            "nested_class_count": len(nested),
+            "collision_depth": len(
+                collision_root.split("/")
+            ),
             "package_descendant_class_count": len(
                 descendants
             ),
-            "alias_simple_name_preserved": True,
+            "mapped_class_identity_count": len(
+                node_mapping
+            ),
+            "mapped_nested_name_count": sum(
+                "$" in name.rsplit("/", 1)[-1]
+                for name in descendants
+            ),
+            "alias_simple_names_preserved": all(
+                old.rsplit("/", 1)[-1]
+                == alias.rsplit("/", 1)[-1]
+                for old, alias in node_mapping.items()
+            ),
+            "colliding_class_identity_preserved": True,
         }
         public_nodes.append(public)
 
@@ -112,12 +140,16 @@ def build_namespace_alias_plan(
             private_nodes.append(
                 {
                     **public,
-                    "original_internal_name": old,
-                    "alias_internal_name": alias,
-                    "nested_internal_names": nested,
+                    "collision_internal_name": (
+                        collision_root
+                    ),
+                    "alias_package_root": (
+                        alias_package_root
+                    ),
                     "package_descendant_internal_names": (
                         descendants
                     ),
+                    "node_mapping": node_mapping,
                 }
             )
 
@@ -139,11 +171,14 @@ def build_namespace_alias_plan(
             "collision_node_count": len(
                 collision_nodes
             ),
+            "root_collision_node_count": len(
+                root_collision_nodes
+            ),
             "mapped_class_identity_count": len(
                 mapping
             ),
-            "nested_class_count": sum(
-                row["nested_class_count"]
+            "mapped_nested_name_count": sum(
+                row["mapped_nested_name_count"]
                 for row in public_nodes
             ),
             "package_descendant_class_count": sum(
