@@ -57,6 +57,7 @@ spk-release-build-recovered = "spk_recovery.release_workspace_orchestrator_cli:m
 spk-update-release = "spk_recovery.update_release_cli:main"
 spk-release-verify = "spk_recovery.release_verify_cli:main"
 spk-source-milestone = "spk_recovery.source_milestone_cli:main"
+spk-source-authority-bundle = "spk_recovery.source_authority_bundle_cli:main"
 spk-source-export = "spk_recovery.source_repository_export_cli:main"
 spk-source-milestone-verify = "spk_recovery.source_milestone_verify_cli:main"
 
