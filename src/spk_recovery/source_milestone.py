@@ -480,6 +480,132 @@ def verify_source_milestone_manifest(
     }
 
 
+def build_source_provenance_document(
+    manifest: dict[str, Any],
+) -> dict[str, Any]:
+    _require_doc(
+        manifest,
+        kind="source_milestone_manifest",
+        label="source_milestone_manifest",
+    )
+
+    provenance = manifest.get("provenance")
+    source_tree = manifest.get("source_tree")
+    class_set = manifest.get("class_set")
+    publication = manifest.get("publication")
+
+    if not isinstance(provenance, dict):
+        raise SourceMilestoneError(
+            "milestone manifest lacks provenance"
+        )
+    if not isinstance(source_tree, dict):
+        raise SourceMilestoneError(
+            "milestone manifest lacks source_tree"
+        )
+    if not isinstance(class_set, dict):
+        raise SourceMilestoneError(
+            "milestone manifest lacks class_set"
+        )
+    if not isinstance(publication, dict):
+        raise SourceMilestoneError(
+            "milestone manifest lacks publication"
+        )
+
+    material = {
+        "milestone_id": manifest.get("milestone_id"),
+        "publishable": manifest.get("publishable"),
+        "provenance": provenance,
+        "source_tree": source_tree,
+        "class_set": class_set,
+        "publication_repository": publication.get(
+            "target_repository"
+        ),
+    }
+
+    return {
+        "schema_version": 1,
+        "kind": "source_milestone_provenance",
+        "provenance_id": (
+            "SRCPROV_"
+            + _stable_digest(material)[:20].upper()
+        ),
+        "milestone_id": manifest.get("milestone_id"),
+        "publishable": bool(manifest.get("publishable")),
+        "authority": {
+            "repository": provenance.get(
+                "authority_repository"
+            ),
+            "commit": provenance.get("authority_commit"),
+            "client_sha256": provenance.get(
+                "authority_client_sha256"
+            ),
+            "build_id": provenance.get("build_id"),
+        },
+        "semantic_authority": {
+            "namespace_id": provenance.get(
+                "semantic_namespace_id"
+            ),
+            "class_plan_digest": provenance.get(
+                "class_plan_digest"
+            ),
+            "member_plan_digest": provenance.get(
+                "member_plan_digest"
+            ),
+            "review_ids": list(
+                provenance.get(
+                    "semantic_review_ids",
+                    [],
+                )
+            ),
+            "fallback_policy": provenance.get(
+                "fallback_policy"
+            ),
+        },
+        "recovery_authority": {
+            "readable_manifest_id": provenance.get(
+                "readable_manifest_id"
+            ),
+            "recovered_workspace_id": provenance.get(
+                "recovered_workspace_id"
+            ),
+            "build_authority_id": provenance.get(
+                "build_authority_id"
+            ),
+            "clean_rebuild_id": provenance.get(
+                "clean_rebuild_id"
+            ),
+            "release_id": provenance.get(
+                "release_id"
+            ),
+            "release_verification_id": provenance.get(
+                "release_verification_id"
+            ),
+            "collision_provenance": provenance.get(
+                "collision_provenance"
+            ),
+        },
+        "source_authority": {
+            "tree_sha256": source_tree.get("sha256"),
+            "java_file_count": source_tree.get(
+                "java_file_count"
+            ),
+            "source_bytes": source_tree.get(
+                "source_bytes"
+            ),
+            "layout": source_tree.get("layout"),
+        },
+        "class_set": class_set,
+        "publication_repository": publication.get(
+            "target_repository"
+        ),
+        "semantic_name_statement": (
+            "Accepted semantic names are evidence-backed recovery "
+            "names. No field in this document claims an inferred "
+            "semantic identifier is the original developer name."
+        ),
+    }
+
+
 def build_source_publication_bundle(
     manifest: dict[str, Any],
     source_root: Path,
@@ -531,14 +657,41 @@ def build_source_publication_bundle(
     provenance_out = out_dir / "provenance"
     provenance_out.mkdir(parents=True, exist_ok=True)
 
+    milestone_provenance = build_source_provenance_document(
+        manifest
+    )
+    milestone_provenance_raw = (
+        json.dumps(
+            milestone_provenance,
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n"
+    )
+    (
+        provenance_out / "SOURCE-PROVENANCE.json"
+    ).write_text(
+        milestone_provenance_raw,
+        encoding="utf-8",
+    )
+
     (out_dir / "SOURCE-MILESTONE.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True)
         + "\n",
         encoding="utf-8",
     )
 
-    provenance_index: dict[str, str] = {}
+    provenance_index: dict[str, str] = {
+        "SOURCE-PROVENANCE.json": hashlib.sha256(
+            milestone_provenance_raw.encode("utf-8")
+        ).hexdigest(),
+    }
     for name in sorted(provenance_documents):
+        if name == "SOURCE-PROVENANCE.json":
+            raise SourceMilestoneError(
+                "SOURCE-PROVENANCE.json is generated from the "
+                "milestone manifest and cannot be overridden"
+            )
         if not re.fullmatch(r"[A-Za-z0-9_.-]+\.json", name):
             raise SourceMilestoneError(
                 "invalid provenance document name"
