@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TimedInterfaceTask",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interval_gate",
+          "detail": "The abstract base stores an interval and last-run timestamp; its final execution path calls the subclass hook only when the interval is zero or the elapsed wall-clock time reaches that interval, then updates last-run time."
+        },
+        {
+          "family": "exact_registry_families",
+          "detail": "The class statically owns and registers three int-keyed registries for its concrete interface-task subclasses and exposes one reset that clears every registry."
+        },
+        {
+          "family": "exact_ui_consumers",
+          "detail": "Exact-v308 consumers bind concrete subclasses to interface/widget ids for Event Activity refresh, Event Brawl status updates and hotspot hover tasks, fixing the abstraction as timed interface work rather than a generic scheduler."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 timed interface-task behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InterfaceTaskRegistry",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_int_keyed_storage",
+          "detail": "The class owns a Trove int-to-List map of TimedInterfaceTask instances; registration lazily creates the list for an integer key and appends the task."
+        },
+        {
+          "family": "exact_dispatch",
+          "detail": "Dispatch by integer key iterates the corresponding task list and invokes the TimedInterfaceTask interval-gated execution path for every registered task."
+        },
+        {
+          "family": "exact_interface_id_join",
+          "detail": "Concrete registrations use live interface/widget ids such as 30072, 40087 and 62150-62156, while rendering/input paths dispatch by the active RSInterface id, fixing the key domain to interface/widget identities."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 timed interface-task behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}
