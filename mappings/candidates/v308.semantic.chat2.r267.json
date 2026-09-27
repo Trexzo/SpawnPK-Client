@@ -76,37 +76,6 @@
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "target": {
         "kind": "class",
-        "owner": "rs/ui/a/f",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "InfoBoxManager",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_string_surface",
-          "detail": "Exact v308 preserves Default Group, InfoBoxOverlay, infoboxgroup, infoboxoverlay, orient_, Detach InfoBox, Flip, Delete, and InfoBox manager log strings."
-        },
-        {
-          "family": "exact_manager_contract",
-          "detail": "The class owns InfoBoxOverlay layers, adds/removes/sorts InfoBox instances, persists layer/orientation state, merges/splits layers, rescales images, and reacts to game/menu events."
-        },
-        {
-          "family": "upstream_source_parity",
-          "detail": "RuneLite InfoBoxManager has the same layer map, menu entries, persistence keys, insertion ordering, image-rescale path, split/merge behavior and overlay lifecycle."
-        }
-      ],
-      "note": "Exact behavior and surviving constants match RuneLite InfoBoxManager; confidence 0.999."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
         "owner": "rs/ui/a/i",
         "name": null,
         "descriptor": null

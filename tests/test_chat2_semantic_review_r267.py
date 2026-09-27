@@ -13,7 +13,6 @@ ROOT = Path(__file__).resolve().parents[1]
 CLASS_COORDS = [
     ("CLIENT_CLASS_001017", "rs/ui/a/a"),
     ("CLIENT_CLASS_001018", "rs/ui/a/b"),
-    ("CLIENT_CLASS_001022", "rs/ui/a/f"),
     ("CLIENT_CLASS_001025", "rs/ui/a/i"),
     ("CLIENT_CLASS_001026", "rs/ui/a/j"),
 ]
@@ -71,9 +70,9 @@ class Chat2SemanticReviewR267Tests(unittest.TestCase):
         candidates = _load("mappings/candidates/v308.semantic.chat2.r267.json")
         expected = _load("mappings/candidates/v308.semantic-review.chat2.r267.json")
         actual = resolve_semantic_candidates(_class_lineage(), _member_lineage(), candidates)
-        self.assertEqual(actual["proposal_count"], 5)
+        self.assertEqual(actual["proposal_count"], 4)
         self.assertEqual(actual["unresolved"], [])
-        self.assertEqual(actual["review_id"], "SEMREVIEW_A3DAE64925416FF5BE45")
+        self.assertEqual(actual["review_id"], "SEMREVIEW_87DCA8E01DE2EB648DC6")
         self.assertEqual(actual, expected)
 
     def test_r267_expected_stable_ids(self):
@@ -83,7 +82,6 @@ class Chat2SemanticReviewR267Tests(unittest.TestCase):
             {
                 "BoostInfoBox": "CLIENT_CLASS_001017",
                 "CounterInfoBox": "CLIENT_CLASS_001018",
-                "InfoBoxManager": "CLIENT_CLASS_001022",
                 "StatusInfoBox": "CLIENT_CLASS_001025",
                 "TimerInfoBox": "CLIENT_CLASS_001026",
             },

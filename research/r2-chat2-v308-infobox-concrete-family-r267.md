@@ -8,55 +8,53 @@ Exact client authority:
 
 - `rs/ui/a/a` -> `CLIENT_CLASS_001017` -> `BoostInfoBox`
 - `rs/ui/a/b` -> `CLIENT_CLASS_001018` -> `CounterInfoBox`
-- `rs/ui/a/f` -> `CLIENT_CLASS_001022` -> `InfoBoxManager`
 - `rs/ui/a/i` -> `CLIENT_CLASS_001025` -> `StatusInfoBox`
 - `rs/ui/a/j` -> `CLIENT_CLASS_001026` -> `TimerInfoBox`
-- review: `SEMREVIEW_A3DAE64925416FF5BE45`
+- review: `SEMREVIEW_87DCA8E01DE2EB648DC6`
 - unresolved: **0**
 - field/method proposals: **0**
 
 ## Exact identities
 
-Three SpawnPK-specific concrete nouns survive directly in generated `toString` recipes:
+All four names survive directly in exact-v308 generated `toString` recipes:
 
 - `BoostInfoBox(offset=…, skillId=…)`
 - `CounterInfoBox(count=…)`
 - `StatusInfoBox(EMPTY=…)`
-
-The timer likewise self-identifies as:
-
 - `TimerInfoBox(startTime=…, endTime=…, duration=…)`
 
-The exact timer bytecode independently preserves the positive-period guard
-`negative period!`, start/end/duration state, 10% red threshold, expiry render/cull behavior,
-and duration mutation paths.
+`BoostInfoBox` stores the skill id and current offset, renders a leading plus sign for
+positive boosts, and selects its text color from the offset sign.
 
-## InfoBoxManager
+`CounterInfoBox` stores one count, renders blank for the exact sentinel value `-1`,
+otherwise renders the decimal count, and uses white text.
 
-`rs/ui/a/f` owns the full reviewed InfoBox/InfoBoxOverlay lifecycle. Exact v308 preserves:
+`StatusInfoBox` is an image/status-only InfoBox specialization whose text is empty and
+whose text color is white.
 
-- `Default Group`
-- `InfoBoxOverlay`
-- `infoboxgroup`
-- `infoboxoverlay`
-- `orient_`
-- `Detach InfoBox`
-- `Flip`
-- `Delete`
-- add/remove/move/merge InfoBox log messages
+`TimerInfoBox` independently preserves the full timer contract: positive-period validation
+with `negative period!`, start/end/duration state, minute/hour formatting, the final-10%
+red threshold, expiry render/cull behavior, and duration mutation guarded by
+`negative duration`.
 
-Its layer map, sorting, image scaling, layer persistence, orientation persistence,
-split/merge behavior, and overlay registration match RuneLite InfoBoxManager.
+RuneLite's historical Timer/Counter InfoBox family independently corroborates those exact
+behavioral roles, while SpawnPK's own generated strings preserve the suffixed class nouns.
 
-## Deliberate exclusions
+## Existing authority deliberately excluded
 
-- `rs/ui/a/c` = already reviewed `InfoBox`
-- `rs/ui/a/d` = already reviewed `InfoBoxComponent`
-- `rs/ui/a/e` = already reviewed `InfoBoxSpriteType`
-- `rs/ui/a/g` = already reviewed `InfoBoxOverlay`
-- `rs/ui/a/h` = already reviewed `InfoBoxPriority`
+`rs/ui/a/f` / `CLIENT_CLASS_001022` is already reviewed in **R11** as
+`InfoBoxManager` under review `SEMREVIEW_688BC62BD168440903CD`.
 
-R267 therefore fills only the remaining live InfoBox-domain classes in this package.
+The first R267 draft rediscovered that same owner/name with stronger source-parity evidence.
+The overlap guard correctly rejected it. R267 therefore does not duplicate or supersede R11.
+
+Other existing InfoBox owners remain unchanged:
+
+- `rs/ui/a/c` -> `InfoBox`
+- `rs/ui/a/d` -> `InfoBoxComponent`
+- `rs/ui/a/e` -> `InfoBoxSpriteType`
+- `rs/ui/a/g` -> `InfoBoxOverlay`
+- `rs/ui/a/h` -> `InfoBoxPriority`
 
 ## Acceptance boundary
 
