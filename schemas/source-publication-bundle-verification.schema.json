@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/source-publication-bundle-verification.schema.json",
+  "title": "SpawnPK source publication bundle verification",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "verification_id",
+    "bundle_id",
+    "milestone_id",
+    "verified",
+    "checks",
+    "source_tree_sha256",
+    "source_file_count",
+    "source_bytes",
+    "indexed_file_count",
+    "provenance_document_count"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "source_publication_bundle_verification"},
+    "verification_id": {
+      "type": "string",
+      "pattern": "^SRCBUNDLEVERIFY_[0-9A-F]{20}$"
+    },
+    "bundle_id": {"type": ["string", "null"]},
+    "milestone_id": {"type": ["string", "null"]},
+    "verified": {"type": "boolean"},
+    "checks": {
+      "type": "object",
+      "additionalProperties": {"type": "boolean"}
+    },
+    "source_tree_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "source_file_count": {"type": "integer", "minimum": 0},
+    "source_bytes": {"type": "integer", "minimum": 0},
+    "indexed_file_count": {"type": "integer", "minimum": 0},
+    "provenance_document_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false
+}
