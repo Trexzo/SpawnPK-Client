@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import json
 import shutil
 import subprocess
 import tempfile
@@ -207,6 +208,115 @@ class NamespaceVirtualizedCompileTests(unittest.TestCase):
                 run.stdout + run.stderr,
             )
             self.assertEqual(run.stdout.strip(), "5")
+
+    def test_report_mode_preserves_remaining_javac_frontier(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            collision = self._collision_jar(root)
+            source_root = self._canonical_source(root)
+            source = source_root / "Use.java"
+            sentinel = "missingVirtualizedSentinel"
+            source.write_text(
+                source.read_text(encoding="utf-8").replace(
+                    "root.v + value.w",
+                    "root.v + value.w + " + sentinel,
+                ),
+                encoding="utf-8",
+            )
+            canonical_before = source_tree_digest(source_root)
+
+            plan = build_namespace_alias_plan(
+                collision,
+                include_identifiers=True,
+            )
+
+            with self.assertRaises(
+                NamespaceVirtualizedCompileError
+            ):
+                compile_with_namespace_virtualization(
+                    plan,
+                    source_root,
+                    collision,
+                    root / "fail-fast",
+                )
+
+            private_out = root / "private-javac.json"
+            first = compile_with_namespace_virtualization(
+                plan,
+                source_root,
+                collision,
+                root / "reported-1",
+                report_compile_failure=True,
+                private_diagnostic_report_out=private_out,
+            )
+            second = compile_with_namespace_virtualization(
+                plan,
+                source_root,
+                collision,
+                root / "reported-2",
+                report_compile_failure=True,
+            )
+
+            self.assertEqual(first["status"], "compile_failed")
+            self.assertEqual(second["status"], "compile_failed")
+            self.assertEqual(
+                first["compile_id"],
+                second["compile_id"],
+            )
+            self.assertEqual(
+                first["restored_classes"]["class_count"],
+                0,
+            )
+            self.assertEqual(
+                first["generated_alias_classes"]["class_count"],
+                0,
+            )
+            self.assertFalse(
+                first["runtime_alias_dependency_allowed"]
+            )
+
+            diagnostic = first["compiler"][
+                "diagnostic_classification"
+            ]
+            self.assertIsNotNone(diagnostic)
+            self.assertEqual(
+                diagnostic["summary"]["total_errors"],
+                1,
+            )
+            self.assertEqual(
+                diagnostic["summary"]["cannot_find_symbol"]["count"],
+                1,
+            )
+            self.assertEqual(
+                diagnostic["summary"]["cannot_find_symbol"][
+                    "symbol_kinds"
+                ],
+                {"variable": 1},
+            )
+            self.assertNotIn(sentinel, str(diagnostic))
+
+            self.assertTrue(private_out.is_file())
+            private = json.loads(
+                private_out.read_text(encoding="utf-8")
+            )
+            self.assertTrue(private["identifiers_included"])
+            self.assertEqual(
+                private["report_id"],
+                diagnostic["report_id"],
+            )
+            self.assertEqual(
+                private["frontier_id"],
+                diagnostic["frontier_id"],
+            )
+            self.assertIn(sentinel, str(private))
+
+            self.assertEqual(
+                source_tree_digest(source_root),
+                canonical_before,
+            )
+            self.assertFalse(
+                (root / "reported-1" / "restored-classes").exists()
+            )
 
     def test_nonempty_output_is_refused(self):
         with tempfile.TemporaryDirectory() as td:

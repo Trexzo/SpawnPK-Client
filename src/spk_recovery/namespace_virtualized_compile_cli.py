@@ -27,6 +27,22 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
         default=[],
     )
+    p.add_argument(
+        "--report-compile-failure",
+        action="store_true",
+        help=(
+            "return a structured compile_failed report instead of refusing "
+            "when javac fails"
+        ),
+    )
+    p.add_argument(
+        "--private-diagnostic-report-out",
+        type=Path,
+        help=(
+            "write identifier-bearing javac diagnostics on reported compile "
+            "failure; never commit this artifact"
+        ),
+    )
     args = p.parse_args(argv)
 
     try:
@@ -41,6 +57,10 @@ def main(argv: list[str] | None = None) -> int:
             javac_command=args.javac_command,
             release=args.release,
             extra_classpath=args.extra_classpath,
+            report_compile_failure=args.report_compile_failure,
+            private_diagnostic_report_out=(
+                args.private_diagnostic_report_out
+            ),
         )
     except (
         NamespaceVirtualizedCompileError,
@@ -51,8 +71,13 @@ def main(argv: list[str] | None = None) -> int:
         print(f"REFUSED: {exc}", file=sys.stderr)
         return 2
 
-    print("SPK_NAMESPACE_VIRTUALIZED_COMPILE_PASS")
+    status = report.get("status", "complete")
+    print(
+        "SPK_NAMESPACE_VIRTUALIZED_COMPILE_"
+        + status.upper()
+    )
     print(f"compile_id={report['compile_id']}")
+    print(f"status={status}")
     print(
         "canonical_source_modified="
         f"{report['canonical_source_modified']}"
@@ -80,7 +105,28 @@ def main(argv: list[str] | None = None) -> int:
             / "namespace-virtualized-compile.json"
         )
     )
-    return 0
+    diagnostic = report["compiler"].get(
+        "diagnostic_classification"
+    )
+    if diagnostic is not None:
+        print(
+            "javac_diagnostic_report_id="
+            f"{diagnostic['report_id']}"
+        )
+        print(
+            "javac_frontier_id="
+            f"{diagnostic['frontier_id']}"
+        )
+        print(
+            "javac_total_errors="
+            f"{diagnostic['summary']['total_errors']}"
+        )
+    if args.private_diagnostic_report_out is not None:
+        print(
+            "private_diagnostic_report_out="
+            f"{args.private_diagnostic_report_out.resolve()}"
+        )
+    return 0 if status == "complete" else 3
 
 
 if __name__ == "__main__":
