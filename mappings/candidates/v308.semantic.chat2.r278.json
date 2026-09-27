@@ -1,0 +1,277 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutSelectionListCellRenderer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_renderer_role",
+          "detail": "Exact v308 extends DefaultListCellRenderer and resolves each visible loadout entry from the active loadout collection or current combo-box selection."
+        },
+        {
+          "family": "exact_visual_contract",
+          "detail": "The renderer applies the loadout's stored Color and optional loadout icon to the JLabel, while using the shared loadout selection background."
+        },
+        {
+          "family": "exact_owner_join",
+          "detail": "rs/gui/b/a/k constructs this renderer directly and installs it as its JComboBox renderer."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout UI behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CreateLoadoutButton",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_component_identity",
+          "detail": "Exact v308 is a JButton used by the loadout window with tooltip 'Create a new loadout' and the create icon supplied by the owning panel."
+        },
+        {
+          "family": "exact_create_flow",
+          "detail": "Its a() method opens LoadoutPropertiesFrame with exact title 'Name Your Loadout' and action label 'Create'."
+        },
+        {
+          "family": "exact_listener_binding",
+          "detail": "The button installs rs/gui/b/a/h as its listener and the created properties frame installs rs/gui/b/a/i as the create action."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout UI behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OpenCreateLoadoutAction",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_delegation",
+          "detail": "The ActionListener has exactly one behavior: invoke CreateLoadoutButton.a(), which opens the exact 'Name Your Loadout' create frame."
+        },
+        {
+          "family": "exact_button_binding",
+          "detail": "CreateLoadoutButton constructs and attaches this listener directly to itself."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout UI behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CreateLoadoutAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_model_mutation",
+          "detail": "The ActionListener asks the loadout manager to create a loadout in the currently selected folder using the name from LoadoutPropertiesFrame."
+        },
+        {
+          "family": "exact_property_copy",
+          "detail": "On successful creation it copies the selected icon and color from LoadoutPropertiesFrame into the new loadout record."
+        },
+        {
+          "family": "exact_persistence_join",
+          "detail": "It persists/refreshes the active folder's loadout collection through the same loadout manager after creation."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout UI behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutIconListCellRenderer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_renderer_role",
+          "detail": "Exact v308 extends DefaultListCellRenderer for the LoadoutPropertiesFrame icon JComboBox."
+        },
+        {
+          "family": "exact_icon_contract",
+          "detail": "Entries beginning with 'None' retain no icon; positive selections map index-1 into the loadout-icon enum and apply that enum's Swing Icon."
+        },
+        {
+          "family": "exact_parent_join",
+          "detail": "LoadoutPropertiesFrame constructs this renderer directly for its Icon selector whose first entry is 'None (Default)'."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout UI behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutSelectionComboBox",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_component_role",
+          "detail": "Exact v308 extends JComboBox<String>, is constructed by the loadout window from the current loadout-name array, and has fixed preferred size 150x25."
+        },
+        {
+          "family": "exact_renderer_join",
+          "detail": "It installs LoadoutSelectionListCellRenderer as its renderer."
+        },
+        {
+          "family": "exact_listener_family",
+          "detail": "It installs rs/gui/b/a/l as PopupMenuListener and rs/gui/b/a/m as ActionListener, forming the loadout-selection control family."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout UI behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutSelectionPopupListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_popup_lifecycle",
+          "detail": "When the loadout selection popup opens or is canceled it repaints the loadout window; when it closes it invokes the window refresh/rebuild method."
+        },
+        {
+          "family": "exact_parent_binding",
+          "detail": "LoadoutSelectionComboBox constructs and installs this class exclusively as its PopupMenuListener."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout UI behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutSelectionAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_selection_mutation",
+          "detail": "The ActionListener writes the combo box selected index into the loadout manager for the manager's currently selected folder."
+        },
+        {
+          "family": "exact_refresh_join",
+          "detail": "After changing the selected loadout index it repaints the owning loadout window."
+        },
+        {
+          "family": "exact_parent_binding",
+          "detail": "LoadoutSelectionComboBox constructs and installs this class directly as its ActionListener."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout UI behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/z",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutPropertiesCloseAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_close_role",
+          "detail": "The ActionListener only hides and disposes LoadoutPropertiesFrame; it performs no loadout mutation itself."
+        },
+        {
+          "family": "exact_frame_binding",
+          "detail": "LoadoutPropertiesFrame appends this listener to its action button after the caller-supplied create/rename listener, making it the shared close-after-action handler."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout UI behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}
