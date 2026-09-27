@@ -63,9 +63,10 @@ def export_source_repository(
         milestone_manifest.get("source", {})
         .get("source_tree_sha256")
     )
-    actual_tree, java_count, source_bytes = source_tree_digest(
+    actual_tree, source_files, source_bytes = source_tree_digest(
         source_root
     )
+    java_count = len(source_files)
     if actual_tree != expected_tree:
         raise SourceRepositoryExportError(
             "source root SHA-256 disagrees with milestone authority"
@@ -81,9 +82,10 @@ def export_source_repository(
     export_source = out_dir / "src"
     shutil.copytree(source_root, export_source)
 
-    exported_tree, exported_count, exported_bytes = (
+    exported_tree, exported_files, exported_bytes = (
         source_tree_digest(export_source)
     )
+    exported_count = len(exported_files)
     if exported_tree != expected_tree:
         raise SourceRepositoryExportError(
             "exported source tree SHA-256 drifted"
