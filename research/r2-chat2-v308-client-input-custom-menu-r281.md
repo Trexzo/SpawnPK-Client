@@ -11,7 +11,7 @@ Exact client authority:
 - `rs/j/a/d$a` -> `CLIENT_CLASS_000306` -> `ClientInputType`
 - `rs/j/b/a` -> `CLIENT_CLASS_000308` -> `CustomMenuSubmenu`
 - `rs/j/b/d` -> `CLIENT_CLASS_000312` -> `CustomMenuManager`
-- review: `SEMREVIEW_9DD057FFF37BEE95F186`
+- review: `SEMREVIEW_E5F3C409B85AAE7D0999`
 - unresolved: **0**
 - member proposals: **0**
 

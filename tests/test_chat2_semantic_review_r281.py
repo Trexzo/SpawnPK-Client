@@ -65,7 +65,7 @@ class Chat2SemanticReviewR281Tests(unittest.TestCase):
         actual = resolve_semantic_candidates(_class_lineage(), _member_lineage(), candidates)
         self.assertEqual(actual["proposal_count"], 5)
         self.assertEqual(actual["unresolved"], [])
-        self.assertEqual(actual["review_id"], "SEMREVIEW_9DD057FFF37BEE95F186")
+        self.assertEqual(actual["review_id"], "SEMREVIEW_E5F3C409B85AAE7D0999")
         self.assertEqual(actual, expected)
 
     def test_r281_expected_stable_ids(self):
