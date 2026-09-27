@@ -120,6 +120,7 @@ def verify_recovery_release(
     decompiler_jar: Path | None = None,
     source_root: Path | None = None,
     javac_command: str | None = None,
+    private_collision_plan_path: Path | None = None,
 ) -> dict[str, Any]:
     if (
         release_manifest.get("schema_version") != 1
@@ -259,6 +260,144 @@ def verify_recovery_release(
                     ),
                 )
 
+    compile_transport = clean_rebuild_report.get(
+        "compile_transport"
+    )
+    collision_mode = (
+        isinstance(compile_transport, dict)
+        and compile_transport.get("mode")
+        == "collision_derived_remap"
+    )
+
+    if collision_mode:
+        _check(
+            checks,
+            name="collision_private_plan_supplied",
+            expected=True,
+            actual=private_collision_plan_path is not None,
+        )
+
+        _check(
+            checks,
+            name="collision_plan_id_authority",
+            expected=recovered_source_manifest.get(
+                "collision_plan_id"
+            ),
+            actual=compile_transport.get(
+                "collision_plan_id"
+            ),
+        )
+        _check(
+            checks,
+            name="collision_report_id_authority",
+            expected=recovered_source_manifest.get(
+                "collision_report_id"
+            ),
+            actual=compile_transport.get(
+                "collision_report_id"
+            ),
+        )
+        _check(
+            checks,
+            name="collision_transform_id_authority",
+            expected=recovered_source_manifest.get(
+                "collision_transform_id"
+            ),
+            actual=compile_transport.get(
+                "collision_transform_id"
+            ),
+        )
+        _check(
+            checks,
+            name="collision_base_readable_authority",
+            expected=str(
+                recovered_source_manifest.get(
+                    "base_readable_jar_sha256",
+                    "",
+                )
+            ).lower(),
+            actual=str(
+                clean_rebuild_report.get(
+                    "readable_jar_sha256",
+                    "",
+                )
+            ).lower(),
+        )
+
+        if private_collision_plan_path is not None:
+            plan_path = private_collision_plan_path.resolve()
+            if not plan_path.is_file():
+                raise RecoveryReleaseVerificationError(
+                    "private collision plan does not exist: "
+                    + str(plan_path)
+                )
+            try:
+                private_plan = json.loads(
+                    plan_path.read_text(encoding="utf-8")
+                )
+            except (
+                OSError,
+                ValueError,
+                json.JSONDecodeError,
+            ) as exc:
+                raise RecoveryReleaseVerificationError(
+                    "private collision plan is not valid JSON"
+                ) from exc
+
+            _check(
+                checks,
+                name="collision_private_plan_kind",
+                expected=(
+                    "class_package_namespace_collision_plan"
+                ),
+                actual=private_plan.get("kind"),
+            )
+            _check(
+                checks,
+                name="collision_private_plan_id",
+                expected=compile_transport.get(
+                    "collision_plan_id"
+                ),
+                actual=private_plan.get("plan_id"),
+            )
+            _check(
+                checks,
+                name="collision_private_plan_report_id",
+                expected=compile_transport.get(
+                    "collision_report_id"
+                ),
+                actual=private_plan.get(
+                    "collision_report_id"
+                ),
+            )
+            _check(
+                checks,
+                name="collision_private_plan_readable_sha256",
+                expected=str(
+                    recovered_source_manifest.get(
+                        "base_readable_jar_sha256",
+                        "",
+                    )
+                ).lower(),
+                actual=str(
+                    private_plan.get(
+                        "readable_jar_sha256",
+                        "",
+                    )
+                ).lower(),
+            )
+            _check(
+                checks,
+                name="collision_private_plan_sha256",
+                expected=str(
+                    compile_transport.get(
+                        "collision_plan_sha256",
+                        "",
+                    )
+                ).lower(),
+                actual=_sha256_file(plan_path),
+            )
+
     required_failures = [
         row
         for row in checks
@@ -309,9 +448,19 @@ def verify_recovery_release(
         "checks": checks,
         "toolchain_probe": toolchain,
         "note": (
-            "verified means the supplied release manifest reproduces exactly "
-            "from its authority documents and all explicitly supplied on-disk "
-            "artifacts/toolchain checks match their recorded pins."
+            (
+                "verified means the supplied collision-derived release "
+                "manifest reproduces exactly, the private collision plan "
+                "matches its recorded plan/report/readable/SHA authority, "
+                "and all explicitly supplied on-disk artifacts/toolchain "
+                "checks match their recorded pins."
+            )
+            if collision_mode
+            else (
+                "verified means the supplied release manifest reproduces exactly "
+                "from its authority documents and all explicitly supplied on-disk "
+                "artifacts/toolchain checks match their recorded pins."
+            )
         ),
     }
 
