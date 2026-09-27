@@ -184,11 +184,13 @@ class SourceMilestoneTests(unittest.TestCase):
                 *docs,
                 src,
                 out_a,
+                authority_commit=COMMIT,
             )
             b = build_source_authority_bundle(
                 *copy.deepcopy(docs),
                 src,
                 out_b,
+                authority_commit=COMMIT,
             )
 
             self.assertEqual(a, b)
@@ -196,6 +198,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 a["bundle_id"].startswith("SOURCE_AUTHORITY_")
             )
             self.assertEqual(a["source_tree_sha256"], tree)
+            self.assertEqual(a["authority_commit"], COMMIT)
             self.assertEqual(a["java_file_count"], count)
 
             for rel in (
@@ -228,6 +231,7 @@ class SourceMilestoneTests(unittest.TestCase):
                     *docs,
                     src,
                     root / "bundle",
+                    authority_commit=COMMIT,
                 )
 
     def test_export_is_byte_faithful_and_verifiable(self):
