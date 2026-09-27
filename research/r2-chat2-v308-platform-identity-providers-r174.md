@@ -12,18 +12,21 @@ identifier providers consumed by the already-reviewed R66 `Signlink`.
 - candidate classes: **3**
 - resolved proposals: **3**
 - unresolved: **0**
-- review ID: `SEMREVIEW_58B30FAC567CE1A27397`
+- review ID: `SEMREVIEW_0EA085C1B6A9E3C68871`
 - field/method proposals: **0**
 
 ## Stable IDs
 
-- `rs/secure/a` -> `CLIENT_CLASS_000977` -> `LinuxHardwareSerialProvider`
-- `rs/secure/b` -> `CLIENT_CLASS_000978` -> `MacHardwareSerialProvider`
-- `rs/secure/c` -> `CLIENT_CLASS_000979` -> `WindowsInstallDateProvider`
+- `rs/secure/a` -> `CLIENT_CLASS_000978` -> `LinuxHardwareSerialProvider`
+- `rs/secure/b` -> `CLIENT_CLASS_000979` -> `MacHardwareSerialProvider`
+- `rs/secure/c` -> `CLIENT_CLASS_000980` -> `WindowsInstallDateProvider`
 
 The nearby exact-named `rs/secure/HardwareValidator` is deliberately excluded from R174.
-It only detects operating-system family and has no live project consumer outside its own
-standalone diagnostic `main` method.
+Its preserved class identity is reviewed separately in R251.
+
+The stable IDs above were re-derived from the complete exact-v308 `seed_lineage()` ordering,
+not from adjacency: `HardwareValidator` is `CLIENT_CLASS_000977`, followed by
+`rs/secure/a` through `rs/secure/c` at `000978` through `000980`.
 
 ## LinuxHardwareSerialProvider
 
@@ -128,4 +131,4 @@ R174 remains class-only.
 ## Acceptance boundary
 
 Chat 2 does not promote R174. Main/Core may accept any subset only through an explicit
-`semantic_acceptance_spec` bound to `SEMREVIEW_58B30FAC567CE1A27397`.
+`semantic_acceptance_spec` bound to `SEMREVIEW_0EA085C1B6A9E3C68871`.

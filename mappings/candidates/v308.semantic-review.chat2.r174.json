@@ -5,43 +5,13 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 3,
-  "review_id": "SEMREVIEW_58B30FAC567CE1A27397",
+  "review_id": "SEMREVIEW_0EA085C1B6A9E3C68871",
   "proposals": [
     {
-      "proposal_id": "SEMPROP_46FBC009B67D38B47FD7",
+      "proposal_id": "SEMPROP_13FE6965757074C27289",
       "target_kind": "class",
       "stable_id": "CLIENT_CLASS_000978",
       "owner_logical_id": "CLIENT_CLASS_000978",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/secure/b",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "MacHardwareSerialProvider",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_mac_command",
-          "detail": "rs/secure/b executes exact '/usr/sbin/system_profiler SPHardwareDataType', scans for the surviving key 'Serial Number', splits on ':', trims the value and caches the result."
-        },
-        {
-          "family": "exact_platform_tool",
-          "detail": "The only external data source is macOS system_profiler with SPHardwareDataType, making the provider's platform and hardware-serial responsibility exact rather than inferred from package adjacency."
-        },
-        {
-          "family": "exact_signlink_consumer",
-          "detail": "R66 Signlink.e() calls this provider after Windows install-date lookup and before the Linux/Unix hardware-serial provider, using its non-null result as the platform identifier."
-        }
-      ],
-      "note": "MacHardwareSerialProvider is fixed by system_profiler SPHardwareDataType, exact Serial Number extraction and Signlink consumption. Confidence is 0.999."
-    },
-    {
-      "proposal_id": "SEMPROP_6754D6873CD14B0C4353",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000977",
-      "owner_logical_id": "CLIENT_CLASS_000977",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "source_coordinate": {
@@ -68,10 +38,40 @@
       "note": "LinuxHardwareSerialProvider is fixed by the exact dmidecode/lshal hardware-serial extraction and Signlink fallback chain. Confidence is 0.999."
     },
     {
-      "proposal_id": "SEMPROP_DD55D065A8FFE3223D5C",
+      "proposal_id": "SEMPROP_AEA991C722485C7383FE",
       "target_kind": "class",
       "stable_id": "CLIENT_CLASS_000979",
       "owner_logical_id": "CLIENT_CLASS_000979",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/secure/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MacHardwareSerialProvider",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_mac_command",
+          "detail": "rs/secure/b executes exact '/usr/sbin/system_profiler SPHardwareDataType', scans for the surviving key 'Serial Number', splits on ':', trims the value and caches the result."
+        },
+        {
+          "family": "exact_platform_tool",
+          "detail": "The only external data source is macOS system_profiler with SPHardwareDataType, making the provider's platform and hardware-serial responsibility exact rather than inferred from package adjacency."
+        },
+        {
+          "family": "exact_signlink_consumer",
+          "detail": "R66 Signlink.e() calls this provider after Windows install-date lookup and before the Linux/Unix hardware-serial provider, using its non-null result as the platform identifier."
+        }
+      ],
+      "note": "MacHardwareSerialProvider is fixed by system_profiler SPHardwareDataType, exact Serial Number extraction and Signlink consumption. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_E2A092B76639CFD80126",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000980",
+      "owner_logical_id": "CLIENT_CLASS_000980",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "source_coordinate": {

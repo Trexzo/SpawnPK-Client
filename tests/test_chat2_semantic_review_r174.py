@@ -11,9 +11,9 @@ SHA = (
 ROOT = Path(__file__).resolve().parents[1]
 
 CLASS_COORDS = [
-    ("CLIENT_CLASS_000977", "rs/secure/a"),
-    ("CLIENT_CLASS_000978", "rs/secure/b"),
-    ("CLIENT_CLASS_000979", "rs/secure/c"),
+    ("CLIENT_CLASS_000978", "rs/secure/a"),
+    ("CLIENT_CLASS_000979", "rs/secure/b"),
+    ("CLIENT_CLASS_000980", "rs/secure/c"),
 ]
 
 
@@ -90,7 +90,7 @@ class Chat2SemanticReviewR174Tests(unittest.TestCase):
         )
         self.assertEqual(actual["proposal_count"], 3)
         self.assertEqual(actual["unresolved"], [])
-        self.assertEqual(actual["review_id"], "SEMREVIEW_58B30FAC567CE1A27397")
+        self.assertEqual(actual["review_id"], "SEMREVIEW_0EA085C1B6A9E3C68871")
         self.assertEqual(actual, expected)
 
     def test_r174_expected_stable_ids(self):
@@ -98,9 +98,9 @@ class Chat2SemanticReviewR174Tests(unittest.TestCase):
         self.assertEqual(
             {row["proposed_name"]: row["stable_id"] for row in review["proposals"]},
             {
-                "LinuxHardwareSerialProvider": "CLIENT_CLASS_000977",
-                "MacHardwareSerialProvider": "CLIENT_CLASS_000978",
-                "WindowsInstallDateProvider": "CLIENT_CLASS_000979",
+                "LinuxHardwareSerialProvider": "CLIENT_CLASS_000978",
+                "MacHardwareSerialProvider": "CLIENT_CLASS_000979",
+                "WindowsInstallDateProvider": "CLIENT_CLASS_000980",
             },
         )
 
