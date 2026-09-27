@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutCloneConfirmationAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_confirmation_flow",
+          "detail": "Exact v308 resolves the currently selected loadout, rejects a missing selection with \"You don't have a loadout selected!\", then opens a \"Clone to <loadout>?\" JFrame with Yes and No buttons."
+        },
+        {
+          "family": "exact_listener_wiring",
+          "detail": "The Yes button installs rs/gui/b/a/c and the No button installs rs/gui/b/a/d, proving this action owns the clone-confirmation dialog rather than the clone mutation itself."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout clone UI behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutCloneCurrentEquipmentAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_clone_mutation",
+          "detail": "The Yes action clears the selected loadout equipment state, copies inventory/equipment widget contents from roots 3214 and 1688, copies client combat/appearance selections, and copies the configured skill levels."
+        },
+        {
+          "family": "exact_skill_contract",
+          "detail": "Copied loadout skill values come from Client.eo through the loadout skill-index table and are clamped to 1..99."
+        },
+        {
+          "family": "exact_completion_flow",
+          "detail": "After cloning it refreshes/persists the loadout views, writes Client.ap = \"::cldt\", and closes the confirmation frame; when no logged-in character exists it shows the exact wear-what-you-want-to-clone retry message."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout clone mutation; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutCloneCancelAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_cancel_role",
+          "detail": "The No-button listener performs no loadout mutation; it only hides and disposes the clone-confirmation JFrame."
+        },
+        {
+          "family": "exact_parent_dependency",
+          "detail": "rs/gui/b/a/b installs this listener specifically on the No button in its clone confirmation dialog."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout clone UI behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutColorListCellRenderer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_renderer_shape",
+          "detail": "Exact v308 extends DefaultListCellRenderer, stores parallel Color[] and String[] arrays, validates equal lengths, and renders each JLabel foreground with the corresponding color."
+        },
+        {
+          "family": "exact_loadout_join",
+          "detail": "LoadoutPropertiesFrame constructs this renderer for its Color selector, supplies the loadout color palette and color labels, and assigns it to the color JComboBox."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout property rendering; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}
