@@ -7,7 +7,10 @@ import re
 import shutil
 from typing import Any
 
-from .source_digest import source_tree_digest
+from .source_digest import (
+    canonical_source_bytes,
+    source_tree_digest,
+)
 
 
 class SourceMilestoneError(ValueError):
@@ -652,7 +655,9 @@ def build_source_publication_bundle(
         rel = path.relative_to(source_root)
         target = source_out / rel
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(path.read_bytes())
+        target.write_bytes(
+            canonical_source_bytes(path.read_bytes())
+        )
 
     provenance_out = out_dir / "provenance"
     provenance_out.mkdir(parents=True, exist_ok=True)
@@ -670,15 +675,19 @@ def build_source_publication_bundle(
     )
     (
         provenance_out / "SOURCE-PROVENANCE.json"
-    ).write_text(
-        milestone_provenance_raw,
-        encoding="utf-8",
+    ).write_bytes(
+        milestone_provenance_raw.encode("utf-8")
     )
 
-    (out_dir / "SOURCE-MILESTONE.json").write_text(
-        json.dumps(manifest, indent=2, sort_keys=True)
-        + "\n",
-        encoding="utf-8",
+    (out_dir / "SOURCE-MILESTONE.json").write_bytes(
+        (
+            json.dumps(
+                manifest,
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n"
+        ).encode("utf-8")
     )
 
     provenance_index: dict[str, str] = {
@@ -702,9 +711,9 @@ def build_source_publication_bundle(
             json.dumps(doc, indent=2, sort_keys=True)
             + "\n"
         )
-        target.write_text(raw, encoding="utf-8")
+        target.write_bytes(raw.encode("utf-8"))
         provenance_index[name] = hashlib.sha256(
-            raw.encode("utf-8")
+            target.read_bytes()
         ).hexdigest()
 
     file_hashes: dict[str, str] = {}
@@ -748,10 +757,15 @@ def build_source_publication_bundle(
             {},
         ).get("target_repository"),
     }
-    (out_dir / "BUNDLE.json").write_text(
-        json.dumps(bundle, indent=2, sort_keys=True)
-        + "\n",
-        encoding="utf-8",
+    (out_dir / "BUNDLE.json").write_bytes(
+        (
+            json.dumps(
+                bundle,
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n"
+        ).encode("utf-8")
     )
     return bundle
 
@@ -971,7 +985,13 @@ def verify_source_publication_bundle(
 
 def write_json(doc: dict[str, Any], out: Path) -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(
-        json.dumps(doc, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
+    out.write_bytes(
+        (
+            json.dumps(
+                doc,
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n"
+        ).encode("utf-8")
     )
