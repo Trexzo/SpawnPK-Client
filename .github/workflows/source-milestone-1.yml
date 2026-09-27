@@ -55,6 +55,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          test -f authority/SOURCE-AUTHORITY.json
           test -f authority/authority-index.json
           test -f authority/readable-client-manifest.json
           test -f authority/recovered-source-manifest.json
