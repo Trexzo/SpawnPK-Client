@@ -153,12 +153,12 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "GroundMarkerPoint",
+      "proposed_name": "JGroundMarkerPoint",
       "confidence": 0.999,
       "evidence": [
         {
           "family": "exact_literal_role",
-          "detail": "Surviving self-identifying toString is \"GroundMarkerPoint(regionId=…, regionX=…, regionY=…, z=…, color=…, label=…)\"."
+          "detail": "Surviving self-identifying toString is \"JGroundMarkerPoint(regionId=…, regionX=…, regionY=…, z=…, color=…, label=…)\"."
         },
         {
           "family": "exact_structural_role",
