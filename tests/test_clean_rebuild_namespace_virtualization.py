@@ -10,6 +10,7 @@ import unittest
 import zipfile
 
 from spk_recovery.clean_rebuild import (
+    CleanRebuildError,
     _dependency_capsule,
     clean_project_rebuild,
 )
@@ -237,6 +238,10 @@ class CleanRebuildNamespaceVirtualizationTests(unittest.TestCase):
                 transport["mode"],
                 "namespace_virtualized",
             )
+            self.assertEqual(
+                transport["alias_plan_source"],
+                "explicit",
+            )
             self.assertTrue(transport["opt_in"])
             self.assertFalse(
                 transport["runtime_alias_dependency_allowed"]
@@ -285,6 +290,147 @@ class CleanRebuildNamespaceVirtualizationTests(unittest.TestCase):
             )
             self.assertTrue(alias_jar.is_file())
             self.assertNotEqual(_sha(alias_jar), _sha(readable))
+
+    def test_auto_alias_matches_explicit_plan_over_same_capsule(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                source,
+                readable,
+                recovered,
+                readiness,
+                readable_manifest,
+                authority,
+                plan,
+            ) = self._fixture(root)
+
+            explicit = clean_project_rebuild(
+                recovered,
+                readiness,
+                readable_manifest,
+                readable,
+                authority,
+                source,
+                out_dir=root / "explicit",
+                source_prefixes=["rs/"],
+                private_namespace_alias_plan=plan,
+            )
+            automatic = clean_project_rebuild(
+                recovered,
+                readiness,
+                readable_manifest,
+                readable,
+                authority,
+                source,
+                out_dir=root / "automatic",
+                source_prefixes=["rs/"],
+                auto_namespace_alias=True,
+            )
+
+            self.assertEqual(explicit["status"], "complete")
+            self.assertEqual(automatic["status"], "complete")
+
+            explicit_transport = explicit["compile_transport"]
+            auto_transport = automatic["compile_transport"]
+
+            self.assertEqual(
+                explicit_transport["alias_plan_source"],
+                "explicit",
+            )
+            self.assertEqual(
+                auto_transport["alias_plan_source"],
+                "auto_dependency_capsule",
+            )
+            self.assertEqual(
+                explicit_transport["alias_plan_id"],
+                auto_transport["alias_plan_id"],
+            )
+            self.assertEqual(
+                explicit_transport["namespace_compile_id"],
+                auto_transport["namespace_compile_id"],
+            )
+            self.assertEqual(
+                explicit["rebuilt_client"]["sha256"],
+                automatic["rebuilt_client"]["sha256"],
+            )
+            self.assertEqual(
+                explicit["rebuild_id"],
+                automatic["rebuild_id"],
+            )
+            self.assertFalse(
+                auto_transport["runtime_alias_dependency_allowed"]
+            )
+            self.assertFalse(
+                auto_transport["canonical_source_modified"]
+            )
+
+    def test_auto_alias_refuses_zero_collision_dependency_capsule(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                source,
+                readable,
+                recovered,
+                readiness,
+                readable_manifest,
+                authority,
+                _plan,
+            ) = self._fixture(root)
+
+            no_collision = root / "no-collision.jar"
+            with zipfile.ZipFile(readable) as src, zipfile.ZipFile(
+                no_collision,
+                "w",
+                zipfile.ZIP_STORED,
+            ) as dst:
+                for name in src.namelist():
+                    if name == "x/a.class":
+                        continue
+                    dst.writestr(name, src.read(name))
+
+            readable_sha = _sha(no_collision)
+            recovered["readable_jar_sha256"] = readable_sha
+            readable_manifest["output_sha256"] = readable_sha
+
+            with self.assertRaises(CleanRebuildError):
+                clean_project_rebuild(
+                    recovered,
+                    readiness,
+                    readable_manifest,
+                    no_collision,
+                    authority,
+                    source,
+                    out_dir=root / "automatic",
+                    source_prefixes=["rs/"],
+                    auto_namespace_alias=True,
+                )
+
+    def test_auto_and_explicit_alias_modes_are_mutually_exclusive(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                source,
+                readable,
+                recovered,
+                readiness,
+                readable_manifest,
+                authority,
+                plan,
+            ) = self._fixture(root)
+
+            with self.assertRaises(CleanRebuildError):
+                clean_project_rebuild(
+                    recovered,
+                    readiness,
+                    readable_manifest,
+                    readable,
+                    authority,
+                    source,
+                    out_dir=root / "invalid",
+                    source_prefixes=["rs/"],
+                    private_namespace_alias_plan=plan,
+                    auto_namespace_alias=True,
+                )
 
     def test_virtualized_failure_preserves_only_remaining_frontier(self):
         with tempfile.TemporaryDirectory() as td:
