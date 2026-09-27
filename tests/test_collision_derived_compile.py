@@ -8,9 +8,7 @@ import tempfile
 import unittest
 import zipfile
 
-from spk_recovery.bytecode_profile import (
-    profile_class_constant_pool_references,
-)
+from spk_recovery.classfile import parse_class
 from spk_recovery.collision_bytecode_remap import (
     transform_collision_jar,
 )
@@ -237,12 +235,19 @@ class CollisionDerivedCompileTests(unittest.TestCase):
                 / "rs"
                 / "A.class"
             ).read_bytes()
-            profile = profile_class_constant_pool_references(
-                restored
+            parsed = parse_class(restored)
+            descriptors = {
+                str(field["descriptor"])
+                for field in parsed.fields
+            }
+            self.assertIn(
+                "L" + old_name + ";",
+                descriptors,
             )
-            refs = set(profile["class_references"])
-            self.assertIn(old_name, refs)
-            self.assertNotIn(new_name, refs)
+            self.assertNotIn(
+                "L" + new_name + ";",
+                descriptors,
+            )
 
             transformed_dependency = (
                 root
