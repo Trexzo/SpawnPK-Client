@@ -12,7 +12,7 @@ Main/Core's accepted R2 semantic authority or prior R3-R18 review batches.
 - candidate classes: **12**
 - resolved proposals: **12**
 - unresolved: **0**
-- review ID: `SEMREVIEW_F6863DB52D922162613D`
+- review ID: `SEMREVIEW_402B4C2AA42205916457`
 - field/method proposals: **0**
 
 ## Asset icon cache
@@ -45,12 +45,12 @@ The builder constructs the already reviewed NavigationButton directly.
 ## Ground markers
 
 - `rs/s/f/a` -> `ColorTileMarker`
-- `rs/s/f/f` -> `JGroundMarkerPoint`
+- `rs/s/f/f` -> `GroundMarkerPoint`
 
 Exact self-identifying forms preserve both names and their field roles:
 
 - `ColorTileMarker(worldPoint=…, color=…, label=…)`
-- `JGroundMarkerPoint(regionId=…, regionX=…, regionY=…, z=…, color=…, label=…)`
+- `GroundMarkerPoint(regionId=…, regionX=…, regionY=…, z=…, color=…, label=…)`
 
 ## Developer-tools widget overlay
 
@@ -72,4 +72,4 @@ also performs x/y/plane transforms and local/world coordinate conversion.
 
 Chat 2 does not promote R19. Main/Core may accept any desired subset only through an
 explicit `semantic_acceptance_spec` bound to
-`SEMREVIEW_F6863DB52D922162613D`.
+`SEMREVIEW_402B4C2AA42205916457`.
