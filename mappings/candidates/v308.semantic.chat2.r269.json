@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BankInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_title_role",
+          "detail": "Exact v308 builds the interface headed 'The Bank of SpawnPK' and owns no unrelated top-level UI surface."
+        },
+        {
+          "family": "exact_bank_controls",
+          "detail": "The class constructs search, repair, decant, placeholder, insert/swap, note/item withdrawal, carried/worn/pet deposit, tab creation/collapse and Withdraw 1/5/10/14/X/All/All But One controls."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Its static and build paths own the bank/BANK, bank/TAB and bank/SEP resource families plus the live bank tab sprite objects."
+        }
+      ],
+      "note": "Descriptive exact-behavior name for SpawnPK's full bank interface builder; confidence 0.999."
+    }
+  ]
+}
