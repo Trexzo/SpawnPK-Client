@@ -65,7 +65,7 @@ def build_namespace_alias_plan(
     ]
 
     readable_sha = _sha256_file(readable_jar)
-    namespace_token = readable_sha[:12]
+    namespace_token = "h" + readable_sha[:12]
     alias_root = (
         "spk_compile_alias/r8s/"
         + namespace_token
