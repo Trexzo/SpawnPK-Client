@@ -9,6 +9,11 @@ import unittest
 import zipfile
 
 from spk_recovery.classfile import parse_class
+from spk_recovery.clean_rebuild import (
+    CleanRebuildError,
+    clean_project_rebuild,
+)
+from spk_recovery.progressive_compile import _probe_javac
 from spk_recovery.collision_bytecode_remap import (
     transform_collision_jar,
 )
@@ -259,6 +264,216 @@ class CollisionDerivedCompileTests(unittest.TestCase):
                 self.assertIn(new_name + ".class", names)
                 self.assertNotIn(old_name + ".class", names)
                 self.assertNotIn("rs/A.class", names)
+
+    def _clean_rebuild_authorities(
+        self,
+        manifest,
+        transform,
+    ):
+        manifest = dict(manifest)
+        manifest.update(
+            {
+                "build_id": "v308",
+                "source_authority_sha256": "a" * 64,
+                "namespace_id": "SEMNS_" + "b" * 20,
+            }
+        )
+        readiness = {
+            "schema_version": 1,
+            "kind": "source_readiness_report",
+            "source_tree_sha256": manifest[
+                "source_tree_sha256"
+            ],
+        }
+        readable_manifest = {
+            "schema_version": 1,
+            "kind": "readable_client_build_manifest",
+            "status": "complete",
+            "verification_pass": True,
+            "output_sha256": transform[
+                "input_jar_sha256"
+            ],
+            "project_source_prefixes": ["rs/"],
+            "semantic_summary": {
+                "source_safety_fallbacks": 0,
+            },
+        }
+        authority = {
+            "schema_version": 1,
+            "kind": "build_authority_manifest",
+            "authority_id": "BUILDAUTH_" + "c" * 20,
+            "source_sha256": "a" * 64,
+            "compiler_runtime": {
+                "javac": _probe_javac("javac"),
+            },
+            "bytecode": {
+                "dominant_java_release": 9,
+            },
+        }
+        return (
+            manifest,
+            readiness,
+            readable_manifest,
+            authority,
+        )
+
+    def test_clean_rebuild_packages_original_runtime_dependency_bytes(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                readable,
+                plan_path,
+                recovered,
+                manifest,
+                old_name,
+                new_name,
+                transform,
+            ) = self._fixture(root)
+
+            (
+                manifest,
+                readiness,
+                readable_manifest,
+                authority,
+            ) = self._clean_rebuild_authorities(
+                manifest,
+                transform,
+            )
+
+            report = clean_project_rebuild(
+                manifest,
+                readiness,
+                readable_manifest,
+                readable,
+                authority,
+                recovered,
+                out_dir=root / "clean",
+                source_prefixes=["rs/"],
+                private_collision_plan_path=plan_path,
+            )
+
+            self.assertEqual(report["status"], "complete")
+            self.assertEqual(
+                report["compile_transport"]["mode"],
+                "collision_derived_remap",
+            )
+            self.assertFalse(
+                report["compile_transport"][
+                    "runtime_transformed_dependency_allowed"
+                ]
+            )
+            self.assertEqual(
+                report["dependency_capsule"]["source"],
+                "verified_base_readable_non_project_classes",
+            )
+
+            rebuilt = root / "clean" / "rebuilt-client.jar"
+            with zipfile.ZipFile(readable) as original_archive:
+                original_blocker = original_archive.read(
+                    old_name + ".class"
+                )
+            with zipfile.ZipFile(rebuilt) as archive:
+                names = set(archive.namelist())
+                self.assertIn(old_name + ".class", names)
+                self.assertIn(
+                    "dep/clash/Target.class",
+                    names,
+                )
+                self.assertNotIn(new_name + ".class", names)
+                self.assertEqual(
+                    archive.read(old_name + ".class"),
+                    original_blocker,
+                )
+                project_bytes = archive.read("rs/A.class")
+
+            parsed = parse_class(project_bytes)
+            descriptors = {
+                str(field["descriptor"])
+                for field in parsed.fields
+            }
+            self.assertIn(
+                "L" + old_name + ";",
+                descriptors,
+            )
+            self.assertNotIn(
+                "L" + new_name + ";",
+                descriptors,
+            )
+
+    def test_collision_derived_workspace_refuses_namespace_alias_transport(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                readable,
+                _plan_path,
+                recovered,
+                manifest,
+                _old_name,
+                _new_name,
+                transform,
+            ) = self._fixture(root)
+            (
+                manifest,
+                readiness,
+                readable_manifest,
+                authority,
+            ) = self._clean_rebuild_authorities(
+                manifest,
+                transform,
+            )
+
+            with self.assertRaisesRegex(
+                CleanRebuildError,
+                "matching blocker-remap compile transport",
+            ):
+                clean_project_rebuild(
+                    manifest,
+                    readiness,
+                    readable_manifest,
+                    readable,
+                    authority,
+                    recovered,
+                    out_dir=root / "clean",
+                    source_prefixes=["rs/"],
+                    auto_namespace_alias=True,
+                )
+
+    def test_collision_derived_workspace_requires_private_collision_plan(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                readable,
+                _plan_path,
+                recovered,
+                manifest,
+                _old_name,
+                _new_name,
+                transform,
+            ) = self._fixture(root)
+            (
+                manifest,
+                readiness,
+                readable_manifest,
+                authority,
+            ) = self._clean_rebuild_authorities(
+                manifest,
+                transform,
+            )
+
+            with self.assertRaisesRegex(
+                CleanRebuildError,
+                "requires an explicit private collision plan path",
+            ):
+                clean_project_rebuild(
+                    manifest,
+                    readiness,
+                    readable_manifest,
+                    readable,
+                    authority,
+                    recovered,
+                    out_dir=root / "clean",
+                    source_prefixes=["rs/"],
+                )
 
     def test_derivation_transform_id_mismatch_is_refused(self):
         with tempfile.TemporaryDirectory() as td:
