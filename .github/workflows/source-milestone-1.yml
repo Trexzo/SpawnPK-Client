@@ -44,6 +44,7 @@ jobs:
             exit 2
           fi
           git cat-file -e "$AUTHORITY_COMMIT^{commit}"
+          git merge-base --is-ancestor "$AUTHORITY_COMMIT" HEAD
       - name: Download exact v308 authority bundle
         uses: actions/download-artifact@v4
         with:
@@ -53,6 +54,8 @@ jobs:
           run-id: ${{ inputs.authority_run_id }}
       - name: Validate authority bundle layout
         shell: bash
+        env:
+          AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
         run: |
           set -euo pipefail
           test -f authority/SOURCE-AUTHORITY.json
@@ -61,6 +64,23 @@ jobs:
           test -f authority/recovered-source-manifest.json
           test -f authority/clean-rebuild.json
           test -d authority/src
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          report = json.loads(
+              Path("authority/SOURCE-AUTHORITY.json").read_text(
+                  encoding="utf-8"
+              )
+          )
+          expected = os.environ["AUTHORITY_COMMIT"]
+          actual = report.get("authority_commit")
+          if actual != expected:
+              raise SystemExit(
+                  f"authority bundle commit mismatch: {actual} != {expected}"
+              )
+          PY
       - name: Build Source Milestone 1 authority
         shell: bash
         env:
