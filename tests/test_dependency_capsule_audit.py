@@ -143,6 +143,20 @@ class DependencyCapsuleAuditTests(unittest.TestCase):
                 1,
             )
             self.assertEqual(
+                report["summary"]["package_depths"],
+                {"1": 1},
+            )
+            self.assertEqual(
+                report["summary"]["default_package_count"],
+                0,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "class_signature_attribute_count"
+                ],
+                0,
+            )
+            self.assertEqual(
                 report["summary"][
                     "capsule_release_resolved_count"
                 ],
@@ -185,6 +199,153 @@ class DependencyCapsuleAuditTests(unittest.TestCase):
             self.assertEqual(
                 report["summary"]["javap_classifications"],
                 {"javap_resolves_exact_class": 1},
+            )
+            for source_form in (
+                "import_simple",
+                "qualified_type",
+                "same_package_simple",
+            ):
+                for channel in (
+                    "capsule_release",
+                    "capsule_default",
+                    "readable_release",
+                ):
+                    self.assertEqual(
+                        report["summary"][
+                            "source_form_classifications"
+                        ][source_form][channel],
+                        {"javac_resolves_exact_class": 1},
+                    )
+                    self.assertEqual(
+                        report["summary"][
+                            "source_form_diagnostic_keys"
+                        ][source_form][channel],
+                        {},
+                    )
+                    self.assertEqual(
+                        report["summary"][
+                            "source_form_target_loaded_counts"
+                        ][source_form][channel],
+                        1,
+                    )
+
+    def test_source_forms_distinguish_default_package_import_artifact(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "Fallback.java"
+            source.write_text(
+                "public class Fallback {}\n",
+                encoding="utf-8",
+            )
+
+            classes = root / "classes"
+            classes.mkdir()
+            proc = subprocess.run(
+                [
+                    "javac",
+                    "--release",
+                    "9",
+                    "-d",
+                    str(classes),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                proc.returncode,
+                0,
+                proc.stdout + proc.stderr,
+            )
+
+            data = (classes / "Fallback.class").read_bytes()
+            readable = root / "readable.jar"
+            capsule = root / "dependency-capsule.jar"
+            for jar in (readable, capsule):
+                with zipfile.ZipFile(
+                    jar,
+                    "w",
+                    zipfile.ZIP_STORED,
+                ) as z:
+                    z.writestr("Fallback.class", data)
+
+            plan = {
+                "schema_version": 1,
+                "kind": "javac_missing_class_recovery_plan",
+                "plan_id": "JCLASSPLAN_" + "3" * 20,
+                "identifiers_included": True,
+                "candidates": [
+                    {
+                        "candidate_id": "JCLASSMISS_001",
+                        "candidate_internal_name": "Fallback",
+                    }
+                ],
+            }
+
+            report = audit_dependency_capsule(
+                plan,
+                readable,
+                capsule,
+                javac_command="javac",
+                release=9,
+            )
+            summary = report["summary"]
+
+            self.assertEqual(
+                summary["package_depths"],
+                {"0": 1},
+            )
+            self.assertEqual(
+                summary["default_package_count"],
+                1,
+            )
+
+            self.assertEqual(
+                summary["source_form_classifications"][
+                    "qualified_type"
+                ]["capsule_release"],
+                {"javac_resolves_exact_class": 1},
+            )
+            self.assertEqual(
+                summary["source_form_classifications"][
+                    "same_package_simple"
+                ]["capsule_release"],
+                {"javac_resolves_exact_class": 1},
+            )
+            self.assertNotEqual(
+                summary["source_form_classifications"][
+                    "import_simple"
+                ]["capsule_release"],
+                {"javac_resolves_exact_class": 1},
+            )
+            self.assertEqual(
+                summary["source_form_target_loaded_counts"][
+                    "qualified_type"
+                ]["capsule_release"],
+                1,
+            )
+            self.assertEqual(
+                summary["source_form_target_loaded_counts"][
+                    "same_package_simple"
+                ]["capsule_release"],
+                1,
+            )
+            self.assertEqual(
+                summary["source_form_target_loaded_counts"][
+                    "import_simple"
+                ]["capsule_release"],
+                0,
+            )
+            import_keys = summary[
+                "source_form_diagnostic_keys"
+            ]["import_simple"]["capsule_release"]
+            self.assertTrue(import_keys)
+            self.assertTrue(
+                all(
+                    key.startswith("compiler.err.")
+                    for key in import_keys
+                )
             )
 
     def test_transitive_dependency_pruning_is_distinguished_from_target_lookup(self):

@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "kind": "r8q_exact_source_entry_public_authority",
+  "build": "v308",
+  "accepted_main_before_r8r": "7ebf31e86fcb25cec63f9b3ec643ae7c142ac2cf",
+  "r8q_head": "4f4d1c38be8a0b3487bc61d55f89ae676b4fc2ef",
+  "audit_id": "DEPCAPAUDIT_86CF96BC6812873EB115",
+  "readable_jar_sha256": "e12e4f917ba2c48ea306e3b4d4cc19c58c5e23cd4f5c33f4ae339ea6fce53c99",
+  "dependency_capsule_sha256": "aaf38eb4fef38f30625746833c88e7461de7b2deeb79994a3169967f71ea1227",
+  "candidate_count": 8,
+  "package_depths": {
+    "3": 1,
+    "4": 7
+  },
+  "default_package_count": 0,
+  "class_signature_attribute_count": 4,
+  "field_signature_attribute_count": 5,
+  "method_signature_attribute_count": 72,
+  "source_form_classifications": {
+    "import_simple": {
+      "capsule_default": {
+        "javac_other_failure": 8
+      },
+      "capsule_release": {
+        "javac_other_failure": 8
+      },
+      "readable_release": {
+        "javac_other_failure": 8
+      }
+    },
+    "qualified_type": {
+      "capsule_default": {
+        "javac_other_failure": 8
+      },
+      "capsule_release": {
+        "javac_other_failure": 8
+      },
+      "readable_release": {
+        "javac_other_failure": 8
+      }
+    },
+    "same_package_simple": {
+      "capsule_default": {
+        "javac_other_failure": 8
+      },
+      "capsule_release": {
+        "javac_other_failure": 8
+      },
+      "readable_release": {
+        "javac_other_failure": 8
+      }
+    }
+  },
+  "source_form_diagnostic_keys": {
+    "import_simple": {
+      "capsule_default": {
+        "compiler.err.cant.resolve.location": 6,
+        "compiler.misc.location": 6
+      },
+      "capsule_release": {
+        "compiler.err.cant.resolve.location": 6,
+        "compiler.misc.location": 6
+      },
+      "readable_release": {
+        "compiler.err.cant.resolve.location": 6,
+        "compiler.misc.location": 6
+      }
+    },
+    "qualified_type": {
+      "capsule_default": {
+        "compiler.err.cant.resolve.location": 6,
+        "compiler.misc.location": 6
+      },
+      "capsule_release": {
+        "compiler.err.cant.resolve.location": 6,
+        "compiler.misc.location": 6
+      },
+      "readable_release": {
+        "compiler.err.cant.resolve.location": 6,
+        "compiler.misc.location": 6
+      }
+    },
+    "same_package_simple": {
+      "capsule_default": {
+        "compiler.err.p": 1,
+        "compiler.err.pkg.clashes.with.class.of.same.name": 5
+      },
+      "capsule_release": {
+        "compiler.err.p": 1,
+        "compiler.err.pkg.clashes.with.class.of.same.name": 5
+      },
+      "readable_release": {
+        "compiler.err.p": 1,
+        "compiler.err.pkg.clashes.with.class.of.same.name": 5
+      }
+    }
+  },
+  "source_form_target_loaded_counts": {
+    "import_simple": {
+      "capsule_default": 0,
+      "capsule_release": 0,
+      "readable_release": 0
+    },
+    "qualified_type": {
+      "capsule_default": 0,
+      "capsule_release": 0,
+      "readable_release": 0
+    },
+    "same_package_simple": {
+      "capsule_default": 8,
+      "capsule_release": 8,
+      "readable_release": 8
+    }
+  },
+  "javap_resolved_count": 8,
+  "identifiers_included": false,
+  "accepted_conclusions": [
+    "target class bytes are present and byte-identical in readable JAR and dependency capsule",
+    "Java release selection is not the direct blocker",
+    "Java source-name lexical legality is not the direct blocker",
+    "javac loads all eight target classfiles in same-package probes",
+    "package/class namespace collision is a proven blocker for the keyed same-package cases"
+  ]
+}

@@ -37,6 +37,14 @@ def main(argv: list[str] | None = None) -> int:
             "never commit this artifact"
         ),
     )
+    p.add_argument(
+        "--namespace-alias-plan",
+        type=Path,
+        help=(
+            "explicit private namespace alias plan enabling compile-only "
+            "namespace virtualization; default clean rebuild remains legacy"
+        ),
+    )
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args(argv)
 
@@ -53,6 +61,11 @@ def main(argv: list[str] | None = None) -> int:
             source_prefixes=args.source_prefixes,
             private_diagnostic_report_out=(
                 args.private_diagnostic_report_out
+            ),
+            private_namespace_alias_plan=(
+                _load(args.namespace_alias_plan)
+                if args.namespace_alias_plan is not None
+                else None
             ),
         )
     except (
@@ -139,6 +152,25 @@ def main(argv: list[str] | None = None) -> int:
                 separators=(",", ":"),
             )
         )
+    transport = report.get("compile_transport")
+    if transport is not None:
+        print(
+            "compile_transport_mode="
+            f"{transport['mode']}"
+        )
+        print(
+            "namespace_compile_id="
+            f"{transport['namespace_compile_id']}"
+        )
+        print(
+            "namespace_alias_plan_id="
+            f"{transport['alias_plan_id']}"
+        )
+        print(
+            "runtime_alias_dependency_allowed="
+            f"{transport['runtime_alias_dependency_allowed']}"
+        )
+
     if args.private_diagnostic_report_out is not None:
         print(
             "private_diagnostic_report_out="
