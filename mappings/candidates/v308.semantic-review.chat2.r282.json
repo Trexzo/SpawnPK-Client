@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_9EAFFFB6D5E7B2A0C543",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_000DE986EB9D374AF611",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000523",
+      "owner_logical_id": "CLIENT_CLASS_000523",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/m/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientInputEventQueue",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_bounded_queue",
+          "detail": "Exact v308 owns a fixed 256-record ring with synchronized append, drain and reset operations plus an overflow counter; a full queue is reset through an inserted type-4 boundary marker."
+        },
+        {
+          "family": "exact_awt_input_join",
+          "detail": "The base client input host rs/C feeds pointer press/release/motion and related client input events into this queue with coordinates and event timestamps; consecutive type-3 motion records are coalesced in place."
+        },
+        {
+          "family": "exact_client_drain",
+          "detail": "rs/Client.by() drains this queue into a preallocated record array and dispatches event types 1, 2, 3, 4 and 5 through the client input state and interaction paths."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 client input behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_65E14234ED74EE83F8FF",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000522",
+      "owner_logical_id": "CLIENT_CLASS_000522",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/m/a$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientInputEventRecord",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_record_shape",
+          "detail": "The exact-v308 record stores an event type, secondary button/code integer, current x/y coordinates, min/max x/y bounds and a timestamp."
+        },
+        {
+          "family": "exact_motion_coalescing",
+          "detail": "When consecutive type-3 movement arrives, the queue updates the latest record's current x/y/time and expands its min/max coordinate bounds instead of appending another record."
+        },
+        {
+          "family": "exact_consumer_join",
+          "detail": "rs/Client.by() consumes these fields after draining the queue, using event type, button/code, coordinates, movement bounds and timestamp in the client input loop."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 client input behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}
