@@ -388,6 +388,18 @@ def build_namespace_source_overlay(
     output_sha, output_count, output_bytes = source_tree_digest(
         overlay_root
     )
+    canonical_after_sha, canonical_after_count, canonical_after_bytes = (
+        source_tree_digest(source_root)
+    )
+
+    if (
+        canonical_after_sha != input_sha
+        or canonical_after_count != input_count
+        or canonical_after_bytes != input_bytes
+    ):
+        raise NamespaceSourceOverlayError(
+            "canonical source tree changed during overlay generation"
+        )
 
     if output_count != input_count:
         raise NamespaceSourceOverlayError(
@@ -437,4 +449,7 @@ def build_namespace_source_overlay(
         ),
         "overlay_root": str(overlay_root),
         "canonical_source_modified": False,
+        "canonical_source_tree_sha256_after": (
+            canonical_after_sha
+        ),
     }
