@@ -101,7 +101,8 @@ class SourceMilestoneTests(unittest.TestCase):
             "package rs; public class A {}\n",
             encoding="utf-8",
         )
-        return (src, *source_tree_digest(src))
+        tree, files, source_bytes = source_tree_digest(src)
+        return src, tree, len(files), source_bytes
 
     def test_publishable_manifest_is_deterministic(self):
         with tempfile.TemporaryDirectory() as td:
