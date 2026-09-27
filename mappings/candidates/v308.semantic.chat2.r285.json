@@ -35,68 +35,6 @@
         }
       ],
       "note": "Descriptive semantic recovery from exact-v308 event UI behavior; original stripped source identifier is not claimed."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/n/c/O",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "EventStatusOverviewInterface",
-      "confidence": 0.995,
-      "evidence": [
-        {
-          "family": "exact_event_surface",
-          "detail": "Exact-v308 strings include Dharok PK Tournament, Golden HG, Blood LMS, Event Brawl, Event Global Boss, Event Wildy Boss, View Active Events and View all events."
-        },
-        {
-          "family": "exact_hotspot_surface",
-          "detail": "The same interface owns Hotspot status, Vote to skip hotspot, vote count and active/countdown presentation, forming one event-status overview rather than an isolated event widget."
-        },
-        {
-          "family": "exact_live_update_join",
-          "detail": "Its static state is updated by the dedicated rs/n/c/P ScriptPacket handler and rendered every second by the already-reviewed EventBrawlStatusInterface task rs/n/c/Q."
-        }
-      ],
-      "note": "Descriptive semantic recovery from exact-v308 event UI behavior; original stripped source identifier is not claimed."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/n/c/P",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "EventStatusOverviewPacketHandler",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_handler_superclass",
-          "detail": "The class extends the exact ScriptPacketHandler base and its seven selectors mutate only EventStatusOverviewInterface state."
-        },
-        {
-          "family": "exact_event_state_updates",
-          "detail": "Selectors update hotspot/event timestamps, tournament sprite/state/text, Golden HG/Blood LMS timers, named global/wilderness boss timers and Event Brawl timing."
-        },
-        {
-          "family": "exact_owner_binding",
-          "detail": "EventStatusOverviewInterface constructs this handler as its static packet-handler instance, fixing the packet surface to that interface."
-        }
-      ],
-      "note": "Descriptive semantic recovery from exact-v308 event UI behavior; original stripped source identifier is not claimed."
     }
   ],
   "conflicts": []
