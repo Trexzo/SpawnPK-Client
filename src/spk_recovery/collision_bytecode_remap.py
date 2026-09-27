@@ -330,6 +330,25 @@ def _is_signature_resource(name: str) -> bool:
     return upper.endswith(_SIGNED_SUFFIXES)
 
 
+def _assert_unsigned_jar(path: Path) -> None:
+    try:
+        with zipfile.ZipFile(path) as z:
+            signed = [
+                name
+                for name in z.namelist()
+                if _is_signature_resource(name)
+            ]
+    except zipfile.BadZipFile as exc:
+        raise CollisionBytecodeRemapError(
+            f"invalid input JAR: {path}"
+        ) from exc
+
+    if signed:
+        raise CollisionBytecodeRemapError(
+            "refusing to rewrite signed JAR"
+        )
+
+
 def transform_collision_jar(
     input_jar: Path,
     private_plan_path: Path,
@@ -350,6 +369,8 @@ def transform_collision_jar(
         raise CollisionBytecodeRemapError(
             "private R8R plan readable-JAR SHA mismatch"
         )
+
+    _assert_unsigned_jar(input_jar)
 
     class_names = _class_names_from_jar(input_jar)
     mappings, nested_added = _expanded_mappings(
@@ -380,14 +401,6 @@ def transform_collision_jar(
                 for info in src.infolist()
                 if not info.is_dir()
             ]
-            signed = [
-                name for name in names if _is_signature_resource(name)
-            ]
-            if signed:
-                raise CollisionBytecodeRemapError(
-                    "refusing to rewrite signed JAR"
-                )
-
             rows: list[tuple[str, bytes]] = []
             for name in sorted(names):
                 payload = src.read(name)
