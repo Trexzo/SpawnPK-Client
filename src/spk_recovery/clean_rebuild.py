@@ -18,6 +18,7 @@ from .javac_diagnostics import (
 from .progressive_compile import (
     ProgressiveCompileError,
     _verify_authority,
+    _workspace_readable_derivation,
 )
 from .namespace_virtualized_compile import (
     NamespaceVirtualizedCompileError,
@@ -367,6 +368,22 @@ def _clean_project_rebuild_legacy(
     except ProgressiveCompileError as exc:
         raise CleanRebuildError(str(exc)) from exc
 
+    try:
+        source_derivation = _workspace_readable_derivation(
+            recovered_manifest,
+            readable_manifest,
+        )
+    except ProgressiveCompileError as exc:
+        raise CleanRebuildError(str(exc)) from exc
+
+    try:
+        source_derivation = _workspace_readable_derivation(
+            recovered_manifest,
+            readable_manifest,
+        )
+    except ProgressiveCompileError as exc:
+        raise CleanRebuildError(str(exc)) from exc
+
     prefixes = _normalize_prefixes(
         readable_manifest,
         source_prefixes,
@@ -534,6 +551,12 @@ def _clean_project_rebuild_legacy(
         "dependency_capsule_sha256": dependency_sha,
         "rebuilt_jar_sha256": rebuilt_sha,
     }
+    if source_derivation is not None:
+        material["source_derivation"] = source_derivation
+
+    if source_derivation is not None:
+        material["source_derivation"] = source_derivation
+
     rebuild_id = (
         "CLEANBUILD_"
         + hashlib.sha256(
@@ -631,6 +654,12 @@ def _clean_project_rebuild_legacy(
             "remain exact binary dependencies from the readable authority."
         ),
     }
+    if source_derivation is not None:
+        report["source_derivation"] = source_derivation
+
+    if source_derivation is not None:
+        report["source_derivation"] = source_derivation
+
     (out_dir / "clean-rebuild.json").write_text(
         json.dumps(
             report,

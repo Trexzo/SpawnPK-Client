@@ -231,6 +231,155 @@ class CleanRebuildTests(unittest.TestCase):
             authority,
         )
 
+    def _collision_derived_manifest(
+        self,
+        recovered,
+        readable_manifest,
+    ):
+        derived = dict(recovered)
+        derived["readable_jar_sha256"] = "f" * 64
+        derived["collision_transform_id"] = (
+            "COLLTRANS_" + "4" * 20
+        )
+        derived["collision_plan_id"] = (
+            "COLLPLAN_" + "5" * 20
+        )
+        derived["collision_report_id"] = (
+            "COLLREPORT_" + "6" * 20
+        )
+        derived["base_readable_jar_sha256"] = (
+            readable_manifest["output_sha256"]
+        )
+        return derived
+
+    def test_collision_derived_workspace_uses_base_runtime_readable(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                source,
+                readable,
+                recovered,
+                readiness,
+                readable_manifest,
+                authority,
+            ) = self._fixture(root)
+
+            derived = self._collision_derived_manifest(
+                recovered,
+                readable_manifest,
+            )
+            report = clean_project_rebuild(
+                derived,
+                readiness,
+                readable_manifest,
+                readable,
+                authority,
+                source,
+                out_dir=root / "derived",
+                source_prefixes=["rs/"],
+            )
+
+            self.assertEqual(report["status"], "complete")
+            self.assertEqual(
+                report["readable_jar_sha256"],
+                readable_manifest["output_sha256"],
+            )
+            self.assertEqual(
+                report["source_derivation"],
+                {
+                    "collision_transform_id": (
+                        derived["collision_transform_id"]
+                    ),
+                    "collision_plan_id": (
+                        derived["collision_plan_id"]
+                    ),
+                    "collision_report_id": (
+                        derived["collision_report_id"]
+                    ),
+                    "base_readable_jar_sha256": (
+                        readable_manifest["output_sha256"]
+                    ),
+                    "source_derivation_readable_jar_sha256": (
+                        "f" * 64
+                    ),
+                },
+            )
+
+            with zipfile.ZipFile(
+                root / "derived" / "dependency-capsule.jar"
+            ) as z:
+                self.assertIn(
+                    "dep/Fallback.class",
+                    set(z.namelist()),
+                )
+
+    def test_collision_derived_workspace_base_sha_mismatch_refused(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                source,
+                readable,
+                recovered,
+                readiness,
+                readable_manifest,
+                authority,
+            ) = self._fixture(root)
+
+            derived = self._collision_derived_manifest(
+                recovered,
+                readable_manifest,
+            )
+            derived["base_readable_jar_sha256"] = "0" * 64
+
+            with self.assertRaisesRegex(
+                CleanRebuildError,
+                "base readable SHA-256",
+            ):
+                clean_project_rebuild(
+                    derived,
+                    readiness,
+                    readable_manifest,
+                    readable,
+                    authority,
+                    source,
+                    out_dir=root / "out",
+                    source_prefixes=["rs/"],
+                )
+
+    def test_incomplete_collision_derivation_refused_before_virtualized_path(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                source,
+                readable,
+                recovered,
+                readiness,
+                readable_manifest,
+                authority,
+            ) = self._fixture(root)
+
+            derived = self._collision_derived_manifest(
+                recovered,
+                readable_manifest,
+            )
+            del derived["collision_report_id"]
+
+            with self.assertRaisesRegex(
+                CleanRebuildError,
+                "incomplete derivation authority",
+            ):
+                clean_project_rebuild(
+                    derived,
+                    readiness,
+                    readable_manifest,
+                    readable,
+                    authority,
+                    source,
+                    out_dir=root / "out",
+                    source_prefixes=["rs/"],
+                    auto_namespace_alias=True,
+                )
+
     def test_no_alias_plan_is_exact_legacy_path(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
