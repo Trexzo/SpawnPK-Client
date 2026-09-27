@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/secure/HardwareValidator",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HardwareValidator",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_preserved_class_identity",
+          "detail": "Exact v308 retains the unobfuscated internal class name rs/secure/HardwareValidator and recovered source declares public top-level type HardwareValidator in package rs.secure; no semantic noun reconstruction is required."
+        },
+        {
+          "family": "exact_package_family",
+          "detail": "The class sits immediately before exact rs/secure/a, rs/secure/b and rs/secure/c in the canonical class sequence; R174 independently identified those adjacent classes as LinuxHardwareSerialProvider, MacHardwareSerialProvider and WindowsInstallDateProvider."
+        }
+      ],
+      "note": "HardwareValidator is preserved verbatim by exact-v308 class identity. R251 records that surviving source name without inferring additional behavior. Confidence 0.999."
+    }
+  ],
+  "conflicts": []
+}
