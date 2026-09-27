@@ -380,6 +380,42 @@ class ClassfileUtf8RemapTests(unittest.TestCase):
                 [alias],
             )
 
+    def test_remap_refuses_to_mutate_constant_string_literal(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "LiteralIdentity.java"
+            source.write_text(
+                'public class LiteralIdentity { '
+                'public static final String S = "a/b/C"; }\n',
+                encoding="utf-8",
+            )
+            out = root / "classes"
+            proc = self._compile(
+                source=source,
+                out=out,
+            )
+            self.assertEqual(
+                proc.returncode,
+                0,
+                proc.stdout + proc.stderr,
+            )
+
+            data = (
+                out / "LiteralIdentity.class"
+            ).read_bytes()
+
+            with self.assertRaisesRegex(
+                ClassfileRemapError,
+                "CONSTANT_String",
+            ):
+                remap_classfile_utf8(
+                    data,
+                    {
+                        "a/b/C":
+                            "spk_compile_alias/r8s/AliasC"
+                    },
+                )
+
     def test_literal_alias_mention_is_refused_before_restore(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
