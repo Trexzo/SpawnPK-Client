@@ -3,10 +3,13 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-import shutil
 from typing import Any
 
-from .source_digest import source_tree_digest
+from .source_digest import (
+    canonical_source_bytes,
+    sorted_java_files,
+    source_tree_digest,
+)
 
 
 class SourceAuthorityBundleError(ValueError):
@@ -110,10 +113,18 @@ def build_source_authority_bundle(
         clean_rebuild_report,
         out_dir / "clean-rebuild.json",
     )
-    shutil.copytree(source_root, out_dir / "src")
+    bundle_source = out_dir / "src"
+    bundle_source.mkdir(parents=True)
+    for source in sorted_java_files(source_root):
+        rel = source.relative_to(source_root)
+        target = bundle_source / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(
+            canonical_source_bytes(source.read_bytes())
+        )
 
     copied_sha, copied_files, copied_bytes = source_tree_digest(
-        out_dir / "src"
+        bundle_source
     )
     if copied_sha != tree_sha:
         raise SourceAuthorityBundleError(
