@@ -1,4 +1,4 @@
-# Chat 2 — exact-v308 self-identifying interface frontier R291
+# Chat 2 — exact-v308 duel preset load interface R291
 
 Exact client authority:
 
@@ -7,30 +7,23 @@ Exact client authority:
 ## Deterministic result
 
 - `rs/n/c/D` -> `CLIENT_CLASS_000549` -> `DuelPresetLoadInterface`
-- `rs/n/c/G` -> `CLIENT_CLASS_000552` -> `ItemEnchantmentChestInterface`
-- `rs/n/c/U` -> `CLIENT_CLASS_000567` -> `PlayerIpUidMatcherInterface`
-- `rs/n/c/p` -> `CLIENT_CLASS_000669` -> `ClanSetupInterface`
-- `rs/n/c/s` -> `CLIENT_CLASS_000672` -> `ClanWarsSetupInterface`
-- `rs/n/c/v` -> `CLIENT_CLASS_000675` -> `CollectionLogInterface`
-- review: `SEMREVIEW_065EC031D6C95C0ADEAB`
+- review: `SEMREVIEW_9015A3B42909159C7E85`
 - unresolved: **0**
 - member proposals: **0**
 
-## Exact-v308 identity
+## Exact-v308 evidence
 
-These classes were selected because their surviving UI text/resources identify the interface role directly rather than by package adjacency.
+The class preserves the exact actions **Load last duel** and **Load last rules** and loads the exact `misc/duel load` resource. That fixes the class as the duel preset/rules reload interface.
 
-`DuelPresetLoadInterface` preserves **Load last duel**, **Load last rules** and the `misc/duel load` resource.
+## Prior authority retained
 
-`ItemEnchantmentChestInterface` preserves the exact title **Item Enchantment Chest** and the complete enchantment flow: categories, selected item, ingredients, success chance, attempt, preparation, success and failure.
+The first draft of R291 also revisited five interfaces that already had R2 authority. They are intentionally not re-proposed:
 
-`PlayerIpUidMatcherInterface` preserves the exact title **Player IP / UID Matcher**, IP/UID/geolocation state, online/match status, search/order controls and IP/UID ban actions.
-
-`ClanSetupInterface` owns clan-name and rank/permission configuration.
-
-`ClanWarsSetupInterface` preserves the exact title **Clan Wars Setup: Challenging xxxx** and the match-rule/arena selection surface.
-
-`CollectionLogInterface` preserves the exact **Collection Log** title and its Bosses/Boxes/Minigames/Other categories, progress and completion rewards.
+- `rs/n/c/G` -> `ItemEnchantmentInterface`
+- `rs/n/c/U` -> `PlayerIpUidMatcherInterface`
+- `rs/n/c/p` -> `ClanChatSetupInterface`
+- `rs/n/c/s` -> `ClanWarsSetupInterface`
+- `rs/n/c/v` -> `CollectionLogInterface`
 
 ## Boundary
 
