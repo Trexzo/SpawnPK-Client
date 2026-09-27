@@ -23,6 +23,10 @@ from .namespace_virtualized_compile import (
     NamespaceVirtualizedCompileError,
     compile_with_namespace_virtualization,
 )
+from .namespace_alias_plan import (
+    NamespaceAliasPlanError,
+    build_namespace_alias_plan,
+)
 from .source_digest import source_tree_digest
 
 
@@ -390,6 +394,24 @@ def _clean_project_rebuild_legacy(
         prefixes,
         dependency_jar,
     )
+
+    if private_namespace_alias_plan is not None:
+        if auto_namespace_alias_plan:
+            raise CleanRebuildError(
+                "explicit and auto namespace alias plan modes are mutually exclusive"
+            )
+        namespace_alias_plan = private_namespace_alias_plan
+        alias_plan_source = "explicit_private_plan"
+    else:
+        if not auto_namespace_alias_plan:
+            raise CleanRebuildError(
+                "virtualized clean rebuild requires an explicit or auto-derived alias plan"
+            )
+        namespace_alias_plan = _derive_auto_namespace_alias_plan(
+            dependency_jar
+        )
+        alias_plan_source = "auto_dependency_capsule"
+
     expected = _expected_project_classes(
         readable_jar,
         prefixes,
@@ -651,6 +673,39 @@ def _copy_project_source_scope(
         target.write_bytes(source.read_bytes())
 
 
+def _derive_auto_namespace_alias_plan(
+    dependency_jar: Path,
+) -> dict[str, Any]:
+    try:
+        plan = build_namespace_alias_plan(
+            dependency_jar,
+            include_identifiers=True,
+        )
+    except NamespaceAliasPlanError as exc:
+        raise CleanRebuildError(str(exc)) from exc
+
+    mapping = plan.get("mapping")
+    mapped_count = int(
+        plan.get("summary", {}).get(
+            "mapped_class_identity_count",
+            0,
+        )
+    )
+    if (
+        not isinstance(mapping, dict)
+        or not mapping
+        or mapped_count <= 0
+    ):
+        raise CleanRebuildError(
+            "auto namespace virtualization found no class/package collisions"
+        )
+    if len(mapping) != mapped_count:
+        raise CleanRebuildError(
+            "auto namespace alias plan mapping count drifted"
+        )
+    return plan
+
+
 def _clean_project_rebuild_virtualized(
     recovered_manifest: dict[str, Any],
     source_readiness: dict[str, Any],
@@ -658,12 +713,13 @@ def _clean_project_rebuild_virtualized(
     readable_jar: Path,
     build_authority: dict[str, Any],
     source_root: Path,
-    private_namespace_alias_plan: dict[str, Any],
+    private_namespace_alias_plan: dict[str, Any] | None,
     *,
     out_dir: Path,
     javac_command: str = "javac",
     source_prefixes: list[str] | None = None,
     private_diagnostic_report_out: Path | None = None,
+    auto_namespace_alias_plan: bool = False,
 ) -> dict[str, Any]:
     source_root = source_root.resolve()
     readable_jar = readable_jar.resolve()
@@ -742,7 +798,7 @@ def _clean_project_rebuild_virtualized(
             )
 
             virtualized = compile_with_namespace_virtualization(
-                private_namespace_alias_plan,
+                namespace_alias_plan,
                 scoped_source_root,
                 dependency_jar,
                 compile_root,
@@ -823,6 +879,7 @@ def _clean_project_rebuild_virtualized(
         "compile_transport": "namespace_virtualized",
         "namespace_compile_id": virtualized["compile_id"],
         "alias_plan_id": virtualized["alias_plan_id"],
+        "alias_plan_source": alias_plan_source,
     }
     rebuild_id = (
         "CLEANBUILD_"
@@ -899,6 +956,17 @@ def _clean_project_rebuild_virtualized(
             "status": virtualized_status,
             "namespace_compile_id": virtualized["compile_id"],
             "alias_plan_id": virtualized["alias_plan_id"],
+            "alias_plan_source": alias_plan_source,
+            "alias_plan": {
+                "plan_id": namespace_alias_plan["plan_id"],
+                "source": alias_plan_source,
+                "mapped_class_identity_count": namespace_alias_plan[
+                    "summary"
+                ]["mapped_class_identity_count"],
+                "root_collision_node_count": namespace_alias_plan[
+                    "summary"
+                ]["root_collision_node_count"],
+            },
             "compiler": virtualized["compiler"],
             "compile_only_alias_dependency": virtualized[
                 "compile_only_alias_dependency"
@@ -956,8 +1024,17 @@ def clean_project_rebuild(
     source_prefixes: list[str] | None = None,
     private_diagnostic_report_out: Path | None = None,
     private_namespace_alias_plan: dict[str, Any] | None = None,
+    auto_namespace_alias_plan: bool = False,
 ) -> dict[str, Any]:
-    if private_namespace_alias_plan is None:
+    if private_namespace_alias_plan is not None and auto_namespace_alias_plan:
+        raise CleanRebuildError(
+            "explicit and auto namespace alias plan modes are mutually exclusive"
+        )
+
+    if (
+        private_namespace_alias_plan is None
+        and not auto_namespace_alias_plan
+    ):
         return _clean_project_rebuild_legacy(
             recovered_manifest,
             source_readiness,
@@ -983,4 +1060,5 @@ def clean_project_rebuild(
         javac_command=javac_command,
         source_prefixes=source_prefixes,
         private_diagnostic_report_out=private_diagnostic_report_out,
+        auto_namespace_alias_plan=auto_namespace_alias_plan,
     )
