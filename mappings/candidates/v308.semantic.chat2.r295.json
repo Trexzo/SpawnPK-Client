@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/X",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GamblingRulesSwitchedOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "client_overlay_base",
+          "detail": "The class extends the already-reviewed ClientOverlay base and participates in the HIGH overlay render pass."
+        },
+        {
+          "family": "exact_gambling_gate",
+          "detail": "Its visibility predicate requires active interface id 59835 and the gambling-interface rule-switched boolean state rs/n/c/V.c."
+        },
+        {
+          "family": "exact_message",
+          "detail": "The render hook draws the exact three-line message '@or2@The rules' / '@or2@have been' / '@or2@switched!' and the gambling-interface sprite rs/n/c/V.e."
+        },
+        {
+          "family": "exact_timing",
+          "detail": "The overlay uses rs/n/c/V.d with 500 ms / 1000 ms timing to animate/reset the same gambling notification state."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 gambling overlay behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}
