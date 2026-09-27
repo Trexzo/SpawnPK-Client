@@ -756,6 +756,219 @@ def build_source_publication_bundle(
     return bundle
 
 
+def verify_source_publication_bundle(
+    bundle_dir: Path,
+    *,
+    expected_manifest: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    bundle_dir = bundle_dir.resolve()
+    if not bundle_dir.is_dir():
+        raise SourceMilestoneError(
+            "publication bundle directory does not exist"
+        )
+
+    bundle_path = bundle_dir / "BUNDLE.json"
+    milestone_path = bundle_dir / "SOURCE-MILESTONE.json"
+    provenance_dir = bundle_dir / "provenance"
+    source_root = bundle_dir / "src"
+
+    required = (
+        bundle_path,
+        milestone_path,
+        provenance_dir / "SOURCE-PROVENANCE.json",
+        source_root,
+    )
+    for path in required:
+        if not path.exists():
+            raise SourceMilestoneError(
+                "publication bundle is missing required artifact: "
+                + path.relative_to(bundle_dir).as_posix()
+            )
+
+    try:
+        bundle = json.loads(
+            bundle_path.read_text(encoding="utf-8")
+        )
+        milestone = json.loads(
+            milestone_path.read_text(encoding="utf-8")
+        )
+        stored_provenance = json.loads(
+            (
+                provenance_dir / "SOURCE-PROVENANCE.json"
+            ).read_text(encoding="utf-8")
+        )
+    except json.JSONDecodeError as exc:
+        raise SourceMilestoneError(
+            "publication bundle contains invalid JSON"
+        ) from exc
+
+    _require_doc(
+        bundle,
+        kind="source_publication_bundle",
+        label="source_publication_bundle",
+    )
+    _require_doc(
+        milestone,
+        kind="source_milestone_manifest",
+        label="source_milestone_manifest",
+    )
+
+    checks: dict[str, bool] = {}
+
+    checks["external_manifest_match"] = (
+        expected_manifest is None
+        or expected_manifest == milestone
+    )
+    checks["milestone_publishable"] = (
+        milestone.get("publishable") is True
+    )
+    checks["bundle_milestone_match"] = (
+        bundle.get("milestone_id")
+        == milestone.get("milestone_id")
+    )
+    checks["publication_repository_match"] = (
+        bundle.get("publication_repository")
+        == milestone.get("publication", {}).get(
+            "target_repository"
+        )
+    )
+    checks["contains_binary_artifacts_false"] = (
+        bundle.get("contains_binary_artifacts") is False
+    )
+
+    tree_sha, source_files, source_bytes = source_tree_digest(
+        source_root
+    )
+    source_count = len(source_files)
+    checks["source_tree_sha256_match"] = (
+        tree_sha
+        == bundle.get("source_tree_sha256")
+        == milestone.get("source_tree", {}).get("sha256")
+    )
+    checks["source_file_count_match"] = (
+        source_count
+        == bundle.get("source_file_count")
+        == milestone.get("source_tree", {}).get(
+            "java_file_count"
+        )
+    )
+    checks["source_bytes_match"] = (
+        source_bytes
+        == bundle.get("source_bytes")
+        == milestone.get("source_tree", {}).get(
+            "source_bytes"
+        )
+    )
+
+    source_only_layout = True
+    actual_indexed_files: dict[str, str] = {}
+    for path in sorted(
+        bundle_dir.rglob("*"),
+        key=lambda item: item.relative_to(bundle_dir).as_posix(),
+    ):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(bundle_dir).as_posix()
+        if rel == "BUNDLE.json":
+            continue
+
+        allowed = (
+            rel == "SOURCE-MILESTONE.json"
+            or (
+                rel.startswith("src/")
+                and rel.endswith(".java")
+            )
+            or (
+                rel.startswith("provenance/")
+                and rel.endswith(".json")
+                and "/" not in rel[len("provenance/"):]
+            )
+        )
+        if not allowed:
+            source_only_layout = False
+
+        actual_indexed_files[rel] = hashlib.sha256(
+            path.read_bytes()
+        ).hexdigest()
+
+    expected_file_hashes = bundle.get("file_sha256")
+    if not isinstance(expected_file_hashes, dict):
+        expected_file_hashes = {}
+
+    checks["source_only_layout"] = source_only_layout
+    checks["indexed_file_set_match"] = (
+        set(actual_indexed_files)
+        == set(expected_file_hashes)
+    )
+    checks["indexed_file_hashes_match"] = (
+        actual_indexed_files == expected_file_hashes
+    )
+
+    expected_provenance_index = bundle.get(
+        "provenance_documents"
+    )
+    if not isinstance(expected_provenance_index, dict):
+        expected_provenance_index = {}
+
+    actual_provenance_index: dict[str, str] = {}
+    if provenance_dir.is_dir():
+        for path in sorted(provenance_dir.iterdir()):
+            if not path.is_file():
+                source_only_layout = False
+                continue
+            if path.suffix != ".json":
+                source_only_layout = False
+                continue
+            actual_provenance_index[path.name] = hashlib.sha256(
+                path.read_bytes()
+            ).hexdigest()
+
+    checks["source_only_layout"] = source_only_layout
+    checks["provenance_index_match"] = (
+        actual_provenance_index
+        == expected_provenance_index
+    )
+
+    recomputed_provenance = build_source_provenance_document(
+        milestone
+    )
+    checks["generated_provenance_match"] = (
+        stored_provenance == recomputed_provenance
+    )
+
+    verified = all(checks.values())
+
+    material = {
+        "bundle_id": bundle.get("bundle_id"),
+        "milestone_id": milestone.get("milestone_id"),
+        "checks": checks,
+        "source_tree_sha256": tree_sha,
+        "indexed_file_sha256": actual_indexed_files,
+        "provenance_index": actual_provenance_index,
+    }
+    verification_id = (
+        "SRCBUNDLEVERIFY_"
+        + _stable_digest(material)[:20].upper()
+    )
+
+    return {
+        "schema_version": 1,
+        "kind": "source_publication_bundle_verification",
+        "verification_id": verification_id,
+        "bundle_id": bundle.get("bundle_id"),
+        "milestone_id": milestone.get("milestone_id"),
+        "verified": verified,
+        "checks": checks,
+        "source_tree_sha256": tree_sha,
+        "source_file_count": source_count,
+        "source_bytes": source_bytes,
+        "indexed_file_count": len(actual_indexed_files),
+        "provenance_document_count": len(
+            actual_provenance_index
+        ),
+    }
+
+
 def write_json(doc: dict[str, Any], out: Path) -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(
