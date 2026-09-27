@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 5,
+  "review_id": "SEMREVIEW_9DD057FFF37BEE95F186",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_4CB5C4D9AD4FE3A9268D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000303",
+      "owner_logical_id": "CLIENT_CLASS_000303",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/j/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientInputManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_active_input_ownership",
+          "detail": "The class owns exactly one active rs/j/a/d input object for a Client, creates it from a prompt/title string, exposes it, and clears it after invoking the input object's close/commit hook."
+        },
+        {
+          "family": "exact_client_join",
+          "detail": "Client rendering and key-input paths repeatedly obtain the current rs/j/a/d through this manager when input mode fN equals 6."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_5AC480ADE85940354EF5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000312",
+      "owner_logical_id": "CLIENT_CLASS_000312",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/j/b/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CustomMenuManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_client_menu_arrays",
+          "detail": "The class inserts, shifts and swaps Client menu text/opcode/argument/index arrays while keeping callback and submenu maps aligned with those indices."
+        },
+        {
+          "family": "exact_callback_dispatch",
+          "detail": "It stores rs/h/b callbacks by menu index, invokes the selected callback, and clears callback state after dispatch."
+        },
+        {
+          "family": "exact_submenu_flow",
+          "detail": "It creates CustomMenuSubmenu objects, tracks the currently active submenu and uses the exact default label 'Choose Sub-Option'."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_DF68E1629E7F868A8D7C",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000305",
+      "owner_logical_id": "CLIENT_CLASS_000305",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/j/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientInputRequest",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_input_state",
+          "detail": "Opening this object sets Client input mode fN to 6, copies its current text into Client.dY, and marks the client input redraw/request flag."
+        },
+        {
+          "family": "exact_prompt_contract",
+          "detail": "The object defaults its prompt to the literal 'Enter text:', stores current text plus optional prefix/suffix formatting, and carries an input type and string callback."
+        },
+        {
+          "family": "exact_render_key_join",
+          "detail": "Client rendering reads this object's prompt/text/font accessors in mode 6, while the key handler dispatches behavior from its input-type enum."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_DFBA78C3E03A48379D25",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000306",
+      "owner_logical_id": "CLIENT_CLASS_000306",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/j/a/d$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientInputType",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_enum_constants",
+          "detail": "The exact-v308 enum constants are literally TEXT, AMOUNT and USERNAME."
+        },
+        {
+          "family": "exact_key_dispatch",
+          "detail": "Client mode-6 key handling switches on this enum to apply the corresponding text, numeric amount and username input rules."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_F8EA42C8338A56D95C60",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000308",
+      "owner_logical_id": "CLIENT_CLASS_000308",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/j/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CustomMenuSubmenu",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "reviewed_leaf_composition",
+          "detail": "The object owns an array of up to ten already-reviewed CustomMenuEntry instances and appends each text/callback entry through a fluent method."
+        },
+        {
+          "family": "exact_menu_geometry",
+          "detail": "It tracks parent menu index, rendered width/height, screen position and hovered child index, and exposes hit testing plus the currently hovered CustomMenuEntry."
+        },
+        {
+          "family": "exact_parent_label",
+          "detail": "CustomMenuManager creates this structure for parent entries, including the literal default parent text 'Choose Sub-Option'."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}
