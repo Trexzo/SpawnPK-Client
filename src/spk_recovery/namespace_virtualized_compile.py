@@ -172,6 +172,7 @@ def compile_with_namespace_virtualization(
     extra_classpath: list[Path] | None = None,
     report_compile_failure: bool = False,
     private_diagnostic_report_out: Path | None = None,
+    diagnostic_source_root: Path | None = None,
 ) -> dict[str, Any]:
     mapping = _validate_plan(private_alias_plan)
     reverse = reverse_alias_mapping(private_alias_plan)
@@ -179,6 +180,11 @@ def compile_with_namespace_virtualization(
     source_root = source_root.resolve()
     dependency_jar = dependency_jar.resolve()
     out_dir = out_dir.resolve()
+    diagnostic_root = (
+        diagnostic_source_root.resolve()
+        if diagnostic_source_root is not None
+        else source_root
+    )
 
     if not source_root.is_dir():
         raise NamespaceVirtualizedCompileError(
@@ -187,6 +193,10 @@ def compile_with_namespace_virtualization(
     if not dependency_jar.is_file():
         raise NamespaceVirtualizedCompileError(
             "dependency JAR does not exist"
+        )
+    if not diagnostic_root.is_dir():
+        raise NamespaceVirtualizedCompileError(
+            "diagnostic source root does not exist"
         )
     if out_dir.exists() and any(out_dir.iterdir()):
         raise NamespaceVirtualizedCompileError(
@@ -280,7 +290,7 @@ def compile_with_namespace_virtualization(
             remapped_diagnostic = _remap_overlay_diagnostics(
                 proc.stdout + proc.stderr,
                 overlay_root=overlay_root,
-                source_root=source_root,
+                source_root=diagnostic_root,
             )
             public_diagnostic = classify_javac_diagnostics(
                 remapped_diagnostic
