@@ -57,29 +57,87 @@ class NamespaceAliasPlanTests(unittest.TestCase):
             )
             self.assertEqual(
                 public["summary"][
+                    "root_collision_node_count"
+                ],
+                2,
+            )
+            self.assertEqual(
+                public["summary"][
                     "mapped_class_identity_count"
                 ],
                 2,
             )
             self.assertEqual(
-                public["summary"]["nested_class_count"],
-                1,
+                public["summary"][
+                    "mapped_nested_name_count"
+                ],
+                0,
             )
 
             mapping = private["mapping"]
-            self.assertEqual(set(mapping), {"a", "x/Y"})
-            self.assertTrue(mapping["a"].endswith("/a"))
-            self.assertTrue(mapping["x/Y"].endswith("/Y"))
+            self.assertEqual(
+                set(mapping),
+                {"a/b/C", "x/Y/Z"},
+            )
+            self.assertNotIn("a", mapping)
+            self.assertNotIn("x/Y", mapping)
+            self.assertTrue(
+                mapping["a/b/C"].endswith("/b/C")
+            )
+            self.assertTrue(
+                mapping["x/Y/Z"].endswith("/Z")
+            )
 
             reverse = reverse_alias_mapping(private)
             self.assertEqual(
-                reverse[mapping["a"]],
-                "a",
+                reverse[mapping["a/b/C"]],
+                "a/b/C",
             )
             self.assertEqual(
-                reverse[mapping["x/Y"]],
-                "x/Y",
+                reverse[mapping["x/Y/Z"]],
+                "x/Y/Z",
             )
+
+    def test_nested_collision_nodes_collapse_to_minimal_root(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._jar(
+                root,
+                [
+                    "a",
+                    "a/b",
+                    "a/b/C",
+                    "a/b/C/d/E",
+                ],
+            )
+            private = build_namespace_alias_plan(
+                jar,
+                include_identifiers=True,
+            )
+
+            self.assertEqual(
+                private["summary"]["collision_node_count"],
+                3,
+            )
+            self.assertEqual(
+                private["summary"][
+                    "root_collision_node_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                len(private["nodes"]),
+                1,
+            )
+            self.assertEqual(
+                set(private["mapping"]),
+                {
+                    "a/b",
+                    "a/b/C",
+                    "a/b/C/d/E",
+                },
+            )
+            self.assertNotIn("a", private["mapping"])
 
     def test_public_plan_redacts_original_and_alias_names(self):
         with tempfile.TemporaryDirectory() as td:
@@ -104,20 +162,20 @@ class NamespaceAliasPlanTests(unittest.TestCase):
             )
 
             self.assertNotIn(
-                '"original_internal_name"',
+                '"collision_internal_name"',
                 public_raw,
             )
             self.assertNotIn(
-                '"alias_internal_name"',
+                '"alias_package_root"',
                 public_raw,
             )
             self.assertIsNone(public["mapping"])
             self.assertIn(
-                '"original_internal_name"',
+                '"collision_internal_name"',
                 private_raw,
             )
             self.assertIn(
-                '"alias_internal_name"',
+                '"alias_package_root"',
                 private_raw,
             )
 
