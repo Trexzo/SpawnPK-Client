@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 import zipfile
 
 from spk_recovery.namespace_alias_plan import (
@@ -140,34 +141,29 @@ class NamespaceAliasPlanTests(unittest.TestCase):
     def test_reserved_alias_namespace_collision_is_refused(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
-            base = self._jar(
+            jar = self._jar(
                 root,
-                ["a", "a/b/C"],
+                [
+                    "a",
+                    "a/b/C",
+                    (
+                        "spk_compile_alias/r8s/"
+                        "deadbeefcafe/Existing"
+                    ),
+                ],
             )
-            first = build_namespace_alias_plan(
-                base,
-                include_identifiers=True,
-            )
-            alias = next(iter(first["mapping"].values()))
 
-            jar = root / "reserved.jar"
-            with zipfile.ZipFile(
-                jar,
-                "w",
-                zipfile.ZIP_STORED,
-            ) as z:
-                z.writestr("a.class", b"x")
-                z.writestr("a/b/C.class", b"x")
-                z.writestr(alias + ".class", b"x")
-
-            # The namespace token is derived from the whole JAR SHA, so
-            # the added entry changes the token. This should still be
-            # accepted unless the exact newly-derived reserved root exists.
-            report = build_namespace_alias_plan(jar)
-            self.assertEqual(
-                report["summary"]["collision_node_count"],
-                2,
-            )
+            with patch(
+                "spk_recovery.namespace_alias_plan._sha256_file",
+                return_value=(
+                    "deadbeefcafe"
+                    + "0" * 52
+                ),
+            ):
+                with self.assertRaises(
+                    NamespaceAliasPlanError
+                ):
+                    build_namespace_alias_plan(jar)
 
     def test_reverse_requires_private_plan(self):
         with tempfile.TemporaryDirectory() as td:
