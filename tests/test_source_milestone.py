@@ -240,12 +240,17 @@ class SourceMilestoneTests(unittest.TestCase):
                 authority_commit=COMMIT,
             )
             out = root / "export"
+            (src / "UNBOUND.txt").write_text(
+                "must not publish\n",
+                encoding="utf-8",
+            )
             exported = export_source_repository(
                 manifest,
                 src,
                 out,
             )
             self.assertTrue(exported["publishable"])
+            self.assertFalse((out / "src" / "UNBOUND.txt").exists())
             self.assertEqual(exported["source_tree_sha256"], tree)
 
             verified = verify_source_milestone(
