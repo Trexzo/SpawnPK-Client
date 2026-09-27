@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_B7F7FF78C1095A1B019B",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_181DCE1F0CC0FA61EE54",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000656",
+      "owner_logical_id": "CLIENT_CLASS_000656",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/d/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaidAfflictionTomeProgressOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_packet_update_join",
+          "detail": "The already-reviewed RaidInterfacePacketHandler handles selector 6 by reading one integer and passing it directly to rs/n/c/d/a.dD, the singleton rs/n/c/d/f instance, through rs/n/c/d/f.a(int)."
+        },
+        {
+          "family": "exact_affliction_widget_join",
+          "detail": "Raid party construction places widget 32465 as raids/affbar1 directly beside the exact controls 'Add affliction tome(s)' and 'Remove affliction tome(s)', and RaidNavigationInterface registers rs/n/c/d/f as the overlay bound to widget 32465."
+        },
+        {
+          "family": "exact_progress_overlay_behavior",
+          "detail": "The overlay lazily loads raids/affbar2, renders the packet-driven value as a color-staged x/5 progress label, treats values >=5 as complete, and emits completion/progress particles on the same affliction bar."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 raid affliction-tome progress behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}
