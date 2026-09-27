@@ -395,23 +395,6 @@ def _clean_project_rebuild_legacy(
         dependency_jar,
     )
 
-    if private_namespace_alias_plan is not None:
-        if auto_namespace_alias_plan:
-            raise CleanRebuildError(
-                "explicit and auto namespace alias plan modes are mutually exclusive"
-            )
-        namespace_alias_plan = private_namespace_alias_plan
-        alias_plan_source = "explicit_private_plan"
-    else:
-        if not auto_namespace_alias_plan:
-            raise CleanRebuildError(
-                "virtualized clean rebuild requires an explicit or auto-derived alias plan"
-            )
-        namespace_alias_plan = _derive_auto_namespace_alias_plan(
-            dependency_jar
-        )
-        alias_plan_source = "auto_dependency_capsule"
-
     expected = _expected_project_classes(
         readable_jar,
         prefixes,
@@ -777,6 +760,24 @@ def _clean_project_rebuild_virtualized(
         prefixes,
         dependency_jar,
     )
+
+    if private_namespace_alias_plan is not None:
+        if auto_namespace_alias_plan:
+            raise CleanRebuildError(
+                "explicit and auto namespace alias plan modes are mutually exclusive"
+            )
+        namespace_alias_plan = private_namespace_alias_plan
+        alias_plan_source = "explicit_private_plan"
+    else:
+        if not auto_namespace_alias_plan:
+            raise CleanRebuildError(
+                "virtualized clean rebuild requires an explicit or auto-derived alias plan"
+            )
+        namespace_alias_plan = _derive_auto_namespace_alias_plan(
+            dependency_jar
+        )
+        alias_plan_source = "auto_dependency_capsule"
+
     expected = _expected_project_classes(
         readable_jar,
         prefixes,
