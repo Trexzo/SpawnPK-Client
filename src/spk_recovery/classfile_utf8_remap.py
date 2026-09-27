@@ -89,7 +89,7 @@ def _mapping_bytes(
 
 
 _LEFT_BOUNDARY = frozenset(b"L[(:;+-")
-_RIGHT_BOUNDARY = frozenset(b";<.$/:)")
+_RIGHT_BOUNDARY = frozenset(b";<.$:)")
 
 
 def _replace_identity(
