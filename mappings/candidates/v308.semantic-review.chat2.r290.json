@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_B4E15495D4AC5E944EEC",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_3D5A2F4F6B1ACFCC4AF9",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000532",
+      "owner_logical_id": "CLIENT_CLASS_000532",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HoverSpriteContainerWidget",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_companion_construction",
+          "detail": "SpriteButtonWidget creates this object only as the secondary interface referenced by a clickable sprite button's hover id."
+        },
+        {
+          "family": "exact_container_shape",
+          "detail": "The instance is configured as a non-interactive container with one child, with width/height derived from the companion hover sprite and that sprite installed at child index zero."
+        },
+        {
+          "family": "exact_hover_sprite_pairing",
+          "detail": "Live callers create normal/hover sprite pairs such as wiki/button 1 -> wiki/button 2, teleport sprite pairs, raids button pairs and bank button pairs through this class."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 clickable/hover sprite widget behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_74CF98E125F423F603C8",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000526",
+      "owner_logical_id": "CLIENT_CLASS_000526",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpriteButtonWidget",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_clickable_sprite_type",
+          "detail": "The factory creates an RSInterface type-5 sprite widget, sets interaction/action type M to 1, stores the supplied tooltip/action string, and sizes the widget from the sprite dimensions."
+        },
+        {
+          "family": "exact_live_actions",
+          "detail": "Concrete interface callers use this class for exact clickable actions including 'Select tab', 'Search by item', 'Go back', 'Tips & Information', 'Teleport to Task', 'Claim rewards', 'Next chapter', 'Previous chapter' and 'Select'."
+        },
+        {
+          "family": "exact_hover_link",
+          "detail": "Its hover-attachment methods bind a secondary interface id through the widget hover field and construct the companion HoverSpriteContainerWidget plus its child sprite."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 clickable/hover sprite widget behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}
