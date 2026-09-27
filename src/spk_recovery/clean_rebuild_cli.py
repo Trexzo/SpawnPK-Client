@@ -37,12 +37,21 @@ def main(argv: list[str] | None = None) -> int:
             "never commit this artifact"
         ),
     )
-    p.add_argument(
+    namespace_group = p.add_mutually_exclusive_group()
+    namespace_group.add_argument(
         "--namespace-alias-plan",
         type=Path,
         help=(
             "explicit private namespace alias plan enabling compile-only "
             "namespace virtualization; default clean rebuild remains legacy"
+        ),
+    )
+    namespace_group.add_argument(
+        "--auto-namespace-alias-plan",
+        action="store_true",
+        help=(
+            "explicitly derive a private collision alias plan from the "
+            "verified dependency capsule"
         ),
     )
     p.add_argument("--out-dir", type=Path, required=True)
@@ -67,6 +76,7 @@ def main(argv: list[str] | None = None) -> int:
                 if args.namespace_alias_plan is not None
                 else None
             ),
+            auto_namespace_alias_plan=args.auto_namespace_alias_plan,
         )
     except (
         CleanRebuildError,
@@ -165,6 +175,10 @@ def main(argv: list[str] | None = None) -> int:
         print(
             "namespace_alias_plan_id="
             f"{transport['alias_plan_id']}"
+        )
+        print(
+            "namespace_alias_plan_source="
+            f"{transport['alias_plan_source']}"
         )
         print(
             "runtime_alias_dependency_allowed="
