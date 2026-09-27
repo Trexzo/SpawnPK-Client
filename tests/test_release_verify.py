@@ -1,5 +1,6 @@
 from pathlib import Path
 import hashlib
+import json
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -63,6 +64,186 @@ class ReleaseVerificationTests(unittest.TestCase):
             )
         self.assertFalse(report["verified"])
         self.assertEqual(report["failed_required_check_count"], 1)
+
+    def test_collision_private_plan_provenance_passes(self):
+        release = _release()
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            plan_path = root / "collision-plan.json"
+            plan = {
+                "schema_version": 1,
+                "kind": "class_package_namespace_collision_plan",
+                "plan_id": "JNSPLAN_TEST",
+                "collision_report_id": "JNSCOLLISION_TEST",
+                "readable_jar_sha256": "b" * 64,
+                "identifiers_included": True,
+            }
+            plan_path.write_text(
+                json.dumps(plan, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            plan_sha = hashlib.sha256(
+                plan_path.read_bytes()
+            ).hexdigest()
+
+            recovered = {
+                "collision_plan_id": "JNSPLAN_TEST",
+                "collision_report_id": "JNSCOLLISION_TEST",
+                "collision_transform_id": "COLLTRANS_TEST",
+                "base_readable_jar_sha256": "b" * 64,
+            }
+            clean = {
+                "readable_jar_sha256": "b" * 64,
+                "compile_transport": {
+                    "mode": "collision_derived_remap",
+                    "collision_plan_id": "JNSPLAN_TEST",
+                    "collision_plan_sha256": plan_sha,
+                    "collision_report_id": "JNSCOLLISION_TEST",
+                    "collision_transform_id": "COLLTRANS_TEST",
+                },
+            }
+
+            with patch(
+                "spk_recovery.release_verify.build_recovery_release_manifest",
+                return_value=release.copy(),
+            ):
+                report = verify_recovery_release(
+                    release,
+                    {},
+                    {},
+                    {},
+                    {},
+                    recovered,
+                    clean,
+                    {},
+                    private_collision_plan_path=plan_path,
+                )
+
+            self.assertTrue(report["verified"])
+            names = {row["name"] for row in report["checks"]}
+            self.assertIn("collision_private_plan_sha256", names)
+            self.assertIn("collision_private_plan_id", names)
+            self.assertIn("collision_private_plan_report_id", names)
+            self.assertIn(
+                "collision_private_plan_readable_sha256",
+                names,
+            )
+
+    def test_collision_private_plan_byte_drift_is_rejected(self):
+        release = _release()
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            plan_path = root / "collision-plan.json"
+            plan = {
+                "schema_version": 1,
+                "kind": "class_package_namespace_collision_plan",
+                "plan_id": "JNSPLAN_TEST",
+                "collision_report_id": "JNSCOLLISION_TEST",
+                "readable_jar_sha256": "b" * 64,
+                "identifiers_included": True,
+            }
+            plan_path.write_text(
+                json.dumps(plan, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            accepted_sha = hashlib.sha256(
+                plan_path.read_bytes()
+            ).hexdigest()
+
+            recovered = {
+                "collision_plan_id": "JNSPLAN_TEST",
+                "collision_report_id": "JNSCOLLISION_TEST",
+                "collision_transform_id": "COLLTRANS_TEST",
+                "base_readable_jar_sha256": "b" * 64,
+            }
+            clean = {
+                "readable_jar_sha256": "b" * 64,
+                "compile_transport": {
+                    "mode": "collision_derived_remap",
+                    "collision_plan_id": "JNSPLAN_TEST",
+                    "collision_plan_sha256": accepted_sha,
+                    "collision_report_id": "JNSCOLLISION_TEST",
+                    "collision_transform_id": "COLLTRANS_TEST",
+                },
+            }
+
+            plan["tamper"] = True
+            plan_path.write_text(
+                json.dumps(plan, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+
+            with patch(
+                "spk_recovery.release_verify.build_recovery_release_manifest",
+                return_value=release.copy(),
+            ):
+                report = verify_recovery_release(
+                    release,
+                    {},
+                    {},
+                    {},
+                    {},
+                    recovered,
+                    clean,
+                    {},
+                    private_collision_plan_path=plan_path,
+                )
+
+            self.assertFalse(report["verified"])
+            failed = {
+                row["name"]
+                for row in report["checks"]
+                if row["required"] and not row["passed"]
+            }
+            self.assertEqual(
+                failed,
+                {"collision_private_plan_sha256"},
+            )
+
+    def test_collision_release_requires_private_plan(self):
+        release = _release()
+        recovered = {
+            "collision_plan_id": "JNSPLAN_TEST",
+            "collision_report_id": "JNSCOLLISION_TEST",
+            "collision_transform_id": "COLLTRANS_TEST",
+            "base_readable_jar_sha256": "b" * 64,
+        }
+        clean = {
+            "readable_jar_sha256": "b" * 64,
+            "compile_transport": {
+                "mode": "collision_derived_remap",
+                "collision_plan_id": "JNSPLAN_TEST",
+                "collision_plan_sha256": "a" * 64,
+                "collision_report_id": "JNSCOLLISION_TEST",
+                "collision_transform_id": "COLLTRANS_TEST",
+            },
+        }
+
+        with patch(
+            "spk_recovery.release_verify.build_recovery_release_manifest",
+            return_value=release.copy(),
+        ):
+            report = verify_recovery_release(
+                release,
+                {},
+                {},
+                {},
+                {},
+                recovered,
+                clean,
+                {},
+            )
+
+        self.assertFalse(report["verified"])
+        failed = {
+            row["name"]
+            for row in report["checks"]
+            if row["required"] and not row["passed"]
+        }
+        self.assertEqual(
+            failed,
+            {"collision_private_plan_supplied"},
+        )
 
     def test_optional_jar_pins_are_verified(self):
         release = _release()
