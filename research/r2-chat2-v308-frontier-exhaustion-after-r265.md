@@ -55,6 +55,40 @@ They contain only synthetic `int[]` tables populated in `<clinit>` with
 
 None receives a semantic proposal.
 
+## rs/l/e interactive/render helper frontier
+
+Three exact owners remain intentionally unnamed in this package:
+
+- `rs/l/e/i`
+- `rs/l/e/l`
+- `rs/l/e/m`
+
+`rs/l/e/i` is a one-method interface with only
+`void a(rs.n.e, int, int)`; its callers prove a rendering/callback role but do not preserve a
+specific source noun.
+
+`rs/l/e/l` is a tiny mutable text record:
+
+- one `String`;
+- x initialized to **522**;
+- y initialized to **330**.
+
+`rs/l/e/m` owns one active record plus a FIFO list of those records and the exact `Client`.
+Its render/update path measures text width, decrements x each tick, draws the string at the stored
+x/y in white, and advances queued records.
+
+The exact class-reference graph is restrictive:
+
+- `rs/l/e/m` is constructed into `Client.n`;
+- `rs/l/b/b` invokes its no-arg update/render method each client frame/tick;
+- no other exact-v308 class references `rs/l/e/l`;
+- no surviving exact-v308 class invokes `rs/l/e/m.a(String)`, the enqueue method.
+
+Therefore the scrolling/sliding-text mechanics are proven, but the originating feature noun is
+not. No semantic proposal is created without a surviving producer or other stronger identity
+evidence.
+
+
 ## Self-identifying literal pass
 
 A whole-`rs/**` exact-v308 scan found 41 classes with generated/self-identifying
