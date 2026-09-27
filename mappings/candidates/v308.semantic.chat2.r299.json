@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/b$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DailyChallengeEntry",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_identity",
+          "detail": "The enclosing rs/n/c/b is already reviewed as DailyChallengesInterface and owns the static List<rs/n/c/b$a> rendered into its 441xx challenge rows."
+        },
+        {
+          "family": "exact_entry_fields",
+          "detail": "The record stores challenge name, challenge description and four integers populated together by DailyChallengesInterface.a(String,String,int,int,int,int)."
+        },
+        {
+          "family": "exact_progress_rendering",
+          "detail": "Parent rendering uses the final two integers as current and goal progress, derives a percentage capped at 100%, updates the progress bar sprite, and writes current/goal/percent text."
+        },
+        {
+          "family": "exact_reward_actions",
+          "detail": "The same entry row is rendered beside the exact action 'Collect reward', with the entry name also used for the challenge information tooltip path."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Daily Challenges entry behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}
