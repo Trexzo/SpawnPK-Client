@@ -295,6 +295,16 @@ def _classify_javac_probe(
         or entry_windows in diagnostic
     )
 
+    raw_lines = sorted(
+        {
+            int(match.group(1))
+            for match in _JAVAC_LINE_RE.finditer(diagnostic)
+        }
+    )
+    raw_diagnostic_keys = sorted(
+        set(_JAVAC_DIAGNOSTIC_KEY_RE.findall(diagnostic))
+    )
+
     dotted = internal.replace("/", ".")
     simple = dotted.rsplit(".", 1)[-1]
     for old, new in (
@@ -316,15 +326,8 @@ def _classify_javac_probe(
         "<TIME>",
         diagnostic,
     )
-    lines = sorted(
-        {
-            int(match.group(1))
-            for match in _JAVAC_LINE_RE.finditer(diagnostic)
-        }
-    )
-    diagnostic_keys = sorted(
-        set(_JAVAC_DIAGNOSTIC_KEY_RE.findall(diagnostic))
-    )
+    lines = raw_lines
+    diagnostic_keys = raw_diagnostic_keys
 
     if proc.returncode == 0 and generated.is_file():
         classification = "javac_resolves_exact_class"
