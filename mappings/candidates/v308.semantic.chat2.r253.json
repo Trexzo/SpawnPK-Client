@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/osrs/util/OsrsMapDependencyScannerTest",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OsrsMapDependencyScannerTest",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_preserved_class_identity",
+          "detail": "Exact v308 retains the unobfuscated internal class name rs/cache/osrs/util/OsrsMapDependencyScannerTest; no semantic noun reconstruction is required."
+        },
+        {
+          "family": "exact_regression_harness",
+          "detail": "Its public static main constructs deterministic landscape/archive fixtures and invokes OsrsMapDependencyScanner directly, failing with AssertionError when scanner behavior does not match the embedded expectations."
+        },
+        {
+          "family": "exact_fixture_coverage",
+          "detail": "Surviving assertions cover extended object-ID smart decoding, truncated spawns, trailing landscape bytes, out-of-range planes, packed frame enumeration, and temporary OSRS map-audit filesystem fixtures."
+        }
+      ],
+      "note": "OsrsMapDependencyScannerTest is preserved verbatim by exact-v308 class identity and its executable regression-harness behavior independently matches the name. Confidence 0.999."
+    }
+  ],
+  "conflicts": []
+}
