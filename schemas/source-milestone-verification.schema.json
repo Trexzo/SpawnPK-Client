@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/source-milestone-verification.schema.json",
+  "title": "SpawnPK source milestone verification",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "verification_id",
+    "milestone_id",
+    "verified",
+    "publishable",
+    "exact_reproduction",
+    "recomputed_milestone_id"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "source_milestone_verification"},
+    "verification_id": {
+      "type": "string",
+      "pattern": "^SRCMILEVERIFY_[0-9A-F]{20}$"
+    },
+    "milestone_id": {"type": ["string", "null"]},
+    "verified": {"type": "boolean"},
+    "publishable": {"type": "boolean"},
+    "exact_reproduction": {"type": "boolean"},
+    "recomputed_milestone_id": {"type": ["string", "null"]}
+  },
+  "additionalProperties": false
+}

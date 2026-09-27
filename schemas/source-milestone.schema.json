@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/source-milestone.schema.json",
+  "title": "SpawnPK recovered source milestone",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "milestone_id",
+    "milestone",
+    "publishable",
+    "blockers",
+    "provenance",
+    "source_tree",
+    "class_set",
+    "publication",
+    "note"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "source_milestone_manifest"},
+    "milestone_id": {
+      "type": "string",
+      "pattern": "^SRCMILESTONE_[0-9A-F]{20}$"
+    },
+    "milestone": {"const": "source-milestone-1"},
+    "publishable": {"type": "boolean"},
+    "blockers": {"type": "array"},
+    "provenance": {"type": "object"},
+    "source_tree": {"type": "object"},
+    "class_set": {"type": "object"},
+    "publication": {"type": "object"},
+    "note": {"type": "string"}
+  },
+  "additionalProperties": false
+}

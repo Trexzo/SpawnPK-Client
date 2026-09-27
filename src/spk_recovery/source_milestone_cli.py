@@ -1,0 +1,216 @@
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+import sys
+
+from .lineage import load_lineage
+from .member_lineage import load_member_lineage
+from .source_milestone import (
+    SourceMilestoneError,
+    build_source_milestone_manifest,
+    build_source_publication_bundle,
+    verify_source_milestone_manifest,
+    verify_source_publication_bundle,
+    write_json,
+)
+
+
+def _load(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _common_inputs(p: argparse.ArgumentParser) -> None:
+    p.add_argument("--authority-commit", required=True)
+    p.add_argument("--class-lineage", type=Path, required=True)
+    p.add_argument("--member-lineage", type=Path, required=True)
+    p.add_argument("--readable-manifest", type=Path, required=True)
+    p.add_argument("--recovered-manifest", type=Path, required=True)
+    p.add_argument("--clean-rebuild", type=Path, required=True)
+    p.add_argument("--release-manifest", type=Path, required=True)
+    p.add_argument("--release-verification", type=Path, required=True)
+    p.add_argument("--source-root", type=Path, required=True)
+    p.add_argument(
+        "--authority-repository",
+        default="Trexzo/SpawnPK-Client",
+    )
+    p.add_argument(
+        "--publication-repository",
+        default="Trexzo/SpawnPK-Client-Source",
+    )
+
+
+def _kwargs(args: argparse.Namespace) -> dict:
+    return {
+        "authority_commit": args.authority_commit,
+        "class_lineage": load_lineage(args.class_lineage),
+        "member_lineage": load_member_lineage(
+            args.member_lineage
+        ),
+        "readable_manifest": _load(args.readable_manifest),
+        "recovered_source_manifest": _load(
+            args.recovered_manifest
+        ),
+        "clean_rebuild_report": _load(args.clean_rebuild),
+        "release_manifest": _load(args.release_manifest),
+        "release_verification": _load(
+            args.release_verification
+        ),
+        "source_root": args.source_root,
+        "authority_repository": args.authority_repository,
+        "publication_repository": args.publication_repository,
+    }
+
+
+def main(argv: list[str] | None = None) -> int:
+    p = argparse.ArgumentParser(prog="spk-source-milestone")
+    sub = p.add_subparsers(dest="command", required=True)
+
+    build = sub.add_parser("build")
+    _common_inputs(build)
+    build.add_argument("--out", type=Path, required=True)
+
+    verify = sub.add_parser("verify")
+    _common_inputs(verify)
+    verify.add_argument("--manifest", type=Path, required=True)
+    verify.add_argument("--out", type=Path, required=True)
+
+    verify_bundle = sub.add_parser("verify-bundle")
+    verify_bundle.add_argument(
+        "--bundle-dir",
+        type=Path,
+        required=True,
+    )
+    verify_bundle.add_argument(
+        "--manifest",
+        type=Path,
+    )
+    verify_bundle.add_argument(
+        "--out",
+        type=Path,
+        required=True,
+    )
+
+    bundle = sub.add_parser("bundle")
+    bundle.add_argument("--manifest", type=Path, required=True)
+    bundle.add_argument("--source-root", type=Path, required=True)
+    bundle.add_argument("--out-dir", type=Path, required=True)
+    bundle.add_argument(
+        "--provenance",
+        action="append",
+        default=[],
+        metavar="NAME=PATH",
+    )
+
+    args = p.parse_args(argv)
+
+    try:
+        if args.command == "build":
+            manifest = build_source_milestone_manifest(
+                **_kwargs(args)
+            )
+            write_json(manifest, args.out)
+            print("SPK_SOURCE_MILESTONE_BUILD_COMPLETE")
+            print(f"milestone_id={manifest['milestone_id']}")
+            print(
+                "publishable="
+                + str(manifest["publishable"]).lower()
+            )
+            print(
+                "blocker_count="
+                + str(len(manifest["blockers"]))
+            )
+            print(f"out={args.out}")
+            return 0 if manifest["publishable"] else 3
+
+        if args.command == "verify":
+            manifest = _load(args.manifest)
+            report = verify_source_milestone_manifest(
+                manifest,
+                **_kwargs(args),
+            )
+            write_json(report, args.out)
+            print("SPK_SOURCE_MILESTONE_VERIFY_COMPLETE")
+            print(
+                f"verification_id={report['verification_id']}"
+            )
+            print(
+                "verified="
+                + str(report["verified"]).lower()
+            )
+            print(
+                "publishable="
+                + str(report["publishable"]).lower()
+            )
+            print(f"out={args.out}")
+            return 0 if report["verified"] else 3
+
+        if args.command == "verify-bundle":
+            expected_manifest = (
+                _load(args.manifest)
+                if args.manifest is not None
+                else None
+            )
+            report = verify_source_publication_bundle(
+                args.bundle_dir,
+                expected_manifest=expected_manifest,
+            )
+            write_json(report, args.out)
+            print(
+                "SPK_SOURCE_MILESTONE_BUNDLE_VERIFY_COMPLETE"
+            )
+            print(
+                f"verification_id={report['verification_id']}"
+            )
+            print(
+                "verified="
+                + str(report["verified"]).lower()
+            )
+            print(
+                "indexed_file_count="
+                + str(report["indexed_file_count"])
+            )
+            print(
+                "provenance_document_count="
+                + str(report["provenance_document_count"])
+            )
+            print(f"out={args.out}")
+            return 0 if report["verified"] else 3
+
+        provenance: dict[str, dict] = {}
+        for item in args.provenance:
+            if "=" not in item:
+                raise SourceMilestoneError(
+                    "--provenance requires NAME=PATH"
+                )
+            name, raw_path = item.split("=", 1)
+            provenance[name] = _load(Path(raw_path))
+
+        manifest = _load(args.manifest)
+        bundle_report = build_source_publication_bundle(
+            manifest,
+            args.source_root,
+            args.out_dir,
+            provenance_documents=provenance,
+        )
+        print("SPK_SOURCE_MILESTONE_BUNDLE_COMPLETE")
+        print(f"bundle_id={bundle_report['bundle_id']}")
+        print(
+            "source_file_count="
+            + str(bundle_report["source_file_count"])
+        )
+        print(f"out_dir={args.out_dir}")
+        return 0
+    except (
+        SourceMilestoneError,
+        OSError,
+        ValueError,
+        json.JSONDecodeError,
+    ) as exc:
+        print(f"REFUSED: {exc}", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

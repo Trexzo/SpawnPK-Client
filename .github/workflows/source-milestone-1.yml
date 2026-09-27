@@ -1,0 +1,210 @@
+name: Source Milestone 1
+
+on:
+  workflow_dispatch:
+    inputs:
+      authority_run_id:
+        description: GitHub Actions run containing the Source M1 authority artifact
+        required: true
+        type: string
+      authority_artifact_name:
+        description: Source M1 authority artifact name
+        required: true
+        default: spawnpk-v308-source-authority
+        type: string
+      authority_commit:
+        description: Exact SpawnPK-Client authority commit (lowercase 40 hex)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  verify-source-milestone:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout recovery tooling
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install recovery tooling
+        run: python -m pip install -e .
+
+      - name: Validate exact authority commit
+        shell: bash
+        env:
+          AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+        run: |
+          set -euo pipefail
+          if ! [[ "$AUTHORITY_COMMIT" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "authority_commit must be exact lowercase 40-hex" >&2
+            exit 2
+          fi
+          git cat-file -e "$AUTHORITY_COMMIT^{commit}"
+          git merge-base --is-ancestor "$AUTHORITY_COMMIT" HEAD
+
+      - name: Download Source M1 authority artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.authority_artifact_name }}
+          path: authority
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.authority_run_id }}
+
+      - name: Validate authority artifact contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f authority/class-lineage.json
+          test -f authority/member-lineage.json
+          test -f authority/readable-client-manifest.json
+          test -f authority/recovered-source-manifest.json
+          test -f authority/clean-rebuild.json
+          test -f authority/recovery-release.json
+          test -f authority/release-verification.json
+          test -d authority/src
+
+          python - <<'PY'
+          from pathlib import Path
+
+          root = Path("authority/src")
+          files = sorted(
+              path
+              for path in root.rglob("*")
+              if path.is_file()
+          )
+          if not files:
+              raise SystemExit("authority/src contains no files")
+
+          non_java = [
+              path.relative_to(root).as_posix()
+              for path in files
+              if path.suffix != ".java"
+          ]
+          if non_java:
+              raise SystemExit(
+                  "authority/src contains non-Java files: "
+                  + ", ".join(non_java[:20])
+              )
+          PY
+
+      - name: Build Source Milestone 1 manifest
+        shell: bash
+        env:
+          AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+        run: |
+          set -euo pipefail
+          mkdir -p source-m1/verification
+
+          python -m spk_recovery.source_milestone_cli build \
+            --authority-commit "$AUTHORITY_COMMIT" \
+            --class-lineage authority/class-lineage.json \
+            --member-lineage authority/member-lineage.json \
+            --readable-manifest authority/readable-client-manifest.json \
+            --recovered-manifest authority/recovered-source-manifest.json \
+            --clean-rebuild authority/clean-rebuild.json \
+            --release-manifest authority/recovery-release.json \
+            --release-verification authority/release-verification.json \
+            --source-root authority/src \
+            --out source-m1/SOURCE-MILESTONE.json
+
+      - name: Exactly reproduce milestone manifest
+        shell: bash
+        env:
+          AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+        run: |
+          set -euo pipefail
+
+          python -m spk_recovery.source_milestone_cli verify \
+            --authority-commit "$AUTHORITY_COMMIT" \
+            --class-lineage authority/class-lineage.json \
+            --member-lineage authority/member-lineage.json \
+            --readable-manifest authority/readable-client-manifest.json \
+            --recovered-manifest authority/recovered-source-manifest.json \
+            --clean-rebuild authority/clean-rebuild.json \
+            --release-manifest authority/recovery-release.json \
+            --release-verification authority/release-verification.json \
+            --source-root authority/src \
+            --manifest source-m1/SOURCE-MILESTONE.json \
+            --out source-m1/verification/SOURCE-MILESTONE-VERIFICATION.json
+
+      - name: Build source-only publication bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python -m spk_recovery.source_milestone_cli bundle \
+            --manifest source-m1/SOURCE-MILESTONE.json \
+            --source-root authority/src \
+            --out-dir source-m1/publication \
+            --provenance class-lineage.json=authority/class-lineage.json \
+            --provenance member-lineage.json=authority/member-lineage.json \
+            --provenance readable-client-manifest.json=authority/readable-client-manifest.json \
+            --provenance recovered-source-manifest.json=authority/recovered-source-manifest.json \
+            --provenance clean-rebuild.json=authority/clean-rebuild.json \
+            --provenance recovery-release.json=authority/recovery-release.json \
+            --provenance release-verification.json=authority/release-verification.json \
+            --provenance source-milestone-verification.json=source-m1/verification/SOURCE-MILESTONE-VERIFICATION.json
+
+      - name: Verify publication bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          python -m spk_recovery.source_milestone_cli verify-bundle \
+            --bundle-dir source-m1/publication \
+            --manifest source-m1/SOURCE-MILESTONE.json \
+            --out source-m1/verification/SOURCE-BUNDLE-VERIFICATION.json
+
+      - name: Reject binaries outside verifier contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          publication = Path("source-m1/publication")
+          allowed = {
+              publication / "BUNDLE.json",
+              publication / "SOURCE-MILESTONE.json",
+          }
+
+          bad = []
+          for path in publication.rglob("*"):
+              if not path.is_file():
+                  continue
+              if path in allowed:
+                  continue
+              rel = path.relative_to(publication).as_posix()
+              if rel.startswith("src/") and path.suffix == ".java":
+                  continue
+              if (
+                  rel.startswith("provenance/")
+                  and path.suffix == ".json"
+                  and "/" not in rel[len("provenance/"):]
+              ):
+                  continue
+              bad.append(rel)
+
+          if bad:
+              raise SystemExit(
+                  "publication bundle contains forbidden files: "
+                  + ", ".join(sorted(bad))
+              )
+          PY
+
+      - name: Upload verified Source Milestone artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: spawnpk-source-m1-${{ inputs.authority_commit }}
+          path: source-m1
+          if-no-files-found: error
+          retention-days: 30
