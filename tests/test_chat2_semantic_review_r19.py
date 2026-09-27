@@ -114,7 +114,7 @@ class Chat2SemanticReviewR19Tests(unittest.TestCase):
         self.assertEqual(actual["unresolved"], [])
         self.assertEqual(
             actual["review_id"],
-            "SEMREVIEW_402B4C2AA42205916457",
+            "SEMREVIEW_F6863DB52D922162613D",
         )
         self.assertEqual(actual, expected)
 
@@ -138,7 +138,7 @@ class Chat2SemanticReviewR19Tests(unittest.TestCase):
                 "DevToolsWidgetOverlay": "CLIENT_CLASS_000891",
                 "DevToolsWidgetDisplay": "CLIENT_CLASS_000892",
                 "ColorTileMarker": "CLIENT_CLASS_000907",
-                "GroundMarkerPoint": "CLIENT_CLASS_000912",
+                "JGroundMarkerPoint": "CLIENT_CLASS_000912",
                 "CounterInfoBox": "CLIENT_CLASS_001018",
                 "StatusInfoBox": "CLIENT_CLASS_001025",
                 "NavigationButtonBuilder": "CLIENT_CLASS_001103",
