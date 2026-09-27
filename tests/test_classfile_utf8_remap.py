@@ -11,6 +11,7 @@ from spk_recovery.classfile import parse_class
 from spk_recovery.classfile_utf8_remap import (
     ClassfileRemapError,
     assert_no_literal_alias_mentions,
+    assert_no_utf8_alias_references,
     remap_classfile_utf8,
     remap_jar,
 )
@@ -243,6 +244,11 @@ class ClassfileUtf8RemapTests(unittest.TestCase):
             restored_path = restored_dir / "Use.class"
             restored_path.write_bytes(restored.data)
 
+            assert_no_utf8_alias_references(
+                [restored.data],
+                [alias],
+            )
+
             parsed = parse_class(restored.data)
             self.assertFalse(
                 any(
@@ -285,6 +291,67 @@ class ClassfileUtf8RemapTests(unittest.TestCase):
             self.assertEqual(
                 run.stdout.strip(),
                 "5",
+            )
+
+    def test_missing_alias_source_identity_is_refused(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            collision = self._collision_jar(root)
+
+            with self.assertRaises(ClassfileRemapError):
+                remap_jar(
+                    collision,
+                    root / "alias.jar",
+                    {
+                        "not/present/Class":
+                            "spk_compile_alias/r8s/Missing"
+                    },
+                )
+
+    def test_structural_alias_residue_is_refused_and_restore_clears_it(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            collision = self._collision_jar(root)
+            alias = "spk_compile_alias/r8s/AliasA"
+            alias_jar = root / "alias.jar"
+            remap_jar(
+                collision,
+                alias_jar,
+                {"a": alias},
+            )
+
+            source = root / "Use.java"
+            source.write_text(
+                "public class Use { "
+                "public spk_compile_alias.r8s.AliasA value; }\n",
+                encoding="utf-8",
+            )
+            out = root / "classes"
+            proc = self._compile(
+                source=source,
+                out=out,
+                classpath=alias_jar,
+            )
+            self.assertEqual(
+                proc.returncode,
+                0,
+                proc.stdout + proc.stderr,
+            )
+
+            generated = (out / "Use.class").read_bytes()
+            with self.assertRaises(ClassfileRemapError):
+                assert_no_utf8_alias_references(
+                    [generated],
+                    [alias],
+                )
+
+            restored = remap_classfile_utf8(
+                generated,
+                {alias: "a"},
+            ).data
+            assert_no_utf8_alias_references(
+                [restored],
+                [alias],
             )
 
     def test_literal_alias_mention_is_refused_before_restore(self):
