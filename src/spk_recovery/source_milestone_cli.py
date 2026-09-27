@@ -12,6 +12,7 @@ from .source_milestone import (
     build_source_milestone_manifest,
     build_source_publication_bundle,
     verify_source_milestone_manifest,
+    verify_source_publication_bundle,
     write_json,
 )
 
@@ -75,6 +76,22 @@ def main(argv: list[str] | None = None) -> int:
     verify.add_argument("--manifest", type=Path, required=True)
     verify.add_argument("--out", type=Path, required=True)
 
+    verify_bundle = sub.add_parser("verify-bundle")
+    verify_bundle.add_argument(
+        "--bundle-dir",
+        type=Path,
+        required=True,
+    )
+    verify_bundle.add_argument(
+        "--manifest",
+        type=Path,
+    )
+    verify_bundle.add_argument(
+        "--out",
+        type=Path,
+        required=True,
+    )
+
     bundle = sub.add_parser("bundle")
     bundle.add_argument("--manifest", type=Path, required=True)
     bundle.add_argument("--source-root", type=Path, required=True)
@@ -125,6 +142,38 @@ def main(argv: list[str] | None = None) -> int:
             print(
                 "publishable="
                 + str(report["publishable"]).lower()
+            )
+            print(f"out={args.out}")
+            return 0 if report["verified"] else 3
+
+        if args.command == "verify-bundle":
+            expected_manifest = (
+                _load(args.manifest)
+                if args.manifest is not None
+                else None
+            )
+            report = verify_source_publication_bundle(
+                args.bundle_dir,
+                expected_manifest=expected_manifest,
+            )
+            write_json(report, args.out)
+            print(
+                "SPK_SOURCE_MILESTONE_BUNDLE_VERIFY_COMPLETE"
+            )
+            print(
+                f"verification_id={report['verification_id']}"
+            )
+            print(
+                "verified="
+                + str(report["verified"]).lower()
+            )
+            print(
+                "indexed_file_count="
+                + str(report["indexed_file_count"])
+            )
+            print(
+                "provenance_document_count="
+                + str(report["provenance_document_count"])
             )
             print(f"out={args.out}")
             return 0 if report["verified"] else 3
