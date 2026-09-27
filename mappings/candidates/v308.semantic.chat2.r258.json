@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MaterialTabSelectionListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_selection_behavior",
+          "detail": "Exact v308 MouseAdapter owns one MaterialTab and one MaterialTabGroup; mousePressed passes that exact tab to the group's selection method and performs no other action."
+        }
+      ],
+      "note": "MaterialTabSelectionListener is descriptive exact-behavior recovery for the reviewed MaterialTab family."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/b/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MaterialTabTextHoverListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_text_hover_behavior",
+          "detail": "Exact v308 MouseAdapter is installed by the text-title MaterialTab constructor; mouseEntered sets foreground WHITE and mouseExited restores GRAY only when the tab is not selected."
+        }
+      ],
+      "note": "MaterialTabTextHoverListener is descriptive exact-behavior recovery for the reviewed MaterialTab family."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/b/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MaterialTabIconHoverListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_icon_hover_behavior",
+          "detail": "Exact v308 MouseAdapter is installed only by the ImageIcon MaterialTab constructor; mouseEntered/mouseExited swap the tab background between the exact themed hover and normal colors."
+        }
+      ],
+      "note": "MaterialTabIconHoverListener is descriptive exact-behavior recovery for the reviewed MaterialTab family."
+    }
+  ],
+  "conflicts": []
+}
