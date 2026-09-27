@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/I",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EquipmentInterface",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_ui_role",
+          "detail": "Exact v308 extends the equipment root at interface 1644 and adds equipment/BOX controls labelled Show Equipment Stats and Show Items Kept on Death."
+        },
+        {
+          "family": "exact_equipment_surface",
+          "detail": "The class installs equipment slot background/outline sprites and a Remove action on the added equipment widget."
+        }
+      ],
+      "note": "Exact literals/resources fix the equipment-interface role; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aQ",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SkillsInterface",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_ui_role",
+          "detail": "Exact v308 builds the skills/SKILL interface surface with Total Level: 0 and a 24-skill grid."
+        },
+        {
+          "family": "exact_skill_domain",
+          "detail": "The class embeds the full skill labels including Attack, Strength, Hitpoints, Mining, Agility, Smithing, Herblore, Fishing, Prayer, Magic, Construction, Hunter and Summoning."
+        }
+      ],
+      "note": "Exact resource and complete skill-name surface fix the skills-interface role; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}
