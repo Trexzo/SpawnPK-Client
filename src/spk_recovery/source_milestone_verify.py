@@ -72,9 +72,10 @@ def verify_source_milestone(
     )
 
     if source_root is not None:
-        tree_sha, java_count, source_bytes = source_tree_digest(
+        tree_sha, source_files, source_bytes = source_tree_digest(
             source_root.resolve()
         )
+        java_count = len(source_files)
         check("source_tree_sha256", expected_tree, tree_sha)
         check(
             "source_java_file_count",
@@ -117,9 +118,10 @@ def verify_source_milestone(
         provenance = json.loads(
             provenance_json.read_text(encoding="utf-8")
         )
-        export_tree, export_count, export_bytes = source_tree_digest(
+        export_tree, export_files, export_bytes = source_tree_digest(
             export_source
         )
+        export_count = len(export_files)
 
         check(
             "export_milestone_exact_copy",
