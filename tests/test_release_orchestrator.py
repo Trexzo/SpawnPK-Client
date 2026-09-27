@@ -6,6 +6,7 @@ from unittest.mock import patch
 from spk_recovery.release_orchestrator import (
     ExistingAuthorityReleaseError,
     build_existing_authority_release,
+    build_existing_authority_release_from_workspace,
 )
 
 
@@ -90,6 +91,191 @@ def _release(ready=True):
         "ready_for_release": ready,
         "blockers": [] if ready else [{"reason": "roundtrip"}],
     }
+
+
+class ExistingAuthorityReleaseWorkspaceTests(unittest.TestCase):
+    def _derived_manifest(self):
+        return {
+            **_recovered(),
+            "readable_jar_sha256": "f" * 64,
+            "base_readable_jar_sha256": "b" * 64,
+            "collision_transform_id": "COLLTRANS_TEST",
+            "collision_plan_id": "COLLPLAN_TEST",
+            "collision_report_id": "COLLREPORT_TEST",
+        }
+
+    def test_incomplete_collision_derivation_is_refused(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source_jar, _decompiler = _inputs(root)
+            source_root = root / "source"
+            source_root.mkdir()
+            plan = root / "plan.json"
+            plan.write_text("{}\n", encoding="utf-8")
+
+            manifest = self._derived_manifest()
+            del manifest["collision_plan_id"]
+
+            with self.assertRaisesRegex(
+                ExistingAuthorityReleaseError,
+                "not complete collision-derived authority",
+            ):
+                build_existing_authority_release_from_workspace(
+                    source_jar,
+                    {},
+                    {},
+                    {},
+                    manifest,
+                    source_root,
+                    plan,
+                    build_id="v308",
+                    out_dir=root / "out",
+                )
+
+    def test_base_readable_sha_mismatch_is_refused(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source_jar, _decompiler = _inputs(root)
+            source_root = root / "source"
+            source_root.mkdir()
+            plan = root / "plan.json"
+            plan.write_text("{}\n", encoding="utf-8")
+            manifest = self._derived_manifest()
+            manifest["base_readable_jar_sha256"] = "0" * 64
+
+            def readable_side_effect(*args, **kwargs):
+                target = kwargs["out_dir"]
+                target.mkdir(parents=True, exist_ok=True)
+                (target / "readable-client.jar").write_bytes(
+                    b"readable"
+                )
+                return _readable()
+
+            with patch(
+                "spk_recovery.release_orchestrator.build_readable_client",
+                side_effect=readable_side_effect,
+            ), self.assertRaisesRegex(
+                ExistingAuthorityReleaseError,
+                "base readable SHA-256",
+            ):
+                build_existing_authority_release_from_workspace(
+                    source_jar,
+                    {},
+                    {},
+                    {},
+                    manifest,
+                    source_root,
+                    plan,
+                    build_id="v308",
+                    out_dir=root / "out",
+                )
+
+    def test_complete_collision_derived_path_reaches_release_manifest(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source_jar, _decompiler = _inputs(root)
+            source_root = root / "source"
+            source_root.mkdir()
+            (source_root / "A.java").write_text(
+                "class A {}\n",
+                encoding="utf-8",
+            )
+            plan = root / "plan.json"
+            plan.write_text("{}\n", encoding="utf-8")
+            manifest = self._derived_manifest()
+            out = root / "out"
+
+            def readable_side_effect(*args, **kwargs):
+                target = kwargs["out_dir"]
+                target.mkdir(parents=True, exist_ok=True)
+                (target / "readable-client.jar").write_bytes(
+                    b"readable"
+                )
+                return _readable()
+
+            def rebuild_side_effect(*args, **kwargs):
+                target = kwargs["out_dir"]
+                target.mkdir(parents=True, exist_ok=True)
+                (target / "rebuilt-client.jar").write_bytes(
+                    b"rebuilt"
+                )
+                return _clean()
+
+            with (
+                patch(
+                    "spk_recovery.release_orchestrator.build_readable_client",
+                    side_effect=readable_side_effect,
+                ),
+                patch(
+                    "spk_recovery.release_orchestrator.audit_source_workspace",
+                    return_value=_readiness(),
+                ),
+                patch(
+                    "spk_recovery.release_orchestrator.write_source_readiness_report"
+                ),
+                patch(
+                    "spk_recovery.release_orchestrator.build_build_authority",
+                    return_value=_build_authority(),
+                ),
+                patch(
+                    "spk_recovery.release_orchestrator.write_build_authority"
+                ),
+                patch(
+                    "spk_recovery.release_orchestrator.clean_project_rebuild",
+                    side_effect=rebuild_side_effect,
+                ) as clean,
+                patch(
+                    "spk_recovery.release_orchestrator.verify_clean_round_trip",
+                    return_value=_roundtrip(),
+                ),
+                patch(
+                    "spk_recovery.release_orchestrator.write_roundtrip_report"
+                ),
+                patch(
+                    "spk_recovery.release_orchestrator.build_recovery_release_manifest",
+                    return_value=_release(True),
+                ) as release,
+                patch(
+                    "spk_recovery.release_orchestrator.write_recovery_release_manifest"
+                ),
+            ):
+                report = build_existing_authority_release_from_workspace(
+                    source_jar,
+                    {},
+                    {},
+                    {},
+                    manifest,
+                    source_root,
+                    plan,
+                    build_id="v308",
+                    out_dir=out,
+                    source_prefixes=["rs/"],
+                )
+
+            self.assertTrue(report["ready_for_release"])
+            self.assertEqual(report["terminal_stage"], "release_manifest")
+            self.assertEqual(
+                report["stage_ids"]["collision_plan_id"],
+                "COLLPLAN_TEST",
+            )
+            self.assertEqual(
+                clean.call_args.kwargs[
+                    "private_collision_plan_path"
+                ],
+                plan.resolve(),
+            )
+            self.assertEqual(
+                clean.call_args.args[0],
+                manifest,
+            )
+            release.assert_called_once()
+            self.assertTrue(
+                (
+                    out
+                    / "source-authority"
+                    / "recovered-manifest.json"
+                ).is_file()
+            )
 
 
 class ExistingAuthorityReleaseTests(unittest.TestCase):
