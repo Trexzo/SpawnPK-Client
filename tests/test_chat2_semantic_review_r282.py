@@ -7,8 +7,8 @@ from spk_recovery.semantic_review import resolve_semantic_candidates
 SHA = "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 ROOT = Path(__file__).resolve().parents[1]
 CLASS_COORDS = [
-    ("CLIENT_CLASS_000522", "rs/m/a$a"),
-    ("CLIENT_CLASS_000523", "rs/m/a"),
+    ("CLIENT_CLASS_000523", "rs/m/a$a"),
+    ("CLIENT_CLASS_000522", "rs/m/a"),
 ]
 
 def _class_lineage():
@@ -62,7 +62,7 @@ class Chat2SemanticReviewR282Tests(unittest.TestCase):
         actual = resolve_semantic_candidates(_class_lineage(), _member_lineage(), candidates)
         self.assertEqual(actual["proposal_count"], 2)
         self.assertEqual(actual["unresolved"], [])
-        self.assertEqual(actual["review_id"], "SEMREVIEW_9EAFFFB6D5E7B2A0C543")
+        self.assertEqual(actual["review_id"], "SEMREVIEW_C42DE9D303AE38C11483")
         self.assertEqual(actual, expected)
 
     def test_r282_expected_stable_ids(self):
@@ -70,8 +70,8 @@ class Chat2SemanticReviewR282Tests(unittest.TestCase):
         self.assertEqual(
             {row["proposed_name"]: row["stable_id"] for row in review["proposals"]},
             {
-                "ClientInputEventQueue": "CLIENT_CLASS_000523",
-                "ClientInputEventRecord": "CLIENT_CLASS_000522",
+                "ClientInputEventQueue": "CLIENT_CLASS_000522",
+                "ClientInputEventRecord": "CLIENT_CLASS_000523",
             },
         )
 

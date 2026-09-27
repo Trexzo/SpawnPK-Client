@@ -6,9 +6,9 @@ Exact client authority:
 
 ## Deterministic result
 
-- `rs/m/a` -> `CLIENT_CLASS_000523` -> `ClientInputEventQueue`
-- `rs/m/a$a` -> `CLIENT_CLASS_000522` -> `ClientInputEventRecord`
-- review: `SEMREVIEW_9EAFFFB6D5E7B2A0C543`
+- `rs/m/a` -> `CLIENT_CLASS_000522` -> `ClientInputEventQueue`
+- `rs/m/a$a` -> `CLIENT_CLASS_000523` -> `ClientInputEventRecord`
+- review: `SEMREVIEW_C42DE9D303AE38C11483`
 - unresolved: **0**
 - member proposals: **0**
 
