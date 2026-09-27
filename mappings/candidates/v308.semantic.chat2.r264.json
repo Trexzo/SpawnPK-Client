@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/e/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorBlindMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_constants",
+          "detail": "Exact v308 rs/s/e/a is an enum with the preserved constants NONE, PROTANOPE, DEUTERANOPE and TRITANOPE."
+        },
+        {
+          "family": "exact_package_role",
+          "detail": "The enum lives in the already reviewed GPU plugin package beside GpuPlugin, GpuPluginConfig and UiScalingMode."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite net.runelite.client.plugins.gpu.config.ColorBlindMode has the identical four constants in the identical order."
+        }
+      ],
+      "note": "ColorBlindMode is fixed by the exact surviving enum constants and direct RuneLite source parity. Exact v308 remains the semantic authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/e/d$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SyncMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_constants",
+          "detail": "Exact v308 rs/s/e/d$a is an enum with the preserved constants OFF, ON and ADAPTIVE."
+        },
+        {
+          "family": "exact_enclosing_owner",
+          "detail": "The enum is nested directly under rs/s/e/d, already reviewed as GpuPluginConfig."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite GpuPluginConfig declares nested enum SyncMode with the identical OFF, ON and ADAPTIVE constants; GpuPlugin consumes it for swap-interval selection."
+        }
+      ],
+      "note": "SyncMode is fixed by its exact enclosing GpuPluginConfig owner, surviving constants and direct RuneLite source parity."
+    }
+  ],
+  "conflicts": []
+}
