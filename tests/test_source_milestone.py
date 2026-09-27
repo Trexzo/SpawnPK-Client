@@ -18,6 +18,10 @@ from spk_recovery.source_repository_export import (
     SourceRepositoryExportError,
     export_source_repository,
 )
+from spk_recovery.source_authority_bundle import (
+    SourceAuthorityBundleError,
+    build_source_authority_bundle,
+)
 
 
 AUTH = "a" * 64
@@ -165,6 +169,65 @@ class SourceMilestoneTests(unittest.TestCase):
                 build_source_milestone_manifest(
                     *_docs(tree, count, size),
                     authority_commit="deadbeef",
+                )
+
+    def test_authority_bundle_is_exact_and_reproducible(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            src, tree, count, size = self._source(root)
+            docs = _docs(tree, count, size)
+
+            out_a = root / "bundle-a"
+            out_b = root / "bundle-b"
+
+            a = build_source_authority_bundle(
+                *docs,
+                src,
+                out_a,
+            )
+            b = build_source_authority_bundle(
+                *copy.deepcopy(docs),
+                src,
+                out_b,
+            )
+
+            self.assertEqual(a, b)
+            self.assertTrue(
+                a["bundle_id"].startswith("SOURCE_AUTHORITY_")
+            )
+            self.assertEqual(a["source_tree_sha256"], tree)
+            self.assertEqual(a["java_file_count"], count)
+
+            for rel in (
+                "authority-index.json",
+                "readable-client-manifest.json",
+                "recovered-source-manifest.json",
+                "clean-rebuild.json",
+                "SOURCE-AUTHORITY.json",
+                "src/rs/A.java",
+            ):
+                self.assertEqual(
+                    (out_a / rel).read_bytes(),
+                    (out_b / rel).read_bytes(),
+                )
+
+    def test_authority_bundle_refuses_source_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            src, tree, count, size = self._source(root)
+            docs = _docs(tree, count, size)
+            (src / "rs" / "A.java").write_text(
+                "package rs; public class A { int drift; }\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                SourceAuthorityBundleError,
+                "source tree SHA-256",
+            ):
+                build_source_authority_bundle(
+                    *docs,
+                    src,
+                    root / "bundle",
                 )
 
     def test_export_is_byte_faithful_and_verifiable(self):
