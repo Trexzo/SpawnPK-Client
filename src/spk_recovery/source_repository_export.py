@@ -3,10 +3,13 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
-import shutil
 from typing import Any
 
-from .source_digest import source_tree_digest
+from .source_digest import (
+    canonical_source_bytes,
+    sorted_java_files,
+    source_tree_digest,
+)
 
 
 class SourceRepositoryExportError(ValueError):
@@ -80,7 +83,14 @@ def export_source_repository(
     out_dir.mkdir(parents=True, exist_ok=True)
 
     export_source = out_dir / "src"
-    shutil.copytree(source_root, export_source)
+    export_source.mkdir(parents=True)
+    for source in sorted_java_files(source_root):
+        rel = source.relative_to(source_root)
+        target = export_source / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(
+            canonical_source_bytes(source.read_bytes())
+        )
 
     exported_tree, exported_files, exported_bytes = (
         source_tree_digest(export_source)
