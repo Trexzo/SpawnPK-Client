@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_E377641A7E02DB092089",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_AA1A693CF4C7992F6122",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000671",
+      "owner_logical_id": "CLIENT_CLASS_000671",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/r",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClanWarsChallengeConfirmationInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_clan_wars_title_join",
+          "detail": "Root 34000 directly embeds widget 24002, the title widget from the already-reviewed ClanWarsSetupInterface ('Clan Wars Setup: Challenging xxxx')."
+        },
+        {
+          "family": "exact_accept_surface",
+          "detail": "The class creates paired clan sprites and exact 'Accept' controls at widgets 34004-34007, plus a companion text/status widget 34008."
+        },
+        {
+          "family": "exact_clan_resource_scope",
+          "detail": "All presentation resources are from the clan sprite family and the only embedded external title/state comes from the Clan Wars setup interface, fixing this as the challenge-confirmation surface."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Clan Wars challenge confirmation behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}
