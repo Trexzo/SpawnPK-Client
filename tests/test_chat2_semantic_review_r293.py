@@ -6,7 +6,6 @@ from spk_recovery.semantic_review import resolve_semantic_candidates
 SHA="854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 ROOT=Path(__file__).resolve().parents[1]
 CLASS_COORDS=[
- ("CLIENT_CLASS_000643","rs/n/c/c/a"),
  ("CLIENT_CLASS_000644","rs/n/c/c/b"),
  ("CLIENT_CLASS_000646","rs/n/c/c/c"),
 ]
@@ -63,9 +62,9 @@ class Chat2SemanticReviewR293Tests(unittest.TestCase):
             _load("mappings/candidates/v308.semantic.chat2.r293.json"),
         )
         expected=_load("mappings/candidates/v308.semantic-review.chat2.r293.json")
-        self.assertEqual(actual["proposal_count"],3)
+        self.assertEqual(actual["proposal_count"],2)
         self.assertEqual(actual["unresolved"],[])
-        self.assertEqual(actual["review_id"],"SEMREVIEW_F8CEB5576A69E962C07D")
+        self.assertEqual(actual["review_id"],"SEMREVIEW_CCF718FEE239CB0DE980")
         self.assertEqual(actual,expected)
 
     def test_r293_expected_stable_ids(self):
@@ -73,7 +72,6 @@ class Chat2SemanticReviewR293Tests(unittest.TestCase):
         self.assertEqual(
             {r["proposed_name"]:r["stable_id"] for r in review["proposals"]},
             {
-                "MailInboxInterface":"CLIENT_CLASS_000643",
                 "InboxMessageListController":"CLIENT_CLASS_000644",
                 "MailAttachmentClaimController":"CLIENT_CLASS_000646",
             },
@@ -86,8 +84,7 @@ class Chat2SemanticReviewR293Tests(unittest.TestCase):
         prior_names=set(); prior_owners=set()
         for batch in range(2,293):
             p=ROOT/"mappings"/"candidates"/f"v308.semantic-review.chat2.r{batch}.json"
-            if not p.is_file():
-                continue
+            if not p.is_file(): continue
             prior=json.loads(p.read_text(encoding="utf-8"))
             prior_names.update(r["proposed_name"] for r in prior["proposals"] if r["target_kind"]=="class")
             prior_owners.update(r["source_coordinate"]["owner"] for r in prior["proposals"] if r["target_kind"]=="class")

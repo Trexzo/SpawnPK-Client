@@ -1,4 +1,4 @@
-# Chat 2 — exact-v308 mail inbox subsystem R293
+# Chat 2 — exact-v308 mailbox helpers R293
 
 Exact client authority:
 
@@ -6,20 +6,20 @@ Exact client authority:
 
 ## Deterministic result
 
-- `rs/n/c/c/a` -> `CLIENT_CLASS_000643` -> `MailInboxInterface`
 - `rs/n/c/c/b` -> `CLIENT_CLASS_000644` -> `InboxMessageListController`
 - `rs/n/c/c/c` -> `CLIENT_CLASS_000646` -> `MailAttachmentClaimController`
-- review: `SEMREVIEW_F8CEB5576A69E962C07D`
+- review: `SEMREVIEW_CCF718FEE239CB0DE980`
+- prior authority retained: R2 `rs/n/c/c/a` -> `MailboxInterface`
 - unresolved: **0**
 - member proposals: **0**
 
 ## Exact-v308 mail contract
 
-`MailInboxInterface` preserves the inbox/message surface directly: **Inbox**, **Mail Subject**, sent/expiry timing, delete-message controls and attached **Items / Rewards** actions for depositing to inventory or bank.
-
-`InboxMessageListController` creates **View inbox message** rows, lays them out through the retained interface-layout engine, and applies the exact `UNREAD / READ` enum state to row color and the unread icon marker.
+`InboxMessageListController` creates **View inbox message** rows, lays them out through the retained interface-layout engine, and applies the exact `UNREAD / READ` state to row color and the unread icon marker.
 
 `MailAttachmentClaimController` owns the attachment claim state machine and switches on the retained `EMPTY / UNCLAIMED / CLAIMED` enum. The claimed state writes the exact text **Items have been claimed!** and toggles the same 321xx mail reward widgets.
+
+The surrounding mailbox root is not re-proposed here: R2 already owns `rs/n/c/c/a` as `MailboxInterface`.
 
 ## Boundary
 

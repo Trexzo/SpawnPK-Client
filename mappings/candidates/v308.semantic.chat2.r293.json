@@ -14,37 +14,6 @@
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "target": {
         "kind": "class",
-        "owner": "rs/n/c/c/a",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "MailInboxInterface",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_mail_surface",
-          "detail": "The class preserves exact mail UI strings including 'Inbox (35 / 35)', 'Mail Subject', sent/expiry timing text and 'No mail message selected!'."
-        },
-        {
-          "family": "exact_attachment_actions",
-          "detail": "Exact controls include delete message plus attached Items / Rewards with deposit-to-inventory and deposit-to-bank actions."
-        },
-        {
-          "family": "exact_mail_resources",
-          "detail": "The class owns the misc/mail resource family used throughout the inbox/message surface."
-        }
-      ],
-      "note": "Descriptive semantic recovery from exact-v308 mail/inbox behavior; original stripped source identifier is not claimed."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
         "owner": "rs/n/c/c/b",
         "name": null,
         "descriptor": null
