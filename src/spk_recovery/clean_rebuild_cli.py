@@ -54,6 +54,15 @@ def main(argv: list[str] | None = None) -> int:
             "--namespace-alias-plan"
         ),
     )
+    p.add_argument(
+        "--private-collision-plan",
+        type=Path,
+        help=(
+            "private identifier-bearing R8S collision remap plan required "
+            "when rebuilding collision-derived source; passed by path and "
+            "never loaded into public CLI output"
+        ),
+    )
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args(argv)
 
@@ -77,6 +86,9 @@ def main(argv: list[str] | None = None) -> int:
                 else None
             ),
             auto_namespace_alias=args.auto_namespace_alias,
+            private_collision_plan_path=(
+                args.private_collision_plan
+            ),
         )
     except (
         CleanRebuildError,
@@ -164,26 +176,52 @@ def main(argv: list[str] | None = None) -> int:
         )
     transport = report.get("compile_transport")
     if transport is not None:
-        print(
-            "compile_transport_mode="
-            f"{transport['mode']}"
-        )
-        print(
-            "namespace_compile_id="
-            f"{transport['namespace_compile_id']}"
-        )
-        print(
-            "namespace_alias_plan_id="
-            f"{transport['alias_plan_id']}"
-        )
-        print(
-            "namespace_alias_plan_source="
-            f"{transport['alias_plan_source']}"
-        )
-        print(
-            "runtime_alias_dependency_allowed="
-            f"{transport['runtime_alias_dependency_allowed']}"
-        )
+        mode = str(transport["mode"])
+        print(f"compile_transport_mode={mode}")
+
+        if mode == "namespace_virtualized":
+            print(
+                "namespace_compile_id="
+                f"{transport['namespace_compile_id']}"
+            )
+            print(
+                "namespace_alias_plan_id="
+                f"{transport['alias_plan_id']}"
+            )
+            print(
+                "namespace_alias_plan_source="
+                f"{transport['alias_plan_source']}"
+            )
+            print(
+                "runtime_alias_dependency_allowed="
+                f"{transport['runtime_alias_dependency_allowed']}"
+            )
+        elif mode == "collision_derived_remap":
+            print(
+                "collision_compile_id="
+                f"{transport['collision_compile_id']}"
+            )
+            print(
+                "collision_transform_id="
+                f"{transport['collision_transform_id']}"
+            )
+            print(
+                "collision_plan_id="
+                f"{transport['collision_plan_id']}"
+            )
+            print(
+                "collision_report_id="
+                f"{transport['collision_report_id']}"
+            )
+            print(
+                "runtime_transformed_dependency_allowed="
+                f"{transport['runtime_transformed_dependency_allowed']}"
+            )
+        else:
+            raise ValueError(
+                "unsupported compile transport mode: " + mode
+            )
+
 
     if args.private_diagnostic_report_out is not None:
         print(

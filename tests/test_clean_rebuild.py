@@ -252,7 +252,7 @@ class CleanRebuildTests(unittest.TestCase):
         )
         return derived
 
-    def test_collision_derived_workspace_uses_base_runtime_readable(self):
+    def test_collision_derived_workspace_requires_matching_private_plan(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             (
@@ -268,50 +268,22 @@ class CleanRebuildTests(unittest.TestCase):
                 recovered,
                 readable_manifest,
             )
-            report = clean_project_rebuild(
-                derived,
-                readiness,
-                readable_manifest,
-                readable,
-                authority,
-                source,
-                out_dir=root / "derived",
-                source_prefixes=["rs/"],
-            )
 
-            self.assertEqual(report["status"], "complete")
-            self.assertEqual(
-                report["readable_jar_sha256"],
-                readable_manifest["output_sha256"],
-            )
-            self.assertEqual(
-                report["source_derivation"],
-                {
-                    "collision_transform_id": (
-                        derived["collision_transform_id"]
-                    ),
-                    "collision_plan_id": (
-                        derived["collision_plan_id"]
-                    ),
-                    "collision_report_id": (
-                        derived["collision_report_id"]
-                    ),
-                    "base_readable_jar_sha256": (
-                        readable_manifest["output_sha256"]
-                    ),
-                    "source_derivation_readable_jar_sha256": (
-                        "f" * 64
-                    ),
-                },
-            )
-
-            with zipfile.ZipFile(
-                root / "derived" / "dependency-capsule.jar"
-            ) as z:
-                self.assertIn(
-                    "dep/Fallback.class",
-                    set(z.namelist()),
+            with self.assertRaisesRegex(
+                CleanRebuildError,
+                "requires an explicit private collision plan path",
+            ):
+                clean_project_rebuild(
+                    derived,
+                    readiness,
+                    readable_manifest,
+                    readable,
+                    authority,
+                    source,
+                    out_dir=root / "derived",
+                    source_prefixes=["rs/"],
                 )
+
 
     def test_collision_derived_workspace_base_sha_mismatch_refused(self):
         with tempfile.TemporaryDirectory() as td:
