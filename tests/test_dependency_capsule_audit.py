@@ -8,6 +8,7 @@ import unittest
 import zipfile
 
 from spk_recovery.dependency_capsule_audit import (
+    _package_class_collision_profile,
     _source_name_profile,
     audit_dependency_capsule,
 )
@@ -15,6 +16,42 @@ from spk_recovery.dependency_capsule_audit import (
 
 @unittest.skipUnless(shutil.which("javac"), "javac required")
 class DependencyCapsuleAuditTests(unittest.TestCase):
+    def test_package_class_collision_profile_detects_prefix_class(self):
+        entries = {
+            "a/b.class",
+            "a/b/c/Fallback.class",
+        }
+        self.assertEqual(
+            _package_class_collision_profile(
+                "a/b/c/Fallback",
+                entries,
+            ),
+            {
+                "package_segment_count": 3,
+                "collision_count": 1,
+                "collision_depths": [2],
+                "has_collision": True,
+            },
+        )
+
+    def test_package_class_collision_profile_allows_clean_packages(self):
+        entries = {
+            "a/b/c/Fallback.class",
+            "a/b/c/Other.class",
+        }
+        self.assertEqual(
+            _package_class_collision_profile(
+                "a/b/c/Fallback",
+                entries,
+            ),
+            {
+                "package_segment_count": 3,
+                "collision_count": 0,
+                "collision_depths": [],
+                "has_collision": False,
+            },
+        )
+
     def test_source_name_profile_accepts_ordinary_binary_name(self):
         self.assertEqual(
             _source_name_profile("com/example/Fallback"),
@@ -223,6 +260,18 @@ class DependencyCapsuleAuditTests(unittest.TestCase):
             )
             self.assertEqual(
                 report["summary"]["default_package_count"],
+                0,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "readable_package_class_collision_count"
+                ],
+                0,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "capsule_package_class_collision_count"
+                ],
                 0,
             )
             self.assertEqual(
