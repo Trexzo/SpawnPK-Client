@@ -12,14 +12,14 @@ recovered R24 on-demand update subsystem and R25 Decompressor cache store.
 - candidate classes: **1**
 - resolved proposals: **1**
 - unresolved: **0**
-- review ID: `SEMREVIEW_92D4CB62913C3F67FCF8`
+- review ID: `SEMREVIEW_34C6B99949DAF8143279`
 - field/method proposals: **0**
 
 ## Stable-ID verification
 
-Core's exact `seed_lineage()` ordering gives:
+Correction: exact `seed_lineage()` ordering was re-derived from the exact v308 class index after R336 exposed a stable-ID collision. It gives:
 
-- `rs/cache/b` -> `CLIENT_CLASS_000095`
+- `rs/cache/b` -> `CLIENT_CLASS_000085`
 
 R25 already recovers:
 
@@ -62,4 +62,4 @@ This is a semantic recovery name and does not claim a verbatim original SpawnPK 
 ## Acceptance boundary
 
 Chat 2 does not promote R64. Main/Core may accept it only through an explicit
-`semantic_acceptance_spec` bound to `SEMREVIEW_92D4CB62913C3F67FCF8`.
+`semantic_acceptance_spec` bound to `SEMREVIEW_34C6B99949DAF8143279`.

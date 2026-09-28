@@ -11,7 +11,7 @@ SHA = (
 ROOT = Path(__file__).resolve().parents[1]
 
 CLASS_COORDS = [
-    ("CLIENT_CLASS_000095", "rs/cache/b"),
+    ("CLIENT_CLASS_000085", "rs/cache/b"),
 ]
 
 
@@ -90,7 +90,7 @@ class Chat2SemanticReviewR64Tests(unittest.TestCase):
         self.assertEqual(actual["unresolved"], [])
         self.assertEqual(
             actual["review_id"],
-            "SEMREVIEW_92D4CB62913C3F67FCF8",
+            "SEMREVIEW_34C6B99949DAF8143279",
         )
         self.assertEqual(actual, expected)
 
@@ -99,7 +99,7 @@ class Chat2SemanticReviewR64Tests(unittest.TestCase):
         self.assertEqual(
             {row["proposed_name"]: row["stable_id"] for row in review["proposals"]},
             {
-                "CacheStoreSet": "CLIENT_CLASS_000095",
+                "CacheStoreSet": "CLIENT_CLASS_000085",
             },
         )
 
