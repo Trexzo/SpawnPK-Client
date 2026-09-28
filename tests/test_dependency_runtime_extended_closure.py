@@ -63,6 +63,9 @@ class DependencyRuntimeExtendedClosureTests(unittest.TestCase):
                 "old/Residual.java": (
                     "package old; public class Residual {}\n"
                 ),
+                "rs/Project.java": (
+                    "package rs; public class Project {}\n"
+                ),
             },
         )
         official_classes = self._compile(
@@ -86,6 +89,10 @@ class DependencyRuntimeExtendedClosureTests(unittest.TestCase):
                     bundled_classes / "old" / f"{name}.class",
                     f"old/{name}.class",
                 )
+            archive.write(
+                bundled_classes / "rs" / "Project.class",
+                "rs/Project.class",
+            )
 
         official = root / "official.jar"
         with zipfile.ZipFile(
@@ -214,6 +221,14 @@ class DependencyRuntimeExtendedClosureTests(unittest.TestCase):
                     "normalized_class_target": "old/Dynamic",
                 },
                 {
+                    "dynamic_target_id": "DEPRUNTIME_DYNAMIC_TARGET_00004",
+                    "source_callsite_id": "CALL_4",
+                    "category": "class_loading",
+                    "classification": "project_class",
+                    "literal_target_proven": True,
+                    "normalized_class_target": "rs/Project",
+                },
+                {
                     "dynamic_target_id": "DEPRUNTIME_DYNAMIC_TARGET_00002",
                     "source_callsite_id": "CALL_2",
                     "category": "resource_loading",
@@ -291,6 +306,16 @@ class DependencyRuntimeExtendedClosureTests(unittest.TestCase):
             self.assertEqual(
                 report["dynamic_roots"][0]["authority_source"],
                 "replacement_extension",
+            )
+            project_rows = [
+                row
+                for row in report["dynamic_roots"]
+                if row.get("owner") == "rs/Project"
+            ]
+            self.assertEqual(len(project_rows), 1)
+            self.assertEqual(
+                project_rows[0]["status"],
+                "project_dynamic_target",
             )
             by_owner = {
                 row.get("owner"): row
