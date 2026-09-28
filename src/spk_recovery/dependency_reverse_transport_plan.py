@@ -174,6 +174,16 @@ def build_dependency_reverse_transport_plan(
         if status not in _ACCEPTED_MEMBER_STATUSES:
             continue
 
+        reference_kind = str(row.get("kind"))
+        if reference_kind not in {
+            "field",
+            "method",
+            "interface_method",
+        }:
+            raise DependencyReverseTransportPlanError(
+                "accepted member row has unsupported reference kind"
+            )
+
         old_owner = row.get("old_owner")
         owner_plan = by_owner.get(str(old_owner))
         if (
@@ -234,6 +244,7 @@ def build_dependency_reverse_transport_plan(
             "DEPREVERSEMEMBER_"
             + _stable_digest(
                 {
+                    "reference_kind": reference_kind,
                     "old": old_identity,
                     "new": new_identity,
                 }
@@ -242,6 +253,7 @@ def build_dependency_reverse_transport_plan(
         member_candidates.append(
             {
                 "member_id": member_id,
+                "reference_kind": reference_kind,
                 "old_owner": old_owner,
                 "old_name": old_name,
                 "old_descriptor": old_descriptor,
@@ -303,6 +315,7 @@ def build_dependency_reverse_transport_plan(
     )
     member_candidates.sort(
         key=lambda row: (
+            row["reference_kind"],
             row["new_owner"],
             row["new_name"],
             row["new_descriptor"],
@@ -330,6 +343,12 @@ def build_dependency_reverse_transport_plan(
     public_member_rows = [
         {
             "member_reverse_id": row["member_id"],
+            "reference_kind": row["reference_kind"],
+            "transport_kind": (
+                "field"
+                if row["reference_kind"] == "field"
+                else "method"
+            ),
         }
         for row in member_candidates
     ]
