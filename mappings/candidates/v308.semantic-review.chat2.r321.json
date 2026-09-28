@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_0D295A9FD0A31BA94A66",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_DED1BF1E5CCF972C2A67",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000740",
+      "owner_logical_id": "CLIENT_CLASS_000740",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner": "rs/p/a", "name": null, "descriptor": null},
+      "proposed_name": "ClientApplicationBootstrap",
+      "confidence": 0.999,
+      "evidence": [
+        {"family": "exact_root_injector_lifecycle", "detail": "The static startup method creates the process/root Guice Injector from rs/p/b, resolves and installs the singleton Launcher, resolves this bootstrap class itself, then invokes its startup lifecycle; the injector is retained statically and exposed through c()."},
+        {"family": "exact_application_startup_sequence", "detail": "The instance startup method initializes the injected configuration/plugin subsystem, loads plugins, initializes UI, registers UI/plugin/config objects on EventBus, starts plugins/UI and finally initializes the rs/A/q client event bridge."},
+        {"family": "exact_application_paths", "detail": "Static initialization derives ~/.spawnpk-data plus exact child directories 'plugins' and 'screenshots', fixing this class at application bootstrap scope rather than a narrow gameplay subsystem."},
+        {"family": "exact_live_ownership", "detail": "Exact-v308 reverse references include Client, Launcher, ScriptPacketDispatcher and the plugin manager path; this is live shared application infrastructure rather than dormant utility code."}
+      ],
+      "note": "Descriptive exact-v308 name for the root client application/injector bootstrap and startup coordinator. No original stripped identifier is claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_F03EB03111AC0AF2C009",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000741",
+      "owner_logical_id": "CLIENT_CLASS_000741",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner": "rs/p/b", "name": null, "descriptor": null},
+      "proposed_name": "ClientApplicationModule",
+      "confidence": 0.999,
+      "evidence": [
+        {"family": "exact_guice_module_contract", "detail": "The class directly extends com.google.inject.AbstractModule and is the sole module supplied to ClientApplicationBootstrap's root Guice.createInjector call."},
+        {"family": "exact_core_bindings", "detail": "configure() binds named developerMode/safeMode flags, a concrete Client singleton instance, ScheduledExecutorService, plugin/config/UI services, a JSON/Gson-like serializer, the primary EventBus and the named 'Deferred EventBus' binding to DeferredEventBus."},
+        {"family": "exact_provider_role", "detail": "Its @Provides @Singleton method resolves rs/s/h from the injected configuration/service manager, making this module the central composition root for application services."},
+        {"family": "exact_bootstrap_pair", "detail": "The only exact-v308 external owner of this module is rs/p/a ClientApplicationBootstrap, which constructs it specifically to create the root application Injector."}
+      ],
+      "note": "Descriptive exact-v308 name for the root Guice application module paired with ClientApplicationBootstrap."
+    }
+  ],
+  "unresolved": []
+}
