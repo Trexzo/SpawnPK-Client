@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_D9C0E264366D9FBF6451",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_37F59EBB201A7B94E871",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000508",
+      "owner_logical_id": "CLIENT_CLASS_000508",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/q$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InteractiveTextRegion",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_region_state",
+          "detail": "The record stores source text, substring start/end, rectangular x/y bounds, a region-kind boolean and an optional tooltip object."
+        },
+        {
+          "family": "exact_hit_test_contract",
+          "detail": "Its predicate checks whether a supplied point lies inside the stored half-open rectangle [x1,x2) x [y1,y2)."
+        },
+        {
+          "family": "exact_tooltip_materialization",
+          "detail": "For tooltip-style regions, changes in source/bounds materialize or refresh the tooltip object from up to 240 characters of the registered source substring."
+        },
+        {
+          "family": "exact_owner_scope",
+          "detail": "The class is created and consumed only by InteractiveTextRegionRegistry and RSFont's link/tool markup registration path; it owns no unrelated rendering state."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for one hit-testable link/tool text span registered by RSFont."
+    },
+    {
+      "proposal_id": "SEMPROP_AFE8A1E80AA379370204",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000507",
+      "owner_logical_id": "CLIENT_CLASS_000507",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InteractiveTextRegionRegistry",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_markup_tokens",
+          "detail": "Exact v308 recognizes <link=...>/</link> and <tool=...>/</tool> while RSFont lays out rich text, and routes those spans into this class."
+        },
+        {
+          "family": "exact_region_registry",
+          "detail": "The class owns two fixed arrays of 256 interactive-region records plus active counters and reset/switch operations used during text layout."
+        },
+        {
+          "family": "exact_hit_testing",
+          "detail": "Registered regions preserve source substring bounds plus screen rectangle bounds; the registry resolves the current region against Client mouse coordinates and can activate a flagged region by click coordinates."
+        },
+        {
+          "family": "exact_click_tooltip_actions",
+          "detail": "Activation extracts the registered substring and dispatches it through Client.c(String); hover over tooltip-capable regions registers the associated tooltip object with the existing tooltip manager."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the shared link/tool rich-text region registry, hit-testing and activation service."
+    }
+  ],
+  "unresolved": []
+}
