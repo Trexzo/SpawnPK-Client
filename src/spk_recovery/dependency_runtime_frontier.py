@@ -7,7 +7,13 @@ from pathlib import Path
 from typing import Any
 import zipfile
 
-from .dependency_artifact_proof import (\n    DependencyArtifactProofError,\n    _artifact_index,\n)\n\n\nclass DependencyRuntimeFrontierError(ValueError):
+from .dependency_artifact_proof import (
+    DependencyArtifactProofError,
+    _artifact_index,
+)
+
+
+class DependencyRuntimeFrontierError(ValueError):
     pass
 
 
