@@ -63,6 +63,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          test -f authority/SOURCE-AUTHORITY-ARTIFACT.json
           test -f authority/class-lineage.json
           test -f authority/member-lineage.json
           test -f authority/readable-client-manifest.json
@@ -72,31 +73,7 @@ jobs:
           test -f authority/release-verification.json
           test -d authority/src
 
-          python - <<'PY'
-          from pathlib import Path
-
-          root = Path("authority/src")
-          files = sorted(
-              path
-              for path in root.rglob("*")
-              if path.is_file()
-          )
-          if not files:
-              raise SystemExit("authority/src contains no files")
-
-          non_java = [
-              path.relative_to(root).as_posix()
-              for path in files
-              if path.suffix != ".java"
-          ]
-          if non_java:
-              raise SystemExit(
-                  "authority/src contains non-Java files: "
-                  + ", ".join(non_java[:20])
-              )
-          PY
-
-      - name: Build Source Milestone 1 manifest
+      - name: Verify Source M1 authority artifact
         shell: bash
         env:
           AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
@@ -104,6 +81,17 @@ jobs:
           set -euo pipefail
           mkdir -p source-m1/verification
 
+          python -m spk_recovery.source_authority_artifact_cli verify \
+            --artifact-dir authority \
+            --expected-authority-commit "$AUTHORITY_COMMIT" \
+            --out source-m1/verification/SOURCE-AUTHORITY-VERIFICATION.json
+
+      - name: Build Source Milestone 1 manifest
+        shell: bash
+        env:
+          AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+        run: |
+          set -euo pipefail
           python -m spk_recovery.source_milestone_cli build \
             --authority-commit "$AUTHORITY_COMMIT" \
             --class-lineage authority/class-lineage.json \
@@ -145,6 +133,8 @@ jobs:
             --manifest source-m1/SOURCE-MILESTONE.json \
             --source-root authority/src \
             --out-dir source-m1/publication \
+            --provenance source-authority-artifact.json=authority/SOURCE-AUTHORITY-ARTIFACT.json \
+            --provenance source-authority-verification.json=source-m1/verification/SOURCE-AUTHORITY-VERIFICATION.json \
             --provenance class-lineage.json=authority/class-lineage.json \
             --provenance member-lineage.json=authority/member-lineage.json \
             --provenance readable-client-manifest.json=authority/readable-client-manifest.json \
