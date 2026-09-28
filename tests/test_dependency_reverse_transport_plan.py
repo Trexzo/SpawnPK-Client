@@ -106,6 +106,7 @@ class DependencyReverseTransportPlanTests(unittest.TestCase):
         remap: dict,
         replacement: dict,
     ):
+        root.mkdir(parents=True, exist_ok=True)
         remap_path = root / "remap.json"
         replacement_path = root / "replacement.json"
         remap_path.write_text(
@@ -280,6 +281,148 @@ class DependencyReverseTransportPlanTests(unittest.TestCase):
                     "member_reverse_many_to_one"
                 ],
                 1,
+            )
+
+    def test_authority_changes_when_blocked_target_changes_with_same_counts(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            remap, replacement = self._docs()
+
+            replacement["owners"].append(
+                {
+                    "owner_id": "DEPOWNER_00004",
+                    "classification": "official_replaceable",
+                    "old_owner": "old/B",
+                    "new_owner": "new/B",
+                }
+            )
+            remap["member_results"].append(
+                {
+                    "status": "accepted_identity",
+                    "old_owner": "old/B",
+                    "old_name": "b",
+                    "old_descriptor": "()V",
+                    "new_owner": "new/B",
+                    "new_name": "b",
+                    "new_descriptor": "()V",
+                }
+            )
+
+            first_replacement = json.loads(
+                json.dumps(replacement)
+            )
+            first_replacement["owners"].append(
+                {
+                    "owner_id": "DEPOWNER_00005",
+                    "classification": "residual_bundled",
+                    "old_owner": "new/A",
+                    "new_owner": None,
+                }
+            )
+            first_paths = self._write(
+                root / "first",
+                remap,
+                first_replacement,
+            )
+            first = build_dependency_reverse_transport_plan(
+                *first_paths,
+            )
+
+            second_replacement = json.loads(
+                json.dumps(replacement)
+            )
+            second_replacement["owners"].append(
+                {
+                    "owner_id": "DEPOWNER_00005",
+                    "classification": "residual_bundled",
+                    "old_owner": "new/B",
+                    "new_owner": None,
+                }
+            )
+            second_paths = self._write(
+                root / "second",
+                remap,
+                second_replacement,
+            )
+            second = build_dependency_reverse_transport_plan(
+                *second_paths,
+            )
+
+            self.assertEqual(
+                first["summary"]["blocker_counts"],
+                second["summary"]["blocker_counts"],
+            )
+            self.assertEqual(
+                first["class_reverse"],
+                second["class_reverse"],
+            )
+            self.assertNotEqual(
+                first["blockers"],
+                second["blockers"],
+            )
+            self.assertNotEqual(
+                first["reverse_plan_id"],
+                second["reverse_plan_id"],
+            )
+
+    def test_authority_binds_ignored_accepted_completeness_count(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            remap, replacement = self._docs()
+
+            first_paths = self._write(
+                root / "first",
+                remap,
+                replacement,
+            )
+            first = build_dependency_reverse_transport_plan(
+                *first_paths,
+            )
+
+            changed = json.loads(json.dumps(remap))
+            changed["member_results"].append(
+                {
+                    "status": "accepted_identity",
+                    "old_owner": "residual/R",
+                    "old_name": "extra",
+                    "old_descriptor": "I",
+                    "new_owner": "residual/R",
+                    "new_name": "extra",
+                    "new_descriptor": "I",
+                }
+            )
+            second_paths = self._write(
+                root / "second",
+                changed,
+                replacement,
+            )
+            second = build_dependency_reverse_transport_plan(
+                *second_paths,
+            )
+
+            self.assertEqual(
+                first["class_reverse"],
+                second["class_reverse"],
+            )
+            self.assertEqual(
+                first["member_reverse"],
+                second["member_reverse"],
+            )
+            self.assertEqual(
+                first["blockers"],
+                second["blockers"],
+            )
+            self.assertNotEqual(
+                first["summary"][
+                    "ignored_nonreplaceable_accepted_member_count"
+                ],
+                second["summary"][
+                    "ignored_nonreplaceable_accepted_member_count"
+                ],
+            )
+            self.assertNotEqual(
+                first["reverse_plan_id"],
+                second["reverse_plan_id"],
             )
 
     def test_public_private_authority_matches_and_redacts(self):
