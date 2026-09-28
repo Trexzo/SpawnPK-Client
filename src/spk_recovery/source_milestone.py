@@ -81,6 +81,109 @@ def _block(
     )
 
 
+def _official_first_dependency_provenance(
+    compile_transport: dict[str, Any] | None,
+    blockers: list[dict[str, str]],
+) -> dict[str, Any] | None:
+    if not isinstance(compile_transport, dict):
+        return None
+    if compile_transport.get("mode") != "official_first_restored":
+        return None
+
+    gate = "dependency_compile_transport"
+    authority_keys = (
+        "official_compile_id",
+        "overlay_id",
+        "replacement_plan_id",
+        "reverse_plan_id",
+        "reverse_application_id",
+        "compile_dependency_capsule_sha256",
+        "generated_project_jar_sha256",
+        "restored_project_jar_sha256",
+    )
+    if any(
+        not isinstance(compile_transport.get(key), str)
+        or not compile_transport.get(key)
+        for key in authority_keys
+    ):
+        _block(
+            blockers,
+            gate=gate,
+            reason="official_first_transport_authority_incomplete",
+        )
+
+    official_shas = compile_transport.get(
+        "official_artifact_sha256"
+    )
+    valid_official_shas = (
+        isinstance(official_shas, list)
+        and bool(official_shas)
+        and all(
+            isinstance(value, str)
+            and re.fullmatch(r"[0-9a-fA-F]{64}", value)
+            for value in official_shas
+        )
+    )
+    if not valid_official_shas:
+        _block(
+            blockers,
+            gate=gate,
+            reason="official_first_artifact_authority_invalid",
+        )
+
+    capsule_count = compile_transport.get(
+        "compile_dependency_capsule_class_count"
+    )
+    if not isinstance(capsule_count, int) or capsule_count <= 0:
+        _block(
+            blockers,
+            gate=gate,
+            reason="official_first_dependency_capsule_invalid",
+        )
+
+    required_values = {
+        "opt_in": True,
+        "status": "complete",
+        "project_binary_fallback_count": 0,
+        "runtime_official_dependencies_allowed": False,
+        "canonical_source_modified": False,
+        "bundled_runtime_dependency_modified": False,
+        "restored_project_bytecode_ready_for_runtime_assembly": True,
+    }
+    if any(
+        compile_transport.get(key) != expected
+        for key, expected in required_values.items()
+    ):
+        _block(
+            blockers,
+            gate=gate,
+            reason="official_first_runtime_boundary_invalid",
+        )
+
+    return {
+        key: compile_transport.get(key)
+        for key in (
+            "mode",
+            "official_compile_id",
+            "overlay_id",
+            "replacement_plan_id",
+            "reverse_plan_id",
+            "reverse_application_id",
+            "official_artifact_sha256",
+            "compile_dependency_capsule_sha256",
+            "compile_dependency_capsule_class_count",
+            "generated_project_jar_sha256",
+            "restored_project_jar_sha256",
+            "project_binary_fallback_count",
+            "runtime_official_dependencies_allowed",
+            "runtime_dependency_source",
+            "canonical_source_modified",
+            "bundled_runtime_dependency_modified",
+            "restored_project_bytecode_ready_for_runtime_assembly",
+        )
+    }
+
+
 def build_source_milestone_manifest(
     *,
     authority_commit: str,
@@ -350,6 +453,15 @@ def build_source_milestone_manifest(
             if compile_transport.get(key) is not None
         }
 
+    dependency_transport_provenance = (
+        _official_first_dependency_provenance(
+            compile_transport
+            if isinstance(compile_transport, dict)
+            else None,
+            blockers,
+        )
+    )
+
     provenance = {
         "authority_repository": authority_repository,
         "authority_commit": authority_commit,
@@ -380,6 +492,9 @@ def build_source_milestone_manifest(
             "verification_id"
         ),
         "collision_provenance": collision_provenance,
+        "dependency_transport_provenance": (
+            dependency_transport_provenance
+        ),
     }
 
     source_tree = {
@@ -585,6 +700,9 @@ def build_source_provenance_document(
             ),
             "collision_provenance": provenance.get(
                 "collision_provenance"
+            ),
+            "dependency_transport_provenance": provenance.get(
+                "dependency_transport_provenance"
             ),
         },
         "source_authority": {
