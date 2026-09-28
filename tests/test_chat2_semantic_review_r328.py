@@ -4,7 +4,7 @@ import unittest
 from spk_recovery.semantic_review import resolve_semantic_candidates
 SHA="854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 ROOT=Path(__file__).resolve().parents[1]
-CLASS_COORDS=[["CLIENT_CLASS_000690","rs/o/a/a/a/d"],["CLIENT_CLASS_000703","rs/o/a/a/a/q"],["CLIENT_CLASS_000704","rs/o/a/a/a/r"],["CLIENT_CLASS_000732","rs/o/a/a/a/T"],["CLIENT_CLASS_000733","rs/o/a/a/a/U"],["CLIENT_CLASS_000735","rs/o/a/a/a/W"]]
+CLASS_COORDS=[("CLIENT_CLASS_000704","rs/o/a/a/a/r"),("CLIENT_CLASS_000732","rs/o/a/a/a/T")]
 def _class_lineage():
     classes=[]
     for logical_id, internal_name in CLASS_COORDS:
@@ -15,9 +15,9 @@ def _load(p): return json.loads((ROOT/p).read_text(encoding="utf-8"))
 class Chat2SemanticReviewR328Tests(unittest.TestCase):
     def test_r328_resolves_deterministically(self):
         actual=resolve_semantic_candidates(_class_lineage(),_member_lineage(),_load("mappings/candidates/v308.semantic.chat2.r328.json")); expected=_load("mappings/candidates/v308.semantic-review.chat2.r328.json")
-        self.assertEqual(actual["proposal_count"],6); self.assertEqual(actual["unresolved"],[]); self.assertEqual(actual["review_id"],"SEMREVIEW_DD2918DAD97E0DF32AAC"); self.assertEqual(actual,expected)
+        self.assertEqual(actual["proposal_count"],2); self.assertEqual(actual["unresolved"],[]); self.assertEqual(actual["review_id"],"SEMREVIEW_6587401478FB9847340D"); self.assertEqual(actual,expected)
     def test_r328_expected_stable_ids(self):
-        review=_load("mappings/candidates/v308.semantic-review.chat2.r328.json"); self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"IdleKeepalivePacket":"CLIENT_CLASS_000690","RegionLoadingFinishedAckPacket":"CLIENT_CLASS_000703","PlayerOption3Packet":"CLIENT_CLASS_000704","PlayerOption2Packet":"CLIENT_CLASS_000732","IdleLogoutNoticePacket":"CLIENT_CLASS_000733","RegionChangeAckPacket":"CLIENT_CLASS_000735"})
+        review=_load("mappings/candidates/v308.semantic-review.chat2.r328.json"); self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"PlayerOption2Packet":"CLIENT_CLASS_000732","PlayerOption3Packet":"CLIENT_CLASS_000704"})
     def test_r328_names_owners_and_ids_do_not_overlap_prior_reviews(self):
         current=_load("mappings/candidates/v308.semantic-review.chat2.r328.json"); names={r["proposed_name"] for r in current["proposals"]}; owners={r["source_coordinate"]["owner"] for r in current["proposals"]}; stable_ids={r["stable_id"] for r in current["proposals"]}
         pn=set(); po=set(); ps=set()

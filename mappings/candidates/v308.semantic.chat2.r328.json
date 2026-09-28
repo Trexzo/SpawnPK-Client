@@ -12,122 +12,15 @@
       "status": "CANDIDATE",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/o/a/a/a/d",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "IdleKeepalivePacket",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_outgoing_opcode",
-          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 0."
-        },
-        {
-          "family": "exact_protocol_contract",
-          "detail": "The exact-current C2S master table identifies opcode 0 as idle keepalive."
-        },
-        {
-          "family": "exact_family_boundary",
-          "detail": "The class contains no unrelated packet payload or second behavior beyond this control/ack transport."
-        }
-      ],
-      "note": "Exact-v308 outgoing transport identity from generated packet bytecode plus exact-current C2S authority."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/o/a/a/a/q",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "RegionLoadingFinishedAckPacket",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_outgoing_opcode",
-          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 121."
-        },
-        {
-          "family": "exact_protocol_contract",
-          "detail": "The exact-current C2S master table identifies opcode 121 as region-loading-finished acknowledgement."
-        },
-        {
-          "family": "exact_family_boundary",
-          "detail": "The class contains no unrelated packet payload or second behavior beyond this control/ack transport."
-        }
-      ],
-      "note": "Exact-v308 outgoing transport identity from generated packet bytecode plus exact-current C2S authority."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/o/a/a/a/r",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "PlayerOption3Packet",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_outgoing_opcode",
-          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 73."
-        },
-        {
-          "family": "exact_protocol_contract",
-          "detail": "The exact-current C2S master table identifies opcode 73 as player option 3."
-        },
-        {
-          "family": "exact_family_boundary",
-          "detail": "The name stops at the configured player option slot; visible option text is server-configurable through S2C104 and no gameplay verb is inferred."
-        }
-      ],
-      "note": "Exact-v308 outgoing transport identity from generated packet bytecode plus exact-current C2S authority."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/o/a/a/a/T",
-        "name": null,
-        "descriptor": null
-      },
+      "target": {"kind": "class", "owner": "rs/o/a/a/a/T", "name": null, "descriptor": null},
       "proposed_name": "PlayerOption2Packet",
       "confidence": 0.999,
       "evidence": [
-        {
-          "family": "exact_outgoing_opcode",
-          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 153."
-        },
-        {
-          "family": "exact_protocol_contract",
-          "detail": "The exact-current C2S master table identifies opcode 153 as player option 2."
-        },
-        {
-          "family": "exact_family_boundary",
-          "detail": "The name stops at the configured player option slot; visible option text is server-configurable through S2C104 and no gameplay verb is inferred."
-        }
+        {"family":"exact_outgoing_opcode","detail":"The concrete R322 OutgoingPacket writes fixed C2S opcode 153 and one target-player index through the matching u16 transform."},
+        {"family":"exact_player_option_contract","detail":"Exact-current outbound protocol authority identifies opcode 153 as player option 2."},
+        {"family":"exact_context_boundary","detail":"S2C104 can configure arbitrary player option labels, so the transport slot is the semantic contract; no contextual verb such as Follow or Trade is asserted."}
       ],
-      "note": "Exact-v308 outgoing transport identity from generated packet bytecode plus exact-current C2S authority."
+      "note":"Exact-v308 player option-2 transport packet."
     },
     {
       "schema_version": 1,
@@ -136,60 +29,15 @@
       "status": "CANDIDATE",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/o/a/a/a/U",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "IdleLogoutNoticePacket",
+      "target": {"kind": "class", "owner": "rs/o/a/a/a/r", "name": null, "descriptor": null},
+      "proposed_name": "PlayerOption3Packet",
       "confidence": 0.999,
       "evidence": [
-        {
-          "family": "exact_outgoing_opcode",
-          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 202."
-        },
-        {
-          "family": "exact_protocol_contract",
-          "detail": "The exact-current C2S master table identifies opcode 202 as idle logout notice."
-        },
-        {
-          "family": "exact_family_boundary",
-          "detail": "The class contains no unrelated packet payload or second behavior beyond this control/ack transport."
-        }
+        {"family":"exact_outgoing_opcode","detail":"The concrete R322 OutgoingPacket writes fixed C2S opcode 73 and one target-player index through the matching u16 transform."},
+        {"family":"exact_player_option_contract","detail":"Exact-current outbound protocol authority identifies opcode 73 as player option 3, including the alternate name-resolved route that resolves to the same transport."},
+        {"family":"exact_context_boundary","detail":"S2C104 can configure arbitrary player option labels, so the transport slot is the semantic contract; no contextual verb is asserted."}
       ],
-      "note": "Exact-v308 outgoing transport identity from generated packet bytecode plus exact-current C2S authority."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/o/a/a/a/W",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "RegionChangeAckPacket",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_outgoing_opcode",
-          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 210 followed by the exact fixed i32 acknowledgement value."
-        },
-        {
-          "family": "exact_protocol_contract",
-          "detail": "The exact-current C2S master table identifies opcode 210 as region-change acknowledgement."
-        },
-        {
-          "family": "exact_family_boundary",
-          "detail": "The class contains no unrelated packet payload or second behavior beyond this control/ack transport."
-        }
-      ],
-      "note": "Exact-v308 outgoing transport identity from generated packet bytecode plus exact-current C2S authority."
+      "note":"Exact-v308 player option-3 transport packet."
     }
   ],
   "conflicts": []
