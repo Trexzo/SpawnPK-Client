@@ -12,15 +12,15 @@ abstraction, its millisecond/nanosecond implementations and their shared sleep h
 - candidate classes: **4**
 - resolved proposals: **4**
 - unresolved: **0**
-- review ID: `SEMREVIEW_A4302A7164027FE8DF30`
+- review ID: `SEMREVIEW_94F90E37D246C76E53F7`
 - field/method proposals: **0**
 
 ## Stable IDs
 
-- `rs/g/b` -> `CLIENT_CLASS_000179` -> `ClientClock`
-- `rs/g/c` -> `CLIENT_CLASS_000180` -> `MillisClientClock`
-- `rs/g/d` -> `CLIENT_CLASS_000181` -> `NanoClientClock`
-- `rs/g/e` -> `CLIENT_CLASS_000182` -> `SleepUtil`
+- `rs/g/b` -> `CLIENT_CLASS_000180` -> `ClientClock`
+- `rs/g/c` -> `CLIENT_CLASS_000181` -> `MillisClientClock`
+- `rs/g/d` -> `CLIENT_CLASS_000182` -> `NanoClientClock`
+- `rs/g/e` -> `CLIENT_CLASS_000183` -> `SleepUtil`
 
 ## ClientClock
 
@@ -103,4 +103,4 @@ R176 remains class-only.
 ## Acceptance boundary
 
 Chat 2 does not promote R176. Main/Core may accept any subset only through an explicit
-`semantic_acceptance_spec` bound to `SEMREVIEW_A4302A7164027FE8DF30`.
+`semantic_acceptance_spec` bound to `SEMREVIEW_94F90E37D246C76E53F7`.

@@ -12,13 +12,13 @@ extension and registry/dispatcher.
 - candidate classes: **2**
 - resolved proposals: **2**
 - unresolved: **0**
-- review ID: `SEMREVIEW_8B8C06D161C5FFE9F959`
+- review ID: `SEMREVIEW_2EAC31E9DA2F64132C80`
 - field/method proposals: **0**
 
 ## Stable IDs
 
-- `rs/g/a/a` -> `CLIENT_CLASS_000177` -> `ClientKeyListener`
-- `rs/g/a/b` -> `CLIENT_CLASS_000178` -> `KeyListenerManager`
+- `rs/g/a/a` -> `CLIENT_CLASS_000178` -> `ClientKeyListener`
+- `rs/g/a/b` -> `CLIENT_CLASS_000179` -> `KeyListenerManager`
 
 ## ClientKeyListener
 
@@ -112,4 +112,4 @@ R175 remains class-only.
 ## Acceptance boundary
 
 Chat 2 does not promote R175. Main/Core may accept either proposal only through an explicit
-`semantic_acceptance_spec` bound to `SEMREVIEW_8B8C06D161C5FFE9F959`.
+`semantic_acceptance_spec` bound to `SEMREVIEW_2EAC31E9DA2F64132C80`.
