@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [{
+    "schema_version": 1,
+    "kind": "semantic_name_candidate",
+    "canonical": false,
+    "status": "CANDIDATE",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target": {"kind":"class","owner":"rs/c/a/a","name":null,"descriptor":null},
+    "proposed_name": "OldSchoolObjectModelOverrides",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"exact_definition_target","detail":"The class exposes only static methods accepting R28 ObjectDefinition plus object id; it has no unrelated state or target type."},
+      {"family":"exact_mode_gate","detail":"ObjectDefinition invokes rs/c/a/a.a(definition,id) only when its exact definition-mode enum equals the preserved OLDSCHOOL constant."},
+      {"family":"exact_model_only_mutation","detail":"Both override methods mutate only ObjectDefinition.an, the integer model-id array. The large method contains an approximately 680-id lookup table assigning replacement model-id arrays, and the wrapper performs a second eight-id model-array correction pass."},
+      {"family":"exact_scope_boundary","detail":"No name, action, size, collision, recolor, animation or other ObjectDefinition field is written by this class, so the semantic role is specifically old-school object model overrides rather than generic definition patching."}
+    ],
+    "note": "Descriptive exact-v308 name for the OLDSCHOOL-only ObjectDefinition model-id override table. No broader object-definition semantics are claimed."
+  }],
+  "conflicts": []
+}
