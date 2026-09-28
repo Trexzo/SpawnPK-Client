@@ -3,6 +3,8 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import shutil
+import subprocess
 import tempfile
 import unittest
 import zipfile
@@ -17,6 +19,7 @@ def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+@unittest.skipUnless(shutil.which("javac"), "javac required")
 class DependencyRuntimeFrontierTests(unittest.TestCase):
     def _fixture(self, root: Path) -> dict:
         bundled = root / "bundled.jar"
@@ -31,14 +34,43 @@ class DependencyRuntimeFrontierTests(unittest.TestCase):
             archive.writestr("unused/D.class", b"D" * 19)
             archive.writestr("META-INF/service", b"service")
 
+        official_src = root / "official-src" / "official"
+        official_src.mkdir(parents=True)
+        (official_src / "A.java").write_text(
+            "package official; public class A {}\n",
+            encoding="utf-8",
+        )
+        official_classes = root / "official-classes"
+        official_classes.mkdir()
+        proc = subprocess.run(
+            [
+                "javac",
+                "--release",
+                "9",
+                "-d",
+                str(official_classes),
+                str(official_src / "A.java"),
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+
         official = root / "official.jar"
         with zipfile.ZipFile(
             official,
             "w",
             zipfile.ZIP_STORED,
         ) as archive:
-            archive.writestr("official/A.class", b"official-A")
-            archive.writestr("official/Extra.class", b"extra")
+            archive.writestr(
+                "official/A.class",
+                (
+                    official_classes
+                    / "official"
+                    / "A.class"
+                ).read_bytes(),
+            )
 
         replacement = {
             "schema_version": 1,
@@ -191,7 +223,17 @@ class DependencyRuntimeFrontierTests(unittest.TestCase):
                 "w",
                 zipfile.ZIP_STORED,
             ) as archive:
-                archive.writestr("official/Other.class", b"other")
+                # Keep a valid JAR whose selected API no longer contains
+                # official/A.
+                archive.writestr(
+                    "official/Other.class",
+                    (
+                        Path(td)
+                        / "official-classes"
+                        / "official"
+                        / "A.class"
+                    ).read_bytes(),
+                )
 
             replacement["official_artifacts"][0]["sha256"] = _sha(
                 fx["official"]
