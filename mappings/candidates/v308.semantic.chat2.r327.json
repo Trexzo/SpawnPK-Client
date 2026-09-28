@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "class", "owner": "rs/o/a/a/a/I", "name": null, "descriptor": null},
+      "proposed_name": "DialogueContinuePacket",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_outgoing_opcode","detail":"The concrete R322 OutgoingPacket writes fixed C2S opcode 40 followed by exactly one widget-id integer using the matching u16 Stream writer."},
+        {"family":"exact_dialogue_contract","detail":"Exact-current dialogue lifecycle authority pairs S2C164 open-chatbox with C2S40 Continue and identifies the payload as widgetId."},
+        {"family":"exact_scope_boundary","detail":"The packet object contains no unrelated state or second action; its only payload is the dialogue/widget continuation target."}
+      ],
+      "note":"Exact-v308 C2S40 dialogue continuation transport."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "class", "owner": "rs/o/a/a/a/S", "name": null, "descriptor": null},
+      "proposed_name": "GroundItemOption3Packet",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_outgoing_opcode","detail":"The concrete R322 OutgoingPacket writes fixed C2S opcode 236 and exactly three integer fields with the ground-item option payload transforms."},
+        {"family":"exact_ground_option_contract","detail":"Exact-current outbound/world authority identifies C2S236 as ground-item option 3 with itemId/worldX/worldY."},
+        {"family":"exact_context_boundary","detail":"Option 3 defaults to Take when no explicit ground action occupies that slot, but exact-current definitions also contain contextual actions; therefore the semantic name remains GroundItemOption3Packet rather than TakePacket."}
+      ],
+      "note":"Exact-v308 ground-item option-slot transport; no contextual action verb is asserted."
+    }
+  ],
+  "conflicts": []
+}
