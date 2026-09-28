@@ -1,4 +1,4 @@
-# Chat 2 — RuneLite key input framework R356
+# Chat 2 — RuneLite key input framework R363
 
 Exact client authority:
 
@@ -31,4 +31,4 @@ login-screen enablement predicate returning false, matching RuneLite `KeyListene
 ## Boundary
 
 These are recovered upstream framework identities, not invented SpawnPK business-domain
-names. R356 remains non-canonical semantic research only.
+names. R363 remains non-canonical semantic research only.
