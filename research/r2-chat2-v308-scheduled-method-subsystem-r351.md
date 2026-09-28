@@ -6,10 +6,19 @@ Exact client authority:
 
 ## Result
 
-- `rs/y/a` -> `CLIENT_CLASS_001123` -> `ScheduledMethodAnnotation`
-- `rs/y/b` -> `CLIENT_CLASS_001124` -> `ScheduledMethod`
-- `rs/y/c` -> `CLIENT_CLASS_001125` -> `ScheduledMethodScheduler`
-- review: `SEMREVIEW_A01FE7807F43259EB383`
+- `rs/y/a` -> `CLIENT_CLASS_001122` -> `ScheduledMethodAnnotation`
+- `rs/y/b` -> `CLIENT_CLASS_001123` -> `ScheduledMethod`
+- `rs/y/c` -> `CLIENT_CLASS_001124` -> `ScheduledMethodScheduler`
+- review: `SEMREVIEW_5746D4B983CB42373512`
+
+Stable IDs were verified against the global sorted exact-v308 class lineage:
+
+- `rs/y` -> 001121
+- `rs/y/a` -> 001122
+- `rs/y/b` -> 001123
+- `rs/y/c` -> 001124
+- `rs/z` -> 001125
+- R252 already fixes `rs/z/a` -> 001126.
 
 ## ScheduledMethodAnnotation
 

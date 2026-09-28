@@ -6,9 +6,9 @@ from spk_recovery.semantic_review import resolve_semantic_candidates
 SHA="854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 ROOT=Path(__file__).resolve().parents[1]
 CLASS_COORDS=[
-    ("CLIENT_CLASS_001123","rs/y/a"),
-    ("CLIENT_CLASS_001124","rs/y/b"),
-    ("CLIENT_CLASS_001125","rs/y/c"),
+    ("CLIENT_CLASS_001122","rs/y/a"),
+    ("CLIENT_CLASS_001123","rs/y/b"),
+    ("CLIENT_CLASS_001124","rs/y/c"),
 ]
 
 def _class_lineage():
@@ -29,15 +29,15 @@ class Chat2SemanticReviewR351Tests(unittest.TestCase):
         expected=_load("mappings/candidates/v308.semantic-review.chat2.r351.json")
         self.assertEqual(actual["proposal_count"],3)
         self.assertEqual(actual["unresolved"],[])
-        self.assertEqual(actual["review_id"],"SEMREVIEW_A01FE7807F43259EB383")
+        self.assertEqual(actual["review_id"],"SEMREVIEW_5746D4B983CB42373512")
         self.assertEqual(actual,expected)
 
     def test_r351_expected_stable_ids(self):
         review=_load("mappings/candidates/v308.semantic-review.chat2.r351.json")
         self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{
-            "ScheduledMethodAnnotation":"CLIENT_CLASS_001123",
-            "ScheduledMethod":"CLIENT_CLASS_001124",
-            "ScheduledMethodScheduler":"CLIENT_CLASS_001125",
+            "ScheduledMethodAnnotation":"CLIENT_CLASS_001122",
+            "ScheduledMethod":"CLIENT_CLASS_001123",
+            "ScheduledMethodScheduler":"CLIENT_CLASS_001124",
         })
 
     def test_r351_names_owners_and_ids_do_not_overlap_prior_reviews(self):
