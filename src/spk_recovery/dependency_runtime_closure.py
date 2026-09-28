@@ -10,6 +10,10 @@ import zipfile
 
 from .bytecode_profile import (
     BytecodeProfileError,
+    _Reader,
+    _constant_pool,
+    _skip_attributes,
+    _utf8,
     profile_class_constant_pool_references,
 )
 from .dependency_artifact_proof import (
@@ -79,6 +83,46 @@ def _descriptor_types(descriptor: str) -> set[str]:
     return set(_DESCRIPTOR_OBJECT_RE.findall(descriptor))
 
 
+def _descriptor_profile_references(data: bytes) -> set[str]:
+    r = _Reader(data)
+    if r.u4() != 0xCAFEBABE:
+        raise DependencyRuntimeClosureError("not a JVM class")
+    r.u2()
+    r.u2()
+    cp = _constant_pool(r)
+
+    refs: set[str] = set()
+    for value in cp:
+        if not value:
+            continue
+        tag = value[0]
+        if tag == 12:
+            refs.update(_descriptor_types(_utf8(cp, value[2])))
+        elif tag == 16:
+            refs.update(_descriptor_types(_utf8(cp, value[1])))
+
+    r.u2()
+    r.u2()
+    r.u2()
+
+    for _ in range(r.u2()):
+        r.u2()
+
+    for _ in range(r.u2()):
+        r.u2()
+        r.u2()
+        refs.update(_descriptor_types(_utf8(cp, r.u2())))
+        _skip_attributes(r, cp)
+
+    for _ in range(r.u2()):
+        r.u2()
+        r.u2()
+        refs.update(_descriptor_types(_utf8(cp, r.u2())))
+        _skip_attributes(r, cp)
+
+    return refs
+
+
 def _profile_references(data: bytes) -> set[str]:
     try:
         profile = profile_class_constant_pool_references(data)
@@ -101,6 +145,13 @@ def _profile_references(data: bytes) -> set[str]:
         descriptor = row.get("descriptor")
         if isinstance(descriptor, str):
             refs.update(_descriptor_types(descriptor))
+    try:
+        refs.update(_descriptor_profile_references(data))
+    except BytecodeProfileError as exc:
+        raise DependencyRuntimeClosureError(
+            f"dependency descriptor profile failed: {exc}"
+        ) from exc
+
     refs.discard(str(profile.get("internal_name", "")))
     return refs
 
