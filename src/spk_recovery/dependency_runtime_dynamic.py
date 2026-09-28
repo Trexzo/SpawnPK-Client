@@ -249,17 +249,31 @@ def build_dependency_runtime_dynamic_inventory(
 
     try:
         with zipfile.ZipFile(bundled_jar) as archive:
-            entries = sorted(
-                info.filename
-                for info in archive.infolist()
-                if not info.is_dir()
-                and info.filename.endswith(".class")
-            )
-            for entry in entries:
+            entries: list[zipfile.ZipInfo] = []
+            seen_entries: set[str] = set()
+            for info in archive.infolist():
+                if (
+                    info.is_dir()
+                    or not info.filename.endswith(".class")
+                ):
+                    continue
+                if info.filename in seen_entries:
+                    raise DependencyRuntimeDynamicError(
+                        "duplicate class entry in bundled/readable JAR: "
+                        + info.filename
+                    )
+                seen_entries.add(info.filename)
+                entries.append(info)
+
+            for info in sorted(
+                entries,
+                key=lambda value: value.filename,
+            ):
+                entry = info.filename
                 scanned_class_count += 1
                 try:
                     profile = _profile_class_dynamic_calls(
-                        archive.read(entry)
+                        archive.read(info)
                     )
                 except DependencyRuntimeDynamicError as exc:
                     raise DependencyRuntimeDynamicError(
