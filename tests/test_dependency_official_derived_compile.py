@@ -118,6 +118,9 @@ class DependencyOfficialDerivedCompileTests(unittest.TestCase):
                     "public void x(T t) { b = t; } "
                     "}\n"
                 ),
+                "app/LegacyOnly.java": (
+                    "package app; public class LegacyOnly {}\n"
+                ),
             },
         )
         bundled_jar = self._jar(
@@ -321,6 +324,23 @@ class DependencyOfficialDerivedCompileTests(unittest.TestCase):
                     "reverse_reference_surface_match"
                 ]
             )
+            self.assertEqual(
+                report["summary"][
+                    "project_binary_fallback_count"
+                ],
+                0,
+            )
+            self.assertFalse(
+                report["summary"][
+                    "compile_dependency_contains_project_classes"
+                ]
+            )
+            self.assertEqual(
+                report["summary"][
+                    "compile_dependency_capsule_class_count"
+                ],
+                3,
+            )
             self.assertFalse(
                 report["summary"]["canonical_source_modified"]
             )
@@ -362,6 +382,64 @@ class DependencyOfficialDerivedCompileTests(unittest.TestCase):
             self.assertNotIn("official/", encoded)
             self.assertIn("bundled/Api", encoded)
             self.assertIn("bundled/I", encoded)
+
+    def test_official_first_compile_cannot_fallback_to_project_binary(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            fx = self._fixture(root)
+
+            source_text = (
+                "package app; "
+                "public class Use { "
+                "public LegacyOnly legacy; "
+                "public official.Api api; "
+                "}\n"
+            )
+            for source_root in (
+                fx["canonical"],
+                fx["overlay"],
+            ):
+                (source_root / "app" / "Use.java").write_text(
+                    source_text,
+                    encoding="utf-8",
+                )
+
+            canonical_sha, _files, _bytes = source_tree_digest(
+                fx["canonical"]
+            )
+            overlay_sha, overlay_files, _overlay_bytes = (
+                source_tree_digest(fx["overlay"])
+            )
+            self.assertEqual(canonical_sha, overlay_sha)
+
+            manifest = json.loads(
+                fx["overlay_manifest"].read_text(
+                    encoding="utf-8"
+                )
+            )
+            manifest["input_source_tree_sha256"] = canonical_sha
+            manifest["output_source_tree_sha256"] = overlay_sha
+            manifest["java_file_count"] = len(overlay_files)
+            fx["overlay_manifest"].write_text(
+                json.dumps(manifest) + "\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                DependencyOfficialDerivedCompileError,
+                "official-first overlay javac failed",
+            ):
+                compile_official_overlay_and_restore(
+                    fx["overlay_manifest"],
+                    fx["overlay"],
+                    fx["canonical"],
+                    fx["replacement"],
+                    fx["reverse"],
+                    fx["bundled"],
+                    [fx["official"]],
+                    root / "derived",
+                    project_prefixes=("app/",),
+                )
 
     def test_authority_mismatch_refuses_before_compile(self):
         with tempfile.TemporaryDirectory() as td:
