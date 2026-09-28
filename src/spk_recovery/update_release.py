@@ -119,6 +119,12 @@ def migrate_update_to_release(
     rewrite_class_name_strings: bool = False,
     source_prefixes: list[str] | None = None,
     project_source_only: bool = False,
+    official_first_restored: bool = False,
+    official_overlay_manifest_path: Path | None = None,
+    official_overlay_source_root: Path | None = None,
+    private_dependency_replacement_plan_path: Path | None = None,
+    private_dependency_reverse_plan_path: Path | None = None,
+    official_artifacts: list[Path] | None = None,
 ) -> dict[str, Any]:
     out_dir = out_dir.resolve()
     if out_dir.exists() and any(out_dir.iterdir()):
@@ -269,7 +275,21 @@ def migrate_update_to_release(
             allow_package_resource_risk=allow_package_resource_risk,
             rewrite_class_name_strings=rewrite_class_name_strings,
             source_prefixes=source_prefixes,
-        project_source_only=project_source_only,
+            project_source_only=project_source_only,
+            official_first_restored=official_first_restored,
+            official_overlay_manifest_path=(
+                official_overlay_manifest_path
+            ),
+            official_overlay_source_root=(
+                official_overlay_source_root
+            ),
+            private_dependency_replacement_plan_path=(
+                private_dependency_replacement_plan_path
+            ),
+            private_dependency_reverse_plan_path=(
+                private_dependency_reverse_plan_path
+            ),
+            official_artifacts=official_artifacts,
         )
     except ExistingAuthorityReleaseError as exc:
         raise UpdateReleaseError(str(exc)) from exc
