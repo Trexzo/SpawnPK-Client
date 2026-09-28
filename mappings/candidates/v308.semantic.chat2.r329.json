@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "class", "owner": "rs/b/a", "name": null, "descriptor": null},
+      "proposed_name": "MouseCoordinateSampler",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_sampling_state","detail":"The Runnable owns two 500-element int arrays, one sample count, one lock object and one running flag; every 50 ms it snapshots Client.hP and Client.hQ into the paired arrays while capacity remains."},
+        {"family":"exact_client_lifecycle","detail":"Client constructs exactly one rs/b/a during initialization, schedules it as a background Runnable, resets its sample count during session setup and clears its running flag during client shutdown."},
+        {"family":"exact_scope_boundary","detail":"The class contains no mouse-button, click-dispatch, rendering or packet behavior; its entire responsibility is periodic coordinate sampling."}
+      ],
+      "note":"Descriptive exact-v308 name for the background mouse-coordinate sampling buffer."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "class", "owner": "rs/h/b", "name": null, "descriptor": null},
+      "proposed_name": "ClientCallback",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_interface_contract","detail":"The interface contains exactly one method, void invoke(), with no fields or secondary behavior."},
+        {"family":"exact_live_usage","detail":"Exact-v308 references span Client, custom-menu entries/manager, plugin/config/UI classes and client runtime helpers; callers invoke the interface as a generic deferred client action."},
+        {"family":"exact_registry_join","detail":"The duplicate rs/h/a and rs/h/c registries both store this interface as one-shot callbacks, invoke all queued/keyed values, and then clear them."}
+      ],
+      "note":"Generic descriptive name for the exact zero-argument callback contract used throughout client UI/runtime code."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "class", "owner": "rs/h/e", "name": null, "descriptor": null},
+      "proposed_name": "ClientLoopCallback",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_interface_contract","detail":"The interface contains exactly one method, boolean loop(), with no fields or secondary behavior."},
+        {"family":"exact_registry_lifecycle","detail":"The rs/h/a and rs/h/c registries keep keyed instances across ticks, invoke loop(), and remove the key when loop() returns false; a true result retains the callback for the next cycle."},
+        {"family":"exact_live_usage","detail":"Exact-v308 implementations/callers exist in GUI, interface and plugin/runtime classes, establishing this as a live repeating client callback rather than a dead functional interface."}
+      ],
+      "note":"Descriptive exact-v308 name for the repeating callback contract whose boolean return controls continued registration."
+    }
+  ],
+  "conflicts": []
+}
