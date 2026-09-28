@@ -58,6 +58,7 @@ spk-dependency-runtime-augmented-closure = "spk_recovery.dependency_runtime_augm
 spk-dependency-runtime-dynamic-mapping = "spk_recovery.dependency_runtime_dynamic_mapping_cli:main"
 spk-dependency-runtime-dynamic-member = "spk_recovery.dependency_runtime_dynamic_member_cli:main"
 spk-dependency-replacement-extension = "spk_recovery.dependency_replacement_extension_cli:main"
+spk-dependency-runtime-extended-closure = "spk_recovery.dependency_runtime_extended_closure_cli:main"
 spk-dependency-references = "spk_recovery.dependency_reference_surface:main"
 spk-pom-authority = "spk_recovery.pom_authority:main"
 spk-roundtrip-verify = "spk_recovery.roundtrip_verify_cli:main"
