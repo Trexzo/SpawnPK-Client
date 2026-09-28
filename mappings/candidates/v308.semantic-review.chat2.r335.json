@@ -1,0 +1,36 @@
+{
+  "schema_version":1,"kind":"semantic_review_set","canonical":false,
+  "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","proposal_count":2,
+  "review_id":"SEMREVIEW_6E97CC5F38F394054F04",
+  "proposals":[
+    {
+      "proposal_id":"SEMPROP_1B5EAB9795E70A01197D","target_kind":"class",
+      "stable_id":"CLIENT_CLASS_000005","owner_logical_id":"CLIENT_CLASS_000005",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate":{"owner":"rs/A/b","name":null,"descriptor":null},
+      "proposed_name":"AssetIconItemCacheLoader","confidence":0.999,
+      "evidence":[
+        {"family":"exact_cache_loader_type","detail":"The class extends the cache-loader base with key type rs/A/a$a and value type rs/A/d. R19 identifies those exact types as AssetIconItemKey and AsyncBufferedImage."},
+        {"family":"exact_manager_ownership","detail":"R19 AssetIconManager constructs this loader exclusively for its first expiring cache and passes the manager instance into the loader constructor."},
+        {"family":"exact_item_key_decode","detail":"load(AssetIconItemKey) extracts the key's three exact values itemId, itemQuantity and size and delegates them to AssetIconManager's item-image creation path."},
+        {"family":"exact_pair_separation","detail":"The sibling rs/A/c loader handles AssetIconSpriteKey instead, proving this class is specifically the item-icon cache loader."}
+      ],
+      "note":"Name follows exact typed cache-loader role inside AssetIconManager."
+    },
+    {
+      "proposal_id":"SEMPROP_BDF0650E9161B8DFBD0A","target_kind":"class",
+      "stable_id":"CLIENT_CLASS_000006","owner_logical_id":"CLIENT_CLASS_000006",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate":{"owner":"rs/A/c","name":null,"descriptor":null},
+      "proposed_name":"AssetIconSpriteCacheLoader","confidence":0.999,
+      "evidence":[
+        {"family":"exact_cache_loader_type","detail":"The class extends the cache-loader base with key type rs/A/a$b and value type rs/A/d. R19 identifies those exact types as AssetIconSpriteKey and AsyncBufferedImage."},
+        {"family":"exact_manager_ownership","detail":"R19 AssetIconManager constructs this loader exclusively for its second expiring cache and passes the manager instance into the loader constructor."},
+        {"family":"exact_sprite_key_decode","detail":"load(AssetIconSpriteKey) extracts the key's exact sprite directory and size and delegates them to AssetIconManager's sprite-image creation path."},
+        {"family":"exact_pair_separation","detail":"The sibling rs/A/b loader handles AssetIconItemKey instead, proving this class is specifically the sprite-icon cache loader."}
+      ],
+      "note":"Name follows exact typed cache-loader role inside AssetIconManager."
+    }
+  ],
+  "unresolved":[]
+}
