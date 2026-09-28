@@ -1,1 +1,68 @@
-# Exact local closure acceptance\n\nGitHub-hosted jobs in the private staging repository can fail before step 1,\nso exact private acceptance must also be reproducible on a trusted local\nmachine without weakening any recovery gate.\n\nThese wrappers do not commit, upload or print private recovery payloads. They\nonly compose existing fail-closed recovery CLIs against private local paths.\n\n## R8DEP38 / issue #92\n\nRun scripts/Invoke-R8DEP38ExactLocalAcceptance.ps1 with the exact v308 client,\nthe complete private R8DEP37 authority set, the exact readable/bundled JAR,\nall exact official dependency artifacts, and an empty private output directory.\n\nThe wrapper requires a clean checkout exactly equal to origin/main, exact v308\nSHA-256 854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6,\nand exact readable/bundled SHA-256\ne12e4f917ba2c48ea306e3b4d4cc19c58c5e23cd4f5c33f4ae339ea6fce53c99.\n\nIt rebuilds the private substitution plan, applies R8DEP38, independently\nverifies the runtime postimage, and accepts only a manifest with verified=true.\n\n## Source Milestone 1 / issue #168\n\nRun scripts/Invoke-SourceM1ExactLocalAcceptance.ps1 with the exact v308 client,\nsource index, current class/member lineage, collision-derived recovered-source\nmanifest/source root, matching private collision plan, and an empty private\noutput directory. Member safety acceptance should be supplied when required by\nthe current readable authority. Source rewrite acceptance and the Procyon JAR\ncan be supplied for additional exact release-verification checks.\n\nThe wrapper requires exact current origin/main, verifies the exact v308 client\nSHA, requires collision-derived recovered-workspace provenance, then runs:\n\n1. recovered-workspace release orchestration;\n2. exact release verification including the private collision plan;\n3. Source M1 authority artifact build and independent verification;\n4. Source Milestone build and exact reproduction;\n5. source-only publication bundle build and independent bundle verification.\n\nIf current-main clean rebuild is still blocked, the wrapper stops before any\npublication step and prints the new compiler frontier from clean-rebuild.json.\nA PASS is emitted only after the milestone reports publishable=true and the\npublication bundle verifies.\n\nThe verified local publication bundle remains private until a separate\npublication decision is made.\n
+# Exact local closure acceptance
+
+GitHub-hosted jobs in the private staging repository can fail before step 1,
+so exact private acceptance must also be reproducible on a trusted local
+machine without weakening any recovery gate.
+
+These wrappers do not commit, upload or print private recovery payloads. They
+only compose existing fail-closed recovery CLIs against private local paths.
+
+## R8DEP38 / issue #92
+
+Run scripts/Invoke-R8DEP38ExactLocalAcceptance.ps1 with the exact v308 client,
+the complete private R8DEP37 authority set, the exact readable/bundled JAR,
+all exact official dependency artifacts, and an empty private output directory.
+
+The wrapper requires a clean checkout exactly equal to origin/main, exact v308
+SHA-256 854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6,
+and exact readable/bundled SHA-256
+e12e4f917ba2c48ea306e3b4d4cc19c58c5e23cd4f5c33f4ae339ea6fce53c99.
+
+It rebuilds the private substitution plan, applies R8DEP38, independently
+verifies the runtime postimage, and accepts only a manifest with verified=true.
+
+## Source Milestone 1 / issue #168
+
+The Source M1 wrapper no longer assumes that an exact-v308 R8S/R8T collision
+workspace has already been preserved. It rebuilds that authority from scratch
+on the trusted local machine.
+
+Required private/local inputs are:
+
+- exact v308 client JAR;
+- exact v308 source index;
+- current canonical class lineage;
+- current canonical member lineage;
+- exact member-safety acceptance bound to the readable build;
+- pinned Procyon 0.6.0 JAR;
+- an empty private output directory.
+
+Optional source-rewrite acceptance can be supplied for the additional release
+verification check.
+
+The wrapper requires a clean checkout exactly equal to origin/main and verifies
+both exact v308 and Procyon SHA-256 pins. It then runs this fail-closed chain:
+
+1. rebuild the exact readable-client authority;
+2. derive a private identifier-bearing namespace collision plan;
+3. require that the plan eliminates all collision edges;
+4. transform the readable JAR and independently require zero post-transform
+   collision edges;
+5. decompile only project classes from that transformed JAR with pinned
+   Procyon, binding the collision transform into the recovered workspace;
+6. run current-main recovered-workspace release orchestration with the exact
+   generated private collision plan;
+7. verify the release including private collision-plan provenance;
+8. build and independently verify the Source M1 authority artifact;
+9. build and reproduce the Source Milestone manifest;
+10. build and independently verify the source-only publication bundle.
+
+If current-main clean rebuild is still blocked, the wrapper stops before any
+publication step and prints the new compiler frontier from clean-rebuild.json,
+including the deterministic javac frontier ID when available. That new exact
+frontier, rather than the older 1,288-error R8N measurement, becomes the only
+valid input for any further source-repair decision.
+
+A PASS is emitted only after the milestone reports publishable=true and the
+publication bundle verifies. The verified local publication bundle remains
+private until a separate publication decision is made.
