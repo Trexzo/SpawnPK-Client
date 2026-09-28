@@ -21,6 +21,7 @@ class DependencyReverseTransportPlanTests(unittest.TestCase):
             "member_results": [
                 {
                     "status": "accepted_remap",
+                    "kind": "method",
                     "old_owner": "old/A",
                     "old_name": "<init>",
                     "old_descriptor": "()V",
@@ -30,6 +31,7 @@ class DependencyReverseTransportPlanTests(unittest.TestCase):
                 },
                 {
                     "status": "accepted_remap",
+                    "kind": "method",
                     "old_owner": "old/A",
                     "old_name": "x",
                     "old_descriptor": "()V",
@@ -39,6 +41,7 @@ class DependencyReverseTransportPlanTests(unittest.TestCase):
                 },
                 {
                     "status": "accepted_remap",
+                    "kind": "field",
                     "old_owner": "old/A",
                     "old_name": "value",
                     "old_descriptor": "Lold/T;",
@@ -48,6 +51,7 @@ class DependencyReverseTransportPlanTests(unittest.TestCase):
                 },
                 {
                     "status": "accepted_identity",
+                    "kind": "field",
                     "old_owner": "same/S",
                     "old_name": "id",
                     "old_descriptor": "I",
@@ -57,6 +61,7 @@ class DependencyReverseTransportPlanTests(unittest.TestCase):
                 },
                 {
                     "status": "accepted_identity",
+                    "kind": "method",
                     "old_owner": "residual/R",
                     "old_name": "ok",
                     "old_descriptor": "()V",
@@ -184,6 +189,17 @@ class DependencyReverseTransportPlanTests(unittest.TestCase):
             self.assertIn(("run", "x"), member_names)
             self.assertIn(("value", "value"), member_names)
 
+            kinds = {
+                (
+                    row["official_name"],
+                    row["reference_kind"],
+                    row["transport_kind"],
+                )
+                for row in report["member_reverse"]
+            }
+            self.assertIn(("run", "method", "method"), kinds)
+            self.assertIn(("value", "field", "field"), kinds)
+
     def test_class_many_to_one_blocks(self):
         with tempfile.TemporaryDirectory() as td:
             remap, replacement = self._docs()
@@ -254,6 +270,7 @@ class DependencyReverseTransportPlanTests(unittest.TestCase):
             remap["member_results"].append(
                 {
                     "status": "accepted_remap",
+                    "kind": "method",
                     "old_owner": "old/A",
                     "old_name": "y",
                     "old_descriptor": "()V",
@@ -299,6 +316,7 @@ class DependencyReverseTransportPlanTests(unittest.TestCase):
             remap["member_results"].append(
                 {
                     "status": "accepted_identity",
+                    "kind": "interface_method",
                     "old_owner": "old/B",
                     "old_name": "b",
                     "old_descriptor": "()V",
@@ -383,6 +401,7 @@ class DependencyReverseTransportPlanTests(unittest.TestCase):
             changed["member_results"].append(
                 {
                     "status": "accepted_identity",
+                    "kind": "field",
                     "old_owner": "residual/R",
                     "old_name": "extra",
                     "old_descriptor": "I",
