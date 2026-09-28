@@ -48,6 +48,45 @@ def main(argv: list[str] | None = None) -> int:
         dest="source_prefixes",
     )
     p.add_argument("--project-source-only", action="store_true")
+    p.add_argument(
+        "--official-first-restored",
+        action="store_true",
+        help=(
+            "compile the migrated build against an R8DEP14 official-API "
+            "source overlay and restore project bytecode to bundled runtime "
+            "dependency identities"
+        ),
+    )
+    p.add_argument(
+        "--official-overlay-manifest",
+        type=Path,
+        help="R8DEP14 dependency source overlay manifest",
+    )
+    p.add_argument(
+        "--official-overlay-source-root",
+        type=Path,
+        help="R8DEP14 copied overlay source root",
+    )
+    p.add_argument(
+        "--private-dependency-replacement-plan",
+        type=Path,
+        help="private R8DEP11 DEPREPLACE plan",
+    )
+    p.add_argument(
+        "--private-dependency-reverse-plan",
+        type=Path,
+        help="private R8DEP15 DEPREVERSE plan",
+    )
+    p.add_argument(
+        "--official-artifact",
+        action="append",
+        type=Path,
+        dest="official_artifacts",
+        help=(
+            "verified official dependency artifact; repeat for multiple "
+            "compile-only artifacts"
+        ),
+    )
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args(argv)
 
@@ -88,6 +127,20 @@ def main(argv: list[str] | None = None) -> int:
             ),
             source_prefixes=args.source_prefixes,
             project_source_only=args.project_source_only,
+            official_first_restored=args.official_first_restored,
+            official_overlay_manifest_path=(
+                args.official_overlay_manifest
+            ),
+            official_overlay_source_root=(
+                args.official_overlay_source_root
+            ),
+            private_dependency_replacement_plan_path=(
+                args.private_dependency_replacement_plan
+            ),
+            private_dependency_reverse_plan_path=(
+                args.private_dependency_reverse_plan
+            ),
+            official_artifacts=args.official_artifacts,
         )
     except (
         UpdateReleaseError,
