@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/b/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutFormatVersionDetector",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_version_filename_scan",
+          "detail": "The class scans the exact R143 LoadoutPersistence directory for filenames beginning with the constructor-supplied loadout/folder key plus '_ver_', parses the numeric suffix and retains the highest discovered version."
+        },
+        {
+          "family": "exact_format_ceiling",
+          "detail": "The class exposes constant version 5 and initializes detected version to 1; a(int) answers whether the discovered format version is at least the requested version."
+        },
+        {
+          "family": "exact_codec_gate",
+          "detail": "LoadoutBinaryCodec invokes the detector for versions 2, 3, 4 and 5 to conditionally decode fields added across loadout format revisions, including presentation/color/icon and later integer state."
+        }
+      ],
+      "note": "Descriptive exact-v308 role; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/b/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutBinaryCodec",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_model_serialization",
+          "detail": "The write path serializes the R143 LoadoutDefinition name, Color, optional LoadoutIcon enum, LoadoutSpellbook, skill/config array, every LoadoutEquipmentSlot entry and inventory LoadoutItemEntry records to DataOutputStream."
+        },
+        {
+          "family": "exact_model_deserialization",
+          "detail": "The read path reconstructs LoadoutDefinition objects from DataInputStream and inserts them into the supplied R143 LoadoutFolder, recreating icons, equipment entries, inventory entries and later-version fields."
+        },
+        {
+          "family": "exact_version_interop",
+          "detail": "The decoder constructs rs/gui/b/b/e and uses its detected format version to gate backward-compatible fields, directly pairing this class with the loadout persistence/versioning layer."
+        },
+        {
+          "family": "exact_persistence_boundary",
+          "detail": "R143 already identifies rs/gui/b/b/d as LoadoutPersistence; this class is the model-level binary codec used by that persistence subsystem rather than the filesystem owner itself."
+        }
+      ],
+      "note": "Descriptive exact-v308 role; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/x",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GuiImageAsset",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_resource_loading",
+          "detail": "The class loads arbitrary GUI image resources from filesystem paths when running from file: Client.class URLs or from classpath resources otherwise, storing the resulting java.awt.Image."
+        },
+        {
+          "family": "exact_draw_wrapper",
+          "detail": "It stores mutable x/y draw coordinates and exposes one Graphics2D draw wrapper that renders the held image at those coordinates."
+        },
+        {
+          "family": "exact_multi_feature_consumers",
+          "detail": "Exact-v308 consumers span multiple reviewed sidebar/loadout surfaces, loading assets such as equipment slot images, skills.png, outline.png, curses.png, normal.png and many /assets/gui/icons/*.png resources."
+        },
+        {
+          "family": "exact_generic_boundary",
+          "detail": "Because the same helper is shared across loadout categories, equipment slots and other sidebar artwork, the name remains generic GuiImageAsset rather than claiming one feature-specific role."
+        }
+      ],
+      "note": "Descriptive exact-v308 role; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}
