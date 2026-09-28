@@ -104,7 +104,10 @@ class SourceM1AuthorityWorkflowContractTests(unittest.TestCase):
             validate,
         )
         self.assertIn(
-            "authority commit is not an ancestor of "
+            "authority commit is not an ancestor of ",
+            validate,
+        )
+        self.assertIn(
             "the workspace run head",
             validate,
         )
