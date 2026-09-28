@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_F43BBFA23C22B1651899",
+  "proposals": [{
+    "proposal_id": "SEMPROP_38DDB6ADCD985A7A7B08",
+    "target_kind": "class",
+    "stable_id": "CLIENT_CLASS_000430",
+    "owner_logical_id": "CLIENT_CLASS_000430",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate": {"owner": "rs/l/e/i", "name": null, "descriptor": null},
+    "proposed_name": "InterfaceWidgetRenderCallback",
+    "confidence": 0.998,
+    "evidence": [
+      {"family": "exact_renderer_dispatch", "detail": "R302 InterfaceRenderer iterates active rs/l/e/f feature controllers during live widget traversal, looks up rs/l/e/i by the current RSInterface.aw id, and invokes it with the concrete RSInterface plus the already-resolved screen x/y coordinates."},
+      {"family": "exact_widget_keyed_registry", "detail": "The controller base rs/l/e/f owns an int-keyed map of rs/l/e/i callbacks. Its protected registration helpers bind either one widget id or an int[] of widget ids to the same callback, and only controllers with non-empty callback maps enter the renderer-consumed callback list."},
+      {"family": "exact_callback_implementations", "detail": "Concrete rs/l/e/a/* controller implementations instantiate rs/l/e/i callbacks for specific interface id sets; those callbacks inspect the supplied RSInterface and perform feature-specific presentation such as sprite drawing from widget state."},
+      {"family": "exact_contract_distinction", "detail": "This contract is distinct from R288 InterfaceDrawCallback: R288 is stored directly on RSInterface and preserves draw(int,int), while rs/l/e/i is externally registered by active feature controllers and receives (RSInterface,int,int)."}
+    ],
+    "note": "Descriptive exact-v308 name for the feature-controller callback invoked by InterfaceRenderer for a widget id with the concrete RSInterface and resolved coordinates; intentionally distinguished from R288 InterfaceDrawCallback."
+  }],
+  "unresolved": []
+}
