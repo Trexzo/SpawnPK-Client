@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_FA1B17E0A3980CE98E4C",
+  "proposals": [{
+    "proposal_id": "SEMPROP_F5828BD31F4FDCA41B7A",
+    "target_kind": "class",
+    "stable_id": "CLIENT_CLASS_000078",
+    "owner_logical_id": "CLIENT_CLASS_000078",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate": {"owner":"rs/b/a","name":null,"descriptor":null},
+    "proposed_name": "MousePositionSampler",
+    "confidence": 0.998,
+    "evidence": [
+      {"family":"exact_sampling_loop","detail":"The Runnable loops while enabled, sleeps exactly 50 ms between iterations, and under a synchronization lock records the current Client.hP and Client.hQ mouse coordinates."},
+      {"family":"exact_sample_storage","detail":"The class owns two parallel int[500] arrays and a sample-count field; each tick appends one x/y coordinate pair until the 500-sample cap is reached."},
+      {"family":"exact_client_lifecycle","detail":"Client constructs exactly one rs/b/a during initialization, launches it as a dedicated runnable, resets its sample count on session reset/login state setup, and disables/releases it during shutdown."},
+      {"family":"exact_reader_boundary","detail":"No surviving exact-v308 class directly reads the stored coordinate arrays; therefore the proposed name describes the proven sampling behavior only and does not assert a telemetry/network destination."}
+    ],
+    "note":"Descriptive exact-v308 name for the dedicated 50 ms mouse-coordinate sampler. The historical downstream use of the retained samples is not claimed."
+  }],
+  "unresolved": []
+}
