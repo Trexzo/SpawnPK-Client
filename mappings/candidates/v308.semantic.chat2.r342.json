@@ -1,0 +1,25 @@
+{
+  "schema_version":1,
+  "kind":"semantic_candidate_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[{
+    "schema_version":1,
+    "kind":"semantic_name_candidate",
+    "canonical":false,
+    "status":"CANDIDATE",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target":{"kind":"class","owner":"rs/f/d","name":null,"descriptor":null},
+    "proposed_name":"IncomingPacketLengthTable",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_client_decode_join","detail":"Immediately after Client reads and ISAAC-decodes the inbound opcode into lO, it indexes rs/f/d.b[lO] and stores the result as the current inbound packet length lN."},
+      {"family":"exact_variable_length_sentinels","detail":"Client treats table value -1 as one-byte variable length and -2 as two-byte variable length before waiting for/reading the packet body, exactly the inbound packet-framing contract."},
+      {"family":"exact_live_reference_boundary","detail":"The only exact-v308 external reference to rs/f/d is this Client inbound framing path; sibling array a is not consumed by stock v308, so the live class role is the incoming length lookup authority rather than a general packet registry."}
+    ],
+    "note":"Descriptive exact-v308 name for the static incoming opcode-to-length framing table consumed by Client."
+  }],
+  "conflicts":[]
+}
