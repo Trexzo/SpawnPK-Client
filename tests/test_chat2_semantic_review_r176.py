@@ -92,7 +92,7 @@ class Chat2SemanticReviewR176Tests(unittest.TestCase):
             {row["proposed_name"]: row["stable_id"] for row in review["proposals"]},
             {
                 "Clock": "CLIENT_CLASS_000180",
-                "MillisClock": "CLIENT_CLASS_000181",
+                "MilliClock": "CLIENT_CLASS_000181",
                 "NanoClock": "CLIENT_CLASS_000182",
                 "SleepUtil": "CLIENT_CLASS_000183",
             },
