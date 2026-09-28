@@ -1,50 +1,27 @@
-# Chat 2 — structured config bases R354
+# Chat 2 — R354 duplicate structured-config audit
 
-Exact client authority:
+R354 retains **no semantic proposals**.
 
-`854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`
+Two exact-v308 abstractions were rediscovered, but both already have prior ownership:
 
-## Result
+- `rs/t/a` -> **R248**
+- `rs/t/c` -> **R247**
 
-- `rs/t/a` -> `CLIENT_CLASS_000982` -> `StructuredConfigStore`
-- `rs/t/c` -> `CLIENT_CLASS_000993` -> `DefinitionConfigMapper`
-- review: `SEMREVIEW_5D7E2450563CF7116F3A`
+The fresh evidence strengthens those older reviews.
 
-## StructuredConfigStore
+For `rs/t/a`:
 
-The base owns two paths:
+- dual source/compiled config paths;
+- YAML loading/writing through SnakeYAML;
+- compiled loading through MessagePack;
+- canonical `Map<Integer, Map<String,Object>>` payload.
 
-- human-editable structured config;
-- compiled binary config.
+For `rs/t/c<T>`:
 
-It loads the former through SnakeYAML and the latter through MessagePackMapper, both into:
+- typed config-to-object mapper contract;
+- per-id materialization into an int-keyed cache;
+- concrete animation/NPC/GFX/item/object definition specializations;
+- shared primitive/nested-array conversion helpers.
 
-`Map<Integer, Map<String,Object>>`
-
-It can also write the structured map back to YAML.
-
-Direct exact-v308 users include map-region overrides, wandering-merchant config and the typed
-definition mapping hierarchy.
-
-## DefinitionConfigMapper
-
-`rs/t/c<T>` extends that store and adds:
-
-- typed int-keyed cache of T;
-- abstract per-id mapper `T a(int, Map<String,Object>)`;
-- materialization lifecycle that maps every config record into T;
-- reusable conversion helpers for primitive arrays / nested arrays / string arrays.
-
-Concrete exact-v308 subclasses map into:
-
-- animation definitions;
-- NPC definitions;
-- spot-animation/GFX definitions;
-- item definitions;
-- object definitions.
-
-## Boundary
-
-These are storage/mapping abstractions only. They do not imply server gameplay authority.
-
-R354 remains non-canonical semantic research only.
+The attempted R354 candidate/review/test artifacts are removed. No new semantic ownership
+is retained.

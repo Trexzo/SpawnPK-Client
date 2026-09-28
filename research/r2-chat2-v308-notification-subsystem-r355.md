@@ -1,18 +1,20 @@
-# Chat 2 — notification subsystem R355
+# Chat 2 — R355 duplicate notification-subsystem audit
 
-Exact client authority: `854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`
+R355 retains **no semantic proposals**.
 
-- `rs/s/n/a` -> `CLIENT_CLASS_000935` -> `NotificationConfig`
-- `rs/s/n/b` -> `CLIENT_CLASS_000936` -> `NotificationPlugin`
-- `rs/s/n/c` -> `CLIENT_CLASS_000937` -> `Notifier`
-- review: `SEMREVIEW_2EDCCBD4B007C877D722`
+The three notification classes were already owned by earlier Chat 2 batches:
 
-The config group is literally `notifications`.
+- `rs/s/n/a` -> **R9**
+- `rs/s/n/b` -> **R9**
+- `rs/s/n/c` -> **R14**
 
-The plugin subscribes to focus/chat/private-message events and produces alerts for exact
-de-aggro, superior-spawn and private-message conditions.
+Fresh exact-v308 evidence strengthens those reviews:
 
-The notifier backend posts `NotificationFired`, manages tray/native delivery, sound/beep,
-focus/attention behavior, timeout state and screen-flash rendering.
+- config group is literally `notifications`;
+- plugin subscribes FocusChanged, ChatMessage and PrivateChatMessage;
+- exact alerts include de-aggro, superior slayer/boss and private-message notifications;
+- backend posts `NotificationFired`, handles tray/native delivery, beep/audio,
+  focus/attention policy, timeout state and screen-flash rendering.
 
-R355 remains non-canonical semantic research only.
+The attempted R355 candidate/review/test artifacts are removed. R355 is
+corroboration-only.
