@@ -48,6 +48,7 @@ spk-dependency-source-edit-plan = "spk_recovery.dependency_source_edit_plan_cli:
 spk-dependency-source-overlay = "spk_recovery.dependency_source_overlay_cli:main"
 spk-dependency-reverse-transport-plan = "spk_recovery.dependency_reverse_transport_plan_cli:main"
 spk-dependency-reverse-transport-apply = "spk_recovery.dependency_reverse_transport_apply_cli:main"
+spk-dependency-official-derived-compile = "spk_recovery.dependency_official_derived_compile_cli:main"
 spk-dependency-references = "spk_recovery.dependency_reference_surface:main"
 spk-pom-authority = "spk_recovery.pom_authority:main"
 spk-roundtrip-verify = "spk_recovery.roundtrip_verify_cli:main"
