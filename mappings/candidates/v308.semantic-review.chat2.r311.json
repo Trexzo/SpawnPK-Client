@@ -4,69 +4,9 @@
   "canonical": false,
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-  "proposal_count": 3,
-  "review_id": "SEMREVIEW_730D656BFB9058CF080B",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_9DC3AC6C4324AD9D5A37",
   "proposals": [
-    {
-      "proposal_id": "SEMPROP_00FAF5347C6833A060BC",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000992",
-      "owner_logical_id": "CLIENT_CLASS_000992",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/t/b/b",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "ItemDefinitionDumpTool",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_definition_diff",
-          "detail": "Exact v308 iterates rs/d/k item definitions, compares current and baseline/template entries, and records changed name/note/template/actions/groundActions, stack data, model/zoom/rotations/offsets, recolors/retextures, resize, worn/chat models, ambient and contrast fields."
-        },
-        {
-          "family": "exact_dump_markers",
-          "detail": "Bootstrap/string evidence includes 'Found differences in item ...', '..Dump completed!', 'Running test..', '..Test completed!', and generated i.yaml / i.bin output names under the client data path."
-        },
-        {
-          "family": "exact_item_fixture",
-          "detail": "The embedded regression/test path explicitly references item data such as 'Dwarf remains', Drop, broken/template/clone handling, confirming item-definition rather than generic object serialization."
-        }
-      ],
-      "note": "Descriptive semantic recovery from exact-v308 item-definition diff/dump/test behavior; original stripped source identifier is not claimed."
-    },
-    {
-      "proposal_id": "SEMPROP_040E30F7FF0FE28D5E45",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000991",
-      "owner_logical_id": "CLIENT_CLASS_000991",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/t/b/a",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "NpcDefinitionDumpTool",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_definition_diff",
-          "detail": "Exact v308 iterates NPC definitions, compares rs/d/d current entries against their baseline/template entries, and records changed name, combatLevel, actions, models, recolors/retextures, animations, scale, minimap, headIcon, pet/clickable and related fields."
-        },
-        {
-          "family": "exact_dump_markers",
-          "detail": "Bootstrap/string evidence includes 'Found differences in NPC ...', '..Dump completed!', and generated e.yaml / e.bin output names rooted under the client data path."
-        },
-        {
-          "family": "exact_tool_gate",
-          "detail": "The dump entry point is gated by the client configuration/development mode value before walking up to 25,000 NPC definition slots."
-        }
-      ],
-      "note": "Descriptive semantic recovery from exact-v308 NPC-definition comparison and dump behavior; original stripped source identifier is not claimed."
-    },
     {
       "proposal_id": "SEMPROP_6AFC04A85FDA4A99C2FA",
       "target_kind": "class",
