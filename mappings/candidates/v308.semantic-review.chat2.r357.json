@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_95660E693BA83C7CD099",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_0FF39CD18F722F0FF005",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000181",
+      "owner_logical_id": "CLIENT_CLASS_000181",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/g/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MilliClock",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_clock_shape",
+          "detail": "Exact v308 rs/g/c extends Clock and owns the classic ten-entry long timestamp history plus 256/1 rate-step fields used by the millisecond cycle scheduler."
+        },
+        {
+          "family": "exact_time_source",
+          "detail": "The implementation is backed by a monotonicized System.currentTimeMillis() helper and recalculates sleep/rate from the ten-sample history before returning the number of client cycles to process."
+        },
+        {
+          "family": "factory_fallback",
+          "detail": "The AWT game-loop factory constructs MilliClock when NanoClock construction fails."
+        },
+        {
+          "family": "upstream_structural_match",
+          "detail": "Public RuneScape deobfuscations identify the same ten-long-array Clock subtype as MilliClock."
+        }
+      ],
+      "note": "Recovered RuneScape MilliClock identity from exact structural and game-loop factory match."
+    },
+    {
+      "proposal_id": "SEMPROP_5416EBF75F5F6AADAF90",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000180",
+      "owner_logical_id": "CLIENT_CLASS_000180",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/g/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Clock",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_abstract_contract",
+          "detail": "Exact v308 rs/g/b is the abstract client timing base with exactly reset/mark semantics plus an int-returning wait(cycleMillis,minSleepMillis) style operation used by the AWT game loop."
+        },
+        {
+          "family": "exact_game_loop_factory",
+          "detail": "rs/C stores this base as the active game-loop clock and its factory returns rs/g/d first with rs/g/c as fallback."
+        },
+        {
+          "family": "upstream_lineage",
+          "detail": "RuneScape/OpenOSRS deobfuscations preserve this exact hierarchy as Clock with concrete MilliClock and NanoClock implementations."
+        }
+      ],
+      "note": "Recovered long-standing RuneScape client timing hierarchy identity."
+    },
+    {
+      "proposal_id": "SEMPROP_BF1A4EE1EE8D9818AB3A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000182",
+      "owner_logical_id": "CLIENT_CLASS_000182",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/g/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NanoClock",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_clock_shape",
+          "detail": "Exact v308 rs/g/d extends Clock, initializes its timing state from System.nanoTime() and advances cycle deadlines in nanoseconds."
+        },
+        {
+          "family": "exact_game_loop_role",
+          "detail": "The AWT game-loop factory prefers this implementation and invokes it through the Clock base on every client loop iteration."
+        },
+        {
+          "family": "exact_nano_scheduler",
+          "detail": "Its wait operation computes nanosecond cycle duration from the requested millisecond period, sleeps when ahead and returns the number of due game cycles, capped at ten."
+        },
+        {
+          "family": "upstream_structural_match",
+          "detail": "Public RuneScape deobfuscations identify the System.nanoTime-backed Clock subtype as NanoClock."
+        }
+      ],
+      "note": "Recovered RuneScape NanoClock identity. SpawnPK contains local scheduling modifications but retains the same core class role."
+    }
+  ],
+  "unresolved": []
+}
