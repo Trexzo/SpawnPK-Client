@@ -351,7 +351,18 @@ def build_dependency_runtime_closure(
                     edge_rows.append(
                         {"source": source, "target": target}
                     )
-                    if target in class_entries and target not in visited:
+                    target_plan_row = owner_rows.get(target)
+                    if (
+                        target in class_entries
+                        and target not in visited
+                        and not any(
+                            target.startswith(prefix)
+                            for prefix in prefixes
+                        )
+                        and target_plan_row is not None
+                        and target_plan_row.get("classification")
+                        == "official_replaceable"
+                    ):
                         queue.append(target)
     except zipfile.BadZipFile as exc:
         raise DependencyRuntimeClosureError(
