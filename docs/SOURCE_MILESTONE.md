@@ -184,34 +184,96 @@ Bundle verification reports use:
 
 Publication bundle source files are emitted with canonical LF line endings and JSON metadata is emitted as deterministic UTF-8/LF bytes so the exported authority is stable across Windows and Linux.
 
+## Recovered workspace artifact contract
+
+The GitHub-side Source M1 authority producer consumes a recovered workspace artifact with this exact source-only layout:
+
+```text
+class-lineage.json
+member-lineage.json
+readable-client-manifest.json
+recovered-source-manifest.json
+clean-rebuild.json
+recovery-release.json
+release-verification.json
+src/**/*.java
+```
+
+No JAR, classfile, private collision plan, cache, log, or unrelated workspace file is accepted by the producer workflow. The artifact must contain at least one Java source file.
+
+This contract is intentionally downstream of the recovered-release pipeline. It does not reconstruct private recovery inputs from Git; it converts an already verified recovered workspace artifact held by GitHub Actions into the deterministic Source M1 authority artifact.
+
+## GitHub-only authority production
+
+`.github/workflows/source-m1-authority.yml` supports both:
+
+- `workflow_call` for a recovered workspace artifact uploaded earlier in the same Actions run;
+- `workflow_dispatch` for an explicit artifact from a prior Actions run.
+
+The workflow validates the exact authority commit, enforces the recovered-workspace source-only layout, builds the authority artifact with `spk-source-authority-artifact build`, independently verifies it with `spk-source-authority-artifact verify`, and uploads only the verified `authority/` directory.
+
+Reusable outputs are:
+
+- `artifact_id`
+- `verification_id`
+- `source_tree_sha256`
+- `authority_artifact_name`
+
+The workflow retains read-only repository/action permissions and does not create or push to the publication repository.
+
 ## Reusable workflow handoff
 
-The same Source Milestone workflow supports both manual verification of a prior Actions run and direct handoff from another workflow.
+The Source M1 GitHub-only chain is:
 
-A recovery workflow can upload a verified Source M1 authority artifact and invoke the gate in the same run:
+```text
+recovered workspace artifact
+        |
+        v
+source-m1-authority.yml
+        |
+        v
+verified Source M1 authority artifact
+        |
+        v
+source-milestone-1.yml
+        |
+        v
+verified Source Milestone publication artifact
+```
+
+A recovery workflow can hand a same-run recovered workspace artifact into the authority producer and then into the publication verifier:
 
 ```yaml
 jobs:
-  produce-authority:
+  produce-recovered-workspace:
     runs-on: ubuntu-latest
     steps:
-      # Build and independently verify the Source M1 authority artifact.
+      # Produce the verified recovered-workspace contract.
       - uses: actions/upload-artifact@v4
         with:
-          name: spawnpk-v308-source-authority
-          path: authority
+          name: spawnpk-v308-recovered-workspace
+          path: recovered-workspace
+
+  source-authority:
+    needs: produce-recovered-workspace
+    uses: ./.github/workflows/source-m1-authority.yml
+    with:
+      authority_commit: <exact-lowercase-40-hex-commit>
+      workspace_artifact_name: spawnpk-v308-recovered-workspace
 
   source-milestone:
-    needs: produce-authority
+    needs: source-authority
     uses: ./.github/workflows/source-milestone-1.yml
     with:
       authority_commit: <exact-lowercase-40-hex-commit>
-      authority_artifact_name: spawnpk-v308-source-authority
+      authority_artifact_name: ${{ needs.source-authority.outputs.authority_artifact_name }}
 ```
 
-When `authority_run_id` is blank, the reusable workflow downloads the artifact from the caller's current workflow run. Manual `workflow_dispatch` retains the prior-run path and requires an explicit run ID.
+When `workspace_run_id` is blank, the authority workflow downloads the recovered workspace artifact from the caller's current workflow run. Manual `workflow_dispatch` retains the prior-run path and requires an explicit run ID.
 
-Reusable workflow outputs are emitted only after the authority artifact verifies, the milestone is publishable, and the publication bundle verifies. Available outputs are:
+Likewise, when `authority_run_id` is blank, the Source Milestone workflow downloads the verified authority artifact from the caller's current workflow run. Manual `workflow_dispatch` retains the prior-run path.
+
+Source Milestone reusable outputs are emitted only after the authority artifact verifies, the milestone is publishable, and the publication bundle verifies. Available outputs are:
 
 - `milestone_id`
 - `bundle_id`
@@ -220,4 +282,5 @@ Reusable workflow outputs are emitted only after the authority artifact verifies
 - `source_tree_sha256`
 - `publication_artifact_name`
 
-The called workflow retains read-only repository/action permissions and does not create or push to the publication repository.
+Neither reusable workflow creates, pushes to, or otherwise populates `Trexzo/SpawnPK-Client-Source`.
+
