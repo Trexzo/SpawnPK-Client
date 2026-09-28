@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_BD279051F7AC442AE739",
+  "proposals": [{
+    "proposal_id": "SEMPROP_B1486B8B0FC8E48F7450",
+    "target_kind": "class",
+    "stable_id": "CLIENT_CLASS_000175",
+    "owner_logical_id": "CLIENT_CLASS_000175",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate": {"owner":"rs/f/e","name":null,"descriptor":null},
+    "proposed_name": "SkillMetadata",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"exact_skill_table","detail":"The class defines the exact 24-skill lowercase name array from attack through summoning and a parallel 24-entry display-name/widget-id table, including Construction, Hunter and Summoning."},
+      {"family":"exact_client_consumer","detail":"Client sizes multiple live skill arrays from rs/f/e.a, consults rs/f/e.d when aggregating skill state, and resolves the per-skill widget id through rs/f/e.c during skill presentation/update logic."},
+      {"family":"exact_event_bridge_consumer","detail":"The live rs/s/h/a SkillLevelChanged event bridge indexes rs/f/e.b by skillId to derive the skill name used for notification/presentation behavior."},
+      {"family":"exact_metadata_shape","detail":"The class has no rendering loop, packet decoding, mutable gameplay service or independent lifecycle; its role is static skill indexing/naming/presentation metadata shared by multiple consumers."}
+    ],
+    "note":"Descriptive exact-v308 name for the shared 24-skill metadata/index table. It is distinct from R275 SkillsInterface, which owns the visible skill-tab UI."
+  }],
+  "unresolved": []
+}
