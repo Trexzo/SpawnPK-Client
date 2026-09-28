@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/n/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NotificationConfig",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_group",
+          "detail": "The interface extends the client config contract and fixes config group 'notifications' plus alert/notif section keys."
+        },
+        {
+          "family": "exact_notification_options",
+          "detail": "Default methods expose toggles/options for de-aggro alerts, superior alerts, private messages, focus behavior, native notification mode, sound mode, timeout and flash color."
+        }
+      ],
+      "note": "Descriptive exact-v308 notification subsystem name."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/n/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NotificationPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_event_subscriptions",
+          "detail": "The class extends the live plugin/service base and subscribes to FocusChanged, ChatMessage and PrivateChatMessage events."
+        },
+        {
+          "family": "exact_alert_rules",
+          "detail": "It matches exact de-aggro, superior slayer/superior boss and private-message events, consults NotificationConfig, and delegates user-visible alerts to the notifier backend."
+        }
+      ],
+      "note": "Descriptive exact-v308 notification subsystem name."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/n/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Notifier",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_notification_backend",
+          "detail": "The class posts NotificationFired events and implements the shared notification backend used by NotificationPlugin."
+        },
+        {
+          "family": "exact_delivery_modes",
+          "detail": "It owns tray/native notification dispatch, toolkit beep/audio behavior, focus/attention policy, timeout state and screen-flash Graphics2D rendering."
+        },
+        {
+          "family": "exact_platform_asset",
+          "detail": "It prepares the launcher icon path used by native notification delivery when needed, confirming application-level notifier scope."
+        }
+      ],
+      "note": "Descriptive exact-v308 notification subsystem name."
+    }
+  ],
+  "conflicts": []
+}
