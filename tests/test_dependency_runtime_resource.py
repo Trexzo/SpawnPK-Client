@@ -97,6 +97,18 @@ class DependencyRuntimeResourceTests(unittest.TestCase):
             "summary": {
                 "reflection_dynamic_loading_unproven": True,
             },
+            "owners": [
+                {
+                    "closure_owner_id": "DEPCLOSUREOWNER_0001",
+                    "status": "official_closure_mapped",
+                    "artifact": "first.jar",
+                },
+                {
+                    "closure_owner_id": "DEPCLOSUREOWNER_0002",
+                    "status": "official_closure_mapped",
+                    "artifact": "second.jar",
+                },
+            ],
             "resources": {
                 "artifacts": [
                     {
@@ -247,6 +259,26 @@ class DependencyRuntimeResourceTests(unittest.TestCase):
                     [fx["first"], fx["second"]],
                 )
 
+    def test_closure_used_artifact_inventory_drift_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            fx = self._fixture(Path(td))
+            closure = fx["closure_report"]
+            closure["owners"][1]["artifact"] = "first.jar"
+            fx["closure"].write_text(
+                json.dumps(closure) + "\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                DependencyRuntimeResourceError,
+                "used-artifact inventory disagrees",
+            ):
+                build_dependency_runtime_resource_equivalence(
+                    fx["closure"],
+                    fx["bundled"],
+                    [fx["first"], fx["second"]],
+                )
+
     def test_non_service_newline_difference_is_not_normalized(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -275,6 +307,13 @@ class DependencyRuntimeResourceTests(unittest.TestCase):
                 "summary": {
                     "reflection_dynamic_loading_unproven": True,
                 },
+                "owners": [
+                    {
+                        "closure_owner_id": "DEPCLOSUREOWNER_0001",
+                        "status": "official_closure_mapped",
+                        "artifact": "official.jar",
+                    }
+                ],
                 "resources": {
                     "artifacts": [
                         {
