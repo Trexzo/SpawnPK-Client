@@ -269,7 +269,7 @@ jobs:
       authority_artifact_name: ${{ needs.source-authority.outputs.authority_artifact_name }}
 ```
 
-When `workspace_run_id` is blank, the authority workflow downloads the recovered workspace artifact from the caller's current workflow run. Manual `workflow_dispatch` retains the prior-run path and requires an explicit run ID.
+When `workspace_run_id` is blank, the authority workflow downloads the recovered workspace artifact from the caller's current workflow run. Manual `workflow_dispatch` retains the prior-run path and requires an explicit run ID. Before a prior-run artifact is downloaded, the workflow requires that run ID to be a positive decimal value, requires the referenced Actions run to belong to the current repository and to have completed successfully, and verifies that the exact authority commit is an ancestor of that run's head SHA.
 
 Likewise, when `authority_run_id` is blank, the Source Milestone workflow downloads the verified authority artifact from the caller's current workflow run. Manual `workflow_dispatch` retains the prior-run path.
 
