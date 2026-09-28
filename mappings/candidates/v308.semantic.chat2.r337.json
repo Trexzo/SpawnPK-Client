@@ -1,0 +1,31 @@
+{
+  "schema_version":1,"kind":"semantic_candidate_set","canonical":false,
+  "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[
+    {
+      "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/t/b","name":null,"descriptor":null},
+      "proposed_name":"IntegerConfigMapTypeReference","confidence":0.999,
+      "evidence":[
+        {"family":"exact_generic_signature","detail":"The class is exactly a Jackson TypeReference<Map<Integer, Map<String, Object>>> with no fields or unrelated behavior."},
+        {"family":"exact_mapper_consumer","detail":"R248 ConfigDataMapper constructs this type token in its MessagePack read path and passes it directly to MessagePackMapper.readValue(byte[], TypeReference)."},
+        {"family":"exact_definition_schema","detail":"The returned integer-keyed nested map is the raw configuration corpus consumed by R247 DefinitionConfigLoader and the reviewed definition-loader family."}
+      ],
+      "note":"Name describes the exact Jackson generic type token used by ConfigDataMapper."
+    },
+    {
+      "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/t/d","name":null,"descriptor":null},
+      "proposed_name":"StringConfigMapTypeReference","confidence":0.999,
+      "evidence":[
+        {"family":"exact_generic_signature","detail":"The class is exactly a Jackson TypeReference<Map<String, Map<String, Object>>> with no fields or unrelated behavior."},
+        {"family":"exact_loader_consumer","detail":"R81 WanderingMerchantItemConfigLoader constructs this type token in its compiled MessagePack path and passes it directly to MessagePackMapper.readValue(byte[], TypeReference)."},
+        {"family":"exact_schema_role","detail":"The resulting string-keyed nested map is traversed by merchant section name and then by the exact nested 'items' map before item ids are extracted."}
+      ],
+      "note":"Name describes the exact Jackson generic type token used by the string-keyed wandering-merchant config path."
+    }
+  ],
+  "conflicts":[]
+}
