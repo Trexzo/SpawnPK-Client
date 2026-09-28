@@ -296,6 +296,8 @@ def build_dependency_runtime_extended_closure(
                     target_row.get("classification")
                 )
                 authority = combined.get(owner)
+                private_new_owner: str | None = None
+                private_artifact: str | None = None
 
                 if owner in static_owner_names:
                     status = "already_in_static_closure"
@@ -317,6 +319,8 @@ def build_dependency_runtime_extended_closure(
                             "dynamic root official target disagrees with artifact authority"
                         )
                     status = "authorized_dynamic_root"
+                    private_new_owner = new_owner
+                    private_artifact = artifact
                     added_roots.append(owner)
                     if source_by_owner.get(owner) == "replacement_extension":
                         extension_promoted_root_owners.add(owner)
@@ -347,6 +351,8 @@ def build_dependency_runtime_extended_closure(
                 }
                 if include_identifiers:
                     public["owner"] = owner
+                    public["new_owner"] = private_new_owner
+                    public["artifact"] = private_artifact
                 root_rows.append(public)
 
             queue = deque(sorted(set(added_roots)))
@@ -406,6 +412,8 @@ def build_dependency_runtime_extended_closure(
     for owner in sorted(new_reachable):
         authority = combined.get(owner)
         authority_source = source_by_owner.get(owner)
+        private_new_owner: str | None = None
+        private_artifact: str | None = None
 
         if any(owner.startswith(prefix) for prefix in prefixes):
             status = "project_retained"
@@ -423,6 +431,8 @@ def build_dependency_runtime_extended_closure(
                         "extended closure official target disagrees with artifact authority"
                     )
                 status = "official_closure_mapped"
+                private_new_owner = new_owner
+                private_artifact = artifact
             elif classification == "residual_bundled":
                 status = "residual_bundled"
             elif classification == "project_retained":
@@ -461,6 +471,8 @@ def build_dependency_runtime_extended_closure(
         }
         if include_identifiers:
             public["owner"] = owner
+            public["new_owner"] = private_new_owner
+            public["artifact"] = private_artifact
         owner_rows.append(public)
 
     edge_public = [
@@ -499,7 +511,7 @@ def build_dependency_runtime_extended_closure(
         {
             key: value
             for key, value in row.items()
-            if key != "owner"
+            if key not in {"owner", "new_owner", "artifact"}
         }
         for row in root_rows
     ]
