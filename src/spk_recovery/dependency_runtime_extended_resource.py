@@ -272,6 +272,7 @@ def build_dependency_runtime_extended_resource(
     public_rows: list[dict[str, Any]] = []
     private_rows: list[dict[str, Any]] = []
     status_counts: Counter[str] = Counter()
+    native_status_counts: Counter[str] = Counter()
     audit_source_counts: Counter[str] = Counter()
     newly_introduced_blocker_count = 0
 
@@ -343,6 +344,8 @@ def build_dependency_runtime_extended_resource(
             newly_introduced_blocker_count += 1
 
         status_counts[status] += 1
+        if native_entry:
+            native_status_counts[status] += 1
         audit_source_counts[audit_source] += 1
 
         public = {
@@ -403,6 +406,10 @@ def build_dependency_runtime_extended_resource(
         1
         for row in public_rows
         if row["native_entry"]
+    )
+    native_blocker_count = sum(
+        native_status_counts.get(status, 0)
+        for status in _BLOCKER_STATUSES
     )
     resource_equivalence_complete = (
         non_native_blocker_count == 0
@@ -485,6 +492,10 @@ def build_dependency_runtime_extended_resource(
                 0,
             ),
             "native_entry_count": native_entry_count,
+            "native_status_counts": dict(
+                sorted(native_status_counts.items())
+            ),
+            "native_blocker_count": native_blocker_count,
             "newly_introduced_blocker_count": (
                 newly_introduced_blocker_count
             ),
