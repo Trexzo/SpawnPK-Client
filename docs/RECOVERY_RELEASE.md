@@ -44,3 +44,45 @@ the supplied authority chain is stale, mixed-build or malformed.
 
 A release-ready manifest still does not claim inferred class/member/local names are original
 developer identifiers.
+
+## R7D official-first reproducibility verification
+
+When a clean rebuild records `compile_transport.mode=official_first_restored`,
+R7D requires the private and on-disk authority that was intentionally omitted
+from the public release manifest. Verification is fail-closed and checks:
+
+- the R8DEP14 overlay manifest ID, replacement-plan linkage, canonical input
+  source-tree SHA and actual overlay source-tree SHA;
+- the private R8DEP11 replacement plan kind/ID, bundled-readable authority and
+  official artifact SHA set;
+- the private R8DEP15 reverse plan kind/ID, replacement-plan linkage,
+  bundled-readable authority and bytecode-restore readiness;
+- the actual official dependency artifact bytes against the exact SHA set
+  recorded by the clean-build transport.
+
+The verification report records only safe IDs, booleans and hashes. It does not
+copy private plan paths or identifier-bearing plan contents.
+
+```powershell
+spk-release-verify `
+  .\generated\recovery-release.json `
+  .\authority\v308-index.json `
+  .\authority\class-lineage.json `
+  .\authority\member-lineage.json `
+  .\generated\readable-v308\readable-client-manifest.json `
+  .\generated\source-v308\recovered-source-manifest.json `
+  .\generated\clean-rebuild.json `
+  .\generated\roundtrip.json `
+  --official-overlay-manifest .\private\dependency-source-overlay-manifest.json `
+  --official-overlay-source-root .\private\dependency-source-overlay\src `
+  --private-dependency-replacement-plan .\private\dependency-replacement-plan.json `
+  --private-dependency-reverse-plan .\private\dependency-reverse-plan.json `
+  --official-artifact .\private\dependencies\dependency-a.jar `
+  --official-artifact .\private\dependencies\dependency-b.jar `
+  --out .\generated\recovery-release-verification.json
+```
+
+Official-first verification inputs are accepted only for
+`official_first_restored` releases. Legacy and collision-derived verification
+behavior remains unchanged.
+

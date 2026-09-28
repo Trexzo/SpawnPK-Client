@@ -35,6 +35,22 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--source-root", type=Path)
     p.add_argument("--javac")
     p.add_argument("--private-collision-plan", type=Path)
+    p.add_argument("--official-overlay-manifest", type=Path)
+    p.add_argument("--official-overlay-source-root", type=Path)
+    p.add_argument(
+        "--private-dependency-replacement-plan",
+        type=Path,
+    )
+    p.add_argument(
+        "--private-dependency-reverse-plan",
+        type=Path,
+    )
+    p.add_argument(
+        "--official-artifact",
+        action="append",
+        type=Path,
+        dest="official_artifacts",
+    )
     p.add_argument("--out", type=Path, required=True)
     args = p.parse_args(argv)
 
@@ -59,6 +75,19 @@ def main(argv: list[str] | None = None) -> int:
             source_root=args.source_root,
             javac_command=args.javac,
             private_collision_plan_path=args.private_collision_plan,
+            official_overlay_manifest_path=(
+                args.official_overlay_manifest
+            ),
+            official_overlay_source_root=(
+                args.official_overlay_source_root
+            ),
+            private_dependency_replacement_plan_path=(
+                args.private_dependency_replacement_plan
+            ),
+            private_dependency_reverse_plan_path=(
+                args.private_dependency_reverse_plan
+            ),
+            official_artifacts=args.official_artifacts,
         )
         write_recovery_release_verification(
             report,
