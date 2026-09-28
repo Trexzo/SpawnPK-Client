@@ -91,25 +91,42 @@ def _official_first_dependency_provenance(
         return None
 
     gate = "dependency_compile_transport"
-    authority_keys = (
-        "official_compile_id",
-        "overlay_id",
-        "replacement_plan_id",
-        "reverse_plan_id",
-        "reverse_application_id",
+    authority_prefixes = {
+        "official_compile_id": "DEPOFFICIALCOMPILE_",
+        "overlay_id": "DEPSRCOVERLAY_",
+        "replacement_plan_id": "DEPREPLACE_",
+        "reverse_plan_id": "DEPREVERSE_",
+        "reverse_application_id": "DEPREVERSEAPPLY_",
+    }
+    if any(
+        not isinstance(compile_transport.get(key), str)
+        or not compile_transport[key].startswith(prefix)
+        for key, prefix in authority_prefixes.items()
+    ):
+        _block(
+            blockers,
+            gate=gate,
+            reason="official_first_transport_authority_incomplete",
+        )
+
+    hash_keys = (
         "compile_dependency_capsule_sha256",
         "generated_project_jar_sha256",
         "restored_project_jar_sha256",
     )
     if any(
         not isinstance(compile_transport.get(key), str)
-        or not compile_transport.get(key)
-        for key in authority_keys
+        or re.fullmatch(
+            r"[0-9a-fA-F]{64}",
+            compile_transport[key],
+        )
+        is None
+        for key in hash_keys
     ):
         _block(
             blockers,
             gate=gate,
-            reason="official_first_transport_authority_incomplete",
+            reason="official_first_transport_hash_authority_invalid",
         )
 
     official_shas = compile_transport.get(
@@ -146,6 +163,9 @@ def _official_first_dependency_provenance(
         "status": "complete",
         "project_binary_fallback_count": 0,
         "runtime_official_dependencies_allowed": False,
+        "runtime_dependency_source": (
+            "original_verified_readable_non_project_bytes"
+        ),
         "canonical_source_modified": False,
         "bundled_runtime_dependency_modified": False,
         "restored_project_bytecode_ready_for_runtime_assembly": True,
