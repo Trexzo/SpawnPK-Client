@@ -563,6 +563,7 @@ class ExistingAuthorityReleaseTests(unittest.TestCase):
                     engine="cfr",
                     build_id="v308",
                     out_dir=out,
+                    project_source_only=True,
                     official_first_restored=True,
                     official_overlay_manifest_path=overlay_manifest,
                     official_overlay_source_root=overlay_root,
@@ -599,6 +600,28 @@ class ExistingAuthorityReleaseTests(unittest.TestCase):
                 "DEPREVERSEAPPLY_TEST",
             )
 
+    def test_official_first_requires_project_only_source(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source_jar, decompiler = _inputs(root)
+
+            with self.assertRaisesRegex(
+                ExistingAuthorityReleaseError,
+                "requires project_source_only",
+            ):
+                build_existing_authority_release(
+                    source_jar,
+                    {},
+                    {},
+                    {},
+                    decompiler,
+                    expected_decompiler_sha256="1" * 64,
+                    engine="cfr",
+                    build_id="v308",
+                    out_dir=root / "out",
+                    official_first_restored=True,
+                )
+
     def test_release_cli_forwards_official_first_inputs(self):
         argv = [
             "client.jar",
@@ -612,6 +635,7 @@ class ExistingAuthorityReleaseTests(unittest.TestCase):
             "cfr",
             "--build-id",
             "v308",
+            "--project-source-only",
             "--official-first-restored",
             "--official-overlay-manifest",
             "overlay.json",
@@ -657,6 +681,7 @@ class ExistingAuthorityReleaseTests(unittest.TestCase):
         self.assertEqual(code, 0)
         kwargs = build.call_args.kwargs
         self.assertTrue(kwargs["official_first_restored"])
+        self.assertTrue(kwargs["project_source_only"])
         self.assertEqual(
             kwargs["official_overlay_manifest_path"],
             Path("overlay.json"),
