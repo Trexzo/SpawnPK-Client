@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_6A96E3D80E1472066489",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_23B91870D52B11FE81FA",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000082",
+      "owner_logical_id": "CLIENT_CLASS_000082",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/cache/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Decompressor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_cache_sector_layout",
+          "detail": "Exact v308 rs/cache/a owns a shared 520-byte sector buffer, reads six-byte index entries and follows 520-byte data sectors with eight-byte headers plus up to 512 payload bytes."
+        },
+        {
+          "family": "exact_store_contract",
+          "detail": "The class owns separate RandomAccessFile data/index handles plus one store/archive id, validates file id/chunk/next-sector/store-id headers, and implements the paired read/write sector-chain operations."
+        },
+        {
+          "family": "exact_legacy_source_identity",
+          "detail": "Public 317 client Decompressor implementations use the same data/index RandomAccessFile pair, six-byte index records, 520-byte sectors, eight-byte sector headers and 512-byte payload chunks."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "This class is the low-level cache store/sector reader-writer itself; the surrounding multi-index cache manager rs/cache/b is intentionally not named by this batch."
+        }
+      ],
+      "note": "Original legacy 317 Decompressor identity recovered from the exact cache-sector format and RandomAccessFile structure."
+    }
+  ],
+  "unresolved": []
+}
