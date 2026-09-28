@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [{
+    "schema_version": 1,
+    "kind": "semantic_name_candidate",
+    "canonical": false,
+    "status": "CANDIDATE",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target": {"kind":"class","owner":"rs/gui/P","name":null,"descriptor":null},
+    "proposed_name": "TitlePaneControlPanelLayout",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"exact_parent_attachment","detail":"The already-reviewed R344 TitlePaneControlPanel rs/gui/O constructs exactly one rs/gui/P in its constructor and installs it directly with JPanel.setLayout; no other exact-v308 owner constructs this layout manager."},
+      {"family":"exact_layout_contract","detail":"rs/gui/P implements LayoutManager2 and sizes the parent from componentCount*27 by 23, then lays out every child horizontally with a 4px lead gap, 23px cell width and vertically centered height capped at 23px."},
+      {"family":"exact_title_pane_scope","detail":"R344 fixes the parent rs/gui/O as the Substance title-pane trailing control panel that owns the hide/show-side-panel button, so this layout's scope is specifically that title-pane control surface."}
+    ],
+    "note":"Descriptive exact-v308 Swing role paired directly with R344 TitlePaneControlPanel; original stripped source identifier is not claimed."
+  }],
+  "conflicts": []
+}
