@@ -163,6 +163,7 @@ class DependencyRuntimeDynamicMappingTests(unittest.TestCase):
             ),
             "replacement_plan_id": replacement_id,
             "bundled_jar_sha256": bundled_sha,
+            "official_artifact_sha256": [official_sha],
             "dynamic_roots": [
                 {
                     "dynamic_root_id": f"ROOT_{index:04d}",
