@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "class", "owner": "rs/l/e/l", "name": null, "descriptor": null},
+      "proposed_name": "ScrollingTextEntry",
+      "confidence": 0.997,
+      "evidence": [
+        {"family": "exact_entry_state", "detail": "Each rs/l/e/l instance stores exactly one String plus x/y integers; construction fixes the initial coordinates to x=522 and y=330 with no other behavior."},
+        {"family": "exact_manager_ownership", "detail": "The only exact-v308 typed owner is rs/l/e/m, which stores one active entry plus a List<rs/l/e/l>, creates entries from queued Strings and reads their text/x/y state during rendering."},
+        {"family": "exact_horizontal_motion", "detail": "The manager decrements the active entry x coordinate by exactly one each update and clears the entry only after x is at or beyond the negative rendered text width, proving a complete right-to-left scrolling lifecycle."}
+      ],
+      "note": "Descriptive exact-v308 name for one horizontally scrolling text message. No surviving feature-specific or original source noun is claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "class", "owner": "rs/l/e/m", "name": null, "descriptor": null},
+      "proposed_name": "ScrollingTextManager",
+      "confidence": 0.997,
+      "evidence": [
+        {"family": "exact_queue_shape", "detail": "The class owns one active rs/l/e/l entry, one FIFO List<rs/l/e/l> and the live Client; a(String) appends a newly constructed text entry and the update path promotes the oldest queued entry when no active entry exists."},
+        {"family": "exact_render_lifecycle", "detail": "For the active entry it measures rendered text width through Client.gm, decrements x by one per update, draws the String at the entry x/y coordinates in white, and discards it after it fully exits past negative text width."},
+        {"family": "exact_client_lifecycle", "detail": "Client constructs exactly one rs/l/e/m instance during initialization, and the central rs/l/b/b render path invokes its update/render method every frame alongside the already-recovered HitDropManager and ExperienceDropManager."},
+        {"family": "exact_producer_boundary", "detail": "No additional exact-v308 class contains a direct rs/l/e/m type reference beyond Client and the central renderer, and no surviving internal direct caller of a(String) fixes a narrower product-domain noun."}
+      ],
+      "note": "Descriptive exact-v308 name for the client-global FIFO manager that renders right-to-left scrolling text. The missing producer/domain identity is intentionally not guessed."
+    }
+  ],
+  "conflicts": []
+}
