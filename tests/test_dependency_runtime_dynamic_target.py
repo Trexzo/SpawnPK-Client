@@ -3,10 +3,15 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import shutil
+import subprocess
 import tempfile
 import unittest
 import zipfile
 
+from spk_recovery.dependency_runtime_dynamic import (
+    build_dependency_runtime_dynamic_inventory,
+)
 from spk_recovery.dependency_runtime_dynamic_target import (
     DependencyRuntimeDynamicTargetError,
     build_dependency_runtime_dynamic_target_classification,
@@ -17,22 +22,126 @@ def _sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+@unittest.skipUnless(shutil.which("javac"), "javac required")
 class DependencyRuntimeDynamicTargetTests(unittest.TestCase):
     def _fixture(self, root: Path) -> dict:
+        src = root / "src"
+        (src / "rs" / "pkg").mkdir(parents=True)
+        (src / "dep").mkdir(parents=True)
+
+        for name in (
+            "Replaceable",
+            "Residual",
+            "Unclassified",
+            "VersionOnly",
+        ):
+            (src / "dep" / f"{name}.java").write_text(
+                f"package dep; public class {name} {{}}\n",
+                encoding="utf-8",
+            )
+
+        (src / "rs" / "pkg" / "DynamicTargets.java").write_text(
+            """
+package rs.pkg;
+
+import java.net.URL;
+import java.util.ServiceLoader;
+
+public class DynamicTargets {
+    public void replaceable() throws Exception {
+        Class.forName("dep.Replaceable");
+    }
+
+    public void residual() throws Exception {
+        Class.forName("dep.Residual");
+    }
+
+    public void unclassified() throws Exception {
+        Class.forName("dep.Unclassified");
+    }
+
+    public void projectTarget() throws Exception {
+        Class.forName("rs.Client");
+    }
+
+    public void platformTarget() throws Exception {
+        Class.forName("java.lang.String");
+    }
+
+    public void versionOnly() throws Exception {
+        Class.forName("dep.VersionOnly");
+    }
+
+    public void malformed() throws Exception {
+        Class.forName("bad/name");
+    }
+
+    public void serviceTarget() {
+        ServiceLoader.load(dep.Residual.class);
+    }
+
+    public URL absoluteResource() {
+        return DynamicTargets.class.getResource("/config/exact.txt");
+    }
+
+    public URL relativeResource() {
+        return DynamicTargets.class.getResource("rel.txt");
+    }
+
+    public URL loaderLeadingSlash() {
+        return ClassLoader.getSystemClassLoader().getResource("/leading.txt");
+    }
+
+    public void nativeTarget() {
+        System.loadLibrary("lwjgl");
+    }
+
+    public void unresolved(String name) throws Exception {
+        Class.forName(name);
+    }
+}
+""".strip()
+            + "\n",
+            encoding="utf-8",
+        )
+
+        classes = root / "classes"
+        classes.mkdir()
+        sources = sorted(str(path) for path in src.rglob("*.java"))
+        proc = subprocess.run(
+            [
+                "javac",
+                "--release",
+                "9",
+                "-d",
+                str(classes),
+                *sources,
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+
         bundled = root / "bundled.jar"
         with zipfile.ZipFile(
             bundled,
             "w",
             zipfile.ZIP_STORED,
         ) as archive:
-            archive.writestr("dep/Replaceable.class", b"x")
-            archive.writestr("dep/Residual.class", b"y")
-            archive.writestr("dep/Unclassified.class", b"z")
-            archive.writestr("rs/Client.class", b"p")
-            archive.writestr("rs/pkg/Caller.class", b"q")
-            archive.writestr(
+            for internal in (
+                "dep/Replaceable",
+                "dep/Residual",
+                "dep/Unclassified",
+                "rs/pkg/DynamicTargets",
+            ):
+                archive.write(
+                    classes / (internal + ".class"),
+                    internal + ".class",
+                )
+            archive.write(
+                classes / "dep" / "VersionOnly.class",
                 "META-INF/versions/9/dep/VersionOnly.class",
-                b"v",
             )
             archive.writestr("rs/pkg/rel.txt", b"rel")
             archive.writestr("config/exact.txt", b"exact")
@@ -95,178 +204,11 @@ class DependencyRuntimeDynamicTargetTests(unittest.TestCase):
             encoding="utf-8",
         )
 
-        rows = [
-            {
-                "callsite_id": "DEPRUNTIME_DYNAMIC_00001",
-                "category": "class_loading",
-                "classification": "literal_target_proven",
-                "literal_target_proven": True,
-                "literal_target": "dep.Replaceable",
-                "caller": "rs/Client",
-                "caller_method": "a",
-                "invoked_owner": "java/lang/Class",
-                "invoked_name": "forName",
-                "invoked_descriptor": (
-                    "(Ljava/lang/String;)Ljava/lang/Class;"
-                ),
-            },
-            {
-                "callsite_id": "DEPRUNTIME_DYNAMIC_00002",
-                "category": "class_loading",
-                "classification": "literal_target_proven",
-                "literal_target_proven": True,
-                "literal_target": "dep.Residual",
-                "caller": "rs/Client",
-                "caller_method": "b",
-                "invoked_owner": "java/lang/ClassLoader",
-                "invoked_name": "loadClass",
-                "invoked_descriptor": (
-                    "(Ljava/lang/String;)Ljava/lang/Class;"
-                ),
-            },
-            {
-                "callsite_id": "DEPRUNTIME_DYNAMIC_00003",
-                "category": "class_loading",
-                "classification": "literal_target_proven",
-                "literal_target_proven": True,
-                "literal_target": "dep.Unclassified",
-                "caller": "rs/Client",
-                "caller_method": "c",
-                "invoked_owner": "java/lang/Class",
-                "invoked_name": "forName",
-                "invoked_descriptor": "",
-            },
-            {
-                "callsite_id": "DEPRUNTIME_DYNAMIC_00004",
-                "category": "class_loading",
-                "classification": "literal_target_proven",
-                "literal_target_proven": True,
-                "literal_target": "rs.Client",
-                "caller": "rs/Client",
-                "caller_method": "d",
-                "invoked_owner": "java/lang/Class",
-                "invoked_name": "forName",
-                "invoked_descriptor": "",
-            },
-            {
-                "callsite_id": "DEPRUNTIME_DYNAMIC_00005",
-                "category": "class_loading",
-                "classification": "literal_target_proven",
-                "literal_target_proven": True,
-                "literal_target": "java.lang.String",
-                "caller": "rs/Client",
-                "caller_method": "e",
-                "invoked_owner": "java/lang/Class",
-                "invoked_name": "forName",
-                "invoked_descriptor": "",
-            },
-            {
-                "callsite_id": "DEPRUNTIME_DYNAMIC_00006",
-                "category": "class_loading",
-                "classification": "literal_target_proven",
-                "literal_target_proven": True,
-                "literal_target": "dep.VersionOnly",
-                "caller": "rs/Client",
-                "caller_method": "f",
-                "invoked_owner": "java/lang/Class",
-                "invoked_name": "forName",
-                "invoked_descriptor": "",
-            },
-            {
-                "callsite_id": "DEPRUNTIME_DYNAMIC_00007",
-                "category": "class_loading",
-                "classification": "literal_target_proven",
-                "literal_target_proven": True,
-                "literal_target": "bad/name",
-                "caller": "rs/Client",
-                "caller_method": "g",
-                "invoked_owner": "java/lang/Class",
-                "invoked_name": "forName",
-                "invoked_descriptor": "",
-            },
-            {
-                "callsite_id": "DEPRUNTIME_DYNAMIC_00008",
-                "category": "service_loading",
-                "classification": "service_loader_class_token",
-                "literal_target_proven": True,
-                "literal_target": "dep/Residual",
-                "caller": "rs/Client",
-                "caller_method": "h",
-                "invoked_owner": "java/util/ServiceLoader",
-                "invoked_name": "load",
-                "invoked_descriptor": "",
-            },
-            {
-                "callsite_id": "DEPRUNTIME_DYNAMIC_00009",
-                "category": "resource_loading",
-                "classification": "literal_target_proven",
-                "literal_target_proven": True,
-                "literal_target": "/config/exact.txt",
-                "caller": "rs/Client",
-                "caller_method": "i",
-                "invoked_owner": "java/lang/Class",
-                "invoked_name": "getResource",
-                "invoked_descriptor": "",
-            },
-            {
-                "callsite_id": "DEPRUNTIME_DYNAMIC_00010",
-                "category": "resource_loading",
-                "classification": "literal_target_proven",
-                "literal_target_proven": True,
-                "literal_target": "rel.txt",
-                "caller": "rs/pkg/Caller",
-                "caller_method": "j",
-                "invoked_owner": "java/lang/Class",
-                "invoked_name": "getResourceAsStream",
-                "invoked_descriptor": "",
-            },
-            {
-                "callsite_id": "DEPRUNTIME_DYNAMIC_00011",
-                "category": "resource_loading",
-                "classification": "literal_target_proven",
-                "literal_target_proven": True,
-                "literal_target": "/leading.txt",
-                "caller": "rs/Client",
-                "caller_method": "k",
-                "invoked_owner": "java/lang/ClassLoader",
-                "invoked_name": "getResource",
-                "invoked_descriptor": "",
-            },
-            {
-                "callsite_id": "DEPRUNTIME_DYNAMIC_00012",
-                "category": "native_loading",
-                "classification": "native_load_literal",
-                "literal_target_proven": True,
-                "literal_target": "lwjgl",
-                "caller": "rs/Client",
-                "caller_method": "l",
-                "invoked_owner": "java/lang/System",
-                "invoked_name": "loadLibrary",
-                "invoked_descriptor": "",
-            },
-            {
-                "callsite_id": "DEPRUNTIME_DYNAMIC_00013",
-                "category": "class_loading",
-                "classification": "dynamic_target_unresolved",
-                "literal_target_proven": False,
-                "literal_target": None,
-                "caller": "rs/Client",
-                "caller_method": "m",
-                "invoked_owner": "java/lang/Class",
-                "invoked_name": "forName",
-                "invoked_descriptor": "",
-            },
-        ]
-
-        dynamic = {
-            "schema_version": 1,
-            "kind": "dependency_runtime_dynamic_inventory",
-            "runtime_dynamic_id": "DEPRUNTIMEDYNAMIC_" + "3" * 20,
-            "runtime_resource_id": resource_id,
-            "bundled_jar_sha256": bundled_sha,
-            "callsites": rows,
-            "identifiers_included": True,
-        }
+        dynamic = build_dependency_runtime_dynamic_inventory(
+            resource_path,
+            bundled,
+            include_identifiers=True,
+        )
         dynamic_path = root / "dynamic.json"
         dynamic_path.write_text(
             json.dumps(dynamic, indent=2) + "\n",
@@ -374,26 +316,33 @@ class DependencyRuntimeDynamicTargetTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             fx = self._fixture(Path(td))
             report = self._build(fx, private=True)
-            by_call = {
-                row["source_callsite_id"]: row
+
+            replaceable = next(
+                row
                 for row in report["targets"]
-            }
+                if row["literal_target"] == "dep.Replaceable"
+            )
+            absolute_resource = next(
+                row
+                for row in report["targets"]
+                if row["literal_target"] == "/config/exact.txt"
+            )
+            relative_resource = next(
+                row
+                for row in report["targets"]
+                if row["literal_target"] == "rel.txt"
+            )
+
             self.assertEqual(
-                by_call["DEPRUNTIME_DYNAMIC_00001"][
-                    "normalized_class_target"
-                ],
+                replaceable["normalized_class_target"],
                 "dep/Replaceable",
             )
             self.assertEqual(
-                by_call["DEPRUNTIME_DYNAMIC_00009"][
-                    "resource_entry"
-                ],
+                absolute_resource["resource_entry"],
                 "config/exact.txt",
             )
             self.assertEqual(
-                by_call["DEPRUNTIME_DYNAMIC_00010"][
-                    "resource_entry"
-                ],
+                relative_resource["resource_entry"],
                 "rs/pkg/rel.txt",
             )
 
@@ -425,6 +374,21 @@ class DependencyRuntimeDynamicTargetTests(unittest.TestCase):
             with self.assertRaisesRegex(
                 DependencyRuntimeDynamicTargetError,
                 "different runtime resource authority",
+            ):
+                self._build(fx)
+
+    def test_tampered_dynamic_callsites_fail_reproduction(self):
+        with tempfile.TemporaryDirectory() as td:
+            fx = self._fixture(Path(td))
+            dynamic = fx["dynamic_report"]
+            dynamic["callsites"][0]["literal_target"] = "tampered.Target"
+            fx["dynamic"].write_text(
+                json.dumps(dynamic) + "\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                DependencyRuntimeDynamicTargetError,
+                "callsite authority does not reproduce",
             ):
                 self._build(fx)
 
