@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [{
+    "schema_version": 1,
+    "kind": "semantic_name_candidate",
+    "canonical": false,
+    "status": "CANDIDATE",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target": {"kind":"class","owner":"rs/f/e","name":null,"descriptor":null},
+    "proposed_name": "SkillDefinitions",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"exact_skill_catalog","detail":"Exact v308 rs/f/e defines a skill count of 24 plus the full ordered lowercase skill-name array from attack/defence/strength through construction/hunter/summoning."},
+      {"family":"exact_ui_metadata","detail":"The class owns a parallel 24-row metadata table containing human-readable skill labels and exact skill-interface widget IDs (for example Attack/50023, Defence/50065, Construction/50215, Hunter/50225 and Summoning/50235)."},
+      {"family":"exact_enabled_flags","detail":"The class owns the parallel boolean skill-enabled array consumed by Client when iterating skills; all current 0..24 slots are initialized true in exact v308."},
+      {"family":"exact_live_consumers","detail":"Client sizes multiple skill-state arrays from rs/f/e.a, gates skill processing through rs/f/e.d and resolves skill UI metadata through rs/f/e.c; the live skill-level-change plugin path also reads rs/f/e.b to derive skill display names."},
+      {"family":"exact_scope_boundary","detail":"The class contains static skill metadata only and no player skill levels, XP mutation, combat formula or server rule logic, so SkillDefinitions is narrower and more accurate than SkillManager."}
+    ],
+    "note": "Descriptive exact-v308 name for the central static skill metadata/definition catalog. No server-side skill rules are claimed."
+  }],
+  "conflicts": []
+}
