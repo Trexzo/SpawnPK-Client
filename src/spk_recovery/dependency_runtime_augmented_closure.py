@@ -185,7 +185,11 @@ def build_dependency_runtime_augmented_closure(
         category = row.get("category")
         if category in {"class_loading", "service_loading"}:
             normalized = row.get("normalized_class_target")
-            if isinstance(normalized, str) and normalized:
+            if (
+                row.get("literal_target_proven") is True
+                and isinstance(normalized, str)
+                and normalized
+            ):
                 class_targets.append(row)
         elif category == "resource_loading":
             resource_requirement_count += 1
@@ -260,14 +264,27 @@ def build_dependency_runtime_augmented_closure(
                     status = "already_in_static_closure"
                     already_static_count += 1
                 elif (
-                    plan_row is not None
+                    classification
+                    in {
+                        "dependency_official_replaceable",
+                        "service_dependency_official_replaceable",
+                    }
+                    and plan_row is not None
                     and plan_row.get("classification")
                     == "official_replaceable"
                     and owner in class_entries
                 ):
                     status = "authorized_dynamic_root"
                     added_roots.append(owner)
-                elif owner in class_entries and plan_row is None:
+                elif (
+                    classification
+                    in {
+                        "bundled_unclassified",
+                        "service_bundled_unclassified",
+                    }
+                    and owner in class_entries
+                    and plan_row is None
+                ):
                     status = "dynamic_mapping_authority_gap"
                     mapping_gap_count += 1
                 else:
