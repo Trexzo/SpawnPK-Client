@@ -4,87 +4,25 @@
   "canonical": false,
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-  "proposal_count": 3,
-  "review_id": "SEMREVIEW_0C940EC4C68D5DDC6CF0",
-  "proposals": [
-    {
-      "proposal_id": "SEMPROP_0CD1AD892C4A033E20F1",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_001124",
-      "owner_logical_id": "CLIENT_CLASS_001124",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/y/c",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "Scheduler",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "historical_source_identity",
-          "detail": "Historical RuneLite Scheduler contains the exact surviving trace literal 'Scheduled task triggered: {}' and the same Duration.of(schedule.period(), schedule.unit()) execution logic."
-        },
-        {
-          "family": "exact_scheduler_behavior",
-          "detail": "Exact v308 manages a CopyOnWriteArrayList of ScheduledMethod entries, fires due tasks from Instant/Duration comparisons, and submits async schedules to ScheduledExecutorService while invoking synchronous ones directly."
-        }
-      ],
-      "note": "Source-proven historical RuneLite class name."
-    },
-    {
-      "proposal_id": "SEMPROP_592193F9E3C091156288",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_001122",
-      "owner_logical_id": "CLIENT_CLASS_001122",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/y/a",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "Schedule",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "historical_source_identity",
-          "detail": "Historical RuneLite source exposes the exact runtime-retained method annotation as net.runelite.client.task.Schedule with period, ChronoUnit unit and async flag matching exact-v308 rs/y/a."
-        },
-        {
-          "family": "exact_annotation_contract",
-          "detail": "Exact v308 rs/y/a is @Retention(RUNTIME), @Target(METHOD), exposes long period, ChronoUnit unit and boolean async=false, and is reflectively read by the live plugin manager."
-        }
-      ],
-      "note": "Source-proven historical RuneLite class name; exact-v308 structure and PluginManager usage match."
-    },
-    {
-      "proposal_id": "SEMPROP_7EFB8E37CCAA8E13556A",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_001123",
-      "owner_logical_id": "CLIENT_CLASS_001123",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/y/b",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "ScheduledMethod",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "historical_source_identity",
-          "detail": "Historical RuneLite PluginManager constructs ScheduledMethod(schedule, method, plugin, runnable), exactly matching rs/y/b's constructor and retained fields."
-        },
-        {
-          "family": "exact_descriptor_state",
-          "detail": "Exact v308 stores Schedule, reflective Method, target object, optional Runnable and last-run Instant; Scheduler reads all five fields."
-        }
-      ],
-      "note": "Source-proven historical RuneLite class name."
-    }
-  ],
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_CDE25DFEBEFB618396DD",
+  "proposals": [{
+    "proposal_id": "SEMPROP_AA02B66A159291F2A957",
+    "target_kind": "class",
+    "stable_id": "CLIENT_CLASS_000080",
+    "owner_logical_id": "CLIENT_CLASS_000080",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate": {"owner":"rs/c/a/a","name":null,"descriptor":null},
+    "proposed_name": "OldSchoolObjectModelOverrides",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"exact_definition_target","detail":"The class exposes only static methods accepting R28 ObjectDefinition plus object id; it has no unrelated state or target type."},
+      {"family":"exact_mode_gate","detail":"ObjectDefinition invokes rs/c/a/a.a(definition,id) only when its exact definition-mode enum equals the preserved OLDSCHOOL constant."},
+      {"family":"exact_model_only_mutation","detail":"Both override methods mutate only ObjectDefinition.an, the integer model-id array. The large method contains an approximately 680-id lookup table assigning replacement model-id arrays, and the wrapper performs a second eight-id model-array correction pass."},
+      {"family":"exact_scope_boundary","detail":"No name, action, size, collision, recolor, animation or other ObjectDefinition field is written by this class, so the semantic role is specifically old-school object model overrides rather than generic definition patching."}
+    ],
+    "note": "Descriptive exact-v308 name for the OLDSCHOOL-only ObjectDefinition model-id override table. No broader object-definition semantics are claimed."
+  }],
   "unresolved": []
 }

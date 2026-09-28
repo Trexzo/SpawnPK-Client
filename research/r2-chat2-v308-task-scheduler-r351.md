@@ -1,4 +1,4 @@
-# Chat 2 — RuneLite task scheduler R350
+# Chat 2 — RuneLite task scheduler R351
 
 Exact authority: `854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`
 
@@ -14,4 +14,4 @@ Exact v308 preserves the Scheduler trace literal `Scheduled task triggered: {}`,
 method-annotation scanning in PluginManager, the ScheduledMethod(schedule, method, plugin,
 runnable) shape, period/unit timing and async execution via ScheduledExecutorService.
 
-These names are historical-source proven, not merely descriptive. R350 remains non-canonical.
+These names are historical-source proven, not merely descriptive. R351 remains non-canonical.
