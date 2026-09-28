@@ -1,0 +1,196 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MainGameAssetUpdater",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_concrete_asset",
+          "detail": "The class extends rs/cache/b/d, labels itself 'Cache', owns cache.zip/cache_version, and displays 'Downloading main game assets..' while downloading and extracting the main asset archive."
+        },
+        {
+          "family": "exact_version_contract",
+          "detail": "It constructs rs/cache/b/e for cache_version and participates in the common local-vs-remote version/update decision inherited from the updater base."
+        },
+        {
+          "family": "exact_update_scope",
+          "detail": "Its archive cleanup/extraction logic explicitly preserves/handles cache asset directories such as configs and sprites, fixing this as the main game asset updater."
+        }
+      ],
+      "note": "Descriptive exact-v308 asset-update subsystem name."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigAssetUpdater",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_concrete_asset",
+          "detail": "The class extends rs/cache/b/d, uses configs.zip and config_version, and displays 'Downloading game configs..' during update."
+        },
+        {
+          "family": "exact_version_contract",
+          "detail": "It owns an rs/cache/b/e version descriptor keyed by config_version and delegates shared archive/version behavior to the updater base."
+        },
+        {
+          "family": "exact_install_target",
+          "detail": "Its surviving path constants and extraction flow target the configs asset directory."
+        }
+      ],
+      "note": "Descriptive exact-v308 asset-update subsystem name."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpriteAssetUpdater",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_concrete_asset",
+          "detail": "The class extends rs/cache/b/d, labels itself 'Sprites', uses sprites.zip and sprite_version, and displays 'Downloading sprites..' during update."
+        },
+        {
+          "family": "exact_version_contract",
+          "detail": "It owns an rs/cache/b/e version descriptor keyed by sprite_version and uses the same shared download/extract/version workflow."
+        },
+        {
+          "family": "exact_install_target",
+          "detail": "Its surviving path constants and extraction flow target the sprites asset directory."
+        }
+      ],
+      "note": "Descriptive exact-v308 asset-update subsystem name."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AssetUpdateManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_manager_shape",
+          "detail": "The class owns three rs/cache/b/d updater instances—main cache, sprites, and configs—plus a List of those updaters and the live Client."
+        },
+        {
+          "family": "exact_orchestration",
+          "detail": "Startup displays 'Please wait, checking assets..', checks each updater, runs outdated assets, reports updater-specific errors, and emits 'Updating outdated game asset: ...' status."
+        },
+        {
+          "family": "exact_concrete_family",
+          "detail": "Its constructor creates exactly rs/cache/b/a/a, rs/cache/b/a/d, and rs/cache/b/a/c, proving central orchestration of the three asset updater types."
+        }
+      ],
+      "note": "Descriptive exact-v308 asset-update subsystem name."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AssetUpdater",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_abstract_contract",
+          "detail": "The class is abstract, owns updater error messages/client/base path, exposes abstract update/version hooks, and provides shared local-vs-remote version comparison."
+        },
+        {
+          "family": "exact_archive_support",
+          "detail": "Shared behavior downloads URLs, creates directories, extracts ZipInputStream entries, writes files, and cleans update artifacts."
+        },
+        {
+          "family": "exact_subclasses",
+          "detail": "The exact concrete subclasses are the main-cache, config, and sprite updater implementations coordinated by rs/cache/b/c."
+        }
+      ],
+      "note": "Descriptive exact-v308 asset-update subsystem name."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AssetVersion",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_version_files",
+          "detail": "The class resolves remote versions.txt and local versions.dat paths, parses named double version entries, and can persist version entries locally."
+        },
+        {
+          "family": "exact_version_comparison",
+          "detail": "Its public methods expose remote and local version doubles and a boolean update/version check used directly by rs/cache/b/d."
+        },
+        {
+          "family": "exact_ui_linkage",
+          "detail": "On remote-version connection failure it constructs an HTML diagnostic pane and installs the already-recovered R336 AssetVersionHyperlinkListener, directly tying this class to asset-version status."
+        }
+      ],
+      "note": "Descriptive exact-v308 asset-update subsystem name."
+    }
+  ],
+  "conflicts": []
+}
