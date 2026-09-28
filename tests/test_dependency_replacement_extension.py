@@ -10,7 +10,6 @@ import unittest
 import zipfile
 
 from spk_recovery.dependency_replacement_extension import (
-    DependencyReplacementExtensionError,
     build_dependency_replacement_extension,
 )
 
@@ -279,24 +278,30 @@ class DependencyReplacementExtensionTests(unittest.TestCase):
                 ]
             )
 
-    def test_conflicting_static_authority_fails_closed(self):
+    def test_conflicting_static_authority_is_reported_and_blocks_ready(self):
         with tempfile.TemporaryDirectory() as td:
             fx = self._fixture(
                 Path(td),
                 complete=True,
                 conflicting_static=True,
             )
-            with self.assertRaisesRegex(
-                DependencyReplacementExtensionError,
-                "conflicts with existing DEPREPLACE",
-            ):
-                build_dependency_replacement_extension(
-                    fx["plan"],
-                    fx["dynamic"],
-                    fx["member"],
-                    fx["bundled"],
-                    [fx["official"]],
-                )
+            report = build_dependency_replacement_extension(
+                fx["plan"],
+                fx["dynamic"],
+                fx["member"],
+                fx["bundled"],
+                [fx["official"]],
+            )
+            self.assertEqual(report["summary"]["conflict_count"], 1)
+            self.assertEqual(
+                report["blocked_rows"][0]["status"],
+                "promotion_conflict",
+            )
+            self.assertFalse(
+                report["summary"][
+                    "ready_for_augmented_closure_reaudit"
+                ]
+            )
 
     def test_public_and_private_reports_share_extension_id(self):
         with tempfile.TemporaryDirectory() as td:
