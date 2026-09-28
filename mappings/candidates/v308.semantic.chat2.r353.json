@@ -1,0 +1,26 @@
+{
+  "schema_version":1,
+  "kind":"semantic_candidate_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[{
+    "schema_version":1,
+    "kind":"semantic_name_candidate",
+    "canonical":false,
+    "status":"CANDIDATE",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target":{"kind":"class","owner":"rs/t/a/e","name":null,"descriptor":null},
+    "proposed_name":"MapRegionOverrideRegistry",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_config_source","detail":"Exact v308 loads configs/maps.yaml or compiled configs/m.bin and parses keys id, map, land, type, osid, group and forceroof/forceroofs."},
+      {"family":"exact_cache_index_mutation","detail":"The cache index loader constructs this class and passes the live region-id, map-archive, land-archive and type arrays into it; configured entries rewrite those arrays in place."},
+      {"family":"exact_region_runtime_tables","detail":"The registry builds exact lookup state for configured region ids, map/land archive ids, OSRS-region membership, group labels and region->OSRS id remaps; region loading consults those tables during coordinate/archive resolution."},
+      {"family":"exact_roof_override","detail":"forceroof/forceroofs entries set the client region-override map for the configured region id, showing this class owns presentation/runtime map-region overrides rather than raw cache decoding alone."}
+    ],
+    "note":"Descriptive exact-v308 name for maps.yaml-driven region/map/land/runtime override state. It does not claim server world authority."
+  }],
+  "conflicts":[]
+}
