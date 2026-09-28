@@ -486,12 +486,20 @@ def build_dependency_runtime_substitution_plan(
     retained_entries = set(bundled_entries) - removal_entries
 
     official_entries: dict[str, str] = {}
+    official_entry_count = 0
     collisions: list[dict[str, str]] = []
+    resource_overlaps: list[dict[str, str]] = []
     for artifact in sorted(required_artifacts):
         for entry in _zip_entries(supplied[artifact]):
+            official_entry_count += 1
             prior = official_entries.get(entry)
             if prior is not None and prior != artifact:
-                collisions.append(
+                target = (
+                    collisions
+                    if entry.endswith(".class")
+                    else resource_overlaps
+                )
+                target.append(
                     {
                         "entry": entry,
                         "kind": "official_official",
@@ -502,7 +510,12 @@ def build_dependency_runtime_substitution_plan(
             else:
                 official_entries[entry] = artifact
             if entry in retained_entries:
-                collisions.append(
+                target = (
+                    collisions
+                    if entry.endswith(".class")
+                    else resource_overlaps
+                )
+                target.append(
                     {
                         "entry": entry,
                         "kind": "retained_bundled_official",
@@ -572,13 +585,37 @@ def build_dependency_runtime_substitution_plan(
         )
     ]
 
+    public_resource_overlap_rows = [
+        {
+            "resource_overlap_id": _redacted_id(
+                "DEPSUBRESOURCEOVERLAP_",
+                row["entry"],
+                row["kind"],
+                row["left"],
+                row["right"],
+            ),
+            "kind": row["kind"],
+        }
+        for row in sorted(
+            resource_overlaps,
+            key=lambda row: (
+                row["entry"],
+                row["kind"],
+                row["left"],
+                row["right"],
+            ),
+        )
+    ]
+
     summary = {
         "class_removal_count": len(private_class_rows),
         "resource_removal_count": len(private_resource_rows),
         "required_official_artifact_count": len(required_artifacts),
         "retained_bundled_entry_count": len(retained_entries),
         "postimage_official_entry_count": len(official_entries),
+        "runtime_official_entry_count": official_entry_count,
         "collision_count": len(collisions),
+        "resource_overlap_count": len(resource_overlaps),
         "protected_owner_classification_counts": dict(
             sorted(protected_owner_counts.items())
         ),
@@ -608,6 +645,7 @@ def build_dependency_runtime_substitution_plan(
         "class_removals": public_class_rows,
         "resource_removals": public_resource_rows,
         "collisions": public_collision_rows,
+        "resource_overlaps": public_resource_overlap_rows,
         "summary": summary,
     }
     substitution_plan_id = (
@@ -616,7 +654,7 @@ def build_dependency_runtime_substitution_plan(
     )
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "kind": "dependency_runtime_substitution_plan",
         "runtime_substitution_plan_id": substitution_plan_id,
         "runtime_readiness_id": readiness_id,
@@ -667,6 +705,19 @@ def build_dependency_runtime_substitution_plan(
             )
             if include_identifiers
             else public_collision_rows
+        ),
+        "resource_overlaps": (
+            sorted(
+                resource_overlaps,
+                key=lambda row: (
+                    row["entry"],
+                    row["kind"],
+                    row["left"],
+                    row["right"],
+                ),
+            )
+            if include_identifiers
+            else public_resource_overlap_rows
         ),
         "identifiers_included": include_identifiers,
         "apply_authorized": False,

@@ -62,6 +62,7 @@ spk-dependency-runtime-extended-closure = "spk_recovery.dependency_runtime_exten
 spk-dependency-runtime-extended-resource = "spk_recovery.dependency_runtime_extended_resource_cli:main"
 spk-dependency-runtime-readiness = "spk_recovery.dependency_runtime_readiness_cli:main"
 spk-dependency-runtime-substitution-plan = "spk_recovery.dependency_runtime_substitution_plan_cli:main"
+spk-dependency-runtime-substitution-apply = "spk_recovery.dependency_runtime_substitution_apply_cli:main"
 spk-dependency-references = "spk_recovery.dependency_reference_surface:main"
 spk-pom-authority = "spk_recovery.pom_authority:main"
 spk-roundtrip-verify = "spk_recovery.roundtrip_verify_cli:main"
