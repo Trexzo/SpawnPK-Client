@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/y",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InlineLabeledImageMarkup",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_markup_syntax",
+          "detail": "Exact v308 recognizes <timg=...> and requires the matching </timg> closing tag, caching the parsed span result by source identity and indexes."
+        },
+        {
+          "family": "exact_image_style_composition",
+          "detail": "The timg opening payload is parsed through the shared rs/l/o image-style specification before the closing-tag contents are captured as the inner label text."
+        },
+        {
+          "family": "exact_font_rendering",
+          "detail": "R55 RSFont resolves the parsed sprite id, applies the shared resize/recolor style transform, draws the sprite inline, then—when the captured inner text is non-empty—renders that text centered inside the sprite while preserving/restoring font state."
+        },
+        {
+          "family": "exact_layout_contract",
+          "detail": "The parsed image width plus style padding participates directly in RSFont text width/position calculations, proving this is inline labeled-image markup rather than an unrelated sprite loader."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for <timg=...>label</timg> inline sprite markup with optional centered label text."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/y$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InlineLabeledImageSpec",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parsed_state",
+          "detail": "The immutable record stores the resolved image id, style/padding state from rs/l/o$a, captured inner label text and the end index after </timg>."
+        },
+        {
+          "family": "exact_renderer_consumption",
+          "detail": "R55 RSFont consumes every field to resolve/style the Sprite, position it in the text line, render the optional centered label and advance past the complete timg span."
+        },
+        {
+          "family": "exact_owner_scope",
+          "detail": "The record is created only by InlineLabeledImageMarkup and has no independent parsing/rendering behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for one parsed timg inline labeled-image span."
+    }
+  ],
+  "conflicts": []
+}
