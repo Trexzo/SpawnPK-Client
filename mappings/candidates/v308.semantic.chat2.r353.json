@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind":"class","owner":"rs/m/a","name":null,"descriptor":null},
+      "proposed_name": "MouseInputEventBuffer",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_awt_producer","detail":"Exact v308 rs/C, the AWT applet/input base, constructs exactly one rs/m/a and writes mouse press/release/move and wheel events into it while input buffering is enabled."},
+        {"family":"exact_mouse_only_boundary","detail":"Keyboard handlers in rs/C update separate key-state structures and do not enqueue into rs/m/a, proving this buffer is mouse-input specific rather than a generic client input queue."},
+        {"family":"exact_ring_buffer","detail":"The class owns a fixed 256-entry rs/m/a$a ring, synchronized enqueue/drain/reset methods, read/write cursor state and an overflow counter."},
+        {"family":"exact_motion_coalescing","detail":"Type-3 events are coalesced with the newest pending type-3 record: current x/y/time are updated while min/max x/y bounds are widened, matching batched mouse-motion semantics."},
+        {"family":"exact_client_consumer","detail":"Client drains buffered rs/m/a$a records each cycle, updates mouse coordinates/button state from event types 1/2/3, handles type 5 as wheel input, and uses type 4 as the reset/fence marker emitted by the buffer."}
+      ],
+      "note":"Descriptive exact-v308 name for the synchronized 256-entry AWT mouse event ring consumed by Client."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind":"class","owner":"rs/m/a$a","name":null,"descriptor":null},
+      "proposed_name": "MouseInputEvent",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_record_shape","detail":"Each record stores event type, button/wheel value, x/y, min/max x/y and event timestamp; constructor/reset logic initializes current and min/max coordinates together."},
+        {"family":"exact_buffer_ownership","detail":"The only owning collection is R353 MouseInputEventBuffer, which preallocates 256 records and copies them into Client's drain array."},
+        {"family":"exact_client_decode","detail":"Client interprets the record type discriminator as mouse press/release/move/fence/wheel behavior and consumes the timestamp plus coordinate/button fields directly."}
+      ],
+      "note":"Descriptive exact-v308 name for one buffered mouse input record."
+    }
+  ],
+  "conflicts": []
+}
