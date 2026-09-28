@@ -159,6 +159,34 @@ def _source_name_profile(
     }
 
 
+def _package_class_collision_profile(
+    internal_name: str,
+    entries: set[str],
+) -> dict[str, Any]:
+    parts = internal_name.split("/")
+    package_parts = parts[:-1]
+    collisions: list[dict[str, int]] = []
+
+    for depth in range(1, len(package_parts) + 1):
+        prefix = "/".join(package_parts[:depth])
+        if prefix + ".class" in entries:
+            collisions.append(
+                {
+                    "package_depth": depth,
+                }
+            )
+
+    return {
+        "package_segment_count": len(package_parts),
+        "collision_count": len(collisions),
+        "collision_depths": [
+            row["package_depth"]
+            for row in collisions
+        ],
+        "has_collision": bool(collisions),
+    }
+
+
 def _class_metadata_profile(
     data: bytes | None,
 ) -> dict[str, Any]:
@@ -577,6 +605,18 @@ def audit_dependency_capsule(
             class_metadata_profile = _class_metadata_profile(
                 capsule_bytes
             )
+            readable_collision_profile = (
+                _package_class_collision_profile(
+                    internal,
+                    set(readable),
+                )
+            )
+            capsule_collision_profile = (
+                _package_class_collision_profile(
+                    internal,
+                    set(capsule),
+                )
+            )
 
             source_form_probes: dict[str, dict[str, Any]] = {}
             javap_probe = {
@@ -646,6 +686,8 @@ def audit_dependency_capsule(
                 "class_major": class_major,
                 "source_name_profile": source_name_profile,
                 "class_metadata_profile": class_metadata_profile,
+                "readable_collision_profile": readable_collision_profile,
+                "capsule_collision_profile": capsule_collision_profile,
                 "source_form_probes": source_form_probes,
                 "capsule_release_probe": source_form_probes.get(
                     "import_simple",
@@ -762,6 +804,30 @@ def audit_dependency_capsule(
         )
         for row in rows
     )
+    readable_package_class_collision_count = sum(
+        1
+        for row in rows
+        if row["readable_collision_profile"]["has_collision"]
+    )
+    capsule_package_class_collision_count = sum(
+        1
+        for row in rows
+        if row["capsule_collision_profile"]["has_collision"]
+    )
+    readable_collision_depths = Counter(
+        str(depth)
+        for row in rows
+        for depth in row[
+            "readable_collision_profile"
+        ]["collision_depths"]
+    )
+    capsule_collision_depths = Counter(
+        str(depth)
+        for row in rows
+        for depth in row[
+            "capsule_collision_profile"
+        ]["collision_depths"]
+    )
 
     source_form_classifications: dict[str, dict[str, Counter[str]]] = {}
     source_form_diagnostic_keys: dict[str, dict[str, Counter[str]]] = {}
@@ -836,6 +902,8 @@ def audit_dependency_capsule(
                 "class_major",
                 "source_name_profile",
                 "class_metadata_profile",
+                "readable_collision_profile",
+                "capsule_collision_profile",
                 "source_form_probes",
                 "capsule_release_probe",
                 "capsule_default_probe",
@@ -918,6 +986,18 @@ def audit_dependency_capsule(
             ),
             "method_signature_attribute_count": (
                 method_signature_attribute_count
+            ),
+            "readable_package_class_collision_count": (
+                readable_package_class_collision_count
+            ),
+            "capsule_package_class_collision_count": (
+                capsule_package_class_collision_count
+            ),
+            "readable_collision_depths": dict(
+                sorted(readable_collision_depths.items())
+            ),
+            "capsule_collision_depths": dict(
+                sorted(capsule_collision_depths.items())
             ),
             "source_form_classifications": {
                 source_form: {
