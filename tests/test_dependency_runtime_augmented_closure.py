@@ -209,6 +209,7 @@ class DependencyRuntimeAugmentedClosureTests(unittest.TestCase):
                     "classification": (
                         "dependency_official_replaceable"
                     ),
+                    "literal_target_proven": True,
                     "normalized_class_target": "dep/A",
                 },
                 {
@@ -217,12 +218,14 @@ class DependencyRuntimeAugmentedClosureTests(unittest.TestCase):
                     "classification": (
                         "dependency_official_replaceable"
                     ),
+                    "literal_target_proven": True,
                     "normalized_class_target": "dep/B",
                 },
                 {
                     "dynamic_target_id": "DYN_0003",
                     "category": "class_loading",
                     "classification": "bundled_unclassified",
+                    "literal_target_proven": True,
                     "normalized_class_target": "dep/C",
                 },
                 {
@@ -231,6 +234,7 @@ class DependencyRuntimeAugmentedClosureTests(unittest.TestCase):
                     "classification": (
                         "dependency_residual_bundled"
                     ),
+                    "literal_target_proven": True,
                     "normalized_class_target": "dep/D",
                 },
                 {
@@ -320,6 +324,44 @@ class DependencyRuntimeAugmentedClosureTests(unittest.TestCase):
             self.assertGreaterEqual(
                 summary["dynamic_closure_blocker_count"],
                 1,
+            )
+
+    def test_tampered_source_classification_cannot_authorize_root(self):
+        with tempfile.TemporaryDirectory() as td:
+            fx = self._fixture(Path(td))
+            dynamic = json.loads(
+                fx["dynamic"].read_text(encoding="utf-8")
+            )
+            dynamic["targets"][1]["classification"] = (
+                "bundled_unclassified"
+            )
+            fx["dynamic"].write_text(
+                json.dumps(dynamic) + "\n",
+                encoding="utf-8",
+            )
+
+            report = build_dependency_runtime_augmented_closure(
+                fx["plan"],
+                fx["static"],
+                fx["dynamic"],
+                fx["bundled"],
+                [fx["official"]],
+                include_identifiers=True,
+            )
+            row = next(
+                item
+                for item in report["dynamic_roots"]
+                if item.get("owner") == "dep/B"
+            )
+            self.assertEqual(
+                row["status"],
+                "protected_or_nontraversable_dynamic_target",
+            )
+            self.assertEqual(
+                report["summary"][
+                    "added_authorized_dynamic_root_count"
+                ],
+                0,
             )
 
     def test_public_and_private_reports_share_id(self):
