@@ -287,3 +287,38 @@ Source Milestone reusable outputs are emitted only after the authority artifact 
 
 Neither reusable workflow creates, pushes to, or otherwise populates `Trexzo/SpawnPK-Client-Source`.
 
+## Private caller repository model
+
+The reusable Source M1 workflows are designed to be invoked from a separate private staging repository when exact recovery inputs or unpublished source must remain private.
+
+In a reusable call:
+
+- artifact download and upload occur in the caller workflow run, so a private caller retains the recovered workspace, authority artifact, and publication artifact inside its private Actions boundary;
+- recovery tooling is checked out explicitly from public `Trexzo/SpawnPK-Client`, never implicitly from the caller repository;
+- the tooling checkout is pinned to the exact lowercase 40-hex `authority_commit` and the workflow requires checked-out `HEAD` to equal that commit;
+- checkout credentials are not persisted;
+- a prior-run artifact must come from a successfully completed Actions run in the caller repository;
+- when the caller itself is `Trexzo/SpawnPK-Client`, the workflow additionally proves that the authority commit is an ancestor of the prior run head;
+- for a different private caller repository, unrelated Git commit graphs are never compared. Exact authority is instead bound by the pinned tooling checkout plus the existing semantic authority/release verification.
+
+Private client JARs, private collision plans, and unpublished recovered source must not be uploaded as Actions artifacts of the public `Trexzo/SpawnPK-Client` repository merely to bridge the workflow chain.
+
+The intended private execution shape is therefore:
+
+```text
+private staging repository
+  private recovery inputs / recovered workspace
+          |
+          | reusable workflow call
+          v
+Trexzo/SpawnPK-Client tooling @ exact authority_commit
+          |
+          v
+private caller Actions artifacts
+  recovered workspace
+  -> verified Source M1 authority
+  -> verified Source Milestone bundle
+```
+
+Only a separately approved publication action may move the verified source-only publication bundle across the publication boundary.
+
