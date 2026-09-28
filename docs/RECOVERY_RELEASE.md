@@ -11,11 +11,17 @@ The command verifies that all supplied stage outputs agree on:
 - readable JAR SHA
 - recovered source workspace
 - clean rebuild state
+- official-first dependency transport authority/runtime boundary when present
 - round-trip authority readiness
 - optional rewritten-source acceptance
 
 It also records canonical SHA-256 digests of the exact index, class/member lineage and every
-stage report so R7D can later verify reproducibility.
+stage report so R7D can later verify reproducibility. When the clean rebuild used
+`official_first_restored`, R7A independently requires the R8DEP14-18 transport IDs,
+artifact/hash authority, zero project fallback, compile-only official dependencies,
+unchanged canonical/bundled inputs, and restored-bytecode readiness. Safe transport IDs
+are then carried in `stage_ids`; private plans and paths are not copied into the release
+manifest.
 
 ## Command
 
