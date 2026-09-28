@@ -334,6 +334,17 @@ def _read_code_calls(
 ) -> list[dict[str, Any]]:
     calls: list[dict[str, Any]] = []
     offsets = _instruction_offsets(code)
+    valid_offsets = set(offsets)
+    invalid_handlers = sorted(
+        target
+        for target in handler_targets
+        if target not in valid_offsets
+    )
+    if invalid_handlers:
+        raise DependencyRuntimeDynamicError(
+            "invalid exception-handler target(s): "
+            + ", ".join(str(value) for value in invalid_handlers)
+        )
     branch_targets = _branch_targets(code, offsets)
     for offset in offsets:
         opcode = code[offset]
