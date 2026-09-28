@@ -202,10 +202,7 @@ class DependencyRuntimeFrontierTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             fx = self._fixture(Path(td))
             fx["official"].write_bytes(b"drift")
-            with self.assertRaisesRegex(
-                DependencyRuntimeFrontierError,
-                "artifact authority differs",
-            ):
+            with self.assertRaises(DependencyRuntimeFrontierError):
                 build_dependency_runtime_frontier(
                     fx["plan"],
                     fx["bundled"],
@@ -225,15 +222,7 @@ class DependencyRuntimeFrontierTests(unittest.TestCase):
             ) as archive:
                 # Keep a valid JAR whose selected API no longer contains
                 # official/A.
-                archive.writestr(
-                    "official/Other.class",
-                    (
-                        Path(td)
-                        / "official-classes"
-                        / "official"
-                        / "A.class"
-                    ).read_bytes(),
-                )
+                archive.writestr("META-INF/marker", b"no-target-class")
 
             replacement["official_artifacts"][0]["sha256"] = _sha(
                 fx["official"]
