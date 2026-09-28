@@ -1,4 +1,4 @@
-# Chat 2 — exact-v308 cache Decompressor R360
+# Chat 2 — exact-v308 cache Decompressor R367
 
 Exact client authority:
 
@@ -46,4 +46,4 @@ cache name.
 The surrounding `rs/cache/b` manager owns multiple cache stores and file handles, but its
 original class-level identity is not independently fixed here.
 
-R360 remains non-canonical semantic research only.
+R367 remains non-canonical semantic research only.
