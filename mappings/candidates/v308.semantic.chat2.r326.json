@@ -1,0 +1,258 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/A",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemOnObjectPacket",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 192 and the target/source selection payload required by item on object."
+        },
+        {
+          "family": "exact_target_contract",
+          "detail": "The exact-current target-router table identifies opcode 192 as item on object, including its field order and Stream transforms."
+        },
+        {
+          "family": "exact_router_boundary",
+          "detail": "The semantic name describes only the item/spell target transport route. Target eligibility and gameplay effects remain server-authoritative and are not inferred from this packet object."
+        }
+      ],
+      "note": "Exact-v308 target-router packet identity from fixed opcode + exact-current protocol contract."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/B",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemOnPlayerPacket",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 14 and the target/source selection payload required by item on player."
+        },
+        {
+          "family": "exact_target_contract",
+          "detail": "The exact-current target-router table identifies opcode 14 as item on player, including its field order and Stream transforms."
+        },
+        {
+          "family": "exact_router_boundary",
+          "detail": "The semantic name describes only the item/spell target transport route. Target eligibility and gameplay effects remain server-authoritative and are not inferred from this packet object."
+        }
+      ],
+      "note": "Exact-v308 target-router packet identity from fixed opcode + exact-current protocol contract."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/y",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemOnInventoryItemPacket",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 53 and the target/source selection payload required by item on inventory item."
+        },
+        {
+          "family": "exact_target_contract",
+          "detail": "The exact-current target-router table identifies opcode 53 as item on inventory item, including its field order and Stream transforms."
+        },
+        {
+          "family": "exact_router_boundary",
+          "detail": "The semantic name describes only the item/spell target transport route. Target eligibility and gameplay effects remain server-authoritative and are not inferred from this packet object."
+        }
+      ],
+      "note": "Exact-v308 target-router packet identity from fixed opcode + exact-current protocol contract."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/z",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemOnNpcPacket",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 57 and the target/source selection payload required by item on NPC."
+        },
+        {
+          "family": "exact_target_contract",
+          "detail": "The exact-current target-router table identifies opcode 57 as item on NPC, including its field order and Stream transforms."
+        },
+        {
+          "family": "exact_router_boundary",
+          "detail": "The semantic name describes only the item/spell target transport route. Target eligibility and gameplay effects remain server-authoritative and are not inferred from this packet object."
+        }
+      ],
+      "note": "Exact-v308 target-router packet identity from fixed opcode + exact-current protocol contract."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/E",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpellOnGroundItemPacket",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 181 and the target/source selection payload required by spell on ground item."
+        },
+        {
+          "family": "exact_target_contract",
+          "detail": "The exact-current target-router table identifies opcode 181 as spell on ground item, including its field order and Stream transforms."
+        },
+        {
+          "family": "exact_router_boundary",
+          "detail": "The semantic name describes only the item/spell target transport route. Target eligibility and gameplay effects remain server-authoritative and are not inferred from this packet object."
+        }
+      ],
+      "note": "Exact-v308 target-router packet identity from fixed opcode + exact-current protocol contract."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/F",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpellOnInventoryItemPacket",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 237 and the target/source selection payload required by spell on inventory item."
+        },
+        {
+          "family": "exact_target_contract",
+          "detail": "The exact-current target-router table identifies opcode 237 as spell on inventory item, including its field order and Stream transforms."
+        },
+        {
+          "family": "exact_router_boundary",
+          "detail": "The semantic name describes only the item/spell target transport route. Target eligibility and gameplay effects remain server-authoritative and are not inferred from this packet object."
+        }
+      ],
+      "note": "Exact-v308 target-router packet identity from fixed opcode + exact-current protocol contract."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/G",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpellOnNpcPacket",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 131 and the target/source selection payload required by spell on NPC."
+        },
+        {
+          "family": "exact_target_contract",
+          "detail": "The exact-current target-router table identifies opcode 131 as spell on NPC, including its field order and Stream transforms."
+        },
+        {
+          "family": "exact_router_boundary",
+          "detail": "The semantic name describes only the item/spell target transport route. Target eligibility and gameplay effects remain server-authoritative and are not inferred from this packet object."
+        }
+      ],
+      "note": "Exact-v308 target-router packet identity from fixed opcode + exact-current protocol contract."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/H",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpellOnPlayerPacket",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 249 and the target/source selection payload required by spell on player."
+        },
+        {
+          "family": "exact_target_contract",
+          "detail": "The exact-current target-router table identifies opcode 249 as spell on player, including its field order and Stream transforms."
+        },
+        {
+          "family": "exact_router_boundary",
+          "detail": "The semantic name describes only the item/spell target transport route. Target eligibility and gameplay effects remain server-authoritative and are not inferred from this packet object."
+        }
+      ],
+      "note": "Exact-v308 target-router packet identity from fixed opcode + exact-current protocol contract."
+    }
+  ],
+  "conflicts": []
+}
