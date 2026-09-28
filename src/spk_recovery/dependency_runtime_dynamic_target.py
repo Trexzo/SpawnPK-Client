@@ -13,6 +13,10 @@ from .dependency_runtime_frontier import (
     _load_private_plan,
     _normalize_prefixes,
 )
+from .dependency_runtime_dynamic import (
+    DependencyRuntimeDynamicError,
+    build_dependency_runtime_dynamic_inventory,
+)
 
 
 class DependencyRuntimeDynamicTargetError(ValueError):
@@ -242,6 +246,33 @@ def build_dependency_runtime_dynamic_target_classification(
         raise DependencyRuntimeDynamicTargetError(
             "runtime dynamic authority is bound to a different "
             "runtime resource authority"
+        )
+
+    try:
+        reproduced_dynamic = (
+            build_dependency_runtime_dynamic_inventory(
+                private_runtime_resource_path,
+                bundled_jar,
+                include_identifiers=True,
+            )
+        )
+    except DependencyRuntimeDynamicError as exc:
+        raise DependencyRuntimeDynamicTargetError(
+            "failed to reproduce runtime dynamic authority: "
+            + str(exc)
+        ) from exc
+
+    if dynamic.get("runtime_dynamic_id") != reproduced_dynamic.get(
+        "runtime_dynamic_id"
+    ):
+        raise DependencyRuntimeDynamicTargetError(
+            "runtime dynamic authority ID does not reproduce"
+        )
+    if dynamic.get("callsites") != reproduced_dynamic.get(
+        "callsites"
+    ):
+        raise DependencyRuntimeDynamicTargetError(
+            "runtime dynamic callsite authority does not reproduce"
         )
 
     prefixes = _normalize_prefixes(
