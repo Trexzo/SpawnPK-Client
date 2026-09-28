@@ -34,6 +34,7 @@ class DependencyRuntimeReadinessTests(unittest.TestCase):
         resource_id = "DEPRUNTIMEEXTRESOURCE_" + "2" * 20
         target_id = "DEPRUNTIMEDYNAMICTARGET_" + "3" * 20
         replacement_id = "DEPREPLACE_" + "4" * 20
+        base_resource_id = "DEPRUNTIMERESOURCE_" + "5" * 20
 
         if blocked:
             roots = [
@@ -145,6 +146,7 @@ class DependencyRuntimeReadinessTests(unittest.TestCase):
             "kind": "dependency_runtime_extended_resource_equivalence",
             "runtime_extended_resource_id": resource_id,
             "runtime_extended_closure_id": closure_id,
+            "runtime_resource_id": base_resource_id,
             "bundled_jar_sha256": bundled_sha,
             "official_artifact_sha256": [official_sha],
             "summary": resource_summary,
@@ -159,6 +161,7 @@ class DependencyRuntimeReadinessTests(unittest.TestCase):
             "schema_version": 1,
             "kind": "dependency_runtime_dynamic_target_classification",
             "runtime_dynamic_target_id": target_id,
+            "runtime_resource_id": base_resource_id,
             "replacement_plan_id": replacement_id,
             "bundled_jar_sha256": bundled_sha,
             "targets": targets,
@@ -247,6 +250,31 @@ class DependencyRuntimeReadinessTests(unittest.TestCase):
             with self.assertRaisesRegex(
                 DependencyRuntimeReadinessError,
                 "static_class_closure_blocker_count",
+            ):
+                build_dependency_runtime_readiness(
+                    fx["closure"],
+                    fx["resource"],
+                    fx["dynamic"],
+                    fx["bundled"],
+                    [fx["official"]],
+                )
+
+    def test_resource_ancestry_drift_is_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            fx = self._fixture(Path(td))
+            resource = json.loads(
+                fx["resource"].read_text(encoding="utf-8")
+            )
+            resource["runtime_resource_id"] = (
+                "DEPRUNTIMERESOURCE_" + "9" * 20
+            )
+            fx["resource"].write_text(
+                json.dumps(resource) + "\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                DependencyRuntimeReadinessError,
+                "different R8DEP26",
             ):
                 build_dependency_runtime_readiness(
                     fx["closure"],
