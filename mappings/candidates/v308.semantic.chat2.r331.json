@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/h/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DefinitionReloadManager",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_item_definition_reload",
+          "detail": "The first gated reload path resets the ItemDefinition backing loader/cache state, clears the ItemDefinition cache, invokes the client definition reset path, clears three shared sprite/model caches, refreshes the client and reloads associated definition-backed resources before returning true."
+        },
+        {
+          "family": "exact_npc_definition_reload",
+          "detail": "The second gated path clears NpcDefinition model/cache state, rebuilds the 20-entry definition cache array, re-resolves every live NPC's NpcDefinition by id and copies the refreshed size/animation/movement fields back onto the live NPC instances."
+        },
+        {
+          "family": "exact_main_loop_gate",
+          "detail": "The main Client loop invokes both static reload methods after shortcut/command handling; if either performs work the client displays 'Loading - please wait.', sleeps briefly and returns early from that cycle."
+        },
+        {
+          "family": "exact_command_trigger",
+          "detail": "The live client-command dispatcher rs/n/a sets the two rs/h/f request flags, including an explicit 'reset' branch for the item-definition reload path, so reload work is deferred from command parsing into the client loop."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the deferred ItemDefinition/NpcDefinition hot-reload coordinator. It is distinct from the callback interfaces/managers sharing package rs/h."
+    }
+  ],
+  "conflicts": []
+}
