@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_486675F3026DFE05BE35",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_1745F265E82AA47A04BE",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000989",
+      "owner_logical_id": "CLIENT_CLASS_000989",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner":"rs/t/a/g","name":null,"descriptor":null},
+      "proposed_name": "WanderingMerchantItemRegistry",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_config_authority","detail":"Exact v308 constructs configs/wandering_merchant.yaml (or compiled configs/w.bin) and walks every merchant entry's nested items map, reading each item id."},
+        {"family":"exact_item_normalization","detail":"Before insertion the loader resolves noted/certificate-style item redirects through ItemDefinition fields, except the exact excluded ids 995, 20693 and 20842, then stores the normalized id in one static integer set."},
+        {"family":"exact_live_consumer","detail":"Client constructs and loads this class during startup. The only external live consumer checks the static set while rendering item-name text and, when the associated client config flag is enabled, appends exact marker '<img=370>' to matching item names."},
+        {"family":"exact_scope_boundary","detail":"The class owns no merchant rotation, price, stock or purchase behavior; exact v308 proves only the registry of item ids sourced from wandering_merchant config, so the name stops at WanderingMerchantItemRegistry."}
+      ],
+      "note":"Descriptive exact-v308 name for the startup-loaded registry of item IDs present in wandering merchant configuration. It does not claim server-side merchant stock/rotation authority."
+    }
+  ],
+  "unresolved": []
+}
