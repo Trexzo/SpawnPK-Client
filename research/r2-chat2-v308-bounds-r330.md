@@ -6,9 +6,9 @@ Exact client authority:
 
 ## Result
 
-- `rs/g/a` -> `CLIENT_CLASS_000176` -> `Bounds`
-- proposal: `SEMPROP_E610CE515C0035F4FADB`
-- review: `SEMREVIEW_B8A900961BF01CA8E08C`
+- `rs/g/a` -> `CLIENT_CLASS_000177` -> `Bounds`
+- proposal: `SEMPROP_7E023E2EA223D9262EA7`
+- review: `SEMREVIEW_4E74912844D1F6296FC4`
 
 ## Exact v308 structure
 
