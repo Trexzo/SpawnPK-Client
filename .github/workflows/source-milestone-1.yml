@@ -16,6 +16,41 @@ on:
         description: Exact SpawnPK-Client authority commit (lowercase 40 hex)
         required: true
         type: string
+  workflow_call:
+    inputs:
+      authority_run_id:
+        description: Optional prior run ID; blank consumes the caller run artifact
+        required: false
+        default: ""
+        type: string
+      authority_artifact_name:
+        description: Source M1 authority artifact name
+        required: false
+        default: spawnpk-v308-source-authority
+        type: string
+      authority_commit:
+        description: Exact SpawnPK-Client authority commit (lowercase 40 hex)
+        required: true
+        type: string
+    outputs:
+      milestone_id:
+        description: Verified Source Milestone manifest ID
+        value: ${{ jobs.verify-source-milestone.outputs.milestone_id }}
+      bundle_id:
+        description: Verified source publication bundle ID
+        value: ${{ jobs.verify-source-milestone.outputs.bundle_id }}
+      authority_verification_id:
+        description: Source authority artifact verification ID
+        value: ${{ jobs.verify-source-milestone.outputs.authority_verification_id }}
+      bundle_verification_id:
+        description: Source publication bundle verification ID
+        value: ${{ jobs.verify-source-milestone.outputs.bundle_verification_id }}
+      source_tree_sha256:
+        description: Canonical verified Java source-tree SHA-256
+        value: ${{ jobs.verify-source-milestone.outputs.source_tree_sha256 }}
+      publication_artifact_name:
+        description: Uploaded verified Source Milestone artifact name
+        value: ${{ jobs.verify-source-milestone.outputs.publication_artifact_name }}
 
 permissions:
   contents: read
@@ -24,6 +59,13 @@ permissions:
 jobs:
   verify-source-milestone:
     runs-on: ubuntu-latest
+    outputs:
+      milestone_id: ${{ steps.result.outputs.milestone_id }}
+      bundle_id: ${{ steps.result.outputs.bundle_id }}
+      authority_verification_id: ${{ steps.result.outputs.authority_verification_id }}
+      bundle_verification_id: ${{ steps.result.outputs.bundle_verification_id }}
+      source_tree_sha256: ${{ steps.result.outputs.source_tree_sha256 }}
+      publication_artifact_name: ${{ steps.result.outputs.publication_artifact_name }}
     steps:
       - name: Checkout recovery tooling
         uses: actions/checkout@v4
@@ -51,7 +93,15 @@ jobs:
           git cat-file -e "$AUTHORITY_COMMIT^{commit}"
           git merge-base --is-ancestor "$AUTHORITY_COMMIT" HEAD
 
-      - name: Download Source M1 authority artifact
+      - name: Download Source M1 authority artifact from caller run
+        if: ${{ inputs.authority_run_id == '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.authority_artifact_name }}
+          path: authority
+
+      - name: Download Source M1 authority artifact from prior run
+        if: ${{ inputs.authority_run_id != '' }}
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.authority_artifact_name }}
@@ -189,6 +239,81 @@ jobs:
                   "publication bundle contains forbidden files: "
                   + ", ".join(sorted(bad))
               )
+          PY
+
+      - name: Export verified workflow outputs
+        id: result
+        shell: bash
+        env:
+          AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          milestone = json.loads(
+              Path("source-m1/SOURCE-MILESTONE.json").read_text(
+                  encoding="utf-8"
+              )
+          )
+          bundle = json.loads(
+              Path(
+                  "source-m1/publication/BUNDLE.json"
+              ).read_text(encoding="utf-8")
+          )
+          authority_verification = json.loads(
+              Path(
+                  "source-m1/verification/"
+                  "SOURCE-AUTHORITY-VERIFICATION.json"
+              ).read_text(encoding="utf-8")
+          )
+          bundle_verification = json.loads(
+              Path(
+                  "source-m1/verification/"
+                  "SOURCE-BUNDLE-VERIFICATION.json"
+              ).read_text(encoding="utf-8")
+          )
+
+          if not authority_verification.get("verified"):
+              raise SystemExit(
+                  "authority artifact verification is not true"
+              )
+          if not bundle_verification.get("verified"):
+              raise SystemExit(
+                  "publication bundle verification is not true"
+              )
+          if not milestone.get("publishable"):
+              raise SystemExit(
+                  "source milestone publishable is not true"
+              )
+
+          values = {
+              "milestone_id": milestone["milestone_id"],
+              "bundle_id": bundle["bundle_id"],
+              "authority_verification_id": (
+                  authority_verification["verification_id"]
+              ),
+              "bundle_verification_id": (
+                  bundle_verification["verification_id"]
+              ),
+              "source_tree_sha256": (
+                  milestone["source_tree"]["sha256"]
+              ),
+              "publication_artifact_name": (
+                  "spawnpk-source-m1-"
+                  + os.environ["AUTHORITY_COMMIT"]
+              ),
+          }
+          with open(
+              os.environ["GITHUB_OUTPUT"],
+              "a",
+              encoding="utf-8",
+              newline="\n",
+          ) as stream:
+              for key, value in values.items():
+                  stream.write(f"{key}={value}\n")
           PY
 
       - name: Upload verified Source Milestone artifact
