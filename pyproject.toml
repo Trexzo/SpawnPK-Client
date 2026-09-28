@@ -51,6 +51,7 @@ spk-dependency-reverse-transport-apply = "spk_recovery.dependency_reverse_transp
 spk-dependency-official-derived-compile = "spk_recovery.dependency_official_derived_compile_cli:main"
 spk-dependency-runtime-frontier = "spk_recovery.dependency_runtime_frontier_cli:main"
 spk-dependency-runtime-closure = "spk_recovery.dependency_runtime_closure_cli:main"
+spk-dependency-runtime-resource = "spk_recovery.dependency_runtime_resource_cli:main"
 spk-dependency-references = "spk_recovery.dependency_reference_surface:main"
 spk-pom-authority = "spk_recovery.pom_authority:main"
 spk-roundtrip-verify = "spk_recovery.roundtrip_verify_cli:main"
