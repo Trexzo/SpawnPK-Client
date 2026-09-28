@@ -338,6 +338,37 @@ def build_dependency_reverse_transport_plan(
         str(row["code"])
         for row in blockers
     )
+    public_blockers = [
+        {
+            "blocker_id": (
+                "DEPREVERSEBLOCK_"
+                + _stable_digest(row)[:16].upper()
+            ),
+            "code": row["code"],
+        }
+        for row in blockers
+    ]
+    public_blockers.sort(
+        key=lambda row: (
+            row["code"],
+            row["blocker_id"],
+        )
+    )
+
+    completeness = {
+        "class_identity_no_transport_count": (
+            class_identity_count
+        ),
+        "member_identity_no_transport_count": (
+            member_identity_count
+        ),
+        "owner_only_member_transport_count": (
+            owner_only_member_transport_count
+        ),
+        "ignored_nonreplaceable_accepted_member_count": (
+            ignored_nonreplaceable_accepted_count
+        ),
+    }
 
     public_material = {
         "dependency_remap_proof_id": remap_id,
@@ -349,7 +380,8 @@ def build_dependency_reverse_transport_plan(
         ],
         "class_reverse": public_class_rows,
         "member_reverse": public_member_rows,
-        "blocker_counts": dict(sorted(blocker_counts.items())),
+        "completeness": completeness,
+        "blockers": public_blockers,
     }
     reverse_plan_id = (
         "DEPREVERSE_"
@@ -370,18 +402,7 @@ def build_dependency_reverse_transport_plan(
         "summary": {
             "class_reverse_count": len(class_candidates),
             "member_reverse_count": len(member_candidates),
-            "class_identity_no_transport_count": (
-                class_identity_count
-            ),
-            "member_identity_no_transport_count": (
-                member_identity_count
-            ),
-            "owner_only_member_transport_count": (
-                owner_only_member_transport_count
-            ),
-            "ignored_nonreplaceable_accepted_member_count": (
-                ignored_nonreplaceable_accepted_count
-            ),
+            **completeness,
             "blocker_count": len(blockers),
             "blocker_counts": dict(
                 sorted(blocker_counts.items())
@@ -427,18 +448,27 @@ def build_dependency_reverse_transport_plan(
             else public_member_rows
         ),
         "blockers": (
-            blockers
-            if include_identifiers
-            else [
+            [
                 {
-                    "blocker_id": (
-                        "DEPREVERSEBLOCK_"
-                        + _stable_digest(row)[:16].upper()
-                    ),
-                    "code": row["code"],
+                    **public,
+                    **private,
                 }
-                for row in blockers
+                for public, private in zip(
+                    public_blockers,
+                    sorted(
+                        blockers,
+                        key=lambda row: (
+                            row["code"],
+                            (
+                                "DEPREVERSEBLOCK_"
+                                + _stable_digest(row)[:16].upper()
+                            ),
+                        ),
+                    ),
+                )
             ]
+            if include_identifiers
+            else public_blockers
         ),
         "identifiers_included": include_identifiers,
     }
