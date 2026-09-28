@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_0C940EC4C68D5DDC6CF0",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_0CD1AD892C4A033E20F1",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001124",
+      "owner_logical_id": "CLIENT_CLASS_001124",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/y/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Scheduler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scheduler_loop",
+          "detail": "Exact v308 rs/y/c is @Singleton, owns a CopyOnWriteArrayList of ScheduledMethod plus injected ScheduledExecutorService, computes Duration since last execution against Schedule interval/unit and triggers due tasks."
+        },
+        {
+          "family": "exact_execution_modes",
+          "detail": "Due tasks either submit asynchronously through ScheduledExecutorService when the annotation flag is true or invoke synchronously; execution supports an optional Runnable lambda or reflected Method.invoke."
+        },
+        {
+          "family": "exact_surviving_logs",
+          "detail": "The class preserves the literals 'Scheduled task triggered: {}', 'error invoking scheduled task' and 'error during scheduled task'."
+        },
+        {
+          "family": "exact_application_wiring",
+          "detail": "R321 ClientApplicationBootstrap/ClientApplicationModule reference this scheduler, while rs/s/g registers discovered plugin scheduled methods into it."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "RuneLite historical net.runelite.client.task.Scheduler contains the same task-trigger log and Schedule/ScheduledMethod architecture."
+        }
+      ],
+      "note": "Source-proven historical Scheduler identity corroborated by exact-v308 lifecycle, logs and application wiring."
+    },
+    {
+      "proposal_id": "SEMPROP_592193F9E3C091156288",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001122",
+      "owner_logical_id": "CLIENT_CLASS_001122",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/y/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Schedule",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_annotation_contract",
+          "detail": "Exact v308 rs/y/a is a runtime-retained method annotation whose members are long interval, ChronoUnit unit and boolean asynchronous flag defaulting false."
+        },
+        {
+          "family": "exact_scheduler_consumers",
+          "detail": "The live plugin scan path rs/s/g reads this annotation from methods and builds rs/y/b scheduled-method records that are registered into rs/y/c."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "RuneLite historical net.runelite.client.task.Schedule has the same method-targeted runtime annotation shape with interval, ChronoUnit and asynchronous scheduling semantics."
+        }
+      ],
+      "note": "Historical RuneLite source identity is corroborated by exact-v308 structure and live scheduler wiring."
+    },
+    {
+      "proposal_id": "SEMPROP_7EFB8E37CCAA8E13556A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001123",
+      "owner_logical_id": "CLIENT_CLASS_001123",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/y/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ScheduledMethod",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_record_shape",
+          "detail": "Exact v308 rs/y/b stores Schedule annotation, reflected Method, target Object, optional Runnable lambda and last-run Instant; construction initializes last to Instant.now()."
+        },
+        {
+          "family": "exact_surviving_literal",
+          "detail": "Its toString bootstrap preserves the exact text 'ScheduledMethod(schedule=..., method=..., object=..., lambda=..., last=...)', directly exposing the historical class noun."
+        },
+        {
+          "family": "exact_registry_role",
+          "detail": "rs/s/g constructs these records for annotated plugin methods and rs/y/c stores and executes them."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "The RuneLite task scheduler family uses the same ScheduledMethod record between Schedule and Scheduler."
+        }
+      ],
+      "note": "The class name is directly preserved by the exact-v308 ScheduledMethod(...) literal and corroborated by historical RuneLite source."
+    }
+  ],
+  "unresolved": []
+}
