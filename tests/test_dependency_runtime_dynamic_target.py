@@ -365,6 +365,10 @@ class DependencyRuntimeDynamicTargetTests(unittest.TestCase):
                     "runtime_capsule_mutation_ready"
                 ]
             )
+            self.assertEqual(
+                report["summary"]["unresolved_or_blocked_count"],
+                9,
+            )
 
     def test_private_rows_preserve_exact_normalization(self):
         with tempfile.TemporaryDirectory() as td:
