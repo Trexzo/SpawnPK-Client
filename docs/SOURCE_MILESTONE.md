@@ -27,6 +27,7 @@ A milestone is publishable only when all of the following hold:
 9. Clean project compilation completes.
 10. Project binary fallback count is exactly zero.
 11. Generated project classes exactly equal the expected project class set: no missing and no unexpected classes.
+12. When clean rebuild uses `official_first_restored`, its R8DEP14-18 authority IDs, artifact hashes, zero-fallback proof, bundled-runtime boundary, and restored-bytecode readiness are complete and valid.
 
 A failed gate is recorded in `blockers`; it never gets silently downgraded.
 
@@ -43,6 +44,7 @@ The deterministic milestone manifest has:
 - fallback policy
 - recovered workspace, build authority, clean rebuild, release and release-verification IDs
 - collision-derived provenance when present
+- official-first dependency transport provenance when present
 - exact project class-set equality
 - publication target and deterministic export layout
 
@@ -75,6 +77,7 @@ It records:
 - deterministic fallback policy
 - recovered workspace, build authority, clean rebuild, release and release-verification IDs
 - collision provenance when present
+- official-first dependency transport provenance when present
 - canonical source-tree authority
 - exact project class-set status
 
