@@ -1,0 +1,289 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AddFriendPacket",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 188 first and then serializes one i64 name hash."
+        },
+        {
+          "family": "exact_protocol_identity",
+          "detail": "Exact protocol corpus fixes C2S188 as ADD_FRIEND with one i64 name hash; this class writes opcode 188 then its sole long field."
+        },
+        {
+          "family": "exact_packet_value_shape",
+          "detail": "The class has no unrelated behavior: its constructor captures only the packet payload state (or no state for the zero-payload close request) and its sole method serializes that packet into Stream."
+        }
+      ],
+      "note": "Exact-v308 packet name from fixed opcode + exact current protocol contract; no gameplay meaning beyond the transport contract is inferred."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AddIgnorePacket",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 133 first and then serializes one i64 name hash."
+        },
+        {
+          "family": "exact_protocol_identity",
+          "detail": "Exact protocol corpus fixes C2S133 as ADD_IGNORE with one i64 name hash; this class writes opcode 133 then its sole long field."
+        },
+        {
+          "family": "exact_packet_value_shape",
+          "detail": "The class has no unrelated behavior: its constructor captures only the packet payload state (or no state for the zero-payload close request) and its sole method serializes that packet into Stream."
+        }
+      ],
+      "note": "Exact-v308 packet name from fixed opcode + exact current protocol contract; no gameplay meaning beyond the transport contract is inferred."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WidgetActionPacket",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 185 first and then serializes one widget id."
+        },
+        {
+          "family": "exact_protocol_identity",
+          "detail": "Exact outbound menu-action matrix fixes C2S185 as the generic widget action carrying widgetId; this class writes opcode 185 then its sole int with the matching u16 writer."
+        },
+        {
+          "family": "exact_packet_value_shape",
+          "detail": "The class has no unrelated behavior: its constructor captures only the packet payload state (or no state for the zero-payload close request) and its sole method serializes that packet into Stream."
+        }
+      ],
+      "note": "Exact-v308 packet name from fixed opcode + exact current protocol contract; no gameplay meaning beyond the transport contract is inferred."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CloseInterfacePacket",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 130 first and then serializes no payload."
+        },
+        {
+          "family": "exact_protocol_identity",
+          "detail": "Exact dialogue/interface lifecycle fixes C2S130 as the client close-interface request; this class writes opcode 130 and no payload."
+        },
+        {
+          "family": "exact_packet_value_shape",
+          "detail": "The class has no unrelated behavior: its constructor captures only the packet payload state (or no state for the zero-payload close request) and its sole method serializes that packet into Stream."
+        }
+      ],
+      "note": "Exact-v308 packet name from fixed opcode + exact current protocol contract; no gameplay meaning beyond the transport contract is inferred."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RemoveFriendPacket",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 215 first and then serializes one i64 name hash."
+        },
+        {
+          "family": "exact_protocol_identity",
+          "detail": "Exact protocol corpus fixes C2S215 as REMOVE_FRIEND with one i64 name hash; this class writes opcode 215 then its sole long field."
+        },
+        {
+          "family": "exact_packet_value_shape",
+          "detail": "The class has no unrelated behavior: its constructor captures only the packet payload state (or no state for the zero-payload close request) and its sole method serializes that packet into Stream."
+        }
+      ],
+      "note": "Exact-v308 packet name from fixed opcode + exact current protocol contract; no gameplay meaning beyond the transport contract is inferred."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RemoveIgnorePacket",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 74 first and then serializes one i64 name hash."
+        },
+        {
+          "family": "exact_protocol_identity",
+          "detail": "Exact protocol corpus fixes C2S74 as REMOVE_IGNORE with one i64 name hash; this class writes opcode 74 then its sole long field."
+        },
+        {
+          "family": "exact_packet_value_shape",
+          "detail": "The class has no unrelated behavior: its constructor captures only the packet payload state (or no state for the zero-payload close request) and its sole method serializes that packet into Stream."
+        }
+      ],
+      "note": "Exact-v308 packet name from fixed opcode + exact current protocol contract; no gameplay meaning beyond the transport contract is inferred."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AmountInputPacket",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 208 first and then serializes one i32 amount."
+        },
+        {
+          "family": "exact_protocol_identity",
+          "detail": "Exact native-input contract fixes C2S208 as amount input; this class writes opcode 208 then its sole int through Stream.g(int), matching the four-byte amount payload."
+        },
+        {
+          "family": "exact_packet_value_shape",
+          "detail": "The class has no unrelated behavior: its constructor captures only the packet payload state (or no state for the zero-payload close request) and its sole method serializes that packet into Stream."
+        }
+      ],
+      "note": "Exact-v308 packet name from fixed opcode + exact current protocol contract; no gameplay meaning beyond the transport contract is inferred."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/N",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ObjectOption1Packet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 132 first and then serializes three u16 object/world fields."
+        },
+        {
+          "family": "exact_protocol_identity",
+          "detail": "Exact outbound action matrix fixes C2S132 as object option 1 with objectId/worldX/worldY; this class writes opcode 132 and exactly three int fields through the matching u16 transforms."
+        },
+        {
+          "family": "exact_packet_value_shape",
+          "detail": "The class has no unrelated behavior: its constructor captures only the packet payload state (or no state for the zero-payload close request) and its sole method serializes that packet into Stream."
+        }
+      ],
+      "note": "Exact-v308 packet name from fixed opcode + exact current protocol contract; no gameplay meaning beyond the transport contract is inferred."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/X",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InventoryMovePacket",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 214 first and then serializes four inventory-move fields."
+        },
+        {
+          "family": "exact_protocol_identity",
+          "detail": "Exact production protocol evidence fixes C2S214 as inventory move and observes authoritative container republish afterward; this class writes opcode 214 followed by exactly four int payload fields."
+        },
+        {
+          "family": "exact_packet_value_shape",
+          "detail": "The class has no unrelated behavior: its constructor captures only the packet payload state (or no state for the zero-payload close request) and its sole method serializes that packet into Stream."
+        }
+      ],
+      "note": "Exact-v308 packet name from fixed opcode + exact current protocol contract; no gameplay meaning beyond the transport contract is inferred."
+    }
+  ],
+  "conflicts": []
+}
