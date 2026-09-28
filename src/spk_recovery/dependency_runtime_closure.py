@@ -35,6 +35,11 @@ _NATIVE_SUFFIXES = (
     ".dylib",
     ".jnilib",
 )
+_PLATFORM_PREFIXES = (
+    "java/",
+    "jdk/",
+    "sun/",
+)
 
 
 def _stable_digest(value: Any) -> str:
@@ -398,6 +403,9 @@ def build_dependency_runtime_closure(
         elif owner in class_entries:
             status = "unresolved"
             reason = "bundled_owner_without_depreplace_authority"
+        elif owner.startswith(_PLATFORM_PREFIXES):
+            status = "platform_runtime"
+            reason = "platform_namespace"
         else:
             status = "unresolved"
             reason = "non_bundled_owner_without_depreplace_authority"
