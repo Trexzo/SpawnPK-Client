@@ -476,6 +476,38 @@ def build_dependency_runtime_closure(
         and not reflection_dynamic_loading_unproven
     )
 
+    material_owners = [
+        {
+            key: value
+            for key, value in row.items()
+            if key not in {"owner", "official_target", "artifact"}
+        }
+        for row in status_rows
+    ]
+    material_edges = [
+        {
+            key: value
+            for key, value in row.items()
+            if key not in {"source", "target"}
+        }
+        for row in edge_public
+    ]
+    material_resources = {
+        **{
+            key: value
+            for key, value in resources.items()
+            if key != "artifacts"
+        },
+        "artifacts": [
+            {
+                key: value
+                for key, value in row.items()
+                if key not in {"artifact", "resource_entries"}
+            }
+            for row in resources["artifacts"]
+        ],
+    }
+
     material = {
         "runtime_frontier_id": frontier.get("runtime_frontier_id"),
         "replacement_plan_id": plan.get("replacement_plan_id"),
@@ -485,9 +517,9 @@ def build_dependency_runtime_closure(
             hashlib.sha256(root.encode("utf-8")).hexdigest()
             for root in roots
         ),
-        "owners": status_rows,
-        "edges": edge_public,
-        "resources": resources,
+        "owners": material_owners,
+        "edges": material_edges,
+        "resources": material_resources,
         "runtime_capsule_mutation_ready": runtime_ready,
         "reflection_dynamic_loading_unproven": (
             reflection_dynamic_loading_unproven
