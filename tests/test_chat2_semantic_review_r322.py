@@ -25,12 +25,12 @@ class Chat2SemanticReviewR322Tests(unittest.TestCase):
         expected=_load("mappings/candidates/v308.semantic-review.chat2.r322.json")
         self.assertEqual(actual["proposal_count"],1)
         self.assertEqual(actual["unresolved"],[])
-        self.assertEqual(actual["review_id"],"SEMREVIEW_E3F62D5DA27AC6E49CA4")
+        self.assertEqual(actual["review_id"],"SEMREVIEW_3A168E8B75A5E913F491")
         self.assertEqual(actual,expected)
 
     def test_r322_expected_stable_id(self):
         review=_load("mappings/candidates/v308.semantic-review.chat2.r322.json")
-        self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"IncomingPacketHandler":"CLIENT_CLASS_000686"})
+        self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"OutgoingPacket":"CLIENT_CLASS_000686"})
 
     def test_r322_name_owner_and_id_do_not_overlap_prior_reviews(self):
         current=_load("mappings/candidates/v308.semantic-review.chat2.r322.json")

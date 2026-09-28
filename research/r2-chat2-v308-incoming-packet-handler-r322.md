@@ -1,53 +1,68 @@
-# Chat 2 — exact-v308 incoming packet handler contract R322
+# Chat 2 — exact-v308 outgoing packet contract R322
 
 Exact client authority:
 
 `854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`
 
-## Result
+## Corrected result
 
-- `rs/o/a/a/a` -> `CLIENT_CLASS_000686` -> `IncomingPacketHandler`
-- proposal: `SEMPROP_18FD8C7C3CEE516BCBD7`
-- review: `SEMREVIEW_E3F62D5DA27AC6E49CA4`
+- `rs/o/a/a/a` -> `CLIENT_CLASS_000686` -> `OutgoingPacket`
+- proposal: `SEMPROP_2C9876842D87391F87A2`
+- review: `SEMREVIEW_3A168E8B75A5E913F491`
+
+The first R322 attempt called this interface `IncomingPacketHandler`. That interpretation
+was rejected after direct inspection of the concrete family.
 
 ## Exact contract
 
-The interface has one method only:
+The interface exposes one method:
 
 `void a(rs.x.e)`
 
 R29 already identifies `rs/x/e` as `Stream`.
 
-## Exact Client dispatch
+## Direction proof
 
-Client contains a direct helper accepting this interface. In the active connected/session
-state it invokes the handler with the live incoming packet Stream `Client.fv`.
-
-Immediately after handler execution the same Client path performs incoming-buffer
-bookkeeping and packet-dispatch exception handling.
-
-This is therefore the ordinary incoming/server packet handler contract, not a generic
-Stream consumer.
-
-## Concrete family
-
-Exact v308 contains 52 concrete classes under:
+Exact v308 contains **52** concrete implementations under:
 
 `rs/o/a/a/a/*`
 
-that implement/reference this base interface. The stable class sequence is contiguous:
+Every inspected implementation serializes a packet, rather than reading one.
 
-- `rs/o` is already R52 `CLIENT_CLASS_000685`
-- base handler is `CLIENT_CLASS_000686`
-- concrete packet-handler family occupies the following IDs through `000738`
-- `rs/p` begins at `CLIENT_CLASS_000739`
+The method pattern is:
+
+1. write one fixed packet opcode with `Stream.a(int)`;
+2. write zero or more constructor-held payload fields through Stream write transforms;
+3. return.
+
+Examples include fixed outgoing opcodes:
+
+- 188
+- 133
+- 72
+- 202
+- 210
+
+Concrete classes are packet-shaped value objects. Some hold one long/int; others hold
+multiple primitive payload values; zero-payload packets simply write their fixed opcode.
+
+## Client send path
+
+`Client.a(rs.o.a.a.a)` passes the shared output Stream `Client.fv` to the packet.
+
+After serialization, the same path sends the resulting stream length/byte array through
+the active connection writer and resets stream bookkeeping. IOException/connection failures
+are handled as send-path failures.
+
+This proves the family is client-to-server ordinary packet serialization.
 
 ## Boundary
 
-This is distinct from R115 `ScriptPacketHandler`, which is the opcode-250 ScriptPacket
+R115 `ScriptPacketHandler` is unrelated: it decodes the opcode-250 server ScriptPacket
 subprotocol.
 
-R322 intentionally names only the base contract. Concrete incoming packet handlers should
-be recovered individually from their exact decode/mutation semantics.
+R322 intentionally names only the base outgoing-packet contract. The 52 concrete packet
+classes remain future semantic recovery targets and should be named from their exact opcode
+and payload/call-site behavior.
 
 R322 remains non-canonical semantic research only.

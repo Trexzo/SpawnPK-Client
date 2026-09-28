@@ -12,15 +12,16 @@
     "source_build": "v308",
     "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
     "target": {"kind": "class", "owner": "rs/o/a/a/a", "name": null, "descriptor": null},
-    "proposed_name": "IncomingPacketHandler",
+    "proposed_name": "OutgoingPacket",
     "confidence": 0.999,
     "evidence": [
-      {"family": "exact_handler_contract", "detail": "The interface defines exactly one operation, void a(rs/x/e), accepting the already-reviewed R29 Stream packet buffer and no unrelated state or lifecycle method."},
-      {"family": "exact_client_dispatch", "detail": "Client exposes one dispatcher helper a(rs/o/a/a/a): when the client is connected and ISAAC/session state is available it invokes handler.a(Client.fv), where Client.fv is the live incoming Stream, then performs incoming-buffer bookkeeping and packet-dispatch error handling."},
-      {"family": "exact_concrete_family", "detail": "Exact v308 contains 52 concrete rs/o/a/a/a/* implementations referencing this interface, forming the complete contiguous stable-ID family immediately after the base contract."},
-      {"family": "exact_namespace_boundary", "detail": "The base is distinct from R115 ScriptPacketHandler: ScriptPacketHandler decodes opcode-250 subprotocol messages, while this interface is invoked directly from the Client's ordinary incoming packet dispatch path with the live Stream."}
+      {"family": "exact_packet_contract", "detail": "The interface defines exactly one operation, void a(rs/x/e), accepting the already-reviewed R29 Stream and no unrelated lifecycle/state method."},
+      {"family": "exact_serialization_direction", "detail": "All 52 concrete implementations write an outgoing opcode first through Stream.a(int) and then serialize constructor-held packet payload fields with the Stream write-transform methods; examples include opcodes 188, 133, 72, 202 and 210."},
+      {"family": "exact_client_send_path", "detail": "Client.a(rs/o/a/a/a) passes the shared output Stream Client.fv to the packet, then forwards the resulting buffer/length to the active connection writer rs/q/b and resets stream bookkeeping. IOException handling disconnects/reconnects the client path."},
+      {"family": "exact_value_object_family", "detail": "Concrete implementations are packet-shaped value objects: their constructors capture primitive payload fields (or no payload), and their sole behavior writes one fixed opcode plus those fields into Stream."},
+      {"family": "exact_namespace_boundary", "detail": "This family is distinct from R115 ScriptPacketHandler, which decodes opcode-250 server subprotocol messages; rs/o/a/a/a represents ordinary client-to-server packet serialization."}
     ],
-    "note": "IncomingPacketHandler is the conservative exact-v308 name for the ordinary server-to-client packet handler contract. Concrete opcode handlers remain separate future recovery work."
+    "note": "Corrected from the initially attempted IncomingPacketHandler label after direct inspection of all 52 concrete implementations proved opcode-first serialization into the client output Stream."
   }],
   "conflicts": []
 }
