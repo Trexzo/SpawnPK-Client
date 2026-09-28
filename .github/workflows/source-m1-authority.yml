@@ -69,20 +69,7 @@ jobs:
       source_tree_sha256: ${{ steps.result.outputs.source_tree_sha256 }}
       authority_artifact_name: ${{ steps.result.outputs.authority_artifact_name }}
     steps:
-      - name: Checkout recovery tooling
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install recovery tooling
-        run: python -m pip install -e .
-
-      - name: Validate exact authority commit
+      - name: Validate authority commit syntax
         shell: bash
         env:
           AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
@@ -92,8 +79,31 @@ jobs:
             echo "authority_commit must be exact lowercase 40-hex" >&2
             exit 2
           fi
-          git cat-file -e "$AUTHORITY_COMMIT^{commit}"
-          git merge-base --is-ancestor "$AUTHORITY_COMMIT" HEAD
+
+      - name: Checkout exact recovery tooling
+        uses: actions/checkout@v4
+        with:
+          repository: Trexzo/SpawnPK-Client
+          ref: ${{ inputs.authority_commit }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Prove exact recovery tooling checkout
+        shell: bash
+        env:
+          AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+        run: |
+          set -euo pipefail
+          actual="$(git rev-parse HEAD)"
+          test "$actual" = "$AUTHORITY_COMMIT"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install recovery tooling
+        run: python -m pip install -e .
 
       - name: Validate prior recovered workspace run provenance
         if: ${{ inputs.workspace_run_id != '' }}
@@ -102,6 +112,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GITHUB_API_URL_VALUE: ${{ github.api_url }}
           GITHUB_REPOSITORY_VALUE: ${{ github.repository }}
+          AUTHORITY_REPOSITORY_VALUE: Trexzo/SpawnPK-Client
           WORKSPACE_RUN_ID: ${{ inputs.workspace_run_id }}
           AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
         run: |
@@ -114,6 +125,9 @@ jobs:
 
           run_id = os.environ["WORKSPACE_RUN_ID"]
           repository = os.environ["GITHUB_REPOSITORY_VALUE"]
+          authority_repository = os.environ[
+              "AUTHORITY_REPOSITORY_VALUE"
+          ]
           api_url = os.environ["GITHUB_API_URL_VALUE"].rstrip("/")
           token = os.environ["GH_TOKEN"]
           authority_commit = os.environ["AUTHORITY_COMMIT"]
@@ -166,14 +180,24 @@ jobs:
                   "workspace run head SHA is not lowercase 40-hex"
               )
 
-          comparison = get_json(
-              f"{api_url}/repos/{repository}/compare/"
-              f"{authority_commit}...{head_sha}"
-          )
-          if comparison.get("status") not in {"ahead", "identical"}:
-              raise SystemExit(
-                  "authority commit is not an ancestor of "
-                  "the workspace run head"
+          if repository == authority_repository:
+              comparison = get_json(
+                  f"{api_url}/repos/{repository}/compare/"
+                  f"{authority_commit}...{head_sha}"
+              )
+              if comparison.get("status") not in {
+                  "ahead",
+                  "identical",
+              }:
+                  raise SystemExit(
+                      "authority commit is not an ancestor of "
+                      "the workspace run head"
+                  )
+          else:
+              print(
+                  "cross-repository caller: authority ancestry "
+                  "is bound by exact tooling checkout and semantic "
+                  "authority verification"
               )
 
           print(

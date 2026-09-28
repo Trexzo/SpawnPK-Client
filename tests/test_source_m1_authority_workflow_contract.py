@@ -25,6 +25,41 @@ class SourceM1AuthorityWorkflowContractTests(unittest.TestCase):
             self.text,
         )
 
+    def test_exact_public_tooling_checkout_supports_private_callers(self):
+        syntax_start = self.text.index(
+            "- name: Validate authority commit syntax"
+        )
+        checkout_start = self.text.index(
+            "- name: Checkout exact recovery tooling"
+        )
+        prove_start = self.text.index(
+            "- name: Prove exact recovery tooling checkout"
+        )
+        setup_start = self.text.index("- name: Set up Python")
+
+        self.assertLess(syntax_start, checkout_start)
+        self.assertLess(checkout_start, prove_start)
+        self.assertLess(prove_start, setup_start)
+
+        checkout = self.text[checkout_start:prove_start]
+        self.assertIn(
+            "repository: Trexzo/SpawnPK-Client",
+            checkout,
+        )
+        self.assertIn(
+            "ref: ${{ inputs.authority_commit }}",
+            checkout,
+        )
+        self.assertIn("fetch-depth: 0", checkout)
+        self.assertIn("persist-credentials: false", checkout)
+
+        prove = self.text[prove_start:setup_start]
+        self.assertIn('actual="$(git rev-parse HEAD)"', prove)
+        self.assertIn(
+            'test "$actual" = "$AUTHORITY_COMMIT"',
+            prove,
+        )
+
     def test_same_run_and_prior_run_downloads_are_distinct(self):
         same_start = self.text.index(
             "- name: Download recovered workspace artifact "
@@ -96,19 +131,41 @@ class SourceM1AuthorityWorkflowContractTests(unittest.TestCase):
             validate,
         )
         self.assertIn(
+            "AUTHORITY_REPOSITORY_VALUE: Trexzo/SpawnPK-Client",
+            validate,
+        )
+        self.assertIn(
+            "if repository == authority_repository:",
+            validate,
+        )
+        self.assertIn(
             "/compare/",
             validate,
         )
         self.assertIn(
-            'comparison.get("status") not in {"ahead", "identical"}',
+            'comparison.get("status") not in {',
             validate,
         )
+        self.assertIn('"ahead"', validate)
+        self.assertIn('"identical"', validate)
         self.assertIn(
             "authority commit is not an ancestor of ",
             validate,
         )
         self.assertIn(
             "the workspace run head",
+            validate,
+        )
+        self.assertIn(
+            "cross-repository caller: authority ancestry ",
+            validate,
+        )
+        self.assertIn(
+            "semantic ",
+            validate,
+        )
+        self.assertIn(
+            "authority verification",
             validate,
         )
 
