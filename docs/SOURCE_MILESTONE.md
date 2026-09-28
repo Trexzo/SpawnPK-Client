@@ -183,3 +183,41 @@ Bundle verification reports use:
 - ID prefix: `SRCBUNDLEVERIFY_`
 
 Publication bundle source files are emitted with canonical LF line endings and JSON metadata is emitted as deterministic UTF-8/LF bytes so the exported authority is stable across Windows and Linux.
+
+## Reusable workflow handoff
+
+The same Source Milestone workflow supports both manual verification of a prior Actions run and direct handoff from another workflow.
+
+A recovery workflow can upload a verified Source M1 authority artifact and invoke the gate in the same run:
+
+```yaml
+jobs:
+  produce-authority:
+    runs-on: ubuntu-latest
+    steps:
+      # Build and independently verify the Source M1 authority artifact.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spawnpk-v308-source-authority
+          path: authority
+
+  source-milestone:
+    needs: produce-authority
+    uses: ./.github/workflows/source-milestone-1.yml
+    with:
+      authority_commit: <exact-lowercase-40-hex-commit>
+      authority_artifact_name: spawnpk-v308-source-authority
+```
+
+When `authority_run_id` is blank, the reusable workflow downloads the artifact from the caller's current workflow run. Manual `workflow_dispatch` retains the prior-run path and requires an explicit run ID.
+
+Reusable workflow outputs are emitted only after the authority artifact verifies, the milestone is publishable, and the publication bundle verifies. Available outputs are:
+
+- `milestone_id`
+- `bundle_id`
+- `authority_verification_id`
+- `bundle_verification_id`
+- `source_tree_sha256`
+- `publication_artifact_name`
+
+The called workflow retains read-only repository/action permissions and does not create or push to the publication repository.
