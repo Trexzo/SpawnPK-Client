@@ -53,6 +53,81 @@ class DependencyCapsuleAuditTests(unittest.TestCase):
             "class",
         )
 
+    def test_diagnostic_keys_survive_short_identifier_redaction(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "p.java"
+            source.write_text(
+                "public class p {}\n",
+                encoding="utf-8",
+            )
+
+            classes = root / "classes"
+            classes.mkdir()
+            proc = subprocess.run(
+                [
+                    "javac",
+                    "--release",
+                    "9",
+                    "-d",
+                    str(classes),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                proc.returncode,
+                0,
+                proc.stdout + proc.stderr,
+            )
+
+            data = (classes / "p.class").read_bytes()
+            readable = root / "readable.jar"
+            capsule = root / "dependency-capsule.jar"
+            for jar in (readable, capsule):
+                with zipfile.ZipFile(
+                    jar,
+                    "w",
+                    zipfile.ZIP_STORED,
+                ) as z:
+                    z.writestr("p.class", data)
+
+            plan = {
+                "schema_version": 1,
+                "kind": "javac_missing_class_recovery_plan",
+                "plan_id": "JCLASSPLAN_" + "5" * 20,
+                "identifiers_included": True,
+                "candidates": [
+                    {
+                        "candidate_id": "JCLASSMISS_001",
+                        "candidate_internal_name": "p",
+                    }
+                ],
+            }
+
+            report = audit_dependency_capsule(
+                plan,
+                readable,
+                capsule,
+                javac_command="javac",
+                release=9,
+            )
+            keys = report["summary"][
+                "source_form_diagnostic_keys"
+            ]["import_simple"]["capsule_release"]
+
+            self.assertTrue(keys)
+            self.assertNotIn("compiler.err.p", keys)
+            self.assertTrue(
+                all(
+                    key.startswith("compiler.err.")
+                    or key.startswith("compiler.misc.")
+                    for key in keys
+                )
+            )
+
     def test_source_name_profile_rejects_illegal_identifier_spelling(self):
         profile = _source_name_profile("com/bad-name/Fallback")
         self.assertEqual(
