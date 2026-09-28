@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/q/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RSSocket",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_socket_contract",
+          "detail": "Exact v308 rs/q/b wraps one java.net.Socket plus its InputStream/OutputStream, exposes synchronous reads and queues writes through a circular byte buffer serviced by its Runnable writer thread."
+        },
+        {
+          "family": "exact_client_connection_role",
+          "detail": "Client constructs rs/q/b directly from the live game Socket during login/connection setup and retains it as the active network connection wrapper."
+        },
+        {
+          "family": "exact_legacy_fingerprint",
+          "detail": "The class preserves legacy 317 RSSocket fingerprints including 'Error closing stream', 'Error in writer thread', EOF handling, circular writer-buffer overflow logic and the same Runnable writer architecture."
+        },
+        {
+          "family": "public_source_identity",
+          "detail": "Public 317 client sources identify this exact Socket/InputStream/OutputStream/Runnable structure and error-string set as RSSocket."
+        }
+      ],
+      "note": "Original legacy 317 RSSocket identity recovered from exact network behavior and retained source fingerprints."
+    }
+  ],
+  "conflicts": []
+}
