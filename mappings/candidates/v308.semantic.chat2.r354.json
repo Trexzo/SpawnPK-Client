@@ -1,0 +1,46 @@
+{
+  "schema_version":1,
+  "kind":"semantic_candidate_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[
+    {
+      "schema_version":1,
+      "kind":"semantic_name_candidate",
+      "canonical":false,
+      "status":"CANDIDATE",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/t/a","name":null,"descriptor":null},
+      "proposed_name":"StructuredConfigStore",
+      "confidence":0.999,
+      "evidence":[
+        {"family":"exact_dual_format_io","detail":"The class is constructed with a human-editable config path and compiled binary path; it loads YAML through SnakeYAML when using source data and MessagePack through MessagePackMapper when using compiled data."},
+        {"family":"exact_config_shape","detail":"Its canonical payload shape is Map<Integer, Map<String,Object>>, shared by map overrides and all typed definition config subclasses."},
+        {"family":"exact_write_support","detail":"The base can persist the in-memory structured map back to the configured YAML path using SnakeYAML DumperOptions and FileWriter."},
+        {"family":"exact_subclass_scope","detail":"Direct subclasses include map-region overrides, wandering-merchant item registry and the typed definition mapper base, so the class is a generic structured config store rather than a definition-specific service."}
+      ],
+      "note":"Descriptive exact-v308 base name for YAML/MessagePack structured config storage. No original stripped identifier is claimed."
+    },
+    {
+      "schema_version":1,
+      "kind":"semantic_name_candidate",
+      "canonical":false,
+      "status":"CANDIDATE",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/t/c","name":null,"descriptor":null},
+      "proposed_name":"DefinitionConfigMapper",
+      "confidence":0.999,
+      "evidence":[
+        {"family":"exact_generic_contract","detail":"The abstract class extends StructuredConfigStore and declares one abstract mapping operation T a(int, Map<String,Object>) that converts a config record for one numeric id into typed object T."},
+        {"family":"exact_materialization_cache","detail":"Its load lifecycle clears the typed cache, loads the shared structured config map, iterates every configured id, invokes the abstract mapper, and stores the resulting T in an int-keyed typed cache."},
+        {"family":"exact_concrete_specializations","detail":"Every exact-v308 concrete subclass maps config records into a client definition type: animation, NPC, spot-animation/GFX, item or object definition."},
+        {"family":"exact_conversion_helpers","detail":"The base supplies reusable structured-value conversion helpers for byte, int[], int[][], int[][][] and String[] used by those concrete definition mappers."}
+      ],
+      "note":"Descriptive exact-v308 name for the generic typed config-to-definition mapper/cache base."
+    }
+  ],
+  "conflicts":[]
+}
