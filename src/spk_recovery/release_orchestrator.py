@@ -114,6 +114,12 @@ def build_existing_authority_release(
     rewrite_class_name_strings: bool = False,
     source_prefixes: list[str] | None = None,
     project_source_only: bool = False,
+    official_first_restored: bool = False,
+    official_overlay_manifest_path: Path | None = None,
+    official_overlay_source_root: Path | None = None,
+    private_dependency_replacement_plan_path: Path | None = None,
+    private_dependency_reverse_plan_path: Path | None = None,
+    official_artifacts: list[Path] | None = None,
     java_command: str = "java",
     javac_command: str = "javac",
 ) -> dict[str, Any]:
@@ -232,11 +238,50 @@ def build_existing_authority_release(
             out_dir=rebuild_dir,
             javac_command=javac_command,
             source_prefixes=source_prefixes,
+            official_first_restored=official_first_restored,
+            official_overlay_manifest_path=(
+                official_overlay_manifest_path
+            ),
+            official_overlay_source_root=(
+                official_overlay_source_root
+            ),
+            private_dependency_replacement_plan_path=(
+                private_dependency_replacement_plan_path
+            ),
+            private_dependency_reverse_plan_path=(
+                private_dependency_reverse_plan_path
+            ),
+            official_artifacts=official_artifacts,
+            java_command=java_command,
         )
     except CleanRebuildError as exc:
         raise ExistingAuthorityReleaseError(str(exc)) from exc
 
     stage_ids["clean_rebuild_id"] = clean.get("rebuild_id")
+    compile_transport = clean.get("compile_transport")
+    if (
+        isinstance(compile_transport, dict)
+        and compile_transport.get("mode") == "official_first_restored"
+    ):
+        stage_ids.update(
+            {
+                "official_compile_id": compile_transport.get(
+                    "official_compile_id"
+                ),
+                "dependency_overlay_id": compile_transport.get(
+                    "overlay_id"
+                ),
+                "dependency_replacement_plan_id": compile_transport.get(
+                    "replacement_plan_id"
+                ),
+                "dependency_reverse_plan_id": compile_transport.get(
+                    "reverse_plan_id"
+                ),
+                "dependency_reverse_application_id": (
+                    compile_transport.get("reverse_application_id")
+                ),
+            }
+        )
     if clean.get("status") != "complete":
         report = _report(
             build_id=build_id,
