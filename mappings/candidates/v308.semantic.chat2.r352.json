@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/runelite/a/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RectangleUnion",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "historical_source_identity",
+          "detail": "Historical RuneLite RectangleUnion contains the exact private helper family already source-proven in R221: ChangingState, Chunk, Segment and Segments."
+        },
+        {
+          "family": "exact_union_algorithm",
+          "detail": "Exact v308 rs/runelite/a/j sorts rectangle-edge records, maintains segment state, and returns Shapes<SimplePolygon>; the sweep/union structure matches RuneLite RectangleUnion."
+        },
+        {
+          "family": "existing_nested_lineage",
+          "detail": "R221 already names rs/runelite/a/j$a, $b, $d and $e from historical RectangleUnion source, fixing their outer owner identity."
+        }
+      ],
+      "note": "Historical RuneLite source-proven outer class name, corroborated by exact-v308 union behavior and R221 nested-class identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/runelite/a/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WorldPoint",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "historical_source_identity",
+          "detail": "Historical RuneLite WorldPoint exposes the same x/y/plane value object plus fromLocal, isInScene, region, distance and coordinate-shift surface present in exact-v308 rs/runelite/a/p."
+        },
+        {
+          "family": "exact_coordinate_state",
+          "detail": "Exact v308 stores exactly three final ints for world x, world y and plane and returns new instances for x/y/plane shifts."
+        },
+        {
+          "family": "exact_scene_region_behavior",
+          "detail": "The class converts LocalPoint to world coordinates, checks 104x104 scene bounds against Client base coordinates, computes region identifiers/local region coordinates, supports distanceTo/distanceTo2D and instanced-region transforms."
+        }
+      ],
+      "note": "Historical RuneLite source-proven coordinate class name."
+    }
+  ],
+  "conflicts": []
+}
