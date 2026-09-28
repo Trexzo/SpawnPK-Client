@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import re
 from typing import Any
 
 from .lineage import validate_lineage
@@ -43,6 +44,103 @@ def _eq(label: str, *values: Any) -> Any:
             f"{label}: authority linkage mismatch: {values!r}"
         )
     return values[0]
+
+
+def _official_first_transport_stage_ids(
+    clean_rebuild_report: dict[str, Any],
+    blockers: list[dict[str, str]],
+) -> dict[str, Any]:
+    transport = clean_rebuild_report.get("compile_transport")
+    if not isinstance(transport, dict):
+        return {}
+    if transport.get("mode") != "official_first_restored":
+        return {}
+
+    def block(reason: str) -> None:
+        blockers.append(
+            {
+                "stage": "clean_rebuild",
+                "reason": reason,
+            }
+        )
+
+    authority_prefixes = {
+        "official_compile_id": "DEPOFFICIALCOMPILE_",
+        "overlay_id": "DEPSRCOVERLAY_",
+        "replacement_plan_id": "DEPREPLACE_",
+        "reverse_plan_id": "DEPREVERSE_",
+        "reverse_application_id": "DEPREVERSEAPPLY_",
+    }
+    if any(
+        not isinstance(transport.get(key), str)
+        or not transport[key].startswith(prefix)
+        for key, prefix in authority_prefixes.items()
+    ):
+        block("official_first_transport_authority_incomplete")
+
+    hash_keys = (
+        "compile_dependency_capsule_sha256",
+        "generated_project_jar_sha256",
+        "restored_project_jar_sha256",
+    )
+    if any(
+        not isinstance(transport.get(key), str)
+        or re.fullmatch(r"[0-9a-fA-F]{64}", transport[key]) is None
+        for key in hash_keys
+    ):
+        block("official_first_transport_hash_authority_invalid")
+
+    official_shas = transport.get("official_artifact_sha256")
+    if not (
+        isinstance(official_shas, list)
+        and bool(official_shas)
+        and all(
+            isinstance(value, str)
+            and re.fullmatch(r"[0-9a-fA-F]{64}", value)
+            for value in official_shas
+        )
+    ):
+        block("official_first_artifact_authority_invalid")
+
+    capsule_count = transport.get(
+        "compile_dependency_capsule_class_count"
+    )
+    if (
+        isinstance(capsule_count, bool)
+        or not isinstance(capsule_count, int)
+        or capsule_count <= 0
+    ):
+        block("official_first_dependency_capsule_invalid")
+
+    required_values = {
+        "opt_in": True,
+        "status": "complete",
+        "project_binary_fallback_count": 0,
+        "runtime_official_dependencies_allowed": False,
+        "runtime_dependency_source": (
+            "original_verified_readable_non_project_bytes"
+        ),
+        "canonical_source_modified": False,
+        "bundled_runtime_dependency_modified": False,
+        "restored_project_bytecode_ready_for_runtime_assembly": True,
+    }
+    if any(
+        transport.get(key) != expected
+        for key, expected in required_values.items()
+    ):
+        block("official_first_runtime_boundary_invalid")
+
+    return {
+        "official_compile_id": transport.get("official_compile_id"),
+        "dependency_overlay_id": transport.get("overlay_id"),
+        "dependency_replacement_plan_id": transport.get(
+            "replacement_plan_id"
+        ),
+        "dependency_reverse_plan_id": transport.get("reverse_plan_id"),
+        "dependency_reverse_application_id": transport.get(
+            "reverse_application_id"
+        ),
+    }
 
 
 def build_recovery_release_manifest(
@@ -194,6 +292,11 @@ def build_recovery_release_manifest(
             }
         )
 
+    dependency_stage_ids = _official_first_transport_stage_ids(
+        clean_rebuild_report,
+        blockers,
+    )
+
     candidate = roundtrip_report.get("rebuild_authority_candidate")
     if not isinstance(candidate, dict):
         raise RecoveryReleaseError(
@@ -327,6 +430,7 @@ def build_recovery_release_manifest(
                 if source_rewrite_acceptance is not None
                 else None
             ),
+            **dependency_stage_ids,
         },
         "note": (
             "Release readiness means the supplied authority chain is mutually "

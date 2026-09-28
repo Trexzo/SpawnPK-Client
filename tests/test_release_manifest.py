@@ -171,6 +171,32 @@ def _docs():
     return authority, readable, source, clean, roundtrip
 
 
+def _official_transport() -> dict:
+    return {
+        "mode": "official_first_restored",
+        "opt_in": True,
+        "status": "complete",
+        "official_compile_id": "DEPOFFICIALCOMPILE_" + "1" * 20,
+        "overlay_id": "DEPSRCOVERLAY_" + "2" * 20,
+        "replacement_plan_id": "DEPREPLACE_" + "3" * 20,
+        "reverse_plan_id": "DEPREVERSE_" + "4" * 20,
+        "reverse_application_id": "DEPREVERSEAPPLY_" + "5" * 20,
+        "official_artifact_sha256": ["a" * 64, "b" * 64],
+        "compile_dependency_capsule_sha256": "c" * 64,
+        "compile_dependency_capsule_class_count": 17,
+        "generated_project_jar_sha256": "d" * 64,
+        "restored_project_jar_sha256": "e" * 64,
+        "project_binary_fallback_count": 0,
+        "runtime_official_dependencies_allowed": False,
+        "runtime_dependency_source": (
+            "original_verified_readable_non_project_bytes"
+        ),
+        "canonical_source_modified": False,
+        "bundled_runtime_dependency_modified": False,
+        "restored_project_bytecode_ready_for_runtime_assembly": True,
+    }
+
+
 class RecoveryReleaseManifestTests(unittest.TestCase):
     def test_ready_manifest_is_deterministic(self):
         authority, readable, source, clean, roundtrip = _docs()
@@ -190,6 +216,83 @@ class RecoveryReleaseManifestTests(unittest.TestCase):
         self.assertEqual(a["blockers"], [])
         self.assertEqual(a["source_state"], "recovered")
         self.assertTrue(a["release_id"].startswith("RECOVERY_"))
+
+    def test_official_first_release_authority_is_bound(self):
+        authority, readable, source, clean, roundtrip = _docs()
+        clean["compile_transport"] = _official_transport()
+
+        manifest = build_recovery_release_manifest(
+            authority,
+            _class_lineage(),
+            _member_lineage(),
+            readable,
+            source,
+            clean,
+            roundtrip,
+        )
+
+        self.assertTrue(manifest["ready_for_release"])
+        self.assertEqual(manifest["blockers"], [])
+        self.assertEqual(
+            manifest["stage_ids"]["official_compile_id"],
+            clean["compile_transport"]["official_compile_id"],
+        )
+        self.assertEqual(
+            manifest["stage_ids"][
+                "dependency_reverse_application_id"
+            ],
+            clean["compile_transport"]["reverse_application_id"],
+        )
+
+    def test_official_first_missing_authority_blocks_release(self):
+        authority, readable, source, clean, roundtrip = _docs()
+        clean["compile_transport"] = _official_transport()
+        clean["compile_transport"]["reverse_plan_id"] = None
+
+        manifest = build_recovery_release_manifest(
+            authority,
+            _class_lineage(),
+            _member_lineage(),
+            readable,
+            source,
+            clean,
+            roundtrip,
+        )
+
+        self.assertFalse(manifest["ready_for_release"])
+        self.assertIn(
+            {
+                "stage": "clean_rebuild",
+                "reason": "official_first_transport_authority_incomplete",
+            },
+            manifest["blockers"],
+        )
+
+    def test_official_first_runtime_boundary_blocks_release(self):
+        authority, readable, source, clean, roundtrip = _docs()
+        clean["compile_transport"] = _official_transport()
+        clean["compile_transport"][
+            "runtime_official_dependencies_allowed"
+        ] = True
+
+        manifest = build_recovery_release_manifest(
+            authority,
+            _class_lineage(),
+            _member_lineage(),
+            readable,
+            source,
+            clean,
+            roundtrip,
+        )
+
+        self.assertFalse(manifest["ready_for_release"])
+        self.assertIn(
+            {
+                "stage": "clean_rebuild",
+                "reason": "official_first_runtime_boundary_invalid",
+            },
+            manifest["blockers"],
+        )
 
     def test_consistent_blocked_chain_returns_blocker(self):
         authority, readable, source, clean, roundtrip = _docs()
