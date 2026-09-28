@@ -93,6 +93,61 @@ def _arg(value: str) -> str:
     return '"' + value.replace("\\", "/").replace('"', '\\"') + '"'
 
 
+def _is_project_class_entry(
+    entry: str,
+    prefixes: tuple[str, ...],
+) -> bool:
+    if not entry.endswith(".class"):
+        return False
+    return any(entry.startswith(prefix) for prefix in prefixes)
+
+
+def _write_dependency_capsule(
+    bundled_jar: Path,
+    out: Path,
+    prefixes: tuple[str, ...],
+) -> tuple[str, int]:
+    rows: list[tuple[str, bytes]] = []
+    try:
+        with zipfile.ZipFile(bundled_jar) as archive:
+            for info in archive.infolist():
+                name = info.filename
+                if (
+                    info.is_dir()
+                    or not name.endswith(".class")
+                    or _is_project_class_entry(name, prefixes)
+                ):
+                    continue
+                rows.append((name, archive.read(info)))
+    except zipfile.BadZipFile as exc:
+        raise DependencyOfficialDerivedCompileError(
+            "invalid bundled JAR"
+        ) from exc
+
+    if not rows:
+        raise DependencyOfficialDerivedCompileError(
+            "official-first dependency capsule would be empty"
+        )
+
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(
+        out,
+        "w",
+        compression=zipfile.ZIP_STORED,
+    ) as archive:
+        for name, data in sorted(rows):
+            info = zipfile.ZipInfo(
+                name,
+                date_time=(1980, 1, 1, 0, 0, 0),
+            )
+            info.compress_type = zipfile.ZIP_STORED
+            info.file_size = len(data)
+            info.CRC = binascii.crc32(data) & 0xFFFFFFFF
+            archive.writestr(info, data)
+
+    return _sha256_file(out), len(rows)
+
+
 def _write_project_jar(
     classes_root: Path,
     out: Path,
@@ -296,6 +351,14 @@ def compile_official_overlay_and_restore(
     javac = _require(javac_command)
 
     out_dir.mkdir(parents=True, exist_ok=True)
+    dependency_capsule = out_dir / "compile-dependency-capsule.jar"
+    dependency_capsule_sha, dependency_capsule_count = (
+        _write_dependency_capsule(
+            bundled_jar,
+            dependency_capsule,
+            prefixes,
+        )
+    )
     generated = out_dir / "generated-official"
     generated.mkdir()
     generated_jar = out_dir / "generated-official-project.jar"
@@ -313,7 +376,7 @@ def compile_official_overlay_and_restore(
             "overlay contains no Java sources"
         )
 
-    classpath = [*artifacts, bundled_jar]
+    classpath = [*artifacts, dependency_capsule]
     args = [
         "-proc:none",
         "-encoding",
@@ -392,6 +455,12 @@ def compile_official_overlay_and_restore(
         "canonical_source_tree_sha256": canonical_before,
         "overlay_source_tree_sha256": overlay_sha,
         "bundled_jar_sha256": bundled_sha,
+        "compile_dependency_capsule_sha256": (
+            dependency_capsule_sha
+        ),
+        "compile_dependency_capsule_class_count": (
+            dependency_capsule_count
+        ),
         "official_artifact_sha256": official_shas,
         "generated_project_jar_sha256": _sha256_file(
             generated_jar
@@ -414,6 +483,11 @@ def compile_official_overlay_and_restore(
             "source_count": len(sources),
             "generated_project_class_count": generated_count,
             "generated_project_class_bytes": generated_bytes,
+            "compile_dependency_capsule_class_count": (
+                dependency_capsule_count
+            ),
+            "project_binary_fallback_count": 0,
+            "compile_dependency_contains_project_classes": False,
             "reverse_reference_surface_match": restored[
                 "summary"
             ]["reference_surface_match"],
