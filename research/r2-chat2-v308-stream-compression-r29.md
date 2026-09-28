@@ -77,3 +77,19 @@ survived unchanged.
 Chat 2 does not promote R29. Main/Core may accept any desired subset only through an
 explicit `semantic_acceptance_spec` bound to
 `SEMREVIEW_058934E269FB8E9BAFBF`.
+
+
+## ISAAC source-name correction
+
+Later exact-source comparison strengthens the original R29 descriptive `IsaacCipher` label
+to the legacy 317 source identity `ISAACRandomGen`.
+
+The owner and stable ID are unchanged:
+
+- `rs/q/a`
+- `CLIENT_CLASS_000743`
+
+The implementation matches the classic 256-word memory/results structure, seed constructor,
+`0x9e3779b9` initialization and ISAAC xor/shift round. The corrected proposal is
+`SEMPROP_97E05F39C53731BD7B35`; corrected review is
+`SEMREVIEW_968453E93260EAA5F8C9`.
