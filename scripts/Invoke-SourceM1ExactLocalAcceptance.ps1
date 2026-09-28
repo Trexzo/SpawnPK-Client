@@ -10,14 +10,10 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$MemberLineage,
     [Parameter(Mandatory = $true)]
-    [string]$RecoveredManifest,
-    [Parameter(Mandatory = $true)]
-    [string]$RecoveredSourceRoot,
-    [Parameter(Mandatory = $true)]
-    [string]$PrivateCollisionPlan,
     [string]$MemberSafetyAcceptance,
-    [string]$SourceRewriteAcceptance,
+    [Parameter(Mandatory = $true)]
     [string]$DecompilerJar,
+    [string]$SourceRewriteAcceptance,
     [string]$Jdk = "C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot",
     [string]$OutDir = "$env:USERPROFILE\Desktop\SpawnPK-SourceM1-Exact"
 )
@@ -26,11 +22,25 @@ Set-StrictMode -Version 2.0
 $ErrorActionPreference = "Stop"
 
 $ExpectedV308 = "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
+$ExpectedProcyon = "821da96012fc69244fa1ea298c90455ee4e021434bc796d3b9546ab24601b779"
 
 function Require-File {
     param([string]$Path)
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
         throw "Missing required file: $Path"
+    }
+}
+
+function Invoke-PyChecked {
+    param(
+        [string]$Label,
+        [string[]]$Arguments
+    )
+    Write-Host ""
+    Write-Host ("=== " + $Label + " ===") -ForegroundColor Cyan
+    & py @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw ($Label + " failed with exit=" + $LASTEXITCODE)
     }
 }
 
@@ -64,24 +74,18 @@ if ($Head -notmatch "^[0-9a-f]{40}$") {
     throw "Current authority commit is not lowercase 40-hex: $Head"
 }
 
-$Required = @(
+foreach ($Path in @(
     $ClientJar,
     $SourceIndex,
     $ClassLineage,
     $MemberLineage,
-    $RecoveredManifest,
-    $PrivateCollisionPlan
-)
-foreach ($Path in $Required) {
+    $MemberSafetyAcceptance,
+    $DecompilerJar
+)) {
     Require-File $Path
 }
-if (-not (Test-Path -LiteralPath $RecoveredSourceRoot -PathType Container)) {
-    throw "Recovered source root not found: $RecoveredSourceRoot"
-}
-foreach ($Optional in @($MemberSafetyAcceptance, $SourceRewriteAcceptance, $DecompilerJar)) {
-    if (-not [string]::IsNullOrWhiteSpace($Optional)) {
-        Require-File $Optional
-    }
+if (-not [string]::IsNullOrWhiteSpace($SourceRewriteAcceptance)) {
+    Require-File $SourceRewriteAcceptance
 }
 
 $Java = Join-Path $Jdk "bin\java.exe"
@@ -92,6 +96,148 @@ Require-File $Javac
 $ClientSha = (Get-FileHash -LiteralPath $ClientJar -Algorithm SHA256).Hash.ToLowerInvariant()
 if ($ClientSha -ne $ExpectedV308) {
     throw "Exact v308 SHA mismatch: $ClientSha"
+}
+
+$DecompilerSha = (Get-FileHash -LiteralPath $DecompilerJar -Algorithm SHA256).Hash.ToLowerInvariant()
+if ($DecompilerSha -ne $ExpectedProcyon) {
+    throw "Exact Procyon 0.6.0 SHA mismatch: $DecompilerSha"
+}
+
+if (Test-Path -LiteralPath $OutDir) {
+    $Existing = @(Get-ChildItem -LiteralPath $OutDir -Force)
+    if ($Existing.Count -ne 0) {
+        throw "Output directory must be empty: $OutDir"
+    }
+} else {
+    New-Item -ItemType Directory -Path $OutDir | Out-Null
+}
+
+$BootstrapReadableDir = Join-Path $OutDir "bootstrap-readable"
+$CollisionDir = Join-Path $OutDir "collision-authority"
+$CollisionWorkspace = Join-Path $OutDir "collision-source"
+$ReleaseDir = Join-Path $OutDir "release"
+$AuthorityDir = Join-Path $OutDir "authority"
+$MilestoneDir = Join-Path $OutDir "milestone"
+$BundleDir = Join-Path $MilestoneDir "publication"
+
+New-Item -ItemType Directory -Path $CollisionDir | Out-Null
+New-Item -ItemType Directory -Path $MilestoneDir | Out-Null
+
+$env:JAVA_HOME = $Jdk
+$env:PATH = "$Jdk\bin;$env:PATH"
+$env:PYTHONPATH = Join-Path $Repo "src"
+$env:PYTHONDONTWRITEBYTECODE = "1"
+
+Write-Host "AUTHORITY_COMMIT=$Head" -ForegroundColor Green
+Write-Host "V308_SHA256=$ClientSha" -ForegroundColor Green
+Write-Host "PROCYON_SHA256=$DecompilerSha" -ForegroundColor Green
+
+$ReadableArgs = @(
+    "-3.13",
+    "-m",
+    "spk_recovery.readable_build_cli",
+    $ClientJar,
+    $ClassLineage,
+    $MemberLineage,
+    $SourceIndex,
+    "--build-id",
+    "v308",
+    "--source-safe-fallback",
+    "--fallback-name-prefix",
+    "Recovered_",
+    "--member-safety-acceptance",
+    $MemberSafetyAcceptance,
+    "--out-dir",
+    $BootstrapReadableDir
+)
+Invoke-PyChecked "REBUILD EXACT READABLE AUTHORITY" $ReadableArgs
+
+$BootstrapReadableManifest = Join-Path $BootstrapReadableDir "readable-client-manifest.json"
+$BootstrapReadableJar = Join-Path $BootstrapReadableDir "readable-client.jar"
+Require-File $BootstrapReadableManifest
+Require-File $BootstrapReadableJar
+
+$ReadableDoc = Get-Content -LiteralPath $BootstrapReadableManifest -Raw | ConvertFrom-Json
+if ($ReadableDoc.status -ne "complete" -or $ReadableDoc.verification_pass -ne $true) {
+    throw "Readable authority is not complete and independently verified."
+}
+if ([string]$ReadableDoc.source_sha256 -ne $ExpectedV308) {
+    throw "Readable authority is not bound to exact v308."
+}
+
+$CollisionPlan = Join-Path $CollisionDir "namespace-collision-plan-private.json"
+$CollisionReadableJar = Join-Path $CollisionDir "readable-client-collision-remapped.jar"
+$CollisionTransform = Join-Path $CollisionDir "collision-transform.json"
+
+$CollisionPlanArgs = @(
+    "-3.13",
+    "-m",
+    "spk_recovery.namespace_collision_plan_cli",
+    $BootstrapReadableJar,
+    "--include-identifiers",
+    "--out",
+    $CollisionPlan
+)
+Invoke-PyChecked "BUILD PRIVATE COLLISION PLAN" $CollisionPlanArgs
+
+$CollisionPlanDoc = Get-Content -LiteralPath $CollisionPlan -Raw | ConvertFrom-Json
+if ($CollisionPlanDoc.identifiers_included -ne $true) {
+    throw "Collision plan is not the required identifier-bearing private authority."
+}
+if ($CollisionPlanDoc.summary.plan_eliminates_all_collisions -ne $true) {
+    throw "Collision plan does not eliminate all namespace collisions."
+}
+if ([int]$CollisionPlanDoc.summary.blocker_remap_count -lt 1) {
+    throw "Exact readable authority unexpectedly has no collision blockers to remap."
+}
+
+$CollisionApplyArgs = @(
+    "-3.13",
+    "-m",
+    "spk_recovery.collision_bytecode_remap_cli",
+    $BootstrapReadableJar,
+    $CollisionPlan,
+    $CollisionReadableJar,
+    "--report-out",
+    $CollisionTransform
+)
+Invoke-PyChecked "APPLY COLLISION-SAFE READABLE REMAP" $CollisionApplyArgs
+
+Require-File $CollisionReadableJar
+Require-File $CollisionTransform
+
+$CollisionTransformDoc = Get-Content -LiteralPath $CollisionTransform -Raw | ConvertFrom-Json
+if ([int]$CollisionTransformDoc.summary.post_collision_edge_count -ne 0) {
+    throw "Collision-remapped readable JAR still has namespace collision edges."
+}
+if ([string]$CollisionTransformDoc.plan_id -ne [string]$CollisionPlanDoc.plan_id) {
+    throw "Collision transform is not bound to the generated private plan."
+}
+
+$WorkspaceArgs = @(
+    "-3.13",
+    "-m",
+    "spk_recovery.source_workspace_cli",
+    $BootstrapReadableManifest,
+    $CollisionReadableJar,
+    $DecompilerJar,
+    "--decompiler-sha256",
+    $ExpectedProcyon,
+    "--engine",
+    "procyon",
+    "--project-only",
+    "--collision-transform-report",
+    $CollisionTransform,
+    "--out-dir",
+    $CollisionWorkspace
+)
+Invoke-PyChecked "BUILD COLLISION-DERIVED SOURCE WORKSPACE" $WorkspaceArgs
+
+$RecoveredManifest = Join-Path $CollisionWorkspace "recovered-source-manifest.json"
+$RecoveredSourceRoot = Join-Path $CollisionWorkspace "src"
+Require-File $RecoveredManifest
+if (-not (Test-Path -LiteralPath $RecoveredSourceRoot -PathType Container)) {
+    throw "Collision-derived source root is missing."
 }
 
 $Recovered = Get-Content -LiteralPath $RecoveredManifest -Raw | ConvertFrom-Json
@@ -112,29 +258,17 @@ foreach ($Name in @(
         throw "Recovered workspace is missing collision authority: $Name"
     }
 }
-
-if (Test-Path -LiteralPath $OutDir) {
-    $Existing = @(Get-ChildItem -LiteralPath $OutDir -Force)
-    if ($Existing.Count -ne 0) {
-        throw "Output directory must be empty: $OutDir"
-    }
-} else {
-    New-Item -ItemType Directory -Path $OutDir | Out-Null
+if ([string]$Recovered.collision_transform_id -ne [string]$CollisionTransformDoc.transform_id) {
+    throw "Recovered workspace collision transform ID drifted."
+}
+if ([string]$Recovered.collision_plan_id -ne [string]$CollisionPlanDoc.plan_id) {
+    throw "Recovered workspace collision plan ID drifted."
 }
 
-$ReleaseDir = Join-Path $OutDir "release"
-$AuthorityDir = Join-Path $OutDir "authority"
-$MilestoneDir = Join-Path $OutDir "milestone"
-$BundleDir = Join-Path $MilestoneDir "publication"
-New-Item -ItemType Directory -Path $MilestoneDir | Out-Null
-
-$env:JAVA_HOME = $Jdk
-$env:PATH = "$Jdk\bin;$env:PATH"
-$env:PYTHONPATH = Join-Path $Repo "src"
-$env:PYTHONDONTWRITEBYTECODE = "1"
-
-Write-Host "AUTHORITY_COMMIT=$Head" -ForegroundColor Green
-Write-Host "V308_SHA256=$ClientSha" -ForegroundColor Green
+Write-Host "COLLISION_PLAN_ID=$($Recovered.collision_plan_id)" -ForegroundColor Green
+Write-Host "COLLISION_TRANSFORM_ID=$($Recovered.collision_transform_id)" -ForegroundColor Green
+Write-Host "RECOVERED_WORKSPACE_ID=$($Recovered.workspace_id)" -ForegroundColor Green
+Write-Host "RECOVERED_JAVA_FILES=$($Recovered.java_file_count)" -ForegroundColor Green
 
 $ReleaseArgs = @(
     "-3.13",
@@ -146,10 +280,14 @@ $ReleaseArgs = @(
     $MemberLineage,
     $RecoveredManifest,
     $RecoveredSourceRoot,
-    $PrivateCollisionPlan,
+    $CollisionPlan,
     "--build-id",
     "v308",
     "--source-safe-fallback",
+    "--fallback-name-prefix",
+    "Recovered_",
+    "--member-safety-acceptance",
+    $MemberSafetyAcceptance,
     "--source-prefix",
     "rs/",
     "--java-command",
@@ -159,9 +297,6 @@ $ReleaseArgs = @(
     "--out-dir",
     $ReleaseDir
 )
-if (-not [string]::IsNullOrWhiteSpace($MemberSafetyAcceptance)) {
-    $ReleaseArgs += @("--member-safety-acceptance", $MemberSafetyAcceptance)
-}
 
 Write-Host ""
 Write-Host "=== CURRENT-MAIN RECOVERED RELEASE ===" -ForegroundColor Cyan
@@ -189,6 +324,7 @@ if ($ReleaseExit -ne 0) {
                 Write-Host "javac_total_errors=$($Summary.total_errors)"
                 Write-Host "javac_affected_files=$($Summary.affected_files)"
                 Write-Host "javac_cannot_find_symbol=$($Summary.cannot_find_symbol.count)"
+                Write-Host "javac_frontier_id=$($CleanDoc.compiler.diagnostic_classification.frontier_id)"
             }
         }
     }
@@ -230,28 +366,21 @@ $VerifyArgs = @(
     $ClientJar,
     "--readable-jar",
     $ReadableJar,
+    "--decompiler-jar",
+    $DecompilerJar,
     "--source-root",
     $RecoveredSourceRoot,
     "--javac",
     $Javac,
     "--private-collision-plan",
-    $PrivateCollisionPlan,
+    $CollisionPlan,
     "--out",
     $ReleaseVerification
 )
 if (-not [string]::IsNullOrWhiteSpace($SourceRewriteAcceptance)) {
     $VerifyArgs += @("--source-rewrite-acceptance", $SourceRewriteAcceptance)
 }
-if (-not [string]::IsNullOrWhiteSpace($DecompilerJar)) {
-    $VerifyArgs += @("--decompiler-jar", $DecompilerJar)
-}
-
-Write-Host ""
-Write-Host "=== VERIFY RECOVERY RELEASE ===" -ForegroundColor Cyan
-& py @VerifyArgs
-if ($LASTEXITCODE -ne 0) {
-    throw "Exact recovery release verification failed."
-}
+Invoke-PyChecked "VERIFY RECOVERY RELEASE" $VerifyArgs
 
 $AuthorityBuildArgs = @(
     "-3.13",
@@ -279,13 +408,7 @@ $AuthorityBuildArgs = @(
     "--out-dir",
     $AuthorityDir
 )
-
-Write-Host ""
-Write-Host "=== BUILD SOURCE M1 AUTHORITY ARTIFACT ===" -ForegroundColor Cyan
-& py @AuthorityBuildArgs
-if ($LASTEXITCODE -ne 0) {
-    throw "Source M1 authority artifact build failed."
-}
+Invoke-PyChecked "BUILD SOURCE M1 AUTHORITY ARTIFACT" $AuthorityBuildArgs
 
 $AuthorityVerification = Join-Path $AuthorityDir "SOURCE-AUTHORITY-VERIFICATION.json"
 $AuthorityVerifyArgs = @(
@@ -300,10 +423,7 @@ $AuthorityVerifyArgs = @(
     "--out",
     $AuthorityVerification
 )
-& py @AuthorityVerifyArgs
-if ($LASTEXITCODE -ne 0) {
-    throw "Source M1 authority artifact verification failed."
-}
+Invoke-PyChecked "VERIFY SOURCE M1 AUTHORITY ARTIFACT" $AuthorityVerifyArgs
 
 $MilestoneManifest = Join-Path $MilestoneDir "SOURCE-MILESTONE.json"
 $MilestoneVerification = Join-Path $MilestoneDir "SOURCE-MILESTONE-VERIFICATION.json"
@@ -338,13 +458,7 @@ $BuildMilestoneArgs = @(
 )
 $BuildMilestoneArgs += $CommonMilestoneArgs
 $BuildMilestoneArgs += @("--out", $MilestoneManifest)
-
-Write-Host ""
-Write-Host "=== BUILD SOURCE MILESTONE ===" -ForegroundColor Cyan
-& py @BuildMilestoneArgs
-if ($LASTEXITCODE -ne 0) {
-    throw "Source milestone is not publishable."
-}
+Invoke-PyChecked "BUILD SOURCE MILESTONE" $BuildMilestoneArgs
 
 $VerifyMilestoneArgs = @(
     "-3.13",
@@ -359,10 +473,7 @@ $VerifyMilestoneArgs += @(
     "--out",
     $MilestoneVerification
 )
-& py @VerifyMilestoneArgs
-if ($LASTEXITCODE -ne 0) {
-    throw "Source milestone verification failed."
-}
+Invoke-PyChecked "VERIFY SOURCE MILESTONE" $VerifyMilestoneArgs
 
 $BundleArgs = @(
     "-3.13",
@@ -382,10 +493,7 @@ $BundleArgs = @(
     "--provenance",
     ("SOURCE-AUTHORITY-VERIFICATION.json=" + $AuthorityVerification)
 )
-& py @BundleArgs
-if ($LASTEXITCODE -ne 0) {
-    throw "Source milestone publication bundle build failed."
-}
+Invoke-PyChecked "BUILD SOURCE-ONLY PUBLICATION BUNDLE" $BundleArgs
 
 $BundleVerifyArgs = @(
     "-3.13",
@@ -399,10 +507,7 @@ $BundleVerifyArgs = @(
     "--out",
     $BundleVerification
 )
-& py @BundleVerifyArgs
-if ($LASTEXITCODE -ne 0) {
-    throw "Source milestone publication bundle verification failed."
-}
+Invoke-PyChecked "VERIFY SOURCE-ONLY PUBLICATION BUNDLE" $BundleVerifyArgs
 
 $Milestone = Get-Content -LiteralPath $MilestoneManifest -Raw | ConvertFrom-Json
 $MilestoneVerify = Get-Content -LiteralPath $MilestoneVerification -Raw | ConvertFrom-Json
