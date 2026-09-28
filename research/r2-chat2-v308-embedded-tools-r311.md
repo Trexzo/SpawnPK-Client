@@ -1,4 +1,4 @@
-# Chat 2 — exact-v308 embedded definition/debug tools R311
+# Chat 2 — exact-v308 texture debug configuration R311
 
 Exact client authority:
 
@@ -7,34 +7,24 @@ Exact client authority:
 ## Deterministic result
 
 - `rs/l/b/a/b/b` -> `CLIENT_CLASS_000375` -> `TextureDebugConfigLoader`
-- `rs/t/b/a` -> `CLIENT_CLASS_000991` -> `NpcDefinitionDumpTool`
-- `rs/t/b/b` -> `CLIENT_CLASS_000992` -> `ItemDefinitionDumpTool`
-- review: `SEMREVIEW_730D656BFB9058CF080B`
+- review: `SEMREVIEW_9DC3AC6C4324AD9D5A37`
 - unresolved: **0**
 - member proposals: **0**
 
-## Exact-v308 evidence
+## Exact-v308 contract
 
-### Texture debug configuration
+`rs/l/b/a/b/b` is a static debug-file loader.
 
-`rs/l/b/a/b/b` creates `./debug` when necessary and opens `./debug/textures.txt`. It clears six integer lists, skips `#` comment lines, recognizes `[textur]`, `[random]`, and `[recolor]` section markers, and parses comma-separated integer entries according to the active section.
+It creates `./debug` when the directory does not exist and opens `./debug/textures.txt` through `FileReader` / `BufferedReader`. Before parsing it clears six integer-list fields. The parser ignores `#` comment lines, switches section mode on the exact markers `[textur]`, `[random]`, and `[recolor]`, and parses comma-separated integer values into the lists associated with the active section.
 
-### NPC definition dump tool
+The class has no gameplay-interface construction state. Its only direct bytecode referrer is the nested section-mode helper used by this parser.
 
-`rs/t/b/a` walks NPC definition slots and compares the current `rs/d/d` definitions to baseline/template definitions. Its difference map covers name, combat level, actions, models, recolors/retextures, chat-head models, animations, scale, minimap/priority rendering, head icon, pet/clickable state and related fields.
+## Global-authority correction
 
-The exact bootstrap/string contract contains **Found differences in NPC**, **..Dump completed!**, and generated **e.yaml / e.bin** output names.
+An earlier draft of R311 also included `rs/t/b/a` and `rs/t/b/b`. Recovery CI correctly exposed that both were already owned by R249 as `NpcDefinitionDiffDumper` and `ItemDefinitionDiffDumper`.
 
-### Item definition dump tool
-
-`rs/t/b/b` performs the parallel operation for `rs/d/k` item definitions. Its comparison surface includes item name/note/template/clone state, actions and ground actions, stacks, model and 2D transforms, recolors/retextures, resize, worn/chat models, ambient and contrast.
-
-Exact strings include **Found differences in item**, **..Dump completed!**, **Running test..**, **..Test completed!**, plus generated **i.yaml / i.bin** outputs and an embedded **Dwarf remains** item fixture.
-
-## Global-authority preflight
-
-Unlike the discarded duplicate attempt, R311 was checked against the complete class-owner/name/stable-ID authority: the R2 seed plus R3-R310 review batches. All three owners, names, and stable IDs are new.
+Those duplicate proposals were removed. This corrected R311 contains only the genuinely unowned `rs/l/b/a/b/b` class and checks its owner, semantic name, and stable ID against every prior review from R2 through R310.
 
 ## Boundary
 
-R311 remains non-canonical semantic research. The names describe exact-v308 roles and do not claim original stripped developer identifiers.
+R311 is non-canonical semantic research. `TextureDebugConfigLoader` describes exact-v308 behavior and does not claim the stripped original developer identifier.
