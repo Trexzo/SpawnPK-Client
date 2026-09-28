@@ -1,4 +1,4 @@
-# Chat 2 — exact-v308 RSSocket R359
+# Chat 2 — exact-v308 RSSocket R366
 
 Exact client authority:
 
@@ -45,4 +45,4 @@ Public 317 client source identifies this exact class family as `RSSocket`.
 This is the game connection wrapper itself, not a packet codec or higher-level session
 manager.
 
-R359 remains non-canonical semantic research only.
+R366 remains non-canonical semantic research only.
