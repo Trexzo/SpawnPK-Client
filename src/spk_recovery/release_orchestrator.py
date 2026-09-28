@@ -124,6 +124,11 @@ def build_existing_authority_release(
     javac_command: str = "javac",
 ) -> dict[str, Any]:
     """Compose the verified R4/R5 path for one already-promoted exact build."""
+    if official_first_restored and not project_source_only:
+        raise ExistingAuthorityReleaseError(
+            "official-first restored release requires project_source_only"
+        )
+
     out_dir = out_dir.resolve()
     if out_dir.exists() and any(out_dir.iterdir()):
         raise ExistingAuthorityReleaseError(
