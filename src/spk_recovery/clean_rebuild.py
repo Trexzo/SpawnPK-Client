@@ -33,6 +33,10 @@ from .collision_derived_compile import (
     compile_collision_derived_source,
 )
 from .source_digest import source_tree_digest
+from .dependency_official_derived_compile import (
+    DependencyOfficialDerivedCompileError,
+    compile_official_overlay_and_restore,
+)
 
 
 class CleanRebuildError(ValueError):
@@ -1350,6 +1354,363 @@ def _clean_project_rebuild_virtualized(
     return report
 
 
+def _project_classes_from_jar(
+    path: Path,
+    prefixes: list[str],
+) -> dict[str, bytes]:
+    rows: dict[str, bytes] = {}
+    try:
+        with zipfile.ZipFile(path) as archive:
+            for info in archive.infolist():
+                if info.is_dir() or not info.filename.endswith(".class"):
+                    continue
+                if not _is_project_class(info.filename, prefixes):
+                    raise CleanRebuildError(
+                        "restored project JAR contains a class outside "
+                        "the clean-build project scope: "
+                        + info.filename
+                    )
+                rows[info.filename] = archive.read(info)
+    except (OSError, zipfile.BadZipFile) as exc:
+        raise CleanRebuildError(
+            "invalid restored project JAR"
+        ) from exc
+
+    if not rows:
+        raise CleanRebuildError(
+            "restored project JAR contains no project classes"
+        )
+    return rows
+
+
+def _clean_project_rebuild_official_first(
+    recovered_manifest: dict[str, Any],
+    source_readiness: dict[str, Any],
+    readable_manifest: dict[str, Any],
+    readable_jar: Path,
+    build_authority: dict[str, Any],
+    source_root: Path,
+    overlay_manifest_path: Path,
+    overlay_source_root: Path,
+    private_replacement_plan_path: Path,
+    private_reverse_plan_path: Path,
+    official_artifacts: list[Path],
+    *,
+    out_dir: Path,
+    java_command: str = "java",
+    javac_command: str = "javac",
+    source_prefixes: list[str] | None = None,
+) -> dict[str, Any]:
+    source_root = source_root.resolve()
+    readable_jar = readable_jar.resolve()
+
+    try:
+        all_files, javac_probe, authority_release = _verify_authority(
+            recovered_manifest,
+            source_readiness,
+            readable_manifest,
+            readable_jar,
+            build_authority,
+            source_root,
+            javac_command,
+        )
+    except ProgressiveCompileError as exc:
+        raise CleanRebuildError(str(exc)) from exc
+
+    try:
+        source_derivation = _workspace_readable_derivation(
+            recovered_manifest,
+            readable_manifest,
+        )
+    except ProgressiveCompileError as exc:
+        raise CleanRebuildError(str(exc)) from exc
+    if source_derivation is not None:
+        raise CleanRebuildError(
+            "official-first restored clean rebuild does not compose "
+            "with collision-derived source authority"
+        )
+
+    prefixes = _normalize_prefixes(
+        readable_manifest,
+        source_prefixes,
+    )
+    source_files = _project_source_files(
+        all_files,
+        source_root,
+        prefixes,
+    )
+    if not source_files:
+        raise CleanRebuildError(
+            "no project Java source matched the clean-build prefixes"
+        )
+
+    out_dir = out_dir.resolve()
+    if out_dir.exists() and any(out_dir.iterdir()):
+        raise CleanRebuildError(
+            "clean rebuild output directory must be empty"
+        )
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    expected = _expected_project_classes(
+        readable_jar,
+        prefixes,
+    )
+
+    runtime_dependency_jar = out_dir / "dependency-capsule.jar"
+    runtime_dependency_sha, runtime_dependency_count = (
+        _dependency_capsule(
+            readable_jar,
+            prefixes,
+            runtime_dependency_jar,
+        )
+    )
+
+    derived_dir = out_dir / "official-first-derived"
+    try:
+        derived = compile_official_overlay_and_restore(
+            overlay_manifest_path,
+            overlay_source_root,
+            source_root,
+            private_replacement_plan_path,
+            private_reverse_plan_path,
+            readable_jar,
+            official_artifacts,
+            derived_dir,
+            project_prefixes=tuple(prefixes),
+            java_command=java_command,
+            javac_command=javac_command,
+        )
+    except DependencyOfficialDerivedCompileError as exc:
+        raise CleanRebuildError(str(exc)) from exc
+
+    if derived.get("status") != "complete":
+        raise CleanRebuildError(
+            "official-first derived compile did not complete"
+        )
+
+    summary = derived.get("summary", {})
+    required_true = (
+        "reverse_reference_surface_match",
+        "restored_project_bytecode_ready_for_runtime_assembly",
+    )
+    for key in required_true:
+        if summary.get(key) is not True:
+            raise CleanRebuildError(
+                "official-first derived compile lacks required proof: "
+                + key
+            )
+
+    required_false = (
+        "compile_dependency_contains_project_classes",
+        "canonical_source_modified",
+        "bundled_runtime_dependency_modified",
+        "official_compile_artifacts_modified",
+        "official_dependencies_runtime_allowed",
+    )
+    for key in required_false:
+        if summary.get(key) is not False:
+            raise CleanRebuildError(
+                "official-first derived compile violates runtime boundary: "
+                + key
+            )
+
+    if int(summary.get("project_binary_fallback_count", -1)) != 0:
+        raise CleanRebuildError(
+            "official-first derived compile used project binary fallback"
+        )
+
+    if (
+        authority_release is not None
+        and int(derived.get("release", -1)) != authority_release
+    ):
+        raise CleanRebuildError(
+            "official-first Java release differs from build authority"
+        )
+
+    restored_path = (
+        derived_dir / "restored-bundled-project.jar"
+    )
+    restored_classes = _project_classes_from_jar(
+        restored_path,
+        prefixes,
+    )
+    restored_set = set(restored_classes)
+    missing = sorted(expected - restored_set)
+    unexpected = sorted(restored_set - expected)
+
+    status = (
+        "complete"
+        if not missing and not unexpected
+        else "class_set_mismatch"
+    )
+
+    rebuilt_sha: str | None = None
+    rebuilt_index_summary: dict[str, Any] | None = None
+    if status == "complete":
+        rebuilt_jar = out_dir / "rebuilt-client.jar"
+        _rebuild_jar(
+            readable_jar,
+            restored_classes,
+            prefixes,
+            rebuilt_jar,
+        )
+        rebuilt_sha = _sha256_file(rebuilt_jar)
+        rebuilt_index = index_jar(rebuilt_jar)
+        rebuilt_index_summary = rebuilt_index["summary"]
+        if rebuilt_index_summary["class_parse_error_count"] != 0:
+            raise CleanRebuildError(
+                "official-first rebuilt client contains class parse errors"
+            )
+
+    material = {
+        "workspace_id": recovered_manifest.get("workspace_id"),
+        "build_authority_id": build_authority.get("authority_id"),
+        "readable_jar_sha256": readable_manifest.get(
+            "output_sha256"
+        ),
+        "source_tree_sha256": recovered_manifest.get(
+            "source_tree_sha256"
+        ),
+        "prefixes": prefixes,
+        "status": status,
+        "compile_id": derived.get("compile_id"),
+        "overlay_id": derived.get("overlay_id"),
+        "replacement_plan_id": derived.get("replacement_plan_id"),
+        "reverse_plan_id": derived.get("reverse_plan_id"),
+        "reverse_application_id": derived.get(
+            "reverse_application_id"
+        ),
+        "runtime_dependency_capsule_sha256": runtime_dependency_sha,
+        "restored_project_jar_sha256": derived.get(
+            "restored_project_jar_sha256"
+        ),
+        "rebuilt_jar_sha256": rebuilt_sha,
+    }
+    rebuild_id = (
+        "CLEANBUILD_"
+        + hashlib.sha256(
+            json.dumps(
+                material,
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=False,
+            ).encode("utf-8")
+        ).hexdigest()[:20].upper()
+    )
+
+    report = {
+        "schema_version": 1,
+        "kind": "clean_project_rebuild_report",
+        "rebuild_id": rebuild_id,
+        "status": status,
+        "workspace_id": recovered_manifest.get("workspace_id"),
+        "build_id": recovered_manifest.get("build_id"),
+        "source_authority_sha256": recovered_manifest.get(
+            "source_authority_sha256"
+        ),
+        "readable_jar_sha256": readable_manifest.get(
+            "output_sha256"
+        ),
+        "namespace_id": recovered_manifest.get("namespace_id"),
+        "source_tree_sha256": recovered_manifest.get(
+            "source_tree_sha256"
+        ),
+        "build_authority_id": build_authority.get("authority_id"),
+        "source_scope": {
+            "prefixes": prefixes,
+            "project_source_files": len(source_files),
+            "all_workspace_java_files": len(all_files),
+            "javac_input_transport": (
+                "official_api_overlay_then_bundled_bytecode_restore"
+            ),
+        },
+        "compiler": {
+            "javac": javac_probe,
+            "target_release": derived.get("release"),
+            "diagnostic_classification": None,
+        },
+        "dependency_capsule": {
+            "path": "dependency-capsule.jar",
+            "sha256": runtime_dependency_sha,
+            "class_count": runtime_dependency_count,
+            "contains_project_classes": False,
+            "source": "verified_readable_client_non_project_classes",
+        },
+        "project_classes": {
+            "expected_count": len(expected),
+            "generated_count": len(restored_classes),
+            "missing": missing,
+            "unexpected": unexpected,
+            "binary_fallback_count": 0,
+        },
+        "diagnostic": "",
+        "rebuilt_client": {
+            "path": (
+                "rebuilt-client.jar"
+                if rebuilt_sha is not None
+                else None
+            ),
+            "sha256": rebuilt_sha,
+            "index_summary": rebuilt_index_summary,
+        },
+        "compile_transport": {
+            "mode": "official_first_restored",
+            "opt_in": True,
+            "status": derived["status"],
+            "official_compile_id": derived["compile_id"],
+            "overlay_id": derived["overlay_id"],
+            "replacement_plan_id": derived["replacement_plan_id"],
+            "reverse_plan_id": derived["reverse_plan_id"],
+            "reverse_application_id": derived[
+                "reverse_application_id"
+            ],
+            "official_artifact_sha256": derived[
+                "official_artifact_sha256"
+            ],
+            "compile_dependency_capsule_sha256": derived[
+                "compile_dependency_capsule_sha256"
+            ],
+            "compile_dependency_capsule_class_count": derived[
+                "compile_dependency_capsule_class_count"
+            ],
+            "generated_project_jar_sha256": derived[
+                "generated_project_jar_sha256"
+            ],
+            "restored_project_jar_sha256": derived[
+                "restored_project_jar_sha256"
+            ],
+            "project_binary_fallback_count": 0,
+            "runtime_official_dependencies_allowed": False,
+            "runtime_dependency_source": (
+                "original_verified_readable_non_project_bytes"
+            ),
+            "canonical_source_modified": False,
+            "bundled_runtime_dependency_modified": False,
+            "restored_project_bytecode_ready_for_runtime_assembly": True,
+        },
+        "clean_project_build": status == "complete",
+        "all_dependencies_rebuilt_from_source": False,
+        "note": (
+            "Official dependency APIs are compile-only inputs. Generated "
+            "project bytecode is restored to bundled dependency identities, "
+            "and the runtime JAR retains the original verified non-project "
+            "dependency bytes."
+        ),
+    }
+
+    (out_dir / "clean-rebuild.json").write_text(
+        json.dumps(
+            report,
+            indent=2,
+            sort_keys=True,
+            ensure_ascii=False,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    return report
+
+
 def clean_project_rebuild(
     recovered_manifest: dict[str, Any],
     source_readiness: dict[str, Any],
@@ -1365,6 +1726,13 @@ def clean_project_rebuild(
     private_namespace_alias_plan: dict[str, Any] | None = None,
     auto_namespace_alias: bool = False,
     private_collision_plan_path: Path | None = None,
+    official_first_restored: bool = False,
+    official_overlay_manifest_path: Path | None = None,
+    official_overlay_source_root: Path | None = None,
+    private_dependency_replacement_plan_path: Path | None = None,
+    private_dependency_reverse_plan_path: Path | None = None,
+    official_artifacts: list[Path] | None = None,
+    java_command: str = "java",
 ) -> dict[str, Any]:
     try:
         source_derivation = _workspace_readable_derivation(
@@ -1373,6 +1741,68 @@ def clean_project_rebuild(
         )
     except ProgressiveCompileError as exc:
         raise CleanRebuildError(str(exc)) from exc
+
+    official_inputs_supplied = any(
+        value is not None
+        for value in (
+            official_overlay_manifest_path,
+            official_overlay_source_root,
+            private_dependency_replacement_plan_path,
+            private_dependency_reverse_plan_path,
+            official_artifacts,
+        )
+    )
+
+    if official_first_restored:
+        if source_derivation is not None:
+            raise CleanRebuildError(
+                "official-first restored transport does not compose with "
+                "collision-derived source authority"
+            )
+        if (
+            private_namespace_alias_plan is not None
+            or auto_namespace_alias
+            or private_collision_plan_path is not None
+        ):
+            raise CleanRebuildError(
+                "official-first restored transport is mutually exclusive "
+                "with namespace/collision compile transports"
+            )
+        if (
+            official_overlay_manifest_path is None
+            or official_overlay_source_root is None
+            or private_dependency_replacement_plan_path is None
+            or private_dependency_reverse_plan_path is None
+            or not official_artifacts
+        ):
+            raise CleanRebuildError(
+                "official-first restored transport requires overlay "
+                "manifest/source, private replacement/reverse plans, and "
+                "at least one official artifact"
+            )
+        return _clean_project_rebuild_official_first(
+            recovered_manifest,
+            source_readiness,
+            readable_manifest,
+            readable_jar,
+            build_authority,
+            source_root,
+            official_overlay_manifest_path,
+            official_overlay_source_root,
+            private_dependency_replacement_plan_path,
+            private_dependency_reverse_plan_path,
+            list(official_artifacts),
+            out_dir=out_dir,
+            java_command=java_command,
+            javac_command=javac_command,
+            source_prefixes=source_prefixes,
+        )
+
+    if official_inputs_supplied:
+        raise CleanRebuildError(
+            "official-first inputs require explicit "
+            "official_first_restored opt-in"
+        )
 
     if source_derivation is not None:
         if (
