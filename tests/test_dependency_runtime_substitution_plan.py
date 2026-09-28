@@ -11,6 +11,11 @@ from spk_recovery.dependency_runtime_substitution_plan import (
     DependencyRuntimeSubstitutionPlanError,
     build_dependency_runtime_substitution_plan,
 )
+from spk_recovery.dependency_runtime_substitution_apply import (
+    DependencyRuntimeSubstitutionApplyError,
+    apply_dependency_runtime_substitution,
+    verify_dependency_runtime_substitution_postimage,
+)
 
 
 def _sha(path: Path) -> str:
@@ -153,6 +158,24 @@ class DependencyRuntimeSubstitutionPlanTests(unittest.TestCase):
             "readiness": readiness_path,
         }
 
+    def _private_plan(self, root: Path, fx: dict) -> Path:
+        report = build_dependency_runtime_substitution_plan(
+            fx["readiness"],
+            fx["replacement"],
+            fx["extension"],
+            fx["closure"],
+            fx["resource"],
+            fx["bundled"],
+            [fx["official"]],
+            include_identifiers=True,
+        )
+        path = root / "substitution-plan.json"
+        path.write_text(
+            json.dumps(report, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        return path
+
     def test_ready_authority_produces_plan_but_never_apply_authority(self):
         with tempfile.TemporaryDirectory() as td:
             fx = self._fixture(Path(td))
@@ -209,7 +232,7 @@ class DependencyRuntimeSubstitutionPlanTests(unittest.TestCase):
                     [fx["official"]],
                 )
 
-    def test_retained_bundled_official_collision_is_reported(self):
+    def test_retained_resource_overlap_is_informational(self):
         with tempfile.TemporaryDirectory() as td:
             fx = self._fixture(Path(td))
             with zipfile.ZipFile(
@@ -242,8 +265,55 @@ class DependencyRuntimeSubstitutionPlanTests(unittest.TestCase):
                 [fx["official"]],
                 include_identifiers=True,
             )
+            self.assertTrue(report["summary"]["collision_free"])
+            self.assertEqual(report["summary"]["collision_count"], 0)
+            self.assertEqual(
+                report["summary"]["resource_overlap_count"],
+                1,
+            )
+            self.assertIn(
+                "retained_bundled_official",
+                {row["kind"] for row in report["resource_overlaps"]},
+            )
+
+    def test_retained_class_collision_remains_blocking(self):
+        with tempfile.TemporaryDirectory() as td:
+            fx = self._fixture(Path(td))
+            with zipfile.ZipFile(
+                fx["official"],
+                "a",
+                zipfile.ZIP_STORED,
+            ) as archive:
+                archive.writestr(
+                    "old/Residual.class",
+                    b"official-collision",
+                )
+
+            official_sha = _sha(fx["official"])
+            for path in (
+                fx["readiness"],
+                fx["closure"],
+                fx["resource"],
+            ):
+                value = json.loads(path.read_text(encoding="utf-8"))
+                value["official_artifact_sha256"] = [official_sha]
+                path.write_text(
+                    json.dumps(value) + "\n",
+                    encoding="utf-8",
+                )
+
+            report = build_dependency_runtime_substitution_plan(
+                fx["readiness"],
+                fx["replacement"],
+                fx["extension"],
+                fx["closure"],
+                fx["resource"],
+                fx["bundled"],
+                [fx["official"]],
+                include_identifiers=True,
+            )
             self.assertFalse(report["summary"]["collision_free"])
-            self.assertGreater(report["summary"]["collision_count"], 0)
+            self.assertEqual(report["summary"]["collision_count"], 1)
             self.assertIn(
                 "retained_bundled_official",
                 {row["kind"] for row in report["collisions"]},
@@ -313,6 +383,142 @@ class DependencyRuntimeSubstitutionPlanTests(unittest.TestCase):
                     fx["resource"],
                     fx["bundled"],
                     [fx["official"]],
+                )
+
+    def test_apply_builds_verified_residual_runtime(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            fx = self._fixture(root)
+            plan = self._private_plan(root, fx)
+            out = root / "postimage"
+
+            manifest = apply_dependency_runtime_substitution(
+                plan,
+                fx["bundled"],
+                [fx["official"]],
+                out,
+            )
+
+            self.assertTrue(manifest["verified"])
+            self.assertEqual(
+                manifest["runtime_classpath"],
+                [
+                    "residual-dependency-capsule.jar",
+                    "official/official.jar",
+                ],
+            )
+            with zipfile.ZipFile(
+                out / "residual-dependency-capsule.jar"
+            ) as archive:
+                names = set(archive.namelist())
+                self.assertIn("old/Residual.class", names)
+                self.assertIn("keep.txt", names)
+                self.assertNotIn("old/A.class", names)
+                self.assertNotIn(
+                    "META-INF/services/example.Service",
+                    names,
+                )
+            self.assertEqual(
+                (out / "official" / "official.jar").read_bytes(),
+                fx["official"].read_bytes(),
+            )
+
+            verified = verify_dependency_runtime_substitution_postimage(
+                plan,
+                fx["bundled"],
+                [fx["official"]],
+                out,
+            )
+            self.assertEqual(
+                verified["runtime_postimage_id"],
+                manifest["runtime_postimage_id"],
+            )
+
+    def test_apply_is_byte_deterministic(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            fx = self._fixture(root)
+            plan = self._private_plan(root, fx)
+
+            first = apply_dependency_runtime_substitution(
+                plan,
+                fx["bundled"],
+                [fx["official"]],
+                root / "postimage-a",
+            )
+            second = apply_dependency_runtime_substitution(
+                plan,
+                fx["bundled"],
+                [fx["official"]],
+                root / "postimage-b",
+            )
+
+            self.assertEqual(
+                first["residual_capsule_sha256"],
+                second["residual_capsule_sha256"],
+            )
+            self.assertEqual(
+                first["runtime_postimage_id"],
+                second["runtime_postimage_id"],
+            )
+            self.assertEqual(
+                (root / "postimage-a" / "residual-dependency-capsule.jar").read_bytes(),
+                (root / "postimage-b" / "residual-dependency-capsule.jar").read_bytes(),
+            )
+
+    def test_postimage_tamper_is_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            fx = self._fixture(root)
+            plan = self._private_plan(root, fx)
+            out = root / "postimage"
+            apply_dependency_runtime_substitution(
+                plan,
+                fx["bundled"],
+                [fx["official"]],
+                out,
+            )
+
+            with zipfile.ZipFile(
+                out / "residual-dependency-capsule.jar",
+                "a",
+                zipfile.ZIP_STORED,
+            ) as archive:
+                archive.writestr("tampered.txt", b"no")
+
+            with self.assertRaisesRegex(
+                DependencyRuntimeSubstitutionApplyError,
+                "residual capsule bytes differ",
+            ):
+                verify_dependency_runtime_substitution_postimage(
+                    plan,
+                    fx["bundled"],
+                    [fx["official"]],
+                    out,
+                )
+
+    def test_tampered_private_plan_id_is_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            fx = self._fixture(root)
+            plan = self._private_plan(root, fx)
+            value = json.loads(plan.read_text(encoding="utf-8"))
+            value["runtime_substitution_plan_id"] = (
+                "DEPRUNTIMESUBPLAN_" + "F" * 20
+            )
+            plan.write_text(
+                json.dumps(value) + "\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                DependencyRuntimeSubstitutionApplyError,
+                "plan ID does not verify",
+            ):
+                apply_dependency_runtime_substitution(
+                    plan,
+                    fx["bundled"],
+                    [fx["official"]],
+                    root / "postimage",
                 )
 
     def test_public_and_private_reports_share_plan_id(self):
