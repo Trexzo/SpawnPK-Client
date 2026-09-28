@@ -100,12 +100,20 @@ def _is_native_path(entry: str) -> bool:
 def _resource_entries(path: Path) -> dict[str, bytes]:
     try:
         with zipfile.ZipFile(path) as archive:
-            return {
-                info.filename: archive.read(info.filename)
-                for info in archive.infolist()
-                if not info.is_dir()
-                and not info.filename.endswith(".class")
-            }
+            result: dict[str, bytes] = {}
+            for info in archive.infolist():
+                if (
+                    info.is_dir()
+                    or info.filename.endswith(".class")
+                ):
+                    continue
+                if info.filename in result:
+                    raise DependencyRuntimeResourceError(
+                        f"duplicate resource entry in JAR: "
+                        f"{path.name}:{info.filename}"
+                    )
+                result[info.filename] = archive.read(info)
+            return result
     except zipfile.BadZipFile as exc:
         raise DependencyRuntimeResourceError(
             f"invalid JAR/ZIP: {path}"
@@ -166,6 +174,20 @@ def build_dependency_runtime_resource_equivalence(
             "official artifact SHA set differs from runtime closure"
         )
 
+    closure_owners = closure.get("owners")
+    if not isinstance(closure_owners, list):
+        raise DependencyRuntimeResourceError(
+            "private runtime closure lacks owner rows"
+        )
+    owner_used_artifacts = {
+        str(row["artifact"])
+        for row in closure_owners
+        if isinstance(row, dict)
+        and row.get("status") == "official_closure_mapped"
+        and isinstance(row.get("artifact"), str)
+        and row.get("artifact")
+    }
+
     resources = closure.get("resources")
     if not isinstance(resources, dict):
         raise DependencyRuntimeResourceError(
@@ -197,6 +219,11 @@ def build_dependency_runtime_resource_equivalence(
     if len(set(used_artifact_names)) != len(used_artifact_names):
         raise DependencyRuntimeResourceError(
             "runtime closure repeats used artifact"
+        )
+    if set(used_artifact_names) != owner_used_artifacts:
+        raise DependencyRuntimeResourceError(
+            "runtime closure used-artifact inventory disagrees with "
+            "official closure owner rows"
         )
 
     bundled_resources = _resource_entries(bundled_jar)
