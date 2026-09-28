@@ -223,6 +223,40 @@ public class DynamicCalls {
             self.assertNotIn("example.Target", rendered)
             self.assertFalse(public["identifiers_included"])
 
+    def test_duplicate_class_entry_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            fx = self._fixture(Path(td))
+            with zipfile.ZipFile(
+                fx["bundled"],
+                "a",
+                zipfile.ZIP_STORED,
+            ) as archive:
+                original = archive.read(
+                    "sample/DynamicCalls.class"
+                )
+                archive.writestr(
+                    "sample/DynamicCalls.class",
+                    original,
+                )
+
+            resource = fx["resource"]
+            resource["bundled_jar_sha256"] = _sha(
+                fx["bundled"]
+            )
+            fx["authority"].write_text(
+                json.dumps(resource) + "\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                DependencyRuntimeDynamicError,
+                "duplicate class entry",
+            ):
+                build_dependency_runtime_dynamic_inventory(
+                    fx["authority"],
+                    fx["bundled"],
+                )
+
     def test_resource_authority_jar_drift_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
             fx = self._fixture(Path(td))
