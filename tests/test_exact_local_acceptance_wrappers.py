@@ -36,32 +36,38 @@ class ExactLocalAcceptanceWrapperTests(unittest.TestCase):
         self.assertIn("origin/main", text)
         self.assertTrue(all(ord(ch) < 128 for ch in text))
 
-    def test_source_m1_wrapper_runs_current_main_release_and_publication_chain(self):
+    def test_source_m1_wrapper_bootstraps_collision_authority_from_exact_v308(self):
         text = self.source.read_text(encoding="utf-8")
         self.assertIn(
             "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
             text,
         )
         self.assertIn(
+            "821da96012fc69244fa1ea298c90455ee4e021434bc796d3b9546ab24601b779",
+            text,
+        )
+        stages = [
+            "spk_recovery.readable_build_cli",
+            "spk_recovery.namespace_collision_plan_cli",
+            "spk_recovery.collision_bytecode_remap_cli",
+            "spk_recovery.source_workspace_cli",
             "spk_recovery.release_workspace_orchestrator_cli",
-            text,
-        )
-        self.assertIn(
             "spk_recovery.release_verify_cli",
-            text,
-        )
-        self.assertIn(
             "spk_recovery.source_authority_artifact_cli",
-            text,
-        )
-        self.assertIn(
             "spk_recovery.source_milestone_cli",
-            text,
-        )
+        ]
+        positions = [text.index(stage) for stage in stages]
+        self.assertEqual(positions, sorted(positions))
+        self.assertIn("--collision-transform-report", text)
+        self.assertIn("--include-identifiers", text)
+        self.assertIn("--private-collision-plan", text)
+        self.assertIn("--project-only", text)
+        self.assertIn("--source-safe-fallback", text)
+        self.assertIn("plan_eliminates_all_collisions", text)
+        self.assertIn("post_collision_edge_count", text)
         self.assertIn("SOURCE M1 EXACT LOCAL ACCEPTANCE - PASS", text)
         self.assertIn("SPK_SOURCE_M1_EXACT_LOCAL_BLOCKED", text)
-        self.assertIn("--private-collision-plan", text)
-        self.assertIn("--source-safe-fallback", text)
+        self.assertIn("javac_frontier_id", text)
         self.assertIn("origin/main", text)
         self.assertTrue(all(ord(ch) < 128 for ch in text))
 
