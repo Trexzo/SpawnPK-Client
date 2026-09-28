@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [{
+    "schema_version": 1,
+    "kind": "semantic_name_candidate",
+    "canonical": false,
+    "status": "CANDIDATE",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target": {"kind": "class", "owner": "rs/gui/N", "name": null, "descriptor": null},
+    "proposed_name": "SwingUtilTrayIconMouseListener",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"exact_parent_ownership","detail":"R180 SwingUtil rs/gui/M constructs rs/gui/N only inside its TrayIcon factory and immediately attaches it with TrayIcon.addMouseListener; no other exact-v308 class constructs the listener."},
+      {"family":"exact_click_behavior","detail":"mouseClicked restores the owned Frame by setVisible(true) and setState(Frame.NORMAL); on the macOS branch, when the frame is not focused it first hides the frame and invokes the macOS foreground helper before restoring visibility."},
+      {"family":"historical_source_match","detail":"Historical RuneLite-derived SwingUtil.java at Jire/tarnish commit a4796be8e8cdef2398faf1081fa6a4da8a0190b1 contains an anonymous MouseAdapter inside createTrayIcon with the same macOS focus workaround and frame restore sequence."}
+    ],
+    "note":"Descriptive name for the anonymous tray-icon MouseAdapter nested behavior recovered from the exact historical SwingUtil source; no standalone original source class name existed."
+  }],
+  "conflicts": []
+}
