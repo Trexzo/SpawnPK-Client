@@ -12,29 +12,15 @@
       "status": "CANDIDATE",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/o/a/a/a/d",
-        "name": null,
-        "descriptor": null
-      },
+      "target": {"kind":"class","owner":"rs/o/a/a/a/d","name":null,"descriptor":null},
       "proposed_name": "IdleKeepalivePacket",
       "confidence": 0.999,
       "evidence": [
-        {
-          "family": "exact_outgoing_opcode",
-          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 0."
-        },
-        {
-          "family": "exact_protocol_contract",
-          "detail": "The exact-current C2S master table identifies opcode 0 as idle keepalive."
-        },
-        {
-          "family": "exact_family_boundary",
-          "detail": "The class contains no unrelated packet payload or second behavior beyond this control/ack transport."
-        }
+        {"family":"exact_outgoing_opcode","detail":"The concrete R322 OutgoingPacket writes fixed C2S opcode 0 and no payload bytes."},
+        {"family":"exact_protocol_identity","detail":"Exact-current C2S authority identifies opcode 0 as IDLE_KEEPALIVE, fixed length 0, STOCK_CLIENT_DIRECT."},
+        {"family":"exact_runtime_corroboration","detail":"LocalLab runtime captures repeated normal opcode-0 fixed-zero client packets during an otherwise healthy session, matching keepalive/liveness traffic rather than a gameplay action."}
       ],
-      "note": "Exact-v308 outgoing transport identity from generated packet bytecode plus exact-current C2S authority."
+      "note":"Exact-v308 fixed-zero idle keepalive transport."
     },
     {
       "schema_version": 1,
@@ -43,29 +29,15 @@
       "status": "CANDIDATE",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/o/a/a/a/q",
-        "name": null,
-        "descriptor": null
-      },
+      "target": {"kind":"class","owner":"rs/o/a/a/a/q","name":null,"descriptor":null},
       "proposed_name": "RegionLoadingFinishedAckPacket",
       "confidence": 0.999,
       "evidence": [
-        {
-          "family": "exact_outgoing_opcode",
-          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 121."
-        },
-        {
-          "family": "exact_protocol_contract",
-          "detail": "The exact-current C2S master table identifies opcode 121 as region-loading-finished acknowledgement."
-        },
-        {
-          "family": "exact_family_boundary",
-          "detail": "The class contains no unrelated packet payload or second behavior beyond this control/ack transport."
-        }
+        {"family":"exact_outgoing_opcode","detail":"The concrete R322 OutgoingPacket writes fixed C2S opcode 121 and no payload."},
+        {"family":"exact_protocol_identity","detail":"Exact-current C2S authority identifies opcode 121 as REGION_LOADING_FINISHED_ACK, fixed length 0, STOCK_CLIENT_DIRECT."},
+        {"family":"exact_runtime_corroboration","detail":"LocalLab runtime captures opcode 121 repeatedly with loadingAck=true during region/bootstrap loading completion."}
       ],
-      "note": "Exact-v308 outgoing transport identity from generated packet bytecode plus exact-current C2S authority."
+      "note":"Exact-v308 region-loading completion acknowledgement."
     },
     {
       "schema_version": 1,
@@ -74,91 +46,15 @@
       "status": "CANDIDATE",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/o/a/a/a/r",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "PlayerOption3Packet",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_outgoing_opcode",
-          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 73."
-        },
-        {
-          "family": "exact_protocol_contract",
-          "detail": "The exact-current C2S master table identifies opcode 73 as player option 3."
-        },
-        {
-          "family": "exact_family_boundary",
-          "detail": "The name stops at the configured player option slot; visible option text is server-configurable through S2C104 and no gameplay verb is inferred."
-        }
-      ],
-      "note": "Exact-v308 outgoing transport identity from generated packet bytecode plus exact-current C2S authority."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/o/a/a/a/T",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "PlayerOption2Packet",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_outgoing_opcode",
-          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 153."
-        },
-        {
-          "family": "exact_protocol_contract",
-          "detail": "The exact-current C2S master table identifies opcode 153 as player option 2."
-        },
-        {
-          "family": "exact_family_boundary",
-          "detail": "The name stops at the configured player option slot; visible option text is server-configurable through S2C104 and no gameplay verb is inferred."
-        }
-      ],
-      "note": "Exact-v308 outgoing transport identity from generated packet bytecode plus exact-current C2S authority."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/o/a/a/a/U",
-        "name": null,
-        "descriptor": null
-      },
+      "target": {"kind":"class","owner":"rs/o/a/a/a/U","name":null,"descriptor":null},
       "proposed_name": "IdleLogoutNoticePacket",
       "confidence": 0.999,
       "evidence": [
-        {
-          "family": "exact_outgoing_opcode",
-          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 202."
-        },
-        {
-          "family": "exact_protocol_contract",
-          "detail": "The exact-current C2S master table identifies opcode 202 as idle logout notice."
-        },
-        {
-          "family": "exact_family_boundary",
-          "detail": "The class contains no unrelated packet payload or second behavior beyond this control/ack transport."
-        }
+        {"family":"exact_outgoing_opcode","detail":"The concrete R322 OutgoingPacket writes fixed C2S opcode 202 and no payload."},
+        {"family":"exact_protocol_identity","detail":"Exact-current C2S authority identifies opcode 202 as IDLE_LOGOUT_NOTICE, fixed length 0, STOCK_CLIENT_DIRECT."},
+        {"family":"runtime_failure_corroboration","detail":"A LocalLab session previously froze its C2S decoder exactly when opcode 202 was emitted after idle time because that fixed-zero schema was missing; adding the known framing restored the causal interpretation."}
       ],
-      "note": "Exact-v308 outgoing transport identity from generated packet bytecode plus exact-current C2S authority."
+      "note":"Exact-v308 idle logout/liveness notice transport; this is the packet implicated in the earlier LocalLab half-connected decoder pause."
     },
     {
       "schema_version": 1,
@@ -167,29 +63,15 @@
       "status": "CANDIDATE",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/o/a/a/a/W",
-        "name": null,
-        "descriptor": null
-      },
+      "target": {"kind":"class","owner":"rs/o/a/a/a/W","name":null,"descriptor":null},
       "proposed_name": "RegionChangeAckPacket",
       "confidence": 0.999,
       "evidence": [
-        {
-          "family": "exact_outgoing_opcode",
-          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 210 followed by the exact fixed i32 acknowledgement value."
-        },
-        {
-          "family": "exact_protocol_contract",
-          "detail": "The exact-current C2S master table identifies opcode 210 as region-change acknowledgement."
-        },
-        {
-          "family": "exact_family_boundary",
-          "detail": "The class contains no unrelated packet payload or second behavior beyond this control/ack transport."
-        }
+        {"family":"exact_outgoing_opcode","detail":"The concrete R322 OutgoingPacket writes fixed C2S opcode 210 followed by one i32 payload."},
+        {"family":"exact_protocol_identity","detail":"Exact-current C2S authority identifies opcode 210 as REGION_CHANGE_ACK with FIXED 4 / i32_be framing."},
+        {"family":"exact_lifecycle_boundary","detail":"The protocol master classifies opcode 210 with UI/region lifecycle acknowledgements and explicitly separates it from gameplay services."}
       ],
-      "note": "Exact-v308 outgoing transport identity from generated packet bytecode plus exact-current C2S authority."
+      "note":"Exact-v308 fixed-four-byte region-change acknowledgement transport."
     }
   ],
   "conflicts": []
