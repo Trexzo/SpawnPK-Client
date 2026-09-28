@@ -1,0 +1,17 @@
+{
+  "schema_version":1,"kind":"semantic_candidate_set","canonical":false,
+  "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[{
+    "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE",
+    "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target":{"kind":"class","owner":"rs/cache/b/f","name":null,"descriptor":null},
+    "proposed_name":"AssetVersionHyperlinkListener","confidence":0.999,
+    "evidence":[
+      {"family":"exact_owner","detail":"R23 AssetVersion creates this class directly and installs it as the HyperlinkListener on its connection-failure JEditorPane; no other exact-v308 class constructs it."},
+      {"family":"exact_hyperlink_behavior","detail":"hyperlinkUpdate reacts only to HyperlinkEvent.EventType.ACTIVATED, converts the event URL to a URI and opens it with Desktop.browse, printing IOException on failure."},
+      {"family":"exact_connection_help_surface","detail":"The owning AssetVersion error pane contains the exact SpawnPK connectivity troubleshooting text and forum hyperlink, fixing this listener to the AssetVersion error/help UI rather than a generic browser utility."}
+    ],
+    "note":"Descriptive exact-v308 name for the hyperlink listener owned exclusively by AssetVersion's connection-failure UI."
+  }],
+  "conflicts":[]
+}
