@@ -1,4 +1,4 @@
-# Chat 2 — exact-v308 client clock hierarchy R357
+# Chat 2 — exact-v308 client clock hierarchy R364
 
 Exact client authority:
 
@@ -53,6 +53,6 @@ unambiguous.
 ## Boundary
 
 `rs/g/e` is a standalone sleep helper but its original class-level identity is not
-independently fixed, so R357 deliberately leaves it unnamed.
+independently fixed, so R364 deliberately leaves it unnamed.
 
-R357 remains non-canonical semantic research only.
+R364 remains non-canonical semantic research only.
