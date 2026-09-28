@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/t/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AnimationDefinitionConfigMapper",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_mapper_inheritance",
+          "detail": "rs/t/a/a is a concrete rs/t/a ConfigDataMapper specialization over exact target definition type rs/d/a."
+        },
+        {
+          "family": "exact_config_key_surface",
+          "detail": "Exact mapper keys include frames/frameids/durations/framestep/priority/playeroffhand/playermainhand/walkprecedence/replaymode/animmayaid/animmayastart/animmayaend, and diagnostics say 'Could not find clone ID {} for Anim {}'."
+        },
+        {
+          "family": "exact_definition_mutation_role",
+          "detail": "The mapper resolves JSON/config values and applies them directly onto the target definition instance, including clone/base-definition handling where present; it owns no unrelated gameplay runtime state."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the concrete config-to-definition mapper; no original stripped identifier is claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/t/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcDefinitionConfigMapper",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_mapper_inheritance",
+          "detail": "rs/t/a/b is a concrete rs/t/a ConfigDataMapper specialization over exact target definition type rs/d/d."
+        },
+        {
+          "family": "exact_config_key_surface",
+          "detail": "Exact mapper keys include name/combatlevel/actions/models/chatheadmodels/standanim/walkanim/rotation animations/minimap/priorityrender/clickable/pet/healthbar/hover/glow."
+        },
+        {
+          "family": "exact_definition_mutation_role",
+          "detail": "The mapper resolves JSON/config values and applies them directly onto the target definition instance, including clone/base-definition handling where present; it owns no unrelated gameplay runtime state."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the concrete config-to-definition mapper; no original stripped identifier is claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/t/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpotAnimationDefinitionConfigMapper",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_mapper_inheritance",
+          "detail": "rs/t/a/c is a concrete rs/t/a ConfigDataMapper specialization over exact target definition type rs/d/x."
+        },
+        {
+          "family": "exact_config_key_surface",
+          "detail": "Exact diagnostics say 'Could not find clone ID {} for GFX {}'; mapper keys include model/modelid/anim/animation/resizex/resizey/rotation/ambient/contrast/recolors/retextures/osrs/osid."
+        },
+        {
+          "family": "exact_definition_mutation_role",
+          "detail": "The mapper resolves JSON/config values and applies them directly onto the target definition instance, including clone/base-definition handling where present; it owns no unrelated gameplay runtime state."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the concrete config-to-definition mapper; no original stripped identifier is claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/t/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemDefinitionConfigMapper",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_mapper_inheritance",
+          "detail": "rs/t/a/d is a concrete rs/t/a ConfigDataMapper specialization over exact target definition type rs/d/k."
+        },
+        {
+          "family": "exact_config_key_surface",
+          "detail": "Exact mapper keys include name/actions/groundactions/stackable/broken/note/template/cert/modelid/stackids/stackamounts/zoom/rotations/offsets/male/female models/recolors/params."
+        },
+        {
+          "family": "exact_definition_mutation_role",
+          "detail": "The mapper resolves JSON/config values and applies them directly onto the target definition instance, including clone/base-definition handling where present; it owns no unrelated gameplay runtime state."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the concrete config-to-definition mapper; no original stripped identifier is claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/t/a/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ObjectDefinitionConfigMapper",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_mapper_inheritance",
+          "detail": "rs/t/a/f is a concrete rs/t/a ConfigDataMapper specialization over exact target definition type rs/d/r."
+        },
+        {
+          "family": "exact_config_key_surface",
+          "detail": "Exact mapper keys include name/actions/models/ambient/contrast/mergenormals/anim/animation/tilex/tiley/resize/contouredground/interacttype/hasactions/recolors."
+        },
+        {
+          "family": "exact_definition_mutation_role",
+          "detail": "The mapper resolves JSON/config values and applies them directly onto the target definition instance, including clone/base-definition handling where present; it owns no unrelated gameplay runtime state."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the concrete config-to-definition mapper; no original stripped identifier is claimed."
+    }
+  ],
+  "conflicts": []
+}
