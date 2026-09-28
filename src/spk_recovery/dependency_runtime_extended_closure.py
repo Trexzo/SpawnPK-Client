@@ -519,7 +519,7 @@ def build_dependency_runtime_extended_closure(
         {
             key: value
             for key, value in row.items()
-            if key != "owner"
+            if key not in {"owner", "new_owner", "artifact"}
         }
         for row in owner_rows
     ]
