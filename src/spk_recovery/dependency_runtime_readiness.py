@@ -46,6 +46,38 @@ def _stable_digest(value: Any) -> str:
     ).hexdigest()
 
 
+def _required_nonnegative_int(
+    summary: dict[str, Any],
+    key: str,
+    *,
+    label: str,
+) -> int:
+    value = summary.get(key)
+    if (
+        not isinstance(value, int)
+        or isinstance(value, bool)
+        or value < 0
+    ):
+        raise DependencyRuntimeReadinessError(
+            f"{label} lacks valid {key}"
+        )
+    return value
+
+
+def _required_bool(
+    summary: dict[str, Any],
+    key: str,
+    *,
+    label: str,
+) -> bool:
+    value = summary.get(key)
+    if not isinstance(value, bool):
+        raise DependencyRuntimeReadinessError(
+            f"{label} lacks valid {key}"
+        )
+    return value
+
+
 def _load_report(
     path: Path,
     *,
@@ -286,47 +318,45 @@ def build_dependency_runtime_readiness(
             "extended resource authority lacks summary"
         )
 
-    static_class_blockers = int(
-        closure_summary.get(
-            "static_class_closure_blocker_count",
-            0,
-        )
+    static_class_blockers = _required_nonnegative_int(
+        closure_summary,
+        "static_class_closure_blocker_count",
+        label="extended closure summary",
     )
-    dynamic_class_blockers = int(
-        closure_summary.get(
-            "dynamic_closure_blocker_count",
-            0,
-        )
+    dynamic_class_blockers = _required_nonnegative_int(
+        closure_summary,
+        "dynamic_closure_blocker_count",
+        label="extended closure summary",
     )
-    remaining_mapping_gaps = int(
-        closure_summary.get(
-            "remaining_mapping_gap_count",
-            0,
-        )
+    remaining_mapping_gaps = _required_nonnegative_int(
+        closure_summary,
+        "remaining_mapping_gap_count",
+        label="extended closure summary",
     )
-    non_native_resource_blockers = int(
-        resource_summary.get(
-            "non_native_blocker_count",
-            0,
-        )
+    native_dynamic_requirements = _required_nonnegative_int(
+        closure_summary,
+        "native_dynamic_requirement_count",
+        label="extended closure summary",
     )
-    native_resource_count = int(
-        resource_summary.get(
-            "native_entry_count",
-            0,
-        )
+    non_native_resource_blockers = _required_nonnegative_int(
+        resource_summary,
+        "non_native_blocker_count",
+        label="extended resource summary",
     )
-    native_resource_blockers = int(
-        resource_summary.get(
-            "native_blocker_count",
-            0,
-        )
+    native_resource_count = _required_nonnegative_int(
+        resource_summary,
+        "native_entry_count",
+        label="extended resource summary",
     )
-    native_dynamic_requirements = int(
-        closure_summary.get(
-            "native_dynamic_requirement_count",
-            0,
-        )
+    native_resource_blockers = _required_nonnegative_int(
+        resource_summary,
+        "native_blocker_count",
+        label="extended resource summary",
+    )
+    resource_equivalence_complete = _required_bool(
+        resource_summary,
+        "resource_equivalence_complete",
+        label="extended resource summary",
     )
 
     class_closure_ready = (
@@ -359,12 +389,7 @@ def build_dependency_runtime_readiness(
     )
 
     resource_equivalence_ready = (
-        bool(
-            resource_summary.get(
-                "resource_equivalence_complete",
-                False,
-            )
-        )
+        resource_equivalence_complete
         and non_native_resource_blockers == 0
     )
 
