@@ -23,6 +23,7 @@ from .dependency_runtime_frontier import (
     _load_private_plan,
     _normalize_prefixes,
 )
+from .decompiler import sha256_file
 
 
 class DependencyRuntimeDynamicMappingError(ValueError):
@@ -79,6 +80,16 @@ def build_dependency_runtime_dynamic_mapping_proof(
     bundled_jar = bundled_jar.resolve()
     prefixes = _normalize_prefixes(plan.get("project_prefixes"))
 
+    actual_bundled_sha = sha256_file(bundled_jar)
+    if plan.get("bundled_jar_sha256") != actual_bundled_sha:
+        raise DependencyRuntimeDynamicMappingError(
+            "bundled/readable JAR SHA differs from DEPREPLACE"
+        )
+    if augmented.get("bundled_jar_sha256") != actual_bundled_sha:
+        raise DependencyRuntimeDynamicMappingError(
+            "augmented closure is bound to a different bundled JAR"
+        )
+
     if augmented.get("replacement_plan_id") != plan.get(
         "replacement_plan_id"
     ):
@@ -93,13 +104,6 @@ def build_dependency_runtime_dynamic_mapping_proof(
         )
     except DependencyRemapProofError as exc:
         raise DependencyRuntimeDynamicMappingError(str(exc)) from exc
-
-    if augmented.get("bundled_jar_sha256") != plan.get(
-        "bundled_jar_sha256"
-    ):
-        raise DependencyRuntimeDynamicMappingError(
-            "augmented closure bundled authority differs from DEPREPLACE"
-        )
 
     release = plan.get("java_release")
     if (
@@ -127,6 +131,20 @@ def build_dependency_runtime_dynamic_mapping_proof(
     ):
         raise DependencyRuntimeDynamicMappingError(
             "official artifact authority differs from DEPREPLACE"
+        )
+    actual_artifact_sha = sorted(
+        str(row["sha256"]).lower()
+        for row in artifact_rows
+    )
+    if sorted(
+        str(value).lower()
+        for value in augmented.get(
+            "official_artifact_sha256",
+            [],
+        )
+    ) != actual_artifact_sha:
+        raise DependencyRuntimeDynamicMappingError(
+            "augmented closure official artifact authority drifted"
         )
 
     gap_sources: dict[str, set[str]] = {}
