@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InlineImageStyleMarkup",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_img_syntax",
+          "detail": "Exact v308 recognizes img= markup payloads and parses up to five colon-delimited fields before the closing tag position supplied by RSFont."
+        },
+        {
+          "family": "exact_value_bounds",
+          "detail": "The parsed fields enforce exact limits: image id <=100000, style/color-transform value <=511, size adjustment <=99, and optional hexadecimal colors <=0xFFFFFF."
+        },
+        {
+          "family": "exact_shared_consumers",
+          "detail": "R55 RSFont invokes this parser for ordinary inline image markup, and R360 InlineLabeledImageMarkup reuses the same parser for timg opening payloads."
+        },
+        {
+          "family": "exact_style_application",
+          "detail": "The resulting spec controls Sprite transformation through rs/l/n and optional two-layer rectangle decoration around the rendered Sprite, establishing a shared image-style contract rather than an image-id parser alone."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the shared img/timg inline image style payload parser."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/o$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InlineImageStyleSpec",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parsed_fields",
+          "detail": "The immutable record stores exactly five parsed integers: image id, sprite transform value, size adjustment and two optional RGB decoration colors."
+        },
+        {
+          "family": "exact_padding_contract",
+          "detail": "Its helper reports two pixels of extra padding only when the first decoration color is present, matching RSFont's inline image layout and border drawing."
+        },
+        {
+          "family": "exact_owner_scope",
+          "detail": "The object is created only by InlineImageStyleMarkup and consumed by RSFont, InlineLabeledImageMarkup and SpriteStyleTransformer paths."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for one parsed inline image style payload."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpriteStyleTransformer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_resize_behavior",
+          "detail": "The transformer creates a new Sprite with original width/height plus the parsed size adjustment, capped by a 65,536-pixel safety bound, then nearest-neighbor samples source pixels into the resized surface."
+        },
+        {
+          "family": "exact_color_transform",
+          "detail": "When the style transform is non-zero, nontransparent pixels are recolored through rs/l/L color math; values above 255 produce a vertical phase/gradient adjustment while lower values apply a uniform transform."
+        },
+        {
+          "family": "exact_result_cache",
+          "detail": "The class maintains a 128-entry four-way cache keyed by Sprite identity plus transform and size parameters, returning cached transformed Sprite instances when available."
+        },
+        {
+          "family": "exact_font_consumers",
+          "detail": "R55 RSFont invokes this transformer for both ordinary img markup and R360 timg markup immediately before inline Sprite layout/drawing."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for cached resize/color transformation of inline text Sprites."
+    }
+  ],
+  "conflicts": []
+}

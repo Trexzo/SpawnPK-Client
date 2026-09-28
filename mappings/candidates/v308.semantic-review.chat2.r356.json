@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_9A97D3BC816564588632",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_4C318C18C0197A7E6B83",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000501",
+      "owner_logical_id": "CLIENT_CLASS_000501",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FlashingTextEffect",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_markup_tokens",
+          "detail": "Exact v308 recognizes @fla@, @fla2@, <fla>, <fla2>, parameterized <fla=...>/<fla2=...>, and the corresponding closing tags."
+        },
+        {
+          "family": "exact_flash_timing",
+          "detail": "The effect stores injected timestamps and alternates the selected color/state on 200 ms intervals. Normal fla lifetime is 600 ms and fla2 lifetime is 1200 ms."
+        },
+        {
+          "family": "exact_secondary_motion",
+          "detail": "The fla2 path additionally derives a sinusoidal offset whose amplitude decays across the 1200 ms lifetime, proving the class owns the complete flashing/animated text effect rather than only tag parsing."
+        },
+        {
+          "family": "exact_renderer_integration",
+          "detail": "R55 RSFont invokes this class during live text layout/rendering and queries its active lifecycle state to continue redraws while the effect is running."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the live fla/fla2 flashing text animation used by RSFont."
+    },
+    {
+      "proposal_id": "SEMPROP_5DB53882E872168FACE3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000350",
+      "owner_logical_id": "CLIENT_CLASS_000350",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/A",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TypewriterTextEffect",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_markup_tokens",
+          "detail": "Exact v308 recognizes @type@, <type>, <type=...> and </type> markup in this class and strips/normalizes those tags for rendering."
+        },
+        {
+          "family": "exact_timing_contract",
+          "detail": "Parameterized <type=N> clamps N to 10..2000 milliseconds; the class injects a current-time timestamp into rewritten markup and computes reveal progress from elapsed time divided by that per-character interval."
+        },
+        {
+          "family": "exact_renderer_integration",
+          "detail": "R55 RSFont calls this class while measuring and rendering text; Client and text-markup routing also retain the same instance/state, proving this is a live text-rendering effect rather than a parser utility with no consumer."
+        },
+        {
+          "family": "exact_lifecycle_state",
+          "detail": "The instance records the effect end time and active flag, and exposes whether a typewriter effect remains active so redraws can continue until all visible characters have been revealed."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the timed <type> text reveal effect used by the font renderer."
+    }
+  ],
+  "unresolved": []
+}

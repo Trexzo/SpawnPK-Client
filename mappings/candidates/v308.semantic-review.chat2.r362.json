@@ -1,0 +1,28 @@
+{
+  "schema_version":1,
+  "kind":"semantic_review_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count":1,
+  "review_id":"SEMREVIEW_73AACF395992E2CC34D4",
+  "proposals":[{
+    "proposal_id":"SEMPROP_D8B1415AE2008643B963",
+    "target_kind":"class",
+    "stable_id":"CLIENT_CLASS_000511",
+    "owner_logical_id":"CLIENT_CLASS_000511",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate":{"owner":"rs/l/t","name":null,"descriptor":null},
+    "proposed_name":"TextParticleMarkup",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_markup_tokens","detail":"Exact v308 recognizes @par@ plus par/par2..par8 tags and pimg/p2img..p8img image-selector forms inside the RSFont rich-text pipeline."},
+      {"family":"exact_particle_selection","detail":"For an active particle markup span the class counts particle controls, resolves the selected pimg family, and chooses up to three unique random palette/image variants with a 50 ms cache window."},
+      {"family":"exact_particle_spawn","detail":"Its render-side method computes randomized positions within the supplied glyph/text bounds, constructs the already-recovered UI particle object rs/l/f/a/f/a, assigns direction/motion/size/alpha/lifetime state and registers it with the active particle manager."},
+      {"family":"exact_font_integration","detail":"R55 RSFont invokes the parser during both layout and drawing, tracks the selected par mode and palette array, and calls the particle-spawn method at matching rendered character positions."}
+    ],
+    "note":"Descriptive exact-v308 name for par/pimg rich-text markup that emits UI particles from RSFont rendering."
+  }],
+  "unresolved":[]
+}

@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GlowTextEffect",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_markup_tokens",
+          "detail": "Exact v308 recognizes @glo@ plus numbered glow variants and matching glo markup, returning palette-family selectors from the text stream."
+        },
+        {
+          "family": "exact_color_cycle",
+          "detail": "The class advances a phase from System.nanoTime on a fixed 40 ms cadence, combines character index with phase, and selects colors from precomputed 256-step palette tables."
+        },
+        {
+          "family": "exact_renderer_integration",
+          "detail": "R55 RSFont calls this class while parsing and drawing live text; returned colors feed per-character render color selection directly."
+        },
+        {
+          "family": "exact_palette_scope",
+          "detail": "The implementation owns eight numbered 256-step glow palette families plus the default glow selector and contains no non-text behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the glo markup color-cycling text effect."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/s",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TextMotionEffect",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_markup_tokens",
+          "detail": "Exact v308 recognizes @hov@/@shi@ plus <hover>, </hover>, <shift>, </shift>, <lift=N> and </lift> text controls."
+        },
+        {
+          "family": "exact_motion_offsets",
+          "detail": "The hover and shift states produce independent sinusoidal pixel offsets (amplitudes 2 and 3), while lift=N parses a signed vertical offset clamped to 40 pixels."
+        },
+        {
+          "family": "exact_renderer_integration",
+          "detail": "R55 RSFont applies the computed offsets to inline sprite/progress/image and glyph positions throughout the live render path."
+        },
+        {
+          "family": "exact_redraw_lifecycle",
+          "detail": "When animated hover/shift text is rendered the class records a timestamp and exposes a 100 ms redraw-invalidating active state, proving it owns the motion effect lifecycle rather than simple markup recognition."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for hover/shift/lift text-position animation and offset markup."
+    }
+  ],
+  "conflicts": []
+}
