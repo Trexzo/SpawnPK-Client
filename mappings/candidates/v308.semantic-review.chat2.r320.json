@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_678D3957A160398F371D",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_70E5E33802E60367151E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000766",
+      "owner_logical_id": "CLIENT_CLASS_000766",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner": "rs/q/b/c", "name": null, "descriptor": null},
+      "proposed_name": "ReportRequestResultsFindNavigationHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {"family": "exact_window_ownership", "detail": "The class is created only by R134 ReportRequestResultsWindow and attached as the exact Find Text dialog's JTextField key listener."},
+        {"family": "exact_navigation_keys", "detail": "Its keyPressed switch handles Enter, Page Up, Page Down, Up and Down. It searches the main results JTextArea using indexOf/lastIndexOf from the current query and delegates the resulting match span/direction back to the parent window."},
+        {"family": "exact_find_surface", "detail": "The parent window owns the exact 'Find Text' dialog and 'Match results: N/A'/'Match results: current/total' labels, so this listener's role is specifically navigation among text-find matches."}
+      ],
+      "note": "Name follows the exact find-dialog navigation behavior; it is not a general-purpose window key listener."
+    },
+    {
+      "proposal_id": "SEMPROP_C4B896C7F3395F1C77AE",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000769",
+      "owner_logical_id": "CLIENT_CLASS_000769",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner": "rs/q/b/f", "name": null, "descriptor": null},
+      "proposed_name": "ReportRequestResultsQueueDrainTask",
+      "confidence": 0.999,
+      "evidence": [
+        {"family": "exact_receiver_ownership", "detail": "The class is instantiated only from R134 ReportRequestResultsReceiver with the receiver, a one-slot ReportRequestResultsWindow holder and the receiver's Queue<String>."},
+        {"family": "exact_queue_drain", "detail": "run() lazily constructs ReportRequestResultsWindow when absent, repeatedly polls queued Strings until null and appends every result to the window JTextArea."},
+        {"family": "exact_ui_bridge", "detail": "This task is the sole exact bridge from the receiver queue into the Report Request Results Swing presentation surface and owns no independent protocol parsing."}
+      ],
+      "note": "Name follows the exact queue-to-window drain behavior."
+    },
+    {
+      "proposal_id": "SEMPROP_D747B291A1FC572DB7D1",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000765",
+      "owner_logical_id": "CLIENT_CLASS_000765",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner": "rs/q/b/b", "name": null, "descriptor": null},
+      "proposed_name": "ReportRequestResultsFindShortcutHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {"family": "exact_window_ownership", "detail": "The class is created only by R134 ReportRequestResultsWindow and attached as the main results JTextArea key listener."},
+        {"family": "exact_ctrl_f_contract", "detail": "Its only keyPressed behavior checks key code 70 together with modifier mask 128, then makes the window's exact 'Find Text' JDialog visible; it has no other shortcut or state."},
+        {"family": "exact_subsystem_scope", "detail": "The class holds only its synthetic parent-window reference and touches no receiver, packet or unrelated client state."}
+      ],
+      "note": "Name follows the exact Ctrl+F shortcut behavior that opens the Report Request Results 'Find Text' dialog."
+    }
+  ],
+  "unresolved": []
+}

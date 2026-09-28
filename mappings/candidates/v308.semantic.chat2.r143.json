@@ -1,0 +1,208 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutDefinition",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_loadout_record_shape",
+          "detail": "The class stores one named loadout's presentation metadata plus spellbook/prayer state, 28 item slots, an equipment-slot map and seven skill values; the active Loadouts UI creates these records through exact 'Name Your Loadout' flow."
+        },
+        {
+          "family": "exact_spawn_consumer",
+          "detail": "The Loadouts spawn action resolves the manager's active rs/gui/b/a record and serializes it into exact client commands/state including '::item_loadout', '::skills_loadout', '::normalpray'/'::cursespray' and the selected spellbook."
+        },
+        {
+          "family": "exact_ui_role",
+          "detail": "The live Loadouts panel labels the action 'Spawn this loadout in-game' and uses the same record for clone/edit/render operations, fixing the class as one loadout definition rather than a generic item container."
+        },
+        {
+          "family": "exact_named_identity",
+          "detail": "The class owns the user-visible loadout name plus color/icon metadata used by the active Loadouts panel and folder manager."
+        }
+      ],
+      "note": "LoadoutDefinition is descriptive exact-behavior recovery for one user-defined Loadouts-tab record consumed directly by the exact spawn/clone/edit flows. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutSpellbook",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_constants",
+          "detail": "The enum preserves exact constants LUNAR, ANCIENTS and MODERN."
+        },
+        {
+          "family": "exact_labels_assets",
+          "detail": "Each value preserves matching labels Lunar/Ancients/Modern and assets /assets/gui/lunar.png, /assets/gui/ancients.png and /assets/gui/modern.png."
+        },
+        {
+          "family": "exact_loadout_consumer",
+          "detail": "LoadoutDefinition stores one enum value and the exact loadout-spawn action reads its label to configure the spawned loadout's spellbook state."
+        }
+      ],
+      "note": "LoadoutSpellbook follows exact surviving spellbook enum constants/assets and exclusive use inside LoadoutDefinition. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/b/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutPersistence",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_settings_files",
+          "detail": "The class reads/writes exact loadout storage files including 'order.settings' and per-folder '.settings' files."
+        },
+        {
+          "family": "exact_folder_load_save",
+          "detail": "It enumerates persisted folder order, writes folder/loadout lists, reconstructs rs/gui/b/c folders and rs/gui/b/a loadout records, and deletes the corresponding settings files when folders are removed."
+        },
+        {
+          "family": "exact_serialized_state",
+          "detail": "Deserialization restores loadout name, spellbook, prayer state, skill values, equipment-slot entries and 28 item-slot entries through the exact Loadouts model classes."
+        },
+        {
+          "family": "exact_warning_domain",
+          "detail": "Its warnings are explicitly Loadouts-specific, including invalid/missing folder diagnostics while loading the order configuration."
+        }
+      ],
+      "note": "LoadoutPersistence is fixed by exclusive .settings/order.settings file I/O and complete serialization/deserialization of the Loadouts model graph. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutFolder",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_collection_shape",
+          "detail": "The class extends ArrayList<rs/gui/b/a>, making it an ordered collection of LoadoutDefinition records."
+        },
+        {
+          "family": "exact_folder_name",
+          "detail": "Its only own state is the immutable String folder name returned to the Loadouts manager/persistence layer."
+        },
+        {
+          "family": "exact_manager_usage",
+          "detail": "LoadoutManager stores these values by folder name, supports folder rename/delete/reorder, and enforces exact UI rules such as retaining at least one loadout in a folder."
+        }
+      ],
+      "note": "LoadoutFolder is fixed by its named ordered collection role inside the exact Loadouts manager/persistence graph. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/c/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutEquipmentSlot",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_slot_enum",
+          "detail": "The enum preserves exact constants HELMET, AMULET, CHEST, LEGS, FEET, CAPE, ARROWS, SHIELD, WEAPON, GLOVES and RING."
+        },
+        {
+          "family": "exact_slot_assets",
+          "detail": "Each enum value binds an equipment index/position to matching slot assets such as slot_helm.png, slot_ammy.png, slot_chest.png, slot_wep.png and slot_ring.png."
+        },
+        {
+          "family": "exact_loadout_mapping",
+          "detail": "LoadoutDefinition owns a Map<LoadoutEquipmentSlot, item-entry>, and the exact loadout spawn path serializes those mapped equipment entries separately from the 28 inventory slots."
+        }
+      ],
+      "note": "LoadoutEquipmentSlot follows exact surviving equipment-slot enum constants/assets and exclusive use in LoadoutDefinition. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_manager_shape",
+          "detail": "The class extends LinkedHashMap<String, LoadoutFolder> and separately tracks the active folder name and active LoadoutDefinition."
+        },
+        {
+          "family": "exact_folder_operations",
+          "detail": "It creates, renames, deletes and reorders folders, validates folder names, refreshes the live LoadoutFolderPanel and synchronizes changes through LoadoutPersistence."
+        },
+        {
+          "family": "exact_loadout_operations",
+          "detail": "It creates, selects, renames, deletes and reorders loadouts and enforces exact UI constraints such as 'You already have a loadout with this name!' and 'You can't delete the only loadout on your folder!'."
+        },
+        {
+          "family": "exact_active_selection",
+          "detail": "The exact 'Spawn this loadout in-game' action retrieves the active LoadoutDefinition from this manager before generating the loadout spawn commands."
+        }
+      ],
+      "note": "LoadoutManager is fixed by its ordered folder map, active-selection state and complete folder/loadout mutation API behind the reviewed LoadoutFolderPanel. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

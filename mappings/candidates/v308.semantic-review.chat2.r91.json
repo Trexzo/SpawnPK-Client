@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_69AF0AAE5D5B1F373C29",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_B19D61AB90D5D13AEA60",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000345",
+      "owner_logical_id": "CLIENT_CLASS_000345",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/k/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Skybox",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parser_grammar",
+          "detail": "The class parses the skybox mapping DSL with the same bounds, m/r/R/c/C region/chunk selectors, #RGB/#RRGGBB colors, plane masks and blend-radius directives, including the exact named regex groups mrx/mry/rx/ry/cx/cy/color/plane/blend."
+        },
+        {
+          "family": "exact_color_blending",
+          "detail": "It encodes colors into YCoCg, stores per-chunk and plane-override data, maps instance template chunks through a three-int callback, applies Gaussian/error-function spatial blending, converts back to RGB and applies HSB brightness."
+        },
+        {
+          "family": "exact_io_and_render_contract",
+          "detail": "It exposes InputStream/String and Reader/String constructors and can render its skybox map into a BufferedImage for inspection."
+        },
+        {
+          "family": "exact_resource_consumer",
+          "detail": "The adjacent exact-v308 wrapper constructs this class from the bundled resource skybox.txt, fixing the data domain independently of the parser shape."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "The public RuneLite-derived source preserves class Skybox with matching constructors, ChunkMapper callback, parser grammar, YCoCg encoding, plane overrides, Gaussian blend calculation and BufferedImage render path."
+        }
+      ],
+      "note": "Skybox is corroborated by the exact-v308 parser/render contract and a matching public RuneLite-derived Skybox implementation. Exact v308 remains the semantic authority."
+    }
+  ],
+  "unresolved": []
+}

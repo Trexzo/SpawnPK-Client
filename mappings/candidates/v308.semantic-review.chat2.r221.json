@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 4,
+  "review_id": "SEMREVIEW_6ABAD489C02634CEAD13",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_114A83FE94B1A40D8494",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000820",
+      "owner_logical_id": "CLIENT_CLASS_000820",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/j$b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Chunk",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_rectangle_union_role",
+          "detail": "Exact v308 rs/runelite/a/j$b extends the recovered SimplePolygon, stores left/right Segment endpoints, and overrides reverse() to swap endpoints and repair each endpoint's left/right side flag."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream runelite/runelite@6e74752caa80fe9cb96cd9b37207e171fa525f07 contains RectangleUnion.Chunk with the same SimplePolygon inheritance, two Segment endpoints and reverse() invariant repair."
+        }
+      ],
+      "note": "Chunk is recovered at confidence 0.999 from an exact private-class inheritance/state/override match to RuneLite RectangleUnion.Chunk."
+    },
+    {
+      "proposal_id": "SEMPROP_9087826F1D9F669B836C",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000823",
+      "owner_logical_id": "CLIENT_CLASS_000823",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/j$e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Segments",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_rectangle_union_role",
+          "detail": "Exact v308 rs/runelite/a/j$e owns the first Segment and implements find-less-or-equal, insert-after and all-zero validation over the doubly linked scan-line segment list."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream runelite/runelite@6e74752caa80fe9cb96cd9b37207e171fa525f07 contains RectangleUnion.Segments with the same first field and findLE(int), insertAfter(Segment,int) and allZero() algorithms."
+        }
+      ],
+      "note": "Segments is recovered at confidence 0.999 from an exact private linked-segment container/method match to RuneLite RectangleUnion.Segments."
+    },
+    {
+      "proposal_id": "SEMPROP_9BEB870CBD174379D4B7",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000819",
+      "owner_logical_id": "CLIENT_CLASS_000819",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/j$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ChangingState",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_rectangle_union_role",
+          "detail": "Exact v308 rs/runelite/a/j$a owns the RectangleUnion sweep state: Shapes<SimplePolygon> output, current x coordinate, delta (+1/-1) and one active Segment; its touch/finish/move/push methods implement the same scan-line state transitions as upstream ChangingState."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream runelite/runelite@6e74752caa80fe9cb96cd9b37207e171fa525f07 contains RectangleUnion.ChangingState with the same fields and touch(Segment), finish(Segment), move(Segment,Segment) and push(Segment) behavior."
+        }
+      ],
+      "note": "ChangingState is recovered at confidence 0.999 from an exact private-class field/method/algorithm match to RuneLite RectangleUnion.ChangingState."
+    },
+    {
+      "proposal_id": "SEMPROP_FF8D969420E4F0FA0D34",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000822",
+      "owner_logical_id": "CLIENT_CLASS_000822",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/j$d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Segment",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_rectangle_union_role",
+          "detail": "Exact v308 rs/runelite/a/j$d is the mutable scan-line segment node with previous/next Segment links, one Chunk link, left-side boolean, y coordinate and occlusion/value counter."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream runelite/runelite@6e74752caa80fe9cb96cd9b37207e171fa525f07 contains RectangleUnion.Segment with the same six fields: next, previous, chunk, left, y and value."
+        }
+      ],
+      "note": "Segment is recovered at confidence 0.999 from an exact private scan-line node field match to RuneLite RectangleUnion.Segment."
+    }
+  ],
+  "unresolved": []
+}

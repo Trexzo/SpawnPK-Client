@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_73905BBB0E66D66FB778",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_A55C9B0712E7376A7063",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000428",
+      "owner_logical_id": "CLIENT_CLASS_000428",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/e/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HitDropEntry",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_asset_identity",
+          "detail": "The class loads exact popup assets 'popups/block drop', 'popups/hit drop', 'popups/protmelee', 'popups/protrange' and 'popups/protmagic'; its instance sprite is selected between the block-drop and hit-drop assets from the numeric hit value."
+        },
+        {
+          "family": "exact_animation_state",
+          "detail": "Each instance stores the numeric drop value/type, x/y position, alpha, optional protection-icon selector and timestamp, and its only method advances the vertical/alpha animation until fade-out."
+        },
+        {
+          "family": "exact_manager_ownership",
+          "detail": "Instances are created, queued, rendered and removed exclusively by rs/l/e/h, which owns active/queued/removal lists of this exact class."
+        }
+      ],
+      "note": "HitDropEntry is descriptive exact-behavior recovery from the client's own 'hit drop'/'block drop' asset vocabulary and per-entry animation state. Confidence is 0.998."
+    },
+    {
+      "proposal_id": "SEMPROP_B0256704A88346862D7A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000429",
+      "owner_logical_id": "CLIENT_CLASS_000429",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/e/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HitDropManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_entry_graph",
+          "detail": "The class owns three List<rs/l/e/g> collections for active hit drops, queued hit drops and removal staging, plus the exact 'popups/drop bar' sprite."
+        },
+        {
+          "family": "exact_hit_aggregation",
+          "detail": "add-style packet methods create a HitDropEntry from a numeric value/timestamp/icon selector; hits arriving within 100 ms aggregate into the most recent active entry and switch that entry to exact block-drop or hit-drop presentation according to the resulting value."
+        },
+        {
+          "family": "exact_queue_policy",
+          "detail": "When vertical spacing is unavailable it queues entries, caps the queued list, later promotes the oldest queued entry once active entries have moved far enough, and accumulates the promoted value into manager state."
+        },
+        {
+          "family": "exact_render_lifecycle",
+          "detail": "The render/update method advances every active entry, draws the drop bar, hit/block sprite, optional melee/range/magic protection icon and numeric drop text, then removes entries after their alpha/vertical animation expires."
+        }
+      ],
+      "note": "HitDropManager is fixed by the complete active/queued hit-drop lifecycle and exact popup asset family. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}

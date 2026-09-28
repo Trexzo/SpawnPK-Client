@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_CFFBC28D4FD2056FFFE0",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_25EB35F95EDD3C682681",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000067",
+      "owner_logical_id": "CLIENT_CLASS_000067",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FaceNormalBuffer",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_normal_math",
+          "detail": "Model.q() iterates triangle faces, derives two edge vectors from the three face vertices, computes their cross product, rescales it into range, normalizes the XYZ vector to length 256, and stores those three components for the flat-shaded face path."
+        },
+        {
+          "family": "exact_face_indexing",
+          "detail": "The buffer is allocated with Model.ah entries, the same count used to iterate face-index arrays ai/aj/ak, and rs/a/d stores exactly three integers per entry with indexed XYZ get/set/add operations."
+        },
+        {
+          "family": "exact_lighting_consumer",
+          "detail": "Model lighting later reads the same three stored components for a face and computes the light-vector dot product divided by the lighting scale before producing the face shade."
+        }
+      ],
+      "note": "FaceNormalBuffer names the packed per-face XYZ normal storage used by Model's flat-shading pipeline; it is a semantic role name rather than a claim about the original developer identifier."
+    }
+  ],
+  "unresolved": []
+}

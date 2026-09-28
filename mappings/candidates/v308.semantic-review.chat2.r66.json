@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_3F05C7C6FE46D833E4E1",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_A6D2EDC0B1FF83081FC8",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001106",
+      "owner_logical_id": "CLIENT_CLASS_001106",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/v/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Signlink",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runtime_bridge_role",
+          "detail": "rs/v/a is a singleton-style Runnable service owning background thread state, socket requests, URL/DataInputStream loading, Runnable dispatch and shared cache-file handles."
+        },
+        {
+          "family": "exact_network_role",
+          "detail": "Synchronized entry points request sockets against a stored InetAddress and open remote data streams while the service thread serializes those asynchronous operations."
+        },
+        {
+          "family": "exact_platform_cache_role",
+          "detail": "The class owns RandomAccessFile cache handles, cache-directory/name helpers and byte-array save requests used by the client runtime."
+        },
+        {
+          "family": "exact_environment_role",
+          "detail": "It also owns applet/environment state, DNS/reporting strings and utility hooks historically grouped into the classic client signlink bridge."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "The combined static service thread, socket/url/thread/cache-file responsibilities match the classic client Signlink architecture; exact v308 behavior is primary authority."
+        }
+      ],
+      "note": "Signlink is the conservative historical/semantic name for the exact v308 platform/network/cache runtime bridge. Exact bytecode behavior is primary evidence."
+    }
+  ],
+  "unresolved": []
+}

@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/n/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NotificationAlertsConfig",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact options configure alert notifications, private messages, superior slayer/boss alerts, de-aggro timer, tray icon/notifications, focus, flash, sound and timeout."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Runtime class rs/s/n/b directly references this config class."
+        }
+      ],
+      "note": "Notification-alert configuration role is explicit from options and runtime pairing."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/n/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NotificationAlertsPlugin",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact runtime messages include superior slayer/boss spawned, de-aggro timer reached and PM notifications."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references rs/s/n/a NotificationAlertsConfig."
+        }
+      ],
+      "note": "Runtime notification-alert role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/f/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GroundMarkerConfig",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_identity",
+          "detail": "Exact v308 rs/s/f/b is the groundMarker Config consumed by rs/s/f/d and exposes marker color, minimap drawing, import/export, border width and fill opacity."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite GroundMarkerConfig at 68c819924cfd6bfb4848c71f74c121109f289d5a has the same groundMarker group and matching marker-color/minimap/import-export/border/fill surface."
+        }
+      ],
+      "note": "GroundMarkerConfig supersedes the descriptive plural GroundMarkersConfig label; exact config group/surface and historical RuneLite source fix the source identity. Confidence 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/f/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GroundMarkerPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_plugin_identity",
+          "detail": "Exact v308 rs/s/f/d owns the Ground Markers plugin lifecycle, groundMarker persistence, Shift-key tile mark/unmark/label/color actions and GroundMarkerConfig pairing."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite GroundMarkerPlugin at 68c819924cfd6bfb4848c71f74c121109f289d5a has the same Ground Markers descriptor, groundMarker persistence, Shift-key tile actions, config pairing and marker reload lifecycle."
+        }
+      ],
+      "note": "GroundMarkerPlugin supersedes the descriptive plural GroundMarkersPlugin label; historical RuneLite provenance fixes the source identity. Confidence 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/l/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MenuEntrySwapperConfig",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact options include Item Swaps, NPC Swaps, customizable left-clicks and shift-clicks."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Runtime class rs/s/l/c directly references this config class."
+        }
+      ],
+      "note": "Menu-entry swapper configuration role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/l/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MenuEntrySwapperPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is Menu Entry Swapper; actions include Swap left click, Swap shift click and Walk here."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references rs/s/l/b MenuEntrySwapperConfig."
+        }
+      ],
+      "note": "Name follows the exact plugin title."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/o/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcIndicatorsPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is NPC Indicators; menu actions include Tag-All, Untag-All, Tag color/style, Highlight NPCs on-screen and tile/true-tile styles."
+        },
+        {
+          "family": "exact_pairing",
+          "detail": "Class directly references rs/s/o/d, reviewed in R4 as NpcIndicatorsConfig."
+        }
+      ],
+      "note": "Runtime NPC-indicators role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/e/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GpuPluginConfig",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_identity",
+          "detail": "Exact v308 rs/s/e/d is ConfigGroup gpu and exposes GPU enablement, smooth banding, anti-aliasing, anisotropic filtering, colorblind correction, UI scaling and Vsync controls."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite GpuPluginConfig at 68c819924cfd6bfb4848c71f74c121109f289d5a is the gpu Config paired with GpuPlugin and shares the smooth-banding, anti-aliasing, anisotropic, colorblind, UI-scaling and Vsync configuration identity; SpawnPK carries an older/forked stretched-mode surface."
+        }
+      ],
+      "note": "GpuPluginConfig supersedes the descriptive GpuConfig label; exact gpu group plus historical RuneLite plugin-config provenance fix the source identity. Confidence 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GpuSettingsPanel",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact panel headings include GPU Settings and Stretched Mode Settings, with GPU Mode, Anti Aliasing, anisotropic filtering, colorblind mode, VSync, UI scaling and aspect-ratio controls."
+        }
+      ],
+      "note": "Desktop settings-panel role is explicit from rendered labels."
+    }
+  ],
+  "conflicts": []
+}

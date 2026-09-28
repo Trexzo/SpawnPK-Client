@@ -1,0 +1,33 @@
+{
+  "schema_version":1,"kind":"semantic_candidate_set","canonical":false,
+  "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[
+    {
+      "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/h/a","name":null,"descriptor":null},
+      "proposed_name":"ClientCallbackRegistry","confidence":0.999,
+      "evidence":[
+        {"family":"exact_callback_storage","detail":"The class owns three exact static collections: a CopyOnWriteArrayList<ClientCallback>, a keyed ConcurrentHashMap<String, ClientCallback>, and a keyed ConcurrentHashMap<String, ClientLoopCallback>."},
+        {"family":"exact_tick_lifecycle","detail":"Its drain method invokes and clears all one-shot callbacks, loops keyed ClientLoopCallback values and removes keys whose loop() returns false, then invokes and clears keyed one-shot callbacks."},
+        {"family":"exact_client_cycle","detail":"Client invokes this registry's drain method unconditionally once in its main cycle after the core client-step method, so the registry is active in both login and in-game states."},
+        {"family":"exact_usage_scope","detail":"Exact-v308 registrations include the asset-icon/loadout image path and Client itself, consistent with a general client-cycle callback registry."}
+      ],
+      "note":"General client-cycle callback registry using the R329 ClientCallback and ClientLoopCallback contracts."
+    },
+    {
+      "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/h/c","name":null,"descriptor":null},
+      "proposed_name":"LoggedInClientCallbackRegistry","confidence":0.999,
+      "evidence":[
+        {"family":"exact_callback_storage","detail":"The class has the same three-collection callback lifecycle as rs/h/a: queued and keyed ClientCallback plus keyed ClientLoopCallback values."},
+        {"family":"exact_logged_in_gate","detail":"Client invokes this registry immediately after ClientCallbackRegistry but only when the exact client logged-in/active state boolean is true; the same state is used by the GPU startup path to detect an already-loaded world."},
+        {"family":"exact_live_plugin_usage","detail":"Exact-v308 registrations span game UI, GPU helpers, interface callbacks and many reviewed plugin classes, fixing this as the in-game/logged-in callback registry rather than an unused duplicate."},
+        {"family":"exact_loop_contract","detail":"Repeating callbacks remain registered only while ClientLoopCallback.loop() returns true; one-shot values are removed after invocation."}
+      ],
+      "note":"Name distinguishes this live duplicate registry by its exact Client-side logged-in execution gate."
+    }
+  ],
+  "conflicts":[]
+}

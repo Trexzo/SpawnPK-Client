@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_74D08E0F75A56AD51744",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_5412428E5E0A9072A424",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001076",
+      "owner_logical_id": "CLIENT_CLASS_001076",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IconTextField",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_component_shape",
+          "detail": "Exact-v308 class rs/ui/components/k extends JPanel and owns an icon JLabel, text-field component, clear button, suggestion button, suggestion list model, clear listeners and matching hover/popup/document-listener behavior."
+        },
+        {
+          "family": "exact_runtime_consumers",
+          "detail": "The component is consumed by the already-reviewed PluginHubPanel and TradingPostSearchPanel as their reusable search-entry widget."
+        },
+        {
+          "family": "exact_public_source_parity",
+          "detail": "Public RuneLite source at commit 7e6d9ac8138be3aa165f88da527ad5a5e6a5d21b contains net.runelite.client.ui.components.IconTextField with the same field layout, constructor behavior, suggestion popup, clear button and icon API."
+        },
+        {
+          "family": "exact_nested_join",
+          "detail": "Its nested enum carries the exact SEARCH/LOADING/LOADING_DARKER/ERROR asset contract used by setIcon, matching the same public source class."
+        }
+      ],
+      "note": "IconTextField is source-parity recovery: exact-v308 structure and resources match the public RuneLite IconTextField class while current SpawnPK consumers use it as the same reusable search field. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_A898E92A3DA0F1939999",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001077",
+      "owner_logical_id": "CLIENT_CLASS_001077",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/k$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Icon",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_constants",
+          "detail": "The nested enum preserves exactly SEARCH, LOADING, LOADING_DARKER and ERROR."
+        },
+        {
+          "family": "exact_asset_binding",
+          "detail": "The four constants bind exact resources search.png, loading_spinner.gif, loading_spinner_darker.gif and error.png."
+        },
+        {
+          "family": "exact_outer_contract",
+          "detail": "rs/ui/components/k setIcon consumes this enum directly and loads the enum's resource file into its icon JLabel."
+        },
+        {
+          "family": "exact_public_source_parity",
+          "detail": "The matching public RuneLite IconTextField source names this nested enum Icon and contains the identical four constants/resource strings."
+        }
+      ],
+      "note": "Icon is directly recoverable from exact enum/resource parity with the public RuneLite IconTextField.Icon source. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}

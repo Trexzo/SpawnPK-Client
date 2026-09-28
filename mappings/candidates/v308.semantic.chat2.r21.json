@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "JagexPrintableCharMatcher",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Exact-v308 class extends Guava CharMatcher and accepts precisely printable Jagex characters: ASCII 32..126, codepoint 128, and 160..255."
+        },
+        {
+          "family": "exact_dependency_role",
+          "detail": "Exact-v308 Text utility instantiates rs/A/k as its JAGEX printable-character matcher used for message/text sanitization."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "RuneLite historical source at a5c2494fc913d5b6023edc7883c4933c948f852e contains JagexPrintableCharMatcher with the identical CharMatcher logic."
+        }
+      ],
+      "note": "Pinned SpawnPK v308 structure is primary authority; historical RuneLite source is provenance/name corroboration only."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OSXFullScreenAdapter",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact-v308 diagnostics say 'Window entered fullscreen mode--setting extended state to {}' and 'Window exited fullscreen mode--setting extended state to {}'."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends com.apple.eawt.FullScreenAdapter, stores a Frame, applies MAXIMIZED_BOTH/NORMAL state on fullscreen transitions, and installs itself through FullScreenUtilities."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "RuneLite historical source at a5c2494fc913d5b6023edc7883c4933c948f852e contains OSXFullScreenAdapter with the same superclass, logs, Frame transitions and install helper."
+        }
+      ],
+      "note": "Pinned SpawnPK v308 bytecode/source shape is primary authority; historical RuneLite source is provenance/name corroboration only."
+    }
+  ],
+  "conflicts": []
+}

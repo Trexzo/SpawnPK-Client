@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_4CD0295E3AAEF38D97C5",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_1E18F3502E475C1325CB",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000869",
+      "owner_logical_id": "CLIENT_CLASS_000869",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/b/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HotkeyButton",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_state",
+          "detail": "Exact v308 rs/s/b/i extends JButton, owns one rs/s/b/l Keybind value, exposes a setter/getter pair, and normalizes null to Keybind.NOT_SET before updating button text from value.toString()."
+        },
+        {
+          "family": "exact_input_behavior",
+          "detail": "Its constructor disables focus traversal keys, derives the default client font to 12f, installs a mouse listener that clears to NOT_SET on button-1 release, and installs a key listener that creates either Keybind or ModifierlessKeybind according to the constructor boolean."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite net.runelite.client.plugins.config.HotkeyButton has the same JButton superclass, Keybind field, constructor signature/behavior, mouse-release reset, key-press selection logic, setter semantics and font setup."
+        }
+      ],
+      "note": "HotkeyButton is recovered at confidence 0.999 from an exact RuneLite source match. Its anonymous mouse/key listener implementation classes remain unnamed."
+    }
+  ],
+  "unresolved": []
+}

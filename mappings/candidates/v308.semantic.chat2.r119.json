@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/q/a/a/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcHitmarkQueueClearPacketHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers rs/q/a/a/a/c directly as ScriptPacket ID 21."
+        },
+        {
+          "family": "exact_npc_target",
+          "detail": "The handler reads an NPC index, bounds-checks Client.cA and resolves rs/a/j, independently recovered by R30 as Npc."
+        },
+        {
+          "family": "exact_hitmark_target",
+          "detail": "It accesses that Npc's rs/a/e HitmarkManager and clears the CopyOnWriteArrayList returned by its queue accessor; R33 identifies this list as the overflow/replay hitmark queue."
+        }
+      ],
+      "note": "The packet clears the NPC HitmarkManager overflow/replay queue. The handler name is descriptive and therefore confidence is 0.998."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/q/a/a/a/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MusicTrackPacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers rs/q/a/a/a/m directly as ScriptPacket ID 29."
+        },
+        {
+          "family": "exact_native_track_path",
+          "detail": "The handler reads one integer and calls Client.a(trackId,true); that method updates the current requested music id and requests OnDemandFetcher type 2."
+        },
+        {
+          "family": "exact_opcode_equivalence",
+          "detail": "The ordinary client packet opcode 74 uses the same type-2 OnDemandFetcher request path for music-track ids, independently fixing the payload domain."
+        },
+        {
+          "family": "exact_audio_consumer",
+          "detail": "Completed type-2 data matching the requested id is passed to the client's byte[] music loader, which forwards the bytes into the audio/MIDI subsystem."
+        }
+      ],
+      "note": "MusicTrackPacketHandler is fixed by ScriptPacket 29 using the same exact track request/loading path as the native client music opcode."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/q/a/a/a/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcOverheadIconPacketHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers rs/q/a/a/a/j directly as ScriptPacket ID 43."
+        },
+        {
+          "family": "exact_override_map",
+          "detail": "The handler reads an NPC-definition id and icon index into a static int-to-int override map; index -1 removes the override."
+        },
+        {
+          "family": "exact_render_consumer",
+          "detail": "Client NPC overhead rendering looks up the live NpcDefinition id in this map and, when present, selects the corresponding sprite from the overhead sprite array and renders it above that NPC."
+        },
+        {
+          "family": "exact_fallback",
+          "detail": "When no packet override exists, the same renderer falls back to the NpcDefinition's built-in overhead-icon index, independently proving that the mapped integer is an NPC overhead icon selection."
+        }
+      ],
+      "note": "NpcOverheadIconPacketHandler is descriptive exact-behavior recovery for ScriptPacket 43's definition-id to overhead-icon override map; confidence is 0.998."
+    }
+  ],
+  "conflicts": []
+}

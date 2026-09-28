@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/runelite/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RenderableDrawListenerRegistry",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_listener_registry_shape",
+          "detail": "Exact v308 owns exactly two static CopyOnWriteArrayList-backed List<rs/runelite/b/a$a> collections and exposes only one accessor for each list."
+        },
+        {
+          "family": "exact_render_suppression_consumers",
+          "detail": "The base Renderable draw path iterates the first list before rendering and aborts the draw when any listener returns false; Client iterates the second list in its secondary entity/presentation path and suppresses that branch on false."
+        },
+        {
+          "family": "exact_entity_hider_lifecycle",
+          "detail": "The exact Entity Hider plugin rs/s/d/b constructs two draw-listener lambdas from its hide settings, registers one into each list on enable/config refresh, and removes both on teardown."
+        }
+      ],
+      "note": "RenderableDrawListenerRegistry is descriptive exact-behavior recovery for the two global draw-suppression listener lists. No surviving upstream source noun for the registry container itself was found; confidence is 0.997."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/runelite/b/a$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RenderableDrawListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_functional_interface",
+          "detail": "Exact v308 is a one-method interface whose surviving method is boolean draw(rs.a.a, boolean), where rs.a.a is the client Renderable base type; call sites use a false return to suppress rendering."
+        },
+        {
+          "family": "exact_entity_hider_implementation",
+          "detail": "Entity Hider constructs this interface through invokedynamic draw lambdas and returns false for configured renderable categories, directly proving a renderable draw-listener role rather than a generic predicate."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite source at runelite/runelite@6e74752caa80fe9cb96cd9b37207e171fa525f07 retains the deprecated Hooks.RenderableDrawListener API with the exact semantic method boolean draw(Renderable renderable, boolean ui), delegating RenderCallback.addEntity to that draw method."
+        }
+      ],
+      "note": "RenderableDrawListener is recovered at confidence 0.998 from the exact functional signature, suppression call sites and surviving RuneLite source name. The SpawnPK class is a standalone stripped interface rather than the current upstream nested compatibility interface, so confidence remains below 0.999."
+    }
+  ],
+  "conflicts": []
+}

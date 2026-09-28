@@ -1,0 +1,282 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 9,
+  "review_id": "SEMREVIEW_006EEBBCA73A2210B0C9",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_234D7FF21427B6E6012A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000716",
+      "owner_logical_id": "CLIENT_CLASS_000716",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/o/a/a/a/D",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InventoryItemOption3Packet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 16 plus exactly the three inventory/widget-item routing integers."
+        },
+        {
+          "family": "exact_option_contract",
+          "detail": "The exact-current outbound protocol matrix identifies opcode 16 as inventory-item option 3."
+        },
+        {
+          "family": "exact_context_boundary",
+          "detail": "The option number is the transport semantic; item-definition or widget context may assign different visible verbs, so no action verb such as Equip, Drop, Buy or Sell is asserted."
+        }
+      ],
+      "note": "Exact-v308 option-slot packet name from the current outbound action matrix."
+    },
+    {
+      "proposal_id": "SEMPROP_6300E9C0BE9E74779DA8",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000708",
+      "owner_logical_id": "CLIENT_CLASS_000708",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/o/a/a/a/v",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WidgetItemOption4Packet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 129 plus exactly the three inventory/widget-item routing integers."
+        },
+        {
+          "family": "exact_option_contract",
+          "detail": "The exact-current outbound protocol matrix identifies opcode 129 as widget-item option 4."
+        },
+        {
+          "family": "exact_context_boundary",
+          "detail": "The option number is the transport semantic; item-definition or widget context may assign different visible verbs, so no action verb such as Equip, Drop, Buy or Sell is asserted."
+        }
+      ],
+      "note": "Exact-v308 option-slot packet name from the current outbound action matrix."
+    },
+    {
+      "proposal_id": "SEMPROP_67DCF6DA1D8030AF3888",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000709",
+      "owner_logical_id": "CLIENT_CLASS_000709",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/o/a/a/a/w",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WidgetItemOption5Packet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 135 plus exactly the three inventory/widget-item routing integers."
+        },
+        {
+          "family": "exact_option_contract",
+          "detail": "The exact-current outbound protocol matrix identifies opcode 135 as widget-item option 5."
+        },
+        {
+          "family": "exact_context_boundary",
+          "detail": "The option number is the transport semantic; item-definition or widget context may assign different visible verbs, so no action verb such as Equip, Drop, Buy or Sell is asserted."
+        }
+      ],
+      "note": "Exact-v308 option-slot packet name from the current outbound action matrix."
+    },
+    {
+      "proposal_id": "SEMPROP_96853041F5B128AA9560",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000698",
+      "owner_logical_id": "CLIENT_CLASS_000698",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/o/a/a/a/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InventoryItemOption5Packet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 87 plus exactly the three inventory/widget-item routing integers."
+        },
+        {
+          "family": "exact_option_contract",
+          "detail": "The exact-current outbound protocol matrix identifies opcode 87 as inventory-item option 5."
+        },
+        {
+          "family": "exact_context_boundary",
+          "detail": "The option number is the transport semantic; item-definition or widget context may assign different visible verbs, so no action verb such as Equip, Drop, Buy or Sell is asserted."
+        }
+      ],
+      "note": "Exact-v308 option-slot packet name from the current outbound action matrix."
+    },
+    {
+      "proposal_id": "SEMPROP_A55C629988949E6B74BA",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000707",
+      "owner_logical_id": "CLIENT_CLASS_000707",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/o/a/a/a/u",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WidgetItemOption3Packet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 43 plus exactly the three inventory/widget-item routing integers."
+        },
+        {
+          "family": "exact_option_contract",
+          "detail": "The exact-current outbound protocol matrix identifies opcode 43 as widget-item option 3."
+        },
+        {
+          "family": "exact_context_boundary",
+          "detail": "The option number is the transport semantic; item-definition or widget context may assign different visible verbs, so no action verb such as Equip, Drop, Buy or Sell is asserted."
+        }
+      ],
+      "note": "Exact-v308 option-slot packet name from the current outbound action matrix."
+    },
+    {
+      "proposal_id": "SEMPROP_B623766E5379DDC9346A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000715",
+      "owner_logical_id": "CLIENT_CLASS_000715",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/o/a/a/a/C",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InventoryItemOption4Packet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 75 plus exactly the three inventory/widget-item routing integers."
+        },
+        {
+          "family": "exact_option_contract",
+          "detail": "The exact-current outbound protocol matrix identifies opcode 75 as inventory-item option 4."
+        },
+        {
+          "family": "exact_context_boundary",
+          "detail": "The option number is the transport semantic; item-definition or widget context may assign different visible verbs, so no action verb such as Equip, Drop, Buy or Sell is asserted."
+        }
+      ],
+      "note": "Exact-v308 option-slot packet name from the current outbound action matrix."
+    },
+    {
+      "proposal_id": "SEMPROP_B965E46F3257510F7110",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000706",
+      "owner_logical_id": "CLIENT_CLASS_000706",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/o/a/a/a/t",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WidgetItemOption2Packet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 117 plus exactly the three inventory/widget-item routing integers."
+        },
+        {
+          "family": "exact_option_contract",
+          "detail": "The exact-current outbound protocol matrix identifies opcode 117 as widget-item option 2."
+        },
+        {
+          "family": "exact_context_boundary",
+          "detail": "The option number is the transport semantic; item-definition or widget context may assign different visible verbs, so no action verb such as Equip, Drop, Buy or Sell is asserted."
+        }
+      ],
+      "note": "Exact-v308 option-slot packet name from the current outbound action matrix."
+    },
+    {
+      "proposal_id": "SEMPROP_ECB9B36FAA15BC33F356",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000705",
+      "owner_logical_id": "CLIENT_CLASS_000705",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/o/a/a/a/s",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WidgetItemOption1Packet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 145 plus exactly the three inventory/widget-item routing integers."
+        },
+        {
+          "family": "exact_option_contract",
+          "detail": "The exact-current outbound protocol matrix identifies opcode 145 as widget-item option 1."
+        },
+        {
+          "family": "exact_context_boundary",
+          "detail": "The option number is the transport semantic; item-definition or widget context may assign different visible verbs, so no action verb such as Equip, Drop, Buy or Sell is asserted."
+        }
+      ],
+      "note": "Exact-v308 option-slot packet name from the current outbound action matrix."
+    },
+    {
+      "proposal_id": "SEMPROP_F4F58489F9B87F27ABB8",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000738",
+      "owner_logical_id": "CLIENT_CLASS_000738",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/o/a/a/a/Z",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InventoryItemOption1Packet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 122 plus exactly the three inventory/widget-item routing integers."
+        },
+        {
+          "family": "exact_option_contract",
+          "detail": "The exact-current outbound protocol matrix identifies opcode 122 as inventory-item option 1."
+        },
+        {
+          "family": "exact_context_boundary",
+          "detail": "The option number is the transport semantic; item-definition or widget context may assign different visible verbs, so no action verb such as Equip, Drop, Buy or Sell is asserted."
+        }
+      ],
+      "note": "Exact-v308 option-slot packet name from the current outbound action matrix."
+    }
+  ],
+  "unresolved": []
+}

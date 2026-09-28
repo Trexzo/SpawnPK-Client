@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 6,
+  "review_id": "SEMREVIEW_EC7BF9DFB04042D59C6D",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_0065CE8FC6018C35463E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000622",
+      "owner_logical_id": "CLIENT_CLASS_000622",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/ar",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MakeQuantityInterfacePacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers ScriptPacket ID 35 from rs/n/c/aq.f; exact v308 initializes that field with concrete handler rs/n/c/ar."
+        },
+        {
+          "family": "exact_interface_identity",
+          "detail": "The target rs/n/c/aq preserves exact text 'How many would you like to make?', 'Choose a quantity, then click an image to begin.', 'Select quantity', 1/5/10/X/All controls, and the options/make/sprite resource family."
+        },
+        {
+          "family": "exact_complete_selector_surface",
+          "detail": "Selectors 0 through 4 remain inside the MakeQuantity interface: option/item icon and quantity data, quantity-selection/reset state, title/subtitle and layout visibility, per-option formatted text, and option timing/selection state."
+        },
+        {
+          "family": "exact_widget_range",
+          "detail": "The handler mutates the same 55301-55330 widget group and rs/n/c/aq-owned arrays/helpers constructed by MakeQuantityInterface, including exact Select/quantity prompt state and formatted option text."
+        }
+      ],
+      "note": "MakeQuantityInterfacePacketHandler is fixed by ScriptPacket 35, exact make-quantity vocabulary/resources, and a complete five-selector protocol confined to rs/n/c/aq and its 553xx widget group. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_606280982128BD429E3F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000569",
+      "owner_logical_id": "CLIENT_CLASS_000569",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/W",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GamblingInterfacePacketHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers ScriptPacket ID 15 from rs/n/c/V.bI; exact v308 initializes that field with concrete handler rs/n/c/W."
+        },
+        {
+          "family": "exact_interface_identity",
+          "detail": "The target rs/n/c/V is self-identifying through gambling/SPRITE and exact controls/text for gambling offers, 55x2, blackjack host modes, Dice duel, Flower poker, offer acceptance/decline and gambling safety rules."
+        },
+        {
+          "family": "exact_complete_selector_surface",
+          "detail": "The handler implements only selector 1. It reads one boolean-like integer into rs/n/c/V.c and records System.currentTimeMillis() into rs/n/c/V.d; no other class or client subsystem is modified."
+        },
+        {
+          "family": "exact_narrow_state_boundary",
+          "detail": "The proposal deliberately names only the containing GamblingInterface packet handler and does not assign a narrower semantic meaning to rs/n/c/V.c or rs/n/c/V.d beyond packet-controlled interface state/timing."
+        }
+      ],
+      "note": "GamblingInterfacePacketHandler is descriptive exact-behavior recovery for ScriptPacket 15. The complete handler surface is two fields owned by the self-identifying gambling interface; confidence is 0.998 because the individual field roles remain unnamed."
+    },
+    {
+      "proposal_id": "SEMPROP_7C1D0E9BE442AD98484F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000557",
+      "owner_logical_id": "CLIENT_CLASS_000557",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/K",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EventActivityViewerInterfacePacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers ScriptPacket ID 6 from rs/n/c/J.c; exact v308 initializes that field with concrete handler rs/n/c/K."
+        },
+        {
+          "family": "exact_interface_identity",
+          "detail": "The target rs/n/c/J preserves the exact title 'Event Activity Viewer', activity-lock/token-limit text, and popups/activities 1/2 resources."
+        },
+        {
+          "family": "exact_complete_selector_surface",
+          "detail": "Selector 0 clears the rs/n/c/J activity list and resets its counter/state; selector 1 reads one activity name, a packet-sized String array, two integers and one long then delegates the complete record to rs/n/c/J.a(...); selector 2 invokes rs/n/c/J.i(). No branch targets another subsystem."
+        },
+        {
+          "family": "exact_target_ownership",
+          "detail": "Every mutable object reached by the handler is returned from or written through rs/n/c/J, so the packet protocol is bounded to the recovered Event Activity Viewer interface."
+        }
+      ],
+      "note": "EventActivityViewerInterfacePacketHandler is fixed by ScriptPacket 6, the exact 'Event Activity Viewer' title, and an exclusive three-selector delegation surface into rs/n/c/J. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_89DA4891B2BD39F9F6D9",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000609",
+      "owner_logical_id": "CLIENT_CLASS_000609",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/ah",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemsKeptOnDeathInterfacePacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers ScriptPacket ID 9 from rs/n/c/ag.e; exact v308 initializes that field with concrete handler rs/n/c/ah."
+        },
+        {
+          "family": "exact_interface_identity",
+          "detail": "The target rs/n/c/ag preserves the exact title 'Items kept on death', the separate 'Items I will keep...', 'Items I will lose...' and 'Items I will auto-keep...' sections, red-skull/prayer-loss explanatory text, and icons/death resources."
+        },
+        {
+          "family": "exact_complete_selector_surface",
+          "detail": "Selector 0 clears rs/n/c/ag.d; selector 1 reads one integer and adds it to that same rs/n/c/ag-owned Set. There are no additional selector branches or writes into any other client subsystem."
+        },
+        {
+          "family": "exact_state_ownership",
+          "detail": "The packet-maintained integer Set is declared and owned by the same exact Items-kept-on-death interface class, giving the handler one complete and unambiguous interface responsibility."
+        }
+      ],
+      "note": "ItemsKeptOnDeathInterfacePacketHandler is fixed by ScriptPacket 9, the exact interface title, and an exclusive Set reset/add protocol owned by rs/n/c/ag. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_8D1DCD72D8D99EB74E20",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000562",
+      "owner_logical_id": "CLIENT_CLASS_000562",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/P",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ActiveEventsInterfacePacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers ScriptPacket ID 13 from rs/n/c/O.c; exact v308 initializes that field with concrete handler rs/n/c/P."
+        },
+        {
+          "family": "exact_interface_identity",
+          "detail": "The target rs/n/c/O preserves exact active-event vocabulary including '<img=100> View Active Events', '<img=100> View all events', 'Event Global Boss', 'Event Wildy Boss', event countdown/status strings, hotspot state and gameframe event assets."
+        },
+        {
+          "family": "exact_complete_selector_surface",
+          "detail": "Selectors 1 through 7 write only rs/n/c/O-owned event state: absolute expiry timestamps derived from packet longs/System.currentTimeMillis(), event Strings, and event progress/count integers. The default path performs no unrelated mutation."
+        },
+        {
+          "family": "exact_time_state_protocol",
+          "detail": "Every long payload is converted into an absolute client-side event deadline before storage in rs/n/c/O, while paired String/int payloads update the same active-event display state."
+        }
+      ],
+      "note": "ActiveEventsInterfacePacketHandler is fixed by ScriptPacket 13, exact active-event UI vocabulary, and a seven-selector protocol that writes only rs/n/c/O event state. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_C3091611B6DDFC82454B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000972",
+      "owner_logical_id": "CLIENT_CLASS_000972",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/t/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TradingPostPacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers ScriptPacket ID 30 from rs/s/t/i.b; exact v308 initializes that field with concrete handler rs/s/t/j."
+        },
+        {
+          "family": "exact_plugin_identity",
+          "detail": "The target rs/s/t/i preserves the exact title 'Trading Post' and ge_icon.png; prior exact-v308 research identifies it as the TradingPostPlugin and its rs/s/t/h and rs/s/t/g children as the Trading Post panel/listings surfaces."
+        },
+        {
+          "family": "exact_listing_add_protocol",
+          "detail": "Selector 1 constructs one rs/s/t/c listing model from four packet integers, a packet-selected rs/s/t/b currency enum, and the exact ItemDefinition name for the listing item, then adds it through rs/s/t/i.c -> TradingPostPanel -> TradingPostListingsPanel."
+        },
+        {
+          "family": "exact_listing_remove_protocol",
+          "detail": "Selector 2 reads one integer and removes the corresponding entry through the same Trading Post listings panel. No selector writes outside the Trading Post model/panel graph."
+        }
+      ],
+      "note": "TradingPostPacketHandler is fixed by ScriptPacket 30 and an exclusive add/remove listing protocol through the exact Trading Post plugin/panel graph. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}

@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/b/a/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EditorKitNotification",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_controller_ownership",
+          "detail": "R107 EditorKitController owns a List of this type; c(String) prepends a new instance for each editor status message and the render/update loop iterates only that list."
+        },
+        {
+          "family": "exact_lifetime",
+          "detail": "Construction stores the message and currentTimeMillis; a() returns true only while elapsed time is below exactly 5000 ms, after which the controller removes the notification."
+        },
+        {
+          "family": "exact_rendering",
+          "detail": "a(x,y) renders the stored message through the editor font as '@yel@[!] @whi@' plus the message and temporarily adjusts font alpha based on elapsed/5000 time to produce a fade."
+        },
+        {
+          "family": "exact_scope",
+          "detail": "The exact incoming-reference index shows the only external owner is EditorKitController, so this is Editor Kit support rather than a general client notification type."
+        }
+      ],
+      "note": "EditorKitNotification is descriptive exact-behavior recovery for the controller-owned five-second fading status notification."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/b/a/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EditorEntityDistanceComparator",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_type",
+          "detail": "The class implements Comparator<EditorEntity> and is constructed directly by EditorKitController."
+        },
+        {
+          "family": "exact_distance_calculation",
+          "detail": "For each entity it subtracts the client's current cJ/cL coordinates from EditorEntity world/editor X/Y, computes ceil(sqrt(dx*dx + dy*dy)), and compares the two resulting distances."
+        },
+        {
+          "family": "exact_order",
+          "detail": "The comparator returns distance(second).compareTo(distance(first)), producing descending/far-to-near distance order."
+        },
+        {
+          "family": "exact_render_consumer",
+          "detail": "EditorKitController copies its entity list, sorts that copy with this comparator, then iterates the sorted entities through their shared update/render method."
+        }
+      ],
+      "note": "EditorEntityDistanceComparator is directly fixed by its Comparator<EditorEntity> contract, Euclidean distance calculation and controller sort-before-render use."
+    }
+  ],
+  "conflicts": []
+}

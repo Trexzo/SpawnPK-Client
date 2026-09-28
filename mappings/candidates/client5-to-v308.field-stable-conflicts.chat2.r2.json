@@ -1,0 +1,520 @@
+{
+  "schema_version": 1,
+  "kind": "field_stable_symbol_conflict_audit",
+  "canonical": false,
+  "old_build": "client5",
+  "old_sha256": "a9a5d1f35a6657b5c26939ca30e008748e718f6b206cc8fd93b64b57c4833385",
+  "new_build": "v308",
+  "new_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "min_observations": 2,
+  "exact_descriptor_conflicts": 23,
+  "single_observation_leads": 5,
+  "conflicts": [
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0001",
+      "owner": "rs/n/c/ac.class",
+      "old": {
+        "name": "bI",
+        "descriptor": "I"
+      },
+      "current_stable_target": {
+        "name": "bI",
+        "descriptor": "I"
+      },
+      "exact_position_target": {
+        "name": "bK",
+        "descriptor": "I"
+      },
+      "observations": 2,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0002",
+      "owner": "rs/n/c/ac.class",
+      "old": {
+        "name": "bQ",
+        "descriptor": "[Ljava/lang/String;"
+      },
+      "current_stable_target": {
+        "name": "bQ",
+        "descriptor": "[Ljava/lang/String;"
+      },
+      "exact_position_target": {
+        "name": "bS",
+        "descriptor": "[Ljava/lang/String;"
+      },
+      "observations": 2,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0003",
+      "owner": "rs/n/c/G.class",
+      "old": {
+        "name": "bK",
+        "descriptor": "I"
+      },
+      "current_stable_target": {
+        "name": "bK",
+        "descriptor": "I"
+      },
+      "exact_position_target": {
+        "name": "bM",
+        "descriptor": "I"
+      },
+      "observations": 8,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0004",
+      "owner": "rs/n/c/G.class",
+      "old": {
+        "name": "bL",
+        "descriptor": "I"
+      },
+      "current_stable_target": {
+        "name": "bL",
+        "descriptor": "I"
+      },
+      "exact_position_target": {
+        "name": "bN",
+        "descriptor": "I"
+      },
+      "observations": 7,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0005",
+      "owner": "rs/n/c/ba.class",
+      "old": {
+        "name": "bI",
+        "descriptor": "I"
+      },
+      "current_stable_target": {
+        "name": "bI",
+        "descriptor": "I"
+      },
+      "exact_position_target": {
+        "name": "bK",
+        "descriptor": "I"
+      },
+      "observations": 9,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0006",
+      "owner": "rs/n/c/ba.class",
+      "old": {
+        "name": "bJ",
+        "descriptor": "I"
+      },
+      "current_stable_target": {
+        "name": "bJ",
+        "descriptor": "I"
+      },
+      "exact_position_target": {
+        "name": "bL",
+        "descriptor": "I"
+      },
+      "observations": 25,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0007",
+      "owner": "rs/n/c/ba.class",
+      "old": {
+        "name": "bK",
+        "descriptor": "I"
+      },
+      "current_stable_target": {
+        "name": "bK",
+        "descriptor": "I"
+      },
+      "exact_position_target": {
+        "name": "bM",
+        "descriptor": "I"
+      },
+      "observations": 3,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0008",
+      "owner": "rs/n/c/ba.class",
+      "old": {
+        "name": "bL",
+        "descriptor": "I"
+      },
+      "current_stable_target": {
+        "name": "bL",
+        "descriptor": "I"
+      },
+      "exact_position_target": {
+        "name": "bN",
+        "descriptor": "I"
+      },
+      "observations": 9,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0009",
+      "owner": "rs/n/c/aD.class",
+      "old": {
+        "name": "bI",
+        "descriptor": "I"
+      },
+      "current_stable_target": {
+        "name": "bI",
+        "descriptor": "I"
+      },
+      "exact_position_target": {
+        "name": "bK",
+        "descriptor": "I"
+      },
+      "observations": 5,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0010",
+      "owner": "rs/n/c/ab.class",
+      "old": {
+        "name": "bL",
+        "descriptor": "I"
+      },
+      "current_stable_target": {
+        "name": "bL",
+        "descriptor": "I"
+      },
+      "exact_position_target": {
+        "name": "bN",
+        "descriptor": "I"
+      },
+      "observations": 12,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0011",
+      "owner": "rs/n/c/ab.class",
+      "old": {
+        "name": "bN",
+        "descriptor": "I"
+      },
+      "current_stable_target": {
+        "name": "bN",
+        "descriptor": "I"
+      },
+      "exact_position_target": {
+        "name": "bP",
+        "descriptor": "I"
+      },
+      "observations": 9,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0012",
+      "owner": "rs/n/c/ab.class",
+      "old": {
+        "name": "bO",
+        "descriptor": "I"
+      },
+      "current_stable_target": {
+        "name": "bO",
+        "descriptor": "I"
+      },
+      "exact_position_target": {
+        "name": "bQ",
+        "descriptor": "I"
+      },
+      "observations": 24,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0013",
+      "owner": "rs/n/c/ab.class",
+      "old": {
+        "name": "bP",
+        "descriptor": "I"
+      },
+      "current_stable_target": {
+        "name": "bP",
+        "descriptor": "I"
+      },
+      "exact_position_target": {
+        "name": "bR",
+        "descriptor": "I"
+      },
+      "observations": 3,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0014",
+      "owner": "rs/n/c/ab.class",
+      "old": {
+        "name": "bQ",
+        "descriptor": "I"
+      },
+      "current_stable_target": {
+        "name": "bQ",
+        "descriptor": "I"
+      },
+      "exact_position_target": {
+        "name": "bS",
+        "descriptor": "I"
+      },
+      "observations": 9,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0015",
+      "owner": "rs/n/c/aw.class",
+      "old": {
+        "name": "bJ",
+        "descriptor": "[I"
+      },
+      "current_stable_target": {
+        "name": "bJ",
+        "descriptor": "[I"
+      },
+      "exact_position_target": {
+        "name": "bL",
+        "descriptor": "[I"
+      },
+      "observations": 2,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0016",
+      "owner": "rs/n/c/aw.class",
+      "old": {
+        "name": "bK",
+        "descriptor": "[I"
+      },
+      "current_stable_target": {
+        "name": "bK",
+        "descriptor": "[I"
+      },
+      "exact_position_target": {
+        "name": "bM",
+        "descriptor": "[I"
+      },
+      "observations": 3,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0017",
+      "owner": "rs/n/c/aw.class",
+      "old": {
+        "name": "bM",
+        "descriptor": "[I"
+      },
+      "current_stable_target": {
+        "name": "bM",
+        "descriptor": "[I"
+      },
+      "exact_position_target": {
+        "name": "bO",
+        "descriptor": "[I"
+      },
+      "observations": 2,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0018",
+      "owner": "rs/n/c/aw.class",
+      "old": {
+        "name": "bO",
+        "descriptor": "[I"
+      },
+      "current_stable_target": {
+        "name": "bO",
+        "descriptor": "[I"
+      },
+      "exact_position_target": {
+        "name": "bQ",
+        "descriptor": "[I"
+      },
+      "observations": 5,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0019",
+      "owner": "rs/n/c/h.class",
+      "old": {
+        "name": "bJ",
+        "descriptor": "[Ljava/lang/String;"
+      },
+      "current_stable_target": {
+        "name": "bJ",
+        "descriptor": "[Ljava/lang/String;"
+      },
+      "exact_position_target": {
+        "name": "bL",
+        "descriptor": "[Ljava/lang/String;"
+      },
+      "observations": 2,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0020",
+      "owner": "rs/n/c/d/a.class",
+      "old": {
+        "name": "do",
+        "descriptor": "Lrs/n/d/c;"
+      },
+      "current_stable_target": {
+        "name": "do",
+        "descriptor": "Lrs/n/d/c;"
+      },
+      "exact_position_target": {
+        "name": "dq",
+        "descriptor": "Lrs/n/d/c;"
+      },
+      "observations": 3,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0021",
+      "owner": "rs/n/c/d/a.class",
+      "old": {
+        "name": "dp",
+        "descriptor": "Lrs/n/d/c;"
+      },
+      "current_stable_target": {
+        "name": "dp",
+        "descriptor": "Lrs/n/d/c;"
+      },
+      "exact_position_target": {
+        "name": "dr",
+        "descriptor": "Lrs/n/d/c;"
+      },
+      "observations": 3,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0022",
+      "owner": "rs/n/c/d/a.class",
+      "old": {
+        "name": "dq",
+        "descriptor": "Lrs/n/d/c;"
+      },
+      "current_stable_target": {
+        "name": "dq",
+        "descriptor": "Lrs/n/d/c;"
+      },
+      "exact_position_target": {
+        "name": "ds",
+        "descriptor": "Lrs/n/d/c;"
+      },
+      "observations": 3,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    },
+    {
+      "conflict_id": "FIELD_STABLE_CONFLICT_0023",
+      "owner": "rs/n/a/a/a.class",
+      "old": {
+        "name": "bI",
+        "descriptor": "I"
+      },
+      "current_stable_target": {
+        "name": "bI",
+        "descriptor": "I"
+      },
+      "exact_position_target": {
+        "name": "bK",
+        "descriptor": "I"
+      },
+      "observations": 2,
+      "evidence": "same matched-method field operation at same own-field ordinal and bytecode offset"
+    }
+  ],
+  "leads": [
+    {
+      "lead_id": "FIELD_STABLE_LEAD_0001",
+      "owner": "rs/n/c/c.class",
+      "old": {
+        "name": "bI",
+        "descriptor": "I"
+      },
+      "current_stable_target": {
+        "name": "bI",
+        "descriptor": "I"
+      },
+      "exact_position_target": {
+        "name": "bK",
+        "descriptor": "I"
+      },
+      "observations": 1,
+      "status": "INSUFFICIENT_OBSERVATIONS"
+    },
+    {
+      "lead_id": "FIELD_STABLE_LEAD_0002",
+      "owner": "rs/n/c/O.class",
+      "old": {
+        "name": "bN",
+        "descriptor": "J"
+      },
+      "current_stable_target": {
+        "name": "bN",
+        "descriptor": "J"
+      },
+      "exact_position_target": {
+        "name": "bP",
+        "descriptor": "J"
+      },
+      "observations": 1,
+      "status": "INSUFFICIENT_OBSERVATIONS"
+    },
+    {
+      "lead_id": "FIELD_STABLE_LEAD_0003",
+      "owner": "rs/n/c/O.class",
+      "old": {
+        "name": "bO",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "current_stable_target": {
+        "name": "bO",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "exact_position_target": {
+        "name": "bQ",
+        "descriptor": "Ljava/lang/String;"
+      },
+      "observations": 1,
+      "status": "INSUFFICIENT_OBSERVATIONS"
+    },
+    {
+      "lead_id": "FIELD_STABLE_LEAD_0004",
+      "owner": "rs/n/c/O.class",
+      "old": {
+        "name": "bP",
+        "descriptor": "J"
+      },
+      "current_stable_target": {
+        "name": "bP",
+        "descriptor": "J"
+      },
+      "exact_position_target": {
+        "name": "bR",
+        "descriptor": "J"
+      },
+      "observations": 1,
+      "status": "INSUFFICIENT_OBSERVATIONS"
+    },
+    {
+      "lead_id": "FIELD_STABLE_LEAD_0005",
+      "owner": "rs/n/c/O.class",
+      "old": {
+        "name": "bR",
+        "descriptor": "J"
+      },
+      "current_stable_target": {
+        "name": "bR",
+        "descriptor": "J"
+      },
+      "exact_position_target": {
+        "name": "bT",
+        "descriptor": "J"
+      },
+      "observations": 1,
+      "status": "INSUFFICIENT_OBSERVATIONS"
+    }
+  ]
+}

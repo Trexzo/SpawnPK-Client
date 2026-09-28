@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/c/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutPreviewRenderer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_render_target",
+          "detail": "The class owns one current LoadoutDefinition and renders only that record's visual state through a Graphics surface."
+        },
+        {
+          "family": "exact_loadout_assets",
+          "detail": "Its renderer loads exact Loadouts assets including loadout_bg.png, normal.png, curses.png, booktag.png, skills.png, outline.png and the pet/cosmetic slot resources."
+        },
+        {
+          "family": "exact_model_consumption",
+          "detail": "Rendering consumes the LoadoutDefinition spellbook, prayer state, skill values, 28 backpack LoadoutItemEntry values and the LoadoutEquipmentSlot map, drawing item icons and quantities for both inventory and equipment."
+        },
+        {
+          "family": "exact_live_panel_bridge",
+          "detail": "LoadoutManager/LoadoutFolderPanel update this renderer with the active LoadoutDefinition and repaint it as selection changes."
+        }
+      ],
+      "note": "LoadoutPreviewRenderer is fixed by exclusive rendering of the active LoadoutDefinition with exact loadout background, spellbook/prayer/skills, inventory and equipment presentation. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutIcon",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_surface",
+          "detail": "The enum preserves 29 exact user-facing icon/category choices including MELEE, RANGE, MAGIC, PURE, WELFARE, SKULL, RED_SKULL, HOTSPOT, SLAYER, BLOOD_SLAYER, RAIDS, EVENT, CASH, BARRAGE, FUN and EMOJI variants."
+        },
+        {
+          "family": "exact_labels_assets",
+          "detail": "Each value carries a visible label such as Melee/Range/Magic/Raids and a matching /assets/gui/icons/*.png resource."
+        },
+        {
+          "family": "exact_loadout_ownership",
+          "detail": "LoadoutDefinition stores one rs/gui/b/e value as presentation metadata, and exact Loadouts UI editors/renderers expose and consume that selection."
+        }
+      ],
+      "note": "LoadoutIcon follows exact surviving enum choices/assets and exclusive use as LoadoutDefinition presentation metadata. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutItemEntry",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_two_int_record",
+          "detail": "The class is an immutable two-integer record with constructors (itemId, quantity) and (itemId) where quantity defaults to 1."
+        },
+        {
+          "family": "exact_loadout_storage",
+          "detail": "LoadoutDefinition stores arrays/maps of these records for backpack and equipment state; LoadoutPersistence serializes/deserializes both integers."
+        },
+        {
+          "family": "exact_spawn_consumer",
+          "detail": "The exact '::item_loadout' spawn path reads the first integer as the item id and the second as quantity when serializing inventory/equipment entries."
+        },
+        {
+          "family": "exact_preview_consumer",
+          "detail": "LoadoutPreviewRenderer resolves the first integer to an item image and draws the second as the item quantity/count where applicable."
+        }
+      ],
+      "note": "LoadoutItemEntry is a conservative descriptive name for the exact item-id/quantity record used only inside the Loadouts model, persistence, spawn and preview paths. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

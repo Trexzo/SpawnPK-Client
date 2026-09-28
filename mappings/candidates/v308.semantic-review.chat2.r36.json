@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_AD69F191733BF4798072",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_CC3A64F9D1F47FDFD749",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001105",
+      "owner_logical_id": "CLIENT_CLASS_001105",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/v",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelHeader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_header_parser",
+          "detail": "Model.a(byte[], int, boolean) reads the model payload trailer through Stream, creates one rs/v entry for the model id, stores the original byte array, and writes the three leading decoded counts plus a sequence of computed section offsets into the object."
+        },
+        {
+          "family": "exact_count_binding",
+          "detail": "Model construction copies rs/v.b, rs/v.c and rs/v.d directly into its core vertex-count, face-count and textured-triangle-count state before allocating/obtaining the corresponding vertex, face and texture arrays."
+        },
+        {
+          "family": "exact_offset_consumers",
+          "detail": "The remaining rs/v integer fields are treated as optional or mandatory byte offsets into the same model payload; Model creates several Stream views, positions them at those offsets and decodes the individual model sections."
+        }
+      ],
+      "note": "ModelHeader describes the per-model byte-array metadata record containing decode counts and section offsets; it is a semantic recovery name rather than a claim about the original developer identifier."
+    }
+  ],
+  "unresolved": []
+}

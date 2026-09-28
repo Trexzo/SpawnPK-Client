@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientRenderCoordinator",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_render_phase_dispatch",
+          "detail": "The class owns the top-level Client render pass: in logged-in game state it dispatches to R303 GameSceneRenderer; outside that state it routes to the Client loading/login presentation path."
+        },
+        {
+          "family": "exact_resize_buffer_authority",
+          "detail": "It detects client width/height changes, recreates the Client rs/l/C image/back buffer, updates projection dimensions and invokes Client layout/rebuild hooks before rendering."
+        },
+        {
+          "family": "exact_game_state_transition",
+          "detail": "The coordinator handles the exact 'Loading, please wait..' path and posts RuneLite GameStateChanged when the client enters its active state, binding rendering to client state transitions rather than one isolated visual surface."
+        },
+        {
+          "family": "exact_frame_composition",
+          "detail": "After scene/interface invalidation work it composes fixed-frame resources 'gameframe/backleft1' and 'gameframe/backtop1' when applicable, then blits the completed rs/l/C frame to the client Graphics target."
+        },
+        {
+          "family": "exact_render_invalidation",
+          "detail": "The method owns broad interface redraw/invalidation checks, active-root updates and pre/post overlay dispatch around the scene/HUD phases, making it the coordinator over the narrower R302-R304 renderers."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 top-level client render coordination; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}

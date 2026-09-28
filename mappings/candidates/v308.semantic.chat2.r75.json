@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/h$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FloorDefinitionMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "rs/d/h$a is an enum with surviving exact constants REGULAR, OLDSCHOOL and OSRS."
+        },
+        {
+          "family": "exact_definition_loader_binding",
+          "detail": "R28 FloorDefinition stores the active rs/d/h$a value and its mode-switching loader selects the corresponding floor-definition source/decoder; R71 FloorOverlayDefinition accepts the same enum and switches its overlay-definition source in lockstep."
+        },
+        {
+          "family": "exact_runtime_mode_switch",
+          "detail": "Client region/map loading explicitly switches both floor underlay and overlay definitions to OSRS for OSRS data, to OLDSCHOOL for the old-school path, and back to REGULAR for the normal path."
+        }
+      ],
+      "note": "FloorDefinitionMode is the conservative semantic name for this exact floor underlay/overlay definition mode enum; it does not claim a verbatim original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/r$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ObjectDefinitionMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "rs/d/r$a is an enum with surviving exact constants STANDARD, OLDSCHOOL, NEW and OSRS."
+        },
+        {
+          "family": "exact_definition_loader_binding",
+          "detail": "R28 ObjectDefinition stores the active rs/d/r$a value, reloads its object-definition data/index pair when that value changes, and dispatches different decode paths according to the selected mode."
+        },
+        {
+          "family": "exact_runtime_mode_switch",
+          "detail": "Client region/map loading selects OSRS for OSRS map data, OLDSCHOOL for the old-school path, NEW for the designated newer object-definition path, and STANDARD for the normal path."
+        },
+        {
+          "family": "exact_consumer_surface",
+          "detail": "OSRS cache/map dependency tooling and runtime object loading both inspect the same enum-backed ObjectDefinition mode, tying it specifically to object-definition format/source selection."
+        }
+      ],
+      "note": "ObjectDefinitionMode is the conservative semantic name for this exact object-definition source/decoder mode enum; it does not claim a verbatim original developer identifier."
+    }
+  ],
+  "conflicts": []
+}

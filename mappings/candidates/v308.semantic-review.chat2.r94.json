@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 4,
+  "review_id": "SEMREVIEW_3F20064375FDD9C50616",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_01776B79BEC513E152C9",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000320",
+      "owner_logical_id": "CLIENT_CLASS_000320",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/k/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FloatBufferCache",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structure",
+          "detail": "The class extends LinkedHashMap<Integer, FloatBuffer>, stores one BufferPool reference and constructs the map as an access-ordered cache."
+        },
+        {
+          "family": "exact_eviction_contract",
+          "detail": "Its room-making path evicts the eldest FloatBuffer back into BufferPool, while clear() returns every cached FloatBuffer to the same pool before removing it."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "A public 117 HD RSPS client preserves FloatBufferCache with the same LinkedHashMap<Integer, FloatBuffer> inheritance, BufferPool constructor, eldest-entry makeRoom behavior and pooled clear implementation."
+        }
+      ],
+      "note": "FloatBufferCache is corroborated by exact-v308 structure/consumers and matching public GPU-source identity. Exact v308 remains the semantic authority."
+    },
+    {
+      "proposal_id": "SEMPROP_55B04702F75A0026A33E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000337",
+      "owner_logical_id": "CLIENT_CLASS_000337",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/k/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Mat4",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_matrix_api",
+          "detail": "The class is a static float[16] 4x4 matrix helper providing identity, scale, translation, axis rotations, projection and in-place matrix multiplication."
+        },
+        {
+          "family": "exact_renderer_consumer",
+          "detail": "R87 GpuRenderer consumes these float[16] matrices as its OpenGL projection/model-view transforms before uploading them to shader uniforms."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "RuneLite preserves net.runelite.client.plugins.gpu.Mat4 with the same private constructor and matching identity/scale/translate/rotate/projection/multiply float[16] API."
+        }
+      ],
+      "note": "Mat4 is corroborated by exact-v308 structure/consumers and matching public GPU-source identity. Exact v308 remains the semantic authority."
+    },
+    {
+      "proposal_id": "SEMPROP_BACAB540EDA6B39FB13C",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000322",
+      "owner_logical_id": "CLIENT_CLASS_000322",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/k/b/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IntBufferCache",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structure",
+          "detail": "The class extends LinkedHashMap<Integer, IntBuffer>, stores one BufferPool reference and constructs the map as an access-ordered cache."
+        },
+        {
+          "family": "exact_eviction_contract",
+          "detail": "Its room-making path evicts the eldest IntBuffer back into BufferPool, while clear() returns every cached IntBuffer to the same pool before removing it."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "A public 117 HD RSPS client preserves IntBufferCache with the same LinkedHashMap<Integer, IntBuffer> inheritance, BufferPool constructor, eldest-entry makeRoom behavior and pooled clear implementation."
+        }
+      ],
+      "note": "IntBufferCache is corroborated by exact-v308 structure/consumers and matching public GPU-source identity. Exact v308 remains the semantic authority."
+    },
+    {
+      "proposal_id": "SEMPROP_E8C652ACDF63A0A0B1FF",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000319",
+      "owner_logical_id": "CLIENT_CLASS_000319",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/k/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BufferPool",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structure",
+          "detail": "The class owns Stack<Long> buffer addresses, a fixed long byte-capacity, an allocated flag and a renderer owner; its constructor takes (long, GpuRenderer)."
+        },
+        {
+          "family": "exact_memory_pool_contract",
+          "detail": "It allocates reusable native blocks, frees all stored addresses, returns whether the pool is empty, converts returned IntBuffer/FloatBuffer objects back to addresses and recreates typed buffers from popped addresses."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "A public 117 HD RSPS client preserves class BufferPool with the same Stack<Long>, byte-capacity/allocated state, native MemoryUtil allocation/freeing and put/take IntBuffer/FloatBuffer contract; the owner parameter is locally adapted from HdPlugin to the SpawnPK renderer."
+        }
+      ],
+      "note": "BufferPool is corroborated by exact-v308 structure/consumers and matching public GPU-source identity. Exact v308 remains the semantic authority."
+    }
+  ],
+  "unresolved": []
+}

@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_03D4A9B99AFBE803214A",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_338A269EBF50DA00AC61",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000540",
+      "owner_logical_id": "CLIENT_CLASS_000540",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/b/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InterfaceDrawCallback",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_preserved_method",
+          "detail": "The exact-v308 interface preserves the non-obfuscated method signature draw(int, int)."
+        },
+        {
+          "family": "exact_rsinterface_fields",
+          "detail": "RSInterface owns two fields of this callback type, and interface rendering invokes them with the widget's resolved x/y screen coordinates."
+        },
+        {
+          "family": "exact_render_callsite",
+          "detail": "The main interface renderer invokes bG.draw(x,y) during normal widget drawing and bH.draw(x,y) in the later overlay/text path, fixing this as an interface draw callback contract."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 interface rendering/hover behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_908AC30DA73EB326CF9C",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000542",
+      "owner_logical_id": "CLIENT_CLASS_000542",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/b/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InterfaceRenderTask",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_render_dispatch",
+          "detail": "The main interface renderer dispatches this subtype's registry by the current RSInterface id immediately before invoking the widget's own render/update hooks."
+        },
+        {
+          "family": "exact_registration",
+          "detail": "ActiveEventsInterface registers its retained EventBrawlStatusInterface task under interface id 40087 in this subtype registry."
+        },
+        {
+          "family": "exact_interval_behavior",
+          "detail": "Concrete tasks inherit the TimedInterfaceTask interval gate, so render-pass dispatch runs their work only when the configured interval is due."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 interface rendering/hover behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_A6FE24FB985208E51920",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000541",
+      "owner_logical_id": "CLIENT_CLASS_000541",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/b/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DeferredHoverTask",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_hover_dispatch",
+          "detail": "Client hit-testing checks the registry keyed by the hovered RSInterface id and dispatches this subtype only while the pointer is inside that widget's bounds."
+        },
+        {
+          "family": "exact_deferred_execution",
+          "detail": "Its timed hook does not execute the concrete effect immediately; it inserts itself into a static HashSet, and Client later flushes that set through the subtype's abstract e() hook after interface traversal."
+        },
+        {
+          "family": "exact_concrete_consumers",
+          "detail": "The retained HotspotVoteSkipTooltipTask and HotspotStatusTooltipTask both extend this subtype and use the deferred phase for hover-tooltip presentation."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 interface rendering/hover behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}

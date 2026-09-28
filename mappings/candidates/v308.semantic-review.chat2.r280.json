@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 4,
+  "review_id": "SEMREVIEW_864C161583CCBDBED781",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_21E0FFB08D7749B05826",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000287",
+      "owner_logical_id": "CLIENT_CLASS_000287",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/z",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SidePanelToggleAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_binding",
+          "detail": "Launcher installs this ActionListener directly on the button whose exact tooltip is 'Hide/show side panel'."
+        },
+        {
+          "family": "exact_toggle_request",
+          "detail": "actionPerformed sets the client-side static side-panel request flag rs/Client.i to true and performs no unrelated mutation."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Swing/launcher behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_289CD079D05FE8E911A3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000286",
+      "owner_logical_id": "CLIENT_CLASS_000286",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/y",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RestoreLauncherFromTrayMouseAdapter",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_tray_binding",
+          "detail": "Launcher creates the TrayIcon labelled 'SpawnPK RSPS' and installs this MouseAdapter directly with TrayIcon.addMouseListener."
+        },
+        {
+          "family": "exact_mouse_role",
+          "detail": "On mouseClicked the adapter obtains the launcher's JFrame, sets its state to 0 (normal), and makes it visible."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Swing/launcher behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_85FC6A96112370EAA170",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000261",
+      "owner_logical_id": "CLIENT_CLASS_000261",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/c/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PvPTrackerMostRecentFightUpdateRunnable",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_event_queue_binding",
+          "detail": "PvPTrackerSidebarPanel public update method a(int,String,String,String,String) constructs this Runnable and submits it with EventQueue.invokeLater."
+        },
+        {
+          "family": "exact_panel_region",
+          "detail": "The Runnable updates the first mirrored fighter label group built directly below the exact 'Most Recent 1v1 Fight' heading."
+        },
+        {
+          "family": "exact_fight_presentation",
+          "detail": "It applies the death/alive icon based on 'Died)', replaces @red@ markup, and writes the packet-provided tracker metric strings into that recent-fight row."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Swing/launcher behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_9D5F1EA7C3D8A8780A5D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000262",
+      "owner_logical_id": "CLIENT_CLASS_000262",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/c/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PvPTrackerPreviousFightUpdateRunnable",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_event_queue_binding",
+          "detail": "PvPTrackerSidebarPanel public update method b(int,String,String,String,String) constructs this Runnable and submits it with EventQueue.invokeLater."
+        },
+        {
+          "family": "exact_panel_region",
+          "detail": "The Runnable updates the second mirrored fighter label group built directly below the exact 'Previous 1v1 Fight' heading."
+        },
+        {
+          "family": "exact_fight_presentation",
+          "detail": "It applies the same death/alive icon and formatted fighter/metric strings to the previous-fight row, using the panel's second label set."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Swing/launcher behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}

@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WorldEventOptionMarkupRenderer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_packet_handler_join",
+          "detail": "The already-reviewed GladiatorsVindicationWorldEventInterfacePacketHandler calls this class directly when packet selectors append or rewrite dynamic option/task text."
+        },
+        {
+          "family": "exact_markup_language",
+          "detail": "The renderer parses exact inline tokens including {DD=}, {NPC=}, {LABEL=}, {SIZE=}, {X=}, {Y=}, {A=}, {line}, {C}, {RA}, {L}, {B}, {M}, {H=} and {IS=}."
+        },
+        {
+          "family": "exact_world_event_layout_state",
+          "detail": "Its generated widget ids/heights feed the same 56997-57223 Gladiator's Vindication interface and update the scroll/container height consumed by the packet handler."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Gladiator's Vindication option rendering behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/b/b$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WorldEventOptionRenderMode",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "preserved_enum_constants",
+          "detail": "The exact-v308 enum constants are literally STANDARD, DROP_DOWN and ANIMATED_NPC."
+        },
+        {
+          "family": "exact_renderer_dispatch",
+          "detail": "WorldEventOptionMarkupRenderer switches rendering behavior by this enum while parsing standard lines, dropdown markup and animated NPC markup."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 Gladiator's Vindication option rendering behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}

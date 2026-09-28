@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/secure/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LinuxHardwareSerialProvider",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_linux_commands",
+          "detail": "rs/secure/a first executes exact 'dmidecode -t system' and searches output for 'Serial Number:'; if no cached serial is obtained it falls back to exact 'lshal' output and the key 'system.hardware.serial ='."
+        },
+        {
+          "family": "exact_serial_extraction",
+          "detail": "The provider strips the matched Linux/Unix hardware-serial value from command output, normalizes/trims it, caches the resulting String and returns the cached value on subsequent calls."
+        },
+        {
+          "family": "exact_signlink_consumer",
+          "detail": "R66 Signlink.e() invokes this provider only after the Windows install-date and macOS serial providers return null, using it as the Unix/Linux platform identifier before the Signlink MAC-address fallback."
+        }
+      ],
+      "note": "LinuxHardwareSerialProvider is fixed by the exact dmidecode/lshal hardware-serial extraction and Signlink fallback chain. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/secure/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MacHardwareSerialProvider",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_mac_command",
+          "detail": "rs/secure/b executes exact '/usr/sbin/system_profiler SPHardwareDataType', scans for the surviving key 'Serial Number', splits on ':', trims the value and caches the result."
+        },
+        {
+          "family": "exact_platform_tool",
+          "detail": "The only external data source is macOS system_profiler with SPHardwareDataType, making the provider's platform and hardware-serial responsibility exact rather than inferred from package adjacency."
+        },
+        {
+          "family": "exact_signlink_consumer",
+          "detail": "R66 Signlink.e() calls this provider after Windows install-date lookup and before the Linux/Unix hardware-serial provider, using its non-null result as the platform identifier."
+        }
+      ],
+      "note": "MacHardwareSerialProvider is fixed by system_profiler SPHardwareDataType, exact Serial Number extraction and Signlink consumption. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/secure/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WindowsInstallDateProvider",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_windows_commands",
+          "detail": "rs/secure/c first executes exact 'cmd /c systeminfo' with a seven-second process timeout and searches output for 'Original Install Date'; its fallback executes PowerShell Get-CimInstance Win32_OperatingSystem InstallDate with a ten-second timeout."
+        },
+        {
+          "family": "exact_install_date_parsing",
+          "detail": "The class parses systeminfo dates using explicit US, UK and ISO-style date formats, parses PowerShell yyyyMMddHHmmss.SSSSSS output in UTC, and emits a normalized install-date String with timezone offset."
+        },
+        {
+          "family": "exact_cached_provider_contract",
+          "detail": "The public no-argument provider caches both the result and completion state so process execution occurs only once; failures/timeout return null rather than changing responsibility."
+        },
+        {
+          "family": "exact_live_consumers",
+          "detail": "Client invokes this provider during update/startup work, and R66 Signlink.e() uses it as the first platform-identifier source before macOS/Linux serial providers and final MAC-address fallback."
+        }
+      ],
+      "note": "WindowsInstallDateProvider is fixed by systeminfo/PowerShell Win32_OperatingSystem InstallDate retrieval, locale-aware normalization and live Client/Signlink consumers. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,284 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 10,
+  "review_id": "SEMREVIEW_EA7F7B04B71D7BC455B6",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_0BCD7F8ACC2D3F00047D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000813",
+      "owner_logical_id": "CLIENT_CLASS_000813",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Jarvis",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_convex_hull_surface",
+          "detail": "Exact v308 exposes List<Point> -> List<Point> convex hull, int[]/int[] -> SimplePolygon convex hull, and the same private square, left-most-point and six-coordinate cross-product helpers."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream runelite/runelite@b0a10a9c14686f4012eb30865261bbeb3d55af4b contains net.runelite.api.model.Jarvis with the same Jarvis-march control flow, invalid Integer.MIN_VALUE point filtering and SimplePolygon output."
+        }
+      ],
+      "note": "Jarvis is recovered at confidence 0.999 from an exact algorithm/method-shape match to the upstream RuneLite convex-hull utility."
+    },
+    {
+      "proposal_id": "SEMPROP_2E176A047DEC5D177F5C",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000814",
+      "owner_logical_id": "CLIENT_CLASS_000814",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LocalPoint",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_coordinate_shape",
+          "detail": "Exact v308 stores two final integer coordinates, constructs from x/y, exposes local distance, in-scene testing, scene-coordinate conversion and x/y/scene-coordinate accessors."
+        },
+        {
+          "family": "exact_world_scene_conversion",
+          "detail": "The class converts to/from the already-reviewed WorldPoint and the live Client scene/base coordinates using the 7-bit local-coordinate scale, fixing it as the local-coordinate value type."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream runelite/runelite@b0a10a9c14686f4012eb30865261bbeb3d55af4b contains net.runelite.api.coords.LocalPoint with the same two-int value shape, distanceTo, isInScene, fromScene, fromWorld and scene-coordinate getters. SpawnPK binds client access globally rather than passing Client on every helper."
+        }
+      ],
+      "note": "LocalPoint is recovered at confidence 0.999 from the exact coordinate behavior plus the matching historical RuneLite source type."
+    },
+    {
+      "proposal_id": "SEMPROP_4777725259B066CCCD1F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000829",
+      "owner_logical_id": "CLIENT_CLASS_000829",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/m$b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TransformIterator",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_nested_transform_iterator",
+          "detail": "Exact v308 subclasses the first SimplePolygon iterator, stores one AffineTransform and transforms both float[] and double[] segment coordinate arrays after delegating to the base iterator."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream runelite/runelite@b0a10a9c14686f4012eb30865261bbeb3d55af4b contains SimplePolygon.TransformIterator with the same inheritance, transform field and two currentSegment overrides."
+        }
+      ],
+      "note": "TransformIterator is recovered at confidence 0.999 as the exact transformed-path nested iterator of upstream SimplePolygon."
+    },
+    {
+      "proposal_id": "SEMPROP_67EB695993652C4C95FE",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000825",
+      "owner_logical_id": "CLIENT_CLASS_000825",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Shapes",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_shape_union_surface",
+          "detail": "Exact v308 is generic over T extends java.awt.Shape, stores List<T>, implements Shape, computes combined bounds and delegates contains/intersects/path-iterator operations across all stored shapes."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream runelite/runelite@b0a10a9c14686f4012eb30865261bbeb3d55af4b contains net.runelite.api.geometry.Shapes with the same generic Shape implementation, varargs/List constructors, stream/delegation behavior and nested path iterator."
+        }
+      ],
+      "note": "Shapes is recovered at confidence 0.999 from an exact class/interface/method match to RuneLite upstream Shapes."
+    },
+    {
+      "proposal_id": "SEMPROP_7D66EA88F083FF848B0A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000827",
+      "owner_logical_id": "CLIENT_CLASS_000827",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SimplePolygon",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_polygon_structure",
+          "detail": "Exact v308 implements java.awt.Shape with protected x/y arrays plus left/right bounds, 16-element growth, push/pop/expand operations, point access, copy/append/reverse and convex clipping."
+        },
+        {
+          "family": "exact_shape_behavior",
+          "detail": "The class implements bounds, contains/intersects and path-iterator behavior and converts its vertices to the recovered RuneLite Point type."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream runelite/runelite@b0a10a9c14686f4012eb30865261bbeb3d55af4b contains net.runelite.api.geometry.SimplePolygon with the same fields, GROW=16, Sutherland-Hodgman clipping, Shape methods and iterator classes."
+        }
+      ],
+      "note": "SimplePolygon is recovered at confidence 0.999 from an exact field/method/algorithm match to RuneLite upstream SimplePolygon."
+    },
+    {
+      "proposal_id": "SEMPROP_9AFB72C999F1F340684F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000816",
+      "owner_logical_id": "CLIENT_CLASS_000816",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Perspective",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_projection_surface",
+          "detail": "Exact v308 owns local-to-canvas/minimap projection, tile-height lookup, tile polygon/area projection, text/image/sprite canvas placement, model-to-canvas projection and model clickbox/2D-bound construction."
+        },
+        {
+          "family": "exact_geometry_dependencies",
+          "detail": "Its methods consume LocalPoint and Point, produce java.awt.Polygon/Shape, and use SimplePolygon/Shapes plus the exact model class, matching the recovered RuneLite geometry family."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream runelite/runelite@b0a10a9c14686f4012eb30865261bbeb3d55af4b contains net.runelite.api.Perspective with the same projection method families and geometry dependencies. SpawnPK uses its globally accessible Client in places where upstream accepts Client explicitly."
+        }
+      ],
+      "note": "Perspective is recovered at confidence 0.999 from the full projection/clickbox surface and historical RuneLite source match."
+    },
+    {
+      "proposal_id": "SEMPROP_A9141B6FD21FB82908B5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000828",
+      "owner_logical_id": "CLIENT_CLASS_000828",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/m$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SimpleIterator",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_nested_iterator_shape",
+          "detail": "Exact v308 is the first SimplePolygon PathIterator implementation, tracks one integer cursor, uses even-odd winding and emits the last point as SEG_MOVETO followed by polygon vertices as SEG_LINETO."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream runelite/runelite@b0a10a9c14686f4012eb30865261bbeb3d55af4b contains SimplePolygon.SimpleIterator with the same cursor/winding/segment behavior."
+        }
+      ],
+      "note": "SimpleIterator is recovered at confidence 0.999 as the exact first nested iterator of upstream SimplePolygon."
+    },
+    {
+      "proposal_id": "SEMPROP_BBB674FE826071F11327",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000826",
+      "owner_logical_id": "CLIENT_CLASS_000826",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/l$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ShapeIterator",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_nested_iterator_shape",
+          "detail": "Exact v308 is the package-private nested iterator behind Shapes: Iterator<PathIterator>, current PathIterator, fixed winding rule, check-done advancement and both float[]/double[] currentSegment delegates."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream runelite/runelite@b0a10a9c14686f4012eb30865261bbeb3d55af4b contains private static Shapes.ShapeIterator with the same state and PathIterator implementation."
+        }
+      ],
+      "note": "ShapeIterator is recovered at confidence 0.999 as the exact nested iterator implementation of upstream Shapes."
+    },
+    {
+      "proposal_id": "SEMPROP_E2469373FD4522101A9C",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000810",
+      "owner_logical_id": "CLIENT_CLASS_000810",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Constants",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_constant_surface",
+          "detail": "Exact v308 preserves the RuneLite constant set values used by this build: fixed client 765x503, Dimension and aspect ratio, zoom 512, chunk 8, region 64, scene 104, max plane 4, bridge flag 2, 20/600 ms tick lengths, 36x32 item sprites and 0.6 high-alchemy multiplier."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream runelite/runelite@b0a10a9c14686f4012eb30865261bbeb3d55af4b contains net.runelite.api.Constants with the same values and Dimension initialization; primitive fields removed or reordered by optimization do not change the source-class identity."
+        }
+      ],
+      "note": "Constants is recovered at confidence 0.999 from the exact surviving constant/value surface and matching RuneLite upstream source. Exact runtime authority remains the pinned v308 client."
+    },
+    {
+      "proposal_id": "SEMPROP_F7E82B930BD1D54855D5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000817",
+      "owner_logical_id": "CLIENT_CLASS_000817",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Point",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_value_shape",
+          "detail": "Exact v308 is a two-int immutable-style value object with x/y getters, distanceTo(Point), equals, hashCode and toString."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream runelite/runelite@b0a10a9c14686f4012eb30865261bbeb3d55af4b contains net.runelite.api.Point with the same two final coordinates and Euclidean distanceTo implementation; Lombok generates the matching value-object methods."
+        }
+      ],
+      "note": "Point is recovered at confidence 0.999 from its exact value-object shape and RuneLite source provenance."
+    }
+  ],
+  "unresolved": []
+}

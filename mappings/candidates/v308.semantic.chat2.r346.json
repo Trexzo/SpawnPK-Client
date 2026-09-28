@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/c/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DefaultLoadoutSeeder",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_empty_folder_gate",
+          "detail": "The static initializer accepts a String key, R143 LoadoutFolder and R143 LoadoutPersistence, and immediately returns without seeding unless the target LoadoutFolder is empty."
+        },
+        {
+          "family": "exact_default_catalogue",
+          "detail": "When empty, it constructs a large built-in catalogue of LoadoutDefinition presets with explicit names such as 'Melee' and 'Hybrid (NH)', exact equipment-slot item ids, inventory LoadoutItemEntry quantities, spellbooks and skill/config values."
+        },
+        {
+          "family": "exact_loadout_model_only",
+          "detail": "Every constructed record is expressed exclusively through the already-reviewed LoadoutDefinition, LoadoutEquipmentSlot, LoadoutItemEntry and LoadoutSpellbook model graph and inserted into the supplied LoadoutFolder."
+        },
+        {
+          "family": "exact_persistence_join",
+          "detail": "The method receives the reviewed LoadoutPersistence object alongside the folder/key, tying the seeded defaults directly to the persisted Loadouts subsystem rather than a generic item preset table."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the built-in default loadout catalogue initializer; no original stripped identifier is claimed."
+    }
+  ],
+  "conflicts": []
+}

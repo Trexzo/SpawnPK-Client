@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NodeHashTable",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_bucket_structure",
+          "detail": "rs/o constructs exactly 1024 sentinel rs/t Node instances, self-links each sentinel's primary previous/next pointers, and stores them in a fixed bucket array."
+        },
+        {
+          "family": "exact_hash_lookup",
+          "detail": "Lookup masks the long key with bucketCount-1, walks that bucket's primary Node chain, and returns the first Node whose long key matches."
+        },
+        {
+          "family": "exact_hash_insert",
+          "detail": "Insertion unlinks the Node from any prior primary chain, splices it into the selected bucket sentinel list, and writes the supplied long key into the R25 Node key field."
+        },
+        {
+          "family": "lineage_consistency",
+          "detail": "R25 already identifies rs/t as Node. rs/o operates exclusively on that exact Node type and implements the classic node-hash-table contract."
+        }
+      ],
+      "note": "NodeHashTable is the conservative semantic recovery name for the exact fixed-bucket keyed Node table; it is consistent with R25 Node and does not claim a verbatim original identifier."
+    }
+  ],
+  "conflicts": []
+}

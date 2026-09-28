@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoginBackgroundGlitchAnimator",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_single_owner",
+          "detail": "Exact v308 constructs rs/l/b only from LoginScreen and stores it as the login screen background animation object."
+        },
+        {
+          "family": "exact_login_assets",
+          "detail": "LoginScreen constructs the class from /assets/bg and /assets/bg 2 with displacement magnitude 6, then invokes it from the login-screen draw path every frame."
+        },
+        {
+          "family": "exact_glitch_motion",
+          "detail": "The animator always draws the base sprite, randomly starts a secondary-sprite horizontal displacement cycle, steps the offset every 45 ms to the configured magnitude, then returns toward zero before idling again."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 LoginScreen ownership and background displacement animation; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}

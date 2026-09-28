@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_4A53B9777700E02BFC42",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_08CA0EBD413228FB2121",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000868",
+      "owner_logical_id": "CLIENT_CLASS_000868",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/b/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FixedWidthPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_panel_shape",
+          "detail": "Exact v308 rs/s/b/h extends javax.swing.JPanel, has no fields, and overrides only getPreferredSize()."
+        },
+        {
+          "family": "exact_fixed_width_behavior",
+          "detail": "Its getPreferredSize() returns new Dimension(350, super.getPreferredSize().height), fixing one constant-width panel role and preserving dynamic preferred height."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite FixedWidthPanel at 68c819924cfd6bfb4848c71f74c121109f289d5a extends JPanel and implements the same single override: new Dimension(PluginPanel.PANEL_WIDTH, super.getPreferredSize().height). In that source window PluginPanel.PANEL_WIDTH is 350, matching exact v308."
+        }
+      ],
+      "note": "FixedWidthPanel is recovered at confidence 0.999 from an exact superclass/method/value match to historical RuneLite source."
+    }
+  ],
+  "unresolved": []
+}

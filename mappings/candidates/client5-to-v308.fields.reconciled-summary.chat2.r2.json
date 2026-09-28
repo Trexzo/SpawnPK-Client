@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "kind": "field_reconciliation_summary",
+  "canonical": false,
+  "old_build": "client5",
+  "old_sha256": "a9a5d1f35a6657b5c26939ca30e008748e718f6b206cc8fd93b64b57c4833385",
+  "new_build": "v308",
+  "new_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "min_exact_position_observations": 2,
+  "hard_tail": {
+    "class_count": 13,
+    "field_count": 305,
+    "gross_relationships": 273,
+    "gross_unresolved": 32,
+    "gross_coverage": 0.895082,
+    "relationships_dropped_as_contradicted": 30,
+    "exact_position_relationships_added": 44,
+    "reconciled_relationships": 287,
+    "reconciled_unresolved": 18,
+    "reconciled_coverage": 0.940984
+  },
+  "historical_research_graph": {
+    "field_count": 5482,
+    "gross_relationships": 5450,
+    "gross_coverage": 0.994163,
+    "projected_reconciled_relationships": 5464,
+    "projected_reconciled_coverage": 0.996717,
+    "qualification": "Projected research-graph coverage only. The exact-position reconciliation was run over the 13 previously hard-tail classes; R3I canonical field transfer is stricter and may retain additional changed-class fields as review blockers."
+  },
+  "remaining": [
+    {
+      "owner": "rs/n/c/G.class",
+      "count": 1,
+      "old": [
+        {
+          "name": "bI",
+          "descriptor": "I"
+        }
+      ],
+      "new": [
+        {
+          "name": "bK",
+          "descriptor": "I"
+        }
+      ]
+    },
+    {
+      "owner": "rs/n/c/c/a.class",
+      "count": 4,
+      "old": [
+        {
+          "name": "bG",
+          "descriptor": "I"
+        },
+        {
+          "name": "bH",
+          "descriptor": "I"
+        },
+        {
+          "name": "bZ",
+          "descriptor": "Lrs/m/q;"
+        },
+        {
+          "name": "ca",
+          "descriptor": "Lrs/m/q;"
+        }
+      ],
+      "new": [
+        {
+          "name": "bZ",
+          "descriptor": "I"
+        },
+        {
+          "name": "ca",
+          "descriptor": "I"
+        },
+        {
+          "name": "cd",
+          "descriptor": "Lrs/l/F;"
+        },
+        {
+          "name": "ce",
+          "descriptor": "Lrs/l/F;"
+        }
+      ]
+    },
+    {
+      "owner": "rs/n/c/c.class",
+      "count": 3,
+      "old": [
+        {
+          "name": "bK",
+          "descriptor": "I"
+        },
+        {
+          "name": "bL",
+          "descriptor": "I"
+        },
+        {
+          "name": "bI",
+          "descriptor": "I"
+        }
+      ],
+      "new": [
+        {
+          "name": "bO",
+          "descriptor": "I"
+        },
+        {
+          "name": "bP",
+          "descriptor": "I"
+        },
+        {
+          "name": "bK",
+          "descriptor": "I"
+        }
+      ]
+    },
+    {
+      "owner": "rs/n/c/O.class",
+      "count": 3,
+      "old": [
+        {
+          "name": "bL",
+          "descriptor": "J"
+        },
+        {
+          "name": "bM",
+          "descriptor": "Ljava/lang/String;"
+        },
+        {
+          "name": "bS",
+          "descriptor": "Ljava/util/List;"
+        }
+      ],
+      "new": [
+        {
+          "name": "bQ",
+          "descriptor": "Ljava/lang/String;"
+        },
+        {
+          "name": "bT",
+          "descriptor": "J"
+        },
+        {
+          "name": "bU",
+          "descriptor": "Ljava/util/List;"
+        }
+      ]
+    },
+    {
+      "owner": "rs/n/c/aw.class",
+      "count": 2,
+      "old": [
+        {
+          "name": "bN",
+          "descriptor": "I"
+        },
+        {
+          "name": "bQ",
+          "descriptor": "I"
+        }
+      ],
+      "new": [
+        {
+          "name": "ch",
+          "descriptor": "I"
+        },
+        {
+          "name": "ci",
+          "descriptor": "I"
+        }
+      ]
+    },
+    {
+      "owner": "rs/n/c/h.class",
+      "count": 1,
+      "old": [
+        {
+          "name": "bH",
+          "descriptor": "[Ljava/lang/String;"
+        }
+      ],
+      "new": [
+        {
+          "name": "bJ",
+          "descriptor": "[Ljava/lang/String;"
+        }
+      ]
+    },
+    {
+      "owner": "rs/n/c/d/a.class",
+      "count": 4,
+      "old": [
+        {
+          "name": "bG",
+          "descriptor": "I"
+        },
+        {
+          "name": "bH",
+          "descriptor": "I"
+        },
+        {
+          "name": "dr",
+          "descriptor": "Lrs/m/q;"
+        },
+        {
+          "name": "ds",
+          "descriptor": "Lrs/m/q;"
+        }
+      ],
+      "new": [
+        {
+          "name": "dm",
+          "descriptor": "I"
+        },
+        {
+          "name": "dn",
+          "descriptor": "I"
+        },
+        {
+          "name": "dz",
+          "descriptor": "Lrs/l/F;"
+        },
+        {
+          "name": "dA",
+          "descriptor": "Lrs/l/F;"
+        }
+      ]
+    }
+  ]
+}

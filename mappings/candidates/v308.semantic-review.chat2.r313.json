@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_7C8BFB0495B431AF01EE",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_2AB9BC55B8F9C03632D0",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000657",
+      "owner_logical_id": "CLIENT_CLASS_000657",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/d/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaidListRowBackgroundOverlay",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_raid_owner_join",
+          "detail": "RaidNavigationInterface rs/n/c/d/a is the sole exact-v308 owner of rs/n/c/d/g. It constructs exactly two instances and registers them through OverlayManager on raid widgets 32317 and 32486; no non-raid caller exists."
+        },
+        {
+          "family": "exact_list_widget_join",
+          "detail": "The first instance is bound to the 32316 scrolling list built by RaidPartyHubInterface, whose surrounding exact labels are 'Members (1/5)' and 'Current Status' and whose row children advance at 18-pixel spacing. The second is bound to the 32481 scrolling list built by RaidPartyListInterface, whose exact header is 'Party<tab=150>Size<tab=225>Raid Type & Difficulty' and whose 30 rows expose the exact action 'Join party'."
+        },
+        {
+          "family": "exact_row_background_behavior",
+          "detail": "The overlay accepts a backing widget id and row count, derives geometry from that widget, iterates exactly that many rows at 18-pixel intervals, alternates only between colors 3814187 and 4274480, and emits the fills through the shared raster rectangle routine. It owns no text, packet state, input handling or second rendering responsibility."
+        }
+      ],
+      "note": "Descriptive semantic recovery for the reusable alternating row-background overlay shared by the exact raid member/status list and public party list; no original stripped identifier is claimed."
+    }
+  ],
+  "unresolved": []
+}

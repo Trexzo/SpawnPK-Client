@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Censor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_filter_resources",
+          "detail": "rs/d/c loads the dedicated word-filter resources badenc.txt, domainenc.txt, fragmentsenc.txt and tldlist.txt from the client archive into bad-word, domain, fragment and top-level-domain lookup structures."
+        },
+        {
+          "family": "exact_chat_filter_role",
+          "detail": "Client invokes rs/d/c.b(String) on player-entered and received chat text before storing/displaying it, and initializes the class during startup from the chat-system archive."
+        },
+        {
+          "family": "exact_censor_pipeline",
+          "detail": "The implementation normalizes text, matches obfuscated character substitutions, bad-word/domain/TLD patterns and numeric/IP-style fragments, then restores permitted capitalization/whitelisted words around the censored output."
+        },
+        {
+          "family": "historical_lineage_crosscheck",
+          "detail": "The four resource names and filtering surface match the classic 317 client Censor subsystem, including badenc/fragmentsenc/tldlist/domain data."
+        }
+      ],
+      "note": "Censor preserves the classic semantic identity of the exact chat word-filter subsystem; exact v308 resources and Client call sites are primary authority."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientToolbar",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_navigation_registry",
+          "detail": "The class owns a Set<NavigationButton> and an EventBus; registration ignores an already-present button and unregistration only acts when the button was registered."
+        },
+        {
+          "family": "exact_added_event",
+          "detail": "Successful registration posts exact rs/runelite/events/NavigationButtonAdded carrying the same NavigationButton instance."
+        },
+        {
+          "family": "exact_removed_event",
+          "detail": "Successful unregistration posts exact rs/runelite/events/NavigationButtonRemoved carrying the same NavigationButton instance."
+        },
+        {
+          "family": "exact_clientui_consumer",
+          "detail": "R147 ClientUI subscribes to those exact added/removed events to install or remove buttons from ClientToolbar/ClientTitleToolbar and to add/remove associated PluginPanel content."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite 96036d17d0f14f2bd20fb174054fe6f46570b613 contains net.runelite.client.ui.ClientToolbar with the same EventBus field, HashSet<NavigationButton> registry, idempotent addNavigation, conditional removeNavigation and exact NavigationButtonAdded/NavigationButtonRemoved event posting contract."
+        }
+      ],
+      "note": "ClientToolbar is exact historical RuneLite source-name recovery at confidence 0.999. The former descriptive NavigationButtonManager label is superseded."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MultiplexingPluginPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_panel_base",
+          "detail": "The class extends R148 PluginPanel with the non-scroll-wrapped constructor and owns a CardLayout plus the current PluginPanel."
+        },
+        {
+          "family": "exact_push_behavior",
+          "detail": "Its panel-selection method pushes a new PluginPanel when absent, shows it by identity-hash card key, and if a requested panel already exists deeper in the stack removes panels above it."
+        },
+        {
+          "family": "exact_pop_behavior",
+          "detail": "Its pop method reveals the previous PluginPanel and removes the current top panel, with exact assertion text 'Cannot pop last component' preventing removal of the root panel."
+        },
+        {
+          "family": "exact_lifecycle_propagation",
+          "detail": "When active, panel transitions call PluginPanel deactivate/activate hooks; PluginPanelStack's own J_()/K_() lifecycle methods propagate to the current child."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite source at 6610375cca74469040ebcf03613866f6b3360668 contains net.runelite.client.ui.MultiplexingPluginPanel with the same PluginPanel(false) base constructor, CardLayout/current/active state, pushState/popState behavior, identity-hash card keys, lifecycle forwarding and exact 'Cannot pop last component' assertion."
+        }
+      ],
+      "note": "MultiplexingPluginPanel is source-name recovery at confidence 0.999: exact v308 matches RuneLite's class state, push/pop algorithm, lifecycle propagation and assertion text. The earlier descriptive PluginPanelStack name is superseded."
+    }
+  ],
+  "conflicts": []
+}

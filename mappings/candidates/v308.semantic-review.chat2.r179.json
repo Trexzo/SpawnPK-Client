@@ -1,0 +1,260 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 8,
+  "review_id": "SEMREVIEW_EDB429AA6A1DC45523CF",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_01716C78D321A7A4D0E1",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001048",
+      "owner_logical_id": "CLIENT_CLASS_001048",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HuePanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_v308_shape",
+          "detail": "Exact v308 rs/ui/components/a/k extends JPanel; stores fixed height, selectedY and Consumer<Integer>; select(Color), closestYToColor(Color), colorAt(y), move selector and paint hue gradient."
+        },
+        {
+          "family": "exact_package_graph",
+          "detail": "The class is used only inside the exact rs/ui/components/a color-picker package graph and fulfills the vertical hue selector responsibility in that graph."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream source runelite/runelite@7e6d9ac8138be3aa165f88da527ad5a5e6a5d21b contains net.runelite.client.ui.components.colorpicker.HuePanel with the same class responsibility, field/method shape and package relationships."
+        }
+      ],
+      "note": "HuePanel is recovered with confidence 0.999 from an exact v308 structural match plus the corresponding original RuneLite source class at runelite/runelite@7e6d9ac8138be3aa165f88da527ad5a5e6a5d21b. The upstream name is source provenance; exact runtime behavior remains bound to the pinned v308 client."
+    },
+    {
+      "proposal_id": "SEMPROP_308C92DE0C7CBC4809C0",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001051",
+      "owner_logical_id": "CLIENT_CLASS_001051",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PreviewPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_v308_shape",
+          "detail": "Exact v308 rs/ui/components/a/n extends JPanel; stores one Color; setColor(Color), paint(Graphics), get Color."
+        },
+        {
+          "family": "exact_package_graph",
+          "detail": "The class is used only inside the exact rs/ui/components/a color-picker package graph and fulfills the selected-color preview panel responsibility in that graph."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream source runelite/runelite@7e6d9ac8138be3aa165f88da527ad5a5e6a5d21b contains net.runelite.client.ui.components.colorpicker.PreviewPanel with the same class responsibility, field/method shape and package relationships."
+        }
+      ],
+      "note": "PreviewPanel is recovered with confidence 0.999 from an exact v308 structural match plus the corresponding original RuneLite source class at runelite/runelite@7e6d9ac8138be3aa165f88da527ad5a5e6a5d21b. The upstream name is source provenance; exact runtime behavior remains bound to the pinned v308 client."
+    },
+    {
+      "proposal_id": "SEMPROP_4DF575FE0DCB747070E6",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001052",
+      "owner_logical_id": "CLIENT_CLASS_001052",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RecentColors",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_v308_shape",
+          "detail": "Exact v308 rs/ui/components/a/o stores config key 'recentColors', bounded recent string collection and config object; load/add recent colors and build a JPanel of selectable color boxes."
+        },
+        {
+          "family": "exact_package_graph",
+          "detail": "The class is used only inside the exact rs/ui/components/a color-picker package graph and fulfills the recent-color persistence/palette responsibility in that graph."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream source runelite/runelite@7e6d9ac8138be3aa165f88da527ad5a5e6a5d21b contains net.runelite.client.ui.components.colorpicker.RecentColors with the same class responsibility, field/method shape and package relationships."
+        },
+        {
+          "family": "exact_literals",
+          "detail": "Exact v308 preserves config group 'colorpicker' and key 'recentColors', matching upstream RecentColors persistence."
+        }
+      ],
+      "note": "RecentColors is recovered with confidence 0.999 from an exact v308 structural match plus the corresponding original RuneLite source class at runelite/runelite@7e6d9ac8138be3aa165f88da527ad5a5e6a5d21b. The upstream name is source provenance; exact runtime behavior remains bound to the pinned v308 client."
+    },
+    {
+      "proposal_id": "SEMPROP_755BF6F38B7B17915134",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001038",
+      "owner_logical_id": "CLIENT_CLASS_001038",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_v308_shape",
+          "detail": "Exact v308 rs/ui/components/a/a extends JPanel; int size, BufferedImage image, Point targetPosition, selectedY, redraw flag and Consumer<Color>; methods select a base hue, find/move the closest color, redraw a gradient and return colorAt(x,y)."
+        },
+        {
+          "family": "exact_package_graph",
+          "detail": "The class is used only inside the exact rs/ui/components/a color-picker package graph and fulfills the tone/saturation-brightness color surface responsibility in that graph."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream source runelite/runelite@7e6d9ac8138be3aa165f88da527ad5a5e6a5d21b contains net.runelite.client.ui.components.colorpicker.ColorPanel with the same class responsibility, field/method shape and package relationships."
+        }
+      ],
+      "note": "ColorPanel is recovered with confidence 0.999 from an exact v308 structural match plus the corresponding original RuneLite source class at runelite/runelite@7e6d9ac8138be3aa165f88da527ad5a5e6a5d21b. The upstream name is source provenance; exact runtime behavior remains bound to the pinned v308 client."
+    },
+    {
+      "proposal_id": "SEMPROP_9FD96E2684F8674CF470",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001042",
+      "owner_logical_id": "CLIENT_CLASS_001042",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorValuePanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_v308_shape",
+          "detail": "Exact v308 rs/ui/components/a/e extends JPanel; owns rs/ui/components/a/h slider, JTextField and Consumer<Integer>; exposes update(int), getValue(), value-change listener and numeric text/filter/focus handling."
+        },
+        {
+          "family": "exact_package_graph",
+          "detail": "The class is used only inside the exact rs/ui/components/a color-picker package graph and fulfills the numeric color-channel panel responsibility in that graph."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream source runelite/runelite@7e6d9ac8138be3aa165f88da527ad5a5e6a5d21b contains net.runelite.client.ui.components.colorpicker.ColorValuePanel with the same class responsibility, field/method shape and package relationships."
+        }
+      ],
+      "note": "ColorValuePanel is recovered with confidence 0.999 from an exact v308 structural match plus the corresponding original RuneLite source class at runelite/runelite@7e6d9ac8138be3aa165f88da527ad5a5e6a5d21b. The upstream name is source provenance; exact runtime behavior remains bound to the pinned v308 client."
+    },
+    {
+      "proposal_id": "SEMPROP_A77448C306A9B1E95B24",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001041",
+      "owner_logical_id": "CLIENT_CLASS_001041",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorPickerManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_v308_shape",
+          "detail": "Exact v308 rs/ui/components/a/d holds the client config object and one current rs/ui/components/a/q picker; create-style method returns q from Window/Color/title/alpha state and manager methods set/get the active picker."
+        },
+        {
+          "family": "exact_package_graph",
+          "detail": "The class is used only inside the exact rs/ui/components/a color-picker package graph and fulfills the color-picker lifecycle manager responsibility in that graph."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream source runelite/runelite@7e6d9ac8138be3aa165f88da527ad5a5e6a5d21b contains net.runelite.client.ui.components.colorpicker.ColorPickerManager with the same class responsibility, field/method shape and package relationships."
+        }
+      ],
+      "note": "ColorPickerManager is recovered with confidence 0.999 from an exact v308 structural match plus the corresponding original RuneLite source class at runelite/runelite@7e6d9ac8138be3aa165f88da527ad5a5e6a5d21b. The upstream name is source provenance; exact runtime behavior remains bound to the pinned v308 client."
+    },
+    {
+      "proposal_id": "SEMPROP_A826087A62DEF8F2E607",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001045",
+      "owner_logical_id": "CLIENT_CLASS_001045",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorValueSlider",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_v308_shape",
+          "detail": "Exact v308 rs/ui/components/a/h extends JPanel; static track/knob colors, one int value and Consumer<Integer>; mouse drag/press/release listeners move one horizontal target and paint the slider/knob."
+        },
+        {
+          "family": "exact_package_graph",
+          "detail": "The class is used only inside the exact rs/ui/components/a color-picker package graph and fulfills the horizontal numeric color slider responsibility in that graph."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream source runelite/runelite@7e6d9ac8138be3aa165f88da527ad5a5e6a5d21b contains net.runelite.client.ui.components.colorpicker.ColorValueSlider with the same class responsibility, field/method shape and package relationships."
+        }
+      ],
+      "note": "ColorValueSlider is recovered with confidence 0.999 from an exact v308 structural match plus the corresponding original RuneLite source class at runelite/runelite@7e6d9ac8138be3aa165f88da527ad5a5e6a5d21b. The upstream name is source provenance; exact runtime behavior remains bound to the pinned v308 client."
+    },
+    {
+      "proposal_id": "SEMPROP_D26FF5B97589333B1CE6",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001054",
+      "owner_logical_id": "CLIENT_CLASS_001054",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RuneliteColorPicker",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_v308_shape",
+          "detail": "Exact v308 rs/ui/components/a/q extends JDialog; exact 'Color Picker - ' title prefix plus Red/Green/Blue/Opacity/Hex color/Previous/Current UI; owns a, k, n, four e panels, hex field, selected Color and change/close consumers."
+        },
+        {
+          "family": "exact_package_graph",
+          "detail": "The class is used only inside the exact rs/ui/components/a color-picker package graph and fulfills the RuneLite color-picker dialog responsibility in that graph."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream source runelite/runelite@7e6d9ac8138be3aa165f88da527ad5a5e6a5d21b contains net.runelite.client.ui.components.colorpicker.RuneliteColorPicker with the same class responsibility, field/method shape and package relationships."
+        },
+        {
+          "family": "exact_literals",
+          "detail": "Exact v308 preserves 'Color Picker - ', 'Red', 'Green', 'Blue', 'Opacity', 'Hex color', 'Previous', ' Current', '#000' and config group 'colorpicker'."
+        }
+      ],
+      "note": "RuneliteColorPicker is recovered with confidence 0.999 from an exact v308 structural match plus the corresponding original RuneLite source class at runelite/runelite@7e6d9ac8138be3aa165f88da527ad5a5e6a5d21b. The upstream name is source provenance; exact runtime behavior remains bound to the pinned v308 client."
+    }
+  ],
+  "unresolved": []
+}

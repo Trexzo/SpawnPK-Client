@@ -1,0 +1,76 @@
+{
+  "canonical": false,
+  "kind": "semantic_review_set",
+  "proposal_count": 2,
+  "proposals": [
+    {
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "detail": "Independent consumers feed this singleton with hover text/content from interface controls, generic hover rectangles, entity/item hover handling and UI sidebar entries; examples include 'Maximize', 'Minimize', 'Hide/show task', 'Task info' and 'Skip target'.",
+          "family": "exact_centralized_hover_consumers"
+        },
+        {
+          "detail": "The renderer anchors from the live mouse coordinates Client.hP / Client.hQ, measures multiline text, clamps the box to the client viewport, draws the tooltip background/border/text and supports optional item/icon/stat layouts from TooltipContent.",
+          "family": "exact_mouse_relative_overlay_render"
+        },
+        {
+          "detail": "The same overlay subsystem exposes a surviving TOOLTIP position enum in rs/l/f/l, while rs/s/s/a contains exact settings text naming 'tooltip overlays' and hover tooltips; rs/s/s/b routes those tooltip settings and records into this renderer.",
+          "family": "exact_tooltip_noun"
+        },
+        {
+          "detail": "rs/l/f/e constructs one rs/l/f/a/j/b singleton, registers it globally during overlay-system initialization and exposes it through f(), making it the shared tooltip overlay rather than a domain-specific widget renderer.",
+          "family": "exact_global_overlay_registration"
+        }
+      ],
+      "note": "TooltipOverlay is fixed by exact hover consumers, mouse-relative box rendering, surviving tooltip configuration/position nouns and singleton registration in the overlay manager. Confidence is 0.999.",
+      "owner_logical_id": "CLIENT_CLASS_000477",
+      "proposal_id": "SEMPROP_A50DF92389EB989FD1D8",
+      "proposed_name": "TooltipOverlay",
+      "source_build": "v308",
+      "source_coordinate": {
+        "descriptor": null,
+        "name": null,
+        "owner": "rs/l/f/a/j/b"
+      },
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "stable_id": "CLIENT_CLASS_000477",
+      "target_kind": "class"
+    },
+    {
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "detail": "The exact hover-region helper rs/l/q$a creates this record from the hovered text substring when the mouse enters its rectangle, caches it as the region's presentation payload and exposes it directly to the centralized overlay renderer.",
+          "family": "exact_hover_region_payload"
+        },
+        {
+          "detail": "rs/s/s/b is the live tooltip settings/producer path: it owns exact settings for tooltip overlay colors and entity/item tooltip visibility, keeps a singleton rs/l/f/a/j/a record and submits that record to rs/l/f/a/j/b for rendering.",
+          "family": "exact_tooltip_config_join"
+        },
+        {
+          "detail": "The record stores the tooltip text plus optional booleans, item-id array, supplemental string array and presentation selectors consumed only by the tooltip renderer for plain text, icon/item and richer stat-line layouts.",
+          "family": "exact_presentation_payload"
+        }
+      ],
+      "note": "TooltipContent is descriptive exact-behavior recovery for the payload object passed from hover regions and tooltip producers into the centralized tooltip renderer. It does not claim the original developer identifier. Confidence is 0.999.",
+      "owner_logical_id": "CLIENT_CLASS_000476",
+      "proposal_id": "SEMPROP_D4F57212D09EDCF78526",
+      "proposed_name": "TooltipContent",
+      "source_build": "v308",
+      "source_coordinate": {
+        "descriptor": null,
+        "name": null,
+        "owner": "rs/l/f/a/j/a"
+      },
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "stable_id": "CLIENT_CLASS_000476",
+      "target_kind": "class"
+    }
+  ],
+  "review_id": "SEMREVIEW_AC7EFCB00B7B58248530",
+  "schema_version": 1,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "unresolved": []
+}

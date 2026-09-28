@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/f/a$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GameVariant",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_identity",
+          "detail": "The enum has exactly two surviving constants: SPAWNPK and RUNEX."
+        },
+        {
+          "family": "exact_variant_metadata",
+          "detail": "Each constant stores its exact display name (SpawnPK / Runex) and associated site string, while ClientSettings uses the selected value to derive variant-specific spk/rx data paths and flags."
+        },
+        {
+          "family": "exact_runtime_title_consumer",
+          "detail": "Launcher and the live UI shell read the selected enum's display name when constructing the application window title."
+        },
+        {
+          "family": "exact_runtime_behavior_split",
+          "detail": "ObjectDefinition runtime code branches on whether the selected value is SPAWNPK, demonstrating that this enum selects product/game-specific client behavior rather than serving as presentation-only text."
+        }
+      ],
+      "note": "GameVariant is the conservative semantic name for the exact SPAWNPK/RUNEX client product selector. It does not claim a verbatim original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/f/a$c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ScreenMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_identity",
+          "detail": "The enum constants survive exactly as FIXED, RESIZABLE and FULLSCREEN."
+        },
+        {
+          "family": "exact_persistence_binding",
+          "detail": "R83 ClientSettings stores and restores this enum through the exact settings.properties key screen_mode; its case-insensitive parser defaults to FIXED."
+        },
+        {
+          "family": "exact_runtime_consumers",
+          "detail": "Client, RSApplet/RSFrame shell, launcher/layout code, interfaces and overlays reference this enum to branch on fixed/resizable/fullscreen presentation behavior."
+        },
+        {
+          "family": "exact_semantic_scope",
+          "detail": "The three modes are mutually exclusive top-level client display modes, directly matching the persisted setting and broad UI consumers."
+        }
+      ],
+      "note": "ScreenMode is the conservative semantic name for the exact FIXED/RESIZABLE/FULLSCREEN client display-mode enum. It does not claim a verbatim original developer identifier."
+    }
+  ],
+  "conflicts": []
+}

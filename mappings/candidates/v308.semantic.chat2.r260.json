@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutItemImageCache",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_cache_state",
+          "detail": "Exact v308 rs/gui/b/g owns a static ConcurrentHashMap<Integer, rs.gui.x> keyed by item id, a five-thread ExecutorService, five loader instances, a round-robin loader index, one cached image field and one LoadoutItemEntry."
+        },
+        {
+          "family": "exact_lookup_dispatch",
+          "detail": "Its image lookup first checks the shared item-id cache; on a miss it dispatches the LoadoutItemEntry item id to one of the five loaders and returns null, while on a hit it memoizes and returns the cached rs.gui.x image."
+        },
+        {
+          "family": "exact_loadout_boundary",
+          "detail": "The class is constructed from LoadoutItemEntry/item id and is consumed by the reviewed Loadout preview path; no unrelated exact-v308 subsystem owns this cache."
+        }
+      ],
+      "note": "LoadoutItemImageCache is fixed by the shared item-id image cache plus bounded loadout-item lookup/dispatch role. Confidence 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutItemImageLoader",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_task_identity",
+          "detail": "Exact v308 rs/gui/b/b/b schedules item-id image work through the surviving task key literal pattern LoadoutIco_<itemId>."
+        },
+        {
+          "family": "exact_sprite_load_pipeline",
+          "detail": "Its loader callback resolves the item sprite at quantity 1 and size 32, converts it to an Image, removes black background pixels, wraps the result in rs.gui.x and stores it into rs/gui/b/g's shared item-id cache."
+        },
+        {
+          "family": "exact_refresh_behavior",
+          "detail": "After caching an image it asks the live Launcher to refresh the relevant UI path; the class has no unrelated exact-v308 consumer outside the loadout item-image cache family."
+        }
+      ],
+      "note": "LoadoutItemImageLoader is a descriptive exact-behavior name for the async item-image loader used by LoadoutItemImageCache; it does not claim an original developer identifier."
+    }
+  ],
+  "conflicts": []
+}

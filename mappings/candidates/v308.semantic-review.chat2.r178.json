@@ -1,0 +1,436 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 16,
+  "review_id": "SEMREVIEW_01E3E3766F0412107582",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_0753CDD71C43CC9CBD9F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000270",
+      "owner_logical_id": "CLIENT_CLASS_000270",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RestoreCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_binding",
+          "detail": "The class is the dedicated ActionListener attached to the exact '::rest (Spawns a restore pot)' button in rs/gui/e."
+        },
+        {
+          "family": "exact_command_action",
+          "detail": "When a live ready client is present, actionPerformed(ActionEvent) writes the exact command '::rest' to Client.ap and touches no unrelated subsystem."
+        }
+      ],
+      "note": "RestoreCommandAction is fixed by its exact button binding and exact Client.ap command literal '::rest'. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_08B4D1916AF4AFCDEB5F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000268",
+      "owner_logical_id": "CLIENT_CLASS_000268",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MeleePotsCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_binding",
+          "detail": "The class is the dedicated ActionListener attached to the exact '::pots (Spawns a set of melee pots)' button in rs/gui/e."
+        },
+        {
+          "family": "exact_command_action",
+          "detail": "When a live ready client is present, actionPerformed(ActionEvent) writes the exact command '::pots' to Client.ap and touches no unrelated subsystem."
+        }
+      ],
+      "note": "MeleePotsCommandAction is fixed by its exact button binding and exact Client.ap command literal '::pots'. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_280D21D26FC29342702D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000278",
+      "owner_logical_id": "CLIENT_CLASS_000278",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/r",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "VengeanceRunesCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_binding",
+          "detail": "The class is the dedicated ActionListener attached to the exact '::veng (Spawns a set of veng runes)' button in rs/gui/e."
+        },
+        {
+          "family": "exact_command_action",
+          "detail": "When a live ready client is present, actionPerformed(ActionEvent) writes the exact command '::veng' to Client.ap and touches no unrelated subsystem."
+        }
+      ],
+      "note": "VengeanceRunesCommandAction is fixed by its exact button binding and exact Client.ap command literal '::veng'. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_3688A58E1A1DD5977AA2",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000267",
+      "owner_logical_id": "CLIENT_CLASS_000267",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EntangleRunesCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_binding",
+          "detail": "The class is the dedicated ActionListener attached to the exact '::entangle (Spawns a set of entangle runes)' button in rs/gui/e."
+        },
+        {
+          "family": "exact_command_action",
+          "detail": "When a live ready client is present, actionPerformed(ActionEvent) writes the exact command '::entangle' to Client.ap and touches no unrelated subsystem."
+        }
+      ],
+      "note": "EntangleRunesCommandAction is fixed by its exact button binding and exact Client.ap command literal '::entangle'. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_41604885C38F8888BBB6",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000272",
+      "owner_logical_id": "CLIENT_CLASS_000272",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MagePotCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_binding",
+          "detail": "The class is the dedicated ActionListener attached to the exact '::mage (Spawns a set of mage pot set)' button in rs/gui/e."
+        },
+        {
+          "family": "exact_command_action",
+          "detail": "When a live ready client is present, actionPerformed(ActionEvent) writes the exact command '::mage' to Client.ap and touches no unrelated subsystem."
+        }
+      ],
+      "note": "MagePotCommandAction is fixed by its exact button binding and exact Client.ap command literal '::mage'. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_592C9D0B0321F94E08FD",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000269",
+      "owner_logical_id": "CLIENT_CLASS_000269",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BrewCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_binding",
+          "detail": "The class is the dedicated ActionListener attached to the exact '::brew (Spawns a saradomin brew)' button in rs/gui/e."
+        },
+        {
+          "family": "exact_command_action",
+          "detail": "When a live ready client is present, actionPerformed(ActionEvent) writes the exact command '::brew' to Client.ap and touches no unrelated subsystem."
+        }
+      ],
+      "note": "BrewCommandAction is fixed by its exact button binding and exact Client.ap command literal '::brew'. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_64C1F7B86EB337990E8E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000271",
+      "owner_logical_id": "CLIENT_CLASS_000271",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RangePotCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_binding",
+          "detail": "The class is the dedicated ActionListener attached to the exact '::range (Spawns a ranger pot set)' button in rs/gui/e."
+        },
+        {
+          "family": "exact_command_action",
+          "detail": "When a live ready client is present, actionPerformed(ActionEvent) writes the exact command '::range' to Client.ap and touches no unrelated subsystem."
+        }
+      ],
+      "note": "RangePotCommandAction is fixed by its exact button binding and exact Client.ap command literal '::range'. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_6B4FE50B21933D713836",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000273",
+      "owner_logical_id": "CLIENT_CLASS_000273",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ForumsCommunityLinkAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_binding",
+          "detail": "The class is the dedicated ActionListener attached to the exact 'Forums/Community' button in rs/gui/e."
+        },
+        {
+          "family": "exact_url_action",
+          "detail": "actionPerformed(ActionEvent) passes the exact URL 'http://spawnpk.net/forums/' to the client's external-link opener."
+        }
+      ],
+      "note": "ForumsCommunityLinkAction is fixed by its exact button binding and exact surviving SpawnPK URL. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_8A50A49125E6FEE4CDA4",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000277",
+      "owner_logical_id": "CLIENT_CLASS_000277",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FoodCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_binding",
+          "detail": "The class is the dedicated ActionListener attached to the exact '::food (Spawns x28 un-noted food)' button in rs/gui/e."
+        },
+        {
+          "family": "exact_command_action",
+          "detail": "When a live ready client is present, actionPerformed(ActionEvent) writes the exact command '::food' to Client.ap and touches no unrelated subsystem."
+        }
+      ],
+      "note": "FoodCommandAction is fixed by its exact button binding and exact Client.ap command literal '::food'. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_BACA2C0EEA0617DEEDA1",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000276",
+      "owner_logical_id": "CLIENT_CLASS_000276",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SwitchSpellbookCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_binding",
+          "detail": "The class is the dedicated ActionListener attached to the exact '::switch (Switches your magic spell book)' button in rs/gui/e."
+        },
+        {
+          "family": "exact_command_action",
+          "detail": "When a live ready client is present, actionPerformed(ActionEvent) writes the exact command '::switch' to Client.ap and touches no unrelated subsystem."
+        }
+      ],
+      "note": "SwitchSpellbookCommandAction is fixed by its exact button binding and exact Client.ap command literal '::switch'. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_C55FADCBFCE401959862",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000274",
+      "owner_logical_id": "CLIENT_CLASS_000274",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LatestUpdatesLinkAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_binding",
+          "detail": "The class is the dedicated ActionListener attached to the exact 'Latest updates' button in rs/gui/e."
+        },
+        {
+          "family": "exact_url_action",
+          "detail": "actionPerformed(ActionEvent) passes the exact URL 'https://spawnpk.net/forums/index.php?/forum/10-updates/' to the client's external-link opener."
+        }
+      ],
+      "note": "LatestUpdatesLinkAction is fixed by its exact button binding and exact surviving SpawnPK URL. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_D6817A36439C7B9E3DB1",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000265",
+      "owner_logical_id": "CLIENT_CLASS_000265",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ServerInformationAndPkCommandsPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_panel_type",
+          "detail": "The class directly extends javax.swing.JPanel and is constructed by the recovered ClientSidebarPanel."
+        },
+        {
+          "family": "exact_section_identity",
+          "detail": "The panel preserves the exact headings 'Check these pages out for server information!' and 'These commands will aid your PKing needs!'."
+        },
+        {
+          "family": "exact_resource_buttons",
+          "detail": "It builds the exact resource buttons 'Server rules', 'Forums/Community', 'Latest updates' and 'Price guide' and wires each to its dedicated rs/gui action class."
+        },
+        {
+          "family": "exact_pk_command_buttons",
+          "detail": "It also builds eleven exact PK-helper command buttons for ::switch, ::food, ::veng, ::barrage, ::tb, ::entangle, ::pots, ::brew, ::rest, ::range and ::mage, each with surviving explanatory button text."
+        }
+      ],
+      "note": "ServerInformationAndPkCommandsPanel follows the two exact surviving panel headings and complete resource/PK-command button surface. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_DDE0F7E3498AEED3ADB3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000279",
+      "owner_logical_id": "CLIENT_CLASS_000279",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/s",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BarrageRunesCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_binding",
+          "detail": "The class is the dedicated ActionListener attached to the exact '::barrage (Spawns a set of barrage runes)' button in rs/gui/e."
+        },
+        {
+          "family": "exact_command_action",
+          "detail": "When a live ready client is present, actionPerformed(ActionEvent) writes the exact command '::barrage' to Client.ap and touches no unrelated subsystem."
+        }
+      ],
+      "note": "BarrageRunesCommandAction is fixed by its exact button binding and exact Client.ap command literal '::barrage'. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_EB76BA402C0ACADE66FA",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000275",
+      "owner_logical_id": "CLIENT_CLASS_000275",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PriceGuideLinkAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_binding",
+          "detail": "The class is the dedicated ActionListener attached to the exact 'Price guide' button in rs/gui/e."
+        },
+        {
+          "family": "exact_url_action",
+          "detail": "actionPerformed(ActionEvent) passes the exact URL 'https://spawnpk.net/forums/index.php?/topic/5710-the-official-spawnpk-price-guide-for-2017/' to the client's external-link opener."
+        }
+      ],
+      "note": "PriceGuideLinkAction is fixed by its exact button binding and exact surviving SpawnPK URL. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_FAB82782114D0F33827F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000266",
+      "owner_logical_id": "CLIENT_CLASS_000266",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ServerRulesButtonAction",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_button_binding",
+          "detail": "The class is the dedicated ActionListener attached to the exact 'Server rules' button constructed by rs/gui/e."
+        },
+        {
+          "family": "exact_v308_behavior",
+          "detail": "actionPerformed(ActionEvent) returns immediately in exact v308; the semantic name records button ownership without claiming a currently implemented navigation action."
+        }
+      ],
+      "note": "ServerRulesButtonAction is fixed by exact button ownership; exact v308 actionPerformed is intentionally recorded as a no-op. Confidence is 0.997."
+    },
+    {
+      "proposal_id": "SEMPROP_FB0E78FF32E513E43194",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000280",
+      "owner_logical_id": "CLIENT_CLASS_000280",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/t",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TeleblockRunesCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_binding",
+          "detail": "The class is the dedicated ActionListener attached to the exact '::tb (Spawns a set of teleblock runes)' button in rs/gui/e."
+        },
+        {
+          "family": "exact_command_action",
+          "detail": "When a live ready client is present, actionPerformed(ActionEvent) writes the exact command '::tb' to Client.ap and touches no unrelated subsystem."
+        }
+      ],
+      "note": "TeleblockRunesCommandAction is fixed by its exact button binding and exact Client.ap command literal '::tb'. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}

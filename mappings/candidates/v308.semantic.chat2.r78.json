@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SequenceDefinitionOverrides",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_sequence_owner",
+          "detail": "rs/d/b references only R28 SequenceDefinition state and directly indexes the global SequenceDefinition array by the sequence id passed into its two static patch methods."
+        },
+        {
+          "family": "exact_post_decode_hook",
+          "detail": "R28 SequenceDefinition invokes rs/d/b.a(id) and rs/d/b.b(id) for every decoded sequence id immediately after the normal definition decode/customization path."
+        },
+        {
+          "family": "exact_id_patch_tables",
+          "detail": "The first method contains a 106-case sequence-id switch and the second a 73-case sequence-id switch; matching cases replace exact SequenceDefinition frame counts, frame arrays, duration arrays and related playback/control fields."
+        },
+        {
+          "family": "exact_override_role",
+          "detail": "The class has no independent model, archive or runtime state: its only behavior is deterministic per-id mutation of already-loaded SequenceDefinition records, fixing it as a sequence-definition override table rather than a separate definition type."
+        }
+      ],
+      "note": "SequenceDefinitionOverrides is the conservative semantic name for this exact post-decode sequence-definition patch table; it does not claim a verbatim original developer identifier."
+    }
+  ],
+  "conflicts": []
+}

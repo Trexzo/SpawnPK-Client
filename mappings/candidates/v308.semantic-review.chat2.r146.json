@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_08BBF1DCA1080D2650C2",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_4D2A3D3E9D99E41DDF19",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000890",
+      "owner_logical_id": "CLIENT_CLASS_000890",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/c/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DeveloperToolsSidebarPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_sidebar_tab",
+          "detail": "R145 ClientSidebarPanel adds rs/s/c/d under exact tab title 'Development' only when rs/s/c/d.b() reports developer tools enabled; otherwise the same slot is occupied by ItemSearchSidebarPanel."
+        },
+        {
+          "family": "exact_developer_tools",
+          "detail": "The panel preserves exact actions 'Reset Item Defs', 'Reset NPC Defs' and 'Repack cache' with exact commands '::itemdef reset', '::resetnpcdefs' and '::repack'."
+        },
+        {
+          "family": "exact_recoloring_tools",
+          "detail": "Its live state uses exact modes 'Recoloring N/A', 'Recoloring NPC', 'Recoloring Item' and 'Recoloring Object', plus exact controls including 'Color inverse', 'Hide modified' and 'Copy selected'."
+        },
+        {
+          "family": "exact_development_feedback",
+          "detail": "The class emits exact Development feedback such as 'Color string added to keyboard!' and manipulates the editor/recolor model consumed by the live developer interface."
+        }
+      ],
+      "note": "DeveloperToolsSidebarPanel is fixed by conditional exact 'Development' tab placement and its reset/repack/recolor developer-tool surface. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_A4AD083385525613AE87",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000190",
+      "owner_logical_id": "CLIENT_CLASS_000190",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/G",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemSearchSidebarPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_sidebar_tab",
+          "detail": "R145 ClientSidebarPanel adds rs/gui/G under the exact tab title 'Item Search' whenever developer tools are not enabled."
+        },
+        {
+          "family": "exact_item_database_gate",
+          "detail": "The panel refuses search until the item-definition database is loaded and shows the exact warning 'Please wait until the client has loaded the item database!'."
+        },
+        {
+          "family": "exact_search_protocol",
+          "detail": "Its search action requires at least three letters, iterates the exact cached item-definition table, matches item names case-insensitively, excludes the reserved item id 11283, and renders matching item ids/names plus exact '(noted)' state."
+        },
+        {
+          "family": "exact_search_ui",
+          "detail": "The class extends JPanel and owns the live search JTextField, Search button, result JTextArea and scroll pane used by the sidebar tab."
+        }
+      ],
+      "note": "ItemSearchSidebarPanel is fixed by exact ClientSidebarPanel placement and exclusive item-definition search/result behavior. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}

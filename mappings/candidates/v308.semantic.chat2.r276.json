@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutCloneButtonFactory",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_button_identity",
+          "detail": "Exact v308 constructs a JButton labelled Clone with the clone.png asset."
+        },
+        {
+          "family": "exact_tooltip_role",
+          "detail": "The button tooltip states that it takes the items currently equipped in game and sets them as the current active loadout."
+        },
+        {
+          "family": "exact_loadout_join",
+          "detail": "The factory accepts rs/gui/b/h and installs rs/gui/b/a/b as the action listener; rs/gui/b/h directly obtains this button while building the loadout UI."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout GUI behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/A",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutSkillLevelEditor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_window_identity",
+          "detail": "Exact v308 titles the JFrame \"Set <skill> level\" and maps indices to Attack, Range, Strength, Prayer, Defence, Magic and Hitpoints."
+        },
+        {
+          "family": "exact_value_contract",
+          "detail": "The editor parses the entered level, clamps it to 1..99, writes the selected slot of the active loadout stat array, refreshes the loadout UI and closes."
+        },
+        {
+          "family": "exact_loadout_join",
+          "detail": "The frame is instantiated from the loadout GUI with its active loadout model and clicked skill index."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout GUI behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/y",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutPropertiesFrame",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_window_role",
+          "detail": "Exact v308 is a JFrame used with titles/actions such as \"Name Your Loadout\"/Create and Rename from the loadout GUI."
+        },
+        {
+          "family": "exact_editable_properties",
+          "detail": "The frame exposes a loadout-name text field plus Color and Icon selectors, including a None (Default) icon choice and named colors."
+        },
+        {
+          "family": "exact_loadout_join",
+          "detail": "Create and rename callers read the frame's name, selected color and selected loadout icon back into rs/gui/b/a loadout records."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout GUI behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}

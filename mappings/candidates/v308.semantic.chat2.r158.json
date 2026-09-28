@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/d/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoginOrb",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_login_owner",
+          "detail": "Only rs/l/d/c LoginScreen references rs/l/d/a; LoginScreen allocates and owns the complete live list of these objects."
+        },
+        {
+          "family": "exact_orb_assets",
+          "detail": "LoginScreen seeds the presentation using exact asset 'orb 1', while rs/l/d/a loads randomized exact 'orb N' sprite variants from /assets/."
+        },
+        {
+          "family": "exact_population",
+          "detail": "LoginScreen constructs 75 rs/l/d/a instances during initialization and iterates the same list throughout login rendering/input updates."
+        },
+        {
+          "family": "exact_animation_role",
+          "detail": "Each object owns one selected orb sprite plus position/fixed-point movement state, randomized movement mode, return-to-origin state and hit/attraction behavior; its update method ends by rendering that orb sprite at its current login-screen position."
+        },
+        {
+          "family": "exact_exclusive_sink",
+          "detail": "No class outside LoginScreen consumes rs/l/d/a, so the orb role is confined to LoginScreen presentation rather than a reusable game-world particle/entity subsystem."
+        }
+      ],
+      "note": "LoginOrb is descriptive exact-behavior recovery for one animated orb in the LoginScreen-owned 75-orb presentation swarm. The 'orb N' asset family survives exactly; confidence is 0.998."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/d/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoginMessageBox",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_login_owner",
+          "detail": "Only rs/l/d/c LoginScreen references or constructs rs/l/d/b; no second client subsystem consumes the class."
+        },
+        {
+          "family": "exact_messagebox_asset",
+          "detail": "LoginScreen loads the exact /assets/messagebox sprite and passes that sprite into every rs/l/d/b construction."
+        },
+        {
+          "family": "exact_two_line_rendering",
+          "detail": "The class stores exactly two message Strings and renders both over the supplied messagebox sprite using LoginScreen/Client fonts, with mutable position, visibility and alpha state."
+        },
+        {
+          "family": "exact_login_messages",
+          "detail": "LoginScreen uses one persistent instance for exact recovery/PIN guidance ('It will be your account\\'s PIN before October 2024' / 'If you do not remember it, request help on our forums!') and creates additional instances from dynamic login-message pairs."
+        },
+        {
+          "family": "exact_presentation_state",
+          "detail": "The class implements fade-in/reset, active-state queries, alternate centered/left text layout and position setters, matching a LoginScreen message box rather than a domain model or generic network message."
+        }
+      ],
+      "note": "LoginMessageBox is descriptive exact-behavior recovery for LoginScreen's exclusive two-line messagebox renderer. Exact asset ownership and message usage support confidence 0.998."
+    }
+  ],
+  "conflicts": []
+}

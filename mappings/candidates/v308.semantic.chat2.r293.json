@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/c/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InboxMessageListController",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_row_builder",
+          "detail": "The controller appends inbox rows with the exact action 'View inbox message', text content and hover/button widgets."
+        },
+        {
+          "family": "exact_read_state_join",
+          "detail": "It applies the retained InboxMessageReadStatus to row color and toggles the unread <img=50> marker."
+        },
+        {
+          "family": "exact_layout_join",
+          "detail": "Rows are inserted through the retained InterfaceLayoutManager and the controller finalizes scroll height from the accumulated inbox row count."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 mail/inbox behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/c/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MailAttachmentClaimController",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_claim_state_machine",
+          "detail": "The controller switches on EMPTY, UNCLAIMED and CLAIMED states from the retained MailAttachmentClaimStatus enum."
+        },
+        {
+          "family": "exact_claimed_text",
+          "detail": "CLAIMED state writes the exact text '@gre@Items have been claimed!' and toggles the corresponding attachment/claim widgets."
+        },
+        {
+          "family": "exact_mail_widget_scope",
+          "detail": "All mutations are confined to the same 321xx mail attachment/reward widget group used by MailInboxInterface."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 mail/inbox behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}

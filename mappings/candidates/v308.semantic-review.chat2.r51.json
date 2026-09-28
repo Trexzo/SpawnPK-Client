@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_229173A6D4F3E5E400D1",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_33CE91E020E6224B5E7D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000044",
+      "owner_logical_id": "CLIENT_CLASS_000044",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/Q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SceneEntity",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_inheritance_role",
+          "detail": "R40 GameObject (rs/l), GroundDecoration (rs/m), WallDecoration (rs/T) and WallObject (rs/U) all extend rs/Q directly, while GroundItemPile (rs/n) deliberately does not."
+        },
+        {
+          "family": "exact_shared_scene_state",
+          "detail": "The three rs/Q integers are inherited as the common scene tag plus world-space X/Y coordinates. Scene construction writes the same tag/X/Y roles into each of the four subclasses."
+        },
+        {
+          "family": "exact_polymorphic_lookup",
+          "detail": "Client scene lookup returns rs/Q and searches the SceneTile wall, wall-decoration, ground-decoration and GameObject slots by their inherited scene tag, proving rs/Q is the shared scene-object record rather than a renderable/model base."
+        }
+      ],
+      "note": "SceneEntity is the conservative semantic recovery name for the shared scene-holder base record. It is distinct from Renderable and from the concrete GameObject type, and does not claim a verbatim original identifier."
+    }
+  ],
+  "unresolved": []
+}

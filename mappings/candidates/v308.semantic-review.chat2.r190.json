@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_6342E35B4E2884955FF4",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_3FC2F671F6CACF12B9F3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000959",
+      "owner_logical_id": "CLIENT_CLASS_000959",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/r/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TileIndicatorsOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_package_pairing",
+          "detail": "rs/s/r/b owns only reviewed TileIndicatorConfig rs/s/r/a; the reviewed TileIndicatorsPlugin rs/s/r/c is the runtime plugin for the same package and exact 'Tile Indicators' feature."
+        },
+        {
+          "family": "exact_destination_tile",
+          "detail": "When the destination-tile setting is enabled, the overlay reads the client's destination coordinates, converts them to a local tile and draws that tile using the configured destination highlight/fill colors and border width."
+        },
+        {
+          "family": "exact_hovered_tile",
+          "detail": "When the hovered-tile setting is enabled, the overlay reads the client's hovered tile coordinates and renders the corresponding tile using the hovered-tile config colors and shared border width."
+        },
+        {
+          "family": "exact_current_tile",
+          "detail": "When the current-tile setting is enabled, the overlay resolves the local Player's current WorldPoint/local tile and renders it using the configured current-tile highlight/fill colors and border width."
+        }
+      ],
+      "note": "TileIndicatorsOverlay is fixed by exclusive TileIndicatorConfig ownership and a complete three-surface current/destination/hovered tile render path. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}

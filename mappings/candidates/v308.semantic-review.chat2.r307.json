@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_05C6AA5481B981CF84F7",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_79A36FEAD4AA2881F904",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000784",
+      "owner_logical_id": "CLIENT_CLASS_000784",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/r/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelParticleAttachmentConfig",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_model_id_table",
+          "detail": "rs/r/b is a static int -> int[][] table keyed by exact model ids including 65295, 65328, 2467 and 42467; each row is a two-integer selector/value pair consumed only by R30 Model."
+        },
+        {
+          "family": "exact_model_particle_field_join",
+          "detail": "Model applies each table row to its per-face integer array L, using direct face indices or special -1/-2/-3/-4 selectors that expand through model face-group arrays before assigning value+1."
+        },
+        {
+          "family": "exact_particle_definition_consumer",
+          "detail": "During live model rendering Model reads L[face]-1 as an index into the R50 ParticleDefinition array rs/r/c.c and spawns that definition through R306 CpuParticlePool from the selected face geometry."
+        },
+        {
+          "family": "exact_attachment_semantics",
+          "detail": "The table therefore configures which model faces/groups emit which particle definitions; it does not recolor faces or alter generic model geometry independently of the particle spawn path."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 model-face to ParticleDefinition attachment behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}

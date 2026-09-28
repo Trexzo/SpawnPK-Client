@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcObjectIconRenderer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_type_dispatch",
+          "detail": "rs/d/e dispatches solely on the nested enum's exact NPC_HEAD and OBJECT modes and keeps a separate R47 MruNodeCache for each mode."
+        },
+        {
+          "family": "exact_definition_model_sources",
+          "detail": "NPC_HEAD resolves the requested id through R28 NpcDefinition and obtains its head model, while OBJECT resolves through R28 ObjectDefinition and obtains the shape-10 object model used for icon rendering."
+        },
+        {
+          "family": "exact_sprite_rasterization",
+          "detail": "The renderer creates a square R55 Sprite at the requested size, temporarily redirects the software rasterizer state, renders the selected model into that sprite, applies the icon outline pass, restores raster state, and caches the result by definition id."
+        },
+        {
+          "family": "exact_size_aware_cache",
+          "detail": "A cached sprite is reused only when its recorded size matches the current request (or carries the sentinel size); otherwise it is discarded and regenerated."
+        },
+        {
+          "family": "exact_ui_consumers",
+          "detail": "The interface renderer has separate NPC_HEAD and OBJECT icon branches, and R5 MakeQuantityInterface resolves exact npc_<id> references by requesting a 64-pixel NPC_HEAD icon from this renderer."
+        }
+      ],
+      "note": "NpcObjectIconRenderer is the conservative semantic name for this exact two-mode NPC-head/object sprite renderer; it does not claim a verbatim original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/e$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcObjectIconType",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "rs/d/e$a is an enum with surviving exact constants NPC_HEAD and OBJECT."
+        },
+        {
+          "family": "exact_renderer_binding",
+          "detail": "NpcObjectIconRenderer uses this enum to select both the model-definition source and the dedicated icon cache."
+        },
+        {
+          "family": "exact_ui_binding",
+          "detail": "Interface rendering requests the two enum values directly for NPC-head and object icon widgets, while MakeQuantityInterface explicitly requests NPC_HEAD for npc_<id> references."
+        }
+      ],
+      "note": "NpcObjectIconType is the conservative semantic name for this exact NPC_HEAD/OBJECT icon source enum; it does not claim a verbatim original developer identifier."
+    }
+  ],
+  "conflicts": []
+}

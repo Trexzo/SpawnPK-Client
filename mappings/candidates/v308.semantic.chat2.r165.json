@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/CustomScrollBarUI",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CustomScrollBarUI",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_surviving_identifier",
+          "detail": "The exact v308 internal class name itself survives as rs/ui/components/CustomScrollBarUI; the semantic simple name CustomScrollBarUI is therefore not inferred."
+        },
+        {
+          "family": "exact_swing_role",
+          "detail": "The class extends javax.swing.plaf.basic.BasicScrollBarUI, overrides track/thumb painting and increase/decrease button creation, and exposes the canonical static createUI(JComponent) factory."
+        },
+        {
+          "family": "exact_scrollbar_behavior",
+          "detail": "createUI casts the component to JScrollBar, sets unit increment 16 and preferred size 7x7, while the UI paints custom track/thumb colors sourced from the client GUI palette."
+        }
+      ],
+      "note": "CustomScrollBarUI is an exact surviving v308 identifier and its implementation matches the name directly. Confidence is 1.0."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/shadowlabel/JShadowedLabelUI",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "JShadowedLabelUI",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_surviving_identifier",
+          "detail": "The exact v308 internal class name survives as rs/ui/components/shadowlabel/JShadowedLabelUI; the semantic simple name JShadowedLabelUI is not inferred."
+        },
+        {
+          "family": "exact_label_ui_role",
+          "detail": "The class extends BasicLabelUI and overrides paintEnabledText. For the companion shadow-label class it paints a shadow String at a configured Point offset and Color before painting the normal JLabel foreground text."
+        },
+        {
+          "family": "exact_companion_binding",
+          "detail": "The implementation explicitly tests/casts rs/ui/components/shadowlabel/a and consumes that class's shadow color and shadow offset accessors."
+        }
+      ],
+      "note": "JShadowedLabelUI is an exact surviving v308 identifier with implementation behavior matching the name. Confidence is 1.0."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/shadowlabel/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "JShadowedLabel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_superclass",
+          "detail": "The class extends javax.swing.JLabel and provides both default and String constructors."
+        },
+        {
+          "family": "exact_ui_binding",
+          "detail": "Both constructors install a new exact JShadowedLabelUI instance through setUI(), making the class the concrete label paired with the surviving UI delegate."
+        },
+        {
+          "family": "exact_shadow_state",
+          "detail": "The class owns only a shadow Color and Point offset, defaulting to Color.BLACK and Point(1,1), with setters that repaint/revalidate and getters consumed directly by JShadowedLabelUI."
+        }
+      ],
+      "note": "JShadowedLabel is descriptive recovery for the obfuscated JLabel companion exclusively bound to exact JShadowedLabelUI. Confidence is 0.999; the original simple identifier for this companion is stripped."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/runelite/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelBoundsCacheEntry",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_value_shape",
+          "detail": "Exact v308 rs/runelite/a/d extends the client linked-list Node and otherwise contains exactly eight mutable integer values plus a default constructor; it has no unrelated behavior."
+        },
+        {
+          "family": "exact_single_consumer",
+          "detail": "The only non-self class reference in the exact jar is recovered RSInterface. Its model-building path allocates this class, stores it in an rs/F node cache keyed by the interface model ID, and reloads it on later model construction."
+        },
+        {
+          "family": "exact_model_bounds_snapshot",
+          "detail": "RSInterface copies eight exact Model bounds values into the entry after Model.m(): min/max X, min/max Z, model height, bottom Y, radius and diameter. On a cache hit it restores those same eight values back into the newly prepared Model before returning it."
+        },
+        {
+          "family": "exact_cache_lifecycle",
+          "detail": "The cache entry is created only when the RSInterface model-bounds caching flag is enabled; first use calculates Model bounds, snapshots them, inserts the Node into the cache, and subsequent uses restore the snapshot without recomputing the full bounds scan."
+        }
+      ],
+      "note": "ModelBoundsCacheEntry is descriptive exact-behavior recovery for the Node-backed eight-int cache record used exclusively by RSInterface to snapshot and restore Model bounds. No original developer identifier is claimed; confidence is 0.998."
+    }
+  ],
+  "conflicts": []
+}

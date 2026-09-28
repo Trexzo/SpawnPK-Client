@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/w/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Instrument",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_synthesis_graph",
+          "detail": "rs/w/d owns multiple SoundEnvelope instances for pitch, volume, modulation and gating plus five oscillator voice parameter slots, echo/delay state, one SoundFilter and its filter envelope."
+        },
+        {
+          "family": "exact_pcm_generation",
+          "detail": "Its synthesis method renders an int[] sample buffer at the requested sample count/duration, evaluates oscillator waveforms, applies modulation/gating, mixes delayed voices, applies echo, then filters and clamps the final PCM amplitude range."
+        },
+        {
+          "family": "exact_stream_decode",
+          "detail": "The decoder reads the paired envelopes, optional modulation/gating envelope pairs, up to five oscillator volume/pitch/delay triplets, delay/feedback, duration/offset, then SoundFilter plus its envelope."
+        }
+      ],
+      "note": "Instrument is the conservative semantic name for this multi-envelope synthesized sound voice; it does not claim a verbatim original identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/w/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SoundEffect",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_container_shape",
+          "detail": "rs/w/e owns up to ten rs/w/d Instrument instances plus loop start/end timing and a static registry keyed by effect id."
+        },
+        {
+          "family": "exact_mix_role",
+          "detail": "Its mixer converts each Instrument duration/offset to 22050-Hz sample positions, calls Instrument synthesis, and sums the resulting PCM bytes into one shared output buffer."
+        },
+        {
+          "family": "exact_wave_output",
+          "detail": "The output method writes a canonical RIFF/WAVE header including RIFF, WAVE, fmt , mono 22050-Hz 8-bit PCM fields and data length before returning the Stream-backed WAV payload."
+        },
+        {
+          "family": "exact_archive_decode",
+          "detail": "The static loader reads effect ids until 65535, decodes each SoundEffect from Stream, stores it in the registry and records its normalized start offset."
+        }
+      ],
+      "note": "SoundEffect is the conservative semantic name for this instrument container/WAV mixer; it does not claim a verbatim original identifier."
+    }
+  ],
+  "conflicts": []
+}

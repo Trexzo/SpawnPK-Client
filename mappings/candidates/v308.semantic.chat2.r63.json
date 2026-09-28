@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/q/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RSSocket",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_socket_wrapper_shape",
+          "detail": "rs/q/b is final, implements Runnable, owns one Socket plus InputStream/OutputStream, a circular byte[] write buffer, read/write cursors and writer/error lifecycle flags."
+        },
+        {
+          "family": "exact_socket_configuration",
+          "detail": "The constructor accepts R48 RSApplet plus Socket, configures socket timeout/TCP_NODELAY/receive-buffer state and captures the socket input/output streams."
+        },
+        {
+          "family": "exact_io_contract",
+          "detail": "The class exposes single-byte read, available-byte count, exact-length blocking read with EOF failure, asynchronous buffered write, orderly close and a writer-thread run loop."
+        },
+        {
+          "family": "surviving_diagnostics",
+          "detail": "Exact strings include \"EOF\", \"Error closing stream\", \"Error in writer thread\", \"buffer overflow\" and \"ioerror:\", directly describing the buffered socket lifecycle."
+        },
+        {
+          "family": "exact_writer_thread",
+          "detail": "Buffered writes append into a circular queue; the writer thread is started through RSApplet's runnable scheduler, drains pending bytes to OutputStream and flushes when the queue becomes empty."
+        }
+      ],
+      "note": "RSSocket is the conservative classic semantic identity for this exact buffered threaded socket wrapper; exact v308 behavior is primary evidence."
+    }
+  ],
+  "conflicts": []
+}

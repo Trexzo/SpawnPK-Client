@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/b/a/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TextureDebugConfigLoader",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_file_contract",
+          "detail": "Exact v308 creates ./debug when absent and opens ./debug/textures.txt through FileReader/BufferedReader."
+        },
+        {
+          "family": "exact_section_parser",
+          "detail": "The loader clears six integer lists, ignores # comment lines, switches parse mode on [textur], [random], and [recolor] section markers, and parses comma-separated integer entries into the corresponding lists."
+        },
+        {
+          "family": "exact_scope",
+          "detail": "The class is a static debug-file loader with no gameplay construction state; its only bytecode referrer is its nested section-mode helper."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 file path and parser behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}

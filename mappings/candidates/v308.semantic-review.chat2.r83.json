@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_425098E7FCD7FEC3474A",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_F911350B8EE9D58D7B09",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000167",
+      "owner_logical_id": "CLIENT_CLASS_000167",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/f/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientSettings",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_persistence_identity",
+          "detail": "rs/f/a owns the exact settings.properties path, plus the temporary-file/replace workflow used to persist the client settings file safely."
+        },
+        {
+          "family": "exact_save_load_contract",
+          "detail": "Its SaveSettings task writes the current static settings to disk with BufferedWriter, while the load path uses java.util.Properties to restore those values from settings.properties."
+        },
+        {
+          "family": "exact_setting_keys",
+          "detail": "Surviving keys span client behavior and presentation, including oldschool_graphics, screen_mode, show_roofs, show_fog, item_drag, queued_item_clicks_v2, player_attack_option, npc_attack_option, desktop_notifications, timer_overlay, shift_drop and key_binding_<n>."
+        },
+        {
+          "family": "exact_runtime_breadth",
+          "detail": "More than one hundred exact-v308 classes reference rs/f/a, including Client, cache/definition loaders, interface code, plugins, rendering, notification and shell code; the class is the shared global client-settings authority rather than a local feature helper."
+        }
+      ],
+      "note": "ClientSettings is the conservative semantic name for the exact settings.properties-backed global client settings authority. It does not claim a verbatim original developer identifier."
+    }
+  ],
+  "unresolved": []
+}

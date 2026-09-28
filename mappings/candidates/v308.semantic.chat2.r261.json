@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HotkeyButtonResetMouseListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_mouse_reset_behavior",
+          "detail": "Exact v308 rs/s/b/j extends MouseAdapter, owns only one reviewed HotkeyButton, and on left-button mouseReleased assigns the reviewed Keybind.NOT_SET value to that button."
+        },
+        {
+          "family": "exact_owner_boundary",
+          "detail": "The class has no other event method or unrelated exact-v308 consumer; its complete responsibility is resetting a HotkeyButton binding through the button's existing setter."
+        }
+      ],
+      "note": "HotkeyButtonResetMouseListener is a descriptive exact-behavior name for the anonymous left-click reset adapter. Confidence 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HotkeyButtonKeyCaptureListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_key_capture_behavior",
+          "detail": "Exact v308 rs/s/b/k extends KeyAdapter, owns one reviewed HotkeyButton and on keyPressed constructs a Keybind from the KeyEvent then assigns it through the HotkeyButton setter."
+        },
+        {
+          "family": "exact_capture_mode_state",
+          "detail": "The adapter also captures the HotkeyButton constructor's boolean key-capture mode flag; regardless of the optimized branch shape, the only surviving exact-v308 action is capture-and-assign of the pressed key event."
+        }
+      ],
+      "note": "HotkeyButtonKeyCaptureListener is a descriptive exact-behavior name for the anonymous key-capture adapter. It does not assert a verbatim upstream anonymous identifier."
+    }
+  ],
+  "conflicts": []
+}

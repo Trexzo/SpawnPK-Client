@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_777E2500491C487C174F",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_C35D0E1B1E4B1A2366EA",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000951",
+      "owner_logical_id": "CLIENT_CLASS_000951",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/q/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PvPTrackerFight",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_two_fighter_model",
+          "detail": "The class owns exactly two rs/s/q/a/b participant records plus one aggregate integer. Construction initializes both participant names to exact sentinel 'N/A'."
+        },
+        {
+          "family": "exact_tracker_plugin_ownership",
+          "detail": "R12 PvPTrackerPlugin rs/s/q/d owns one current rs/s/q/a/a in field k and an ArrayList<rs/s/q/a/a> fight history in field l; public accessors expose the current fight and history separately."
+        },
+        {
+          "family": "exact_history_snapshot",
+          "detail": "When the current fight is complete, PvPTrackerPlugin creates a new rs/s/q/a/a, deep-copies both participant records and the fight aggregate into it, appends that snapshot to fight history, sends it to PvPTrackerPanel, then replaces current state with a fresh rs/s/q/a/a."
+        },
+        {
+          "family": "exact_fight_comparisons",
+          "detail": "The model compares the two participants' paired percentage metrics and exposes both participant records, matching the reviewed PvP Tracker 'Current Fight' and fight-history presentation."
+        }
+      ],
+      "note": "PvPTrackerFight is fixed by exact PvPTrackerPlugin ownership: one current two-participant model is deep-copied into fight history and then reset. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_E6F4AB6FB3C274FF3949",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000952",
+      "owner_logical_id": "CLIENT_CLASS_000952",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/q/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PvPTrackerFighterStats",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_participant_record",
+          "detail": "Each rs/s/q/a/b stores one fighter name, five integer counters/aggregate values and one boolean state. PvPTrackerFight owns exactly two of these records."
+        },
+        {
+          "family": "exact_ratio_state",
+          "detail": "The class maintains two current/total counter pairs, computes two clamped float ratios, formats each pair as current/total/(percentage), and exposes all underlying values through accessors."
+        },
+        {
+          "family": "exact_tracker_updates",
+          "detail": "R141 PvPTrackerPacketHandler writes fighter names, paired counters/ratios, aggregate values and death state into these exact records through the R12 PvPTrackerPlugin current-fight model."
+        },
+        {
+          "family": "exact_history_copy",
+          "detail": "PvPTrackerPlugin history finalization clones each fighter's name, aggregate, both paired counter sets and boolean death state into new rs/s/q/a/b records before archiving the completed PvPTrackerFight."
+        }
+      ],
+      "note": "PvPTrackerFighterStats is descriptive exact-behavior recovery for each participant's name/counter/ratio/death record inside current and archived PvP Tracker fights. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}

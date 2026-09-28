@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_9D3D080DCFC1237F346E",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_E3847C9971C10D57CE07",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000548",
+      "owner_logical_id": "CLIENT_CLASS_000548",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/C",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LegacyDonationShoppingCartInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Class builds exact title 'Donation Shopping Cart Interface' with checkout, quantity, PayPal/OSRS-GP selection and bond values."
+        },
+        {
+          "family": "exact_widget_root",
+          "detail": "Exact bytecode builds interface root 60200, the same root later rebuilt by accepted DonationShoppingCartInterface rs/n/c/aw."
+        },
+        {
+          "family": "exact_initialization_order",
+          "detail": "rs/n/d invokes C.a() first and later invokes aw.a(); registration helper immediately executes each builder, so aw replaces the same root widget tree later in startup."
+        },
+        {
+          "family": "exact_superseding_handler",
+          "detail": "rs/n/c/aw additionally exposes the registered rs/q/a/a handler path used by rs/q/a/a/b; C has no equivalent external handler registration."
+        }
+      ],
+      "note": "Legacy/superseded is supported by exact same-root construction and deterministic startup order; it is not inferred merely from class naming."
+    }
+  ],
+  "unresolved": []
+}

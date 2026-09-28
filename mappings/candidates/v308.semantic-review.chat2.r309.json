@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_355A96AA9839EF9BF032",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_64FA49EBC7BE22EE9990",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000365",
+      "owner_logical_id": "CLIENT_CLASS_000365",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AnimatedSpriteSequence",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_frame_construction",
+          "detail": "The constructor builds an array of rs/l/F Sprite frames from an arbitrary base name by loading baseName + frameIndex for each frame, or accepts a caller-supplied Sprite[] directly."
+        },
+        {
+          "family": "exact_timed_cycle",
+          "detail": "The class stores a frame interval in milliseconds, advances the current frame when System.currentTimeMillis passes the next-frame deadline, and wraps back to frame 0 at the end of the array."
+        },
+        {
+          "family": "exact_current_frame_draw_wrappers",
+          "detail": "Three public draw wrappers all fetch the current animated frame and delegate to distinct Sprite draw methods, proving the object is a reusable animated sprite sequence rather than a one-off resource holder."
+        },
+        {
+          "family": "exact_glitter_instance",
+          "detail": "Exact v308 initializes the shared singleton with base name 'glitter', 4 frames and a 100 ms interval, providing a concrete live use without constraining the generic class role."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 timed Sprite frame sequencing; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}

@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_F8F8ABA22C4D9A92D585",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_53DBA649CA4B4389CC0B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000031",
+      "owner_logical_id": "CLIENT_CLASS_000031",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/D",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientComponentMoveListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_component_listener_contract",
+          "detail": "rs/D extends java.awt.event.ComponentAdapter and overrides only componentMoved(ComponentEvent); it contains no resize, focus, key, mouse or window callbacks."
+        },
+        {
+          "family": "exact_base_client_installation",
+          "detail": "RSApplet rs/C constructs exactly one rs/D and installs it with addComponentListener on the active client drawing component during input/window listener setup."
+        },
+        {
+          "family": "exact_move_debounce",
+          "detail": "componentMoved compares currentTimeMillis against the last move timestamp, and after more than 100 ms marks the shared client relocation/layout flag and records the new timestamp."
+        },
+        {
+          "family": "exact_lineage_id",
+          "detail": "The canonical lineage generator sorts baseline classes by internal_name; recomputing against the exact v308 JAR places rs/D at deterministic ordinal CLIENT_CLASS_000031 between Client$a 000030 and RSFrame rs/E 000032."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the dedicated debounced ComponentAdapter installed on the client component."
+    }
+  ],
+  "unresolved": []
+}

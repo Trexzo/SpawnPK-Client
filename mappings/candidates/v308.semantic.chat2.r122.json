@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/ac",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemListInterface",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_interface_build",
+          "detail": "The class builds and owns the 36000-series interface rooted at id 36000, including exact labels 'Item List Title', 'Description Line 1', tab selectors, a search input, list background assets, and a scrollable item-entry region."
+        },
+        {
+          "family": "exact_search_ui",
+          "detail": "Surviving literals and resources include 'Search by item', '<img=39> Search for an item', search result text, 'Go back', and 'Search description text', fixing the interface as an item-list/search surface rather than a generic widget builder."
+        },
+        {
+          "family": "exact_inventory_actions",
+          "detail": "The same interface installs item-list actions including Remove 1/5/10/All, Deposit 1/5/10/All, 'Deposit all to bank', and 'Deposit all to inventory', showing that the list can bridge selected items with bank/inventory operations."
+        },
+        {
+          "family": "exact_runtime_controller",
+          "detail": "Its static methods mutate the same constructed 36000-series widgets, tab state, descriptions, search state, list contents, visibility, and layout; ScriptPacket 14 delegates its multi-mode updates directly into those methods."
+        }
+      ],
+      "note": "ItemListInterface is descriptive exact-behavior recovery for the 36000-series item-list/search interface builder/controller. No surviving original source noun was found; confidence is 0.997."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/q/a/a/a/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemListInterfacePacketHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers this exact class as ScriptPacket 14."
+        },
+        {
+          "family": "exact_subsystem_target",
+          "detail": "Its 26-way selector dispatches overwhelmingly into rs/n/c/ac static methods and the same 36000-series RSInterface widgets constructed by ItemListInterface."
+        },
+        {
+          "family": "exact_packet_operations",
+          "detail": "Packet modes reset/open/close the list, select tabs, toggle modes, populate item rows, set item-list title/description text, update search text/results, control list visibility, and mutate the exact list widgets used by the item-list UI."
+        },
+        {
+          "family": "exact_shared_state",
+          "detail": "The handler also updates ItemListInterface-owned arrays and builder nodes used for the five tabs and scroll/list layout, tying its broad mode surface to one coherent item-list interface subsystem rather than unrelated client state."
+        }
+      ],
+      "note": "ItemListInterfacePacketHandler is descriptive exact-behavior recovery for ScriptPacket 14. Its many selector modes are all anchored to the recovered ItemListInterface subsystem; confidence is 0.998."
+    }
+  ],
+  "conflicts": []
+}

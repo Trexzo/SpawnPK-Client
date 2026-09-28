@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/k/b/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelData",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structure",
+          "detail": "The class has exactly two instance fields: int[] model color data and int face count, with fluent setters and a face-count getter."
+        },
+        {
+          "family": "exact_index_contract",
+          "detail": "Its color lookup returns colors[(face * 4) + index], fixing the four-integers-per-face metadata layout."
+        },
+        {
+          "family": "exact_cache_consumer",
+          "detail": "rs/k/b/e stores these values directly as the value type of its LinkedHashMap<Integer, rs/k/b/c> model metadata cache."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "Public 117 HD source preserves class ModelData with the same int[] colors + int faceCount fields, fluent setters and exact colors[(face * 4) + index] accessor."
+        }
+      ],
+      "note": "ModelData is a near one-to-one exact structural/source identity; exact v308 remains the authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/k/b/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelCache",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_buffer_cache_contract",
+          "detail": "The class owns BufferPool, IntBufferCache and two FloatBufferCache instances and exposes the older 117 HD ModelCache get/put vertex, normal and UV data; pooled typed-buffer acquisition; makeRoom balancing; clear; and shutdown behavior."
+        },
+        {
+          "family": "exact_runtime_diagnostics",
+          "detail": "Exact v308 preserves the distinctive 32-bit fallback diagnostic \"defaulting model cache to 512MiB due to non 64-bit client\" plus the buffer-room and physical-memory limit/failure diagnostics associated with the older ModelCache implementation."
+        },
+        {
+          "family": "exact_model_data_cache_contract",
+          "detail": "The same class also extends LinkedHashMap<Integer, rs/k/b/c>, where rs/k/b/c is independently identified as ModelData. This matches the newer public 117 HD ModelCache generation that extends LinkedHashMap<Integer, ModelData>."
+        },
+        {
+          "family": "historical_lineage_merge",
+          "detail": "Public 117 HD history contains both ModelCache forms found together in v308: an older native BufferPool/IntBufferCache/FloatBufferCache manager with the exact 512MiB fallback, and a newer LinkedHashMap<Integer, ModelData> cache. SpawnPK v308 combines those two ModelCache responsibilities into one class."
+        }
+      ],
+      "note": "ModelCache is supported by two complementary public 117 HD generations whose responsibilities are merged in exact v308; this does not claim byte-for-byte source equivalence."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/k/b/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelHasher",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_structure",
+          "detail": "The class owns one model reference, six integer hash fields and a reusable static int[4] hash workspace."
+        },
+        {
+          "family": "exact_hash_contract",
+          "detail": "Its color/cache hash combines the six stored hashes with model override amount, hue, saturation and luminance through Arrays.hashCode; its second hash combines Arrays.hashCode results from model integer arrays."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "Public 117 HD ModelHasher preserves the same model reference, the same six color/transparency/texture hash roles and an Arrays.hashCode-based color/batch hash generation using model overrides and model arrays."
+        },
+        {
+          "family": "local_variant_caveat",
+          "detail": "The exact-v308 setter path is locally simplified relative to the public revision and does not visibly recompute all six stored fields, so the identity is lineage-backed rather than asserted as source-equivalent."
+        }
+      ],
+      "note": "ModelHasher is strongly lineage-corroborated but receives 0.998 confidence because v308 locally simplified the public setter/hash preparation path."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/k/b/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TempModelInfo",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_instance_contract",
+          "detail": "The class has exactly three integer instance fields with three getters and three fluent setters, matching temporary model offset, temporary UV offset and face count."
+        },
+        {
+          "family": "exact_pool_extension",
+          "detail": "v308 adds a 6048-entry preallocated object array plus integer-keyed lookup storage and reset/take helpers around those same three-value instances; the pooling layer does not change the instance data contract."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "Public 117 HD source preserves TempModelInfo with the identical three integer fields and fluent getter/setter API for tempOffset, tempUvOffset and faceCount."
+        },
+        {
+          "family": "renderer_context",
+          "detail": "The surrounding exact-v308 model-cache/batching family is independently identified as 117 HD-derived, providing the same temporary per-model batching context in which TempModelInfo is used upstream."
+        }
+      ],
+      "note": "TempModelInfo matches the public instance contract exactly; exact v308 adds a local preallocated pooling/lookup layer."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ScenePolygonRecord",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_polygon_state",
+          "detail": "The class owns one java.awt.Polygon, separate fill and outline java.awt.Color values, an optional String, and the source tile x/y integers used when the record represents a world-tile polygon."
+        },
+        {
+          "family": "exact_tile_factory",
+          "detail": "Its tile-coordinate factory converts packet/world tile coordinates relative to Client.eh/ei into the client scene coordinate system, asks Client for the corresponding Polygon, stores the original x/y, and can later recompute that Polygon from the same tile."
+        },
+        {
+          "family": "exact_entity_factory",
+          "detail": "A second exact factory accepts rs/a/c entities and obtains their live scene polygon/hull, so the class is broader than a tile-only record and is conservatively named ScenePolygonRecord."
+        },
+        {
+          "family": "exact_renderer_consumption",
+          "detail": "The scene renderer rs/l/b/c consumes these records and passes their Polygon plus fill/outline colors into rs/C.a(Graphics2D, Polygon, Color, Color) for direct scene drawing."
+        }
+      ],
+      "note": "ScenePolygonRecord is descriptive exact-behavior recovery for the polygon/color record rendered into the scene. It supports both entity hulls and world-tile polygons, so the name deliberately avoids a narrower tile-only claim. Confidence is 0.997."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ScenePolygonManager",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_registry_shape",
+          "detail": "The class owns both a Map<String, ScenePolygonRecord> and a List<ScenePolygonRecord>, with add/update/remove helpers for scene polygons and coordinate-keyed tile polygon entries."
+        },
+        {
+          "family": "exact_client_ownership",
+          "detail": "Exact Client initialization constructs one rs/l/e/o instance into Client.aa, making it the live client registry consumed by the scene rendering path."
+        },
+        {
+          "family": "exact_renderer_join",
+          "detail": "rs/l/b/c checks both Client.aa collections, iterates their records, and renders every non-null Polygon with the record's fill and outline colors through the scene Graphics2D context."
+        },
+        {
+          "family": "exact_packet_binding",
+          "detail": "The manager's static handler field is initialized with rs/l/e/p and registered by R115 ScriptPacketDispatcher as exact ScriptPacket ID 12."
+        }
+      ],
+      "note": "ScenePolygonManager is descriptive recovery for the live Client.aa polygon registry consumed directly by scene rendering. The class manages both entity/list records and coordinate-keyed packet polygons; confidence is 0.997."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ScenePolygonPacketHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers ScriptPacket ID 12 from rs/l/e/o.a; exact v308 initializes that field with concrete handler rs/l/e/p."
+        },
+        {
+          "family": "exact_add_protocol",
+          "detail": "Selector 0 reads two RGBA color tuples, tile x/y coordinates and an optional String flag/payload, then adds or replaces the coordinate-keyed ScenePolygonRecord through the live Client.aa ScenePolygonManager."
+        },
+        {
+          "family": "exact_remove_protocol",
+          "detail": "Selector 1 reads tile x/y coordinates and removes the corresponding coordinate-keyed polygon entry from the same ScenePolygonManager."
+        },
+        {
+          "family": "exact_rendered_target",
+          "detail": "The records produced by this handler are part of Client.aa and are rendered by rs/l/b/c as actual java.awt.Polygon geometry with their packet-provided fill/outline colors. The optional String is preserved as packet state but is not assigned a narrower semantic role here."
+        }
+      ],
+      "note": "ScenePolygonPacketHandler is descriptive exact-behavior recovery for ScriptPacket 12. Its whole surface adds/removes tile-coordinate scene polygons in the exact renderer-consumed polygon registry; confidence is 0.998."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/z/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DurationCooldownTimer",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_time_state_role",
+          "detail": "Exact v308 rs/z/a stores exactly two long values: a start timestamp populated from System.currentTimeMillis() and a constructor-supplied duration."
+        },
+        {
+          "family": "exact_timer_behavior",
+          "detail": "Its start method records the current time, active-state compares elapsed milliseconds against duration, and remaining-time returns max-like zero-or-duration-minus-elapsed behavior."
+        },
+        {
+          "family": "exact_manager_construction",
+          "detail": "R250 CooldownManager constructs rs/z/a(duration), starts it immediately, and stores it as the keyed cooldown timer for login and tray-notification throttling."
+        }
+      ],
+      "note": "DurationCooldownTimer is a conservative descriptive recovery for the concrete fixed-duration implementation used exclusively by CooldownManager. It does not claim a verbatim original developer identifier. Confidence 0.998."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/z/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CooldownTimer",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_abstract_contract",
+          "detail": "Exact v308 rs/z/b is abstract and defines the three operations implemented by rs/z/a: start(), active-state boolean, and remaining milliseconds."
+        },
+        {
+          "family": "exact_registry_value_type",
+          "detail": "R250 CooldownManager stores Map<String, rs.z.b> and invokes the active-state and remaining-time operations through this abstract type."
+        },
+        {
+          "family": "exact_concrete_subclass",
+          "detail": "The only exact-v308 subclass/reference family is rs/z/a, the fixed-duration currentTimeMillis-backed implementation used by CooldownManager."
+        }
+      ],
+      "note": "CooldownTimer is a conservative descriptive recovery for the abstract timer contract owned by CooldownManager. It does not claim a verbatim original developer identifier. Confidence 0.997."
+    }
+  ],
+  "conflicts": []
+}

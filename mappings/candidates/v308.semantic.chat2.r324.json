@@ -1,0 +1,289 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcOption2Packet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 72 and only the expected target/payload ints for NPC option 2."
+        },
+        {
+          "family": "exact_option_contract",
+          "detail": "The exact-current outbound action matrix identifies opcode 72 as NPC option 2; the transport slot is the semantic contract and is not narrowed to contextual menu text."
+        },
+        {
+          "family": "exact_context_boundary",
+          "detail": "Exact-current protocol research explicitly warns that NPC/object option slots are transport positions whose displayed gameplay verb can vary by definition/context, so the proposed name stops at the option number."
+        }
+      ],
+      "note": "Exact-v308 option-slot transport name. No contextual verb such as Attack, Talk-to, Open or Search is asserted."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/J",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcOption1Packet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 155 and only the expected target/payload ints for NPC option 1."
+        },
+        {
+          "family": "exact_option_contract",
+          "detail": "The exact-current outbound action matrix identifies opcode 155 as NPC option 1; the transport slot is the semantic contract and is not narrowed to contextual menu text."
+        },
+        {
+          "family": "exact_context_boundary",
+          "detail": "Exact-current protocol research explicitly warns that NPC/object option slots are transport positions whose displayed gameplay verb can vary by definition/context, so the proposed name stops at the option number."
+        }
+      ],
+      "note": "Exact-v308 option-slot transport name. No contextual verb such as Attack, Talk-to, Open or Search is asserted."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/K",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcOption3Packet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 17 and only the expected target/payload ints for NPC option 3."
+        },
+        {
+          "family": "exact_option_contract",
+          "detail": "The exact-current outbound action matrix identifies opcode 17 as NPC option 3; the transport slot is the semantic contract and is not narrowed to contextual menu text."
+        },
+        {
+          "family": "exact_context_boundary",
+          "detail": "Exact-current protocol research explicitly warns that NPC/object option slots are transport positions whose displayed gameplay verb can vary by definition/context, so the proposed name stops at the option number."
+        }
+      ],
+      "note": "Exact-v308 option-slot transport name. No contextual verb such as Attack, Talk-to, Open or Search is asserted."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/L",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcOption4Packet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 21 and only the expected target/payload ints for NPC option 4."
+        },
+        {
+          "family": "exact_option_contract",
+          "detail": "The exact-current outbound action matrix identifies opcode 21 as NPC option 4; the transport slot is the semantic contract and is not narrowed to contextual menu text."
+        },
+        {
+          "family": "exact_context_boundary",
+          "detail": "Exact-current protocol research explicitly warns that NPC/object option slots are transport positions whose displayed gameplay verb can vary by definition/context, so the proposed name stops at the option number."
+        }
+      ],
+      "note": "Exact-v308 option-slot transport name. No contextual verb such as Attack, Talk-to, Open or Search is asserted."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/M",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcOption5Packet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 18 and only the expected target/payload ints for NPC option 5."
+        },
+        {
+          "family": "exact_option_contract",
+          "detail": "The exact-current outbound action matrix identifies opcode 18 as NPC option 5; the transport slot is the semantic contract and is not narrowed to contextual menu text."
+        },
+        {
+          "family": "exact_context_boundary",
+          "detail": "Exact-current protocol research explicitly warns that NPC/object option slots are transport positions whose displayed gameplay verb can vary by definition/context, so the proposed name stops at the option number."
+        }
+      ],
+      "note": "Exact-v308 option-slot transport name. No contextual verb such as Attack, Talk-to, Open or Search is asserted."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/O",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ObjectOption2Packet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 252 and only the expected target/payload ints for object option 2."
+        },
+        {
+          "family": "exact_option_contract",
+          "detail": "The exact-current outbound action matrix identifies opcode 252 as object option 2; the transport slot is the semantic contract and is not narrowed to contextual menu text."
+        },
+        {
+          "family": "exact_context_boundary",
+          "detail": "Exact-current protocol research explicitly warns that NPC/object option slots are transport positions whose displayed gameplay verb can vary by definition/context, so the proposed name stops at the option number."
+        }
+      ],
+      "note": "Exact-v308 option-slot transport name. No contextual verb such as Attack, Talk-to, Open or Search is asserted."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/P",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ObjectOption3Packet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 70 and only the expected target/payload ints for object option 3."
+        },
+        {
+          "family": "exact_option_contract",
+          "detail": "The exact-current outbound action matrix identifies opcode 70 as object option 3; the transport slot is the semantic contract and is not narrowed to contextual menu text."
+        },
+        {
+          "family": "exact_context_boundary",
+          "detail": "Exact-current protocol research explicitly warns that NPC/object option slots are transport positions whose displayed gameplay verb can vary by definition/context, so the proposed name stops at the option number."
+        }
+      ],
+      "note": "Exact-v308 option-slot transport name. No contextual verb such as Attack, Talk-to, Open or Search is asserted."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/Q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ObjectOption4Packet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 234 and only the expected target/payload ints for object option 4."
+        },
+        {
+          "family": "exact_option_contract",
+          "detail": "The exact-current outbound action matrix identifies opcode 234 as object option 4; the transport slot is the semantic contract and is not narrowed to contextual menu text."
+        },
+        {
+          "family": "exact_context_boundary",
+          "detail": "Exact-current protocol research explicitly warns that NPC/object option slots are transport positions whose displayed gameplay verb can vary by definition/context, so the proposed name stops at the option number."
+        }
+      ],
+      "note": "Exact-v308 option-slot transport name. No contextual verb such as Attack, Talk-to, Open or Search is asserted."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/o/a/a/a/R",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ObjectOption5Packet",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 228 and only the expected target/payload ints for object option 5."
+        },
+        {
+          "family": "exact_option_contract",
+          "detail": "The exact-current outbound action matrix identifies opcode 228 as object option 5; the transport slot is the semantic contract and is not narrowed to contextual menu text."
+        },
+        {
+          "family": "exact_context_boundary",
+          "detail": "Exact-current protocol research explicitly warns that NPC/object option slots are transport positions whose displayed gameplay verb can vary by definition/context, so the proposed name stops at the option number."
+        }
+      ],
+      "note": "Exact-v308 option-slot transport name. No contextual verb such as Attack, Talk-to, Open or Search is asserted."
+    }
+  ],
+  "conflicts": []
+}

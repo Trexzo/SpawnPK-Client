@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/d/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InterfaceRelativeLayoutConstraint",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_constraint_shape",
+          "detail": "The value object stores a referenced interface id, x/y offsets, two booleans controlling proportional placement, x/y float multipliers and two integer caps."
+        },
+        {
+          "family": "exact_manager_math",
+          "detail": "InterfaceLayoutManager resolves the referenced entry, optionally multiplies its width/height by the stored float factors, applies the integer offsets and enforces the stored width/height caps before positioning the dependent child."
+        },
+        {
+          "family": "exact_entry_join",
+          "detail": "InterfaceLayoutEntry constructs and owns this object only through its relative-layout configuration method."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 interface layout behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/d/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InterfaceLayoutEntry",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_child_identity",
+          "detail": "Each entry stores one interface/widget id and resolves that id through the global RSInterface table to expose the child's width and height."
+        },
+        {
+          "family": "exact_layout_inputs",
+          "detail": "The entry carries direct x/y coordinates, optional relative-entry dependencies with offsets, optional point-anchor dependencies and an optional InterfaceRelativeLayoutConstraint."
+        },
+        {
+          "family": "exact_fluent_configuration",
+          "detail": "Its mutators configure absolute coordinates, dependency ids and offsets, relative constraints and anchor offsets, then return the same entry for chained interface construction."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 interface layout behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/d/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InterfaceLayoutManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_owner_binding",
+          "detail": "The manager is constructed for one owning RSInterface and maintains an ordered list plus id-indexed map of InterfaceLayoutEntry objects for that interface."
+        },
+        {
+          "family": "exact_position_resolution",
+          "detail": "Its layout pass resolves each child's direct coordinates, relative-entry dependencies, saved point anchors and proportional constraints, then writes final positions back through RSInterface.b(index, childId, x, y)."
+        },
+        {
+          "family": "exact_dropdown_join",
+          "detail": "When a managed child is a DropDownComponent, the manager also lays out the shared DropDownMenuPanel directly beneath it, proving this is live interface layout authority rather than a generic collection."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 interface layout behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}

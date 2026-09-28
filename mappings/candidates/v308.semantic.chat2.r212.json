@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/f/a/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigurableActionPromptOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_mail_coffer_packet_join",
+          "detail": "R118 ScriptPacket 3 (rs/q/a/a/a/l) constructs exactly two instances of this class: '<img=9> Claim' with misc/treasure sprites and '<img=288> View' with misc/mail sprites, then adds/removes the selected instance through the live overlay manager."
+        },
+        {
+          "family": "exact_overlay_geometry_stage",
+          "detail": "The constructor fixes a 40x40 overlay, binds it to exact render stage AFTER_WIDGETS_BEFORE_INTERFACE_HIGH and exact TOP_RIGHT placement."
+        },
+        {
+          "family": "exact_configurable_rendering",
+          "detail": "The class receives normal/hover sprite names and two colors through its constructor, animates opacity between 100 and 200, hit-tests the live mouse over its rectangle, swaps normal/hover sprites, displays the configured hover/action text and invokes an optional draw callback with x, y, opacity and hover state."
+        },
+        {
+          "family": "exact_configurable_action",
+          "detail": "The class accepts an optional execute callback, and its activation hook schedules that callback; the two R118 instances bind the exact ::claimcoffer and ::mail actions through this callback path."
+        }
+      ],
+      "note": "ConfigurableActionPromptOverlay is descriptive exact-behavior recovery for the callback-composed 40x40 action prompt implementation used by ScriptPacket 3. The 'Configurable' qualifier deliberately distinguishes it from R113's separate abstract ActionPromptOverlay family. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/f/a/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ActionPromptExecuteCallback",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_functional_contract",
+          "detail": "The interface has exactly one surviving abstract method named execute() with descriptor ()V."
+        },
+        {
+          "family": "exact_prompt_owner",
+          "detail": "Its only concrete consumer is ConfigurableActionPromptOverlay, which stores one instance and invokes execute() from the prompt activation path."
+        },
+        {
+          "family": "exact_packet_lambdas",
+          "detail": "R118 ScriptPacket 3 supplies this interface with two lambdas whose bodies send the exact commands ::claimcoffer and ::mail for the two action prompts."
+        }
+      ],
+      "note": "ActionPromptExecuteCallback follows the exact surviving execute() functional method and its exclusive use as the activation callback for ConfigurableActionPromptOverlay. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/f/a/b/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ActionPromptDrawCallback",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_functional_contract",
+          "detail": "The interface has exactly one surviving abstract method named draw(int,int,int,boolean) with descriptor (IIIZ)V."
+        },
+        {
+          "family": "exact_prompt_owner",
+          "detail": "Its only concrete consumer is ConfigurableActionPromptOverlay, which invokes draw(x, y, opacity, hovered) after rendering the prompt shell."
+        },
+        {
+          "family": "exact_packet_lambdas",
+          "detail": "R118 ScriptPacket 3 supplies this interface for both prompt instances; each callback draws the same client sprite at the prompt-relative offset, confirming a render-extension callback rather than an action callback."
+        }
+      ],
+      "note": "ActionPromptDrawCallback follows the exact surviving draw(...) functional method and its exclusive use as the render-extension callback for ConfigurableActionPromptOverlay. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

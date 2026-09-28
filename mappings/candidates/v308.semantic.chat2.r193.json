@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/m/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NotesSaveFocusListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_notes_package_authority",
+          "detail": "Earlier reviews recover rs/s/m/a as NotesConfig, rs/s/m/b as NotesPanel and rs/s/m/f as NotesPlugin; rs/s/m/e is the sole remaining Notes-package helper between the reviewed redo action and plugin."
+        },
+        {
+          "family": "exact_panel_attachment",
+          "detail": "NotesPanel constructs exactly one rs/s/m/e instance and attaches it directly to the Notes JTextArea with addFocusListener, fixing the class as a focus listener for the Notes document rather than a generic UI listener."
+        },
+        {
+          "family": "exact_focus_lifecycle",
+          "detail": "rs/s/m/e implements java.awt.event.FocusListener. focusGained is a no-op; focusLost performs the class's only substantive behavior."
+        },
+        {
+          "family": "exact_persistence_write",
+          "detail": "On focusLost the listener reads the complete Notes JTextArea Document with getText(0, getLength()) and writes that exact String through the reviewed NotesConfig notesData setter."
+        },
+        {
+          "family": "exact_failure_literal",
+          "detail": "The only exceptional path catches BadLocationException and logs the exact Notes-specific prefix 'Notes Document Bad Location: ', reinforcing that the listener's whole responsibility is persisting Notes document text when focus is lost."
+        }
+      ],
+      "note": "NotesSaveFocusListener is fixed by direct NotesPanel JTextArea attachment, FocusListener shape, and exclusive focusLost persistence of the complete document through NotesConfig. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

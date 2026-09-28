@@ -1,0 +1,442 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AsyncBufferedImage",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends BufferedImage, tracks deferred completion callbacks, repaints Swing components when image data becomes available, and exposes add-to JButton/JLabel helpers."
+        },
+        {
+          "family": "exact_origin_crosscheck",
+          "detail": "The exact method/field behavior matches the RuneLite AsyncBufferedImage utility contract."
+        }
+      ],
+      "note": "SpawnPK exact-v308 structure independently fixes the asynchronous buffered-image role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CallableExceptionLogger",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact diagnostic is \"Uncaught exception in callable {}\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Generic class implements Callable<V>, wraps one Callable<V>, logs any Throwable, then rethrows it."
+        }
+      ],
+      "note": "Name follows the exact exception-logging wrapper behavior."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorUtil",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Static utilities create <col=…> tags, wrap strings, interpolate Color values, convert RGB/ARGB hex, adjust alpha, validate hex strings and derive colors."
+        },
+        {
+          "family": "exact_constant_role",
+          "detail": "Exact constants include \"<col=\", \">\", \"</col>\" and RGB range 0..255."
+        }
+      ],
+      "note": "Exact utility surface matches the color formatting/conversion role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ExecutorServiceExceptionLogger",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class implements ScheduledExecutorService and delegates every execute/submit/schedule operation after wrapping Runnable/Callable arguments with the adjacent exception logger classes."
+        },
+        {
+          "family": "exact_dependency_role",
+          "detail": "Uses rs/A/r and rs/A/e wrappers for Runnable and Callable exception logging."
+        }
+      ],
+      "note": "Name follows exact executor-service wrapper behavior."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HotkeyListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Abstract KeyListener consumes matching key events from Supplier<Keybind>, tracks pressed state and exposes hotkeyPressed/hotkeyReleased-style hooks plus login-screen enable state."
+        },
+        {
+          "family": "exact_input_role",
+          "detail": "Behavior matches one hotkey lifecycle rather than a generic key listener."
+        }
+      ],
+      "note": "HotkeyListener is fixed by the exact Keybind-driven press/release contract."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ImageUtil",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Static image utility loads resources, flips/scales images, converts to ARGB BufferedImage, offsets alpha/color channels, grays images and rotates via AffineTransformOp."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact warning is \"Failed to load image from class: {}, path: {}\"."
+        }
+      ],
+      "note": "Exact-v308 method surface is a general image utility."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LinkBrowser",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact diagnostics literally say \"LinkBrowser.browse() called with invalid input\", \"LinkBrowser.open() called with invalid input\" and \"LinkBrowser.browse() could not open {}\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Uses xdg-open or Desktop.browse/open and falls back to copying URL/path into the clipboard after a Swing dialog."
+        }
+      ],
+      "note": "Name is literally preserved in exact-v308 diagnostics."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MacOSPopupFactory",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends javax.swing.PopupFactory and overrides getPopup to force the heavyweight-popup flag true."
+        },
+        {
+          "family": "exact_platform_role",
+          "detail": "Behavior is specifically the macOS Java popup workaround used by the recovered utility package."
+        }
+      ],
+      "note": "Role is exact from PopupFactory specialization."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "QuantityFormatter",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Static utilities format long/int quantities with K/M/B/T suffixes, parse formatted stacks, and format numeric values with English NumberFormat/DecimalFormat."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact parse errors include \"does not resemble a properly formatted stack.\" and \"Invalid Suffix:\"."
+        }
+      ],
+      "note": "Exact method surface fixes the quantity-formatting role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ReflectUtil",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Static reflection helper creates private MethodHandles.Lookup values, installs lookup helpers into custom classloaders, tracks Guice-bound classes and invalidates declared-annotation caches reflectively."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact failure text includes \"unable to install lookup helper\"."
+        }
+      ],
+      "note": "Role is exact from reflection and private-lookup behavior."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/q$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ReflectUtilPrivateLookupHelper",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_nested_role",
+          "detail": "Nested static class installs MethodHandles.lookup() into the enclosing ReflectUtil private-lookupable classloader during static initialization."
+        },
+        {
+          "family": "exact_outer_role",
+          "detail": "Its enclosing class is the recovered ReflectUtil and it exists solely to bootstrap a private lookup."
+        }
+      ],
+      "note": "Flattened name preserves the nested helper identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/q$b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ReflectUtilPrivateLookupableClassLoader",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_nested_role",
+          "detail": "Nested interface exposes defineClass-like byte loading, lookup retrieval, and lookup installation methods used by ReflectUtil."
+        },
+        {
+          "family": "exact_outer_role",
+          "detail": "ReflectUtil checks whether target classes use this classloader contract before producing private lookups."
+        }
+      ],
+      "note": "Flattened name preserves the nested classloader contract."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/r",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RunnableExceptionLogger",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact diagnostic is \"Uncaught exception in runnable {}\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class implements Runnable, wraps one Runnable, logs any Throwable and rethrows it."
+        }
+      ],
+      "note": "Name follows exact exception-logging wrapper behavior."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/s",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Text",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Static utilities parse/join CSV, strip/retain game tags, normalize item/player text, escape < > into game tags, humanize enum names and perform fuzzy string matching."
+        },
+        {
+          "family": "exact_dependency_role",
+          "detail": "Uses JaroWinklerDistance and WordUtils over the recovered text-normalization surface."
+        }
+      ],
+      "note": "Exact method surface fixes the general text-utility role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/t",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WildcardMatcher",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Single static matcher converts '*' wildcards into case-insensitive regex while quoting all non-wildcard segments."
+        },
+        {
+          "family": "exact_pattern_role",
+          "detail": "Recovered Pattern is the wildcard-token splitter and final call is String.matches over the generated regex."
+        }
+      ],
+      "note": "Role is exact from the wildcard matching algorithm."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/u",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WinUtil",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_platform_role",
+          "detail": "Static Windows helper restores a Frame, uses JNA Win32 structures/APIs to manipulate foreground state, and targets the native HWND for the AWT component."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Utility is platform-specific and has no instance state."
+        }
+      ],
+      "note": "WinUtil is the conservative platform-helper identity from exact Win32 behavior."
+    }
+  ],
+  "conflicts": []
+}

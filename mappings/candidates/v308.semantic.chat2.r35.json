@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/a/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "StreamPool",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_pooled_type",
+          "detail": "The class owns a static fixed-size array of ten rs/x/e objects, where R29 already establishes rs/x/e as Stream."
+        },
+        {
+          "family": "exact_reuse_behavior",
+          "detail": "a(byte[]) returns the current slot, lazily constructs Stream(byte[]) when empty, otherwise rebinds the existing Stream to the new byte array, then advances the shared slot cursor."
+        },
+        {
+          "family": "exact_decode_lifecycle",
+          "detail": "Model decoding resets the pool before each decode and then requests multiple Stream views over the same model byte array at different offsets, proving the object exists to reuse temporary decoder streams rather than to represent model data itself."
+        }
+      ],
+      "note": "StreamPool is the conservative semantic name for the fixed reusable Stream wrapper pool used by model decoding."
+    }
+  ],
+  "conflicts": []
+}

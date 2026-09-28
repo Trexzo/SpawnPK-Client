@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PvPTrackerOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_tracker_labels",
+          "detail": "The overlay preserves exact fight-stat presentation including 'Correct F3:', 'Magic:', 'Damage:', 'N/A', '0 / 0', '0/0 (0%)' and '[0%]' across its paired fighter panels."
+        },
+        {
+          "family": "exact_tracker_pairing",
+          "detail": "Its state is consumed directly by ScriptPacket 8, which simultaneously writes the exact rs/s/q/d PvPTrackerPlugin model and refreshes the R12 PvPTrackerPanel. The reviewed plugin preserves title 'PvP Tracker' and key 'pvptracker'."
+        },
+        {
+          "family": "exact_two_fighter_surface",
+          "detail": "The renderer draws two mirrored/paired panels from separate name, count, ratio, difference and status fields, matching the tracker panel's exact 'Current Fight' two-fighter model rather than a generic combat HUD."
+        },
+        {
+          "family": "exact_overlay_lifecycle",
+          "detail": "The class extends the client overlay base rs/l/e/f, implements overlay rendering/visibility hooks, and owns the singleton ScriptPacket handler instance used by the exact dispatcher."
+        }
+      ],
+      "note": "PvPTrackerOverlay is fixed by exact tracker labels plus the direct data bridge into the already-reviewed PvPTrackerPlugin/PvPTrackerPanel graph. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PvPTrackerPacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers the singleton rs/l/e/a/c.v as exact ScriptPacket ID 8; rs/l/e/a/c's static initializer constructs rs/l/e/a/d into that field."
+        },
+        {
+          "family": "exact_complete_selector_surface",
+          "detail": "Selectors 1-8 update only PvP-tracker presentation/state: overlay visibility/detail flags, paired fighter names/status, multiple current/total ratio counters and percentages, pairwise differences, colored correction/F3 values and death/status handling."
+        },
+        {
+          "family": "exact_plugin_model_sync",
+          "detail": "The handler repeatedly updates rs/s/q/d.e, the R12 PvPTrackerPlugin singleton, through its current-fight model and PvPTrackerPanel; SwingUtilities.invokeLater is used to refresh the desktop tracker UI after packet-state changes."
+        },
+        {
+          "family": "exact_death_state",
+          "detail": "The handler recognizes exact '@red@' and 'Died' state text, marks the corresponding fighter in the PvP tracker model, and refreshes the tracker plugin/panel rather than writing an unrelated combat subsystem."
+        }
+      ],
+      "note": "PvPTrackerPacketHandler is fixed by exact ScriptPacket 8 and a complete selector surface that keeps the in-game overlay and the already-reviewed PvP Tracker plugin model synchronized. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

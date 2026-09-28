@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InteractiveClientOverlay",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_inheritance",
+          "detail": "The class is an abstract subclass of R111 ClientOverlay and adds exactly one abstract boolean a(int) interaction hook."
+        },
+        {
+          "family": "exact_registry_subset",
+          "detail": "R111 ClientOverlay registration places every subclass of rs/l/e/a into a dedicated interactive-overlay list in addition to the ordinary render registry."
+        },
+        {
+          "family": "exact_client_menu_interception",
+          "detail": "Client menu-building iterates that interactive-overlay list, requires the overlay to be active, calls a(currentMouseOrActionValue), and aborts ordinary menu construction immediately when the overlay returns true."
+        }
+      ],
+      "note": "InteractiveClientOverlay is descriptive exact-behavior recovery for the ClientOverlay subclass that can intercept client menu/input processing. No surviving original source noun is asserted; confidence is 0.998."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/a/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WorldCoordinateOverlay",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_visible_text",
+          "detail": "The HIGH-layer draw path preserves the exact labels 'Coords: @gre@' and 'Region ID: @whi@'."
+        },
+        {
+          "family": "exact_coordinate_math",
+          "detail": "It derives world X/Y from the local player coordinates plus Client map-base offsets, then derives regionX = worldX >> 6, regionY = worldY >> 6 and regionId = regionX * 256 + regionY."
+        },
+        {
+          "family": "exact_render_layer",
+          "detail": "The overlay renders only in the R111 HIGH OverlayLayer and adjusts screen placement around other active overlays/resizable layout state."
+        },
+        {
+          "family": "exact_activation",
+          "detail": "Its visibility predicate is the live client setting flag rs/f/a.ao, so the overlay is conditionally enabled rather than dead diagnostic code."
+        }
+      ],
+      "note": "WorldCoordinateOverlay is descriptive exact-behavior recovery for the live coordinate/region diagnostic overlay. No surviving original source noun was found; confidence is 0.998."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/a/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InterfaceEditorOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_command_activation",
+          "detail": "The live client command parser handles 'edit' by enabling this singleton and optionally resolving a supplied interface child ID."
+        },
+        {
+          "family": "exact_hover_identity",
+          "detail": "Its draw text preserves '@gre@X', '@cya@Y', '@yel@Hovered', 'ID' and 'Parent', while its resolver walks the currently opened interface tree to locate the requested child and parent/index coordinates."
+        },
+        {
+          "family": "exact_edit_behavior",
+          "detail": "While active, keyboard handling for arrows/WASD mutates the selected interface child's X/Y offsets in the live widget arrays and marks the interface for redraw; Tab/escape-style input disables the editor."
+        },
+        {
+          "family": "exact_failure_diagnostics",
+          "detail": "The resolver emits '[ERROR] No opened interface to reference!' and '[ERROR] Could not find child ID ... in interface ...!' when the requested widget cannot be resolved."
+        }
+      ],
+      "note": "InterfaceEditorOverlay is fixed by the exact 'edit' command, live widget coordinate mutation and ID/Parent hover display. The English noun is descriptive but the role is exact; confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

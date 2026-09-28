@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientOverlay",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_registry_role",
+          "detail": "The abstract class owns the live overlay registry: concrete overlay singletons plus ordered lists populated by its static initialization/registration paths."
+        },
+        {
+          "family": "exact_render_contract",
+          "detail": "Its public dispatch method accepts Client plus rs/l/e/f$a, tests the subclass visibility predicate, records active state and invokes the subclass layer-aware render hook."
+        },
+        {
+          "family": "exact_client_render_passes",
+          "detail": "Live client rendering iterates the registered overlay lists and dispatches each instance once with LOW and later with HIGH, proving the objects participate in client overlay passes rather than ordinary scene entities."
+        },
+        {
+          "family": "exact_lifecycle",
+          "detail": "Client reset/logout paths iterate the same registered objects through their cleanup hook, while each overlay can expose interface/callback handlers through the base-owned int-keyed map."
+        }
+      ],
+      "note": "ClientOverlay is descriptive exact-behavior recovery for the abstract client overlay registry/component base. No surviving original source noun is asserted; confidence is 0.998."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/f$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OverlayLayer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_constants",
+          "detail": "The enum preserves exactly two source-level constants: LOW and HIGH."
+        },
+        {
+          "family": "exact_render_order",
+          "detail": "The live client performs separate overlay dispatch passes using LOW before later scene/UI work and HIGH afterward; overlay subclasses frequently gate drawing on one exact enum value."
+        },
+        {
+          "family": "exact_owner_contract",
+          "detail": "The enum is used exclusively as the second argument to ClientOverlay render hooks and has no unrelated state or behavior."
+        }
+      ],
+      "note": "OverlayLayer is fixed by the exact LOW/HIGH enum and its exclusive role selecting ClientOverlay render passes. The English noun is descriptive; confidence is 0.999 because the constants and call contract survive exactly."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/q/a/a/a/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InterfaceScrollPacketHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers this exact class as ScriptPacket 5."
+        },
+        {
+          "family": "exact_widget_target",
+          "detail": "The handler reads selector, interface id and value, indexes the global R56 RSInterface table, and mutates only two integer fields on that exact widget."
+        },
+        {
+          "family": "exact_scroll_consumers",
+          "detail": "Renderer/input code clamps RSInterface.V between 0 and RSInterface.aH - RSInterface.aR, uses V as the child-render vertical offset, and draws/updates the scrollbar when aH exceeds aR; this independently fixes V as scroll position and aH as scroll maximum/content height."
+        },
+        {
+          "family": "exact_mode_contract",
+          "detail": "Selector 1 writes RSInterface.V; selector 2 writes RSInterface.aH. No other state is touched."
+        }
+      ],
+      "note": "InterfaceScrollPacketHandler is descriptive exact-behavior recovery for ScriptPacket 5. The packet's complete target surface is proven as RSInterface scroll position/max state; confidence is 0.998."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/q/a/a/a/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InventorySlotOverlayPacketHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers this exact class as ScriptPacket 37."
+        },
+        {
+          "family": "exact_slot_text_state",
+          "detail": "The handler targets one R56 RSInterface and clears, sets one entry, fills, allocates, or removes its String[] ay array; RSInterface itself allocates ay to exactly the inventory-item array az length."
+        },
+        {
+          "family": "exact_render_consumer",
+          "detail": "Inventory rendering reads ay[slot] for the current inventory slot and, when non-null, draws that String directly over the rendered item slot."
+        },
+        {
+          "family": "exact_layout_control",
+          "detail": "The packet's selector 4 writes the same RSInterface ac/ap pair decoded and used by inventory-style widget layout, so the same handler also controls the slot-grid spacing/layout paired with the per-slot overlay text."
+        }
+      ],
+      "note": "InventorySlotOverlayPacketHandler is descriptive exact-behavior recovery for ScriptPacket 37. It controls per-slot inventory overlay Strings and their paired slot-grid layout state; confidence is 0.998."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/q/a/a/a/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemNumericOverlayPacketHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers this exact class as ScriptPacket 39."
+        },
+        {
+          "family": "exact_map_contract",
+          "detail": "The handler owns the sole static Trove int-to-int map. It reads item id plus integer value; value -2 removes the item key, otherwise the value is inserted/replaced."
+        },
+        {
+          "family": "exact_inventory_consumer",
+          "detail": "The inventory renderer derives itemId as RSInterface.az[slot] - 1, checks this exact map for that item id, and draws the mapped integer as white text over the item slot."
+        },
+        {
+          "family": "exact_unknown_marker",
+          "detail": "A mapped value of -1 is rendered literally as '?', while other values are rendered through String.valueOf(int), fixing the payload as a numeric per-item overlay without asserting what the number semantically represents."
+        }
+      ],
+      "note": "ItemNumericOverlayPacketHandler is deliberately narrower than guesses such as charges/value/count: exact v308 proves only a per-item numeric overlay map. Confidence is 0.998."
+    }
+  ],
+  "conflicts": []
+}

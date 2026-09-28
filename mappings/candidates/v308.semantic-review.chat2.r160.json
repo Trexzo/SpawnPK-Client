@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_27E3EAA8C4E422D2C546",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_5FBDE2345D12EA83C95C",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000493",
+      "owner_logical_id": "CLIENT_CLASS_000493",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OverlayPosition",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_constants",
+          "detail": "rs/l/f/l is a ten-value enum whose exact constants survive as DETACHED, DYNAMIC, TOP_LEFT, TOP_CENTER, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT, ABOVE_CHATBOX_RIGHT, CANVAS_TOP_RIGHT and TOOLTIP."
+        },
+        {
+          "family": "exact_overlay_state",
+          "detail": "rs/l/f/g stores rs/l/f/l as the overlay's configured/current position state, exposes getters/setters for that state, and defaults new overlays to TOP_LEFT."
+        },
+        {
+          "family": "exact_anchor_geometry",
+          "detail": "rs/l/f/c maps the fixed position values to dedicated screen rectangles, while rs/l/f/m computes the corresponding anchor point and layout geometry for each position."
+        },
+        {
+          "family": "exact_renderer_contract",
+          "detail": "rs/l/f/i resolves each overlay's effective rs/l/f/l value before rendering, treats DETACHED, DYNAMIC and TOOLTIP as special placement modes, and uses fixed-position rectangles/anchor points for the remaining positions."
+        },
+        {
+          "family": "exact_persistence_binding",
+          "detail": "The overlay manager reads/writes this exact enum through the overlay settings/configuration path, including runtime position overrides, showing it is the persisted overlay-position contract rather than a transient draw hint."
+        }
+      ],
+      "note": "OverlayPosition is fixed by the exact placement constants and exclusive use as the overlay system's configured/effective position enum across geometry, rendering and persistence. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}

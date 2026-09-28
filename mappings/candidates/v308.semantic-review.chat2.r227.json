@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 7,
+  "review_id": "SEMREVIEW_CBE811E10F4C015AAFE0",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_10CD5F6618B71F7C21BA",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001085",
+      "owner_logical_id": "CLIENT_CLASS_001085",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/s",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PanelComponent",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_layout_state",
+          "detail": "Exact v308 implements LayoutableRenderableEntity and owns Rectangle bounds, preferred Point/Dimension, background Color, List of layoutable children, ComponentOrientation, wrap flag, border Rectangle, gap Point and child Dimension cache."
+        },
+        {
+          "family": "exact_default_values",
+          "detail": "The constructor preserves preferred width 129, vertical orientation, four-pixel borders, zero gap and ComponentConstants background color."
+        },
+        {
+          "family": "exact_render_flow",
+          "detail": "Render returns null for no children, paints BackgroundComponent, propagates preferred sizes/locations, lays out/wraps children by orientation, removes the terminal gap and caches child/bounds dimensions."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 6e74752caa80fe9cb96cd9b37207e171fa525f07 PanelComponent has the same state defaults and render/layout algorithm."
+        }
+      ],
+      "note": "PanelComponent is recovered from an exact field/default/render algorithm source match; confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_27A85DDD6F7662A7FBB3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001037",
+      "owner_logical_id": "CLIENT_CLASS_001037",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BackgroundComponent",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_renderable_shape",
+          "detail": "Exact v308 implements rs/ui/components/w, stores Color background, Rectangle bounds and fill boolean, and renders fill plus darker/lighter two-line borders before returning the rectangle Dimension."
+        },
+        {
+          "family": "exact_constants_and_math",
+          "detail": "The bytecode preserves BORDER_OFFSET=2 and color factors 0.8f, 1.2f and 1.4f exactly, including alpha clamping to 255."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 6e74752caa80fe9cb96cd9b37207e171fa525f07 contains BackgroundComponent with the same fields, constructors, setters, constants and render algorithm."
+        }
+      ],
+      "note": "BackgroundComponent is an exact upstream source-name recovery at confidence 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_6796D09667C76E385C48",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001067",
+      "owner_logical_id": "CLIENT_CLASS_001067",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ComponentOrientation",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "Exact v308 preserves the two enum constant strings HORIZONTAL and VERTICAL."
+        },
+        {
+          "family": "exact_panel_use",
+          "detail": "The exact panel component switches only on these two values to lay out children by X or Y axis."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 6e74752caa80fe9cb96cd9b37207e171fa525f07 ComponentOrientation is exactly the two-value HORIZONTAL/VERTICAL enum."
+        }
+      ],
+      "note": "ComponentOrientation is exact surviving enum/source recovery; confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_83578B7AABC263D82EC2",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001066",
+      "owner_logical_id": "CLIENT_CLASS_001066",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ComponentConstants",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_constant_values",
+          "detail": "Exact v308 exposes STANDARD_BORDER-equivalent 4, STANDARD_WIDTH-equivalent 129, and initializes its only Color to new Color(70,61,50,156)."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 6e74752caa80fe9cb96cd9b37207e171fa525f07 ComponentConstants contains exactly STANDARD_BORDER=4, STANDARD_WIDTH=129 and STANDARD_BACKGROUND_COLOR=new Color(70,61,50,156)."
+        }
+      ],
+      "note": "ComponentConstants is fixed by an exact constant/value source match; confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_ACBCDD812C7A51136D25",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001092",
+      "owner_logical_id": "CLIENT_CLASS_001092",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/x",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TextComponent",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_text_state",
+          "detail": "Exact v308 implements RenderableEntity and stores the <col=([0-9a-fA-F]{2,6})> Pattern, String text, Point position, Color defaulting WHITE, outline boolean and optional Font."
+        },
+        {
+          "family": "exact_render_algorithm",
+          "detail": "Render temporarily swaps Font, walks embedded color tags, measures FontMetrics, draws black outline or one-pixel shadow then colored text, restores Font and returns rendered width/height."
+        },
+        {
+          "family": "historical_upstream_source_match",
+          "detail": "RuneLite upstream immediately before the 2025 TextComponent position-inline change (67496933120316f33bfc480f1a1c67c897cb82b9) has the exact Point-position field and identical color-tag/renderText algorithm preserved by v308."
+        }
+      ],
+      "note": "TextComponent is exact historical RuneLite source-name recovery at confidence 0.999; the chosen upstream snapshot predates a later Point-field inlining change."
+    },
+    {
+      "proposal_id": "SEMPROP_DD49EB10B66CC1EA72F6",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001083",
+      "owner_logical_id": "CLIENT_CLASS_001083",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LayoutableRenderableEntity",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_shape",
+          "detail": "Exact v308 is an interface extending rs/ui/components/w and adds precisely Rectangle getBounds-equivalent, setPreferredLocation(Point)-equivalent and setPreferredSize(Dimension)-equivalent methods."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 6e74752caa80fe9cb96cd9b37207e171fa525f07 LayoutableRenderableEntity extends RenderableEntity with exactly Rectangle getBounds(), setPreferredLocation(Point) and setPreferredSize(Dimension)."
+        }
+      ],
+      "note": "LayoutableRenderableEntity is an exact upstream interface source-name recovery at confidence 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_EC8B794BC778E3D83EC1",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001091",
+      "owner_logical_id": "CLIENT_CLASS_001091",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/components/w",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RenderableEntity",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_shape",
+          "detail": "Exact v308 is a one-method interface: Dimension render-equivalent(Graphics2D), with no other state or methods."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 6e74752caa80fe9cb96cd9b37207e171fa525f07 RenderableEntity is exactly a one-method interface Dimension render(Graphics2D graphics)."
+        }
+      ],
+      "note": "RenderableEntity is an exact upstream interface source-name recovery at confidence 0.999."
+    }
+  ],
+  "unresolved": []
+}

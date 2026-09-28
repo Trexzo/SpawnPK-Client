@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/J",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientSidebarPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_launcher_placement",
+          "detail": "Launcher constructs rs/gui/J and adds it beside the centered rs/Client canvas in the main Swing container; when the side-panel setting is disabled, Launcher calls setVisible(false) on this exact component and uses the exact menu text 'Hide/show side panel'."
+        },
+        {
+          "family": "exact_tab_container",
+          "detail": "The class extends JPanel, owns one JTabbedPane, and directly installs the exact live tabs 'Loadouts', 'PvP Tracker' and 'GPU (Beta)', plus 'Development' when developer tools are enabled or 'Item Search' otherwise."
+        },
+        {
+          "family": "exact_reviewed_children",
+          "detail": "Its live tab children include the already-reviewed LoadoutFolderPanel plus the exact rs/gui/c/a PvP tracker panel and rs/gui/a/a GPU panel, fixing a shared client-sidebar container rather than a feature-specific page."
+        },
+        {
+          "family": "exact_sidebar_accessors",
+          "detail": "The component exposes its Loadouts panel, PvP tracker panel, JTabbedPane, GPU panel and optional developer panel through dedicated accessors, matching its role as the parent sidebar surface."
+        }
+      ],
+      "note": "ClientSidebarPanel is fixed by exact Launcher placement/visibility behavior and the live Loadouts/PvP Tracker/GPU/Development-or-Item Search tab container. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/c/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PvPTrackerSidebarPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_tab_title",
+          "detail": "ClientSidebarPanel inserts this exact JPanel under the literal tab title 'PvP Tracker'."
+        },
+        {
+          "family": "exact_tracker_guidance",
+          "detail": "The panel preserves the exact instruction 'Type ::pvptracker to view overlay in-game' and the heading 'Most Recent 1v1 Fight'."
+        },
+        {
+          "family": "exact_fight_metrics",
+          "detail": "Its paired fighter presentation includes exact tracker metrics such as 'Correct overheads:' and 'Spell casts:', death handling, fighter icons and mirrored recent-fight rows, independently matching the reviewed PvP Tracker subsystem."
+        },
+        {
+          "family": "exact_swing_update_path",
+          "detail": "Two public update methods enqueue Swing EventQueue runnables rs/gui/c/b and rs/gui/c/c, which update the two mirrored fighter label sets including death state and the packet-provided tracker metric strings."
+        },
+        {
+          "family": "exact_distinction_from_plugin_panel",
+          "detail": "This class is the client sidebar tab, distinct from R12 rs/s/q/b PvPTrackerPanel, whose exact content is 'Current Fight', fight-history filtering and RuneLite-style plugin navigation."
+        }
+      ],
+      "note": "PvPTrackerSidebarPanel names the exact client-sidebar PvP Tracker surface and deliberately distinguishes it from the already-reviewed plugin PvPTrackerPanel. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

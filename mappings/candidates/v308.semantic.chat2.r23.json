@@ -1,0 +1,280 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FileDownloader",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Abstract class owns URL + destination File, streams bytes through BufferedInputStream/FileOutputStream, tracks content length/bytes/time and invokes one abstract progress callback while downloading."
+        },
+        {
+          "family": "exact_io_role",
+          "detail": "The concrete operation deletes an existing destination, downloads to disk in 16 KiB chunks, periodically flushes, and returns the completed File."
+        }
+      ],
+      "note": "FileDownloader describes the exact generic download primitive."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientProgressFileDownloader",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Subclass of FileDownloader adds Client + display label and implements the progress callback by computing percentage and kb/s or mb/s throughput."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Progress text includes '@yel@Current progress - ' and formatted transfer-rate output, then calls the Client loading/progress UI."
+        }
+      ],
+      "note": "Name distinguishes this progress-reporting client-aware wrapper from the generic downloader."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AssetUpdateError",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_enum_role",
+          "detail": "Two enum values contain the complete user-facing version-check failure and game-asset download failure messages."
+        },
+        {
+          "family": "exact_dependency_role",
+          "detail": "AssetUpdater records these enum messages when remote version lookup or concrete asset download fails."
+        }
+      ],
+      "note": "Enum is the error vocabulary for the updater subsystem."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AssetUpdateManager",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Coordinator constructs CacheUpdater, SpriteUpdater and ConfigUpdater, injects the Client, compares local/remote versions, invokes updates and prints updater error lists."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include 'Please wait, checking assets..', 'Updating outdated game asset:', and per-updater error messages for cache, sprite and configuration updates."
+        }
+      ],
+      "note": "Manager name follows exact coordination/version-check behavior."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AssetUpdater",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Abstract base stores updater display name, Client and errors; requires update(), AssetVersion accessor and capability flag; implements version parsing and ZIP extraction helpers."
+        },
+        {
+          "family": "exact_dependency_role",
+          "detail": "AssetUpdateManager treats all concrete Cache/Client/Config/Sprite updaters through this common type."
+        }
+      ],
+      "note": "AssetUpdater is the shared versioned-updater abstraction."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AssetVersion",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Stores local version-file path plus a version key, reads remote versions.txt and local versions.dat, rewrites one key/value, and exposes remote/local numeric versions."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Connection failure UI explicitly reports inability to connect to the SpawnPK server while retrieving version state."
+        }
+      ],
+      "note": "Value/service object is specifically the local/remote asset version tracker."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CacheUpdater",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Base display name is 'Cache'; uses key cache_version, archive cache.zip and progress label 'Downloading main game assets..'."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Downloads and extracts the main cache while deliberately preserving sprite/config subtrees handled by their own updaters."
+        }
+      ],
+      "note": "Role is exact from asset name, version key and archive behavior."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientUpdater",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Downloads /assets/client.jar with progress label 'Downloading client..' and tracks client_version."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Concrete AssetUpdater deletes/recreates the client destination and verifies the downloaded client.jar exists."
+        }
+      ],
+      "note": "Role is exact from target artifact and version key."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigUpdater",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Base display name is 'Configs'; uses config_version, archive configs.zip and progress label 'Downloading game configs..'."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Concrete AssetUpdater downloads/extracts the configs archive into the configured cache configs directory."
+        }
+      ],
+      "note": "Role is exact from asset name/archive/version key."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpriteUpdater",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Base display name is 'Sprites'; uses sprite_version, archive sprites.zip and progress label 'Downloading sprites..'."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Concrete AssetUpdater downloads/extracts the sprites archive into the configured cache sprites directory."
+        }
+      ],
+      "note": "Role is exact from asset name/archive/version key."
+    }
+  ],
+  "conflicts": []
+}

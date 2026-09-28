@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_6F00226592F2C68FD202",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_1B31F0960C258DB81179",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000781",
+      "owner_logical_id": "CLIENT_CLASS_000781",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/r/J",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CpuParticlePool",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_cpu_capacity",
+          "detail": "rs/r/J owns a 100,000-particle live map/recycle-id list and preserves the exact diagnostic '[CPU] Reached max capacity of particle pool!' when allocation reaches that bound."
+        },
+        {
+          "family": "exact_r50_particle_allocation",
+          "detail": "Its allocator accepts the R50 ParticleDefinition plus four spawn/state integers, creates an R50 Particle when no recycled instance exists, or resets and reinitializes a recycled Particle with the new definition/state."
+        },
+        {
+          "family": "exact_recycle_contract",
+          "detail": "Particle removal decrements the live count and either records the particle id in the reusable-id list or evicts the backing map entry when the recycle pool itself reaches 100,000."
+        },
+        {
+          "family": "exact_model_spawn_consumer",
+          "detail": "R30 Model calls this allocator directly while emitting model/world particles, fixing the pool as the CPU Particle allocation authority rather than the separate R98 GPU particle pool."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 R50 Particle allocation/recycling behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_DEE9AB34822FD79163F6",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000782",
+      "owner_logical_id": "CLIENT_CLASS_000782",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/r/K",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CpuParticleRenderer",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_per_definition_instances",
+          "detail": "Client allocates one rs/r/K instance for every R50 ParticleDefinition and stores them in its particle-renderer array; each instance owns that definition plus active/removal lists of R50 Particle objects."
+        },
+        {
+          "family": "exact_tick_recycle",
+          "detail": "The render/update pass ticks each Particle, sends expired particles back to CpuParticlePool, queues them for removal, and removes them from the active list after traversal."
+        },
+        {
+          "family": "exact_software_rasterization",
+          "detail": "When GPU mode is not active, the class projects each live particle into screen/depth coordinates and alpha-blends its color directly into the Client rs/l/C pixel buffer while checking the scene depth buffer."
+        },
+        {
+          "family": "exact_gpu_boundary",
+          "detail": "When the GPU path is active the class still advances particle lifecycle but skips its software rasterization body, distinguishing this CPU renderer from R98's GpuParticleInstance/Pool/Batch subsystem."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 per-definition CPU Particle update/software-render behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}

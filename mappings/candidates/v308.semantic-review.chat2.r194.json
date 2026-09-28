@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_CB1006D489AE13ABBE22",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_1F7FB002684053D5BAC3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000965",
+      "owner_logical_id": "CLIENT_CLASS_000965",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/t/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TradingPostListing",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_live_packet_model",
+          "detail": "Reviewed TradingPostPacketHandler (ScriptPacket 30) constructs rs/s/t/c for live account listings, populates item id, sold/amount values, price, currency and item name, then passes the record directly into reviewed TradingPostListingsPanel."
+        },
+        {
+          "family": "exact_search_history_model",
+          "detail": "Reviewed TradingPostSearchPanel constructs the same rs/s/t/c type from exact sale-history JSON keys id, item_id, time, item_name, seller, buyer, currency, price and amount, then renders those records as TradingPostSearchResultPanel rows."
+        },
+        {
+          "family": "exact_listing_panel_consumer",
+          "detail": "Reviewed TradingPostListingPanel accepts rs/s/t/c and renders item name/image, sold-versus-amount state, currency icon, 'Price each:' and 'Received:' values, using the record's amount/price/currency fields and total-value product."
+        },
+        {
+          "family": "exact_shared_item_identity",
+          "detail": "The record resolves a fallback item name from the exact item definition using its item-id field, and both account-listing and search-history presentation use that same item id to obtain the TradingPostPlugin image."
+        },
+        {
+          "family": "exact_value_object_shape",
+          "detail": "rs/s/t/c contains only listing data with getters/setters plus one total-value calculation; it has no UI, network, plugin lifecycle or unrelated gameplay responsibility."
+        }
+      ],
+      "note": "TradingPostListing is fixed by two independent producers—ScriptPacket 30 live listings and TradingPostSearchPanel sale-history JSON—and by the reviewed listing/search-result consumers. The model deliberately spans both active account listings and historical search results. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}

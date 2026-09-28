@@ -1,0 +1,324 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 12,
+  "review_id": "SEMREVIEW_402B4C2AA42205916457",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_178B95A6670D55BE583B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000832",
+      "owner_logical_id": "CLIENT_CLASS_000832",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WorldPoint",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"WorldPoint(x=…, y=…, plane=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Immutable coordinate value supports x/y/plane transforms and local/world coordinate conversions."
+        }
+      ],
+      "note": "Name is directly preserved in exact-v308 bytecode."
+    },
+    {
+      "proposal_id": "SEMPROP_1F80E5917082D1474E22",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001025",
+      "owner_logical_id": "CLIENT_CLASS_001025",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/a/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "StatusInfoBox",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"StatusInfoBox(EMPTY=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends the InfoBox base and represents status-text/icon presentation."
+        }
+      ],
+      "note": "Name is directly preserved in exact-v308 bytecode."
+    },
+    {
+      "proposal_id": "SEMPROP_36637A543871801A1D8E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000907",
+      "owner_logical_id": "CLIENT_CLASS_000907",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/f/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorTileMarker",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"ColorTileMarker(worldPoint=…, color=…, label=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Value object stores WorldPoint, Color and optional label for the ground-marker plugin."
+        }
+      ],
+      "note": "Name is directly preserved in exact-v308 bytecode."
+    },
+    {
+      "proposal_id": "SEMPROP_38F6DB481C46FC695CD5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000003",
+      "owner_logical_id": "CLIENT_CLASS_000003",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/A/a$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AssetIconItemKey",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"AssetIconManager.ItemKey(itemId=…, itemQuantity=…, size=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Value object stores exactly item id, quantity and size and is used as AssetIconManager cache key."
+        }
+      ],
+      "note": "Flattened semantic name preserves exact nested identity."
+    },
+    {
+      "proposal_id": "SEMPROP_5D197FF4C81E1E654FFB",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000891",
+      "owner_logical_id": "CLIENT_CLASS_000891",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/c/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DevToolsWidgetOverlay",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_inner_identity",
+          "detail": "Nested value type self-identifies as \"DevToolsWidgetOverlay.WidgetDisplay(...)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class is an overlay implementation driven by DeveloperToolsConfig and builds a queue of widget display records."
+        }
+      ],
+      "note": "Outer overlay name is fixed by its nested self-identifying type and developer-tools role."
+    },
+    {
+      "proposal_id": "SEMPROP_5E4E2C4B75F10C7A82A1",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000530",
+      "owner_logical_id": "CLIENT_CLASS_000530",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/a/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DropDownOption",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"DropDownOption(text=…, tooltip=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Value object stores exactly text and tooltip strings with equality/hash accessors."
+        }
+      ],
+      "note": "Name is directly preserved in exact-v308 bytecode."
+    },
+    {
+      "proposal_id": "SEMPROP_799809C44D22579BD584",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000002",
+      "owner_logical_id": "CLIENT_CLASS_000002",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/A/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AssetIconManager",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_inner_identity",
+          "detail": "Nested keys self-identify as \"AssetIconManager.ItemKey(...)\" and \"AssetIconManager.SpriteKey(...)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Outer class owns two expiring caches keyed by those item/sprite keys and returns rendered icon/image objects."
+        }
+      ],
+      "note": "Outer manager name is fixed by its exact nested-class identities and cache behavior."
+    },
+    {
+      "proposal_id": "SEMPROP_7D88C11918C1B83D590A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001103",
+      "owner_logical_id": "CLIENT_CLASS_001103",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/l$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NavigationButtonBuilder",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString begins \"NavigationButton.NavigationButtonBuilder(icon=…, tab=…, tooltip=…, selected=…, …)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Builder methods configure icon/tab/tooltip/callback/panel/priority/popup state and construct the already reviewed NavigationButton."
+        }
+      ],
+      "note": "Flattened semantic name preserves exact nested identity."
+    },
+    {
+      "proposal_id": "SEMPROP_88ADAA200AFDF5B93BE7",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000004",
+      "owner_logical_id": "CLIENT_CLASS_000004",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/A/a$b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AssetIconSpriteKey",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"AssetIconManager.SpriteKey(directory=…, size=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Value object stores sprite directory and size and is used as AssetIconManager cache key."
+        }
+      ],
+      "note": "Flattened semantic name preserves exact nested identity."
+    },
+    {
+      "proposal_id": "SEMPROP_92FBA1EBA6A9AF4D7953",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000892",
+      "owner_logical_id": "CLIENT_CLASS_000892",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/c/e$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DevToolsWidgetDisplay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"DevToolsWidgetOverlay.WidgetDisplay(text=…, x=…, y=…, type=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Value object stores display text, x/y coordinates and widget-display type enum."
+        }
+      ],
+      "note": "Flattened semantic name preserves exact nested identity."
+    },
+    {
+      "proposal_id": "SEMPROP_98628E8A5B4EE06B8B23",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001018",
+      "owner_logical_id": "CLIENT_CLASS_001018",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CounterInfoBox",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"CounterInfoBox(count=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends the InfoBox base and adds mutable integer count presentation."
+        }
+      ],
+      "note": "Name is directly preserved in exact-v308 bytecode."
+    },
+    {
+      "proposal_id": "SEMPROP_A542C4D21CEE7A35BDBB",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000912",
+      "owner_logical_id": "CLIENT_CLASS_000912",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/f/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GroundMarkerPoint",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"GroundMarkerPoint(regionId=…, regionX=…, regionY=…, z=…, color=…, label=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Value object stores region coordinates, plane, color and optional label used by ground-marker persistence."
+        }
+      ],
+      "note": "Name is directly preserved in exact-v308 bytecode."
+    }
+  ],
+  "unresolved": []
+}

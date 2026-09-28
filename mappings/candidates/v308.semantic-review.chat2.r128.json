@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_C9EEEC5E0D22C36FFC69",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_47E473E0FD05961A7DCC",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000628",
+      "owner_logical_id": "CLIENT_CLASS_000628",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/ax",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DonationShoppingCartParticleOverlayPacketHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers ScriptPacket ID 36 from rs/n/c/aw.d; exact v308 initializes that field with concrete handler rs/n/c/ax."
+        },
+        {
+          "family": "exact_overlay_target",
+          "detail": "Every handler branch mutates only rs/n/c/ay static overlay state: selector 0 resets j/k, selector 1 writes one clamped 0..457 progress value into j or k, and selector 2 replaces one entry in the rs/n/c/ay.l particle-style array with null or an rs/n/c/ay$a enum value."
+        },
+        {
+          "family": "exact_cart_ownership",
+          "detail": "The exact Donation Shopping Cart builder rs/n/c/aw constructs the sole rs/n/c/ay instance, stores it as its private static cj field, registers it with the live overlay manager, and binds that overlay to cart widget 60065."
+        },
+        {
+          "family": "exact_whole_class_boundary",
+          "detail": "No selector mutates any non-cart or non-rs/n/c/ay state. The packet protocol is therefore bounded to the Donation Shopping Cart particle overlay even though j/k are deliberately left semantically unnamed beyond packet-controlled progress values."
+        }
+      ],
+      "note": "DonationShoppingCartParticleOverlayPacketHandler is descriptive exact-behavior recovery for ScriptPacket 36. Exact v308 proves the handler controls only the cart-owned rs/n/c/ay particle overlay; confidence is 0.998."
+    },
+    {
+      "proposal_id": "SEMPROP_A5AA6F148D67D290F58F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000629",
+      "owner_logical_id": "CLIENT_CLASS_000629",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/ay",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DonationShoppingCartParticleOverlay",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_cart_construction",
+          "detail": "rs/n/c/aw, the exact interface builder with title '@or1@Donation Shopping Cart', constructs rs/n/c/ay once into private static field cj during the same interface initialization."
+        },
+        {
+          "family": "exact_widget_binding",
+          "detail": "The same rs/n/c/aw builder registers that exact cj instance with the live overlay manager and binds it to interface widget 60065 inside the Donation Shopping Cart widget tree."
+        },
+        {
+          "family": "exact_particle_rendering",
+          "detail": "rs/n/c/ay extends the client overlay base, emits rs/l/f/a/f/a particle instances through the overlay particle manager, and drives their position/count/color behavior from rs/n/c/ay$a presets while rendering cart-bound progress/state."
+        },
+        {
+          "family": "exact_cart_widget_state",
+          "detail": "The overlay reads cart widgets 60249 and 60251 and draws its packet-controlled j/k progress values only in that cart interface context. No second interface owner constructs or registers the overlay."
+        }
+      ],
+      "note": "DonationShoppingCartParticleOverlay is a descriptive name for the cart-owned overlay bound to widget 60065 and responsible for exact particle/progress presentation. No original source identifier is claimed; confidence is 0.998."
+    },
+    {
+      "proposal_id": "SEMPROP_B7E5DC06FFECC559EB22",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000630",
+      "owner_logical_id": "CLIENT_CLASS_000630",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/ay$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DonationShoppingCartParticleStyle",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "The enum preserves exact constants GOLD_SLOW and PURPLE_EXOTIC."
+        },
+        {
+          "family": "exact_overlay_consumption",
+          "detail": "DonationShoppingCartParticleOverlay stores rs/n/c/ay$a values in its three-slot style array and reads each enum's five integer parameters directly when emitting overlay particle bursts."
+        },
+        {
+          "family": "exact_particle_parameters",
+          "detail": "The enum payload includes fixed position/size-count style parameters plus packed color values; GOLD_SLOW uses gold color 16774912 while PURPLE_EXOTIC uses magenta/purple values 16711935 and 9765119."
+        },
+        {
+          "family": "exact_cart_scope",
+          "detail": "Exact v308 usage of rs/n/c/ay$a in this subsystem is through the cart-owned rs/n/c/ay overlay and ScriptPacket 36 updates to that overlay's style slots."
+        }
+      ],
+      "note": "DonationShoppingCartParticleStyle is descriptive recovery for the exact GOLD_SLOW/PURPLE_EXOTIC particle-preset enum consumed by the cart particle overlay. Confidence is 0.998."
+    }
+  ],
+  "unresolved": []
+}

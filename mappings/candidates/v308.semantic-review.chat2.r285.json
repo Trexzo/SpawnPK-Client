@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_55FF3724E2430093649C",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_2D48E08E557CBFF5D04F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000558",
+      "owner_logical_id": "CLIENT_CLASS_000558",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/L",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EventActivityViewerRefreshTask",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scheduler_binding",
+          "detail": "EventActivityViewerInterface registers this concrete rs/n/b/a/a task against interface 30072 with a 500 ms interval."
+        },
+        {
+          "family": "exact_refresh_role",
+          "detail": "Each run iterates the EventActivityViewerInterface activity-model list and rewrites the corresponding interface text rows starting at widget 30333."
+        },
+        {
+          "family": "exact_parent_join",
+          "detail": "The task captures only the owning EventActivityViewerInterface instance and performs no unrelated work."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 event UI behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}

@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/k/o$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ChunkMapper",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_contract",
+          "detail": "The nested rs/k/o$a type is a public interface with exactly one method int a(int,int,int), matching the three-coordinate skybox instance-template mapping contract."
+        },
+        {
+          "family": "exact_skybox_consumer",
+          "detail": "R91 Skybox accepts this interface in its chunk-data/color/render paths; when non-null it maps (chunkX, chunkY, plane) to one packed instance-template chunk value before sampling skybox data."
+        },
+        {
+          "family": "exact_mapping_semantics",
+          "detail": "Skybox decodes the callback result using the exact packed template layout: template Y from bits 3..13, template X from bits 14..23 and plane from bits 24..25, with -1 meaning unavailable."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "The matching public RuneLite-derived Skybox declares @FunctionalInterface ChunkMapper with exactly int getTemplateChunk(int cx, int cy, int plane), consumed by the same chunkData/getColorForPoint/render paths."
+        }
+      ],
+      "note": "ChunkMapper is corroborated by the exact-v308 Skybox callback contract and the matching nested public RuneLite-derived Skybox.ChunkMapper identity. Exact v308 remains the semantic authority."
+    }
+  ],
+  "conflicts": []
+}

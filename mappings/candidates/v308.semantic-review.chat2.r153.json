@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_AD3FFFEAA4722512E54A",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_4ED7C35BE688AF2E05E5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000169",
+      "owner_logical_id": "CLIENT_CLASS_000169",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/f/a$b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WorldTheme",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_constants",
+          "detail": "rs/f/a$b preserves exactly NORMAL, WINTER, DARK_WINTER, HALLOWEEN and SUMMER. Every non-NORMAL value carries one fixed RGB color payload."
+        },
+        {
+          "family": "exact_runtime_commands",
+          "detail": "The live Client command parser maps exact commands winter, hween, summer, darkwinter/darkxmas onto the corresponding enum values, toggles the active rs/f/a.r value and persists the selection through ClientSettings."
+        },
+        {
+          "family": "exact_world_render_consumers",
+          "detail": "The enum is consumed across FloorDefinition, NpcDefinition, ObjectDefinition, ObjectManager/region rendering and adjacent world-definition paths. These consumers recolor or replace world floors, NPC/object definitions and region presentation according to the active enum."
+        },
+        {
+          "family": "exact_color_role",
+          "detail": "FloorDefinition directly reads the enum's integer payload as an RGB replacement color for eligible floor colors, while NORMAL bypasses the seasonal replacement."
+        },
+        {
+          "family": "exact_persistence_contract",
+          "detail": "ClientSettings persists this enum as the first component of ground_mode=<WorldTheme>.<secondary-seasonal-mode>; the active/default fields initialize to NORMAL and the configured override is omitted when it equals the default."
+        }
+      ],
+      "note": "WorldTheme is fixed by the exact seasonal enum constants, direct winter/hween/summer/darkwinter command toggles, RGB theme payload and broad floor/NPC/object/region consumers. R153 deliberately does not name sibling rs/f/a$d, whose ItemDefinition-only seasonal override role remains narrower and less independently anchored. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/d/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaidListRowBackgroundOverlay",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_raid_owner_join",
+          "detail": "RaidNavigationInterface rs/n/c/d/a is the sole exact-v308 owner of rs/n/c/d/g. It constructs exactly two instances and registers them through OverlayManager on raid widgets 32317 and 32486; no non-raid caller exists."
+        },
+        {
+          "family": "exact_list_widget_join",
+          "detail": "The first instance is bound to the 32316 scrolling list built by RaidPartyHubInterface, whose surrounding exact labels are 'Members (1/5)' and 'Current Status' and whose row children advance at 18-pixel spacing. The second is bound to the 32481 scrolling list built by RaidPartyListInterface, whose exact header is 'Party<tab=150>Size<tab=225>Raid Type & Difficulty' and whose 30 rows expose the exact action 'Join party'."
+        },
+        {
+          "family": "exact_row_background_behavior",
+          "detail": "The overlay accepts a backing widget id and row count, derives geometry from that widget, iterates exactly that many rows at 18-pixel intervals, alternates only between colors 3814187 and 4274480, and emits the fills through the shared raster rectangle routine. It owns no text, packet state, input handling or second rendering responsibility."
+        }
+      ],
+      "note": "Descriptive semantic recovery for the reusable alternating row-background overlay shared by the exact raid member/status list and public party list; no original stripped identifier is claimed."
+    }
+  ],
+  "conflicts": []
+}

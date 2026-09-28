@@ -1,0 +1,334 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AssetIconManager",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_inner_identity",
+          "detail": "Nested keys self-identify as \"AssetIconManager.ItemKey(...)\" and \"AssetIconManager.SpriteKey(...)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Outer class owns two expiring caches keyed by those item/sprite keys and returns rendered icon/image objects."
+        }
+      ],
+      "note": "Outer manager name is fixed by its exact nested-class identities and cache behavior."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/a$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AssetIconItemKey",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"AssetIconManager.ItemKey(itemId=…, itemQuantity=…, size=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Value object stores exactly item id, quantity and size and is used as AssetIconManager cache key."
+        }
+      ],
+      "note": "Flattened semantic name preserves exact nested identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/A/a$b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AssetIconSpriteKey",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"AssetIconManager.SpriteKey(directory=…, size=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Value object stores sprite directory and size and is used as AssetIconManager cache key."
+        }
+      ],
+      "note": "Flattened semantic name preserves exact nested identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/a/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DropDownOption",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"DropDownOption(text=…, tooltip=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Value object stores exactly text and tooltip strings with equality/hash accessors."
+        }
+      ],
+      "note": "Name is directly preserved in exact-v308 bytecode."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/f/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorTileMarker",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"ColorTileMarker(worldPoint=…, color=…, label=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Value object stores WorldPoint, Color and optional label for the ground-marker plugin."
+        }
+      ],
+      "note": "Name is directly preserved in exact-v308 bytecode."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/f/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GroundMarkerPoint",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"GroundMarkerPoint(regionId=…, regionX=…, regionY=…, z=…, color=…, label=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Value object stores region coordinates, plane, color and optional label used by ground-marker persistence."
+        }
+      ],
+      "note": "Name is directly preserved in exact-v308 bytecode."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CounterInfoBox",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"CounterInfoBox(count=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends the InfoBox base and adds mutable integer count presentation."
+        }
+      ],
+      "note": "Name is directly preserved in exact-v308 bytecode."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/a/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "StatusInfoBox",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"StatusInfoBox(EMPTY=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends the InfoBox base and represents status-text/icon presentation."
+        }
+      ],
+      "note": "Name is directly preserved in exact-v308 bytecode."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/l$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NavigationButtonBuilder",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString begins \"NavigationButton.NavigationButtonBuilder(icon=…, tab=…, tooltip=…, selected=…, …)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Builder methods configure icon/tab/tooltip/callback/panel/priority/popup state and construct the already reviewed NavigationButton."
+        }
+      ],
+      "note": "Flattened semantic name preserves exact nested identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/c/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DevToolsWidgetOverlay",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_inner_identity",
+          "detail": "Nested value type self-identifies as \"DevToolsWidgetOverlay.WidgetDisplay(...)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class is an overlay implementation driven by DeveloperToolsConfig and builds a queue of widget display records."
+        }
+      ],
+      "note": "Outer overlay name is fixed by its nested self-identifying type and developer-tools role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/c/e$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DevToolsWidgetDisplay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"DevToolsWidgetOverlay.WidgetDisplay(text=…, x=…, y=…, type=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Value object stores display text, x/y coordinates and widget-display type enum."
+        }
+      ],
+      "note": "Flattened semantic name preserves exact nested identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/runelite/a/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WorldPoint",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"WorldPoint(x=…, y=…, plane=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Immutable coordinate value supports x/y/plane transforms and local/world coordinate conversions."
+        }
+      ],
+      "note": "Name is directly preserved in exact-v308 bytecode."
+    }
+  ],
+  "conflicts": []
+}

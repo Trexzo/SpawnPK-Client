@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/D",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DuelPresetLoadInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_duel_actions",
+          "detail": "The class preserves the exact actions 'Load last duel' and 'Load last rules'."
+        },
+        {
+          "family": "exact_duel_resource",
+          "detail": "It loads the exact 'misc/duel load' resource, fixing the role as the duel preset/rules reload surface."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 self-identifying interface text/resources; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}

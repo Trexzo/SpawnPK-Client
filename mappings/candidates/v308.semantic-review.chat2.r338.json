@@ -1,0 +1,20 @@
+{
+  "schema_version":1,"kind":"semantic_review_set","canonical":false,
+  "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","proposal_count":1,
+  "review_id":"SEMREVIEW_999D7A8D27FC00D7949B",
+  "proposals":[{
+    "proposal_id":"SEMPROP_F79B197C8E86F3EE667B","target_kind":"class",
+    "stable_id":"CLIENT_CLASS_000335","owner_logical_id":"CLIENT_CLASS_000335",
+    "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate":{"owner":"rs/k/f","name":null,"descriptor":null},
+    "proposed_name":"GpuStartupWorldLoadTask","confidence":0.998,
+    "evidence":[
+      {"family":"exact_gpu_owner","detail":"R87 GpuRenderer is the only exact-v308 owner: during GPU startup it creates and schedules this Runnable only when the live Client is already in its logged-in/active state."},
+      {"family":"exact_startup_refresh","detail":"run() switches the client canvas into GPU repaint mode, refreshes client GPU state, and when the renderer compute mode is not NONE invokes the renderer scene/buffer rebuild path followed by the GL error check."},
+      {"family":"exact_client_redraw","detail":"After the GPU scene refresh, the task invokes the two client refresh/redraw methods used by the startup path and owns no recurring loop or independent state."},
+      {"family":"upstream_gpu_lineage","detail":"RuneLite GpuPlugin startup contains the same canvas.setIgnoreRepaint(true) and 'Error starting GPU plugin' lineage and, when GameState is LOGGED_IN, invokes the explicitly named startupWorldLoad() lifecycle at this same startup point."}
+    ],
+    "note":"GpuStartupWorldLoadTask is a conservative descriptive recovery anchored by the exact logged-in GPU startup path and corroborating RuneLite startupWorldLoad lineage."
+  }],
+  "unresolved":[]
+}

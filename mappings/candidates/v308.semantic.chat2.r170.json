@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/Client",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Client",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal class name is rs/Client; the semantic name Client survives verbatim."
+        },
+        {
+          "family": "exact_runtime_role",
+          "detail": "The class is the concrete final client implementation (public final class rs.Client extends rs.C), owns the live EventBus and numerous scene/UI/network/runtime fields, and is passed directly into rs/gui/Launcher."
+        },
+        {
+          "family": "exact_protocol_role",
+          "detail": "The exact v308 packet loop and ScriptPacket opcode-250 dispatch studied in R115 execute on this Client instance, fixing it as the central live game client rather than a generic helper."
+        }
+      ],
+      "note": "Client is the exact surviving class name of the central concrete v308 game client. Confidence is 1.0."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/Launcher",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Launcher",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_manifest_entrypoint",
+          "detail": "META-INF/MANIFEST.MF declares exactly 'Main-Class: rs.gui.Launcher'."
+        },
+        {
+          "family": "exact_binary_name",
+          "detail": "The exact v308 internal class name is rs/gui/Launcher; the semantic name Launcher survives verbatim."
+        },
+        {
+          "family": "exact_bootstrap_role",
+          "detail": "Launcher.main sets process/UI/network properties, initializes startup services, manages log output, and the Launcher instance owns the live rs.Client plus desktop UI/tray components."
+        }
+      ],
+      "note": "Launcher is the exact surviving manifest entry-point class name for v308. Confidence is 1.0."
+    }
+  ],
+  "conflicts": []
+}

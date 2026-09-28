@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_3A168E8B75A5E913F491",
+  "proposals": [{
+    "proposal_id": "SEMPROP_2C9876842D87391F87A2",
+    "target_kind": "class",
+    "stable_id": "CLIENT_CLASS_000686",
+    "owner_logical_id": "CLIENT_CLASS_000686",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate": {"owner": "rs/o/a/a/a", "name": null, "descriptor": null},
+    "proposed_name": "OutgoingPacket",
+    "confidence": 0.999,
+    "evidence": [
+      {"family": "exact_packet_contract", "detail": "The interface defines exactly one operation, void a(rs/x/e), accepting the already-reviewed R29 Stream and no unrelated lifecycle/state method."},
+      {"family": "exact_serialization_direction", "detail": "All 52 concrete implementations write an outgoing opcode first through Stream.a(int) and then serialize constructor-held packet payload fields with the Stream write-transform methods; examples include opcodes 188, 133, 72, 202 and 210."},
+      {"family": "exact_client_send_path", "detail": "Client.a(rs/o/a/a/a) passes the shared output Stream Client.fv to the packet, then forwards the resulting buffer/length to the active connection writer rs/q/b and resets stream bookkeeping. IOException handling disconnects/reconnects the client path."},
+      {"family": "exact_value_object_family", "detail": "Concrete implementations are packet-shaped value objects: their constructors capture primitive payload fields (or no payload), and their sole behavior writes one fixed opcode plus those fields into Stream."},
+      {"family": "exact_namespace_boundary", "detail": "This family is distinct from R115 ScriptPacketHandler, which decodes opcode-250 server subprotocol messages; rs/o/a/a/a represents ordinary client-to-server packet serialization."}
+    ],
+    "note": "Corrected from the initially attempted IncomingPacketHandler label after direct inspection of all 52 concrete implementations proved opcode-first serialization into the client output Stream."
+  }],
+  "unresolved": []
+}

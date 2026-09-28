@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_5F86889B10D97E6837BE",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_0CD1AD892C4A033E20F1",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001124",
+      "owner_logical_id": "CLIENT_CLASS_001124",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/y/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Scheduler",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact diagnostics include \"Scheduled task triggered: {}\", \"error during scheduled task\" and \"error invoking scheduled task\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Singleton service owns ScheduledExecutorService plus List<ScheduledMethod> and registers/removes/executes scheduled methods."
+        }
+      ],
+      "note": "Scheduler reflects the exact service role over ScheduledMethod instances."
+    },
+    {
+      "proposal_id": "SEMPROP_592193F9E3C091156288",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001122",
+      "owner_logical_id": "CLIENT_CLASS_001122",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/y/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Schedule",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_annotation_shape",
+          "detail": "Runtime METHOD annotation exposes a long interval, ChronoUnit and boolean flag controlling scheduled execution."
+        },
+        {
+          "family": "exact_framework_role",
+          "detail": "ScheduledMethod stores this annotation directly as its schedule metadata."
+        }
+      ],
+      "note": "Name follows the annotation's exact scheduled-execution role."
+    },
+    {
+      "proposal_id": "SEMPROP_7EFB8E37CCAA8E13556A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001123",
+      "owner_logical_id": "CLIENT_CLASS_001123",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/y/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ScheduledMethod",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"ScheduledMethod(schedule=…, method=…, object=…, lambda=…, last=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Stores Schedule annotation, reflected Method, target object, Runnable lambda and last execution Instant."
+        }
+      ],
+      "note": "Name is directly preserved in exact-v308 bytecode."
+    }
+  ],
+  "unresolved": []
+}

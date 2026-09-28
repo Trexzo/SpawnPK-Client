@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SequenceDefinition",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_data_source",
+          "detail": "Exact strings include \"seq.dat\", \"Error unrecognised seq config code: …\" and \"Unrecognized seq.dat config code: …\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class owns frame/duration arrays, sequence flags, animation transforms and model-application methods over rs.a.h."
+        }
+      ],
+      "note": "SequenceDefinition follows the exact seq.dat decoder and animation-sequence behavior."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcDefinition",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_data_source",
+          "detail": "Exact class data source is \"npc.dat\" with a matching definition array/cache and typed loader."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class exposes name/actions, model ids, recolor/retexture/config arrays, morphing and NPC model/head construction methods."
+        }
+      ],
+      "note": "NpcDefinition follows the exact npc.dat decoder and NPC-specific model/action surface."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FloorDefinition",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_data_source",
+          "detail": "Exact strings include flo.dat/osrs_flo.dat and diagnostic \"[FLO] Error unrecognised config code: …\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class is a compact color/texture floor-config decoder with HSL-style derived fields."
+        }
+      ],
+      "note": "FloorDefinition follows the exact flo.dat decoder and floor-color config role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IdentityKitDefinition",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_data_source",
+          "detail": "Exact strings include \"idk.dat\" and diagnostic \"[IDK] Error unrecognised config code: …\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class stores body-part/model arrays, recolor arrays and model-availability/build methods characteristic of identity-kit appearance definitions."
+        }
+      ],
+      "note": "IdentityKitDefinition follows exact idk.dat identity-kit decoding."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemDefinition",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_data_source",
+          "detail": "Exact strings include obj.dat/obj.idx plus item action literals such as Wear, Wield, Drop, Destroy and Take."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class owns item name/actions, model ids, equip/chathead models, stack variants, recolor/retexture data, note/copy transforms and sprite/model generation."
+        }
+      ],
+      "note": "ItemDefinition is fixed by obj.dat plus the complete item-specific model/action surface."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/r",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ObjectDefinition",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact diagnostic is \"Object definition data/index length mismatch\"."
+        },
+        {
+          "family": "exact_data_source",
+          "detail": "Exact strings include loc.dat/loc.idx plus OSRS loc variants."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class owns object name/actions, model/type arrays, size/collision flags, morphing and world-object model construction."
+        }
+      ],
+      "note": "ObjectDefinition is directly corroborated by surviving diagnostic text."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/x",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpotAnimationDefinition",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_data_source",
+          "detail": "Exact strings include \"spotanim.dat\" and \"Error unrecognised spotanim config code: …\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Definition stores model id, linked sequence definition, recolor/retexture arrays, scale/rotation/light metadata and model construction."
+        }
+      ],
+      "note": "SpotAnimationDefinition follows exact spotanim.dat decoding and linked sequence/model role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/y",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "VarbitDefinition",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_data_source",
+          "detail": "Exact strings include \"varbit.dat\" and diagnostic \"[VARB] Error unrecognised config code: …\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Compact definition stores base variable index plus start/end bit bounds."
+        }
+      ],
+      "note": "VarbitDefinition follows exact varbit.dat decoding and bit-range fields."
+    }
+  ],
+  "conflicts": []
+}

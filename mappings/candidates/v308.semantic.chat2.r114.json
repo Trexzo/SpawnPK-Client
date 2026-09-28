@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/a/u",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TextureBrowserOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_command_activation",
+          "detail": "R110 EditorKitUtilityCommandHandler handles texture/textures by enabling the live rs/l/e/a/u singleton, resetting its start texture ID to 0 and emitting the exact message 'Textures opened'."
+        },
+        {
+          "family": "exact_texture_grid",
+          "detail": "The HIGH-layer renderer iterates the global rs/l/E.y texture array from the current start ID, draws each texture in a grid and labels every cell with the exact text '@gre@ID <id>'."
+        },
+        {
+          "family": "exact_paging_geometry",
+          "detail": "The default grid is exactly 8 columns by 5 rows; Editor Kit/resizable mode recalculates the column/row counts from the live client window dimensions."
+        },
+        {
+          "family": "exact_lazy_texture_load",
+          "detail": "For texture IDs >= 40 the renderer attempts Client.a(id, 50L) before drawing, then renders the corresponding texture sprite when present."
+        },
+        {
+          "family": "exact_keyboard_navigation",
+          "detail": "While active, the keyboard handler pages the start ID left/right by one complete grid page, clamps it to zero and below the texture-array length, and closes the browser on ESC (key code 27)."
+        },
+        {
+          "family": "exact_interactive_overlay",
+          "detail": "The class extends R112 InteractiveClientOverlay, is visible exactly while its active flag is true, and its interaction hook claims input codes 1 and 2."
+        }
+      ],
+      "note": "TextureBrowserOverlay is descriptive exact-behavior recovery for the live texture ID grid/browser opened by the exact texture/textures commands. No surviving original source noun is asserted; confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_E9514DAB12076DBACF0A",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_D87B232CABEE33A7A804",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000264",
+      "owner_logical_id": "CLIENT_CLASS_000264",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorScheme",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_color_constant_surface",
+          "detail": "Exact v308 rs/gui/d contains exactly 15 public static java.awt.Color fields and no non-constructor behavior. Its static initializer creates, in order: (220,138,0), (220,138,0,120), (30,30,30), (40,40,40), (77,77,77), (165,165,165), (60,60,60), (35,35,35), (55,240,70), (230,30,30), (230,150,30), (110,225,110), (240,207,123), (50,160,250), and (25,25,25)."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite net.runelite.client.ui.ColorScheme defines the same 15 Color constants in the same order and with the exact RGB/RGBA values: BRAND_ORANGE, BRAND_ORANGE_TRANSPARENT, four base grays, two hover grays, three progress colors, three GE indicator colors, and SCROLL_TRACK_COLOR."
+        },
+        {
+          "family": "stable_lineage_coordinate",
+          "detail": "The existing exact-v308 stable sequence places rs/gui/d at CLIENT_CLASS_000264, immediately before already-reviewed rs/gui/e at CLIENT_CLASS_000265 and consistently before rs/gui/u at CLIENT_CLASS_000281."
+        }
+      ],
+      "note": "ColorScheme is recovered at confidence 0.999 from a value-for-value whole-class match to RuneLite ColorScheme. The pinned v308 JAR SHA is exact runtime authority; RuneLite source supplies source-name provenance."
+    }
+  ],
+  "unresolved": []
+}

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_79333AA52A38368370D8",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_127C262B21B5A0E3A095",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000068",
+      "owner_logical_id": "CLIENT_CLASS_000068",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/a/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HitmarkManager",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_actor_ownership",
+          "detail": "Every Actor constructs and owns one rs/a/e instance; Actor delegates hit insertion/update directly to it, while the client reads its four active slots during overhead rendering."
+        },
+        {
+          "family": "exact_slot_lifecycle",
+          "detail": "The class owns exactly four active rs/a/f slots plus an overflow/replay CopyOnWriteArrayList, replaces expired slots using client-cycle timestamps, can clear all hit state, and exposes active-slot checks."
+        },
+        {
+          "family": "exact_client_terminology",
+          "detail": "The same client loads hit-display assets from literal hitmarks/... paths and exposes the config key hitMarkStyle labelled \"Hitsplats\", making Hitmark the client-native noun for the managed records."
+        }
+      ],
+      "note": "HitmarkManager describes the Actor-owned lifecycle/slot manager for the client's hitmark records; it is a semantic recovery name, not an original-identifier claim."
+    },
+    {
+      "proposal_id": "SEMPROP_33395DF85F9D41DF3D71",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000069",
+      "owner_logical_id": "CLIENT_CLASS_000069",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/a/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Hitmark",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_rendering_role",
+          "detail": "The class is the object rendered from each Actor hit slot. Its two client-facing render paths select old/new hitmark sprite sets, position the mark above the Actor, and draw the numeric damage value."
+        },
+        {
+          "family": "exact_hitmark_assets",
+          "detail": "Client resources used by this rendering path survive under literal names such as hitmarks/old/hit, hitmarks/old/crit, hitmarks/old/heal, hitmarks/old/poison, hitmarks/old/venom, hitmarks/new/block and hitmarks/new/hit N."
+        },
+        {
+          "family": "exact_record_lifecycle",
+          "detail": "rs/a/e constructs rs/a/f from hit style/type, damage/value and auxiliary icon data, assigns display offsets/duration, and expires the record using the client cycle."
+        }
+      ],
+      "note": "Hitmark follows the exact project resource terminology and the record's damage-display behavior; Hitsplat is intentionally not used because hitMark is the surviving client term."
+    }
+  ],
+  "unresolved": []
+}

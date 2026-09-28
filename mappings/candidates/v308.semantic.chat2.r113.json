@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/a/s",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ActionPromptOverlay",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_inheritance",
+          "detail": "The abstract class extends R112 InteractiveClientOverlay and supplies the shared render/input implementation for exactly two concrete subclasses: rs/l/e/a/r and rs/l/e/a/t."
+        },
+        {
+          "family": "exact_prompt_render",
+          "detail": "It renders a 40x40 LOW-layer prompt using normal/hover sprites, animated alpha between 100 and 200, stacked positioning through the global overlay counter, and subclass-provided colors/action label."
+        },
+        {
+          "family": "exact_hover_click_contract",
+          "detail": "Its interaction hook performs hit-testing against the prompt rectangle, tracks press/release state, invokes the subclass action only on a completed click, and returns true while the prompt owns the interaction so normal client menu construction is intercepted."
+        },
+        {
+          "family": "exact_subclass_contract",
+          "detail": "Subclasses provide sprite setup, click action, two presentation colors and the hover/action text, fixing this as a reusable clickable action prompt rather than a generic overlay."
+        }
+      ],
+      "note": "ActionPromptOverlay is descriptive exact-behavior recovery for the shared clickable overlay prompt base. No surviving original source noun is asserted; confidence is 0.998."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/a/r",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MailNotificationOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_assets",
+          "detail": "The subclass loads the exact sprites 'misc/mail 7' and 'misc/mail 8' into the ActionPromptOverlay normal/hover slots."
+        },
+        {
+          "family": "exact_action",
+          "detail": "Its click action writes the exact client command '::mail' into Client.ap."
+        },
+        {
+          "family": "exact_prompt_text",
+          "detail": "Its action label is exactly ' <img=288> View' and it supplies a fixed presentation color."
+        },
+        {
+          "family": "exact_live_registration",
+          "detail": "R111 ClientOverlay initializes this class as one of the live registered overlay singletons."
+        }
+      ],
+      "note": "MailNotificationOverlay is fixed by the mail sprite pair, ::mail click action and View prompt. The English noun is descriptive but the domain/action identity is exact; confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/a/t",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CofferClaimOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_assets",
+          "detail": "The subclass loads the exact sprites 'misc/treasure' and 'misc/treasure 2' into the ActionPromptOverlay normal/hover slots."
+        },
+        {
+          "family": "exact_action",
+          "detail": "Its click action writes the exact client command '::claimcoffer' into Client.ap."
+        },
+        {
+          "family": "exact_prompt_text",
+          "detail": "Its action label is exactly ' <img=9> Claim' and it supplies the two fixed presentation colors used by the shared prompt renderer."
+        },
+        {
+          "family": "exact_live_registration",
+          "detail": "R111 ClientOverlay initializes this class as one of the live registered overlay singletons."
+        }
+      ],
+      "note": "CofferClaimOverlay is fixed by the treasure/coffer assets, ::claimcoffer action and Claim prompt. The English noun is descriptive but the role is exact; confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

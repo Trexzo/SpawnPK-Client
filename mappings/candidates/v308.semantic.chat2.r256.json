@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FlatTextFieldHoverListener",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_owner_role",
+          "detail": "Exact v308 class is a MouseAdapter owned only by reviewed FlatTextField."
+        },
+        {
+          "family": "exact_hover_behavior",
+          "detail": "mouseEntered applies the field's hover color when enabled; mouseExited restores its normal background color."
+        }
+      ],
+      "note": "FlatTextFieldHoverListener is descriptive exact-behavior recovery for rs/ui/components/j; no verbatim original identifier is asserted."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IconTextFieldHoverListener",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_owner_role",
+          "detail": "Exact v308 MouseAdapter is owned by reviewed IconTextField and operates through its embedded FlatTextField."
+        },
+        {
+          "family": "exact_hover_behavior",
+          "detail": "mouseEntered propagates the hover color into the IconTextField/FlatTextField surface and mouseExited restores the normal background."
+        }
+      ],
+      "note": "IconTextFieldHoverListener is descriptive exact-behavior recovery for rs/ui/components/l; no verbatim original identifier is asserted."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IconTextFieldListDataListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_listener_contract",
+          "detail": "Exact v308 class implements ListDataListener; intervalAdded, intervalRemoved and contentsChanged all invoke the same IconTextField refresh helper."
+        }
+      ],
+      "note": "IconTextFieldListDataListener is descriptive exact-behavior recovery for rs/ui/components/m; no verbatim original identifier is asserted."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IconTextFieldPopupFocusListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_focus_behavior",
+          "detail": "Exact v308 FocusAdapter owns the IconTextField suggestion JPopupMenu and JList; focusLost hides the popup, clears selection and resets SubstanceListUI rollover state."
+        }
+      ],
+      "note": "IconTextFieldPopupFocusListener is descriptive exact-behavior recovery for rs/ui/components/n; no verbatim original identifier is asserted."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IconTextFieldDocumentListener",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_listener_contract",
+          "detail": "Exact v308 class implements DocumentListener and all three document callbacks invoke the same IconTextField refresh helper."
+        }
+      ],
+      "note": "IconTextFieldDocumentListener is descriptive exact-behavior recovery for rs/ui/components/o; no verbatim original identifier is asserted."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IconTextFieldButtonHoverListener",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_button_hover_behavior",
+          "detail": "Exact v308 MouseAdapter swaps a JButton foreground between supplied hover/normal colors on enter/exit."
+        },
+        {
+          "family": "exact_event_forwarding",
+          "detail": "Both hover callbacks forward the same mouse event to the IconTextField's embedded FlatTextField after updating the button color."
+        }
+      ],
+      "note": "IconTextFieldButtonHoverListener is descriptive exact-behavior recovery for rs/ui/components/p; no verbatim original identifier is asserted."
+    }
+  ],
+  "conflicts": []
+}

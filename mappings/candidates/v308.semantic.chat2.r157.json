@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/d/c$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoginScreenState",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_values",
+          "detail": "rs/l/d/c$a is a two-value enum whose surviving exact constants are LOADING_ASSETS and LOGIN_PROMPT."
+        },
+        {
+          "family": "exact_login_owner",
+          "detail": "The enclosing rs/l/d/c is already reviewed as LoginScreen and stores exactly one rs/l/d/c$a instance in its active state field, initialized to LOADING_ASSETS and updated through a dedicated setter."
+        },
+        {
+          "family": "exact_loading_branch",
+          "detail": "When the active enum value is LOADING_ASSETS, LoginScreen follows the asset-loading/progress rendering path, including the load frame/progress surface and loading-state presentation."
+        },
+        {
+          "family": "exact_login_prompt_branch",
+          "detail": "When the active enum value is LOGIN_PROMPT, LoginScreen enables login prompt interaction behavior, including prompt-region hover/input checks and login-specific cursor/input-state handling."
+        },
+        {
+          "family": "exact_state_partition",
+          "detail": "The enum is used as the explicit branch discriminator between the loading-assets screen and the interactive login prompt; no third value or unrelated subsystem consumes it."
+        }
+      ],
+      "note": "LoginScreenState is fixed by the exact LOADING_ASSETS/LOGIN_PROMPT enum values and exclusive use as LoginScreen's rendering/input branch discriminator. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 4,
+  "review_id": "SEMREVIEW_686ABD66C7FB93794A1C",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_1165AA6BAD6FBC208702",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000184",
+      "owner_logical_id": "CLIENT_CLASS_000184",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/A",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TitlePaneControlLayout",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_title_pane_attachment",
+          "detail": "Launcher obtains the Substance title-pane JComponent, adds rs/gui/O as a trailing extra component, captures the title pane's existing LayoutManager, and replaces it with rs/gui/A wrapping that original manager."
+        },
+        {
+          "family": "exact_delegate_layout",
+          "detail": "layoutContainer first delegates to the wrapped LayoutManager, preserving the title pane's normal layout before applying the custom control-panel bounds."
+        },
+        {
+          "family": "exact_control_positioning",
+          "detail": "After delegated layout, the wrapper reads the control panel preferred width and pins it at titlePaneWidth - 75 - panelWidth, y=0, with full title-pane height."
+        }
+      ],
+      "note": "Descriptive exact-v308 Swing/Launcher role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_13F3822EB6C7981E3238",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000199",
+      "owner_logical_id": "CLIENT_CLASS_000199",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/O",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TitlePaneControlPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_substance_role",
+          "detail": "Launcher constructs exactly one rs/gui/O and marks it with Substance's 'titlePane.extraComponentKind' client property as TRAILING before adding it to the title-pane component."
+        },
+        {
+          "family": "exact_control_content",
+          "detail": "The live panel receives the JButton whose exact tooltip is 'Hide/show side panel'; the button uses panel/panel2 assets and the already-reviewed sidebar visibility action path."
+        },
+        {
+          "family": "exact_surface_scope",
+          "detail": "The class extends JPanel and exists solely as the title-bar extra-control container; no gameplay, network or unrelated application state is owned."
+        }
+      ],
+      "note": "Descriptive exact-v308 Swing/Launcher role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_99A8021F19FBD22BB930",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000186",
+      "owner_logical_id": "CLIENT_CLASS_000186",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/C",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherWindowResizableTask",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_edt_task",
+          "detail": "Launcher.b(boolean) constructs rs/gui/C and schedules it with SwingUtilities.invokeLater."
+        },
+        {
+          "family": "exact_single_effect",
+          "detail": "run() resolves Launcher's JFrame and calls exactly JFrame.setResizable(boolean) using the constructor-captured flag."
+        }
+      ],
+      "note": "Descriptive exact-v308 Swing/Launcher role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_E5821EFDDEF89E9FBDDA",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000187",
+      "owner_logical_id": "CLIENT_CLASS_000187",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/D",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherWindowSizeTask",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_edt_shape",
+          "detail": "rs/gui/D is a Runnable capturing four ints plus Launcher, with no unrelated state."
+        },
+        {
+          "family": "exact_window_geometry_effect",
+          "detail": "run() sets the JFrame minimum size from the first width/height pair, then sets the current JFrame size from the second width/height pair."
+        },
+        {
+          "family": "exact_launcher_scope",
+          "detail": "The only target is the live Launcher JFrame; the task performs no game-client rendering or application-domain mutation."
+        }
+      ],
+      "note": "Descriptive exact-v308 Swing/Launcher role; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}

@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_CEA31CD5E3BE66DE0413",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_37FD54B700B507B53128",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000041",
+      "owner_logical_id": "CLIENT_CLASS_000041",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/N",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpawnObjectNode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_record_shape",
+          "detail": "rs/N extends the recovered Node class and contains twelve integer fields, with one field initialized to -1; this matches the classic spawned-object update record shape."
+        },
+        {
+          "family": "exact_scene_capture",
+          "detail": "Client resolves the current Scene object at the record's plane/type/x/y coordinates, extracts the object id plus orientation/config bits, and stores those values back into rs/N."
+        },
+        {
+          "family": "exact_delayed_spawn_loop",
+          "detail": "Client iterates rs/N records from a NodeList, decrements two independent countdowns, installs either the captured prior object state or the queued replacement object at the stored tile, and unlinks the record once the transition is complete."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Classic SpawnObjectNode extends Node with the same twelve-int layout including a -1 sentinel and plane/type/x/y/id/face plus delayed replacement state."
+        }
+      ],
+      "note": "SpawnObjectNode is a non-canonical semantic recovery name grounded in exact v308 behavior; historical client source is corroboration only where noted."
+    },
+    {
+      "proposal_id": "SEMPROP_D73844950DE2560D4019",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000039",
+      "owner_logical_id": "CLIENT_CLASS_000039",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/L",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AudioClipPlayer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_audio_pipeline",
+          "detail": "rs/L implements Runnable and converts its InputStream/byte[] audio source through AudioSystem into 16-bit PCM_SIGNED, opens a javax.sound.sampled.Clip, starts playback and waits for completion before flushing/closing resources."
+        },
+        {
+          "family": "exact_volume_delay_role",
+          "detail": "The constructor stores volume and delay, starts a dedicated thread, applies MASTER_GAIN through FloatControl, optionally sleeps before playback, and refreshes gain while the clip remains active."
+        },
+        {
+          "family": "exact_client_consumer",
+          "detail": "Client's queued sound-effect loop retrieves sound bytes by sound id and constructs rs/L with the queued volume/delay values when the sound is ready."
+        }
+      ],
+      "note": "AudioClipPlayer is a non-canonical semantic recovery name grounded in exact v308 behavior; historical client source is corroboration only where noted."
+    }
+  ],
+  "unresolved": []
+}

@@ -1,0 +1,178 @@
+{
+  "canonical": false,
+  "kind": "semantic_review_set",
+  "proposal_count": 5,
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_10C3FC49881C37BE8BDB",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000441",
+      "owner_logical_id": "CLIENT_CLASS_000441",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OverlayRenderStage",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_stage_literals",
+          "detail": "The enum preserves 27 exact render lifecycle values spanning ITEM_3D_PRE_SHADE through CONTEXT_MENU and OVERLAY, including NPC/PLAYER/ENTITY 2D/3D stages and AFTER_WIDGETS_BEFORE_INTERFACE[_HIGH]."
+        },
+        {
+          "family": "exact_overlay_state",
+          "detail": "The root overlay class rs/l/f/b stores primary and secondary values of this enum, while OverlayPanel stores an additional preferred/override stage value."
+        },
+        {
+          "family": "exact_manager_dispatch",
+          "detail": "rs/l/f/e creates stage-keyed overlay collections for every enum value and its per-stage render entrypoint dispatches the matching panel list into rs/l/f/i before invoking non-panel overlays for that same stage."
+        }
+      ],
+      "note": "OverlayRenderStage is descriptive exact-behavior recovery for the exact lifecycle-stage enum driving overlay registration and rendering. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_26F6557A7543451AEB9F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000479",
+      "owner_logical_id": "CLIENT_CLASS_000479",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Overlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_hierarchy_root",
+          "detail": "This abstract class is the common root of the reviewed tooltip, particle, raid-progress and Adventure Book render components, of rs/l/f/g, and of all four specialized rs/l/f/b/* actor/widget overlay bases."
+        },
+        {
+          "family": "exact_manager_contract",
+          "detail": "OverlayManager stores this type in stage-keyed List<rs/l/f/b> collections and exposes register, unregister and contains operations directly on rs/l/f/b instances."
+        },
+        {
+          "family": "exact_render_state",
+          "detail": "The class owns enabled state plus primary/secondary OverlayRenderStage state and provides shared Graphics2D/shape/text/world-projection helpers used by concrete overlays."
+        },
+        {
+          "family": "exact_render_dispatch",
+          "detail": "The manager's per-stage path checks the enabled state, binds the current Client if needed, invokes the overlay hook, then executes its stage-specific render lifecycle."
+        }
+      ],
+      "note": "Overlay is the descriptive root abstraction proven by the complete manager collection contract and the already-reviewed overlay subclass family. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_59DFE72AE4ECC54E0111",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000488",
+      "owner_logical_id": "CLIENT_CLASS_000488",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OverlayPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_overlay_subclass",
+          "detail": "The class extends Overlay and is the direct base of the reviewed ConfigurableActionPromptOverlay, BossBarOverlay, BountyHunterOverlay and raid panel overlays."
+        },
+        {
+          "family": "exact_panel_component",
+          "detail": "Every instance owns one rs/ui/components/s component tree, renders that component through a(Graphics2D) and exposes it through q(); the component itself owns bounds, dimensions, color and a child-component list."
+        },
+        {
+          "family": "exact_position_contract",
+          "detail": "The class owns current and override OverlayPosition values, defaulting to TOP_LEFT, plus point, dimension, rectangle, priority and preferred-stage state consumed by the central renderer."
+        },
+        {
+          "family": "exact_renderer_registration",
+          "detail": "Its lifecycle/removal path reaches OverlayManager.m() and rs/l/f/i, while OverlayManager keeps a separate stage-keyed CopyOnWriteArrayList specifically for this subclass."
+        }
+      ],
+      "note": "OverlayPanel is descriptive exact-behavior recovery for the positionable component-tree overlay subclass rendered through the dedicated panel renderer. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_7B9FC04DE584C451CDC0",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000490",
+      "owner_logical_id": "CLIENT_CLASS_000490",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OverlayRenderer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_manager_delegate",
+          "detail": "OverlayManager constructs exactly one instance and delegates each stage plus List<OverlayPanel> to its public a(rs/l/f/a, List<rs/l/f/g>) render method."
+        },
+        {
+          "family": "exact_position_geometry",
+          "detail": "The render path resolves each panel's effective OverlayPosition, consumes R12 OverlayBounds and the overlay geometry utility, computes anchored/stacked points and renders panels into the stage Graphics2D."
+        },
+        {
+          "family": "exact_interaction_path",
+          "detail": "The class owns mouse pressed/dragged/released/moved and focus-change handling for OverlayPanel instances, including detached/dynamic/fixed positions and drag target rectangles."
+        },
+        {
+          "family": "exact_persistence_join",
+          "detail": "It reads and writes preferred overlay positions through the settings/config path and is the renderer consumer identified independently by R160 OverlayPosition recovery."
+        }
+      ],
+      "note": "OverlayRenderer is fixed by the manager's per-stage delegation plus its complete panel layout, drawing, drag/drop and position-persistence behavior. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_9B3356FC985752DDB927",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000486",
+      "owner_logical_id": "CLIENT_CLASS_000486",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OverlayManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_registry_contract",
+          "detail": "The class owns stage-keyed collections of Overlay and OverlayPanel instances and directly implements register, unregister and contains operations over those collections."
+        },
+        {
+          "family": "exact_stage_dispatch",
+          "detail": "For each OverlayRenderStage it obtains the live client Graphics2D, delegates the panel list to rs/l/f/i, then iterates enabled non-panel overlays for the same stage."
+        },
+        {
+          "family": "exact_global_overlays",
+          "detail": "Its constructor creates and registers the exact reviewed TooltipOverlay, OverlayParticleManager, combat/text-related global overlays and development recoloring overlays, then exposes typed getters for them."
+        },
+        {
+          "family": "exact_singleton_renderer_join",
+          "detail": "The class stores a static live instance returned by d(), owns one rs/l/f/i renderer, and exposes that renderer to panel registration/removal and interaction paths."
+        }
+      ],
+      "note": "OverlayManager is fixed by the exact central registry, lifecycle dispatch, global overlay ownership and singleton manager role. Confidence is 0.999."
+    }
+  ],
+  "review_id": "SEMREVIEW_60409C2E417ECC4CC51D",
+  "schema_version": 1,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "unresolved": []
+}

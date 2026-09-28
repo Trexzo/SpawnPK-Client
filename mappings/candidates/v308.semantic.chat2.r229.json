@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/components/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ComboBoxListRenderer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_swing_type_shape",
+          "detail": "Exact v308 is final, generic <T>, extends JLabel and implements ListCellRenderer<T>, with only the default constructor and getListCellRendererComponent(JList<? extends T>, T, int, boolean, boolean)."
+        },
+        {
+          "family": "exact_render_algorithm",
+          "detail": "The renderer uses the dark-gray/white selected palette, list background/light-gray unselected palette, EmptyBorder(5,5,5,0), title-cases Enum values through the client Text helper, otherwise uses toString(), writes JLabel text and returns itself."
+        },
+        {
+          "family": "historical_upstream_source_match",
+          "detail": "RuneLite source at 8118d9d7b9f8129625b148a7b8d46cb735a66890 contains net.runelite.client.ui.components.ComboBoxListRenderer<T> with the same superclass/interface, selected/unselected colors, EmptyBorder(5,5,5,0), Enum title-case branch, setText and return-this implementation. Commit 97fe0928 later renamed/reworked this source into TitleCaseListCellRenderer."
+        }
+      ],
+      "note": "ComboBoxListRenderer is recovered at confidence 0.999 from an exact historical RuneLite source match. The class was renamed and structurally simplified upstream in 2024, while exact v308 retains the earlier generic JLabel/ListCellRenderer implementation."
+    }
+  ],
+  "conflicts": []
+}

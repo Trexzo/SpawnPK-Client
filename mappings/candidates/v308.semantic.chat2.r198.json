@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/tools/TextPopupWindow",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TextPopupWindow",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_surviving_class_name",
+          "detail": "The exact v308 internal class name is rs/tools/TextPopupWindow; the readable noun survives directly in the class path rather than being inferred from obfuscated behavior."
+        },
+        {
+          "family": "exact_window_type",
+          "detail": "The class directly extends javax.swing.JFrame, accepts a window-title String in its constructor, calls setTitle, uses EXIT_ON_CLOSE, sets an explicit 989x571 size, and makes itself visible."
+        },
+        {
+          "family": "exact_text_surface",
+          "detail": "The window owns a dedicated JTextPane subclass inside a JScrollPane, configures it non-editable with visible caret/selection state, and exposes the pane through a public accessor."
+        },
+        {
+          "family": "exact_styled_text_append",
+          "detail": "Its public String method delegates into the configured text writer with the pane's StyledDocument and a SimpleAttributeSet, matching a reusable styled-text popup window responsibility."
+        },
+        {
+          "family": "exact_focus_key_helpers",
+          "detail": "The constructor wires focus and keyboard helper classes around the text pane, including a Ctrl+F binding, further corroborating that this is a standalone searchable/readable text popup surface."
+        }
+      ],
+      "note": "TextPopupWindow preserves its readable source name exactly in v308 and its JFrame/JTextPane behavior matches that identity without semantic extrapolation. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

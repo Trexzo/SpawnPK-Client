@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b/y",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IntegerConfigFormatterFactory",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_factory_shape",
+          "detail": "Exact v308 rs/s/b/y extends JFormattedTextField.AbstractFormatterFactory, owns a Map<JFormattedTextField, AbstractFormatter>, and getFormatter(tf) uses computeIfAbsent to cache one formatter per text field."
+        },
+        {
+          "family": "exact_formatter_pair",
+          "detail": "The factory constructs rs/s/b/x for each field. R14 already reviews rs/s/b/x as IntegerConfigFormatter; that formatter strips the configured unit suffix, parses Integer.valueOf, raises ParseException on invalid integers, and appends the unit on formatting."
+        },
+        {
+          "family": "exact_unit_source",
+          "detail": "The factory constructor stores rs/e/q, the config-unit annotation interface whose method supplies the unit string consumed by IntegerConfigFormatter."
+        }
+      ],
+      "note": "IntegerConfigFormatterFactory is descriptive exact-behavior recovery for the formatter factory paired directly with R14 IntegerConfigFormatter. No stronger original source-class identifier is claimed; confidence is 0.997."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,136 @@
+{
+  "canonical": false,
+  "kind": "semantic_review_set",
+  "proposal_count": 4,
+  "proposals": [
+    {
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "detail": "The constructor binds this specialization to rs/l/f/a.a, whose surviving enum literal is ITEM_3D_PRE_SHADE.",
+          "family": "exact_item_pre_shade_stage"
+        },
+        {
+          "detail": "The specialization resolves and tracks one rs/d/k item definition, exposes that definition's model-id/recolor state to the shared model recoloring base and refreshes when the selected item id changes.",
+          "family": "exact_item_definition_state"
+        },
+        {
+          "detail": "rs/s/c/d.a(int, boolean) sets the exact visible mode text 'Recoloring Item' and then selects this exact overlay through rs/l/f/e.k().",
+          "family": "exact_developer_ui_label"
+        }
+      ],
+      "note": "ItemRecoloringOverlay is fixed by ITEM_3D_PRE_SHADE, item-definition state and the exact 'Recoloring Item' development UI path. Confidence is 0.999.",
+      "owner_logical_id": "CLIENT_CLASS_000454",
+      "proposal_id": "SEMPROP_069495376EA5137D4A5F",
+      "proposed_name": "ItemRecoloringOverlay",
+      "source_build": "v308",
+      "source_coordinate": {
+        "descriptor": null,
+        "name": null,
+        "owner": "rs/l/f/a/d/a"
+      },
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "stable_id": "CLIENT_CLASS_000454",
+      "target_kind": "class"
+    },
+    {
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "detail": "The constructor binds this specialization to rs/l/f/a.c, whose surviving enum literal is NPC_3D_PRE_SHADE.",
+          "family": "exact_npc_pre_shade_stage"
+        },
+        {
+          "detail": "The specialization accepts an rs/a/j NPC actor, tracks its rs/d/d NPC definition id, resolves that definition and exposes its model/recolor state to the shared model recoloring base.",
+          "family": "exact_npc_definition_state"
+        },
+        {
+          "detail": "rs/s/c/d.a(rs/a/j, boolean) sets the exact visible mode text 'Recoloring NPC' and then selects this exact overlay through rs/l/f/e.j().",
+          "family": "exact_developer_ui_label"
+        }
+      ],
+      "note": "NpcRecoloringOverlay is fixed by NPC_3D_PRE_SHADE, live NPC-definition state and the exact 'Recoloring NPC' development UI path. Confidence is 0.999.",
+      "owner_logical_id": "CLIENT_CLASS_000456",
+      "proposal_id": "SEMPROP_3E76D67849B68161C831",
+      "proposed_name": "NpcRecoloringOverlay",
+      "source_build": "v308",
+      "source_coordinate": {
+        "descriptor": null,
+        "name": null,
+        "owner": "rs/l/f/a/d/c"
+      },
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "stable_id": "CLIENT_CLASS_000456",
+      "target_kind": "class"
+    },
+    {
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "detail": "The constructor binds this specialization to rs/l/f/a.d, whose surviving enum literal is OBJECT_3D_PRE_SHADE.",
+          "family": "exact_object_pre_shade_stage"
+        },
+        {
+          "detail": "The specialization resolves and tracks one rs/d/r object definition, exposes that definition's model/color state to the shared recoloring base and refreshes the client when the selected object id changes.",
+          "family": "exact_object_definition_state"
+        },
+        {
+          "detail": "rs/s/c/d.b(int, boolean) sets the exact visible mode text 'Recoloring Object' and then selects this exact overlay through rs/l/f/e.l().",
+          "family": "exact_developer_ui_label"
+        }
+      ],
+      "note": "ObjectRecoloringOverlay is fixed by OBJECT_3D_PRE_SHADE, object-definition state and the exact 'Recoloring Object' development UI path. Confidence is 0.999.",
+      "owner_logical_id": "CLIENT_CLASS_000457",
+      "proposal_id": "SEMPROP_AA03838243EC6BDCFE0F",
+      "proposed_name": "ObjectRecoloringOverlay",
+      "source_build": "v308",
+      "source_coordinate": {
+        "descriptor": null,
+        "name": null,
+        "owner": "rs/l/f/a/d/d"
+      },
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "stable_id": "CLIENT_CLASS_000457",
+      "target_kind": "class"
+    },
+    {
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "detail": "The shared development window rs/s/c/d stores this base as its active recoloring component and exposes exact mode labels 'Recoloring NPC', 'Recoloring Item', 'Recoloring Object' and 'Recoloring N/A'.",
+          "family": "exact_recoloring_ui_join"
+        },
+        {
+          "detail": "The overlay reads the active model's face/color array, gathers definition-side recolor/texture sets and publishes color ids into the development JList with exact suffixes '(texture)', '(texturized)' and '(recolored)'.",
+          "family": "exact_model_color_inventory"
+        },
+        {
+          "detail": "Before shading, selected color ids are rewritten in the active model color array to -1, while the alternate display mode rewrites remaining entries to 1; this is a visual recoloring/isolation inspection path rather than gameplay state.",
+          "family": "exact_pre_shade_mutation"
+        },
+        {
+          "detail": "The only concrete specializations are the item, NPC and object recoloring overlays, each bound to the corresponding exact 3D pre-shade render stage and selected by the same development recoloring window.",
+          "family": "exact_specializations"
+        }
+      ],
+      "note": "ModelRecoloringOverlay is descriptive exact-behavior recovery for the shared development-time model recoloring/color-isolation overlay used by item, NPC and object specializations. Confidence is 0.999.",
+      "owner_logical_id": "CLIENT_CLASS_000455",
+      "proposal_id": "SEMPROP_C8B489ABCF0834CD22E1",
+      "proposed_name": "ModelRecoloringOverlay",
+      "source_build": "v308",
+      "source_coordinate": {
+        "descriptor": null,
+        "name": null,
+        "owner": "rs/l/f/a/d/b"
+      },
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "stable_id": "CLIENT_CLASS_000455",
+      "target_kind": "class"
+    }
+  ],
+  "review_id": "SEMREVIEW_F56A03A3A97AEC0E7D4E",
+  "schema_version": 1,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "unresolved": []
+}

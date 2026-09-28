@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/b/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EditorNpcCommandHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_typed_dispatch",
+          "detail": "R107 EditorKitController dispatches to this static helper only when the selected EditorEntity is an EditorNpcEntity, passing the parsed command name/arguments and the typed NPC entity."
+        },
+        {
+          "family": "exact_command_vocabulary",
+          "detail": "Surviving commands are reset, select, set, set_id, setid, setnpc, sizex, stand and walk."
+        },
+        {
+          "family": "exact_npc_mutation",
+          "detail": "The helper changes the EditorNpcEntity NPC definition/id, stand/walk animation and size-related state, then refreshes its NPC model/render state."
+        },
+        {
+          "family": "exact_feedback",
+          "detail": "Its transform path emits the exact Editor Kit message '@whi@<img=24> Entity transformed to @gre@... (...)!' through EditorKitController status output."
+        }
+      ],
+      "note": "EditorNpcCommandHandler is descriptive exact-behavior recovery for the static NPC-specific command processor used only by EditorNpcEntity dispatch."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/b/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EditorPlayerCommandHandler",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_typed_dispatch",
+          "detail": "R107 EditorKitController dispatches to this static helper only when the selected EditorEntity is an EditorPlayerEntity, passing the parsed command name/arguments and the typed player entity."
+        },
+        {
+          "family": "exact_equipment_vocabulary",
+          "detail": "The command vocabulary includes weapon/wep, cape/back, legs/leg, gloves/glove/hand/hands, boots/boot/feet, shield, helmet/helm/hat/head, amulet/ammy/neck and chest/body/top."
+        },
+        {
+          "family": "exact_appearance_vocabulary",
+          "detail": "It also handles male/female transforms and full_body/full_chest/full_hat/full_helm/full_mask flag variants, plus reset/off states."
+        },
+        {
+          "family": "exact_feedback",
+          "detail": "Surviving Editor Kit messages explicitly say 'Set player weapon!', 'Set player cape!', 'Set player legs!', 'Entity transformed to male!' and 'Entity transformed to female!', fixing the player-specific command role."
+        }
+      ],
+      "note": "EditorPlayerCommandHandler is descriptive exact-behavior recovery for the static Player appearance/equipment command processor used only by EditorPlayerEntity dispatch."
+    }
+  ],
+  "conflicts": []
+}

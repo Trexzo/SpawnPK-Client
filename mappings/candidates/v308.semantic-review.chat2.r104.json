@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_7E5DE83AA771BC1BB53C",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_664562B273117DBCA98E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000739",
+      "owner_logical_id": "CLIENT_CLASS_000739",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PerlinNoise",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_tile_height_pipeline",
+          "detail": "rs/p implements the classic procedural tile-height function: three octaves at periods 4/2/1 with offsets 45365/91923 and 10294/37821, weighted -128 normalization, 0.3 scaling +35, then clamping to 10..60."
+        },
+        {
+          "family": "exact_noise_primitives",
+          "detail": "The same class owns interpolated noise, smoothed neighborhood noise, the x + y*57 integer noise hash with constants 15731/789221/1376312589, and cosine interpolation."
+        },
+        {
+          "family": "exact_local_cosine_table",
+          "detail": "Its static initializer builds 2048-entry fixed-point sine/cosine tables using 65536 scaling and 0.17578125-degree steps; the interpolation path indexes the cosine table at t*1024/period."
+        },
+        {
+          "family": "exact_object_manager_consumer",
+          "detail": "R53 ObjectManager calls rs/p.a(x,z) for procedural terrain heights when a terrain tile has no explicit height opcode, then negates/scales the returned 10..60 height into the scene heightmap."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "Public deobfuscated RuneScape source preserves class PerlinNoise with the same getTileHeight, interpolatedNoise, smoothNoise, integer noise hash and cosine interpolation pipeline; 317 SceneBuilder/ObjectManager lineage contains the identical algorithms."
+        }
+      ],
+      "note": "PerlinNoise is backed by an exact-v308 five-function terrain-noise contract and matching public deobfuscated lineage. Exact v308 remains the semantic authority."
+    }
+  ],
+  "unresolved": []
+}

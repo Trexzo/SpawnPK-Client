@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/w/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MidiPlayer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_midi_types",
+          "detail": "rs/w/c directly owns javax.sound.midi.Sequence, Sequencer and Synthesizer instances and coordinates them as one playback object."
+        },
+        {
+          "family": "exact_playback_role",
+          "detail": "Its public methods load/play MIDI content, start playback with configurable volume/loop behavior, stop/close playback and expose track/source metadata strings."
+        },
+        {
+          "family": "exact_receiver_volume_role",
+          "detail": "The class configures MIDI Receiver channels/controllers to apply a floating-point volume scalar while routing playback through the active synthesizer/sequencer."
+        },
+        {
+          "family": "exact_runtime_dependency",
+          "detail": "The classic runtime bridge rs/v/a holds a static rs/w/c instance, tying this object to client music playback rather than generic MIDI utilities."
+        }
+      ],
+      "note": "MidiPlayer is the conservative semantic name for this exact Java-MIDI playback wrapper; it does not claim a verbatim original developer identifier."
+    }
+  ],
+  "conflicts": []
+}

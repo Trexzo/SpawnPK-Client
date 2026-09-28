@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_0AC5B516E2D050415E42",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_26C496885B3C8A5F98D0",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000525",
+      "owner_logical_id": "CLIENT_CLASS_000525",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientCommandProcessor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_command_entrypoint",
+          "detail": "The public entry point accepts Client, a command String and privilege/context integer, strips the exact '::' prefix, tokenizes the command and arguments, dispatches common local commands, and conditionally dispatches the privileged/debug command table through rs/l/j.b(int)."
+        },
+        {
+          "family": "exact_common_command_table",
+          "detail": "The non-privileged/local table includes exact commands cmdmode, chatcmd, chatcmdmode, hween, snow, winter, xmas, summer, darkwinter, darkxmas, renderself and multi, with direct client-state effects and user-facing enabled/disabled messages."
+        },
+        {
+          "family": "exact_privileged_command_table",
+          "detail": "The privileged/debug table has 32 exact command keys including checkscreen, repack, gfxdata, animdata, macaddress, dumpclip, tipint, acc, particle, dumpcommands, region, mapfile, resetnpcdefs, topbar, botbar, colors, friends, disconnect, clearchat, itemhovers, objectdef, noteable, dumpitems, resetgraphs, itemdef, entitydef, texture and textures."
+        },
+        {
+          "family": "exact_command_side_effects",
+          "detail": "Those handlers perform command-specific cache/data inspection, definition reload/reset, region/map diagnostics, interface reload/edit/check actions, item/model inspection, display toggles and client configuration changes, confirming a general client-command processing responsibility rather than one feature-specific command."
+        },
+        {
+          "family": "exact_server_forward_queue",
+          "detail": "The same class owns a CopyOnWriteArrayList<String> command queue; its flush method iterates queued command Strings and writes packet opcode 103, the encoded command length and command.substring(2), then clears the queue."
+        },
+        {
+          "family": "exact_live_references",
+          "detail": "Exact v308 references this processor from Client plus multiple live interface/packet/overlay classes, matching a shared client command gateway used by both typed commands and feature-generated :: commands."
+        }
+      ],
+      "note": "ClientCommandProcessor is descriptive exact-behavior recovery for the central client-side :: command parser/dispatcher and forwarding queue. The whole class is command-processing infrastructure rather than one individual command family. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}

@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/d/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoginUpdateFetcher",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_login_owner",
+          "detail": "rs/l/d/c, already reviewed as LoginScreen, constructs rs/l/d/e directly in its update-loading path, starts it as a Thread exactly once while update text is absent, and stores the resulting parsed strings on the same LoginScreen instance."
+        },
+        {
+          "family": "exact_update_url",
+          "detail": "The thread opens the exact URL https://spawnpk.net/forums/index.php?/forum/10-updates/ and reads the forum HTML directly."
+        },
+        {
+          "family": "exact_update_parser",
+          "detail": "Its run method identifies '<span itemprop=\"name headline\">' entries, extracts href links, decodes HTML entities, truncates long titles, formats date/title text and accumulates up to six update rows."
+        },
+        {
+          "family": "exact_login_sink",
+          "detail": "The parsed headline/link/summary strings and derived display height are written back exclusively through LoginScreen fields/accessors; no second UI or gameplay subsystem consumes the thread."
+        }
+      ],
+      "note": "LoginUpdateFetcher is fixed by its exclusive LoginScreen ownership, exact SpawnPK updates-forum URL, headline/link HTML parser and one-shot Thread lifecycle. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

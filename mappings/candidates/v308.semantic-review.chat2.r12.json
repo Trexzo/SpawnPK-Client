@@ -1,0 +1,402 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 15,
+  "review_id": "SEMREVIEW_655A5A8C14B6608179D9",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_01ABB62F3DEE55929BF2",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000484",
+      "owner_logical_id": "CLIENT_CLASS_000484",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OverlayBounds",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact toString constant is 'OverlayBounds(topLeft=..., topCenter=..., topRight=..., bottomLeft=..., bottomRight=..., aboveChatboxRight=..., canvasTopRight=...)'."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class stores seven Rectangle regions, supports translation and maps overlay positions to rectangles."
+        }
+      ],
+      "note": "Name follows the exact self-identifying toString form."
+    },
+    {
+      "proposal_id": "SEMPROP_2DD31CEA7C19B0F66325",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000949",
+      "owner_logical_id": "CLIENT_CLASS_000949",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/p/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PlayerOutlinePlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact plugin title is 'Player Outline'; description says it outlines the player behind objects and tags include highlight/player/outline/color."
+        },
+        {
+          "family": "exact_pairing_role",
+          "detail": "Runtime class extends the plugin base, directly requests rs/s/p/a config and responds to the petOutline ConfigChanged key."
+        }
+      ],
+      "note": "Plugin role is exact from runtime descriptor and direct config pairing."
+    },
+    {
+      "proposal_id": "SEMPROP_4FABA8886AE5C9FE4776",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000155",
+      "owner_logical_id": "CLIENT_CLASS_000155",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigProfile",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact toString constant is 'ConfigProfile(id=..., name=..., sync=..., active=..., rev=...)'."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class stores profile identity/name plus sync, active and revision state."
+        }
+      ],
+      "note": "Name follows the exact self-identifying toString form."
+    },
+    {
+      "proposal_id": "SEMPROP_556FC8A438870B043D85",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000946",
+      "owner_logical_id": "CLIENT_CLASS_000946",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/p/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PlayerOutlineConfig",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact config strings include 'Outline Color', 'Outline your pet', 'Outline Feather', 'Border Width' and group key 'playeroutline'."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Interface extends the shared config base and exposes default color, pet outline, feather and border-width settings."
+        }
+      ],
+      "note": "Config role is exact from annotated option text and config-group key."
+    },
+    {
+      "proposal_id": "SEMPROP_77482C7309BA1D0538C2",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000309",
+      "owner_logical_id": "CLIENT_CLASS_000309",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/j/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CustomMenuEntry",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact toString constant is 'CustomMenuEntry(text=..., event=...)'."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class stores menu text and an event/callback object with value semantics."
+        }
+      ],
+      "note": "Name follows the exact self-identifying toString form."
+    },
+    {
+      "proposal_id": "SEMPROP_7B9B486AD8AC0F6FF6D7",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000957",
+      "owner_logical_id": "CLIENT_CLASS_000957",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/q/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PvPTrackerPlugin",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact navigation title is 'PvP Tracker' and the class loads pvp_icon.png."
+        },
+        {
+          "family": "exact_pairing_role",
+          "detail": "Runtime class extends the plugin base, requests PvPTrackerConfig, injects PvPTrackerPanel and registers a NavigationButton for the panel."
+        }
+      ],
+      "note": "Plugin role is exact from runtime/plugin shape and direct config/panel pairing."
+    },
+    {
+      "proposal_id": "SEMPROP_831188DDACB318AA26B5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000147",
+      "owner_logical_id": "CLIENT_CLASS_000147",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigStore",
+      "confidence": 0.99,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class owns a File, loads java.util.Properties into a ConcurrentHashMap, supports synchronized get/put/remove, tracks dirty values and writes the configuration file under a file lock."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact constants reference RL configurations and configuration file load/save failures."
+        }
+      ],
+      "note": "Store is chosen over manager because the exact class is the file-backed key/value persistence layer."
+    },
+    {
+      "proposal_id": "SEMPROP_A555897388EBF2921283",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000487",
+      "owner_logical_id": "CLIENT_CLASS_000487",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OverlayMenuEntry",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact toString constant is 'OverlayMenuEntry(menuAction=..., option=..., target=...)'."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class stores menu action, option, target and an optional CustomMenuEntry consumer."
+        }
+      ],
+      "note": "Name follows the exact self-identifying toString form."
+    },
+    {
+      "proposal_id": "SEMPROP_A57999B466CCA4AFEF0E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000953",
+      "owner_logical_id": "CLIENT_CLASS_000953",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/q/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PvPTrackerPanel",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact panel strings include 'Current Fight', 'Fight History (Filter by Usernames):' and 'Filter Usernames:'."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends the side-panel base and owns Swing panels, filters and fight-history rendering, while holding PvPTrackerConfig and PvPTrackerPlugin references."
+        }
+      ],
+      "note": "Panel role is exact from Swing class shape and tracker-specific content."
+    },
+    {
+      "proposal_id": "SEMPROP_B6CE6B18C0477EAC3D6E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001102",
+      "owner_logical_id": "CLIENT_CLASS_001102",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NavigationButton",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact toString constant is 'NavigationButton(icon=..., tab=..., tooltip=..., selected=..., onClick=..., onSelect=..., panel=..., priority=..., popup=...)'."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class exposes a builder and stores icon, tooltip, selected state, callbacks, panel, priority and popup actions."
+        }
+      ],
+      "note": "Name follows the exact self-identifying toString form."
+    },
+    {
+      "proposal_id": "SEMPROP_D1C0766D80261F04FF26",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000157",
+      "owner_logical_id": "CLIENT_CLASS_000157",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigSectionDescriptor",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact toString constant is 'ConfigSectionDescriptor(key=..., section=...)'."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class is a small immutable descriptor implementing the shared config-descriptor interface."
+        }
+      ],
+      "note": "Name follows the exact self-identifying toString form."
+    },
+    {
+      "proposal_id": "SEMPROP_F2719179CBE576893619",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000152",
+      "owner_logical_id": "CLIENT_CLASS_000152",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigItemDescriptor",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact toString constant is 'ConfigItemDescriptor(item=..., type=..., range=..., alpha=..., units=...)'."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class is an immutable descriptor-like value object carrying config item metadata, reflected Type and annotation-backed presentation metadata."
+        }
+      ],
+      "note": "Name follows the exact self-identifying toString form."
+    },
+    {
+      "proposal_id": "SEMPROP_F3AD64298BA24A155540",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001017",
+      "owner_logical_id": "CLIENT_CLASS_001017",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BoostInfoBox",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact toString constant is 'BoostInfoBox(offset=..., skillId=...)'."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends the shared InfoBox base and stores boost offset and skill ID."
+        }
+      ],
+      "note": "Name follows the exact self-identifying toString form."
+    },
+    {
+      "proposal_id": "SEMPROP_F4F81EFD67CBC3270975",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001026",
+      "owner_logical_id": "CLIENT_CLASS_001026",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/a/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TimerInfoBox",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact toString constant is 'TimerInfoBox(startTime=..., endTime=..., duration=...)'."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Class extends the shared InfoBox base and stores Instant start/end plus Duration, formatting the remaining timer text."
+        }
+      ],
+      "note": "Name follows exact self-identification and class behavior."
+    },
+    {
+      "proposal_id": "SEMPROP_FB2FAC743B40E6BEE7D8",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000950",
+      "owner_logical_id": "CLIENT_CLASS_000950",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/q/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PvPTrackerConfig",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact config group key is 'pvptracker'; options include Max Rendered Fights, Exact Name Filter and Name Filter."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Interface extends the shared config base and supplies tracker history/filter preferences."
+        }
+      ],
+      "note": "Config role is exact from group key and option text."
+    }
+  ],
+  "unresolved": []
+}

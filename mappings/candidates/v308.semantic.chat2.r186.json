@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/l/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MenuEntryEntityMatcher",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "surviving_method_name",
+          "detail": "The interface preserves the unobfuscated method name isMatchingEntity(int, int), directly exposing its predicate role in exact v308 bytecode."
+        },
+        {
+          "family": "exact_menu_entry_swapper_ownership",
+          "detail": "Reviewed MenuEntrySwapperPlugin rs/s/l/c owns three final instances of rs/s/l/a, each created from an invokedynamic isMatchingEntity lambda during plugin construction."
+        },
+        {
+          "family": "exact_menu_scan_use",
+          "detail": "MenuEntrySwapperPlugin passes an rs/s/l/a instance into its menu-entry scan helper; the helper calls isMatchingEntity on candidate menu-entry entity identifiers before selecting the matching menu entry for swap/reorder handling."
+        },
+        {
+          "family": "exact_role_boundary",
+          "detail": "The interface has no fields and exactly one abstract boolean method. It is not itself a swap rule or config object; it is the entity-matching predicate consumed by MenuEntrySwapperPlugin."
+        }
+      ],
+      "note": "MenuEntryEntityMatcher follows the surviving method name isMatchingEntity and the complete MenuEntrySwapperPlugin call graph. The class name is descriptive, but the predicate responsibility is exact; confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

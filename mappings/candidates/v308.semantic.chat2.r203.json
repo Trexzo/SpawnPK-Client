@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/f/a/g/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaidPartyOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_overlay_identity",
+          "detail": "The constructor writes the exact surviving overlay identity literal 'RaidPartyOverlay' into the shared positioned-overlay base."
+        },
+        {
+          "family": "exact_render_surface",
+          "detail": "The overlay renders only the exact labels 'Your points:' and 'Time:' plus their live values inside one fixed 127x34 raid-party status surface."
+        },
+        {
+          "family": "exact_timer_lifecycle",
+          "detail": "The class stores a timer start timestamp and, unless frozen by packet state, recomputes the displayed elapsed time once per second using the exact '%d:%02d' format."
+        },
+        {
+          "family": "exact_packet_owner",
+          "detail": "R123 ScriptPacket 41 directly constructs and mutates this class: selector 18 initializes/toggles the raid party overlay timer, selector 19 updates points and selector 20 updates the displayed time."
+        }
+      ],
+      "note": "RaidPartyOverlay is fixed by the exact surviving identity literal and a complete points/timer raid-party status lifecycle. R123 independently fixes its ScriptPacket 41 owner. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/f/a/g/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaidTheatreBar",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_overlay_identity",
+          "detail": "The constructor writes the exact surviving overlay identity literal 'RaidTheatreBar' into the shared overlay base."
+        },
+        {
+          "family": "exact_fixed_surface",
+          "detail": "The class owns one fixed 504x20 overlay surface and records only its current Graphics2D clip x/y anchor for the sibling raid theatre progress renderer."
+        },
+        {
+          "family": "exact_sibling_contract",
+          "detail": "The sibling rs/l/f/a/g/b renderer consumes RaidTheatreBar.r/s as its placement anchor and draws one 500-pixel proportional raid progress bar with packet-fed text/state."
+        },
+        {
+          "family": "exact_packet_owner",
+          "detail": "R123 ScriptPacket 41 constructs/manages the raid-theatre overlay family together with RaidPartyOverlay; no non-raid caller or second domain is present."
+        }
+      ],
+      "note": "RaidTheatreBar is fixed by the exact surviving identity literal and its single fixed raid-theatre bar anchor contract, consumed only by the sibling raid progress renderer under R123 ScriptPacket 41 ownership. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

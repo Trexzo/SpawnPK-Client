@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/f/a/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TransientMessageEntry",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_three_string_record",
+          "detail": "The class owns exactly three packet-provided Strings plus one creation timestamp and renders the first line with Client.gn and the second/third lines with Client.gl."
+        },
+        {
+          "family": "exact_transient_lifecycle",
+          "detail": "Construction timestamps the entry with System.currentTimeMillis(); the owning overlay removes the current entry after exactly 5000 ms, so the record is explicitly short-lived rather than persistent UI state."
+        },
+        {
+          "family": "exact_animated_panel",
+          "detail": "The entry calculates width from the three rendered Strings, starts at width 175 and height 5, expands width then height, and renders a temporary bordered/filled panel before the SHOWING state."
+        }
+      ],
+      "note": "TransientMessageEntry is descriptive exact-behavior recovery for one three-line, timestamped, animated message record shown by the ScriptPacket 23 overlay. The binary supplies no narrower content domain; confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/f/a/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TransientMessageOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_overlay_role",
+          "detail": "The class extends the live overlay base rs/l/f/b, registers itself on the overlay layer rs/l/f/a.v, and renders one current TransientMessageEntry each frame."
+        },
+        {
+          "family": "exact_queue_policy",
+          "detail": "If a message is already active, new three-String entries are queued; exact duplicate triples are rejected, queue size is capped at three by dropping index 0 before append, and queued entries are promoted to the current slot when it becomes empty."
+        },
+        {
+          "family": "exact_five_second_lifetime",
+          "detail": "The overlay clears the current entry when System.currentTimeMillis() minus the entry timestamp reaches exactly 5000 milliseconds, resetting the promoted queued entry timestamp when it becomes current."
+        }
+      ],
+      "note": "TransientMessageOverlay is descriptive exact-behavior recovery for the live queued five-second message overlay. 'TransientMessage' avoids inventing a feature/domain noun; confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/f/a/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TransientMessagePacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers rs/l/f/a/a/d directly as exact ScriptPacket ID 23."
+        },
+        {
+          "family": "exact_complete_handler_surface",
+          "detail": "The handler has one operation: read exactly three packet Strings, obtain the live rs/l/f/a/a/c overlay from rs/l/f/e, and submit those three Strings to its message-entry path."
+        },
+        {
+          "family": "exact_no_other_domain",
+          "detail": "The class has no selector switch, no Client/gameplay field writes and no other collaborators; its complete packet responsibility is adding one transient three-line message."
+        }
+      ],
+      "note": "TransientMessagePacketHandler is fixed by exact ScriptPacket 23 and its single three-String write into the recovered transient-message overlay. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/f/a/a/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TransientMessageAnimationState",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "The enum constants survive exactly as EXPANDING_WIDTH, EXPANDING_HEIGHT and SHOWING."
+        },
+        {
+          "family": "exact_entry_state_machine",
+          "detail": "TransientMessageEntry initializes to EXPANDING_WIDTH, advances to EXPANDING_HEIGHT when target width is reached, and then advances to SHOWING after target height is reached."
+        }
+      ],
+      "note": "TransientMessageAnimationState follows exact surviving animation-state constants and their exclusive use by TransientMessageEntry. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/z/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CooldownManager",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_timer_registry_role",
+          "detail": "Exact v308 rs/z/d owns a Map<String, rs.z.b>, starts a duration-backed timer only when the same key is not active, can forcibly restart/remove/clear timers, reports active state and remaining milliseconds, and exposes the registry."
+        },
+        {
+          "family": "exact_login_consumer",
+          "detail": "Both rs/Client and rs/l/d/c obtain this exact object from Launcher.f(), use key LOGIN_COOLDOWN with duration 500 ms, and proceed with login only when rs/z/d.a(String,long) successfully starts the cooldown."
+        },
+        {
+          "family": "exact_notification_consumer",
+          "detail": "Launcher constructs one rs/z/d and uses it to suppress repeated tray notifications: the notification title is the key and a 5000 ms duration must be acquired before TrayIcon.displayMessage executes."
+        }
+      ],
+      "note": "CooldownManager is a conservative semantic recovery name for the shared keyed runtime cooldown registry proven by independent login and tray-notification consumers. It does not claim a verbatim original developer identifier. Confidence 0.997."
+    }
+  ],
+  "conflicts": []
+}

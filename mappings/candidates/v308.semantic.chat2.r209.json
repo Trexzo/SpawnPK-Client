@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/f/a/d/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelRecoloringOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_recoloring_ui_join",
+          "detail": "The shared development window rs/s/c/d stores this base as its active recoloring component and exposes exact mode labels 'Recoloring NPC', 'Recoloring Item', 'Recoloring Object' and 'Recoloring N/A'."
+        },
+        {
+          "family": "exact_model_color_inventory",
+          "detail": "The overlay reads the active model's face/color array, gathers definition-side recolor/texture sets and publishes color ids into the development JList with exact suffixes '(texture)', '(texturized)' and '(recolored)'."
+        },
+        {
+          "family": "exact_pre_shade_mutation",
+          "detail": "Before shading, selected color ids are rewritten in the active model color array to -1, while the alternate display mode rewrites remaining entries to 1; this is a visual recoloring/isolation inspection path rather than gameplay state."
+        },
+        {
+          "family": "exact_specializations",
+          "detail": "The only concrete specializations are the item, NPC and object recoloring overlays, each bound to the corresponding exact 3D pre-shade render stage and selected by the same development recoloring window."
+        }
+      ],
+      "note": "ModelRecoloringOverlay is descriptive exact-behavior recovery for the shared development-time model recoloring/color-isolation overlay used by item, NPC and object specializations. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/f/a/d/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemRecoloringOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_item_pre_shade_stage",
+          "detail": "The constructor binds this specialization to rs/l/f/a.a, whose surviving enum literal is ITEM_3D_PRE_SHADE."
+        },
+        {
+          "family": "exact_item_definition_state",
+          "detail": "The specialization resolves and tracks one rs/d/k item definition, exposes that definition's model-id/recolor state to the shared model recoloring base and refreshes when the selected item id changes."
+        },
+        {
+          "family": "exact_developer_ui_label",
+          "detail": "rs/s/c/d.a(int, boolean) sets the exact visible mode text 'Recoloring Item' and then selects this exact overlay through rs/l/f/e.k()."
+        }
+      ],
+      "note": "ItemRecoloringOverlay is fixed by ITEM_3D_PRE_SHADE, item-definition state and the exact 'Recoloring Item' development UI path. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/f/a/d/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcRecoloringOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_npc_pre_shade_stage",
+          "detail": "The constructor binds this specialization to rs/l/f/a.c, whose surviving enum literal is NPC_3D_PRE_SHADE."
+        },
+        {
+          "family": "exact_npc_definition_state",
+          "detail": "The specialization accepts an rs/a/j NPC actor, tracks its rs/d/d NPC definition id, resolves that definition and exposes its model/recolor state to the shared model recoloring base."
+        },
+        {
+          "family": "exact_developer_ui_label",
+          "detail": "rs/s/c/d.a(rs/a/j, boolean) sets the exact visible mode text 'Recoloring NPC' and then selects this exact overlay through rs/l/f/e.j()."
+        }
+      ],
+      "note": "NpcRecoloringOverlay is fixed by NPC_3D_PRE_SHADE, live NPC-definition state and the exact 'Recoloring NPC' development UI path. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/f/a/d/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ObjectRecoloringOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_object_pre_shade_stage",
+          "detail": "The constructor binds this specialization to rs/l/f/a.d, whose surviving enum literal is OBJECT_3D_PRE_SHADE."
+        },
+        {
+          "family": "exact_object_definition_state",
+          "detail": "The specialization resolves and tracks one rs/d/r object definition, exposes that definition's model/color state to the shared recoloring base and refreshes the client when the selected object id changes."
+        },
+        {
+          "family": "exact_developer_ui_label",
+          "detail": "rs/s/c/d.b(int, boolean) sets the exact visible mode text 'Recoloring Object' and then selects this exact overlay through rs/l/f/e.l()."
+        }
+      ],
+      "note": "ObjectRecoloringOverlay is fixed by OBJECT_3D_PRE_SHADE, object-definition state and the exact 'Recoloring Object' development UI path. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

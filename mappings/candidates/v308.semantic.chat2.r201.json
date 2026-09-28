@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/f/a/c/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CombatOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_overlay_identity",
+          "detail": "The constructor writes the exact surviving overlay identity literal 'CombatOverlay' into the shared client-overlay base, fixing the class noun directly."
+        },
+        {
+          "family": "exact_overlay_contract",
+          "detail": "The class extends the shared positioned overlay base, configures overlay placement/layer behavior, returns zero dimensions when hidden, and otherwise renders one bounded combat-status surface."
+        },
+        {
+          "family": "exact_combat_target_resolution",
+          "detail": "The overlay stores a target name and entity index, resolves that index to live NPC or player state, validates the resolved entity name against the stored target, and derives current combat/health state from that entity."
+        },
+        {
+          "family": "exact_health_progress_render",
+          "detail": "It stores maximum/current combat values plus an animated display value, derives the proportional bar width, handles recent damage interpolation, and renders the target label together with current/max values on the combat bar."
+        },
+        {
+          "family": "exact_visibility_lifecycle",
+          "detail": "Rendering requires a non-null target name, positive maximum value and a recent update timestamp; the overlay expires after 20 seconds and is additionally suppressed by exact client/interface visibility state."
+        }
+      ],
+      "note": "CombatOverlay is fixed by the exact surviving 'CombatOverlay' identity literal and a complete single-purpose target/health/progress render lifecycle. This client-native overlay is distinct from the separately reviewed CombatOverlaysPlugin/config subsystem. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

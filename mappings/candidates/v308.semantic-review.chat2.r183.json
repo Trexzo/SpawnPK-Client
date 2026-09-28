@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_A3664323BAFEE620DA1D",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_FB28539C1D0D3FCFC4C9",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000954",
+      "owner_logical_id": "CLIENT_CLASS_000954",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/q/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FightPerformancePanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_v308_panel_shape",
+          "detail": "rs/s/q/b/a directly extends JPanel, stores exactly one rs/s/q/a/a fight model, owns paired fighter labels/panels, and exposes only constructor/update/get/set fight behavior."
+        },
+        {
+          "family": "exact_v308_presentation_fingerprint",
+          "detail": "The class preserves the exact formatter \"HH:mm:ss 'on' yyyy/MM/dd\", static normal/hover borders, and the five tracker icon resources ico_skull.png, ico_user.png, ico_pray.png, ico_magic.png and ico_damage.png."
+        },
+        {
+          "family": "exact_tracker_graph",
+          "detail": "The class is instantiated by the reviewed PvPTrackerPanel for fight-history/current-fight presentation and consumes the R142 reviewed PvPTrackerFight model."
+        },
+        {
+          "family": "upstream_source_name_match",
+          "detail": "The pinned OpenOSRS PvP Performance Tracker source open-osrs/OpenOSRS-RL-hub@32df35dcf71dde2f9f5e81ce8170bd2da325b63c pvpperformancetracker/src/main/java/matsyir/pvpperformancetracker/FightPerformancePanel.java defines class FightPerformancePanel with the same JPanel role, one fight model, identical date formatter, normal/hover borders and the same fighter performance presentation responsibilities."
+        }
+      ],
+      "note": "FightPerformancePanel is recovered at confidence 0.999 from an exact v308 presentation/structure match plus the original OpenOSRS PvP Performance Tracker source name. The adjacent simplified SpawnPK fight model is not renamed by this batch."
+    }
+  ],
+  "unresolved": []
+}

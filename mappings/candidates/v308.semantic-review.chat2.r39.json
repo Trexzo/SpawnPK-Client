@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_BC5E6AB3E6207F6BD98B",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_F6DC28793F0CE1517C28",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000166",
+      "owner_logical_id": "CLIENT_CLASS_000166",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CollisionMap",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_grid_shape",
+          "detail": "The class owns a 104x104 int clipping grid. Reset marks the outer border with 0x00FFFFFF and interior cells with 0x01000000, matching a tile collision/clipping map rather than terrain heights or scene objects."
+        },
+        {
+          "family": "exact_directional_masks",
+          "detail": "Wall placement/removal methods apply reciprocal directional masks to the target tile and its neighbor (including 1,2,4,8,16,32,64,128 and projectile-blocking counterparts such as 1024,4096,16384,65536)."
+        },
+        {
+          "family": "exact_object_and_reachability_role",
+          "detail": "Additional methods set/clear rectangular object-blocking masks and test whether one tile/area can reach another through directional clipping flags for wall/decor/object interaction."
+        }
+      ],
+      "note": "CollisionMap is fixed by the exact tile-clipping grid, reciprocal directional wall masks and reachability tests; it is a semantic recovery name rather than an original-identifier claim."
+    }
+  ],
+  "unresolved": []
+}

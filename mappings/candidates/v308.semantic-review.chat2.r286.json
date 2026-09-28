@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_2C962EAEF0049B63885E",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_18BDA93C4E380D4D81C8",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000564",
+      "owner_logical_id": "CLIENT_CLASS_000564",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/R",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HotspotVoteSkipTooltipTask",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_widget_binding",
+          "detail": "EventStatusOverviewInterface registers this concrete deferred task on widget 62153, the exact Vote to skip hotspot control."
+        },
+        {
+          "family": "exact_tooltip_literal",
+          "detail": "Its execution calls the live Client tooltip path with the exact text '<img=25> Vote to skip\\nIf enough players vote to skip, the\\nhotspot will automatically change.'."
+        },
+        {
+          "family": "exact_pointer_position",
+          "detail": "The tooltip is shown at the task base's exact client-relative mouse x/y coordinates, fixing the role as the vote-skip hover tooltip task."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 hotspot tooltip behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_8307E1DECE14963EE5B4",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000565",
+      "owner_logical_id": "CLIENT_CLASS_000565",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/S",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HotspotStatusTooltipTask",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_status_widget_binding",
+          "detail": "EventStatusOverviewInterface registers the same instance on hotspot/status widgets 62150, 62151, 62152 and 62156."
+        },
+        {
+          "family": "exact_dynamic_tooltip",
+          "detail": "Execution displays Client.bS through the live Client tooltip path at the same client-relative mouse coordinates, making it the dynamic hotspot/status tooltip task."
+        },
+        {
+          "family": "exact_vote_tooltip_precedence",
+          "detail": "The task captures HotspotVoteSkipTooltipTask and suppresses its own display while that vote-tooltip task is already queued, proving the two tasks are coordinated hover surfaces."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 hotspot tooltip behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}

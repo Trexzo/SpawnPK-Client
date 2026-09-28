@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_C13F4E48CFAAB9CB2FA6",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_501AFCBD5DE68ED5FD6A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000381",
+      "owner_logical_id": "CLIENT_CLASS_000381",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/b/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GameSceneRenderer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_logged_in_scene_entry",
+          "detail": "The main logged-in render path in rs/l/b/a calls rs/l/b/c.a(Client) as the world-scene phase; rs/l/b/c is therefore live frame rendering authority rather than an orphan graphics helper."
+        },
+        {
+          "family": "exact_camera_and_scene_flow",
+          "detail": "rs/l/b/c computes the active camera pitch/yaw/position from Client state, applies the five camera-shake channels, derives the viewport projection and drives the world-scene draw path before restoring the prior camera state."
+        },
+        {
+          "family": "exact_scene_polygon_join",
+          "detail": "R133 independently proved that this class consumes Client.aa ScenePolygonManager records, creates scene Graphics2D and renders their live polygons with fill/outline colors after world projection."
+        },
+        {
+          "family": "exact_downstream_handoff",
+          "detail": "After scene/world overlay work, the same render phase invokes the adjacent HUD/gameframe renderer rs/l/b/b and then the remaining client post-scene presentation hooks, distinguishing it from the R302 InterfaceRenderer."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 logged-in world-scene/camera rendering behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}

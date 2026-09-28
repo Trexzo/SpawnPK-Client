@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 8,
+  "review_id": "SEMREVIEW_B22A3A1170133143FD11",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_695546E6E8ABB31AA768",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000258",
+      "owner_logical_id": "CLIENT_CLASS_000258",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutSkillLevelMouseListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_hit_regions",
+          "detail": "MouseListener maps seven fixed hit regions in the loadout panel to skill indices 0 through 6."
+        },
+        {
+          "family": "exact_editor_join",
+          "detail": "For a matched skill region it disposes any existing editor, constructs the already-reviewed LoadoutSkillLevelEditor with the loadout manager and selected skill index, and opens it."
+        },
+        {
+          "family": "exact_skill_contract",
+          "detail": "LoadoutSkillLevelEditor exposes the seven exact skill labels Attack, Range, Strength, Prayer, Defence, Magic and Hitpoints."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout UI behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_805179352AAA64F6C2A1",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000253",
+      "owner_logical_id": "CLIENT_CLASS_000253",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DeleteLoadoutCancelAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_action_role",
+          "detail": "ActionListener performs no model mutation; it only hides and disposes the delete-current-loadout confirmation frame."
+        },
+        {
+          "family": "exact_modal_binding",
+          "detail": "LoadoutFolderPanel wires this listener to the exact cancellation button 'No, Nevermind.' in the delete-current-loadout dialog."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout UI behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_95C78FA161FD252D2A70",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000252",
+      "owner_logical_id": "CLIENT_CLASS_000252",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DeleteLoadoutConfirmAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_action_role",
+          "detail": "ActionListener invokes the loadout manager's delete operation for the current folder and active loadout name, then hides and disposes the confirmation frame."
+        },
+        {
+          "family": "exact_modal_binding",
+          "detail": "LoadoutFolderPanel wires this listener to the affirmative button in the delete-current-loadout confirmation dialog."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout UI behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_95EBF0CABEDA74448216",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000255",
+      "owner_logical_id": "CLIENT_CLASS_000255",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RenameLoadoutConfirmAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_model_mutation",
+          "detail": "ActionListener reads the replacement name, color, and icon from LoadoutPropertiesFrame, applies color/icon to the current loadout, and invokes the loadout manager rename operation."
+        },
+        {
+          "family": "exact_flow_join",
+          "detail": "RenameLoadoutAction installs this class as the rename listener on the shared LoadoutPropertiesFrame."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout UI behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_A1119B42DD46C3E7D54A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000254",
+      "owner_logical_id": "CLIENT_CLASS_000254",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RenameLoadoutAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_action_role",
+          "detail": "ActionListener resolves the current loadout and folder, opens LoadoutPropertiesFrame for that loadout, and uses the exact action label 'Rename'."
+        },
+        {
+          "family": "exact_property_prefill",
+          "detail": "Before display it preloads the current loadout name, stored color, and stored icon into LoadoutPropertiesFrame."
+        },
+        {
+          "family": "exact_parent_binding",
+          "detail": "LoadoutFolderPanel attaches this listener to the button whose tooltip is 'Rename the active loadout'."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout UI behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_A9082AE9418861355063",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000251",
+      "owner_logical_id": "CLIENT_CLASS_000251",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OpenLoadoutFolderContextMenuMouseAdapter",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_mouse_role",
+          "detail": "Exact v308 extends MouseAdapter; on a left-button mouseReleased it retrieves the owning LoadoutFolderPanel's folder popup menu and shows it at the clicked component."
+        },
+        {
+          "family": "exact_parent_binding",
+          "detail": "LoadoutFolderPanel attaches this adapter directly to the button whose tooltip is '<html>Loadout folders</html>'."
+        },
+        {
+          "family": "reviewed_menu_join",
+          "detail": "The popup shown by this adapter is built by the already-reviewed LoadoutFolderContextMenu family."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout UI behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_F5CFE62BCE3EAEB44A31",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000256",
+      "owner_logical_id": "CLIENT_CLASS_000256",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MoveLoadoutUpAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_action_role",
+          "detail": "ActionListener resolves the active loadout and, when present, asks the loadout manager to move the current-folder loadout from the selected combo-box index to selectedIndex - 1."
+        },
+        {
+          "family": "exact_parent_binding",
+          "detail": "LoadoutFolderPanel attaches this listener to the button whose tooltip is 'Move loadout up in the list'."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout UI behavior; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_F708336B717F992D6B73",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000257",
+      "owner_logical_id": "CLIENT_CLASS_000257",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MoveLoadoutDownAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_action_role",
+          "detail": "ActionListener resolves the active loadout and, when present, asks the loadout manager to move the current-folder loadout from the selected combo-box index to selectedIndex + 1."
+        },
+        {
+          "family": "exact_parent_binding",
+          "detail": "LoadoutFolderPanel attaches this listener to the button whose tooltip is 'Move loadout down in the list'."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 loadout UI behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}

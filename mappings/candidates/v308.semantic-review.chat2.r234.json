@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_EDD457452DF995D41667",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_05AD3F506160E16D8C27",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000284",
+      "owner_logical_id": "CLIENT_CLASS_000284",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/w",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FontManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_font_resource_surface",
+          "detail": "Exact v308 rs/gui/w owns five cached Font values and five direct getters. Its static initializer loads exact classpath resources runescape.ttf, runescape_small.ttf and runescape_bold.ttf, derives 16px fonts, registers each with GraphicsEnvironment, then resolves them through StyleContext."
+        },
+        {
+          "family": "exact_default_and_failure_surface",
+          "detail": "The class creates Dialog plain 16 and Dialog bold 16 default fonts and preserves exact RuntimeException messages 'Font loaded, but format incorrect.' and 'Font file not found.' for FontFormatException and IOException."
+        },
+        {
+          "family": "upstream_runelite_source_lineage",
+          "detail": "RuneLite net.runelite.client.ui.FontManager has the same three RuneScape font resources, GraphicsEnvironment/StyleContext registration model, runescape/default font roles, getters and exact failure strings. Historical RuneLite parent 593c8102f66cffcb8b55678aa59f2a36dfcf64ff also preserves the v308-era plain-style runescape_bold handling; later upstream revisions add default/custom-font behavior, while SpawnPK combines those lineage elements."
+        },
+        {
+          "family": "stable_lineage_coordinate",
+          "detail": "The exact-v308 stable sequence places rs/gui/w at CLIENT_CLASS_000284 directly after rs/gui/v / CLIENT_CLASS_000283."
+        }
+      ],
+      "note": "FontManager is recovered at confidence 0.999 from exact resources, font construction/registration behavior, getter roles and error literals matching RuneLite FontManager lineage. SpawnPK combines upstream-era details, so this is source-identity recovery with documented fork drift rather than a claim of byte-identical upstream revision."
+    }
+  ],
+  "unresolved": []
+}

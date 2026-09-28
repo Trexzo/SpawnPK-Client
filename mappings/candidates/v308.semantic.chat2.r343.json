@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AnimatedTextIconDefinition",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_frame_range_state",
+          "detail": "The constructor stores start/end sprite-frame indices and initializes currentFrame=start; a() increments currentFrame and wraps to start after end."
+        },
+        {
+          "family": "exact_rich_text_consumer",
+          "detail": "R55 RSFont resolves these definitions from rs/l/j by inline icon id, selects the current sprite from the client text-icon sprite table, and reads additional definition integers as icon placement/spacing adjustments during rich-text layout and drawing."
+        },
+        {
+          "family": "exact_overlay_consumer",
+          "detail": "R74 ItemIconOverlay resolves TEXT_ICON overlays through the same rs/l/j definition map and uses currentFrame to select the live client text-icon sprite."
+        },
+        {
+          "family": "exact_registry_population",
+          "detail": "rs/l/j populates the definition map with explicit icon-id to sprite-frame ranges such as 21 -> 27..30, 32 -> 33..36, 45 -> 41..44 and multiple 333+ animated ranges, with fluent per-icon offsets/spacing."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for one animated inline text-icon definition. The six additional integers are retained generically as presentation adjustments rather than over-named."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RichTextMarkupRegistry",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_icon_registry",
+          "detail": "The class owns the int-keyed rs/l/a/a AnimatedTextIconDefinition map used by RSFont and ItemIconOverlay, plus icon-id arrays and resource lookup helpers for icons/, clan/icons/ and popup icon families."
+        },
+        {
+          "family": "exact_markup_palette",
+          "detail": "It owns the String->Integer color map and exact markup tokens including red, gre, blu, cya, mag, whi, yel, lre, dre, or0..or3, gr1..gr3 and additional hexadecimal colors."
+        },
+        {
+          "family": "exact_text_markup_helpers",
+          "detail": "Its helpers parse color text, classify icon ids, strip classic <...>/@...@ markup with regex, and expose icon/color lookup behavior consumed by the rich-text renderer."
+        },
+        {
+          "family": "exact_animation_population",
+          "detail": "Static initialization constructs the animated inline-icon definitions and derives the registered icon-id set used by RSFont's icon width/drawing paths."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the shared rich-text markup/color/inline-icon registry. It is broader than an icon-only cache and narrower than the RSFont renderer itself."
+    }
+  ],
+  "conflicts": []
+}

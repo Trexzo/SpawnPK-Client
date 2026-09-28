@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_3BB4E2A255F6BCA26229",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_7F6B11FFF02B7EE3D9F9",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000811",
+      "owner_logical_id": "CLIENT_CLASS_000811",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GameState",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_constants",
+          "detail": "rs/runelite/a/c is a nine-value enum with surviving exact constants UNKNOWN, STARTING, LOGIN_SCREEN, LOGIN_SCREEN_AUTHENTICATOR, LOGGING_IN, LOADING, LOGGED_IN, CONNECTION_LOST and HOPPING."
+        },
+        {
+          "family": "exact_protocol_ids",
+          "detail": "The enum preserves exact numeric state ids -1, 0, 10, 11, 20, 25, 30, 40 and 45 and exposes deterministic int-to-enum and enum-to-int conversion."
+        },
+        {
+          "family": "exact_event_identity",
+          "detail": "rs/runelite/events/GameStateChanged stores this exact type in a field literally named gameState and exposes exact getGameState()/setGameState(...) methods."
+        },
+        {
+          "family": "exact_client_transitions",
+          "detail": "Client constructs and posts GameStateChanged events with these enum values during real client transitions including LOADING, LOGIN_SCREEN and LOGGING_IN."
+        },
+        {
+          "family": "exact_runtime_consumers",
+          "detail": "The type is referenced by Client plus login, plugin/sidebar and Trading Post runtime classes, matching a shared top-level client game-state contract rather than a feature-local enum."
+        }
+      ],
+      "note": "GameState is fixed by exact enum state names/ids and the surviving GameStateChanged.gameState/getGameState/setGameState API. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}

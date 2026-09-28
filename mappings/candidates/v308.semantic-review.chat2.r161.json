@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_4CAA59E079289FA28AA0",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_0C56681840C4E65F53AE",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000857",
+      "owner_logical_id": "CLIENT_CLASS_000857",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CombatOverlayStyle",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_binding",
+          "detail": "The combatInfo config interface returns rs/s/a/c from exact keys opponentOverlayStyle, bhOverlayStyle and bossOverlayStyle, with titles 'Opponent overlay style', 'Bounty hunter overlay style' and 'Boss overlay style'."
+        },
+        {
+          "family": "exact_enum_constants",
+          "detail": "The enum preserves exactly DEFAULT and COMPACT."
+        },
+        {
+          "family": "exact_shared_scope",
+          "detail": "One enum type is intentionally shared by opponent, bounty-hunter and boss overlays, so the role is a common combat-overlay style rather than one feature-specific overlay type."
+        },
+        {
+          "family": "exact_runtime_binding",
+          "detail": "The combat-info config manager compares these values to COMPACT and writes the resulting runtime flags into shared client settings used by combat overlay presentation."
+        }
+      ],
+      "note": "CombatOverlayStyle is fixed by the exact combatInfo config keys/titles and shared DEFAULT/COMPACT contract across opponent, bounty-hunter and boss overlays. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_60C2BB1A18AB487CD1A7",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000858",
+      "owner_logical_id": "CLIENT_CLASS_000858",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HealthBarStyle",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_binding",
+          "detail": "The combatInfo config interface returns rs/s/a/d from the exact key healthBarStyle with title 'Health bars' and description 'The style of health bar to display'."
+        },
+        {
+          "family": "exact_enum_constants",
+          "detail": "The enum preserves exactly OLDSCHOOL and NEWSCHOOL."
+        },
+        {
+          "family": "exact_runtime_binding",
+          "detail": "The combat-info config manager compares the selected value to NEWSCHOOL and writes the resulting boolean into live client combat-presentation state."
+        }
+      ],
+      "note": "HealthBarStyle follows the exact surviving healthBarStyle config key, health-bar title/description and OLDSCHOOL/NEWSCHOOL values. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_A7281C17C103FE862816",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000859",
+      "owner_logical_id": "CLIENT_CLASS_000859",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/a/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HitMarkStyle",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_binding",
+          "detail": "The combatInfo config interface returns rs/s/a/e from the exact key hitMarkStyle with title 'Hitsplats'."
+        },
+        {
+          "family": "exact_enum_constants",
+          "detail": "The enum preserves exactly OLDSCHOOL_WITH_ICONS, OLDSCHOOL and NEWSCHOOL."
+        },
+        {
+          "family": "exact_runtime_binding",
+          "detail": "The combat-info config manager distinguishes NEWSCHOOL and OLDSCHOOL_WITH_ICONS and writes the resulting live client hit-mark presentation flags."
+        },
+        {
+          "family": "exact_semantic_scope",
+          "detail": "The enum is paired with the hitOverlay config section and the adjacent healthBarStyle/multipliedHits settings, fixing it as hit-mark/hitsplat presentation style rather than a generic UI theme."
+        }
+      ],
+      "note": "HitMarkStyle follows the exact hitMarkStyle config key plus OLDSCHOOL_WITH_ICONS/OLDSCHOOL/NEWSCHOOL runtime behavior. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}

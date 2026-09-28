@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OnDemandData",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Exact-v308 node stores request data type/id, payload buffer, incomplete/priority state, loop-cycle counter and additional request metadata; constructor defaults the request-state booleans."
+        },
+        {
+          "family": "exact_fetcher_role",
+          "detail": "OnDemandFetcher queues, retries, fills and completes these nodes by matching their type/id and writing received bytes into the node buffer."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Classic 317 client source names the structurally identical node OnDemandData with fields dataType, ID, buffer, incomplete and loopCycle."
+        }
+      ],
+      "note": "Pinned SpawnPK v308 behavior is primary authority; historical client source corroborates the inherited identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OnDemandFetcher",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Exact-v308 class extends rs/cache/e, implements Runnable, owns request queues, CRC32, socket/input/output state, version/index arrays and the on-demand fetch/retry/read loop."
+        },
+        {
+          "family": "exact_algorithm_role",
+          "detail": "The run loop performs check/failed/request/read stages, retries incomplete requests after loop-cycle thresholds, resets stalled sockets, validates CRC/version trailers and writes completed files into cache stores."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Classic 317 OnDemandFetcher source matches the same superclass, Runnable role, request-loop structure, CRC check, socket state and OnDemandData queues."
+        }
+      ],
+      "note": "Name is strongly fixed by exact algorithm and historical lineage."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OnDemandFetcherParent",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Minimal parent class exposes the integer request hook overridden by rs/cache/d; model/cache consumers hold this parent type and invoke that request method when data is absent."
+        },
+        {
+          "family": "exact_inheritance_role",
+          "detail": "Exact-v308 OnDemandFetcher extends this class directly."
+        },
+        {
+          "family": "historical_origin_crosscheck",
+          "detail": "Classic 317 clients expose OnDemandFetcherParent as the parent request abstraction consumed by model-loading code and extended by OnDemandFetcher."
+        }
+      ],
+      "note": "Parent name follows exact inheritance/request contract; historical identity is corroborating evidence."
+    }
+  ],
+  "conflicts": []
+}

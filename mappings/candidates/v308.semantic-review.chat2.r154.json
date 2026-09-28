@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_26EFDAFE2D0D62B5BA26",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_E774876303909F93AAD6",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000171",
+      "owner_logical_id": "CLIENT_CLASS_000171",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/f/a$d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SeasonalItemMode",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_enum_constants",
+          "detail": "rs/f/a$d preserves exactly NONE, SPRING, SUMMER, HWEEN, DARK_WINTER and WINTER."
+        },
+        {
+          "family": "exact_consumer_isolation",
+          "detail": "Outside ClientSettings itself, exact-v308 binary references to this enum occur in ItemDefinition. No floor, NPC, object, region, UI or renderer class consumes it."
+        },
+        {
+          "family": "exact_item_override_behavior",
+          "detail": "ItemDefinition branches on SPRING/HWEEN/DARK_WINTER/WINTER values to apply season-specific item-definition/model override tables for selected item ids. The enum therefore controls seasonal item presentation rather than the whole-world theme handled by sibling rs/f/a$b."
+        },
+        {
+          "family": "exact_persistence_pair",
+          "detail": "ClientSettings stores this enum as the second component of ground_mode=<WorldTheme>.<SeasonalItemMode>. The v308 default is NONE, and settings restoration validates the persisted WorldTheme against the current second-component mode before restoring the first component."
+        },
+        {
+          "family": "exact_sibling_separation",
+          "detail": "R153 WorldTheme carries RGB color payload and is consumed across FloorDefinition/NpcDefinition/ObjectDefinition/ObjectManager. rs/f/a$d carries no color payload and is ItemDefinition-scoped, fixing a distinct seasonal-item mode responsibility."
+        }
+      ],
+      "note": "SeasonalItemMode is descriptive recovery for the payload-free second ground_mode enum whose exact compiled consumer surface is ItemDefinition seasonal override logic. Confidence is 0.998 because v308 fixes the enum values and item-domain role but does not expose every non-default activation path."
+    }
+  ],
+  "unresolved": []
+}

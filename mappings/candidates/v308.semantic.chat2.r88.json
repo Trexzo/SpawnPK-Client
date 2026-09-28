@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/k/e$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ComputeMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_constants",
+          "detail": "The nested GpuRenderer enum preserves the exact constants NONE, OPENGL and OPENCL."
+        },
+        {
+          "family": "exact_renderer_selection",
+          "detail": "R87 GpuRenderer initializes the mode to NONE, selects OPENCL on macOS and OPENGL on other supported platforms, and falls back from OPENGL to NONE when OpenGL 4.3 compute shaders are unavailable."
+        },
+        {
+          "family": "exact_compute_dispatch",
+          "detail": "The renderer dispatches distinct scene-processing paths by this enum: NONE uses the CPU-side scene path, OPENGL uses GL compute shaders/uniform buffers, and OPENCL delegates to the dedicated OpenCL runtime object."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "A public RuneLite-derived GPU implementation preserves an enum named ComputeMode with the identical NONE, OPENGL and OPENCL constants."
+        }
+      ],
+      "note": "ComputeMode is strongly corroborated by the exact-v308 renderer contract and identical historical RuneLite-derived enum identity. Exact v308 remains the semantic authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/k/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OSType",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_constants",
+          "detail": "The enum preserves the exact values Windows, MacOS, Linux and Other."
+        },
+        {
+          "family": "exact_detection_contract",
+          "detail": "Its static initializer reads os.name, lowercases it and maps mac/darwin, win and nux substrings to MacOS, Windows and Linux, otherwise Other; a() returns the detected singleton value."
+        },
+        {
+          "family": "exact_runtime_consumers",
+          "detail": "R87 GpuRenderer and its OpenCL support use this detected enum to choose platform-specific compute/context behavior, including macOS OPENCL selection."
+        },
+        {
+          "family": "historical_name_corroboration",
+          "detail": "RuneLite preserves net.runelite.client.util.OSType with the same Windows, MacOS, Linux and Other constants and the same os.name detection algorithm."
+        }
+      ],
+      "note": "OSType is directly corroborated by the exact-v308 detection algorithm and matching RuneLite class identity. Exact v308 remains the semantic authority."
+    }
+  ],
+  "conflicts": []
+}

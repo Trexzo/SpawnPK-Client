@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LegacyItemDefinitionConfigParser",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_config_path",
+          "detail": "rs/d/g derives one fixed source path from the client cache root: configs/old_i.dat."
+        },
+        {
+          "family": "exact_item_block_grammar",
+          "detail": "Its parser recognizes exact [item ...] block headers and item-definition keys including name, modelid/groundmodel, clone, description, zoom, offsets, value, textures, actions, equipment fields, stack ids/amounts, cert/note/template and stackable."
+        },
+        {
+          "family": "exact_definition_output",
+          "detail": "Parsed blocks create or clone R28 ItemDefinition instances, mutate their ItemDefinition fields directly, and are returned in an item-id keyed Trove object map."
+        },
+        {
+          "family": "exact_parser_diagnostics",
+          "detail": "The class preserves the exact mismatch diagnostic 'Error! Detected mismatch at line: <n>' and exposes a companion path that reads the same old_i.dat source into a raw line list."
+        }
+      ],
+      "note": "LegacyItemDefinitionConfigParser is the conservative semantic name for this exact old_i.dat item-definition parser. No direct exact-v308 caller survives, so confidence is deliberately lower than runtime-wired batches and the name does not imply active production use or a verbatim original identifier."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_0AC800944F9BC39C0F26",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_E5066BD8C6EDB27DFB44",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000938",
+      "owner_logical_id": "CLIENT_CLASS_000938",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/n/c$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NotificationSound",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_config_binding",
+          "detail": "Exact v308 NotificationAlertsConfig key notificationSound / title Notification sound returns rs/s/n/c$a and defaults to its NATIVE constant."
+        },
+        {
+          "family": "exact_enum_identity",
+          "detail": "Exact v308 enum constants are NATIVE(\"Native\") and OFF(\"Off\"); toString returns the stored display label, and DesktopNotificationService consumes this enum in the notification-sound path."
+        },
+        {
+          "family": "upstream_runelite_source_identity",
+          "detail": "RuneLite uses the source type name NotificationSound for the notificationSound config setting and the same NATIVE / Off-facing notification-sound domain."
+        }
+      ],
+      "note": "NotificationSound is source-identified by the exact notificationSound config binding, surviving NATIVE/OFF enum surface and RuneLite source identity. SpawnPK's v308 variant contains the two modes NATIVE and OFF; confidence 0.998."
+    }
+  ],
+  "unresolved": []
+}

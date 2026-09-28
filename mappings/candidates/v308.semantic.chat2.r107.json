@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/b/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EditorKitController",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_product_mode",
+          "detail": "Launcher checks this class's static editor-mode flag and changes the client window title to the literal 'SPK Editor Kit' while also switching the normal launcher/UI layout for that mode."
+        },
+        {
+          "family": "exact_lifecycle",
+          "detail": "The live loading controller constructs exactly one rs/l/b/a/d(Client), stores it in the class singleton, and immediately initializes it when Editor Kit mode is active; Client loop/input/camera paths later call back into that same singleton."
+        },
+        {
+          "family": "exact_command_controller",
+          "detail": "The class owns the live Editor Kit command surface for npc, player, item, delete/del, reset/wipe, reverse, hud, background/bg plus per-entity movement and animation commands."
+        },
+        {
+          "family": "exact_editor_state",
+          "detail": "It owns the editor entity list, active graphics context, camera position/curve/zoom state, background color, HUD/mode flags and status-message output. Surviving diagnostics include 'Camera position reset', 'Entities cleared!', 'Entity indices reversed!' and 'Graphics and definitions have been reset!'."
+        }
+      ],
+      "note": "EditorKitController is descriptive exact-behavior recovery anchored by the surviving product label 'SPK Editor Kit', singleton lifecycle and command/render ownership. No surviving original class noun was found."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/b/a/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EditorEntity",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_abstract_hierarchy",
+          "detail": "The class is abstract and has exactly three concrete subclasses in exact v308: rs/l/b/a/a/b, rs/l/b/a/a/c and rs/l/b/a/a/d."
+        },
+        {
+          "family": "exact_shared_state",
+          "detail": "It owns the common Editor Kit entity position, animation definition/frame state, selection/hover state, render-order/index state and per-entity interaction collections."
+        },
+        {
+          "family": "exact_shared_tick",
+          "detail": "Its common update method lazily initializes subclass rendering, calls the subclass render hook every tick, and advances the assigned SequenceDefinition frame cycle when an animation is active."
+        },
+        {
+          "family": "exact_controller_dependency",
+          "detail": "The shared class reads the EditorKitController singleton/Client for projection and mouse-space data, proving it is the common entity abstraction owned by that editor subsystem."
+        }
+      ],
+      "note": "EditorEntity is descriptive exact-behavior recovery for the shared abstract base of the three Editor Kit entity kinds."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/b/a/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EditorItemEntity",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_item_command",
+          "detail": "EditorKitController's live 'item' command parses one item ID, resolves ItemDefinition for the confirmation text, removes any prior item entity and constructs new rs/l/b/a/a/b(itemId)."
+        },
+        {
+          "family": "exact_item_identity",
+          "detail": "The subclass stores only its item-specific integer beyond the EditorEntity base and exposes direct get/set access to that value."
+        },
+        {
+          "family": "exact_item_render",
+          "detail": "Its render hook calls ItemDefinition sprite generation for the stored item ID and draws that item sprite in the Editor Kit overlay, alongside the editor entity selection/index visualization."
+        },
+        {
+          "family": "exact_hierarchy",
+          "detail": "It is one of exactly three concrete subclasses of EditorEntity, alongside the independently NPC- and Player-backed subclasses."
+        }
+      ],
+      "note": "EditorItemEntity is descriptive exact-behavior recovery for the Editor Kit entity created by the item command and rendered from ItemDefinition sprites."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/b/a/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EditorNpcEntity",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_npc_definition",
+          "detail": "The integer constructor resolves rs/d/d.c(id), the R28 NpcDefinition lookup, and the model/render path obtains the NPC definition model."
+        },
+        {
+          "family": "exact_npc_command",
+          "detail": "EditorKitController's live 'npc' command constructs this subclass with the requested NPC ID, assigns editor index/position and inserts it into the editor entity list."
+        },
+        {
+          "family": "exact_surviving_labels",
+          "detail": "The subclass preserves exact interaction messages 'Selected @gre@NPC entity #' and 'Deleted @red@NPC entity #'."
+        },
+        {
+          "family": "exact_hierarchy",
+          "detail": "It is one of exactly three concrete EditorEntity subclasses and is the only one backed by NpcDefinition."
+        }
+      ],
+      "note": "EditorNpcEntity is strongly fixed by direct NpcDefinition ownership, the live npc command and surviving NPC entity labels."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/b/a/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EditorPlayerEntity",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_player_model",
+          "detail": "The subclass constructs and maintains an rs/a/k Player instance and obtains its model through the Player model path while owning editor appearance/equipment state."
+        },
+        {
+          "family": "exact_player_command",
+          "detail": "EditorKitController's live 'player' command constructs this subclass, assigns editor index/position and inserts it into the shared entity list."
+        },
+        {
+          "family": "exact_player_customization",
+          "detail": "The adjacent live player-command helper mutates this entity's appearance/equipment using named slots such as amulet, boots, cape, gloves, helmet, legs, shield and weapon plus male/female transforms."
+        },
+        {
+          "family": "exact_surviving_labels",
+          "detail": "The subclass preserves exact interaction messages 'Selected @gre@Player entity #' and 'Deleted @red@Player entity #'."
+        }
+      ],
+      "note": "EditorPlayerEntity is strongly fixed by its Player-backed model path, live player command, appearance/equipment mutations and surviving Player entity labels."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_FD135EAA84CA72B0CC53",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_04D9A41F6586FEFCA32F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000079",
+      "owner_logical_id": "CLIENT_CLASS_000079",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MapChunkRotation",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_stateless_transform_role",
+          "detail": "rs/c exposes exactly four static integer transforms and no state: two map local X/Y coordinates inside an 8x8 chunk under quarter-turn rotation, and two perform the same transform while accounting for object width/height."
+        },
+        {
+          "family": "exact_rotation_math",
+          "detail": "All methods normalize rotation with '& 3' and return the expected quarter-turn coordinate forms using 7-coordinate and 7-coordinate-(size-1) complements."
+        },
+        {
+          "family": "exact_object_placement_consumer",
+          "detail": "R53 ObjectManager uses these transforms while decoding rotated map/object chunks so source-local coordinates and object footprints are remapped into the destination chunk consistently."
+        }
+      ],
+      "note": "MapChunkRotation is a conservative semantic recovery name for this stateless 8x8 region/object coordinate rotation helper; it does not claim a verbatim original developer identifier."
+    }
+  ],
+  "unresolved": []
+}

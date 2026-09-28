@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/t",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClickTextSelectionInterface",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_row_range",
+          "detail": "The builder creates 600 selectable text widgets across ids 51320 through 51919 under root 51318, each with exact action text 'Select' and hover/click state enabled."
+        },
+        {
+          "family": "exact_scrolling_container",
+          "detail": "Widget 51319 is a 600-child scrolling container that receives the full selectable-text row range; root 51318 embeds that container together with existing widget 8135 and closing text widget 51920."
+        },
+        {
+          "family": "exact_client_reset_command",
+          "detail": "Client handles the exact command 'CLEAR_CLICK_TEXT_INT' by iterating widgets 51320 through 51919 and clearing their text, proving this range is a runtime-populated click-text interface."
+        }
+      ],
+      "note": "Descriptive semantic recovery from exact-v308 clickable-text list behavior; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}

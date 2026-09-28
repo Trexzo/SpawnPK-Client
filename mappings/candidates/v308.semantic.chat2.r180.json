@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/M",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SwingUtil",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_v308_api_shape",
+          "detail": "rs/gui/M has exactly seven public static UI utilities: setup Swing defaults, set LookAndFeel, set global Font, remove AbstractButton decorations, create a JButton from rs/ui/l NavigationButton plus callback, add selected/unselected modal tooltip text, and create a TrayIcon."
+        },
+        {
+          "family": "exact_v308_literals",
+          "detail": "Exact v308 preserves SwingUtil-era implementation strings/properties including 'jgoodies.popupDropShadowEnabled', 'sun.awt.noerasebackground', 'substancelaf.internal.FlatLook', 'Unable to set look and feel' and 'Unable to add system tray icon'."
+        },
+        {
+          "family": "exact_navigation_button_binding",
+          "detail": "The button-construction method consumes rs/ui/l, already reviewed as NavigationButton from its exact self-identifying toString, reads its icon/tooltip/popup map and wires selection/click callbacks."
+        },
+        {
+          "family": "historical_runelite_source_match",
+          "detail": "Historical RuneLite-derived source Jire/tarnish@a4796be8e8cdef2398faf1081fa6a4da8a0190b1 game-client/src/main/java/net/runelite/client/util/SwingUtil.java defines class SwingUtil with the same seven responsibilities and matching method names: setupDefaults, setLookAndFeel, setFont, createTrayIcon, createSwingButton, removeButtonDecorations and addModalTooltip."
+        }
+      ],
+      "note": "SwingUtil is recovered at confidence 0.999 from an exact v308 whole-class API/string match to the historical RuneLite SwingUtil source. External source supplies name provenance only; pinned v308 remains runtime authority."
+    }
+  ],
+  "conflicts": []
+}

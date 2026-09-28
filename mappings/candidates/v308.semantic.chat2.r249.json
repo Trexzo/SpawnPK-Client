@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "class", "owner": "rs/t/b/a", "name": null, "descriptor": null},
+      "proposed_name": "NpcDefinitionDiffDumper",
+      "confidence": 0.999,
+      "evidence": [
+        {"family": "exact_npc_diff_role", "detail": "Exact v308 compares rs/d/d NPC definitions field-by-field, emits the surviving diagnostic 'Found differences in NPC ...', and builds only changed NPC properties into maps keyed by definition ID."},
+        {"family": "exact_dump_output", "detail": "Its dump path serializes the accumulated changed NPC fields through rs/t/a into e.yaml, with paired compiled path e.bin, then prints '..Dump completed!'."},
+        {"family": "exact_review_path", "detail": "Its second public action loads the reviewed NpcDefinitionConfigLoader, recomputes per-ID differences and prints the non-ignored changed properties for inspection."}
+      ],
+      "note": "NpcDefinitionDiffDumper is a conservative semantic recovery name fixed by exact NPC-definition comparison and e.yaml/e.bin diff output behavior. Confidence 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "class", "owner": "rs/t/b/b", "name": null, "descriptor": null},
+      "proposed_name": "ItemDefinitionDiffDumper",
+      "confidence": 0.999,
+      "evidence": [
+        {"family": "exact_item_diff_role", "detail": "Exact v308 compares rs/d/k item definitions field-by-field, emits the surviving diagnostic 'Found differences in item ...', and builds only changed item properties into maps keyed by definition ID."},
+        {"family": "exact_dump_output", "detail": "Its dump path serializes changed item fields through rs/t/a into i.yaml, with paired compiled path i.bin, then prints '..Dump completed!'."},
+        {"family": "exact_review_path", "detail": "Its second public action loads the reviewed ItemDefinitionConfigLoader, prints 'Running test..', recomputes per-ID differences and reports non-ignored changes while preserving old values for selected diagnostics."}
+      ],
+      "note": "ItemDefinitionDiffDumper is a conservative semantic recovery name fixed by exact item-definition comparison and i.yaml/i.bin diff output behavior. Confidence 0.999."
+    }
+  ],
+  "conflicts": []
+}

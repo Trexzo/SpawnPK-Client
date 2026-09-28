@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_04FD79B45379F4F5FCB5",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_2A5B3ED6605E58F84AB8",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000678",
+      "owner_logical_id": "CLIENT_CLASS_000678",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner": "rs/n/c/y", "name": null, "descriptor": null},
+      "proposed_name": "ConstructionBackgroundInterface",
+      "confidence": 0.997,
+      "evidence": [
+        {"family": "exact_construction_resource", "detail": "The class builds root widget 39984 and contains exactly one child, widget 39983, backed by the exact asset 'construction/sprite 0'."},
+        {"family": "exact_single_image_surface", "detail": "Its entire build method is the one construction sprite child at coordinates 0,0; it owns no labels, requirements, actions, packet state or independent domain behavior."},
+        {"family": "exact_registry_adjacency", "detail": "The central interface registry constructs rs/n/c/y immediately beside rs/n/c/x and rs/n/c/z, the exact-v308 construction build-options and room-selection surfaces."}
+      ],
+      "note": "Descriptive exact-v308 name for the standalone construction background/root-image interface. No stronger historical feature noun is claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_E729B38704125CCD8E04",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000677",
+      "owner_logical_id": "CLIENT_CLASS_000677",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner": "rs/n/c/x", "name": null, "descriptor": null},
+      "proposed_name": "ConstructionBuildOptionsInterface",
+      "confidence": 0.997,
+      "evidence": [
+        {"family": "exact_construction_resource", "detail": "The class builds root widget 39982 and attaches exact construction asset 'construction/sprite 1' through child 39981; no non-construction resource or cross-domain literal exists."},
+        {"family": "exact_eight_option_layout", "detail": "The interface lays out eight repeated option groups using exact placeholders Name1..Name8 and lvl1..lvl8, with four requirement text rows per option (ReqN.1..ReqN.4)."},
+        {"family": "exact_requirement_geometry", "detail": "Each option group positions one option name, up to four requirement lines and one level label into a fixed two-column construction panel, establishing an option/requirements selection surface rather than the separate room catalogue."},
+        {"family": "exact_family_separation", "detail": "R2 already fixes sibling rs/n/c/z as ConstructionRoomSelectionInterface with the 23-room POH catalogue. This class instead owns the distinct eight-slot dynamic option/requirements surface and is therefore conservatively named ConstructionBuildOptionsInterface rather than RoomSelection or furniture-specific terminology."}
+      ],
+      "note": "Descriptive exact-v308 name for the eight-slot construction option/requirements panel. A narrower noun such as furniture/hotspot is intentionally not asserted."
+    }
+  ],
+  "unresolved": []
+}

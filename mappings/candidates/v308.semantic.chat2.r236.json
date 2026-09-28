@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Keybind",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_keybind_state",
+          "detail": "Exact v308 stores keyCode and modifiers, exposes NOT_SET/CTRL/ALT/SHIFT static instances, normalizes modifier key codes, masks supported modifiers, and implements equals/hashCode/toString over the pair."
+        },
+        {
+          "family": "exact_keyevent_matching",
+          "detail": "Constructors accept either keyCode/modifier ints or KeyEvent; matches(KeyEvent) handles pressed/released events, modifier-only bindings, and the same modifier normalization used during construction."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite net.runelite.client.config.Keybind has the same BiMap modifier mapping, modifier mask, NOT_SET/CTRL/ALT/SHIFT constants, constructors, matches logic, getModifierForKeyCode helper, getters and value semantics."
+        }
+      ],
+      "note": "Keybind is recovered at confidence 0.999 from an exact class/state/algorithm match to RuneLite source."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModifierlessKeybind",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_subclass_shape",
+          "detail": "Exact v308 extends rs/s/b/l Keybind and exposes the same two constructors: keyCode/modifiers and KeyEvent."
+        },
+        {
+          "family": "exact_modifierless_matching",
+          "detail": "Its KeyEvent constructor asserts matches(e), and its matches override delegates to the protected Keybind matcher with ignoreModifiers=true."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite net.runelite.client.config.ModifierlessKeybind has the same Keybind inheritance, constructors and matches(KeyEvent)->matches(e,true) behavior."
+        }
+      ],
+      "note": "ModifierlessKeybind is recovered at confidence 0.999 from an exact RuneLite source match."
+    }
+  ],
+  "conflicts": []
+}

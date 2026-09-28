@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_833F07E8D4884EF03C77",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_2B5ADDF55D40DDF73A1F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000831",
+      "owner_logical_id": "CLIENT_CLASS_000831",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Vertex",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_three_axis_value_shape",
+          "detail": "Exact v308 rs/runelite/a/o stores exactly three final integers, has a three-int constructor and three direct coordinate getters; its only non-value operation returns a rotated instance."
+        },
+        {
+          "family": "exact_rotation_algorithm",
+          "detail": "The rotation method adds 1024 to the supplied orientation modulo 2048, returns this for zero, reads the client 2048-entry sine/cosine tables, and returns (x*cos + z*sin)>>16, y, (z*cos - x*sin)>>16."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream immediately before commit 9e696ac3 removed Vertex/Triangle retains net.runelite.api.model.Vertex at f16cd53d0920f88d6edeb08c2b9c7f005e910f15, with the same three final coordinates and byte-for-byte-equivalent rotate(int) orientation/sine/cosine algorithm."
+        }
+      ],
+      "note": "Vertex is recovered at confidence 0.999 from an exact historical RuneLite source match. The source type was removed upstream in 2019, explaining its absence from current RuneLite API source while the SpawnPK v308 lineage still retains it."
+    }
+  ],
+  "unresolved": []
+}

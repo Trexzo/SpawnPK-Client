@@ -1,0 +1,532 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 20,
+  "review_id": "SEMREVIEW_1948F58DF9A849992F1A",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_1368FD028EC0E3A0DDF4",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000452",
+      "owner_logical_id": "CLIENT_CLASS_000452",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/a/c/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BountyHunterOverlay",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact constant 'BountyOverlay' appears with Target, Risk, Kills, Time Left, Receive task, Skip target and bounty-task commands."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads popups/bh target/combat/skull/compact assets."
+        }
+      ],
+      "note": "Exact-current bounty-hunter overlay behavior."
+    },
+    {
+      "proposal_id": "SEMPROP_1B7AC87DA5272CB44932",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000674",
+      "owner_logical_id": "CLIENT_CLASS_000674",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/u",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "UnclaimedRewardsCofferInterface",
+      "confidence": 0.992,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'Coffer of Unclaimed Rewards & Prizes'; help text says it holds contest prizes/event rewards and exposes bank/inventory deposit actions."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads bank/bank assets."
+        }
+      ],
+      "note": "Exact-current coffer UI role."
+    },
+    {
+      "proposal_id": "SEMPROP_1D3AB4E4DADE2FB2867A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000250",
+      "owner_logical_id": "CLIENT_CLASS_000250",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutFolderPanel",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact HTML label is 'Loadout folders'; actions create, delete, rename and reorder loadouts."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads gui/create, delete, down, edit, folder and up icons."
+        }
+      ],
+      "note": "Desktop-side loadout folder management panel."
+    },
+    {
+      "proposal_id": "SEMPROP_3196CFB535EF6C5EBAA5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000623",
+      "owner_logical_id": "CLIENT_CLASS_000623",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/as",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MarketplaceInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'SpawnPK Marketplace'; controls include Purchase, Sell item, Search by item/player, View listings/history/recent sales and Your sales."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads pos/button, pos/icon and pos/sprite marketplace assets."
+        }
+      ],
+      "note": "Primary SpawnPK marketplace surface."
+    },
+    {
+      "proposal_id": "SEMPROP_4E5EB23CF0B90C4AB9EA",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000625",
+      "owner_logical_id": "CLIENT_CLASS_000625",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/au",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MarketplaceListingInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'SpawnPK Marketplace Listing'; controls include Set price, Set quantity, Select currency, Submit and View item history."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads pos/button and pos/sprite marketplace assets."
+        }
+      ],
+      "note": "Name follows the exact self-identifying interface title."
+    },
+    {
+      "proposal_id": "SEMPROP_526053C373BAFDB1B159",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000655",
+      "owner_logical_id": "CLIENT_CLASS_000655",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/d/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AfflictionTomesInterface",
+      "confidence": 0.992,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include 'Affliction Tomes', 'What are Modifier tomes?', tome deposit actions and modifier-roll purchase actions."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads raids/tomes*, raids/btn* and raids/close* assets."
+        }
+      ],
+      "note": "Exact-current UI role; English identifier is inferred, not claimed as the original developer name."
+    },
+    {
+      "proposal_id": "SEMPROP_5FBF809B7BAFAACA4159",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000653",
+      "owner_logical_id": "CLIENT_CLASS_000653",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/d/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaidPartyHubInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings cover creating public/private/mass parties, joining private parties, members, raid selection, raid difficulty, ready/enter/leave state and party afflictions."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads raids/bgparty, raids/affbar1, raids/btn*, raids/refresh* and raid sprite assets."
+        }
+      ],
+      "note": "Broad hub name is intentionally used because the class owns creation, membership, difficulty and lobby-state controls."
+    },
+    {
+      "proposal_id": "SEMPROP_640DBB8D3A40B3C9D910",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000572",
+      "owner_logical_id": "CLIENT_CLASS_000572",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/Z",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LeaderboardSelectionInterface",
+      "confidence": 0.992,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact string is 'Leaderboard Selection Menu'; available entries include Tournament Leaderboard and Daily PK Leaderboards."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads misc/hs leaderboard assets."
+        }
+      ],
+      "note": "Name follows the self-identifying selection-menu role."
+    },
+    {
+      "proposal_id": "SEMPROP_6B2A68525CD1CE2F2328",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000652",
+      "owner_logical_id": "CLIENT_CLASS_000652",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/d/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaidPartyListInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include 'Party / Size / Raid Type & Difficulty', 'Join party' and 'Refresh party list'."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads raids/list, raids/refresh* and raids/close* assets."
+        }
+      ],
+      "note": "Role is the public raid-party listing/join surface."
+    },
+    {
+      "proposal_id": "SEMPROP_7EE280D0221B9B001411",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000613",
+      "owner_logical_id": "CLIENT_CLASS_000613",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/al",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemLoadoutModificationInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'Item Loadout Modification Interface' with Save loadout, Set as default and Reset to default controls."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads equipment/loadout and fountain assets."
+        }
+      ],
+      "note": "Name follows the exact self-identifying interface title."
+    },
+    {
+      "proposal_id": "SEMPROP_95E9C507E307727561A8",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000585",
+      "owner_logical_id": "CLIENT_CLASS_000585",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aJ",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "QuickPrayerSetupInterface",
+      "confidence": 0.992,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include 'Select your quick prayers:', 'Select your quick curses:' and 'Confirm Selection'."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads /prayer/quick/SPRITE."
+        }
+      ],
+      "note": "Shared setup surface for quick prayers/curses."
+    },
+    {
+      "proposal_id": "SEMPROP_9A07435BD6D3B839AC82",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000634",
+      "owner_logical_id": "CLIENT_CLASS_000634",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GladiatorsVindicationWorldEventInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is \"Gladiator's Vindication (World Event)\" with event duration, progress bar, buttons and selectable options."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads event/task*, drops/sprite and fountain/sprite assets."
+        }
+      ],
+      "note": "Identifier is normalized to a Java name while preserving the exact event title in evidence."
+    },
+    {
+      "proposal_id": "SEMPROP_AA1D7A0F1954FCAE0209",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000586",
+      "owner_logical_id": "CLIENT_CLASS_000586",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aK",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaidPartyInvitationsInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include 'Party invitations', 'Raiding party invitations' and 'Selected invitation'."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads raids/sprite 5."
+        }
+      ],
+      "note": "Conservative invitation-list role."
+    },
+    {
+      "proposal_id": "SEMPROP_AA7BD015C0CA74AADD51",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000560",
+      "owner_logical_id": "CLIENT_CLASS_000560",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/N",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HalloweenEventChestInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include 'Event Chest Tier I', 'Event Chest Tier II', 'Tier I - Halloween Event 2020', Roll, Exchange and Event Guide."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads fountain/event*, fountain/glow*, fountain/icon* and fountain/button assets."
+        }
+      ],
+      "note": "Legacy seasonal event-chest interface; year-specific text is preserved in provenance rather than the identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_D3BB2540499AC306E926",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000670",
+      "owner_logical_id": "CLIENT_CLASS_000670",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClanChatInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include 'Clan Chat (0/100)', 'Clan Setup', 'Manage clan member', Join Chat and Owner."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads /clan/sprite assets."
+        }
+      ],
+      "note": "General clan-chat surface; distinct from the already accepted ClanChatSetupInterface."
+    },
+    {
+      "proposal_id": "SEMPROP_D7B95D18AD8E8752324F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000624",
+      "owner_logical_id": "CLIENT_CLASS_000624",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/at",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MarketplaceSearchResultsInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'SpawnPK Marketplace Search Results'; table controls include Seller, Price, Name/Quantity, pagination, refresh and Select this market listing."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads pos/SPRITE, pos/button and pos/sprite assets."
+        }
+      ],
+      "note": "Name follows the exact self-identifying interface title."
+    },
+    {
+      "proposal_id": "SEMPROP_E2457EEEA7864BF0985E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000598",
+      "owner_logical_id": "CLIENT_CLASS_000598",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aW",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WorldTournamentLeaderboardInterface",
+      "confidence": 0.992,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'World Tournament Leaderboards' with Top Players, Top Clans, This week and All time controls."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads leaderboard/presentation sprites including misc/hs assets."
+        }
+      ],
+      "note": "Companion leaderboard surface to the already accepted WorldTournamentInterface."
+    },
+    {
+      "proposal_id": "SEMPROP_ECDED0F32B38D11D0D28",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000580",
+      "owner_logical_id": "CLIENT_CLASS_000580",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aE",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LegendaryPetFusingInterface",
+      "confidence": 0.992,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include 'Legendary Pet Fusing', 'Fuse pets', 'Fuse' and a limited-time pet-fusion notice."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads fountain and teleport interface assets."
+        }
+      ],
+      "note": "Exact-current presentation role."
+    },
+    {
+      "proposal_id": "SEMPROP_ED7CDD3777E107EE4C3B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000676",
+      "owner_logical_id": "CLIENT_CLASS_000676",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/w",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ComponentColorSelectionInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include Cape Color Selection Menu, Text Color Selection Menu, Background/Detail/Font/Particle/Shadow/Trim color and ::compcolors."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads options/colors/* assets and emits component-color configuration commands."
+        }
+      ],
+      "note": "Broad selection name covers both text/component and cape-color modes."
+    },
+    {
+      "proposal_id": "SEMPROP_FB0B8C7A1B00EC288A4E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000413",
+      "owner_logical_id": "CLIENT_CLASS_000413",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/e/a/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HalloweenHungerGamesOverlay",
+      "confidence": 0.992,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include \"H'ween Hunger Games Lobby\", Ceasefire Stage, Safety Countdown, chest unlock timing, PvP enable timing and match statistics."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Presentation strings and image tags are specific to the Hunger Games event overlay."
+        }
+      ],
+      "note": "Seasonal Hunger Games overlay role."
+    }
+  ],
+  "unresolved": []
+}

@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_E717D253AD955D38DC5D",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_1B9679DD2C2C235F1138",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000099",
+      "owner_logical_id": "CLIENT_CLASS_000099",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/cache/osrs/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OsrsCacheIndex",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "rs/cache/osrs/a is an enum with surviving exact constants MODELS, ANIMS, SOUNDS and MAPS, each paired with a numeric cache-store index and human label."
+        },
+        {
+          "family": "exact_cache_path_binding",
+          "detail": "Its constructor derives an exact osrs_idx<id> path from the R66 Signlink cache-directory root, binding each enum value to one OSRS cache index directory."
+        },
+        {
+          "family": "exact_packer_contract",
+          "detail": "rs/cache/osrs/b iterates these values, uses the enum path to locate asset-pack files, the label for diagnostics, and the numeric id to select one R64 CacheStoreSet Decompressor."
+        }
+      ],
+      "note": "OsrsCacheIndex is the conservative semantic name for this OSRS asset-category/cache-index enum; it does not claim a verbatim original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_8E1B9DF2E16CD82DA115",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000100",
+      "owner_logical_id": "CLIENT_CLASS_000100",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/cache/osrs/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OsrsAssetPacker",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_pack_scan",
+          "detail": "rs/cache/osrs/b iterates every OsrsCacheIndex, opens its pack directory, logs the exact surviving message 'Scanning assets in pack directory {} index (file count: {})', and considers .gz asset files."
+        },
+        {
+          "family": "exact_cache_write",
+          "detail": "For each numeric .gz file it reads the bytes, parses the filename-derived asset id and writes the payload into the R64 CacheStoreSet Decompressor selected by the enum cache index."
+        },
+        {
+          "family": "exact_runtime_consumer",
+          "detail": "R24 OnDemandFetcher constructs this class after initializing main_file_osrs.dat/main_file_osrs.idx and invokes its pack operation when the OSRS asset-pack feature flag is enabled."
+        },
+        {
+          "family": "surviving_diagnostic_text",
+          "detail": "The class reports 'Packed new assets into {} index ({} files)' and 'Unable to locate index {}.', directly identifying its cache-packing responsibility."
+        }
+      ],
+      "note": "OsrsAssetPacker is the conservative semantic name for this OSRS pack-directory scanner/cache writer; it does not claim a verbatim original developer identifier."
+    }
+  ],
+  "unresolved": []
+}

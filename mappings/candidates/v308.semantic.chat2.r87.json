@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/k/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GpuRenderer",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_runtime_activation",
+          "detail": "R86 GpuRuntimeSettings creates rs/k/e directly when the GPU path is enabled, stores it on Client, reuses it across GPU transitions and tears it down when GPU mode is disabled."
+        },
+        {
+          "family": "exact_opengl_contract",
+          "detail": "The class owns org.lwjgl.opengl.GLCapabilities, GLUtil callback state and a RuneLite AWTContext, and its exact diagnostics require OpenGL 3.1 while conditionally enabling OpenGL 4.3 compute shaders."
+        },
+        {
+          "family": "exact_render_pipeline",
+          "detail": "Its bytecode directly drives OpenGL texture, vertex-array, buffer, shader/uniform and draw/dispatch APIs, including glBindTexture, glBindVertexArray, glDispatchCompute, glUniform*, glVertexAttrib* and related resource lifecycle calls."
+        },
+        {
+          "family": "exact_gpu_resources",
+          "detail": "Surviving exact resource/debug identities include scene vertex buffer, scene tex buffer, out vertex buffer, tmp vertex buffer, uniform buffer, uniforms and the diagnostic \"Error starting GPU plugin\"."
+        },
+        {
+          "family": "exact_client_consumer",
+          "detail": "Client owns the rs/k/e instance as the active GPU rendering object; R15 GpuPlugin and R86 runtime settings manipulate configuration/state that this object consumes for live rendering."
+        }
+      ],
+      "note": "GpuRenderer is the conservative semantic name for the exact LWJGL/OpenGL rendering engine instantiated by the GPU runtime path. It does not claim a verbatim original developer identifier; nested shader/buffer helpers remain outside this batch."
+    }
+  ],
+  "conflicts": []
+}

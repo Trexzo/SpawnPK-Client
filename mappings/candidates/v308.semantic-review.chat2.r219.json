@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_800BAAAFD12F32A54DC7",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_55A9DCDB0CEF918CAB82",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000440",
+      "owner_logical_id": "CLIENT_CLASS_000440",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "JagexColor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_jagex_hsl_constants",
+          "detail": "Exact v308 rs/l/f is final and exposes the Jagex HSL maxima 63 hue, 7 saturation and 127 luminance, with the canonical 6/3/7-bit packing layout (hue<<10, saturation<<7, luminance)."
+        },
+        {
+          "family": "exact_hsl_utility_surface",
+          "detail": "Its exact methods pack HSL, unpack hue/saturation/luminance, format a packed value as %02Xh%Xs%02Xl and convert RGB to packed HSL with the same brightness/gamma and Color.RGBtoHSB calculation."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream runelite/runelite@b0a10a9c14686f4012eb30865261bbeb3d55af4b contains net.runelite.api.JagexColor with the same final-class constants, bit packing/unpacking, exact format string and rgbToHSL(int,double) implementation."
+        },
+        {
+          "family": "exact_v308_extension_boundary",
+          "detail": "Exact v308 additionally retains int-returning packing and rgbToHSL(int) overloads using the same 63/7/127 representation; these are compatible local extensions and do not change the upstream-proven class identity."
+        }
+      ],
+      "note": "JagexColor is recovered at confidence 0.999 from an exact v308 behavioral/constant match to RuneLite upstream JagexColor at runelite/runelite@b0a10a9c14686f4012eb30865261bbeb3d55af4b. The upstream source name is provenance; exact runtime authority remains the pinned v308 client."
+    }
+  ],
+  "unresolved": []
+}

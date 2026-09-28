@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 7,
+  "review_id": "SEMREVIEW_F2CFA1AE53BAA1DF13C7",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_0ECAF014094E16BEEEFD",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000047",
+      "owner_logical_id": "CLIENT_CLASS_000047",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/T",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WallDecoration",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_tile_slot",
+          "detail": "Scene constructs rs/T separately from the wall object and stores it in the SceneTile wall-decoration slot."
+        },
+        {
+          "family": "exact_decoration_shape",
+          "detail": "The holder has one Renderable plus wall-relative position/orientation metadata used by Scene's decoration insertion/render path."
+        }
+      ],
+      "note": "WallDecoration names the wall-attached decorative renderable holder."
+    },
+    {
+      "proposal_id": "SEMPROP_137DE7C1C2EF6411B7B2",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000524",
+      "owner_logical_id": "CLIENT_CLASS_000524",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GroundItemPile",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_tile_slot",
+          "detail": "Scene constructs rs/n and stores it in a separate SceneTile slot from GroundDecoration and GameObject."
+        },
+        {
+          "family": "exact_pile_shape",
+          "detail": "The holder carries three Renderable references at one tile location plus pile height/tag metadata, matching the scene's stacked ground-item rendering path."
+        }
+      ],
+      "note": "GroundItemPile names the three-renderable tile pile used for stacked ground items."
+    },
+    {
+      "proposal_id": "SEMPROP_1B7C0B323C35EACC5A64",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000035",
+      "owner_logical_id": "CLIENT_CLASS_000035",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/H",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SceneTile",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_tile_coordinates",
+          "detail": "The constructor receives plane/x/y tile coordinates and instances are stored directly in Scene's three-dimensional tile grid."
+        },
+        {
+          "family": "exact_scene_ownership",
+          "detail": "Each tile owns the tile paint/model plus WallObject, WallDecoration, GroundDecoration, GroundItemPile and an array of GameObject references, with a linked lower/adjacent SceneTile reference."
+        }
+      ],
+      "note": "SceneTile names one cell of the Scene grid and its attached scene entities."
+    },
+    {
+      "proposal_id": "SEMPROP_44E1E866A3A0245F12E3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000521",
+      "owner_logical_id": "CLIENT_CLASS_000521",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GroundDecoration",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_tile_slot",
+          "detail": "Scene constructs rs/m from one Renderable and stores it in the dedicated singleton ground-decoration slot of SceneTile."
+        },
+        {
+          "family": "exact_ground_position",
+          "detail": "The holder carries the centered world/tile position and tag/config state used for the floor-level decorative renderable."
+        }
+      ],
+      "note": "GroundDecoration names the singleton floor-level decorative renderable attached to a SceneTile."
+    },
+    {
+      "proposal_id": "SEMPROP_5EE7125A7438BF610667",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000349",
+      "owner_logical_id": "CLIENT_CLASS_000349",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GameObject",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_multitile_placement",
+          "detail": "Scene constructs rs/l for generic scene entities, records one Renderable plus orientation/tag state and tile-boundary coordinates, and installs the same object reference into every SceneTile covered by its footprint."
+        },
+        {
+          "family": "exact_tile_collection",
+          "detail": "Each SceneTile can hold up to five rs/l references with per-object edge masks, distinguishing this role from singleton wall or ground-decoration slots."
+        }
+      ],
+      "note": "GameObject is the general one-or-more-tile scene object holder."
+    },
+    {
+      "proposal_id": "SEMPROP_6F7D6EA38ED040B4652E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000049",
+      "owner_logical_id": "CLIENT_CLASS_000049",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/V",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Scene",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scene_grid",
+          "detail": "The class owns the 3D rs/H tile grid together with terrain heights, temporary game-object collections, visibility maps and occlusion state."
+        },
+        {
+          "family": "exact_scene_operations",
+          "detail": "It creates tiles across planes, inserts/removes/queries wall, decoration, game-object and ground-object holders, performs model-normal merging and drives the scene traversal/rendering pipeline."
+        },
+        {
+          "family": "exact_collision_adjacency",
+          "detail": "Client world loading uses this structure alongside the R39 CollisionMap array, separating rendered scene ownership from movement clipping."
+        }
+      ],
+      "note": "Scene is the conservative semantic name for the world scene graph/controller represented by rs/V."
+    },
+    {
+      "proposal_id": "SEMPROP_E47F0DC35909A48E68BD",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000048",
+      "owner_logical_id": "CLIENT_CLASS_000048",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/U",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WallObject",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_tile_slot",
+          "detail": "Scene constructs rs/U and stores it in the dedicated rs/H wall slot."
+        },
+        {
+          "family": "exact_wall_shape",
+          "detail": "The holder stores two Renderable references plus world position/orientation masks, matching a boundary wall that can expose two rendered sides."
+        }
+      ],
+      "note": "WallObject describes the two-renderable boundary/wall holder attached to a SceneTile."
+    }
+  ],
+  "unresolved": []
+}

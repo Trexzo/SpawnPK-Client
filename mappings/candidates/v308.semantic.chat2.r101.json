@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/osrs/util/OsrsMapDependencyScanner$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DependencyFinding",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_record_shape",
+          "detail": "The nested class is an immutable three-field record: one integer dependency object ID plus two Strings describing the dependency asset/context and finding reason."
+        },
+        {
+          "family": "exact_finding_construction",
+          "detail": "OsrsMapDependencyScanner constructs these records for MISSING_DEFINITION, MISSING_SEQUENCE, frame/keyframe failures, decode errors and related dependency findings while recursively checking spawned object definitions and animation dependencies."
+        },
+        {
+          "family": "exact_report_role",
+          "detail": "The scanner stores List<OsrsMapDependencyScanner$a> per root object and emits each record under the exact report heading 'Findings (one example spawn per region/root object/dependency):', formatting object=<root>, dependencyObject=<record id>, the record asset text and reason."
+        }
+      ],
+      "note": "DependencyFinding is descriptive exact-behavior recovery for the scanner's immutable per-dependency finding record. No surviving original nested source noun is asserted; confidence is 0.997."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/osrs/util/OsrsMapDependencyScanner$b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LandscapeObjectConsumer",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_callback_shape",
+          "detail": "The nested interface has exactly one method accept(int,int,int,int)."
+        },
+        {
+          "family": "exact_landscape_decoder",
+          "detail": "OsrsMapDependencyScanner's static landscape parser decodes delta-compressed object IDs and packed locations, then invokes the callback with objectId, packed local location, object type and rotation."
+        },
+        {
+          "family": "exact_regression_fixture",
+          "detail": "OsrsMapDependencyScannerTest supplies a lambda of this interface and verifies the decoded callback tuple as '32769:0:10:2', independently fixing the four callback values and landscape-object role."
+        },
+        {
+          "family": "exact_scan_consumer",
+          "detail": "The main scanner uses the same callback while traversing packed OSRS landscape data to count spawns and seed recursive object dependency checks."
+        }
+      ],
+      "note": "LandscapeObjectConsumer is descriptive exact-behavior recovery for the scanner's four-value landscape object-spawn callback. No surviving original nested source noun is asserted; confidence is 0.997."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/osrs/util/OsrsMapDependencyScanner$c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CacheStoreReader",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_file_set",
+          "detail": "The AutoCloseable helper owns one shared read-only RandomAccessFile for <prefix>.dat plus a lazily opened map of <prefix>.idxN RandomAccessFiles under a configured cache Path and prefix."
+        },
+        {
+          "family": "exact_cache_read",
+          "detail": "Its read method selects an index file by cache index, constructs the existing rs/cache/a store reader with shared data/index handles and index+1, reads a numeric archive/file ID, and optionally GZIP-decompresses the returned bytes."
+        },
+        {
+          "family": "exact_scanner_ownership",
+          "detail": "OsrsMapDependencyScanner owns two instances configured as main_file_cache and main_file_osrs and uses them for config, model, animation/frame and landscape dependency reads."
+        },
+        {
+          "family": "exact_lifecycle",
+          "detail": "close() deterministically closes every lazily opened index RandomAccessFile and then the shared data RandomAccessFile; main uses try/finally-style close handling for both stores."
+        }
+      ],
+      "note": "CacheStoreReader is descriptive exact-behavior recovery for the scanner's read-only main_file_*.dat/.idxN store wrapper. No surviving original nested source noun is asserted; confidence is 0.997."
+    }
+  ],
+  "conflicts": []
+}

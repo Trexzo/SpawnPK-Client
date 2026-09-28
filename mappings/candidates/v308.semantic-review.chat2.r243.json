@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_D66439477D22EAD9F9FA",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_461EC971F7658025139E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000942",
+      "owner_logical_id": "CLIENT_CLASS_000942",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/o/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MemorizedNpc",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_value_shape",
+          "detail": "Exact v308 rs/s/o/b stores NPC index, NPC name, NPC size, died-on tick, respawn time and List<WorldPoint> possible respawn locations, with getters plus setters for the mutable respawn state."
+        },
+        {
+          "family": "exact_constructor_fingerprint",
+          "detail": "The constructor accepts one NPC, copies its name and index, allocates an ArrayList with capacity 2, initializes respawnTime and diedOnTick to -1, then reads transformed composition size when present."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite MemorizedNpc at 68c819924cfd6bfb4848c71f74c121109f289d5a has the same six fields, Lombok getter/setter surface and constructor sequence including ArrayList<>(2), -1 tick defaults and transformed-composition size extraction."
+        }
+      ],
+      "note": "The exact-v308 field set and constructor instruction sequence match RuneLite MemorizedNpc directly; source identity is stronger than descriptive inference. Confidence 0.999."
+    }
+  ],
+  "unresolved": []
+}

@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/J",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CombatHudSpriteAssets",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_asset_bundle",
+          "detail": "rs/l/J is a pure static rs/l/F sprite holder initialized only from the exact resources misc/singlesplus, misc/singlesplushot, popups/hp 0..3, hitmarks/old/poise and popups/scope."
+        },
+        {
+          "family": "exact_hud_consumer",
+          "detail": "R304 GameHudRenderer consumes the singlesplus/singlesplushot pair for the live singles-area gameframe indicator."
+        },
+        {
+          "family": "exact_healthbar_consumer",
+          "detail": "Client consumes popups/hp 0..3 as the paired normal/high-health bar sprites while rendering actor health presentation."
+        },
+        {
+          "family": "exact_hitmark_scope_consumers",
+          "detail": "The entity hitmark renderer rs/a/f consumes hitmarks/old/poise, while Client consumes popups/scope for the live scoped target/player presentation path."
+        }
+      ],
+      "note": "Descriptive semantic recovery for the exact-v308 shared combat/HUD sprite bundle; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/u",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelChecker",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "surviving_self_description",
+          "detail": "The class emits multiple diagnostics prefixed exactly with \"[Model Checker]\", including scan start, missing-directory, per-definition match and completion messages."
+        },
+        {
+          "family": "exact_model_file_scan",
+          "detail": "rs/u accepts a directory path, enumerates files, strips .dat/.gz suffixes, parses numeric filenames as model ids and then scans those ids for references."
+        },
+        {
+          "family": "exact_definition_cross_reference",
+          "detail": "The checker walks item definitions and tests modelID plus male/female equipment model fields, NPC model arrays, object model arrays, and GFX model ids, recording every matched model id."
+        },
+        {
+          "family": "exact_summary_behavior",
+          "detail": "After scanning, it prints the total number of used model ids and the resulting id set, matching the class's explicit Model Checker diagnostics."
+        }
+      ],
+      "note": "ModelChecker is directly supported by the surviving [Model Checker] diagnostics and exact cross-definition model-reference scan; it does not claim more than that explicit v308 role."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/c/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DevToolsOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_hierarchy",
+          "detail": "Exact v308 rs/s/c/b extends reviewed Overlay (rs/l/f/b) and implements reviewed ClientKeyListener (rs/g/a/a)."
+        },
+        {
+          "family": "exact_devtools_ownership",
+          "detail": "Its injected constructor takes the reviewed DevToolsPlugin rs/s/c/c and DevToolsConfig rs/s/c/a, fixing it inside the DevTools runtime rather than a generic overlay family."
+        },
+        {
+          "family": "exact_render_and_input_surface",
+          "detail": "The class renders interface/drag polygons and text using surviving labels including @gre@m:, @mag@intf: and @red@drag:, while keyPressed handles the DevTools keyboard controls."
+        },
+        {
+          "family": "upstream_runelite_source_identity",
+          "detail": "Historical RuneLite DevTools source contains the dedicated class DevToolsOverlay, separate from the plugin/config/panel/widget-inspector classes, matching this class's overlay ownership and role."
+        }
+      ],
+      "note": "DevToolsOverlay is fixed by exact Overlay + ClientKeyListener hierarchy, direct DevToolsPlugin/DevToolsConfig ownership, and historical RuneLite source identity. Confidence 0.999."
+    }
+  ],
+  "conflicts": []
+}

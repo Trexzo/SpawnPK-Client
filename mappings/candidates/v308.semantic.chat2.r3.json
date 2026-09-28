@@ -1,0 +1,550 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/d/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AfflictionTomesInterface",
+      "confidence": 0.992,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include 'Affliction Tomes', 'What are Modifier tomes?', tome deposit actions and modifier-roll purchase actions."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads raids/tomes*, raids/btn* and raids/close* assets."
+        }
+      ],
+      "note": "Exact-current UI role; English identifier is inferred, not claimed as the original developer name."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/d/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaidPartyListInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include 'Party / Size / Raid Type & Difficulty', 'Join party' and 'Refresh party list'."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads raids/list, raids/refresh* and raids/close* assets."
+        }
+      ],
+      "note": "Role is the public raid-party listing/join surface."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/d/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaidPartyHubInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings cover creating public/private/mass parties, joining private parties, members, raid selection, raid difficulty, ready/enter/leave state and party afflictions."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads raids/bgparty, raids/affbar1, raids/btn*, raids/refresh* and raid sprite assets."
+        }
+      ],
+      "note": "Broad hub name is intentionally used because the class owns creation, membership, difficulty and lobby-state controls."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aE",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LegendaryPetFusingInterface",
+      "confidence": 0.992,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include 'Legendary Pet Fusing', 'Fuse pets', 'Fuse' and a limited-time pet-fusion notice."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads fountain and teleport interface assets."
+        }
+      ],
+      "note": "Exact-current presentation role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/u",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "UnclaimedRewardsCofferInterface",
+      "confidence": 0.992,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'Coffer of Unclaimed Rewards & Prizes'; help text says it holds contest prizes/event rewards and exposes bank/inventory deposit actions."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads bank/bank assets."
+        }
+      ],
+      "note": "Exact-current coffer UI role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/al",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemLoadoutModificationInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'Item Loadout Modification Interface' with Save loadout, Set as default and Reset to default controls."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads equipment/loadout and fountain assets."
+        }
+      ],
+      "note": "Name follows the exact self-identifying interface title."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/as",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MarketplaceInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'SpawnPK Marketplace'; controls include Purchase, Sell item, Search by item/player, View listings/history/recent sales and Your sales."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads pos/button, pos/icon and pos/sprite marketplace assets."
+        }
+      ],
+      "note": "Primary SpawnPK marketplace surface."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/at",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MarketplaceSearchResultsInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'SpawnPK Marketplace Search Results'; table controls include Seller, Price, Name/Quantity, pagination, refresh and Select this market listing."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads pos/SPRITE, pos/button and pos/sprite assets."
+        }
+      ],
+      "note": "Name follows the exact self-identifying interface title."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/au",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MarketplaceListingInterface",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'SpawnPK Marketplace Listing'; controls include Set price, Set quantity, Select currency, Submit and View item history."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads pos/button and pos/sprite marketplace assets."
+        }
+      ],
+      "note": "Name follows the exact self-identifying interface title."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aJ",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "QuickPrayerSetupInterface",
+      "confidence": 0.992,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include 'Select your quick prayers:', 'Select your quick curses:' and 'Confirm Selection'."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads /prayer/quick/SPRITE."
+        }
+      ],
+      "note": "Shared setup surface for quick prayers/curses."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aW",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WorldTournamentLeaderboardInterface",
+      "confidence": 0.992,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is 'World Tournament Leaderboards' with Top Players, Top Clans, This week and All time controls."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads leaderboard/presentation sprites including misc/hs assets."
+        }
+      ],
+      "note": "Companion leaderboard surface to the already accepted WorldTournamentInterface."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aK",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaidPartyInvitationsInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include 'Party invitations', 'Raiding party invitations' and 'Selected invitation'."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads raids/sprite 5."
+        }
+      ],
+      "note": "Conservative invitation-list role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/f/a/c/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BountyHunterOverlay",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact constant 'BountyOverlay' appears with Target, Risk, Kills, Time Left, Receive task, Skip target and bounty-task commands."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads popups/bh target/combat/skull/compact assets."
+        }
+      ],
+      "note": "Exact-current bounty-hunter overlay behavior."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/e/a/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HalloweenHungerGamesOverlay",
+      "confidence": 0.992,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include \"H'ween Hunger Games Lobby\", Ceasefire Stage, Safety Countdown, chest unlock timing, PvP enable timing and match statistics."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Presentation strings and image tags are specific to the Hunger Games event overlay."
+        }
+      ],
+      "note": "Seasonal Hunger Games overlay role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutFolderPanel",
+      "confidence": 0.995,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact HTML label is 'Loadout folders'; actions create, delete, rename and reorder loadouts."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads gui/create, delete, down, edit, folder and up icons."
+        }
+      ],
+      "note": "Desktop-side loadout folder management panel."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/w",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ComponentColorSelectionInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include Cape Color Selection Menu, Text Color Selection Menu, Background/Detail/Font/Particle/Shadow/Trim color and ::compcolors."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads options/colors/* assets and emits component-color configuration commands."
+        }
+      ],
+      "note": "Broad selection name covers both text/component and cape-color modes."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClanChatInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include 'Clan Chat (0/100)', 'Clan Setup', 'Manage clan member', Join Chat and Owner."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads /clan/sprite assets."
+        }
+      ],
+      "note": "General clan-chat surface; distinct from the already accepted ClanChatSetupInterface."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/Z",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LeaderboardSelectionInterface",
+      "confidence": 0.992,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact string is 'Leaderboard Selection Menu'; available entries include Tournament Leaderboard and Daily PK Leaderboards."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads misc/hs leaderboard assets."
+        }
+      ],
+      "note": "Name follows the self-identifying selection-menu role."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/N",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HalloweenEventChestInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact strings include 'Event Chest Tier I', 'Event Chest Tier II', 'Tier I - Halloween Event 2020', Roll, Exchange and Event Guide."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads fountain/event*, fountain/glow*, fountain/icon* and fountain/button assets."
+        }
+      ],
+      "note": "Legacy seasonal event-chest interface; year-specific text is preserved in provenance rather than the identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GladiatorsVindicationWorldEventInterface",
+      "confidence": 0.985,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact title is \"Gladiator's Vindication (World Event)\" with event duration, progress bar, buttons and selectable options."
+        },
+        {
+          "family": "exact_resource_role",
+          "detail": "Class loads event/task*, drops/sprite and fountain/sprite assets."
+        }
+      ],
+      "note": "Identifier is normalized to a Java name while preserving the exact event title in evidence."
+    }
+  ],
+  "conflicts": []
+}

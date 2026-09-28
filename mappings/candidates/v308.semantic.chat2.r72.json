@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemHoverDescriptionConfig",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_yaml_source",
+          "detail": "rs/d/m opens the exact configs/hovers.yaml file beneath the client cache/config root, parses it with SnakeYAML as a Map<Integer,String>, and copies the entries into an item-id keyed Trove map."
+        },
+        {
+          "family": "exact_hover_application",
+          "detail": "Its lookup method accepts an existing item-hover string plus item id and appends the configured description when present; the Client item-hover rendering path calls this method directly."
+        },
+        {
+          "family": "exact_reload_and_override",
+          "detail": "The runtime reload command emits the surviving message '<img=2> Item hover descriptions reloaded!', while the item-definition update path can insert per-item description overrides into the same map."
+        }
+      ],
+      "note": "ItemHoverDescriptionConfig is the conservative semantic name for this exact hovers.yaml item-description table; it does not claim a verbatim original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemRarityConfig",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_yaml_source",
+          "detail": "rs/d/p opens the exact configs/rarities.yaml file, parses item-id keys and rarity strings with SnakeYAML, and stores the resolved rarity enum in an item-id keyed Trove map."
+        },
+        {
+          "family": "exact_rarity_mapping",
+          "detail": "The loader recognizes exactly uncommon, rare and legendary values and maps them to the three rs/d/p$a enum constants."
+        },
+        {
+          "family": "exact_item_definition_consumer",
+          "detail": "R28 ItemDefinition checks this map by item id and, when a mapped item name still carries the default @gre@ prefix, replaces that prefix with the selected rarity enum's display-format tag."
+        }
+      ],
+      "note": "ItemRarityConfig is the conservative semantic name for this exact rarities.yaml item-id-to-rarity table; it does not claim a verbatim original developer identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/d/p$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemRarity",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "rs/d/p$a is an enum with surviving exact constants UNCOMMON, RARE and LEGENDARY."
+        },
+        {
+          "family": "exact_display_style",
+          "detail": "Each enum value owns the exact item-name formatting tag used by ItemDefinition: <col=65BFFF>, <col=BD73FF><shad=773494>, or <col=FFC81A><shad=9A7705>."
+        },
+        {
+          "family": "exact_config_binding",
+          "detail": "ItemRarityConfig maps rarities.yaml values to these enum constants, and ItemDefinition consumes the enum's formatting string for rarity-colored item names."
+        }
+      ],
+      "note": "ItemRarity is the conservative semantic name for this exact three-tier item rarity enum; it does not claim a verbatim original developer identifier."
+    }
+  ],
+  "conflicts": []
+}

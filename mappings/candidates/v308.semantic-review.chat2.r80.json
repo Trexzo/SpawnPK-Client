@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 5,
+  "review_id": "SEMREVIEW_E585C37C70B2F894E280",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_488D3E6B65F54CCB7A7F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000983",
+      "owner_logical_id": "CLIENT_CLASS_000983",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/t/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SequenceDefinitionConfigLoader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_identity",
+          "detail": "The class is hard-wired to configs/anims.yaml with compiled counterpart configs/a.bin."
+        },
+        {
+          "family": "exact_target_type",
+          "detail": "It extends the generic config loader as rs.t.c<rs.d.a>; R28 identifies rs/d/a as SequenceDefinition."
+        },
+        {
+          "family": "exact_definition_parser",
+          "detail": "Per-ID maps construct/clone SequenceDefinition objects and decode sequence-specific keys including animation/Maya fields; surviving diagnostics include \"(ID {}) Unknown config: {}\" and \"Could not find clone ID {} for Anim {}\"."
+        },
+        {
+          "family": "exact_runtime_consumer",
+          "detail": "SequenceDefinition loading invokes this loader, then replaces matching IDs in all active SequenceDefinition arrays with the parsed definitions."
+        }
+      ],
+      "note": "SequenceDefinitionConfigLoader is the conservative semantic name for the exact anims.yaml/a.bin SequenceDefinition config loader. It does not claim a verbatim original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_641D59FD4AB2F5C3486B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000986",
+      "owner_logical_id": "CLIENT_CLASS_000986",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/t/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemDefinitionConfigLoader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_identity",
+          "detail": "The class is hard-wired to configs/items.yaml with compiled counterpart configs/i.bin."
+        },
+        {
+          "family": "exact_target_type",
+          "detail": "It extends the generic config loader as rs.t.c<rs.d.k>; R28 identifies rs/d/k as ItemDefinition."
+        },
+        {
+          "family": "exact_definition_parser",
+          "detail": "Per-ID maps construct ItemDefinition objects and decode item-specific fields including name, actions/model data and texture/retexture controls such as fulltexture and textureinvanim; unknown keys use the surviving item-aware diagnostic \"(ID {} '{}') Unknown config: {}\"."
+        },
+        {
+          "family": "exact_runtime_consumer",
+          "detail": "ItemDefinition initialization creates and loads this config loader, and the normal ItemDefinition lookup path returns its configured definition for matching positive item IDs before archive decoding."
+        }
+      ],
+      "note": "ItemDefinitionConfigLoader is the conservative semantic name for the exact items.yaml/i.bin ItemDefinition config loader. It does not claim a verbatim original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_7CBF84CFA84C13F9FDD7",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000988",
+      "owner_logical_id": "CLIENT_CLASS_000988",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/t/a/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ObjectDefinitionConfigLoader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_identity",
+          "detail": "The class is hard-wired to configs/objects.yaml with compiled counterpart configs/o.bin."
+        },
+        {
+          "family": "exact_target_type",
+          "detail": "It extends the generic config loader as rs.t.c<rs.d.r>; R28 identifies rs/d/r as ObjectDefinition."
+        },
+        {
+          "family": "exact_definition_parser",
+          "detail": "Per-ID maps construct ObjectDefinition objects and decode object-specific keys including name, actions, models, animation/animid, randomanimstart, interaction flags, dimensions, recolors/retextures and OSRS mode selection."
+        },
+        {
+          "family": "exact_runtime_consumer",
+          "detail": "ObjectDefinition initialization creates and loads this config loader, and the primary ObjectDefinition lookup checks it before the normal archive/cache path."
+        }
+      ],
+      "note": "ObjectDefinitionConfigLoader is the conservative semantic name for the exact objects.yaml/o.bin ObjectDefinition config loader. It does not claim a verbatim original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_8778443CC62C8E8FFD11",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000985",
+      "owner_logical_id": "CLIENT_CLASS_000985",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/t/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpotAnimationDefinitionConfigLoader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_identity",
+          "detail": "The class is hard-wired to configs/graphics.yaml with compiled counterpart configs/g.bin."
+        },
+        {
+          "family": "exact_target_type",
+          "detail": "It extends the generic config loader as rs.t.c<rs.d.x>; R28 identifies rs/d/x as SpotAnimationDefinition."
+        },
+        {
+          "family": "exact_definition_parser",
+          "detail": "Per-ID maps construct/clone SpotAnimationDefinition objects and decode graphic-specific animation, model/render, recolor/retexture data; diagnostics include \"(ID {}) Unknown config: {}\" and \"Could not find clone ID {} for GFX {}\"."
+        },
+        {
+          "family": "exact_runtime_consumer",
+          "detail": "SpotAnimationDefinition loading creates and loads this config loader, iterates its configured IDs and replaces the corresponding runtime SpotAnimationDefinition array entries."
+        }
+      ],
+      "note": "SpotAnimationDefinitionConfigLoader is the conservative semantic name for the exact graphics.yaml/g.bin SpotAnimationDefinition config loader. It does not claim a verbatim original developer identifier."
+    },
+    {
+      "proposal_id": "SEMPROP_F9A8D12D76B70682FD4E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000984",
+      "owner_logical_id": "CLIENT_CLASS_000984",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/t/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcDefinitionConfigLoader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_identity",
+          "detail": "The class is hard-wired to configs/npcs.yaml with compiled counterpart configs/e.bin."
+        },
+        {
+          "family": "exact_target_type",
+          "detail": "It extends the generic config loader as rs.t.c<rs.d.d>; R28 identifies rs/d/d as NpcDefinition."
+        },
+        {
+          "family": "exact_definition_parser",
+          "detail": "Per-ID maps construct NpcDefinition objects and decode NPC-specific keys such as name, mapicon, standanim, walkanim, rotation animations and retextures; unknown keys use the surviving NPC-aware diagnostic \"(ID {} '{}') Unknown config: {}\"."
+        },
+        {
+          "family": "exact_runtime_consumer",
+          "detail": "NpcDefinition initialization creates and loads this config loader, and the primary NpcDefinition lookup consults it before the archive-backed definition path."
+        }
+      ],
+      "note": "NpcDefinitionConfigLoader is the conservative semantic name for the exact npcs.yaml/e.bin NpcDefinition config loader. It does not claim a verbatim original developer identifier."
+    }
+  ],
+  "unresolved": []
+}

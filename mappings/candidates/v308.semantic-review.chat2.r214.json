@@ -1,0 +1,144 @@
+{
+  "canonical": false,
+  "kind": "semantic_review_set",
+  "proposal_count": 4,
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_5664C56222D9F40D733A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000483",
+      "owner_logical_id": "CLIENT_CLASS_000483",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/b/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WidgetOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_widget_id_registry",
+          "detail": "OverlayManager maintains this subtype in an int-keyed registry. a(overlay, id) assigns the id to the overlay and stores it under that exact integer key; unregister uses the same stored key."
+        },
+        {
+          "family": "exact_widget_render_dispatch",
+          "detail": "The manager's a(int,int,int) render entrypoint treats the first integer as the registry key and writes the remaining two integers into the overlay before executing it, matching widget-id plus on-screen x/y rendering."
+        },
+        {
+          "family": "exact_r205_widget_join",
+          "detail": "R205 AdventureBookChapterProgressRenderer extends this class and is registered under exact widget 38388 immediately after the 'Chapter Progress' widget is built."
+        },
+        {
+          "family": "exact_additional_widget_joins",
+          "detail": "Other direct subclasses are registered under exact interface/widget ids such as 60065, 32317, 32465 and 32486 by their owning interface builders, confirming this is a generic widget-bound overlay base rather than an Adventure Book special case."
+        }
+      ],
+      "note": "WidgetOverlay is fixed by the exact int-keyed widget registry, x/y dispatch and multiple independent interface-builder registrations. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_5A7DE0C985653D7AB69E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000481",
+      "owner_logical_id": "CLIENT_CLASS_000481",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_r30_npc_join",
+          "detail": "R30 independently fixes rs/a/j as Npc and R28 fixes rs/d/d as NpcDefinition. This abstract overlay stores both the live Npc and its NpcDefinition."
+        },
+        {
+          "family": "exact_model_geometry",
+          "detail": "The class also stores the current R30 Model and exposes exact NPC hull/polygon geometry helpers computed from the model plus the Npc world coordinates."
+        },
+        {
+          "family": "exact_manager_npc_dispatch",
+          "detail": "OverlayManager's actor-stage dispatch detects this subtype when the supplied actor is rs/a/j, assigns the Npc and current Model, then executes the overlay lifecycle."
+        },
+        {
+          "family": "exact_subclasses",
+          "detail": "Direct subclasses include R208 NpcDefinitionSpriteOverlay plus NPC-facing plugin overlays, all sharing the same Npc/NpcDefinition/Model contract."
+        }
+      ],
+      "note": "NpcOverlay is fixed by exact Npc, NpcDefinition and Model state plus the manager's NPC-specific dispatch. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_8A9BF0FA5B6F52433CDC",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000482",
+      "owner_logical_id": "CLIENT_CLASS_000482",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/b/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PlayerOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_r30_player_join",
+          "detail": "R30 independently fixes rs/a/k as Player. This abstract overlay stores exactly one rs/a/k and clears that state after the render lifecycle."
+        },
+        {
+          "family": "exact_local_player_check",
+          "detail": "Its protected predicate compares the stored Player directly with Client.eR, the live local-player reference, providing a player-specific self check."
+        },
+        {
+          "family": "exact_manager_player_dispatch",
+          "detail": "OverlayManager's actor-stage dispatch detects this subtype when the supplied actor is rs/a/k, assigns the Player and executes the overlay lifecycle."
+        },
+        {
+          "family": "exact_subclass",
+          "detail": "Its exact-v308 direct subclass is the player-facing outline overlay implementation in rs/s/p/b."
+        }
+      ],
+      "note": "PlayerOverlay is fixed by the exact R30 Player type, local-player predicate and player-specific manager dispatch. Confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_EDAEE532EF54C6601F48",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000480",
+      "owner_logical_id": "CLIENT_CLASS_000480",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/f/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_r30_model_join",
+          "detail": "R30 independently fixes rs/a/h as Model. This abstract overlay stores exactly one rs/a/h plus the associated render-context Object and exposes setters for both."
+        },
+        {
+          "family": "exact_manager_model_dispatch",
+          "detail": "OverlayManager's stage/object/model dispatch detects this subtype, supplies the exact Object plus Model pair, binds the Client and executes the overlay lifecycle for that render stage."
+        },
+        {
+          "family": "exact_concrete_specialization",
+          "detail": "Its only exact-v308 direct subclass is R209 ModelRecoloringOverlay, which consumes the supplied live Model before the item/NPC/object 3D shade stage."
+        }
+      ],
+      "note": "ModelOverlay is fixed by the exact R30 Model type, manager dispatch contract and the ModelRecoloringOverlay specialization. Confidence is 0.999."
+    }
+  ],
+  "review_id": "SEMREVIEW_6DB640B065E4298217A3",
+  "schema_version": 1,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "unresolved": []
+}

@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 4,
+  "review_id": "SEMREVIEW_0E29D2E6D57B3D6291EE",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_7980778F704DA881451F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001028",
+      "owner_logical_id": "CLIENT_CLASS_001028",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IntBlockBuffer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_block_buffer_shape",
+          "detail": "Exact v308 owns BLOCK_BITS/BLOCK_SIZE-equivalent constants, int[] memory, int[] unused-block indices and unused length, with private grow and public getMemory/useNewBlock/freeBlock methods."
+        },
+        {
+          "family": "exact_block_sizes",
+          "detail": "The implementation manages fixed 1024-int blocks and reuses freed block indexes before growing backing memory, matching the outline renderer's allocation pattern."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 6e74752caa80fe9cb96cd9b37207e171fa525f07 net.runelite.client.ui.overlay.outline.IntBlockBuffer has the same constants, fields and grow/getMemory/useNewBlock/freeBlock behavior."
+        }
+      ],
+      "note": "IntBlockBuffer is an exact upstream source-name recovery at confidence 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_ACD0A73BDB724B51EEA1",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001030",
+      "owner_logical_id": "CLIENT_CLASS_001030",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/b/b$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PixelDistanceDelta",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_nested_value_shape",
+          "detail": "Exact v308 nested class stores exactly two final ints corresponding to dx and dy and is instantiated by the outline-width distance-delta precomputation."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 6e74752caa80fe9cb96cd9b37207e171fa525f07 ModelOutlineRenderer.PixelDistanceDelta is a private @AllArgsConstructor class with exactly final int dx and dy."
+        }
+      ],
+      "note": "PixelDistanceDelta is recovered at confidence 0.999 as the exact private nested source class of ModelOutlineRenderer."
+    },
+    {
+      "proposal_id": "SEMPROP_F33400AAE9FD08A2561F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001031",
+      "owner_logical_id": "CLIENT_CLASS_001031",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/b/b$b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PixelDistanceGroupIndex",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_nested_value_shape",
+          "detail": "Exact v308 nested class stores final double distance, final int distance-group index and final double alpha multiplier; the outline priority list sorts instances by the distance getter."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 6e74752caa80fe9cb96cd9b37207e171fa525f07 ModelOutlineRenderer.PixelDistanceGroupIndex has exactly distance, distanceGroupIndex and alphaMultiply with a private distance getter used for sorting."
+        }
+      ],
+      "note": "PixelDistanceGroupIndex is recovered at confidence 0.999 as the exact private nested source class of ModelOutlineRenderer."
+    },
+    {
+      "proposal_id": "SEMPROP_FD47E2CBEA6BB1FDEEB4",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_001029",
+      "owner_logical_id": "CLIENT_CLASS_001029",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/ui/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelOutlineRenderer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outline_state",
+          "detail": "Exact v308 preserves MAX_OUTLINE_WIDTH=50, MAX_FEATHER=4, direct-write threshold, 6500-entry projected X/Y arrays, clip/crop bounds, visited bitset, IntBlockBuffer queues and precomputed distance tables."
+        },
+        {
+          "family": "exact_outline_algorithm",
+          "detail": "The class retains next-power-of-two growth, face culling, distance-priority creation, triangle rasterization, outline pixel queueing and public outline entry points for actors, tile objects, item layers, graphics objects and RuneLite objects."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite upstream 6e74752caa80fe9cb96cd9b37207e171fa525f07 ModelOutlineRenderer has the same state layout, private raster/queue helpers, nested distance records and drawOutline overload family."
+        }
+      ],
+      "note": "ModelOutlineRenderer is an exact upstream source-name recovery at confidence 0.999."
+    }
+  ],
+  "unresolved": []
+}

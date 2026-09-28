@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/c/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodFountainPerkEntry",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_record_shape",
+          "detail": "rs/l/c/e is a four-field mutable record with one String label, x/y coordinates and one small integer presentation state; its constructor fixes the label/coordinates and initializes state to 0."
+        },
+        {
+          "family": "exact_exclusive_consumer",
+          "detail": "Exact v308 rs/l/c/f creates 27 of these records and is the only recovered consumer in this subsystem, using the label for hover text, x/y for screen placement and state as the index into the three fountain/sprite presentation states."
+        },
+        {
+          "family": "exact_perk_vocabulary",
+          "detail": "The owning overlay populates entries with exact Blood Fountain perk names including 'Blood vengeance I/II', 'Blood whip', 'Blood rune c\\'bow', 'Blood dark bow', 'Bloodthirsty I/II', 'Blood pool', 'Blood staff', 'Blood ring', 'Bloodlust', 'War diamonds', 'Vampiric damage' and 'Vampiric defence'."
+        },
+        {
+          "family": "exact_interface_binding",
+          "detail": "The same owner renders these entries only while the exact BloodFountainPerkTreeInterface root is active, binding the record role to that interface rather than a generic coordinate record."
+        }
+      ],
+      "note": "BloodFountainPerkEntry is descriptive exact-behavior recovery for the per-perk label/position/presentation-state record consumed exclusively by the Blood Fountain perk selection overlay. No original source identifier is claimed; confidence is 0.998."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/c/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodFountainPerkSelectionOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_existing_interface_binding",
+          "detail": "The renderer exits unless Client.cH equals rs/n/c/aD.bI; R2 already resolves rs/n/c/aD as BloodFountainPerkTreeInterface from the exact '<img=186> Blood Fountain Perk Tree <img=186>' title and perk-tree vocabulary."
+        },
+        {
+          "family": "exact_perk_inventory",
+          "detail": "Its constructor hardcodes 27 exact Blood Fountain perk labels and coordinates, including Blood vengeance I/II, Treasure hunter I/II, Blood whip, Blood rune c'bow, Blood dark bow, Bloodthirsty I/II, Killjoy I/II, Blood pool, Blood staff, Blood ring, Bloodlust, Excavator, War diamonds, Unholy smite, Eternal recoil, Eternal blood cape, Vampiric damage and Vampiric defence."
+        },
+        {
+          "family": "exact_sprite_family",
+          "detail": "The live renderer lazily loads exactly 'fountain/sprite 1', 'fountain/sprite 2' and 'fountain/sprite 3' and selects among them per perk state/selection."
+        },
+        {
+          "family": "exact_hover_and_selection",
+          "detail": "The overlay draws each perk node at its stored interface-relative coordinates, hit-tests the 32x32 perk regions, emits the exact perk label as hover text, tracks the selected index and writes the exact client command '::selectperk <index>' on selection."
+        },
+        {
+          "family": "exact_runtime_state_updates",
+          "detail": "Its public state methods toggle individual perk-entry states and externally set the selected perk index, matching a runtime interactive selection overlay layered over the static Blood Fountain perk-tree interface."
+        }
+      ],
+      "note": "BloodFountainPerkSelectionOverlay is fixed by the existing BloodFountainPerkTreeInterface identity, exact fountain sprites, 27 exact perk names, hover/selection behavior and ::selectperk command path. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

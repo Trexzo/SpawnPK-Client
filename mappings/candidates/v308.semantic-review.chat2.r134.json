@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_ED00F196692ECC124E36",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_034FA416882D14B0B285",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000767",
+      "owner_logical_id": "CLIENT_CLASS_000767",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/q/b/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ReportRequestResultsReceiver",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_receiver_literals",
+          "detail": "The Runnable preserves exact diagnostics 'Receiver thread started!', 'Connected to the server!' and 'Receiver has stopped!' and owns an AtomicBoolean start/stop lifecycle."
+        },
+        {
+          "family": "exact_socket_protocol",
+          "detail": "The receiver opens a Socket to rs/f/a.j on port 2456, reads UTF messages until END/timeout, and parses exact Login, Login request @, Logout and Unregistered (logout) message vocabulary."
+        },
+        {
+          "family": "exact_results_window_flow",
+          "detail": "Parsed receiver results are queued and a Swing Timer drains them through rs/q/b/f into the exact 'Report Request Results' window rs/q/b/a."
+        },
+        {
+          "family": "exact_isolated_ownership",
+          "detail": "Outside its own rs/q/b helper classes, the only live owner reference is the ScriptPacket dispatcher registration path; no unrelated Client subsystem mutates the receiver."
+        }
+      ],
+      "note": "ReportRequestResultsReceiver is a descriptive readable name for the socket receiver whose sole UI sink is the exact Report Request Results window. Confidence is 0.998 because the original developer class noun is stripped."
+    },
+    {
+      "proposal_id": "SEMPROP_9DD3A9E551C34CA77CD3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000764",
+      "owner_logical_id": "CLIENT_CLASS_000764",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/q/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ReportRequestResultsWindow",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_window_title",
+          "detail": "The JFrame sets its exact title to 'Report Request Results' and initializes its main JTextArea with 'Waiting for results..'."
+        },
+        {
+          "family": "exact_results_surface",
+          "detail": "The window is an 800x600 result viewer centered relative to the SpawnPK Launcher frame, with a searchable JTextArea and an exact 'Find Text' dialog plus 'Match results: N/A' status label."
+        },
+        {
+          "family": "exact_receiver_consumer",
+          "detail": "rs/q/b/f lazily constructs this window for the rs/q/b/d receiver and appends every queued receiver String directly into the window's JTextArea."
+        },
+        {
+          "family": "exact_subsystem_scope",
+          "detail": "The class is referenced only by its key/find helpers and the receiver queue-drain runnable inside rs/q/b/*, keeping the exact Report Request Results responsibility self-contained."
+        }
+      ],
+      "note": "ReportRequestResultsWindow follows the exact surviving JFrame title and result-viewer behavior. This is not an inferred gameplay noun; confidence is 0.999."
+    },
+    {
+      "proposal_id": "SEMPROP_E5B36910C8A57A967398",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000768",
+      "owner_logical_id": "CLIENT_CLASS_000768",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/q/b/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ReportRequestResultsPacketHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_scriptpacket_id",
+          "detail": "R115 ScriptPacketDispatcher registers rs/q/b/d.b as exact ScriptPacket ID 20; exact v308 initializes that field with concrete handler rs/q/b/e."
+        },
+        {
+          "family": "exact_complete_selector_surface",
+          "detail": "Selector 0 calls rs/q/b/d.a.b() to stop the receiver; selector 1 calls rs/q/b/d.a.a() to start it. There are no other selector branches."
+        },
+        {
+          "family": "exact_target_identity",
+          "detail": "The controlled singleton is the receiver that feeds the exact 'Report Request Results' Swing window and parses Login/Logout result messages from port 2456."
+        },
+        {
+          "family": "exact_no_cross_domain_write",
+          "detail": "The handler touches no widget, gameplay state or second service; its whole packet surface is receiver start/stop control."
+        }
+      ],
+      "note": "ReportRequestResultsPacketHandler is fixed by ScriptPacket 20 and the complete start/stop contract for the Report Request Results receiver. Confidence is 0.999."
+    }
+  ],
+  "unresolved": []
+}

@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/g/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientKeyListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_java_interface",
+          "detail": "rs/g/a/a directly extends java.awt.event.KeyListener, so keyPressed, keyReleased and keyTyped are part of its exact JVM contract rather than inferred behavior."
+        },
+        {
+          "family": "exact_manager_element_type",
+          "detail": "The only central registry stores CopyOnWriteArrayList<rs/g/a/a>, and its registration/unregistration plus every dispatch loop are typed to this exact interface."
+        },
+        {
+          "family": "exact_live_implementations",
+          "detail": "Exact v308 plugin/input classes including rs/l/f/j, rs/s/c/b and rs/s/j/b implement this interface and are dynamically registered by their owning live subsystems."
+        },
+        {
+          "family": "exact_extension_hook",
+          "detail": "The interface adds one default boolean method returning false beyond the standard AWT KeyListener contract. R175 preserves the class-level listener role without inventing a narrower meaning for that extra hook."
+        }
+      ],
+      "note": "ClientKeyListener is descriptive exact-behavior recovery for the AWT KeyListener extension registered by the client key-listener manager. The extra default hook remains intentionally unnamed. Confidence is 0.999."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/g/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "KeyListenerManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_registry_contract",
+          "detail": "rs/g/a/b owns a CopyOnWriteArrayList<rs/g/a/a> with explicit add/remove methods and surviving log messages 'Registering key listener: {}' and 'Unregistered key listener: {}'."
+        },
+        {
+          "family": "exact_three_event_dispatch",
+          "detail": "Separate methods dispatch KeyEvent keyPressed, keyReleased and keyTyped to registered ClientKeyListener instances, with surviving trace strings 'Processing key pressed/released/typed ... for key listener {}'."
+        },
+        {
+          "family": "exact_consumption_semantics",
+          "detail": "Each dispatch returns immediately if the incoming KeyEvent is already consumed; after invoking a listener it stops iteration when that listener consumes the event, with exact 'Consuming key ...' debug messages."
+        },
+        {
+          "family": "exact_client_front_gate",
+          "detail": "The base client rs/C forwards its AWT keyPressed, keyReleased and keyTyped events to this manager through Launcher/UI before legacy Client key handling; keyPressed and keyTyped return early when the manager path consumes the event."
+        },
+        {
+          "family": "exact_dynamic_consumers",
+          "detail": "Live overlay/plugin systems register and unregister ClientKeyListener implementations at lifecycle boundaries, including developer-tools and other client-side modules, establishing the manager as shared runtime input infrastructure rather than one feature-specific handler."
+        }
+      ],
+      "note": "KeyListenerManager is fixed by its CopyOnWrite listener registry, three KeyEvent dispatch paths, consumption semantics and base-client front-gate integration. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}

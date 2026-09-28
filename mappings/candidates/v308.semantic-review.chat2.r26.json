@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_F2B9678512AAB9EE7CC2",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_AA8246B1EB3DCD512706",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000941",
+      "owner_logical_id": "CLIENT_CLASS_000941",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/o/a$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HighlightedNpcBuilder",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"HighlightedNpc.HighlightedNpcBuilder(npc=…, highlightColor=…, fillColor$value=…, hull=…, tile=…, trueTile=…, swTile=…, swTrueTile=…, outline=…, name=…, nameOnMinimap=…, borderWidth$value=…, outlineFeather=…, render=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Builder setters populate the same HighlightedNpc fields and construct rs/s/o/a directly."
+        }
+      ],
+      "note": "Flattened semantic name preserves the exact nested builder identity."
+    },
+    {
+      "proposal_id": "SEMPROP_CF357360D01F9458F358",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000940",
+      "owner_logical_id": "CLIENT_CLASS_000940",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/o/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HighlightedNpc",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_role",
+          "detail": "Surviving self-identifying toString is \"HighlightedNpc(npc=…, highlightColor=…, fillColor=…, hull=…, tile=…, trueTile=…, swTile=…, swTrueTile=…, outline=…, name=…, nameOnMinimap=…, borderWidth=…, outlineFeather=…, render=…)\"."
+        },
+        {
+          "family": "exact_structural_role",
+          "detail": "Immutable value stores exactly the NPC reference, highlight/fill colors, rendering flags, border/feather values and predicate described by that self-identifying output."
+        }
+      ],
+      "note": "Name is directly preserved in exact-v308 bytecode."
+    }
+  ],
+  "unresolved": []
+}

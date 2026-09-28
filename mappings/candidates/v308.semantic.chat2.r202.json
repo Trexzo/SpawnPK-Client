@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/f/a/c/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BossBarOverlay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_overlay_identity",
+          "detail": "The constructor writes the exact surviving overlay identity literal 'BossBarOverlay' into the shared positioned-overlay base."
+        },
+        {
+          "family": "exact_overlay_contract",
+          "detail": "The class extends the positioned client-overlay base, configures overlay placement/layer state and fixed bounds, and renders one boss-bar surface only when its packet-controlled visibility state is enabled."
+        },
+        {
+          "family": "exact_reset_state",
+          "detail": "Its reset method restores progress to 0, bar colors to their exact defaults, both percentage strings to '100%', and auxiliary display strings to empty."
+        },
+        {
+          "family": "exact_progress_render",
+          "detail": "Rendering converts the integer progress field into a 0-100 proportion, draws the fixed 220-pixel bar and proportional foreground width, and renders the packet-fed percentage/display strings over the same surface."
+        },
+        {
+          "family": "exact_packet_owner",
+          "detail": "R125 independently fixes rs/l/f/a/c/b as ScriptPacket 7 BossBarOverlayPacketHandler; that handler exclusively creates and mutates this exact rs/l/f/a/c/a instance."
+        }
+      ],
+      "note": "BossBarOverlay is fixed by the exact surviving 'BossBarOverlay' identity literal and a complete single-purpose progress-bar render/reset lifecycle. R125 independently fixes its exclusive ScriptPacket 7 owner. Confidence is 0.999."
+    }
+  ],
+  "conflicts": []
+}
