@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_1992D79C7AD0CA5E72CF",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_AD12D37ACE42B650AEBD",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000514",
+      "owner_logical_id": "CLIENT_CLASS_000514",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/v$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InlineProgressBarSpec",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_immutable_state",
+          "detail": "The class is an immutable nine-field value object created only by InlineProgressBarMarkup and consumed only by that parser plus RSFont."
+        },
+        {
+          "family": "exact_layout_state",
+          "detail": "Its fields carry the parsed bar dimensions/value/style colors, optional label text, closing-tag position and pbar variant needed by the renderer."
+        },
+        {
+          "family": "exact_no_independent_behavior",
+          "detail": "The class performs no parsing or drawing itself; it is solely the parsed inline progress-bar specification passed into rendering."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the immutable result of pbar markup parsing."
+    },
+    {
+      "proposal_id": "SEMPROP_E8F76F0EE5E9B97AD005",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000513",
+      "owner_logical_id": "CLIENT_CLASS_000513",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/v",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InlineProgressBarMarkup",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_markup_syntax",
+          "detail": "Exact v308 parses inline pbar markup, including numbered pbar2..pbar7 variants, colon-delimited numeric/style fields and an optional embedded label section."
+        },
+        {
+          "family": "exact_dimension_contract",
+          "detail": "The first numeric width field is parsed and clamped to 20..300 pixels before a progress-bar specification is produced."
+        },
+        {
+          "family": "exact_rendering_behavior",
+          "detail": "The renderer draws a bordered/background rectangle and a filled region through R55 DrawingArea; animated style variants derive changing fill colors from nanoTime and request text-motion redraw invalidation."
+        },
+        {
+          "family": "exact_font_integration",
+          "detail": "R55 RSFont invokes this parser during inline text layout, advances text width by the parsed bar width, renders the bar at the current glyph position and optionally renders the spec label inside it."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for inline pbar markup parsing/rendering used by RSFont."
+    }
+  ],
+  "unresolved": []
+}
