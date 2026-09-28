@@ -134,6 +134,30 @@ def main(argv: list[str] | None = None) -> int:
         f"{summary['method_signature_attribute_count']}"
     )
     print(
+        "readable_package_class_collision_count="
+        f"{summary['readable_package_class_collision_count']}"
+    )
+    print(
+        "capsule_package_class_collision_count="
+        f"{summary['capsule_package_class_collision_count']}"
+    )
+    print(
+        "readable_collision_depths="
+        + json.dumps(
+            summary["readable_collision_depths"],
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    print(
+        "capsule_collision_depths="
+        + json.dumps(
+            summary["capsule_collision_depths"],
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+    )
+    print(
         "source_form_classifications="
         + json.dumps(
             summary["source_form_classifications"],
