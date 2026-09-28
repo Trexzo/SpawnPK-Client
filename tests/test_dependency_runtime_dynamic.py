@@ -57,6 +57,15 @@ public class DynamicCalls {
     public InputStream loaderResource(ClassLoader loader) {
         return loader.getResourceAsStream("example.txt");
     }
+
+    public void conditionalTarget(boolean flag) throws Exception {
+        Class.forName(flag ? "example.Left" : "example.Right");
+    }
+
+    public void localTarget() throws Exception {
+        String name = "example.Local";
+        Class.forName(name);
+    }
 }
 """.strip()
             + "\n",
@@ -155,7 +164,7 @@ public class DynamicCalls {
                 report["summary"]["runtime_capsule_mutation_ready"]
             )
 
-    def test_does_not_guess_literal_targets_from_nearby_constants(self):
+    def test_proves_only_control_flow_safe_immediate_literals(self):
         with tempfile.TemporaryDirectory() as td:
             fx = self._fixture(Path(td))
             report = build_dependency_runtime_dynamic_inventory(
@@ -164,19 +173,46 @@ public class DynamicCalls {
                 include_identifiers=True,
             )
 
-            for row in report["callsites"]:
-                self.assertFalse(row["literal_target_proven"])
-                self.assertIsNone(row["literal_target"])
+            proven = [
+                row
+                for row in report["callsites"]
+                if row["literal_target_proven"]
+            ]
+            unresolved = [
+                row
+                for row in report["callsites"]
+                if not row["literal_target_proven"]
+            ]
 
-            self.assertEqual(
-                report["summary"]["literal_target_proven_count"],
-                0,
+            self.assertGreaterEqual(len(proven), 6)
+            self.assertGreaterEqual(len(unresolved), 2)
+
+            proven_targets = {
+                row["literal_target"]
+                for row in proven
+            }
+            self.assertIn("example.Target", proven_targets)
+            self.assertIn("example.Target2", proven_targets)
+            self.assertIn("java/lang/Runnable", proven_targets)
+            self.assertIn("example", proven_targets)
+            self.assertIn("/example.txt", proven_targets)
+            self.assertIn("example.txt", proven_targets)
+
+            unresolved_methods = {
+                row["caller_method"]
+                for row in unresolved
+            }
+            self.assertIn(
+                "conditionalTarget",
+                unresolved_methods,
             )
+            self.assertIn("localTarget", unresolved_methods)
+
             self.assertEqual(
                 report["summary"][
                     "dynamic_target_unresolved_count"
                 ],
-                report["summary"]["dynamic_callsite_count"],
+                len(unresolved),
             )
 
     def test_native_calls_are_classified_separately(self):
@@ -196,8 +232,43 @@ public class DynamicCalls {
             self.assertTrue(
                 all(
                     row["classification"]
-                    == "native_load_dynamic"
+                    in {
+                        "native_load_dynamic",
+                        "native_load_literal",
+                    }
                     for row in native
+                )
+            )
+            self.assertTrue(
+                any(
+                    row["classification"]
+                    == "native_load_literal"
+                    and row["literal_target"] == "example"
+                    for row in native
+                )
+            )
+
+    def test_service_loader_class_token_is_proven(self):
+        with tempfile.TemporaryDirectory() as td:
+            fx = self._fixture(Path(td))
+            report = build_dependency_runtime_dynamic_inventory(
+                fx["authority"],
+                fx["bundled"],
+                include_identifiers=True,
+            )
+            service = [
+                row
+                for row in report["callsites"]
+                if row["category"] == "service_loading"
+            ]
+            self.assertGreaterEqual(len(service), 1)
+            self.assertTrue(
+                any(
+                    row["classification"]
+                    == "service_loader_class_token"
+                    and row["literal_target"]
+                    == "java/lang/Runnable"
+                    for row in service
                 )
             )
 

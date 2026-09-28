@@ -23,6 +23,68 @@ class DependencyRuntimeDynamicError(ValueError):
     pass
 
 
+_LITERAL_TARGET_APIS: dict[
+    tuple[str, str, str],
+    str,
+] = {
+    (
+        "java/lang/Class",
+        "forName",
+        "(Ljava/lang/String;)Ljava/lang/Class;",
+    ): "string",
+    (
+        "java/lang/ClassLoader",
+        "loadClass",
+        "(Ljava/lang/String;)Ljava/lang/Class;",
+    ): "string",
+    (
+        "java/lang/invoke/MethodHandles$Lookup",
+        "findClass",
+        "(Ljava/lang/String;)Ljava/lang/Class;",
+    ): "string",
+    (
+        "java/lang/System",
+        "load",
+        "(Ljava/lang/String;)V",
+    ): "string",
+    (
+        "java/lang/System",
+        "loadLibrary",
+        "(Ljava/lang/String;)V",
+    ): "string",
+    (
+        "java/lang/Class",
+        "getResource",
+        "(Ljava/lang/String;)Ljava/net/URL;",
+    ): "string",
+    (
+        "java/lang/Class",
+        "getResourceAsStream",
+        "(Ljava/lang/String;)Ljava/io/InputStream;",
+    ): "string",
+    (
+        "java/lang/ClassLoader",
+        "getResource",
+        "(Ljava/lang/String;)Ljava/net/URL;",
+    ): "string",
+    (
+        "java/lang/ClassLoader",
+        "getResourceAsStream",
+        "(Ljava/lang/String;)Ljava/io/InputStream;",
+    ): "string",
+    (
+        "java/lang/ClassLoader",
+        "getResources",
+        "(Ljava/lang/String;)Ljava/util/Enumeration;",
+    ): "string",
+    (
+        "java/util/ServiceLoader",
+        "load",
+        "(Ljava/lang/Class;)Ljava/util/ServiceLoader;",
+    ): "class",
+}
+
+
 _DYNAMIC_APIS: dict[tuple[str, str], str] = {
     ("java/lang/Class", "forName"): "class_loading",
     ("java/lang/ClassLoader", "loadClass"): "class_loading",
@@ -89,13 +151,202 @@ def _load_resource_authority(path: Path) -> dict[str, Any]:
     return report
 
 
+def _instruction_offsets(code: bytes) -> list[int]:
+    offsets: list[int] = []
+    offset = 0
+    while offset < len(code):
+        offsets.append(offset)
+        length = _instruction_length(code, offset)
+        if length <= 0 or offset + length > len(code):
+            raise DependencyRuntimeDynamicError(
+                f"invalid instruction length at bytecode offset {offset}"
+            )
+        offset += length
+    if offset != len(code):
+        raise DependencyRuntimeDynamicError(
+            "instruction stream does not end at code boundary"
+        )
+    return offsets
+
+
+def _branch_targets(
+    code: bytes,
+    offsets: list[int],
+) -> set[int]:
+    targets: set[int] = set()
+    valid = set(offsets)
+
+    def add_target(source: int, delta: int) -> None:
+        target = source + delta
+        if target not in valid:
+            raise DependencyRuntimeDynamicError(
+                f"invalid branch target {target} from {source}"
+            )
+        targets.add(target)
+
+    for offset in offsets:
+        opcode = code[offset]
+        if opcode in set(range(0x99, 0xA9)) | {0xC6, 0xC7}:
+            delta = int.from_bytes(
+                code[offset + 1 : offset + 3],
+                "big",
+                signed=True,
+            )
+            add_target(offset, delta)
+        elif opcode in {0xC8, 0xC9}:
+            delta = int.from_bytes(
+                code[offset + 1 : offset + 5],
+                "big",
+                signed=True,
+            )
+            add_target(offset, delta)
+        elif opcode == 0xAA:
+            padding = (4 - ((offset + 1) % 4)) % 4
+            base = offset + 1 + padding
+            default = int.from_bytes(
+                code[base : base + 4],
+                "big",
+                signed=True,
+            )
+            low = int.from_bytes(
+                code[base + 4 : base + 8],
+                "big",
+                signed=True,
+            )
+            high = int.from_bytes(
+                code[base + 8 : base + 12],
+                "big",
+                signed=True,
+            )
+            add_target(offset, default)
+            cursor = base + 12
+            for _ in range(high - low + 1):
+                delta = int.from_bytes(
+                    code[cursor : cursor + 4],
+                    "big",
+                    signed=True,
+                )
+                add_target(offset, delta)
+                cursor += 4
+        elif opcode == 0xAB:
+            padding = (4 - ((offset + 1) % 4)) % 4
+            base = offset + 1 + padding
+            default = int.from_bytes(
+                code[base : base + 4],
+                "big",
+                signed=True,
+            )
+            pairs = int.from_bytes(
+                code[base + 4 : base + 8],
+                "big",
+                signed=True,
+            )
+            add_target(offset, default)
+            cursor = base + 8
+            for _ in range(pairs):
+                cursor += 4
+                delta = int.from_bytes(
+                    code[cursor : cursor + 4],
+                    "big",
+                    signed=True,
+                )
+                add_target(offset, delta)
+                cursor += 4
+
+    return targets
+
+
+def _ldc_literal(
+    code: bytes,
+    offset: int,
+    cp: list[Any],
+) -> tuple[str, str] | None:
+    opcode = code[offset]
+    if opcode == 0x12:
+        cp_index = code[offset + 1]
+    elif opcode == 0x13:
+        cp_index = int.from_bytes(
+            code[offset + 1 : offset + 3],
+            "big",
+        )
+    else:
+        return None
+
+    value = cp[cp_index]
+    if not value:
+        return None
+    if value[0] == 8:
+        return ("string", _utf8(cp, value[1]))
+    if value[0] == 7:
+        return ("class", _class_name(cp, cp_index))
+    return None
+
+
+def _literal_target_proof(
+    *,
+    code: bytes,
+    cp: list[Any],
+    offsets: list[int],
+    branch_targets: set[int],
+    handler_targets: set[int],
+    invocation_offset: int,
+    owner: str,
+    name: str,
+    descriptor: str,
+) -> tuple[str, str] | None:
+    expected = _LITERAL_TARGET_APIS.get(
+        (owner, name, descriptor)
+    )
+    if expected is None:
+        return None
+    if (
+        invocation_offset in branch_targets
+        or invocation_offset in handler_targets
+    ):
+        return None
+
+    try:
+        index = offsets.index(invocation_offset)
+    except ValueError:
+        return None
+    if index == 0:
+        return None
+
+    predecessor = offsets[index - 1]
+    if (
+        predecessor
+        + _instruction_length(code, predecessor)
+        != invocation_offset
+    ):
+        return None
+
+    literal = _ldc_literal(code, predecessor, cp)
+    if literal is None or literal[0] != expected:
+        return None
+    return literal
+
+
 def _read_code_calls(
     code: bytes,
     cp: list[Any],
+    *,
+    handler_targets: set[int],
 ) -> list[dict[str, Any]]:
     calls: list[dict[str, Any]] = []
-    offset = 0
-    while offset < len(code):
+    offsets = _instruction_offsets(code)
+    valid_offsets = set(offsets)
+    invalid_handlers = sorted(
+        target
+        for target in handler_targets
+        if target not in valid_offsets
+    )
+    if invalid_handlers:
+        raise DependencyRuntimeDynamicError(
+            "invalid exception-handler target(s): "
+            + ", ".join(str(value) for value in invalid_handlers)
+        )
+    branch_targets = _branch_targets(code, offsets)
+    for offset in offsets:
         opcode = code[offset]
         if opcode in {0xB6, 0xB7, 0xB8, 0xB9}:
             if offset + 3 > len(code):
@@ -118,11 +369,39 @@ def _read_code_calls(
 
             category = _DYNAMIC_APIS.get((owner, name))
             if category is not None:
-                classification = (
-                    "native_load_dynamic"
-                    if category == "native_loading"
-                    else "dynamic_target_unresolved"
+                proof = _literal_target_proof(
+                    code=code,
+                    cp=cp,
+                    offsets=offsets,
+                    branch_targets=branch_targets,
+                    handler_targets=handler_targets,
+                    invocation_offset=offset,
+                    owner=owner,
+                    name=name,
+                    descriptor=descriptor,
                 )
+                if proof is not None:
+                    literal_kind, literal_target = proof
+                    if category == "service_loading":
+                        classification = "service_loader_class_token"
+                    elif category == "native_loading":
+                        classification = "native_load_literal"
+                    else:
+                        classification = "literal_target_proven"
+                    proof_reason = (
+                        "immediate_typed_constant_with_no_alternate_"
+                        "branch_or_handler_entry"
+                    )
+                else:
+                    literal_kind = None
+                    literal_target = None
+                    classification = (
+                        "native_load_dynamic"
+                        if category == "native_loading"
+                        else "dynamic_target_unresolved"
+                    )
+                    proof_reason = None
+
                 calls.append(
                     {
                         "offset": offset,
@@ -138,17 +417,12 @@ def _read_code_calls(
                         "descriptor": descriptor,
                         "category": category,
                         "classification": classification,
-                        "literal_target": None,
-                        "literal_target_proven": False,
+                        "literal_target": literal_target,
+                        "literal_kind": literal_kind,
+                        "literal_target_proven": proof is not None,
+                        "literal_proof_reason": proof_reason,
                     }
                 )
-
-        length = _instruction_length(code, offset)
-        if length <= 0 or offset + length > len(code):
-            raise DependencyRuntimeDynamicError(
-                f"invalid instruction length at bytecode offset {offset}"
-            )
-        offset += length
     return calls
 
 
@@ -197,8 +471,19 @@ def _profile_class_dynamic_calls(
                 cr.u2()
                 code_length = cr.u4()
                 code = cr.take(code_length)
+                handler_targets: set[int] = set()
+                for _ in range(cr.u2()):
+                    cr.u2()
+                    cr.u2()
+                    handler_pc = cr.u2()
+                    cr.u2()
+                    handler_targets.add(handler_pc)
                 method_calls.extend(
-                    _read_code_calls(code, cp)
+                    _read_code_calls(
+                        code,
+                        cp,
+                        handler_targets=handler_targets,
+                    )
                 )
 
             if method_calls:
@@ -354,6 +639,12 @@ def build_dependency_runtime_dynamic_inventory(
                     ],
                     "literal_target": row[
                         "literal_target"
+                    ],
+                    "literal_kind": row[
+                        "literal_kind"
+                    ],
+                    "literal_proof_reason": row[
+                        "literal_proof_reason"
                     ],
                 }
             )
