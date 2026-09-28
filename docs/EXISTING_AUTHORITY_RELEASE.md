@@ -49,6 +49,7 @@ spk-release-build `
   --decompiler-sha256 <PINNED_SHA256> `
   --engine cfr `
   --build-id v308 `
+  --project-source-only `
   --official-first-restored `
   --official-overlay-manifest .\private\overlay-manifest.json `
   --official-overlay-source-root .\private\overlay-src `
@@ -59,8 +60,9 @@ spk-release-build `
   --out-dir .\generated\release-v308
 ```
 
-The opt-in forwards into the fail-closed clean-rebuild authority gate. Official
-artifacts are compile-only, generated project bytecode is restored to bundled
+The opt-in requires `--project-source-only` because the derived official
+overlay compiler accepts only project Java sources. It then forwards into the
+fail-closed clean-rebuild authority gate. Official artifacts are compile-only, generated project bytecode is restored to bundled
 dependency identities, and runtime dependency bytes remain the original
 verified readable-client bytes. The release run records only safe transport
 authority IDs, not private plan contents or paths.
