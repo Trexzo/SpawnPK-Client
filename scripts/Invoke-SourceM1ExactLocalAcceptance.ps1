@@ -1,0 +1,428 @@
+[CmdletBinding()]
+param(
+    [string]$Repo = "C:\Users\Felix\Desktop\SpawnPK-Client",
+    [Parameter(Mandatory = $true)]
+    [string]$ClientJar,
+    [Parameter(Mandatory = $true)]
+    [string]$SourceIndex,
+    [Parameter(Mandatory = $true)]
+    [string]$ClassLineage,
+    [Parameter(Mandatory = $true)]
+    [string]$MemberLineage,
+    [Parameter(Mandatory = $true)]
+    [string]$RecoveredManifest,
+    [Parameter(Mandatory = $true)]
+    [string]$RecoveredSourceRoot,
+    [Parameter(Mandatory = $true)]
+    [string]$PrivateCollisionPlan,
+    [string]$MemberSafetyAcceptance,
+    [string]$SourceRewriteAcceptance,
+    [string]$DecompilerJar,
+    [string]$Jdk = "C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot",
+    [string]$OutDir = "$env:USERPROFILE\Desktop\SpawnPK-SourceM1-Exact"
+)
+
+Set-StrictMode -Version 2.0
+$ErrorActionPreference = "Stop"
+
+$ExpectedV308 = "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
+
+function Require-File {
+    param([string]$Path)
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        throw "Missing required file: $Path"
+    }
+}
+
+Write-Host ""
+Write-Host "=== SOURCE M1 EXACT LOCAL ACCEPTANCE ===" -ForegroundColor Cyan
+
+if (-not (Test-Path -LiteralPath $Repo -PathType Container)) {
+    throw "Repo not found: $Repo"
+}
+
+$Dirty = @(& git -C $Repo status --porcelain)
+if ($LASTEXITCODE -ne 0) {
+    throw "git status failed."
+}
+if ($Dirty.Count -ne 0) {
+    $Dirty | ForEach-Object { Write-Host $_ }
+    throw "Repo is dirty."
+}
+
+& git -C $Repo fetch origin main
+if ($LASTEXITCODE -ne 0) {
+    throw "git fetch origin main failed."
+}
+
+$Head = @(& git -C $Repo rev-parse HEAD)[0].Trim()
+$RemoteMain = @(& git -C $Repo rev-parse origin/main)[0].Trim()
+if ($Head -ne $RemoteMain) {
+    throw "Local HEAD is not exact origin/main: head=$Head origin/main=$RemoteMain"
+}
+if ($Head -notmatch "^[0-9a-f]{40}$") {
+    throw "Current authority commit is not lowercase 40-hex: $Head"
+}
+
+$Required = @(
+    $ClientJar,
+    $SourceIndex,
+    $ClassLineage,
+    $MemberLineage,
+    $RecoveredManifest,
+    $PrivateCollisionPlan
+)
+foreach ($Path in $Required) {
+    Require-File $Path
+}
+if (-not (Test-Path -LiteralPath $RecoveredSourceRoot -PathType Container)) {
+    throw "Recovered source root not found: $RecoveredSourceRoot"
+}
+foreach ($Optional in @($MemberSafetyAcceptance, $SourceRewriteAcceptance, $DecompilerJar)) {
+    if (-not [string]::IsNullOrWhiteSpace($Optional)) {
+        Require-File $Optional
+    }
+}
+
+$Java = Join-Path $Jdk "bin\java.exe"
+$Javac = Join-Path $Jdk "bin\javac.exe"
+Require-File $Java
+Require-File $Javac
+
+$ClientSha = (Get-FileHash -LiteralPath $ClientJar -Algorithm SHA256).Hash.ToLowerInvariant()
+if ($ClientSha -ne $ExpectedV308) {
+    throw "Exact v308 SHA mismatch: $ClientSha"
+}
+
+$Recovered = Get-Content -LiteralPath $RecoveredManifest -Raw | ConvertFrom-Json
+if ([string]$Recovered.build_id -ne "v308") {
+    throw "Recovered workspace is not v308."
+}
+if ([string]$Recovered.source_authority_sha256 -ne $ExpectedV308) {
+    throw "Recovered workspace source authority is not exact v308."
+}
+foreach ($Name in @(
+    "collision_transform_id",
+    "collision_plan_id",
+    "collision_report_id",
+    "base_readable_jar_sha256"
+)) {
+    $Value = $Recovered.$Name
+    if ([string]::IsNullOrWhiteSpace([string]$Value)) {
+        throw "Recovered workspace is missing collision authority: $Name"
+    }
+}
+
+if (Test-Path -LiteralPath $OutDir) {
+    $Existing = @(Get-ChildItem -LiteralPath $OutDir -Force)
+    if ($Existing.Count -ne 0) {
+        throw "Output directory must be empty: $OutDir"
+    }
+} else {
+    New-Item -ItemType Directory -Path $OutDir | Out-Null
+}
+
+$ReleaseDir = Join-Path $OutDir "release"
+$AuthorityDir = Join-Path $OutDir "authority"
+$MilestoneDir = Join-Path $OutDir "milestone"
+$BundleDir = Join-Path $MilestoneDir "publication"
+New-Item -ItemType Directory -Path $MilestoneDir | Out-Null
+
+$env:JAVA_HOME = $Jdk
+$env:PATH = "$Jdk\bin;$env:PATH"
+$env:PYTHONPATH = Join-Path $Repo "src"
+$env:PYTHONDONTWRITEBYTECODE = "1"
+
+Write-Host "AUTHORITY_COMMIT=$Head" -ForegroundColor Green
+Write-Host "V308_SHA256=$ClientSha" -ForegroundColor Green
+
+$ReleaseArgs = @(
+    "-3.13",
+    "-m",
+    "spk_recovery.release_workspace_orchestrator_cli",
+    $ClientJar,
+    $SourceIndex,
+    $ClassLineage,
+    $MemberLineage,
+    $RecoveredManifest,
+    $RecoveredSourceRoot,
+    $PrivateCollisionPlan,
+    "--build-id",
+    "v308",
+    "--source-safe-fallback",
+    "--source-prefix",
+    "rs/",
+    "--java-command",
+    $Java,
+    "--javac-command",
+    $Javac,
+    "--out-dir",
+    $ReleaseDir
+)
+if (-not [string]::IsNullOrWhiteSpace($MemberSafetyAcceptance)) {
+    $ReleaseArgs += @("--member-safety-acceptance", $MemberSafetyAcceptance)
+}
+
+Write-Host ""
+Write-Host "=== CURRENT-MAIN RECOVERED RELEASE ===" -ForegroundColor Cyan
+& py @ReleaseArgs
+$ReleaseExit = $LASTEXITCODE
+if ($ReleaseExit -ne 0) {
+    $RunPath = Join-Path $ReleaseDir "release-run.json"
+    if (Test-Path -LiteralPath $RunPath -PathType Leaf) {
+        $Run = Get-Content -LiteralPath $RunPath -Raw | ConvertFrom-Json
+        Write-Host ""
+        Write-Host "SPK_SOURCE_M1_EXACT_LOCAL_BLOCKED" -ForegroundColor Yellow
+        Write-Host "terminal_stage=$($Run.terminal_stage)"
+        Write-Host "status=$($Run.status)"
+        Write-Host "run_id=$($Run.run_id)"
+        $CleanPath = Join-Path $ReleaseDir "rebuild\clean-rebuild.json"
+        if (Test-Path -LiteralPath $CleanPath -PathType Leaf) {
+            $CleanDoc = Get-Content -LiteralPath $CleanPath -Raw | ConvertFrom-Json
+            Write-Host "clean_rebuild_id=$($CleanDoc.rebuild_id)"
+            Write-Host "clean_status=$($CleanDoc.status)"
+            Write-Host "generated_project_classes=$($CleanDoc.project_classes.generated_count)"
+            Write-Host "expected_project_classes=$($CleanDoc.project_classes.expected_count)"
+            Write-Host "project_binary_fallback_count=$($CleanDoc.project_classes.binary_fallback_count)"
+            if ($null -ne $CleanDoc.compiler.diagnostic_classification) {
+                $Summary = $CleanDoc.compiler.diagnostic_classification.summary
+                Write-Host "javac_total_errors=$($Summary.total_errors)"
+                Write-Host "javac_affected_files=$($Summary.affected_files)"
+                Write-Host "javac_cannot_find_symbol=$($Summary.cannot_find_symbol.count)"
+            }
+        }
+    }
+    exit 3
+}
+
+$ReadableManifest = Join-Path $ReleaseDir "readable\readable-client-manifest.json"
+$ReadableJar = Join-Path $ReleaseDir "readable\readable-client.jar"
+$UsedRecoveredManifest = Join-Path $ReleaseDir "source-authority\recovered-manifest.json"
+$CleanRebuild = Join-Path $ReleaseDir "rebuild\clean-rebuild.json"
+$RoundTrip = Join-Path $ReleaseDir "rebuild\roundtrip.json"
+$ReleaseManifest = Join-Path $ReleaseDir "recovery-release.json"
+$ReleaseVerification = Join-Path $ReleaseDir "release-verification.json"
+
+foreach ($Path in @(
+    $ReadableManifest,
+    $ReadableJar,
+    $UsedRecoveredManifest,
+    $CleanRebuild,
+    $RoundTrip,
+    $ReleaseManifest
+)) {
+    Require-File $Path
+}
+
+$VerifyArgs = @(
+    "-3.13",
+    "-m",
+    "spk_recovery.release_verify_cli",
+    $ReleaseManifest,
+    $SourceIndex,
+    $ClassLineage,
+    $MemberLineage,
+    $ReadableManifest,
+    $UsedRecoveredManifest,
+    $CleanRebuild,
+    $RoundTrip,
+    "--authority-jar",
+    $ClientJar,
+    "--readable-jar",
+    $ReadableJar,
+    "--source-root",
+    $RecoveredSourceRoot,
+    "--javac",
+    $Javac,
+    "--private-collision-plan",
+    $PrivateCollisionPlan,
+    "--out",
+    $ReleaseVerification
+)
+if (-not [string]::IsNullOrWhiteSpace($SourceRewriteAcceptance)) {
+    $VerifyArgs += @("--source-rewrite-acceptance", $SourceRewriteAcceptance)
+}
+if (-not [string]::IsNullOrWhiteSpace($DecompilerJar)) {
+    $VerifyArgs += @("--decompiler-jar", $DecompilerJar)
+}
+
+Write-Host ""
+Write-Host "=== VERIFY RECOVERY RELEASE ===" -ForegroundColor Cyan
+& py @VerifyArgs
+if ($LASTEXITCODE -ne 0) {
+    throw "Exact recovery release verification failed."
+}
+
+$AuthorityBuildArgs = @(
+    "-3.13",
+    "-m",
+    "spk_recovery.source_authority_artifact_cli",
+    "build",
+    "--authority-commit",
+    $Head,
+    "--class-lineage",
+    $ClassLineage,
+    "--member-lineage",
+    $MemberLineage,
+    "--readable-manifest",
+    $ReadableManifest,
+    "--recovered-manifest",
+    $UsedRecoveredManifest,
+    "--clean-rebuild",
+    $CleanRebuild,
+    "--release-manifest",
+    $ReleaseManifest,
+    "--release-verification",
+    $ReleaseVerification,
+    "--source-root",
+    $RecoveredSourceRoot,
+    "--out-dir",
+    $AuthorityDir
+)
+
+Write-Host ""
+Write-Host "=== BUILD SOURCE M1 AUTHORITY ARTIFACT ===" -ForegroundColor Cyan
+& py @AuthorityBuildArgs
+if ($LASTEXITCODE -ne 0) {
+    throw "Source M1 authority artifact build failed."
+}
+
+$AuthorityVerification = Join-Path $AuthorityDir "SOURCE-AUTHORITY-VERIFICATION.json"
+$AuthorityVerifyArgs = @(
+    "-3.13",
+    "-m",
+    "spk_recovery.source_authority_artifact_cli",
+    "verify",
+    "--artifact-dir",
+    $AuthorityDir,
+    "--expected-authority-commit",
+    $Head,
+    "--out",
+    $AuthorityVerification
+)
+& py @AuthorityVerifyArgs
+if ($LASTEXITCODE -ne 0) {
+    throw "Source M1 authority artifact verification failed."
+}
+
+$MilestoneManifest = Join-Path $MilestoneDir "SOURCE-MILESTONE.json"
+$MilestoneVerification = Join-Path $MilestoneDir "SOURCE-MILESTONE-VERIFICATION.json"
+$BundleVerification = Join-Path $MilestoneDir "SOURCE-BUNDLE-VERIFICATION.json"
+
+$CommonMilestoneArgs = @(
+    "--authority-commit",
+    $Head,
+    "--class-lineage",
+    (Join-Path $AuthorityDir "class-lineage.json"),
+    "--member-lineage",
+    (Join-Path $AuthorityDir "member-lineage.json"),
+    "--readable-manifest",
+    (Join-Path $AuthorityDir "readable-client-manifest.json"),
+    "--recovered-manifest",
+    (Join-Path $AuthorityDir "recovered-source-manifest.json"),
+    "--clean-rebuild",
+    (Join-Path $AuthorityDir "clean-rebuild.json"),
+    "--release-manifest",
+    (Join-Path $AuthorityDir "recovery-release.json"),
+    "--release-verification",
+    (Join-Path $AuthorityDir "release-verification.json"),
+    "--source-root",
+    (Join-Path $AuthorityDir "src")
+)
+
+$BuildMilestoneArgs = @(
+    "-3.13",
+    "-m",
+    "spk_recovery.source_milestone_cli",
+    "build"
+)
+$BuildMilestoneArgs += $CommonMilestoneArgs
+$BuildMilestoneArgs += @("--out", $MilestoneManifest)
+
+Write-Host ""
+Write-Host "=== BUILD SOURCE MILESTONE ===" -ForegroundColor Cyan
+& py @BuildMilestoneArgs
+if ($LASTEXITCODE -ne 0) {
+    throw "Source milestone is not publishable."
+}
+
+$VerifyMilestoneArgs = @(
+    "-3.13",
+    "-m",
+    "spk_recovery.source_milestone_cli",
+    "verify"
+)
+$VerifyMilestoneArgs += $CommonMilestoneArgs
+$VerifyMilestoneArgs += @(
+    "--manifest",
+    $MilestoneManifest,
+    "--out",
+    $MilestoneVerification
+)
+& py @VerifyMilestoneArgs
+if ($LASTEXITCODE -ne 0) {
+    throw "Source milestone verification failed."
+}
+
+$BundleArgs = @(
+    "-3.13",
+    "-m",
+    "spk_recovery.source_milestone_cli",
+    "bundle",
+    "--manifest",
+    $MilestoneManifest,
+    "--source-root",
+    (Join-Path $AuthorityDir "src"),
+    "--out-dir",
+    $BundleDir,
+    "--provenance",
+    ("recovery-release.json=" + (Join-Path $AuthorityDir "recovery-release.json")),
+    "--provenance",
+    ("release-verification.json=" + (Join-Path $AuthorityDir "release-verification.json")),
+    "--provenance",
+    ("SOURCE-AUTHORITY-VERIFICATION.json=" + $AuthorityVerification)
+)
+& py @BundleArgs
+if ($LASTEXITCODE -ne 0) {
+    throw "Source milestone publication bundle build failed."
+}
+
+$BundleVerifyArgs = @(
+    "-3.13",
+    "-m",
+    "spk_recovery.source_milestone_cli",
+    "verify-bundle",
+    "--bundle-dir",
+    $BundleDir,
+    "--manifest",
+    $MilestoneManifest,
+    "--out",
+    $BundleVerification
+)
+& py @BundleVerifyArgs
+if ($LASTEXITCODE -ne 0) {
+    throw "Source milestone publication bundle verification failed."
+}
+
+$Milestone = Get-Content -LiteralPath $MilestoneManifest -Raw | ConvertFrom-Json
+$MilestoneVerify = Get-Content -LiteralPath $MilestoneVerification -Raw | ConvertFrom-Json
+$BundleVerify = Get-Content -LiteralPath $BundleVerification -Raw | ConvertFrom-Json
+
+if ($Milestone.publishable -ne $true) {
+    throw "Milestone publishable flag is false."
+}
+if ($MilestoneVerify.verified -ne $true -or $MilestoneVerify.publishable -ne $true) {
+    throw "Milestone verification did not reproduce publishable=true."
+}
+if ($BundleVerify.verified -ne $true) {
+    throw "Publication bundle verification failed."
+}
+
+Write-Host ""
+Write-Host "MILESTONE_ID=$($Milestone.milestone_id)" -ForegroundColor Green
+Write-Host "SOURCE_TREE_SHA256=$($Milestone.source_tree.sha256)" -ForegroundColor Green
+Write-Host "PUBLICATION_BUNDLE=$BundleDir"
+Write-Host ""
+Write-Host "============================================" -ForegroundColor Green
+Write-Host " SOURCE M1 EXACT LOCAL ACCEPTANCE - PASS" -ForegroundColor Green
+Write-Host "============================================" -ForegroundColor Green
