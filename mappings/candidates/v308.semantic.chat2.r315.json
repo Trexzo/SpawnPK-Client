@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [{
+    "schema_version": 1,
+    "kind": "semantic_name_candidate",
+    "canonical": false,
+    "status": "CANDIDATE",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target": {"kind": "class", "owner": "rs/l/e/f", "name": null, "descriptor": null},
+    "proposed_name": "InterfaceFeatureController",
+    "confidence": 0.998,
+    "evidence": [
+      {"family": "exact_renderer_consumer", "detail": "R302 InterfaceRenderer iterates active rs/l/e/f instances during live widget traversal and queries each controller by the current RSInterface.aw widget id before dispatching any registered R314 InterfaceWidgetRenderCallback."},
+      {"family": "exact_callback_registry", "detail": "Each rs/l/e/f instance owns the int-keyed registry of rs/l/e/i callbacks. Protected registration helpers bind either one widget id or an int[] of widget ids to a callback, making the class the controller-side owner of feature-specific widget render behavior."},
+      {"family": "exact_active_controller_contract", "detail": "Only rs/l/e/f instances with non-empty callback registries are admitted to the list consumed by InterfaceRenderer, so the class participates directly in activation and render dispatch rather than merely storing callback data."},
+      {"family": "exact_concrete_feature_family", "detail": "The exact-v308 recovered-source inventory places rs/l/e/f beside the concrete rs/l/e/a/* feature controllers and records imports of the concrete controller family plus GamblingInterface, consistent with the shared feature-controller role independently exposed by the R314 dispatch path."}
+    ],
+    "note": "Descriptive exact-v308 name for the shared interface feature controller that owns widget-id callback registration and participates in InterfaceRenderer dispatch; original stripped source identifier is not claimed."
+  }],
+  "conflicts": []
+}
