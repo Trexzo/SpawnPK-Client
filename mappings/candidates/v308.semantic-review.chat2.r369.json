@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_7ECDDC2C748AB50DBA03",
+  "proposals": [{
+    "proposal_id":"SEMPROP_7946A1BC633CD23D6C80",
+    "target_kind":"class",
+    "stable_id":"CLIENT_CLASS_000744",
+    "owner_logical_id":"CLIENT_CLASS_000744",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate":{"owner":"rs/q/a/a","name":null,"descriptor":null},
+    "proposed_name":"DeferredInventoryAction",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_action_capture","detail":"Client creates rs/q/a/a only in exact menu action 454, passing the three routing integers that the exact-current action matrix identifies as widgetId, slot and itemId for C2S41."},
+      {"family":"exact_deferred_queue","detail":"Under the action-454 timing/flag branch, Client appends the value object to a dedicated List instead of writing C2S41 immediately; the class itself stores exactly those three integers and exposes only getters."},
+      {"family":"exact_flush_path","detail":"A later Client loop path waits for the configured interval, iterates the queued rs/q/a/a values, writes opcode 41 followed by the three stored integers with the exact C2S41 transforms, then clears the queue."},
+      {"family":"exact_context_boundary","detail":"Exact-current protocol authority labels opcode 41 as inventory option 2 / equip alias and warns that its visible meaning is definition/context-driven; the proposed name therefore stops at DeferredInventoryAction rather than asserting Equip or a single option-slot verb."}
+    ],
+    "note":"Descriptive exact-v308 name for the delayed C2S41 inventory-action record. It intentionally preserves opcode41's context-dependent semantic boundary."
+  }],
+  "unresolved": []
+}
