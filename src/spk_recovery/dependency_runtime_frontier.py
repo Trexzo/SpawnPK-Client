@@ -7,8 +7,7 @@ from pathlib import Path
 from typing import Any
 import zipfile
 
-
-class DependencyRuntimeFrontierError(ValueError):
+from .dependency_artifact_proof import (\n    DependencyArtifactProofError,\n    _artifact_index,\n)\n\n\nclass DependencyRuntimeFrontierError(ValueError):
     pass
 
 
@@ -67,38 +66,47 @@ def _normalize_prefixes(values: Any) -> tuple[str, ...]:
     return tuple(sorted(set(out)))
 
 
+def _artifact_rows_key(
+    rows: list[dict[str, Any]],
+) -> list[tuple[str, str, int, int | None]]:
+    return sorted(
+        (
+            str(row.get("artifact")),
+            str(row.get("sha256")).lower(),
+            int(row.get("multi_release_class_count", 0)),
+            (
+                int(row["java_release"])
+                if row.get("java_release") is not None
+                else None
+            ),
+        )
+        for row in rows
+    )
+
+
 def _artifact_authority(
     plan: dict[str, Any],
     official_artifacts: list[Path],
-) -> tuple[dict[str, Path], dict[str, str]]:
+) -> tuple[
+    dict[str, Path],
+    dict[str, str],
+    dict[str, str],
+]:
     rows = plan.get("official_artifacts")
     if not isinstance(rows, list) or not rows:
         raise DependencyRuntimeFrontierError(
             "private DEPREPLACE lacks official artifact authority"
         )
 
-    expected: dict[str, str] = {}
-    for row in rows:
-        if not isinstance(row, dict):
-            raise DependencyRuntimeFrontierError(
-                "malformed DEPREPLACE official artifact row"
-            )
-        name = row.get("artifact")
-        sha = row.get("sha256")
-        if (
-            not isinstance(name, str)
-            or not name
-            or not isinstance(sha, str)
-            or len(sha) != 64
-        ):
-            raise DependencyRuntimeFrontierError(
-                "invalid DEPREPLACE official artifact row"
-            )
-        if name in expected:
-            raise DependencyRuntimeFrontierError(
-                "duplicate DEPREPLACE official artifact name"
-            )
-        expected[name] = sha.lower()
+    release = plan.get("java_release")
+    if (
+        not isinstance(release, int)
+        or isinstance(release, bool)
+        or release < 1
+    ):
+        raise DependencyRuntimeFrontierError(
+            "private DEPREPLACE has invalid java_release"
+        )
 
     supplied: dict[str, Path] = {}
     for raw in official_artifacts:
@@ -107,24 +115,30 @@ def _artifact_authority(
             raise DependencyRuntimeFrontierError(
                 f"official artifact missing: {path}"
             )
-        name = path.name
-        if name in supplied:
+        if path.name in supplied:
             raise DependencyRuntimeFrontierError(
-                f"duplicate supplied artifact basename: {name}"
+                f"duplicate supplied artifact basename: {path.name}"
             )
-        supplied[name] = path
+        supplied[path.name] = path
 
-    if set(supplied) != set(expected):
-        raise DependencyRuntimeFrontierError(
-            "supplied official artifact names differ from DEPREPLACE"
+    try:
+        _classes, owner_artifact, actual_rows = _artifact_index(
+            list(supplied.values()),
+            java_release=release,
         )
-    for name, path in supplied.items():
-        actual = _sha256_file(path)
-        if actual != expected[name]:
-            raise DependencyRuntimeFrontierError(
-                f"official artifact SHA drifted: {name}"
-            )
-    return supplied, expected
+    except DependencyArtifactProofError as exc:
+        raise DependencyRuntimeFrontierError(str(exc)) from exc
+
+    if _artifact_rows_key(rows) != _artifact_rows_key(actual_rows):
+        raise DependencyRuntimeFrontierError(
+            "supplied official artifact authority differs from DEPREPLACE"
+        )
+
+    expected = {
+        str(row["artifact"]): str(row["sha256"]).lower()
+        for row in actual_rows
+    }
+    return supplied, expected, owner_artifact
 
 
 def build_dependency_runtime_frontier(
@@ -152,9 +166,11 @@ def build_dependency_runtime_frontier(
             "bundled/readable JAR SHA differs from DEPREPLACE"
         )
 
-    artifacts, expected_artifacts = _artifact_authority(
-        plan,
-        official_artifacts,
+    artifacts, expected_artifacts, official_owner_artifact = (
+        _artifact_authority(
+            plan,
+            official_artifacts,
+        )
     )
     artifact_ids = plan.get("artifact_ids")
     if not isinstance(artifact_ids, dict):
@@ -168,15 +184,6 @@ def build_dependency_runtime_frontier(
             for info in archive.infolist()
             if not info.is_dir() and info.filename.endswith(".class")
         }
-
-    official_entries: dict[str, set[str]] = {}
-    for name, path in artifacts.items():
-        with zipfile.ZipFile(path) as archive:
-            official_entries[name] = {
-                info.filename
-                for info in archive.infolist()
-                if not info.is_dir() and info.filename.endswith(".class")
-            }
 
     allowed = {
         "official_replaceable",
@@ -241,12 +248,12 @@ def build_dependency_runtime_frontier(
                     "official-replaceable owner lacks exact artifact target"
                 )
             official_target_present = (
-                new_owner + ".class"
-                in official_entries[artifact_name]
+                official_owner_artifact.get(new_owner)
+                == artifact_name
             )
             if not official_target_present:
                 raise DependencyRuntimeFrontierError(
-                    "official-replaceable target class missing from artifact"
+                    "official-replaceable target class missing from bound artifact"
                 )
         elif artifact_name is not None or new_owner is not None:
             raise DependencyRuntimeFrontierError(
