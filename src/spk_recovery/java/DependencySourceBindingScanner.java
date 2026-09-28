@@ -484,6 +484,19 @@ public final class DependencySourceBindingScanner {
         }
 
         @Override
+        public Void visitMemberReference(
+            MemberReferenceTree node,
+            Void unused
+        ) {
+            emit(
+                node,
+                trees.getElement(getCurrentPath()),
+                "member_reference"
+            );
+            return super.visitMemberReference(node, unused);
+        }
+
+        @Override
         public Void visitNewClass(
             NewClassTree node,
             Void unused
