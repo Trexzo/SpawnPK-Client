@@ -8,40 +8,72 @@
   "review_id": "SEMREVIEW_645E359560E8991081F3",
   "proposals": [
     {
-      "proposal_id": "SEMPROP_72A4FA7EB4276C3A07F1",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000411",
-      "owner_logical_id": "CLIENT_CLASS_000411",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {"owner": "rs/l/e/a/m", "name": null, "descriptor": null},
-      "proposed_name": "StatusProgressOverlay",
-      "confidence": 0.996,
-      "evidence": [
-        {"family": "exact_overlay_shape", "detail": "The class extends ClientOverlay and renders one fixed 220x40 top-screen surface containing a bordered horizontal progress bar, centered status text and a secondary right-aligned text field."},
-        {"family": "exact_progress_state", "detail": "The overlay stores an explicit integer percentage y, renders the filled bar width from ceil((y/100.0)*barWidth), initializes visible progress text to '100%', and exposes an independent active boolean E as its visibility predicate."},
-        {"family": "exact_client_layout_join", "detail": "R201 CombatOverlay suppresses itself while this overlay is active, while R112 WorldCoordinateOverlay increases its vertical offset when this overlay is active, proving this object owns a live top-screen status/progress slot."},
-        {"family": "exact_domain_boundary", "detail": "The only exact-v308 reverse references outside the base registry and its own state handler are layout interactions from CombatOverlay and WorldCoordinateOverlay; no surviving caller fixes a narrower event or gameplay-domain noun."}
-      ],
-      "note": "Descriptive exact-v308 name for the generic active status/progress bar overlay. The original feature/domain noun is intentionally not guessed."
-    },
-    {
       "proposal_id": "SEMPROP_1168C82370F5B935F0C4",
       "target_kind": "class",
       "stable_id": "CLIENT_CLASS_000412",
       "owner_logical_id": "CLIENT_CLASS_000412",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {"owner": "rs/l/e/a/n", "name": null, "descriptor": null},
+      "source_coordinate": {
+        "owner": "rs/l/e/a/n",
+        "name": null,
+        "descriptor": null
+      },
       "proposed_name": "StatusProgressOverlayStateHandler",
       "confidence": 0.995,
       "evidence": [
-        {"family": "exact_target_ownership", "detail": "The class is instantiated only as static field F of StatusProgressOverlay and every selector writes exclusively to the singleton rs/l/e/f.e StatusProgressOverlay state."},
-        {"family": "exact_selector_surface", "detail": "Its selector switch 1..6 resets/toggles overlay activation, updates the two bar colors, computes percentage plus 'current / max @yel@(percent%)' text, replaces the centered String, and formats the right-side field as '<img=305><value>'; selector 3 is a no-op."},
-        {"family": "exact_handler_contract", "detail": "The class extends the R115 ScriptPacketHandler base and uses its integer/String packet-read helpers, so its state-decoding role is structural even though it has no independent rendering behavior."},
-        {"family": "exact_dormant_dispatch_boundary", "detail": "The live R115 ScriptPacketDispatcher registration table for IDs 1..43 contains no rs/l/e/a/n class and no StatusProgressOverlay.F registration. The handler therefore remains present in exact v308 but is not claimed as a live registered ScriptPacket endpoint."}
+        {
+          "family": "exact_target_ownership",
+          "detail": "The class is instantiated only as static field F of StatusProgressOverlay and every selector writes exclusively to the singleton rs/l/e/f.e StatusProgressOverlay state."
+        },
+        {
+          "family": "exact_selector_surface",
+          "detail": "Its selector switch 1..6 resets/toggles overlay activation, updates the two bar colors, computes percentage plus 'current / max @yel@(percent%)' text, replaces the centered String, and formats the right-side field as '<img=305><value>'; selector 3 is a no-op."
+        },
+        {
+          "family": "exact_handler_contract",
+          "detail": "The class extends the R115 ScriptPacketHandler base and uses its integer/String packet-read helpers, so its state-decoding role is structural even though it has no independent rendering behavior."
+        },
+        {
+          "family": "exact_dormant_dispatch_boundary",
+          "detail": "The live R115 ScriptPacketDispatcher registration table for IDs 1..43 contains no rs/l/e/a/n class and no StatusProgressOverlay.F registration. The handler therefore remains present in exact v308 but is not claimed as a live registered ScriptPacket endpoint."
+        }
       ],
       "note": "Descriptive exact-v308 name for the overlay's packet-shaped state decoder. 'StateHandler' is used instead of claiming an active ScriptPacket registration that exact v308 does not contain."
+    },
+    {
+      "proposal_id": "SEMPROP_72A4FA7EB4276C3A07F1",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000411",
+      "owner_logical_id": "CLIENT_CLASS_000411",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/e/a/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "StatusProgressOverlay",
+      "confidence": 0.996,
+      "evidence": [
+        {
+          "family": "exact_overlay_shape",
+          "detail": "The class extends ClientOverlay and renders one fixed 220x40 top-screen surface containing a bordered horizontal progress bar, centered status text and a secondary right-aligned text field."
+        },
+        {
+          "family": "exact_progress_state",
+          "detail": "The overlay stores an explicit integer percentage y, renders the filled bar width from ceil((y/100.0)*barWidth), initializes visible progress text to '100%', and exposes an independent active boolean E as its visibility predicate."
+        },
+        {
+          "family": "exact_client_layout_join",
+          "detail": "R201 CombatOverlay suppresses itself while this overlay is active, while R112 WorldCoordinateOverlay increases its vertical offset when this overlay is active, proving this object owns a live top-screen status/progress slot."
+        },
+        {
+          "family": "exact_domain_boundary",
+          "detail": "The only exact-v308 reverse references outside the base registry and its own state handler are layout interactions from CombatOverlay and WorldCoordinateOverlay; no surviving caller fixes a narrower event or gameplay-domain noun."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the generic active status/progress bar overlay. The original feature/domain noun is intentionally not guessed."
     }
   ],
   "unresolved": []
