@@ -302,6 +302,11 @@ def build_dependency_runtime_extended_closure(
                 if owner in static_owner_names:
                     status = "already_in_static_closure"
                     already_static_count += 1
+                elif any(
+                    owner.startswith(prefix)
+                    for prefix in prefixes
+                ):
+                    status = "project_dynamic_target"
                 elif (
                     authority is not None
                     and authority.get("classification")
@@ -600,7 +605,22 @@ def build_dependency_runtime_extended_closure(
             "new_status_counts": dict(
                 sorted(status_counts.items())
             ),
+            "static_class_closure_blocker_count": int(
+                static_summary.get(
+                    "class_closure_blocker_count",
+                    0,
+                )
+            ),
             "dynamic_closure_blocker_count": blocker_count,
+            "total_class_closure_blocker_count": (
+                int(
+                    static_summary.get(
+                        "class_closure_blocker_count",
+                        0,
+                    )
+                )
+                + blocker_count
+            ),
             "resource_dynamic_requirement_count": (
                 resource_requirement_count
             ),
