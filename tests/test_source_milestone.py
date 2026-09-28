@@ -160,6 +160,35 @@ class SourceMilestoneTests(unittest.TestCase):
             source_root=root,
         )
 
+    def _official_transport(self) -> dict:
+        return {
+            "mode": "official_first_restored",
+            "opt_in": True,
+            "status": "complete",
+            "official_compile_id": (
+                "DEPOFFICIALCOMPILE_" + "1" * 20
+            ),
+            "overlay_id": "DEPSRCOVERLAY_" + "2" * 20,
+            "replacement_plan_id": "DEPREPLACE_" + "3" * 20,
+            "reverse_plan_id": "DEPREVERSE_" + "4" * 20,
+            "reverse_application_id": (
+                "DEPREVERSEAPPLY_" + "5" * 20
+            ),
+            "official_artifact_sha256": ["a" * 64, "b" * 64],
+            "compile_dependency_capsule_sha256": "c" * 64,
+            "compile_dependency_capsule_class_count": 17,
+            "generated_project_jar_sha256": "d" * 64,
+            "restored_project_jar_sha256": "e" * 64,
+            "project_binary_fallback_count": 0,
+            "runtime_official_dependencies_allowed": False,
+            "runtime_dependency_source": (
+                "original_verified_readable_non_project_bytes"
+            ),
+            "canonical_source_modified": False,
+            "bundled_runtime_dependency_modified": False,
+            "restored_project_bytecode_ready_for_runtime_assembly": True,
+        }
+
     def test_publishable_manifest_binds_all_hard_gates(self):
         with tempfile.TemporaryDirectory() as td:
             source = Path(td) / "source"
@@ -198,6 +227,97 @@ class SourceMilestoneTests(unittest.TestCase):
             self.assertEqual(
                 manifest["publication"]["target_repository"],
                 "Trexzo/SpawnPK-Client-Source",
+            )
+
+    def test_official_first_dependency_provenance_is_bound(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            transport = self._official_transport()
+            fixture["clean_rebuild_report"][
+                "compile_transport"
+            ] = transport
+
+            manifest = self._build(source, fixture)
+
+            self.assertTrue(manifest["publishable"])
+            self.assertEqual(manifest["blockers"], [])
+            dependency = manifest["provenance"][
+                "dependency_transport_provenance"
+            ]
+            self.assertEqual(
+                dependency["official_compile_id"],
+                transport["official_compile_id"],
+            )
+            self.assertEqual(
+                dependency["reverse_application_id"],
+                transport["reverse_application_id"],
+            )
+            self.assertEqual(
+                dependency["official_artifact_sha256"],
+                transport["official_artifact_sha256"],
+            )
+            self.assertFalse(
+                dependency["runtime_official_dependencies_allowed"]
+            )
+            self.assertTrue(
+                dependency[
+                    "restored_project_bytecode_ready_for_runtime_assembly"
+                ]
+            )
+
+            provenance = build_source_provenance_document(
+                manifest
+            )
+            self.assertEqual(
+                provenance["recovery_authority"][
+                    "dependency_transport_provenance"
+                ],
+                dependency,
+            )
+
+    def test_official_first_missing_authority_blocks_publication(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            transport = self._official_transport()
+            transport["reverse_plan_id"] = None
+            fixture["clean_rebuild_report"][
+                "compile_transport"
+            ] = transport
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "dependency_compile_transport",
+                    "reason": (
+                        "official_first_transport_authority_incomplete"
+                    ),
+                },
+                manifest["blockers"],
+            )
+
+    def test_official_first_runtime_boundary_blocks_publication(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            transport = self._official_transport()
+            transport["runtime_official_dependencies_allowed"] = True
+            fixture["clean_rebuild_report"][
+                "compile_transport"
+            ] = transport
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "dependency_compile_transport",
+                    "reason": "official_first_runtime_boundary_invalid",
+                },
+                manifest["blockers"],
             )
 
     def test_exact_verifier_rejects_source_drift(self):
