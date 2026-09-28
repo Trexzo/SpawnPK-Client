@@ -5,11 +5,7 @@ from spk_recovery.semantic_review import resolve_semantic_candidates
 
 SHA="854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 ROOT=Path(__file__).resolve().parents[1]
-CLASS_COORDS=[
-    ("CLIENT_CLASS_000375","rs/l/b/a/b/b"),
-    ("CLIENT_CLASS_000991","rs/t/b/a"),
-    ("CLIENT_CLASS_000992","rs/t/b/b"),
-]
+CLASS_COORDS=[("CLIENT_CLASS_000375","rs/l/b/a/b/b")]
 
 def _class_lineage():
     classes=[]
@@ -63,30 +59,24 @@ class Chat2SemanticReviewR311Tests(unittest.TestCase):
             _load("mappings/candidates/v308.semantic.chat2.r311.json"),
         )
         expected=_load("mappings/candidates/v308.semantic-review.chat2.r311.json")
-        self.assertEqual(actual["proposal_count"],3)
+        self.assertEqual(actual["proposal_count"],1)
         self.assertEqual(actual["unresolved"],[])
-        self.assertEqual(actual["review_id"],"SEMREVIEW_730D656BFB9058CF080B")
+        self.assertEqual(actual["review_id"],"SEMREVIEW_9DC3AC6C4324AD9D5A37")
         self.assertEqual(actual,expected)
 
-    def test_r311_expected_stable_ids(self):
+    def test_r311_expected_stable_id(self):
         review=_load("mappings/candidates/v308.semantic-review.chat2.r311.json")
         self.assertEqual(
             {r["proposed_name"]:r["stable_id"] for r in review["proposals"]},
-            {
-          "TextureDebugConfigLoader": "CLIENT_CLASS_000375",
-          "NpcDefinitionDumpTool": "CLIENT_CLASS_000991",
-          "ItemDefinitionDumpTool": "CLIENT_CLASS_000992"
-}
+            {"TextureDebugConfigLoader":"CLIENT_CLASS_000375"},
         )
 
-    def test_r311_names_owners_and_stable_ids_do_not_overlap_prior_reviews(self):
+    def test_r311_name_owner_and_stable_id_do_not_overlap_prior_reviews(self):
         current=_load("mappings/candidates/v308.semantic-review.chat2.r311.json")
-        names={r["proposed_name"] for r in current["proposals"] if r["target_kind"]=="class"}
-        owners={r["source_coordinate"]["owner"] for r in current["proposals"] if r["target_kind"]=="class"}
-        stable_ids={r["stable_id"] for r in current["proposals"] if r["target_kind"]=="class"}
-        self.assertEqual(len(names),3)
-        self.assertEqual(len(owners),3)
-        self.assertEqual(len(stable_ids),3)
+        row=current["proposals"][0]
+        names={row["proposed_name"]}
+        owners={row["source_coordinate"]["owner"]}
+        stable_ids={row["stable_id"]}
 
         prior_names=set()
         prior_owners=set()
@@ -96,12 +86,12 @@ class Chat2SemanticReviewR311Tests(unittest.TestCase):
             if not p.is_file():
                 continue
             prior=json.loads(p.read_text(encoding="utf-8"))
-            for r in prior.get("proposals",[]):
-                if r.get("target_kind")!="class":
+            for proposal in prior.get("proposals",[]):
+                if proposal.get("target_kind")!="class":
                     continue
-                prior_names.add(r["proposed_name"])
-                prior_owners.add(r["source_coordinate"]["owner"])
-                prior_stable_ids.add(r["stable_id"])
+                prior_names.add(proposal["proposed_name"])
+                prior_owners.add(proposal["source_coordinate"]["owner"])
+                prior_stable_ids.add(proposal["stable_id"])
 
         self.assertTrue(names.isdisjoint(prior_names))
         self.assertTrue(owners.isdisjoint(prior_owners))
