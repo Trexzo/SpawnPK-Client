@@ -46,6 +46,20 @@ def _stable_digest(value: Any) -> str:
     ).hexdigest()
 
 
+def _required_id(
+    report: dict[str, Any],
+    key: str,
+    *,
+    label: str,
+) -> str:
+    value = report.get(key)
+    if not isinstance(value, str) or not value:
+        raise DependencyRuntimeReadinessError(
+            f"{label} lacks valid {key}"
+        )
+    return value
+
+
 def _required_nonnegative_int(
     summary: dict[str, Any],
     key: str,
@@ -137,23 +151,67 @@ def build_dependency_runtime_readiness(
                 f"{label} is bound to a different bundled JAR"
             )
 
-    if resource.get("runtime_extended_closure_id") != closure.get(
-        "runtime_extended_closure_id"
-    ):
+    closure_id = _required_id(
+        closure,
+        "runtime_extended_closure_id",
+        label="extended runtime closure",
+    )
+    resource_closure_id = _required_id(
+        resource,
+        "runtime_extended_closure_id",
+        label="extended runtime resource",
+    )
+    resource_id = _required_id(
+        resource,
+        "runtime_extended_resource_id",
+        label="extended runtime resource",
+    )
+    closure_dynamic_id = _required_id(
+        closure,
+        "runtime_dynamic_target_id",
+        label="extended runtime closure",
+    )
+    dynamic_id = _required_id(
+        dynamic,
+        "runtime_dynamic_target_id",
+        label="dynamic target",
+    )
+    closure_replacement_id = _required_id(
+        closure,
+        "replacement_plan_id",
+        label="extended runtime closure",
+    )
+    dynamic_replacement_id = _required_id(
+        dynamic,
+        "replacement_plan_id",
+        label="dynamic target",
+    )
+    resource_base_id = _required_id(
+        resource,
+        "runtime_resource_id",
+        label="extended runtime resource",
+    )
+    dynamic_base_id = _required_id(
+        dynamic,
+        "runtime_resource_id",
+        label="dynamic target",
+    )
+
+    if resource_closure_id != closure_id:
         raise DependencyRuntimeReadinessError(
             "extended resource authority is bound to a different closure"
         )
-    if closure.get("runtime_dynamic_target_id") != dynamic.get(
-        "runtime_dynamic_target_id"
-    ):
+    if closure_dynamic_id != dynamic_id:
         raise DependencyRuntimeReadinessError(
             "extended closure is bound to a different dynamic target authority"
         )
-    if closure.get("replacement_plan_id") != dynamic.get(
-        "replacement_plan_id"
-    ):
+    if closure_replacement_id != dynamic_replacement_id:
         raise DependencyRuntimeReadinessError(
             "dynamic target authority is bound to a different DEPREPLACE"
+        )
+    if resource_base_id != dynamic_base_id:
+        raise DependencyRuntimeReadinessError(
+            "extended resource and dynamic target authorities use different R8DEP26 resource authority"
         )
 
     supplied_sha: list[str] = []
@@ -446,18 +504,11 @@ def build_dependency_runtime_readiness(
     }
 
     material = {
-        "runtime_extended_closure_id": closure.get(
-            "runtime_extended_closure_id"
-        ),
-        "runtime_extended_resource_id": resource.get(
-            "runtime_extended_resource_id"
-        ),
-        "runtime_dynamic_target_id": dynamic.get(
-            "runtime_dynamic_target_id"
-        ),
-        "replacement_plan_id": closure.get(
-            "replacement_plan_id"
-        ),
+        "runtime_extended_closure_id": closure_id,
+        "runtime_extended_resource_id": resource_id,
+        "runtime_dynamic_target_id": dynamic_id,
+        "replacement_plan_id": closure_replacement_id,
+        "runtime_resource_id": resource_base_id,
         "bundled_jar_sha256": bundled_sha,
         "official_artifact_sha256": supplied_sha,
         "target_resolutions": target_resolution_rows,
