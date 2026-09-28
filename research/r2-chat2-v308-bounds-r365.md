@@ -1,4 +1,4 @@
-# Chat 2 — exact-v308 Bounds R358
+# Chat 2 — exact-v308 Bounds R365
 
 Exact client authority:
 
@@ -30,4 +30,4 @@ otherwise distinctive `toString() { return null; }` implementation.
 
 This is therefore a recovered original framework identity, not merely a descriptive name.
 
-R358 remains non-canonical semantic research only.
+R365 remains non-canonical semantic research only.
