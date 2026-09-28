@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/y/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Schedule",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "historical_source_identity",
+          "detail": "Historical RuneLite source exposes the exact runtime-retained method annotation as net.runelite.client.task.Schedule with period, ChronoUnit unit and async flag matching exact-v308 rs/y/a."
+        },
+        {
+          "family": "exact_annotation_contract",
+          "detail": "Exact v308 rs/y/a is @Retention(RUNTIME), @Target(METHOD), exposes long period, ChronoUnit unit and boolean async=false, and is reflectively read by the live plugin manager."
+        }
+      ],
+      "note": "Source-proven historical RuneLite class name; exact-v308 structure and PluginManager usage match."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/y/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ScheduledMethod",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "historical_source_identity",
+          "detail": "Historical RuneLite PluginManager constructs ScheduledMethod(schedule, method, plugin, runnable), exactly matching rs/y/b's constructor and retained fields."
+        },
+        {
+          "family": "exact_descriptor_state",
+          "detail": "Exact v308 stores Schedule, reflective Method, target object, optional Runnable and last-run Instant; Scheduler reads all five fields."
+        }
+      ],
+      "note": "Source-proven historical RuneLite class name."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/y/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Scheduler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "historical_source_identity",
+          "detail": "Historical RuneLite Scheduler contains the exact surviving trace literal 'Scheduled task triggered: {}' and the same Duration.of(schedule.period(), schedule.unit()) execution logic."
+        },
+        {
+          "family": "exact_scheduler_behavior",
+          "detail": "Exact v308 manages a CopyOnWriteArrayList of ScheduledMethod entries, fires due tasks from Instant/Duration comparisons, and submits async schedules to ScheduledExecutorService while invoking synchronous ones directly."
+        }
+      ],
+      "note": "Source-proven historical RuneLite class name."
+    }
+  ],
+  "conflicts": []
+}
