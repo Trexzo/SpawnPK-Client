@@ -5,6 +5,9 @@ import unittest
 from unittest.mock import patch
 
 from spk_recovery.update_release import migrate_update_to_release
+from spk_recovery.update_release_cli import (
+    main as update_release_cli_main,
+)
 
 
 def _write(path: Path, value: dict):
@@ -194,6 +197,20 @@ class UpdateReleaseTests(unittest.TestCase):
                     out_dir=out,
                     source_safe_fallback=True,
                     fallback_name_prefix="Safe_",
+                    project_source_only=True,
+                    official_first_restored=True,
+                    official_overlay_manifest_path=root / "overlay.json",
+                    official_overlay_source_root=root / "overlay-src",
+                    private_dependency_replacement_plan_path=(
+                        root / "replacement.json"
+                    ),
+                    private_dependency_reverse_plan_path=(
+                        root / "reverse.json"
+                    ),
+                    official_artifacts=[
+                        root / "official-a.jar",
+                        root / "official-b.jar",
+                    ],
                 )
 
             self.assertTrue(report["ready_for_release"])
@@ -207,6 +224,124 @@ class UpdateReleaseTests(unittest.TestCase):
                 release.call_args.kwargs["fallback_name_prefix"],
                 "Safe_",
             )
+            self.assertTrue(
+                release.call_args.kwargs["project_source_only"]
+            )
+            self.assertTrue(
+                release.call_args.kwargs["official_first_restored"]
+            )
+            self.assertEqual(
+                release.call_args.kwargs[
+                    "official_overlay_manifest_path"
+                ],
+                root / "overlay.json",
+            )
+            self.assertEqual(
+                release.call_args.kwargs[
+                    "official_overlay_source_root"
+                ],
+                root / "overlay-src",
+            )
+            self.assertEqual(
+                release.call_args.kwargs[
+                    "private_dependency_replacement_plan_path"
+                ],
+                root / "replacement.json",
+            )
+            self.assertEqual(
+                release.call_args.kwargs[
+                    "private_dependency_reverse_plan_path"
+                ],
+                root / "reverse.json",
+            )
+            self.assertEqual(
+                release.call_args.kwargs["official_artifacts"],
+                [root / "official-a.jar", root / "official-b.jar"],
+            )
+
+    def test_update_release_cli_forwards_official_first_inputs(self):
+        argv = [
+            "old-index.json",
+            "old-authority.json",
+            "new.jar",
+            "classes.json",
+            "members.json",
+            "decompiler.jar",
+            "--decompiler-sha256",
+            "a" * 64,
+            "--engine",
+            "cfr",
+            "--old-build-id",
+            "v308",
+            "--new-build-id",
+            "v309",
+            "--project-source-only",
+            "--official-first-restored",
+            "--official-overlay-manifest",
+            "overlay.json",
+            "--official-overlay-source-root",
+            "overlay-src",
+            "--private-dependency-replacement-plan",
+            "replacement.json",
+            "--private-dependency-reverse-plan",
+            "reverse.json",
+            "--official-artifact",
+            "official-a.jar",
+            "--official-artifact",
+            "official-b.jar",
+            "--out-dir",
+            "out",
+        ]
+
+        with (
+            patch(
+                "spk_recovery.update_release_cli._load",
+                return_value={},
+            ),
+            patch(
+                "spk_recovery.update_release_cli.load_lineage",
+                return_value={},
+            ),
+            patch(
+                "spk_recovery.update_release_cli.load_member_lineage",
+                return_value={},
+            ),
+            patch(
+                "spk_recovery.update_release_cli.migrate_update_to_release",
+                return_value={
+                    "run_id": "UPDATEREL_TEST",
+                    "status": "complete",
+                    "ready_for_release": True,
+                    "terminal_stage": "release",
+                },
+            ) as migrate,
+        ):
+            code = update_release_cli_main(argv)
+
+        self.assertEqual(code, 0)
+        kwargs = migrate.call_args.kwargs
+        self.assertTrue(kwargs["project_source_only"])
+        self.assertTrue(kwargs["official_first_restored"])
+        self.assertEqual(
+            kwargs["official_overlay_manifest_path"],
+            Path("overlay.json"),
+        )
+        self.assertEqual(
+            kwargs["official_overlay_source_root"],
+            Path("overlay-src"),
+        )
+        self.assertEqual(
+            kwargs["private_dependency_replacement_plan_path"],
+            Path("replacement.json"),
+        )
+        self.assertEqual(
+            kwargs["private_dependency_reverse_plan_path"],
+            Path("reverse.json"),
+        )
+        self.assertEqual(
+            kwargs["official_artifacts"],
+            [Path("official-a.jar"), Path("official-b.jar")],
+        )
 
 
 if __name__ == "__main__":
