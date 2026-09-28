@@ -252,6 +252,18 @@ def build_dependency_replacement_extension(
             raise DependencyReplacementExtensionError(
                 "accepted dynamic mapping lacks matching member proof row"
             )
+        if (
+            member_row.get("old_owner") != old_owner
+            or member_row.get("new_owner") != new_owner
+            or member_row.get("artifact") != artifact
+        ):
+            raise DependencyReplacementExtensionError(
+                "dynamic member row disagrees with dynamic class mapping"
+            )
+        if not isinstance(member_row.get("class_id"), str):
+            raise DependencyReplacementExtensionError(
+                "dynamic member row lacks stable class ID"
+            )
 
         extension_row_id = f"DEPREPLACEEXTROW_{index:05d}"
         complete = (
@@ -267,9 +279,36 @@ def build_dependency_replacement_extension(
                 or prior.get("artifact") != artifact
             ):
                 conflict_count += 1
-                raise DependencyReplacementExtensionError(
-                    "dynamic promotion conflicts with existing DEPREPLACE owner"
-                )
+                status_counts["promotion_conflict"] += 1
+                public = {
+                    "extension_row_id": extension_row_id,
+                    "source_dynamic_mapping_id": mapping_id,
+                    "source_dynamic_member_class_id": member_row.get(
+                        "class_id"
+                    ),
+                    "status": "promotion_conflict",
+                    "member_transport_complete": complete,
+                }
+                public_blocked.append(public)
+                if include_identifiers:
+                    private_blocked.append(
+                        {
+                            **public,
+                            "old_owner": old_owner,
+                            "new_owner": new_owner,
+                            "artifact": artifact,
+                            "existing_classification": prior.get(
+                                "classification"
+                            ),
+                            "existing_new_owner": prior.get(
+                                "new_owner"
+                            ),
+                            "existing_artifact": prior.get(
+                                "artifact"
+                            ),
+                        }
+                    )
+                continue
 
             status_counts["already_authorized"] += 1
             public = {
