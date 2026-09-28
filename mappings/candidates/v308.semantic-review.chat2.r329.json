@@ -4,59 +4,128 @@
   "canonical": false,
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-  "proposal_count": 3,
-  "review_id": "SEMREVIEW_4807A13BA5B947AAF223",
+  "proposal_count": 4,
+  "review_id": "SEMREVIEW_D5F4C9121A96681B2774",
   "proposals": [
     {
-      "proposal_id": "SEMPROP_7FA9A06A377894F2096E",
+      "proposal_id": "SEMPROP_1D0635577B1C2051E49E",
       "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000293",
-      "owner_logical_id": "CLIENT_CLASS_000293",
+      "stable_id": "CLIENT_CLASS_000733",
+      "owner_logical_id": "CLIENT_CLASS_000733",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {"owner":"rs/h/e","name":null,"descriptor":null},
-      "proposed_name": "ClientLoopCallback",
+      "source_coordinate": {
+        "owner": "rs/o/a/a/a/U",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IdleLogoutNoticePacket",
       "confidence": 0.999,
       "evidence": [
-        {"family":"exact_interface_contract","detail":"The interface contains exactly one method, boolean loop(), with no fields or secondary behavior."},
-        {"family":"exact_registry_lifecycle","detail":"The rs/h/a and rs/h/c registries keep keyed instances across ticks, invoke loop(), and remove the key when loop() returns false; a true result retains the callback for the next cycle."},
-        {"family":"exact_live_usage","detail":"Exact-v308 implementations/callers exist in GUI, interface and plugin/runtime classes, establishing this as a live repeating client callback rather than a dead functional interface."}
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 202 and no payload bytes."
+        },
+        {
+          "family": "exact_protocol_contract",
+          "detail": "The exact-current C2S master table identifies opcode 202 as IDLE_LOGOUT_NOTICE, FIXED 0, stock-client direct."
+        },
+        {
+          "family": "runtime_corroboration",
+          "detail": "A LocalLab runtime capture independently observed opcode 202 after extended idle time; missing framing for this fixed-zero packet caused the decoder to pause, matching the idle/logout lifecycle role."
+        }
       ],
-      "note":"Descriptive exact-v308 name for the repeating callback contract whose boolean return controls continued registration."
+      "note": "Exact-v308 zero-payload idle logout notice packet."
     },
     {
-      "proposal_id": "SEMPROP_819235421EB9265C275F",
+      "proposal_id": "SEMPROP_44AC82477119BC29606E",
       "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000290",
-      "owner_logical_id": "CLIENT_CLASS_000290",
+      "stable_id": "CLIENT_CLASS_000735",
+      "owner_logical_id": "CLIENT_CLASS_000735",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {"owner":"rs/h/b","name":null,"descriptor":null},
-      "proposed_name": "ClientCallback",
+      "source_coordinate": {
+        "owner": "rs/o/a/a/a/W",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RegionChangeAckPacket",
       "confidence": 0.999,
       "evidence": [
-        {"family":"exact_interface_contract","detail":"The interface contains exactly one method, void invoke(), with no fields or secondary behavior."},
-        {"family":"exact_live_usage","detail":"Exact-v308 references span Client, custom-menu entries/manager, plugin/config/UI classes and client runtime helpers; callers invoke the interface as a generic deferred client action."},
-        {"family":"exact_registry_join","detail":"The duplicate rs/h/a and rs/h/c registries both store this interface as one-shot callbacks, invoke all queued/keyed values, and then clear them."}
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 210 and then the constant i32 value 1057001181 through Stream.g(int)."
+        },
+        {
+          "family": "exact_protocol_contract",
+          "detail": "The exact-current C2S master table identifies opcode 210 as REGION_CHANGE_ACK with FIXED 4 / i32_be payload."
+        },
+        {
+          "family": "exact_lifecycle_boundary",
+          "detail": "Protocol authority classifies opcode 210 as region/UI lifecycle rather than gameplay state; the generated object has no constructor payload and always serializes the same acknowledgement constant."
+        }
       ],
-      "note":"Generic descriptive name for the exact zero-argument callback contract used throughout client UI/runtime code."
+      "note": "Exact-v308 fixed-payload region-change acknowledgement packet."
     },
     {
-      "proposal_id": "SEMPROP_AEBEAAB40CE003553DFB",
+      "proposal_id": "SEMPROP_B7D8EA04FC27550BCF5B",
       "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000078",
-      "owner_logical_id": "CLIENT_CLASS_000078",
+      "stable_id": "CLIENT_CLASS_000703",
+      "owner_logical_id": "CLIENT_CLASS_000703",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {"owner":"rs/b/a","name":null,"descriptor":null},
-      "proposed_name": "MouseCoordinateSampler",
+      "source_coordinate": {
+        "owner": "rs/o/a/a/a/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RegionLoadingFinishedAckPacket",
       "confidence": 0.999,
       "evidence": [
-        {"family":"exact_sampling_state","detail":"The Runnable owns two 500-element int arrays, one sample count, one lock object and one running flag; every 50 ms it snapshots Client.hP and Client.hQ into the paired arrays while capacity remains."},
-        {"family":"exact_client_lifecycle","detail":"Client constructs exactly one rs/b/a during initialization, schedules it as a background Runnable, resets its sample count during session setup and clears its running flag during client shutdown."},
-        {"family":"exact_scope_boundary","detail":"The class contains no mouse-button, click-dispatch, rendering or packet behavior; its entire responsibility is periodic coordinate sampling."}
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 121 and no payload bytes."
+        },
+        {
+          "family": "exact_protocol_contract",
+          "detail": "The exact-current C2S master table identifies opcode 121 as REGION_LOADING_FINISHED_ACK, FIXED 0, stock-client direct."
+        },
+        {
+          "family": "exact_lifecycle_boundary",
+          "detail": "Protocol authority classifies opcode 121 as region/UI lifecycle rather than gameplay state, matching this zero-payload acknowledgement object."
+        }
       ],
-      "note":"Descriptive exact-v308 name for the background mouse-coordinate sampling buffer."
+      "note": "Exact-v308 region-loading completion acknowledgement packet."
+    },
+    {
+      "proposal_id": "SEMPROP_D9375397C98C9CD36551",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000690",
+      "owner_logical_id": "CLIENT_CLASS_000690",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/o/a/a/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "IdleKeepalivePacket",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 0 and no payload bytes."
+        },
+        {
+          "family": "exact_protocol_contract",
+          "detail": "The exact-current C2S master table identifies opcode 0 as IDLE_KEEPALIVE, FIXED 0, stock-client direct."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The class has no fields and no behavior beyond serializing the zero-payload keepalive packet."
+        }
+      ],
+      "note": "Exact-v308 zero-payload idle keepalive packet."
     }
   ],
   "unresolved": []
