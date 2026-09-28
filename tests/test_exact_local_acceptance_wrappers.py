@@ -12,7 +12,7 @@ class ExactLocalAcceptanceWrapperTests(unittest.TestCase):
         self.dep = root / "scripts" / "Invoke-R8DEP38ExactLocalAcceptance.ps1"
         self.source = root / "scripts" / "Invoke-SourceM1ExactLocalAcceptance.ps1"
 
-    def test_r8dep_wrapper_pins_exact_authority_and_full_apply_verify(self):
+    def test_r8dep_wrapper_self_bootstraps_full_runtime_authority(self):
         text = self.dep.read_text(encoding="utf-8")
         self.assertIn(
             "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
@@ -22,17 +22,38 @@ class ExactLocalAcceptanceWrapperTests(unittest.TestCase):
             "e12e4f917ba2c48ea306e3b4d4cc19c58c5e23cd4f5c33f4ae339ea6fce53c99",
             text,
         )
-        self.assertIn(
+
+        stages = [
+            "spk_recovery.dependency_reference_surface",
+            "spk_recovery.dependency_remap_proof",
+            "spk_recovery.dependency_retention",
+            "spk_recovery.dependency_replacement_plan_cli",
+            "spk_recovery.dependency_runtime_frontier_cli",
+            "spk_recovery.dependency_runtime_closure_cli",
+            "spk_recovery.dependency_runtime_resource_cli",
+            "spk_recovery.dependency_runtime_dynamic_cli",
+            "spk_recovery.dependency_runtime_dynamic_target_cli",
+            "spk_recovery.dependency_runtime_augmented_closure_cli",
+            "spk_recovery.dependency_runtime_dynamic_mapping_cli",
+            "spk_recovery.dependency_runtime_dynamic_member_cli",
+            "spk_recovery.dependency_replacement_extension_cli",
+            "spk_recovery.dependency_runtime_extended_closure_cli",
+            "spk_recovery.dependency_runtime_extended_resource_cli",
+            "spk_recovery.dependency_runtime_readiness_cli",
             "spk_recovery.dependency_runtime_substitution_plan_cli",
-            text,
-        )
-        self.assertIn(
             "spk_recovery.dependency_runtime_substitution_apply_cli",
-            text,
-        )
+        ]
+        positions = [text.index(stage) for stage in stages]
+        self.assertEqual(positions, sorted(positions))
+
         self.assertIn('"apply"', text)
         self.assertIn('"verify"', text)
         self.assertIn("--include-identifiers", text)
+        self.assertIn("SPK_R8DEP_EXACT_LOCAL_BLOCKED", text)
+        self.assertIn("runtime_dependency_substitution_ready", text)
+        self.assertIn("service_provider_discovery_blocker_count", text)
+        self.assertIn("native_dynamic_requirement_count", text)
+        self.assertIn("R8DEP38 EXACT LOCAL ACCEPTANCE - PASS", text)
         self.assertIn("origin/main", text)
         self.assertTrue(all(ord(ch) < 128 for ch in text))
 
