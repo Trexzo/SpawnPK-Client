@@ -61,6 +61,54 @@ class SourceM1AuthorityWorkflowContractTests(unittest.TestCase):
             prior,
         )
 
+    def test_prior_run_provenance_is_validated_before_download(self):
+        validate_start = self.text.index(
+            "- name: Validate prior recovered workspace run provenance"
+        )
+        prior_start = self.text.index(
+            "- name: Download recovered workspace artifact "
+            "from prior run"
+        )
+        validate = self.text[validate_start:prior_start]
+
+        self.assertIn(
+            "if: ${{ inputs.workspace_run_id != '' }}",
+            validate,
+        )
+        self.assertIn(
+            "workspace_run_id must be a positive decimal run ID",
+            validate,
+        )
+        self.assertIn(
+            'run.get("status") != "completed"',
+            validate,
+        )
+        self.assertIn(
+            'run.get("conclusion") != "success"',
+            validate,
+        )
+        self.assertIn(
+            'run_repository != repository',
+            validate,
+        )
+        self.assertIn(
+            "/actions/runs/{run_id}",
+            validate,
+        )
+        self.assertIn(
+            "/compare/",
+            validate,
+        )
+        self.assertIn(
+            'comparison.get("status") not in {"ahead", "identical"}',
+            validate,
+        )
+        self.assertIn(
+            "authority commit is not an ancestor of "
+            "the workspace run head",
+            validate,
+        )
+
     def test_recovered_workspace_contract_is_source_only(self):
         validate_start = self.text.index(
             "- name: Validate recovered workspace contract"
