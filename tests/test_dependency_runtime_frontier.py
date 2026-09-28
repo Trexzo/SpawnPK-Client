@@ -172,7 +172,7 @@ class DependencyRuntimeFrontierTests(unittest.TestCase):
             fx["official"].write_bytes(b"drift")
             with self.assertRaisesRegex(
                 DependencyRuntimeFrontierError,
-                "artifact SHA drifted",
+                "artifact authority differs",
             ):
                 build_dependency_runtime_frontier(
                     fx["plan"],
