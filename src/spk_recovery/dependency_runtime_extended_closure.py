@@ -280,9 +280,9 @@ def build_dependency_runtime_extended_closure(
             root_rows: list[dict[str, Any]] = []
             added_roots: list[str] = []
             already_static_count = 0
-            extension_promoted_root_count = 0
-            prior_gap_resolved_count = 0
-            root_mapping_gap_count = 0
+            extension_promoted_root_owners: set[str] = set()
+            prior_gap_resolved_owners: set[str] = set()
+            root_mapping_gap_owners: set[str] = set()
             protected_root_count = 0
 
             for index, target_row in enumerate(
@@ -319,15 +319,15 @@ def build_dependency_runtime_extended_closure(
                     status = "authorized_dynamic_root"
                     added_roots.append(owner)
                     if source_by_owner.get(owner) == "replacement_extension":
-                        extension_promoted_root_count += 1
+                        extension_promoted_root_owners.add(owner)
                         if prior_classification in {
                             "bundled_unclassified",
                             "service_bundled_unclassified",
                         }:
-                            prior_gap_resolved_count += 1
+                            prior_gap_resolved_owners.add(owner)
                 elif owner in class_entries and authority is None:
                     status = "remaining_mapping_authority_gap"
-                    root_mapping_gap_count += 1
+                    root_mapping_gap_owners.add(owner)
                 else:
                     status = "protected_or_nontraversable_dynamic_target"
                     protected_root_count += 1
@@ -401,7 +401,7 @@ def build_dependency_runtime_extended_closure(
     owner_rows: list[dict[str, Any]] = []
     status_counts: Counter[str] = Counter()
     blocker_count = 0
-    reachable_mapping_gap_count = 0
+    reachable_mapping_gap_owners: set[str] = set()
 
     for owner in sorted(new_reachable):
         authority = combined.get(owner)
@@ -433,7 +433,7 @@ def build_dependency_runtime_extended_closure(
                 status = "unresolved"
         elif owner in class_entries:
             status = "remaining_mapping_authority_gap"
-            reachable_mapping_gap_count += 1
+            reachable_mapping_gap_owners.add(owner)
         elif owner.startswith(_PLATFORM_PREFIXES):
             status = "platform_runtime"
         else:
@@ -520,9 +520,12 @@ def build_dependency_runtime_extended_closure(
         for row in edge_public
     ]
 
-    remaining_mapping_gap_count = (
-        root_mapping_gap_count
-        + reachable_mapping_gap_count
+    remaining_mapping_gap_owners = (
+        root_mapping_gap_owners
+        | reachable_mapping_gap_owners
+    )
+    remaining_mapping_gap_count = len(
+        remaining_mapping_gap_owners
     )
 
     material = {
@@ -570,11 +573,11 @@ def build_dependency_runtime_extended_closure(
                 already_static_count
             ),
             "authorized_dynamic_root_count": len(set(added_roots)),
-            "extension_promoted_dynamic_root_count": (
-                extension_promoted_root_count
+            "extension_promoted_dynamic_root_count": len(
+                extension_promoted_root_owners
             ),
-            "prior_mapping_gap_resolved_count": (
-                prior_gap_resolved_count
+            "prior_mapping_gap_resolved_count": len(
+                prior_gap_resolved_owners
             ),
             "remaining_mapping_gap_count": (
                 remaining_mapping_gap_count
