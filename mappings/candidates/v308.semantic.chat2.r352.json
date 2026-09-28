@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [{
+    "schema_version": 1,
+    "kind": "semantic_name_candidate",
+    "canonical": false,
+    "status": "CANDIDATE",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target": {"kind": "class", "owner": "rs/w/c", "name": null, "descriptor": null},
+    "proposed_name": "MidiPlayer",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"exact_midi_state","detail":"The class owns two path Strings, a javax.sound.midi.Sequence, Sequencer, Synthesizer, and volume double; no unrelated domain state exists."},
+      {"family":"exact_playback_lifecycle","detail":"Its playback method stops/closes any prior Sequencer, builds a File path from the two configured Strings, loads the Sequence with MidiSystem.getSequence, opens a non-default Sequencer and Synthesizer, wires the transmitter to the receiver, installs a MetaEventListener, applies volume, and starts playback."},
+      {"family":"exact_volume_control","detail":"Volume updates use Synthesizer channels via MIDI controller 7, MASTER_GAIN when the synthesizer is also a Mixer, or explicit ShortMessage control-change messages as fallback."},
+      {"family":"exact_live_consumers","detail":"The singleton instance is owned by rs/v/a; that live subsystem supplies the two path strings, invokes playback, adjusts volume, and Client invokes the player's public lifecycle method."}
+    ],
+    "note":"Descriptive exact-v308 name for the live MIDI sequence playback component. The name stops at the media role and does not infer higher-level game music policy."
+  }],
+  "conflicts": []
+}
