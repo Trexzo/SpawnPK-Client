@@ -265,19 +265,23 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "DesktopNotificationService",
-      "confidence": 0.99,
+      "proposed_name": "Notifier",
+      "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_platform_behavior",
-          "detail": "Class implements desktop notification delivery through TrayIcon, terminal-notifier, notify-send and osascript paths with sound/focus timing."
+          "family": "exact_notifier_contract",
+          "detail": "Exact v308 posts NotificationFired, applies request-focus policy, performs native notification sound/flash timing, and dispatches platform notifications through TrayIcon, notify-send, terminal-notifier and osascript."
         },
         {
-          "family": "exact_literal_role",
-          "detail": "Exact strings include display notification with title, error sending notification, terminal-notifier -help and Linux/macOS launcher commands."
+          "family": "exact_source_literals",
+          "detail": "Exact v308 preserves the distinctive Notifier literals terminal-notifier -help, net.runelite.launcher, notify-send, display notification ... with title ..., and error sending notification."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite Notifier at 68c819924cfd6bfb4848c71f74c121109f289d5a preserves the same Client/ClientUI/RuneLiteConfig/ScheduledExecutorService/EventBus service shape, NotificationFired posting, focus policy, 2000 ms flash lifecycle, notify-send Linux path, terminal-notifier/osascript macOS path, TrayIcon fallback and notification-sound handling."
         }
       ],
-      "note": "Service is deliberately broader than plugin because this class is the delivery helper used by notification configuration/plugin code."
+      "note": "Notifier supersedes the earlier descriptive DesktopNotificationService label; the source noun is fixed by the unusually distinctive exact-v308 platform-notification and flash lifecycle matching RuneLite Notifier."
     },
     {
       "schema_version": 1,

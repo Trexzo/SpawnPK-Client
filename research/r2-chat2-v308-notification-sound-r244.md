@@ -38,7 +38,7 @@ Exact v308 preserves two constants:
 
 The enum's `toString()` returns that display label.
 
-Reviewed `DesktopNotificationService` consumes the same enum in its live sound-notification branch.
+Reviewed `Notifier` consumes the same enum in its live sound-notification branch.
 
 ## Source identity
 

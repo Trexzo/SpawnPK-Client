@@ -115,7 +115,7 @@ class Chat2SemanticReviewR14Tests(unittest.TestCase):
         self.assertEqual(actual["unresolved"], [])
         self.assertEqual(
             actual["review_id"],
-            "SEMREVIEW_327683188A4DACD87309",
+            "SEMREVIEW_9BD6CC9F44F074203F9E",
         )
         self.assertEqual(actual, expected)
 
@@ -139,7 +139,7 @@ class Chat2SemanticReviewR14Tests(unittest.TestCase):
             "NotesUndoAction": "CLIENT_CLASS_000931",
             "NotesRedoAction": "CLIENT_CLASS_000932",
             "NotesPlugin": "CLIENT_CLASS_000934",
-            "DesktopNotificationService": "CLIENT_CLASS_000937",
+            "Notifier": "CLIENT_CLASS_000937",
             "TradingPostCurrency": "CLIENT_CLASS_000964",
             "TradingPostListingPanel": "CLIENT_CLASS_000966",
             "TradingPostSearchResultPanel": "CLIENT_CLASS_000975",

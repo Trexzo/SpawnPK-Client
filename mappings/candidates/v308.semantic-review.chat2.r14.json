@@ -5,7 +5,7 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 13,
-  "review_id": "SEMREVIEW_327683188A4DACD87309",
+  "review_id": "SEMREVIEW_9BD6CC9F44F074203F9E",
   "proposals": [
     {
       "proposal_id": "SEMPROP_00D3972F3633FD449FA4",
@@ -142,32 +142,6 @@
       "note": "TopLevelConfigPanel supersedes PluginConfigurationRootPanel; exact RuneLite source identity is anchored by the full tab/card/event-bus structure and matching resource/forwarding surface. Confidence 0.999."
     },
     {
-      "proposal_id": "SEMPROP_496786CD54C8FD6F0F4E",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000937",
-      "owner_logical_id": "CLIENT_CLASS_000937",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/s/n/c",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "DesktopNotificationService",
-      "confidence": 0.99,
-      "evidence": [
-        {
-          "family": "exact_platform_behavior",
-          "detail": "Class implements desktop notification delivery through TrayIcon, terminal-notifier, notify-send and osascript paths with sound/focus timing."
-        },
-        {
-          "family": "exact_literal_role",
-          "detail": "Exact strings include display notification with title, error sending notification, terminal-notifier -help and Linux/macOS launcher commands."
-        }
-      ],
-      "note": "Service is deliberately broader than plugin because this class is the delivery helper used by notification configuration/plugin code."
-    },
-    {
       "proposal_id": "SEMPROP_5DCCA72768704C2E692E",
       "target_kind": "class",
       "stable_id": "CLIENT_CLASS_000932",
@@ -218,6 +192,36 @@
         }
       ],
       "note": "Plugin name is exact from the runtime descriptor; English class suffix reflects its plugin-base role."
+    },
+    {
+      "proposal_id": "SEMPROP_71E663302D99CB1E890C",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000937",
+      "owner_logical_id": "CLIENT_CLASS_000937",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/n/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Notifier",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_notifier_contract",
+          "detail": "Exact v308 posts NotificationFired, applies request-focus policy, performs native notification sound/flash timing, and dispatches platform notifications through TrayIcon, notify-send, terminal-notifier and osascript."
+        },
+        {
+          "family": "exact_source_literals",
+          "detail": "Exact v308 preserves the distinctive Notifier literals terminal-notifier -help, net.runelite.launcher, notify-send, display notification ... with title ..., and error sending notification."
+        },
+        {
+          "family": "upstream_runelite_source_match",
+          "detail": "RuneLite Notifier at 68c819924cfd6bfb4848c71f74c121109f289d5a preserves the same Client/ClientUI/RuneLiteConfig/ScheduledExecutorService/EventBus service shape, NotificationFired posting, focus policy, 2000 ms flash lifecycle, notify-send Linux path, terminal-notifier/osascript macOS path, TrayIcon fallback and notification-sound handling."
+        }
+      ],
+      "note": "Notifier supersedes the earlier descriptive DesktopNotificationService label; the source noun is fixed by the unusually distinctive exact-v308 platform-notification and flash lifecycle matching RuneLite Notifier."
     },
     {
       "proposal_id": "SEMPROP_982D0B36402DB09512EF",

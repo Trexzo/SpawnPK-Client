@@ -57,7 +57,7 @@ the exact validation text `… is not an integer.`.
 
 ## Desktop notifications
 
-- `rs/s/n/c` -> `DesktopNotificationService`
+- `rs/s/n/c` -> `Notifier`
 
 This is intentionally not named as a plugin. Exact bytecode implements platform notification
 delivery through TrayIcon, `terminal-notifier`, `notify-send` and `osascript`, plus
@@ -87,7 +87,7 @@ A later historical-source audit of the exact same v308 configuration package sup
 descriptive R14 labels without changing R14's proposal count:
 
 - `CLIENT_CLASS_000867`: `ConfigurationPlugin` -> `ConfigPlugin`
-- `CLIENT_CLASS_000883`: `PluginConfigurationRootPanel` -> `TopLevelConfigPanel`
+- `CLIENT_CLASS_000883`: `PluginConfigurationRootPanel` -> `TopLevelConfigPanel`\n- `CLIENT_CLASS_000937`: `DesktopNotificationService` -> `Notifier`
 
 Source authority: RuneLite `68c819924cfd6bfb4848c71f74c121109f289d5a`.
 
