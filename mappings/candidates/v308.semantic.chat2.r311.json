@@ -35,68 +35,6 @@
         }
       ],
       "note": "Descriptive semantic recovery from exact-v308 file path and parser behavior; original stripped source identifier is not claimed."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/t/b/a",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "NpcDefinitionDumpTool",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_definition_diff",
-          "detail": "Exact v308 iterates NPC definitions, compares rs/d/d current entries against their baseline/template entries, and records changed name, combatLevel, actions, models, recolors/retextures, animations, scale, minimap, headIcon, pet/clickable and related fields."
-        },
-        {
-          "family": "exact_dump_markers",
-          "detail": "Bootstrap/string evidence includes 'Found differences in NPC ...', '..Dump completed!', and generated e.yaml / e.bin output names rooted under the client data path."
-        },
-        {
-          "family": "exact_tool_gate",
-          "detail": "The dump entry point is gated by the client configuration/development mode value before walking up to 25,000 NPC definition slots."
-        }
-      ],
-      "note": "Descriptive semantic recovery from exact-v308 NPC-definition comparison and dump behavior; original stripped source identifier is not claimed."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/t/b/b",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "ItemDefinitionDumpTool",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_definition_diff",
-          "detail": "Exact v308 iterates rs/d/k item definitions, compares current and baseline/template entries, and records changed name/note/template/actions/groundActions, stack data, model/zoom/rotations/offsets, recolors/retextures, resize, worn/chat models, ambient and contrast fields."
-        },
-        {
-          "family": "exact_dump_markers",
-          "detail": "Bootstrap/string evidence includes 'Found differences in item ...', '..Dump completed!', 'Running test..', '..Test completed!', and generated i.yaml / i.bin output names under the client data path."
-        },
-        {
-          "family": "exact_item_fixture",
-          "detail": "The embedded regression/test path explicitly references item data such as 'Dwarf remains', Drop, broken/template/clone handling, confirming item-definition rather than generic object serialization."
-        }
-      ],
-      "note": "Descriptive semantic recovery from exact-v308 item-definition diff/dump/test behavior; original stripped source identifier is not claimed."
     }
   ],
   "conflicts": []
