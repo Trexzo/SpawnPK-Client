@@ -24,6 +24,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("build_authority", type=Path)
     p.add_argument("source_root", type=Path)
     p.add_argument("--javac-command", default="javac")
+    p.add_argument("--java-command", default="java")
     p.add_argument(
         "--source-prefix",
         action="append",
@@ -63,6 +64,45 @@ def main(argv: list[str] | None = None) -> int:
             "never loaded into public CLI output"
         ),
     )
+    p.add_argument(
+        "--official-first-restored",
+        action="store_true",
+        help=(
+            "explicitly compile a dependency API source overlay against "
+            "official artifacts, then restore generated project bytecode "
+            "to bundled runtime identities"
+        ),
+    )
+    p.add_argument(
+        "--official-overlay-manifest",
+        type=Path,
+        help="R8DEP14 dependency source overlay manifest",
+    )
+    p.add_argument(
+        "--official-overlay-source-root",
+        type=Path,
+        help="R8DEP14 copied overlay source root",
+    )
+    p.add_argument(
+        "--private-dependency-replacement-plan",
+        type=Path,
+        help="private R8DEP11 DEPREPLACE plan",
+    )
+    p.add_argument(
+        "--private-dependency-reverse-plan",
+        type=Path,
+        help="private R8DEP15 DEPREVERSE plan",
+    )
+    p.add_argument(
+        "--official-artifact",
+        action="append",
+        type=Path,
+        dest="official_artifacts",
+        help=(
+            "verified official dependency artifact; repeat for multiple "
+            "compile-only artifacts"
+        ),
+    )
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args(argv)
 
@@ -89,6 +129,23 @@ def main(argv: list[str] | None = None) -> int:
             private_collision_plan_path=(
                 args.private_collision_plan
             ),
+            official_first_restored=(
+                args.official_first_restored
+            ),
+            official_overlay_manifest_path=(
+                args.official_overlay_manifest
+            ),
+            official_overlay_source_root=(
+                args.official_overlay_source_root
+            ),
+            private_dependency_replacement_plan_path=(
+                args.private_dependency_replacement_plan
+            ),
+            private_dependency_reverse_plan_path=(
+                args.private_dependency_reverse_plan
+            ),
+            official_artifacts=args.official_artifacts,
+            java_command=args.java_command,
         )
     except (
         CleanRebuildError,
@@ -195,6 +252,31 @@ def main(argv: list[str] | None = None) -> int:
             print(
                 "runtime_alias_dependency_allowed="
                 f"{transport['runtime_alias_dependency_allowed']}"
+            )
+        elif mode == "official_first_restored":
+            print(
+                "official_compile_id="
+                f"{transport['official_compile_id']}"
+            )
+            print(
+                "dependency_overlay_id="
+                f"{transport['overlay_id']}"
+            )
+            print(
+                "dependency_replacement_plan_id="
+                f"{transport['replacement_plan_id']}"
+            )
+            print(
+                "dependency_reverse_plan_id="
+                f"{transport['reverse_plan_id']}"
+            )
+            print(
+                "runtime_official_dependencies_allowed="
+                f"{transport['runtime_official_dependencies_allowed']}"
+            )
+            print(
+                "restored_project_bytecode_ready_for_runtime_assembly="
+                f"{transport['restored_project_bytecode_ready_for_runtime_assembly']}"
             )
         elif mode == "collision_derived_remap":
             print(
