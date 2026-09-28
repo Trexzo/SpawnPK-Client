@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "class", "owner": "rs/l/e/a/j", "name": null, "descriptor": null},
+      "proposed_name": "HalloweenEventChestWidgetDecorationCallback",
+      "confidence": 0.998,
+      "evidence": [
+        {"family": "exact_parent_ownership", "detail": "The class is a synthetic child of the already-reviewed rs/l/e/a/h HalloweenEventChestOverlay; its constructor takes only that parent and no other exact-v308 owner constructs it."},
+        {"family": "exact_widget_registration", "detail": "HalloweenEventChestOverlay registers this callback on exact widget id 60612 through the ClientOverlay widget-callback registry during construction."},
+        {"family": "exact_decoration_behavior", "detail": "The callback activates only while the parent overlay flag is set and widget az[1] is positive, then draws the shared decoration renderer four times around the widget at fixed corner offsets; it owns no packet parsing or unrelated state."},
+        {"family": "exact_callback_contract", "detail": "The class implements the R314 InterfaceWidgetRenderCallback contract and receives the concrete RSInterface plus resolved x/y coordinates from R302 InterfaceRenderer."}
+      ],
+      "note": "Descriptive exact-v308 name for the widget decoration callback owned exclusively by HalloweenEventChestOverlay. The decoration's product meaning is not narrowed beyond what the draw behavior proves."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "class", "owner": "rs/l/e/a/p", "name": null, "descriptor": null},
+      "proposed_name": "HalloweenHungerGamesWidgetDecorationCallback",
+      "confidence": 0.998,
+      "evidence": [
+        {"family": "exact_parent_ownership", "detail": "The class is a synthetic child of the already-reviewed rs/l/e/a/o HalloweenHungerGamesOverlay; its constructor takes only that parent and no other exact-v308 owner constructs it."},
+        {"family": "exact_widget_registration", "detail": "HalloweenHungerGamesOverlay registers this callback across the exact contiguous widget set 18038 through 18044 through the ClientOverlay widget-callback registry."},
+        {"family": "exact_decoration_behavior", "detail": "The callback draws the parent overlay's shared rs/l/F N sprite at fixed offsets from the resolved widget coordinates, with one offset branch for widget ids below 18041 and another for ids 18041 and above."},
+        {"family": "exact_callback_contract", "detail": "The class implements the R314 InterfaceWidgetRenderCallback contract and owns no independent packet, lifecycle or cross-domain state."}
+      ],
+      "note": "Descriptive exact-v308 name for the widget decoration callback owned exclusively by HalloweenHungerGamesOverlay. The sprite's narrower visual meaning is intentionally not guessed."
+    }
+  ],
+  "conflicts": []
+}
