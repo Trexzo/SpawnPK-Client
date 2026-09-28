@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_E3F62D5DA27AC6E49CA4",
+  "proposals": [{
+    "proposal_id": "SEMPROP_18FD8C7C3CEE516BCBD7",
+    "target_kind": "class",
+    "stable_id": "CLIENT_CLASS_000686",
+    "owner_logical_id": "CLIENT_CLASS_000686",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate": {"owner": "rs/o/a/a/a", "name": null, "descriptor": null},
+    "proposed_name": "IncomingPacketHandler",
+    "confidence": 0.999,
+    "evidence": [
+      {"family": "exact_handler_contract", "detail": "The interface defines exactly one operation, void a(rs/x/e), accepting the already-reviewed R29 Stream packet buffer and no unrelated state or lifecycle method."},
+      {"family": "exact_client_dispatch", "detail": "Client exposes one dispatcher helper a(rs/o/a/a/a): when the client is connected and ISAAC/session state is available it invokes handler.a(Client.fv), where Client.fv is the live incoming Stream, then performs incoming-buffer bookkeeping and packet-dispatch error handling."},
+      {"family": "exact_concrete_family", "detail": "Exact v308 contains 52 concrete rs/o/a/a/a/* implementations referencing this interface, forming the complete contiguous stable-ID family immediately after the base contract."},
+      {"family": "exact_namespace_boundary", "detail": "The base is distinct from R115 ScriptPacketHandler: ScriptPacketHandler decodes opcode-250 subprotocol messages, while this interface is invoked directly from the Client's ordinary incoming packet dispatch path with the live Stream."}
+    ],
+    "note": "IncomingPacketHandler is the conservative exact-v308 name for the ordinary server-to-client packet handler contract. Concrete opcode handlers remain separate future recovery work."
+  }],
+  "unresolved": []
+}
