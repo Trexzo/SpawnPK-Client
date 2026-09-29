@@ -98,9 +98,11 @@ both exact v308 and Procyon SHA-256 pins. It then runs this fail-closed chain:
 
 If current-main clean rebuild is still blocked, the wrapper stops before any
 publication step and prints the new compiler frontier from clean-rebuild.json,
-including the deterministic javac frontier ID when available. That new exact
-frontier, rather than the older 1,288-error R8N measurement, becomes the only
-valid input for any further source-repair decision.
+including the deterministic javac frontier ID when available. The same
+authoritative run also writes a private identifier-bearing javac diagnostic
+report beside release-run.json; that private artifact must never be committed.
+That new exact frontier, rather than the older 1,288-error R8N measurement,
+becomes the only valid input for any further source-repair decision.
 
 A PASS is emitted only after the milestone reports publishable=true and the
 publication bundle verifies. The verified local publication bundle remains
