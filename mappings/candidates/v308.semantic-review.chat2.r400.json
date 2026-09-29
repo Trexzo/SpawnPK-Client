@@ -6,24 +6,45 @@
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 1,
   "review_id": "SEMREVIEW_970395AED54C89F28C74",
-  "proposals": [{
-    "proposal_id": "SEMPROP_5EB9D7CACA2E66842B6D",
-    "target_kind": "class",
-    "stable_id": "CLIENT_CLASS_000030",
-    "owner_logical_id": "CLIENT_CLASS_000030",
-    "source_build": "v308",
-    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-    "source_coordinate": {"owner":"rs/Client$a","name":null,"descriptor":null},
-    "proposed_name": "DeferredMenuActionSnapshot",
-    "confidence": 0.999,
-    "evidence": [
-      {"family":"exact_menu_row_snapshot","detail":"Client captures this object from the currently selected menu row (eV-1): it copies the five parallel menu-action integer arrays plus the menu action text from Client.fx."},
-      {"family":"exact_widget_state_snapshot","detail":"The snapshot resolves the menu row's RSInterface and records only active interface/widget ids that occur in that widget's parent chain, including current modal/chat/overlay-like client interface state."},
-      {"family":"exact_deferred_validation","detail":"Before a delayed queued input/action is allowed to proceed, Client calls snapshot.a(Client); validation requires every captured active interface id to remain unchanged, the same RSInterface object to remain installed, and the captured child/slot state to still match."},
-      {"family":"exact_replay_path","detail":"When the deferred path needs to replay the menu action, Client passes the snapshot's five captured integers and action String back into the normal six-argument menu-action execution method rather than reading a possibly changed current menu row."},
-      {"family":"exact_lineage_slot","detail":"Canonical baseline ordering places rs/Client at CLIENT_CLASS_000029, rs/Client$a at CLIENT_CLASS_000030 and R332 rs/D at CLIENT_CLASS_000031."}
-    ],
-    "note":"Descriptive exact-v308 name for the snapshot/guard used to preserve and validate a menu action across deferred input handling."
-  }],
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_5EB9D7CACA2E66842B6D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000030",
+      "owner_logical_id": "CLIENT_CLASS_000030",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/Client$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DeferredMenuActionSnapshot",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_menu_row_snapshot",
+          "detail": "Client captures this object from the currently selected menu row (eV-1): it copies the five parallel menu-action integer arrays plus the menu action text from Client.fx."
+        },
+        {
+          "family": "exact_widget_state_snapshot",
+          "detail": "The snapshot resolves the menu row's RSInterface and records only active interface/widget ids that occur in that widget's parent chain, including current modal/chat/overlay-like client interface state."
+        },
+        {
+          "family": "exact_deferred_validation",
+          "detail": "Before a delayed queued input/action is allowed to proceed, Client calls snapshot.a(Client); validation requires every captured active interface id to remain unchanged, the same RSInterface object to remain installed, and the captured child/slot state to still match."
+        },
+        {
+          "family": "exact_replay_path",
+          "detail": "When the deferred path needs to replay the menu action, Client passes the snapshot's five captured integers and action String back into the normal six-argument menu-action execution method rather than reading a possibly changed current menu row."
+        },
+        {
+          "family": "exact_lineage_slot",
+          "detail": "Canonical baseline ordering places rs/Client at CLIENT_CLASS_000029, rs/Client$a at CLIENT_CLASS_000030 and R332 rs/D at CLIENT_CLASS_000031."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the immutable-like snapshot/guard used to preserve and validate a menu action across deferred input handling. The fields themselves remain obfuscated and no member names are proposed."
+    }
+  ],
   "unresolved": []
 }
