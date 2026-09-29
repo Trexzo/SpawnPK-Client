@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/G",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemDatabaseSearchPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_swing_surface",
+          "detail": "The class extends JPanel and owns exactly one search JTextField, one results JTextArea and one JScrollPane; it also creates a JButton with exact label 'Search'."
+        },
+        {
+          "family": "exact_item_database_contract",
+          "detail": "The search method emits exact warnings 'Please wait until the client has loaded the item database!' and 'Please have at least 3 letters in your search term!', then iterates the live item-definition table, matching item names case-insensitively and rendering item ids/names into the results text area."
+        },
+        {
+          "family": "exact_parent_usage",
+          "detail": "rs/gui/J constructs exactly one rs/gui/G and stores it as one of its launcher/tab content panels; no non-item-database behavior exists in rs/gui/G."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the item-definition database search panel; the original stripped class name is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/H",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemDatabaseSearchFieldActionListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_ownership",
+          "detail": "The class is constructed only by ItemDatabaseSearchPanel and stores only its synthetic parent reference."
+        },
+        {
+          "family": "exact_field_attachment",
+          "detail": "ItemDatabaseSearchPanel attaches this listener specifically to the search JTextField via addActionListener."
+        },
+        {
+          "family": "exact_action_behavior",
+          "detail": "actionPerformed delegates directly to the panel's single item-database search routine and owns no independent state or second action."
+        }
+      ],
+      "note": "Generated listener name follows its exact JTextField attachment and delegated search action."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/I",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemDatabaseSearchButtonActionListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_ownership",
+          "detail": "The class is constructed only by ItemDatabaseSearchPanel and stores only its synthetic parent reference."
+        },
+        {
+          "family": "exact_button_attachment",
+          "detail": "ItemDatabaseSearchPanel attaches this listener specifically to the JButton whose exact label is 'Search'."
+        },
+        {
+          "family": "exact_action_behavior",
+          "detail": "actionPerformed delegates directly to the panel's single item-database search routine and owns no independent state or second action."
+        }
+      ],
+      "note": "Generated listener name follows its exact Search-button attachment and delegated search action."
+    }
+  ],
+  "conflicts": []
+}
