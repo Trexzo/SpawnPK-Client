@@ -44,6 +44,105 @@ function Invoke-PyChecked {
     }
 }
 
+function Enable-CaseSensitiveWorkspace {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    if (Test-Path -LiteralPath $Path) {
+        $Existing = @(Get-ChildItem -LiteralPath $Path -Force)
+        if ($Existing.Count -ne 0) {
+            throw "Case-sensitive workspace must be empty before preparation: $Path"
+        }
+    } else {
+        New-Item -ItemType Directory -Path $Path | Out-Null
+    }
+
+    if ($env:OS -ne "Windows_NT") {
+        Write-Host "CASE_SENSITIVE_WORKSPACE_NATIVE=$Path" -ForegroundColor Green
+        return
+    }
+
+    $AdminScript = Join-Path (
+        [System.IO.Path]::GetTempPath()
+    ) (
+        "SpawnPK-EnableCaseSensitive-" +
+        [guid]::NewGuid().ToString("N") +
+        ".ps1"
+    )
+
+    $AdminSource = @'
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$Target
+)
+
+$ErrorActionPreference = "Continue"
+
+& fsutil.exe file setCaseSensitiveInfo "$Target" enable
+$Code = $LASTEXITCODE
+if ($Code -ne 0) {
+    exit $Code
+}
+
+& fsutil.exe file queryCaseSensitiveInfo "$Target"
+if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+}
+
+exit 0
+'@
+
+    $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText(
+        $AdminScript,
+        $AdminSource,
+        $Utf8NoBom
+    )
+
+    $Process = $null
+    try {
+        Write-Host ""
+        Write-Host (
+            "Windows requires one UAC prompt to enable per-directory " +
+            "case sensitivity for the Source M1 resolver workspace."
+        ) -ForegroundColor Yellow
+
+        $Process = Start-Process `
+            -FilePath "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" `
+            -Verb RunAs `
+            -Wait `
+            -PassThru `
+            -ArgumentList @(
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "`"$AdminScript`"",
+                "-Target",
+                "`"$Path`""
+            )
+    }
+    catch {
+        throw (
+            "Could not launch elevated case-sensitivity preparation: " +
+            $_.Exception.Message
+        )
+    }
+    finally {
+        Remove-Item `
+            -LiteralPath $AdminScript `
+            -Force `
+            -ErrorAction SilentlyContinue
+    }
+
+    if ($null -eq $Process -or $Process.ExitCode -ne 0) {
+        $Code = if ($null -eq $Process) { "not_started" } else { $Process.ExitCode }
+        throw "Could not enable Windows directory case sensitivity. Exit=$Code"
+    }
+
+    Write-Host "CASE_SENSITIVE_WORKSPACE_PREPARED=$Path" -ForegroundColor Green
+}
+
+
 Write-Host ""
 Write-Host "=== SOURCE M1 EXACT LOCAL ACCEPTANCE ===" -ForegroundColor Cyan
 
@@ -111,6 +210,12 @@ if (Test-Path -LiteralPath $OutDir) {
 } else {
     New-Item -ItemType Directory -Path $OutDir | Out-Null
 }
+
+# Prepare the empty top-level output root before any child directories are
+# created. On Windows, newly created descendants inherit per-directory NTFS
+# case sensitivity, covering both Procyon resolver staging and clean-javac
+# release/rebuild staging with one UAC elevation.
+Enable-CaseSensitiveWorkspace -Path $OutDir
 
 $BootstrapReadableDir = Join-Path $OutDir "bootstrap-readable"
 $CollisionDir = Join-Path $OutDir "collision-authority"
@@ -235,6 +340,7 @@ Invoke-PyChecked "BUILD COLLISION-DERIVED SOURCE WORKSPACE" $WorkspaceArgs
 
 $RecoveredManifest = Join-Path $CollisionWorkspace "recovered-source-manifest.json"
 $RecoveredSourceRoot = Join-Path $CollisionWorkspace "src"
+$PrivateDiagnostic = Join-Path $ReleaseDir "javac-diagnostic-private.json"
 Require-File $RecoveredManifest
 if (-not (Test-Path -LiteralPath $RecoveredSourceRoot -PathType Container)) {
     throw "Collision-derived source root is missing."
@@ -294,6 +400,8 @@ $ReleaseArgs = @(
     $Java,
     "--javac-command",
     $Javac,
+    "--private-diagnostic-report-out",
+    $PrivateDiagnostic,
     "--out-dir",
     $ReleaseDir
 )
@@ -326,6 +434,9 @@ if ($ReleaseExit -ne 0) {
                 Write-Host "javac_cannot_find_symbol=$($Summary.cannot_find_symbol.count)"
                 Write-Host "javac_frontier_id=$($CleanDoc.compiler.diagnostic_classification.frontier_id)"
             }
+        }
+        if (Test-Path -LiteralPath $PrivateDiagnostic -PathType Leaf) {
+            Write-Host "private_javac_diagnostic=$PrivateDiagnostic"
         }
     }
     exit 3

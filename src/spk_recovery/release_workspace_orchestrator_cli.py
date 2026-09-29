@@ -54,6 +54,14 @@ def main(argv: list[str] | None = None) -> int:
     )
     p.add_argument("--java-command", default="java")
     p.add_argument("--javac-command", default="javac")
+    p.add_argument(
+        "--private-diagnostic-report-out",
+        type=Path,
+        help=(
+            "write a private identifier-bearing javac classification report; "
+            "never commit this artifact"
+        ),
+    )
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args(argv)
 
@@ -83,6 +91,9 @@ def main(argv: list[str] | None = None) -> int:
                 args.rewrite_class_name_strings
             ),
             source_prefixes=args.source_prefixes,
+            private_diagnostic_report_out=(
+                args.private_diagnostic_report_out
+            ),
             java_command=args.java_command,
             javac_command=args.javac_command,
         )
@@ -117,6 +128,11 @@ def main(argv: list[str] | None = None) -> int:
         print(
             "collision_transform_id="
             f"{collision_transform_id}"
+        )
+    if args.private_diagnostic_report_out is not None:
+        print(
+            "private_diagnostic_report_out="
+            f"{args.private_diagnostic_report_out.resolve()}"
         )
     print(f"out_dir={args.out_dir}")
     return 0 if report["ready_for_release"] else 3

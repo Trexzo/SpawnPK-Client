@@ -97,7 +97,15 @@ def _cp_layout(
                 "raw": data[start:offset],
             }
             index += 1
-        elif tag in (7, 16, 19, 20):
+        elif tag == 7:
+            utf8_index = _u2(data, offset)
+            offset += 2
+            entries[index] = {
+                "tag": tag,
+                "raw": data[start:offset],
+                "utf8_index": utf8_index,
+            }
+        elif tag in (16, 19, 20):
             offset += 2
             entries[index] = {
                 "tag": tag,
@@ -110,6 +118,7 @@ def _cp_layout(
             entries[index] = {
                 "tag": tag,
                 "raw": data[start:offset],
+                "utf8_index": utf8_index,
             }
         elif tag in (9, 10, 11, 12, 17, 18):
             offset += 4
@@ -140,6 +149,8 @@ def _cp_layout(
 def _rewrite_utf8_payload(
     payload: bytes,
     mappings: dict[str, str],
+    *,
+    rewrite_exact: bool = True,
 ) -> bytes:
     result = payload
 
@@ -153,7 +164,7 @@ def _rewrite_utf8_payload(
         old_b = old.encode("ascii")
         new_b = new.encode("ascii")
 
-        if result == old_b:
+        if rewrite_exact and result == old_b:
             result = new_b
             continue
 
@@ -173,44 +184,157 @@ def remap_class_bytes(
         _cp_layout(data)
     )
 
-    changed_utf8 = 0
-    encoded_entries: list[bytes] = []
-
+    # Exact internal class names are unsafe to rewrite by mutating their
+    # shared CONSTANT_Utf8 in place. The same Utf8 value may also be used
+    # as an ordinary field/method name. Instead, clone only the renamed
+    # class identity and retarget CONSTANT_Class to the clone.
+    class_alias_payload_by_utf8: dict[int, bytes] = {}
     for index in range(1, cp_count):
         entry = entries[index]
-        if entry is None:
+        if entry is None or entry["tag"] != 7:
             continue
-        if entry["tag"] != 1:
-            encoded_entries.append(entry["raw"])
+        utf8_index = int(entry["utf8_index"])
+        utf8_entry = entries[utf8_index]
+        if utf8_entry is None or utf8_entry["tag"] != 1:
+            raise CollisionBytecodeRemapError(
+                "CONSTANT_Class does not reference CONSTANT_Utf8"
+            )
+        payload = utf8_entry["payload"]
+        try:
+            internal = payload.decode("ascii")
+        except UnicodeDecodeError:
+            continue
+        replacement = mappings.get(internal)
+        if replacement is None:
+            continue
+        new_payload = replacement.encode("ascii")
+        if len(new_payload) > 0xFFFF:
+            raise CollisionBytecodeRemapError(
+                "rewritten class-name CONSTANT_Utf8 exceeds JVM u2 length"
+            )
+        existing = class_alias_payload_by_utf8.get(utf8_index)
+        if existing is not None and existing != new_payload:
+            raise CollisionBytecodeRemapError(
+                "shared CONSTANT_Class Utf8 requires conflicting remaps"
+            )
+        class_alias_payload_by_utf8[utf8_index] = new_payload
+
+    # Descriptors/signatures may contain class identities inside larger
+    # Utf8 payloads. Rewrite those structurally, but do not exact-rewrite
+    # a bare Utf8 token: bare class identities are handled above.
+    rewrites: dict[int, bytes] = {}
+    for index in range(1, cp_count):
+        entry = entries[index]
+        if entry is None or entry["tag"] != 1:
             continue
 
         old_payload = entry["payload"]
         new_payload = _rewrite_utf8_payload(
             old_payload,
             mappings,
+            rewrite_exact=False,
         )
-        if new_payload != old_payload:
-            if index in string_utf8_indices:
-                raise CollisionBytecodeRemapError(
-                    "refusing class remap because a rewritten "
-                    f"CONSTANT_Utf8 is also CONSTANT_String cp#{index}"
-                )
-            if len(new_payload) > 0xFFFF:
-                raise CollisionBytecodeRemapError(
-                    "rewritten CONSTANT_Utf8 exceeds JVM u2 length"
-                )
-            changed_utf8 += 1
+        if new_payload == old_payload:
+            continue
+        if len(new_payload) > 0xFFFF:
+            raise CollisionBytecodeRemapError(
+                "rewritten CONSTANT_Utf8 exceeds JVM u2 length"
+            )
+        rewrites[index] = new_payload
+
+    # Descriptor/signature Utf8 constants can also be shared by
+    # CONSTANT_String. Preserve runtime string literals by cloning the
+    # original Utf8 and retargeting the string constant to the clone.
+    string_alias_sources = sorted(
+        set(rewrites) & string_utf8_indices
+    )
+
+    class_alias_sources = sorted(class_alias_payload_by_utf8)
+    added_count = len(class_alias_sources) + len(string_alias_sources)
+    if cp_count + added_count > 0xFFFF:
+        raise CollisionBytecodeRemapError(
+            "collision remap aliases exceed JVM constant-pool limit"
+        )
+
+    class_alias_index_by_utf8 = {
+        source_index: cp_count + offset
+        for offset, source_index in enumerate(class_alias_sources)
+    }
+    string_alias_base = cp_count + len(class_alias_sources)
+    string_alias_index_by_utf8 = {
+        source_index: string_alias_base + offset
+        for offset, source_index in enumerate(string_alias_sources)
+    }
+
+    encoded_entries: list[bytes] = []
+    for index in range(1, cp_count):
+        entry = entries[index]
+        if entry is None:
+            continue
+
+        if entry["tag"] == 1:
+            new_payload = rewrites.get(index)
+            if new_payload is None:
+                encoded_entries.append(entry["raw"])
+                continue
             encoded_entries.append(
                 bytes([1])
                 + struct.pack(">H", len(new_payload))
                 + new_payload
             )
-        else:
-            encoded_entries.append(entry["raw"])
+            continue
 
+        if entry["tag"] == 7:
+            source_index = int(entry["utf8_index"])
+            alias_index = class_alias_index_by_utf8.get(source_index)
+            if alias_index is not None:
+                encoded_entries.append(
+                    bytes([7])
+                    + struct.pack(">H", alias_index)
+                )
+                continue
+
+        if entry["tag"] == 8:
+            source_index = int(entry["utf8_index"])
+            alias_index = string_alias_index_by_utf8.get(source_index)
+            if alias_index is not None:
+                encoded_entries.append(
+                    bytes([8])
+                    + struct.pack(">H", alias_index)
+                )
+                continue
+
+        encoded_entries.append(entry["raw"])
+
+    alias_entries: list[bytes] = []
+
+    for source_index in class_alias_sources:
+        payload = class_alias_payload_by_utf8[source_index]
+        alias_entries.append(
+            bytes([1])
+            + struct.pack(">H", len(payload))
+            + payload
+        )
+
+    for source_index in string_alias_sources:
+        entry = entries[source_index]
+        if entry is None or entry["tag"] != 1:
+            raise CollisionBytecodeRemapError(
+                "CONSTANT_String alias source is not CONSTANT_Utf8"
+            )
+        payload = entry["payload"]
+        alias_entries.append(
+            bytes([1])
+            + struct.pack(">H", len(payload))
+            + payload
+        )
+
+    new_cp_count = cp_count + len(alias_entries)
     rebuilt = (
-        data[:10]
+        data[:8]
+        + struct.pack(">H", new_cp_count)
         + b"".join(encoded_entries)
+        + b"".join(alias_entries)
         + data[tail_offset:]
     )
     try:
@@ -220,8 +344,7 @@ def remap_class_bytes(
             f"rewritten class failed to parse: {exc}"
         ) from exc
 
-    return rebuilt, changed_utf8
-
+    return rebuilt, len(rewrites) + len(class_alias_sources)
 
 def _load_plan(path: Path) -> dict[str, Any]:
     try:
