@@ -386,6 +386,7 @@ def build_existing_authority_release_from_workspace(
     allow_package_resource_risk: bool = False,
     rewrite_class_name_strings: bool = False,
     source_prefixes: list[str] | None = None,
+    private_diagnostic_report_out: Path | None = None,
     java_command: str = "java",
     javac_command: str = "javac",
 ) -> dict[str, Any]:
@@ -544,6 +545,7 @@ def build_existing_authority_release_from_workspace(
             out_dir=rebuild_dir,
             javac_command=javac_command,
             source_prefixes=source_prefixes,
+            private_diagnostic_report_out=private_diagnostic_report_out,
             private_collision_plan_path=private_collision_plan_path,
         )
     except CleanRebuildError as exc:

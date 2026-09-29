@@ -211,6 +211,12 @@ if (Test-Path -LiteralPath $OutDir) {
     New-Item -ItemType Directory -Path $OutDir | Out-Null
 }
 
+# Prepare the empty top-level output root before any child directories are
+# created. On Windows, newly created descendants inherit per-directory NTFS
+# case sensitivity, covering both Procyon resolver staging and clean-javac
+# release/rebuild staging with one UAC elevation.
+Enable-CaseSensitiveWorkspace -Path $OutDir
+
 $BootstrapReadableDir = Join-Path $OutDir "bootstrap-readable"
 $CollisionDir = Join-Path $OutDir "collision-authority"
 $CollisionWorkspace = Join-Path $OutDir "collision-source"
@@ -313,8 +319,6 @@ if ([string]$CollisionTransformDoc.plan_id -ne [string]$CollisionPlanDoc.plan_id
     throw "Collision transform is not bound to the generated private plan."
 }
 
-Enable-CaseSensitiveWorkspace -Path $CollisionWorkspace
-
 $WorkspaceArgs = @(
     "-3.13",
     "-m",
@@ -336,6 +340,7 @@ Invoke-PyChecked "BUILD COLLISION-DERIVED SOURCE WORKSPACE" $WorkspaceArgs
 
 $RecoveredManifest = Join-Path $CollisionWorkspace "recovered-source-manifest.json"
 $RecoveredSourceRoot = Join-Path $CollisionWorkspace "src"
+$PrivateDiagnostic = Join-Path $ReleaseDir "javac-diagnostic-private.json"
 Require-File $RecoveredManifest
 if (-not (Test-Path -LiteralPath $RecoveredSourceRoot -PathType Container)) {
     throw "Collision-derived source root is missing."
@@ -395,6 +400,8 @@ $ReleaseArgs = @(
     $Java,
     "--javac-command",
     $Javac,
+    "--private-diagnostic-report-out",
+    $PrivateDiagnostic,
     "--out-dir",
     $ReleaseDir
 )
@@ -427,6 +434,9 @@ if ($ReleaseExit -ne 0) {
                 Write-Host "javac_cannot_find_symbol=$($Summary.cannot_find_symbol.count)"
                 Write-Host "javac_frontier_id=$($CleanDoc.compiler.diagnostic_classification.frontier_id)"
             }
+        }
+        if (Test-Path -LiteralPath $PrivateDiagnostic -PathType Leaf) {
+            Write-Host "private_javac_diagnostic=$PrivateDiagnostic"
         }
     }
     exit 3

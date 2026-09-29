@@ -84,10 +84,11 @@ both exact v308 and Procyon SHA-256 pins. It then runs this fail-closed chain:
    collision edges;
 5. decompile only project classes from that transformed JAR with pinned
    Procyon, binding the collision transform into the recovered workspace;
-   on Windows the wrapper first creates the empty collision-source directory,
-   elevates one fsutil call to enable per-directory NTFS case sensitivity,
-   and relies on inherited case sensitivity for Procyon's resolver/source
-   children before the Python source-workspace gate independently probes them;
+   on Windows the wrapper first marks the empty top-level Source M1 output
+   directory as per-directory NTFS case-sensitive with one elevated fsutil
+   call, so Procyon resolver/source staging and later clean-javac release
+   staging inherit the same case-sensitive transport before Python/JVM gates
+   independently verify and consume those paths;
 6. run current-main recovered-workspace release orchestration with the exact
    generated private collision plan;
 7. verify the release including private collision-plan provenance;
@@ -97,9 +98,11 @@ both exact v308 and Procyon SHA-256 pins. It then runs this fail-closed chain:
 
 If current-main clean rebuild is still blocked, the wrapper stops before any
 publication step and prints the new compiler frontier from clean-rebuild.json,
-including the deterministic javac frontier ID when available. That new exact
-frontier, rather than the older 1,288-error R8N measurement, becomes the only
-valid input for any further source-repair decision.
+including the deterministic javac frontier ID when available. The same
+authoritative run also writes a private identifier-bearing javac diagnostic
+report beside release-run.json; that private artifact must never be committed.
+That new exact frontier, rather than the older 1,288-error R8N measurement,
+becomes the only valid input for any further source-repair decision.
 
 A PASS is emitted only after the milestone reports publishable=true and the
 publication bundle verifies. The verified local publication bundle remains
