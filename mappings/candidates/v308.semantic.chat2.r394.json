@@ -1,0 +1,307 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutFolderMenuFactory",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_folder_control",
+          "detail": "Builds the exact 'Loadout folders' popup and adds folder entries plus Create new folder, Rename, Move up, Move down and Delete actions with dedicated icons."
+        },
+        {
+          "family": "exact_family_ownership",
+          "detail": "The class is owned exclusively by the R390 LoadoutsPanel / R143 LoadoutManager folder-control graph and has no unrelated client responsibility."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts folder-control identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SelectLoadoutFolderAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_folder_control",
+          "detail": "Attached to each dynamic folder JMenuItem; highlights the chosen entry, switches the active folder in LoadoutManager and refreshes LoadoutsPanel."
+        },
+        {
+          "family": "exact_family_ownership",
+          "detail": "The class is owned exclusively by the R390 LoadoutsPanel / R143 LoadoutManager folder-control graph and has no unrelated client responsibility."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts folder-control identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OpenCreateLoadoutFolderAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_folder_control",
+          "detail": "Attached to exact 'Create new folder'; opens a JFrame titled 'Name Your Folder' with a 'Create' button."
+        },
+        {
+          "family": "exact_family_ownership",
+          "detail": "The class is owned exclusively by the R390 LoadoutsPanel / R143 LoadoutManager folder-control graph and has no unrelated client responsibility."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts folder-control identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CreateLoadoutFolderCommitAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_folder_control",
+          "detail": "Reads the create-folder JTextField, calls LoadoutManager's create-folder operation with that text, then closes/disposes the frame."
+        },
+        {
+          "family": "exact_family_ownership",
+          "detail": "The class is owned exclusively by the R390 LoadoutsPanel / R143 LoadoutManager folder-control graph and has no unrelated client responsibility."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts folder-control identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/r",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OpenRenameLoadoutFolderAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_folder_control",
+          "detail": "Attached to exact 'Rename'; opens a JFrame titled 'Re-name Your Folder' with a 'Rename' button."
+        },
+        {
+          "family": "exact_family_ownership",
+          "detail": "The class is owned exclusively by the R390 LoadoutsPanel / R143 LoadoutManager folder-control graph and has no unrelated client responsibility."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts folder-control identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/s",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RenameLoadoutFolderCommitAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_folder_control",
+          "detail": "Reads the new folder name and calls LoadoutManager with current folder name plus replacement name, then closes the frame."
+        },
+        {
+          "family": "exact_family_ownership",
+          "detail": "The class is owned exclusively by the R390 LoadoutsPanel / R143 LoadoutManager folder-control graph and has no unrelated client responsibility."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts folder-control identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/t",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MoveLoadoutFolderUpAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_folder_control",
+          "detail": "Attached to exact 'Move up'; resolves the folder preceding the active folder and asks LoadoutManager to reorder active folder against that predecessor."
+        },
+        {
+          "family": "exact_family_ownership",
+          "detail": "The class is owned exclusively by the R390 LoadoutsPanel / R143 LoadoutManager folder-control graph and has no unrelated client responsibility."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts folder-control identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/u",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MoveLoadoutFolderDownAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_folder_control",
+          "detail": "Attached to exact 'Move down'; resolves the folder following the active folder and asks LoadoutManager to reorder active folder against that successor."
+        },
+        {
+          "family": "exact_family_ownership",
+          "detail": "The class is owned exclusively by the R390 LoadoutsPanel / R143 LoadoutManager folder-control graph and has no unrelated client responsibility."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts folder-control identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/v",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OpenDeleteLoadoutFolderAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_folder_control",
+          "detail": "Attached to exact 'Delete'; opens a confirmation frame for the current folder with confirm and exact 'No, Nevermind.' buttons."
+        },
+        {
+          "family": "exact_family_ownership",
+          "detail": "The class is owned exclusively by the R390 LoadoutsPanel / R143 LoadoutManager folder-control graph and has no unrelated client responsibility."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts folder-control identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/w",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DeleteLoadoutFolderConfirmAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_folder_control",
+          "detail": "The delete confirmation listener calls LoadoutManager delete-folder for the captured active folder name, then closes/disposes the confirmation frame."
+        },
+        {
+          "family": "exact_family_ownership",
+          "detail": "The class is owned exclusively by the R390 LoadoutsPanel / R143 LoadoutManager folder-control graph and has no unrelated client responsibility."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts folder-control identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/x",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DeleteLoadoutFolderCancelAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_folder_control",
+          "detail": "Attached to the exact 'No, Nevermind.' button; it performs no mutation and only closes/disposes the delete confirmation frame."
+        },
+        {
+          "family": "exact_family_ownership",
+          "detail": "The class is owned exclusively by the R390 LoadoutsPanel / R143 LoadoutManager folder-control graph and has no unrelated client responsibility."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts folder-control identity."
+    }
+  ],
+  "conflicts": []
+}
