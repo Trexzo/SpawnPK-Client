@@ -1405,9 +1405,9 @@ def _normalize_hierarchy_shadowed_self_static_field_owners(
 _DOTTED_STATIC_FIELD_RE = re.compile(
     r"(?<![A-Za-z0-9_$])"
     r"(?P<owner>[A-Za-z_$][A-Za-z0-9_$]*"
-    r"(?:\\.[A-Za-z_$][A-Za-z0-9_$]*){2,})"
-    r"\\.(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\\b"
-    r"(?!\\s*\\()"
+    r"(?:\.[A-Za-z_$][A-Za-z0-9_$]*){2,})"
+    r"\.(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+    r"(?!\s*\()"
 )
 
 
