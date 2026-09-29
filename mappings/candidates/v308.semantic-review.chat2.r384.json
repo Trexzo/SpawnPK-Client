@@ -1,0 +1,30 @@
+{
+  "schema_version":1,"kind":"semantic_review_set","canonical":false,
+  "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","proposal_count":2,
+  "review_id":"SEMREVIEW_CDBEB1F2DE8EF8D18A9B",
+  "proposals":[
+    {
+      "proposal_id":"SEMPROP_0CBD385B6336C59CDB6E","target_kind":"class","stable_id":"CLIENT_CLASS_000915","owner_logical_id":"CLIENT_CLASS_000915",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","source_coordinate":{"owner":"rs/s/g/b","name":null,"descriptor":null},
+      "proposed_name":"ItemIdSearchPlugin","confidence":0.999,
+      "evidence":[
+        {"family":"exact_plugin_descriptor","detail":"Exact v308 rs/s/g/b carries plugin name 'Item ID Search', config group 'itemsearch', description 'Enable the Item ID Search Panel' and panel tag."},
+        {"family":"exact_panel_wiring","detail":"On startup it resolves rs/s/g/a, initializes the panel, loads search.png, creates a navigation button titled 'Item ID Search' at priority 6 and adds it to the client toolbar; shutdown removes the same navigation button."},
+        {"family":"exact_resource_identity","detail":"The sole plugin image resource is search.png and the sole owned presentation surface is the Item ID Search panel."}
+      ],
+      "note":"Descriptive exact-v308 name from the preserved plugin descriptor and lifecycle; no public source identity was found."
+    },
+    {
+      "proposal_id":"SEMPROP_A806D4499BDE0CC471A9","target_kind":"class","stable_id":"CLIENT_CLASS_000914","owner_logical_id":"CLIENT_CLASS_000914",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","source_coordinate":{"owner":"rs/s/g/a","name":null,"descriptor":null},
+      "proposed_name":"ItemIdSearchPanel","confidence":0.999,
+      "evidence":[
+        {"family":"exact_panel_role","detail":"Exact v308 rs/s/g/a extends the plugin-panel base, owns a search JTextField, read-only results JTextArea and JScrollPane, and lays them out with a Search button."},
+        {"family":"exact_search_contract","detail":"The panel enforces a minimum three-character query, requires the item database and logged-in client state, scans the live item-definition table by case-insensitive name and renders matching item IDs/names/noted state."},
+        {"family":"exact_literal_identity","detail":"The exact warning strings are 'Please have at least 3 letters in your search term!', 'Please login before searching items!' and 'Please wait until the client has loaded the item database!'."}
+      ],
+      "note":"Descriptive exact-v308 name for the Item ID Search Swing panel; no public source identity was found."
+    }
+  ],
+  "unresolved":[]
+}

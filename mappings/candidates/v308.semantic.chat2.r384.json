@@ -1,0 +1,31 @@
+{
+  "schema_version":1,"kind":"semantic_candidate_set","canonical":false,
+  "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[
+    {
+      "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/s/g/a","name":null,"descriptor":null},
+      "proposed_name":"ItemIdSearchPanel","confidence":0.999,
+      "evidence":[
+        {"family":"exact_panel_role","detail":"Exact v308 rs/s/g/a extends the plugin-panel base, owns a search JTextField, read-only results JTextArea and JScrollPane, and lays them out with a Search button."},
+        {"family":"exact_search_contract","detail":"The panel enforces a minimum three-character query, requires the item database and logged-in client state, scans the live item-definition table by case-insensitive name and renders matching item IDs/names/noted state."},
+        {"family":"exact_literal_identity","detail":"The exact warning strings are 'Please have at least 3 letters in your search term!', 'Please login before searching items!' and 'Please wait until the client has loaded the item database!'."}
+      ],
+      "note":"Descriptive exact-v308 name for the Item ID Search Swing panel; no public source identity was found."
+    },
+    {
+      "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/s/g/b","name":null,"descriptor":null},
+      "proposed_name":"ItemIdSearchPlugin","confidence":0.999,
+      "evidence":[
+        {"family":"exact_plugin_descriptor","detail":"Exact v308 rs/s/g/b carries plugin name 'Item ID Search', config group 'itemsearch', description 'Enable the Item ID Search Panel' and panel tag."},
+        {"family":"exact_panel_wiring","detail":"On startup it resolves rs/s/g/a, initializes the panel, loads search.png, creates a navigation button titled 'Item ID Search' at priority 6 and adds it to the client toolbar; shutdown removes the same navigation button."},
+        {"family":"exact_resource_identity","detail":"The sole plugin image resource is search.png and the sole owned presentation surface is the Item ID Search panel."}
+      ],
+      "note":"Descriptive exact-v308 name from the preserved plugin descriptor and lifecycle; no public source identity was found."
+    }
+  ],
+  "conflicts":[]
+}
