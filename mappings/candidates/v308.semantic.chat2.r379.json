@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SubstanceRuneLiteLookAndFeel",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_superclass",
+          "detail": "Exact v308 rs/gui/a directly extends org.pushingpixels.substance.api.SubstanceLookAndFeel and contains only one constructor."
+        },
+        {
+          "family": "exact_skin_constructor",
+          "detail": "Its constructor creates the already-owned R22 rs/gui/b RuneLiteSkin and passes that instance directly to the SubstanceLookAndFeel superclass constructor."
+        },
+        {
+          "family": "exact_source_name",
+          "detail": "Historical RuneLite/OpenOSRS source defines net.runelite.client.ui.skin.SubstanceRuneLiteLookAndFeel with the same superclass and constructor pattern around RuneLiteSkin."
+        }
+      ],
+      "note": "Exact source-name recovery for RuneLite/OpenOSRS SubstanceRuneLiteLookAndFeel."
+    }
+  ],
+  "conflicts": []
+}
