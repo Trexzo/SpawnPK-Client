@@ -12,14 +12,14 @@ Main/Core's accepted R2 semantic authority or the R3-R11 review batches.
 - candidate classes: **15**
 - resolved proposals: **15**
 - unresolved: **0**
-- review ID: `SEMREVIEW_655A5A8C14B6608179D9`
+- review ID: `SEMREVIEW_635F5E962FE5DB9BC7BC`
 - field/method proposals: **0**
 
 ## Exact self-identifying/value classes
 
 | Raw class | Stable ID | Candidate semantic |
 | --- | --- | --- |
-| `rs/e/c` | `CLIENT_CLASS_000147` | `ConfigStore` |
+| `rs/e/c` | `CLIENT_CLASS_000147` | `ConfigData` |
 | `rs/e/h` | `CLIENT_CLASS_000152` | `ConfigItemDescriptor` |
 | `rs/e/k` | `CLIENT_CLASS_000155` | `ConfigProfile` |
 | `rs/e/m` | `CLIENT_CLASS_000157` | `ConfigSectionDescriptor` |
@@ -34,9 +34,9 @@ Most of these carry exact self-identifying `toString` constants, including
 `ConfigItemDescriptor(...)`, `ConfigProfile(...)`, `OverlayBounds(...)`,
 `TimerInfoBox(...)`, `BoostInfoBox(...)` and `NavigationButton(...)`.
 
-`ConfigStore` is role-based rather than a surviving identifier: exact bytecode proves a
-file-backed key/value persistence layer using `Properties`, `ConcurrentHashMap`,
-synchronized mutation, dirty tracking and file locking.
+`ConfigData` is now source-proven: RuneLite `ConfigData.java` matches the exact-v308
+file-backed key/value layer, including `Properties`, `ConcurrentHashMap`, patch tracking,
+file locking, `runelite_config` temporary files and atomic-move fallback.
 
 ## Player Outline pair
 
@@ -61,4 +61,4 @@ of a `NavigationButton` titled `PvP Tracker` using `pvp_icon.png`.
 
 Chat 2 does not promote R12. Main/Core may accept any desired subset only through an explicit
 `semantic_acceptance_spec` bound to
-`SEMREVIEW_655A5A8C14B6608179D9`.
+`SEMREVIEW_635F5E962FE5DB9BC7BC`.

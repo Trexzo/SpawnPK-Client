@@ -185,7 +185,7 @@
       "evidence": [
         {
           "family": "exact_structural_role",
-          "detail": "Class owns EventBus, ConfigStore and ConfigInvocationHandler; creates configuration proxies and descriptors and reads/writes serialized group/key values."
+          "detail": "Class owns EventBus, ConfigData and ConfigInvocationHandler; creates configuration proxies and descriptors and reads/writes serialized group/key values."
         },
         {
           "family": "exact_literal_role",

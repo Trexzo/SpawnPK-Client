@@ -18,19 +18,23 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "ConfigStore",
-      "confidence": 0.99,
+      "proposed_name": "ConfigData",
+      "confidence": 0.999,
       "evidence": [
         {
           "family": "exact_structural_role",
-          "detail": "Class owns a File, loads java.util.Properties into a ConcurrentHashMap, supports synchronized get/put/remove, tracks dirty values and writes the configuration file under a file lock."
+          "detail": "Class owns configPath File, loads java.util.Properties into a ConcurrentHashMap, supports synchronized get/set/unset/putAll, tracks patch changes and writes under a file lock."
         },
         {
           "family": "exact_literal_role",
-          "detail": "Exact constants reference RL configurations and configuration file load/save failures."
+          "detail": "Exact constants preserve runelite_config temporary-file naming, configuration-file load/save diagnostics and the atomic move fallback."
+        },
+        {
+          "family": "source_name_identity",
+          "detail": "RuneLite source commit 4ccf49c7cfc3b66f5236771e9c092d74d9ae35ad ConfigData.java matches the exact file-backed properties store: configPath, ConcurrentHashMap properties, patchChanges, UTF-8 load, lock-file patching, runelite_config temp file and atomic-move fallback."
         }
       ],
-      "note": "Store is chosen over manager because the exact class is the file-backed key/value persistence layer."
+      "note": "Corrected from descriptive ConfigStore to source-proven RuneLite identifier ConfigData; exact v308 behavior remains authority."
     },
     {
       "schema_version": 1,

@@ -5,7 +5,7 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 15,
-  "review_id": "SEMREVIEW_655A5A8C14B6608179D9",
+  "review_id": "SEMREVIEW_635F5E962FE5DB9BC7BC",
   "proposals": [
     {
       "proposal_id": "SEMPROP_01ABB62F3DEE55929BF2",
@@ -58,6 +58,36 @@
         }
       ],
       "note": "Plugin role is exact from runtime descriptor and direct config pairing."
+    },
+    {
+      "proposal_id": "SEMPROP_2F1B56FCC4CBAC034A65",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000147",
+      "owner_logical_id": "CLIENT_CLASS_000147",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigData",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_structural_role",
+          "detail": "Class owns configPath File, loads java.util.Properties into a ConcurrentHashMap, supports synchronized get/set/unset/putAll, tracks patch changes and writes under a file lock."
+        },
+        {
+          "family": "exact_literal_role",
+          "detail": "Exact constants preserve runelite_config temporary-file naming, configuration-file load/save diagnostics and the atomic move fallback."
+        },
+        {
+          "family": "source_name_identity",
+          "detail": "RuneLite source commit 4ccf49c7cfc3b66f5236771e9c092d74d9ae35ad ConfigData.java matches the exact file-backed properties store: configPath, ConcurrentHashMap properties, patchChanges, UTF-8 load, lock-file patching, runelite_config temp file and atomic-move fallback."
+        }
+      ],
+      "note": "Corrected from descriptive ConfigStore to source-proven RuneLite identifier ConfigData; exact v308 behavior remains authority."
     },
     {
       "proposal_id": "SEMPROP_4FABA8886AE5C9FE4776",
@@ -162,32 +192,6 @@
         }
       ],
       "note": "Plugin role is exact from runtime/plugin shape and direct config/panel pairing."
-    },
-    {
-      "proposal_id": "SEMPROP_831188DDACB318AA26B5",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000147",
-      "owner_logical_id": "CLIENT_CLASS_000147",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/e/c",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "ConfigStore",
-      "confidence": 0.99,
-      "evidence": [
-        {
-          "family": "exact_structural_role",
-          "detail": "Class owns a File, loads java.util.Properties into a ConcurrentHashMap, supports synchronized get/put/remove, tracks dirty values and writes the configuration file under a file lock."
-        },
-        {
-          "family": "exact_literal_role",
-          "detail": "Exact constants reference RL configurations and configuration file load/save failures."
-        }
-      ],
-      "note": "Store is chosen over manager because the exact class is the file-backed key/value persistence layer."
     },
     {
       "proposal_id": "SEMPROP_A555897388EBF2921283",
