@@ -23,8 +23,8 @@ Exact v308 preserves:
 
 RuneLite historical source preserves the same plugin/config names and the distinctive descriptor/config strings.
 
-## Withheld helper
+## Existing helper ownership
 
-`rs/s/l/a` remains unnamed. It is an exact two-int `isMatchingEntity` functional contract used by the plugin, but no trustworthy public source-name match was found. R379 does not invent one.
+`rs/s/l/a` was already reviewed in R186 as `MenuEntryEntityMatcher`, based on its surviving `isMatchingEntity(int, int)` method and complete MenuEntrySwapper call graph. R379 therefore adds only the source-proven config/plugin identities and does not duplicate that helper.
 
 R379 remains non-canonical semantic research only.
