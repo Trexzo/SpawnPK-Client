@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/M",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "VoteRewardsInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_title",
+          "detail": "Exact v308 preserves '@or1@Vote for us and receive rewards!'."
+        },
+        {
+          "family": "exact_vote_surface",
+          "detail": "The interface owns vote actions for TopG, RuneLocus, RSPS-List and Moparscape together with the misc/event presentation family."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The class is a vote/reward navigation interface only; external vote verification and reward granting are not inferred."
+        }
+      ],
+      "note": "Descriptive exact-v308 interface name fixed by surviving UI vocabulary and bounded widget responsibility."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/E",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DuelTypeSelectionInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_selection_prompt",
+          "detail": "Exact v308 preserves 'Select a duel type..' with Standard duel, Whip only, Whip + dds only and Invite choices."
+        },
+        {
+          "family": "exact_duel_assets",
+          "detail": "The builder uses popups/duel and gambling/SPRITE resources and exposes Select/Close Window controls in one compact duel-type chooser."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The class selects a duel transport/mode presentation and does not define duel rules or combat authority."
+        }
+      ],
+      "note": "Descriptive exact-v308 interface name fixed by surviving UI vocabulary and bounded widget responsibility."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/F",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EmotesInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_emote_assets",
+          "detail": "Exact v308 builds the standard emote widget surface from emotes/EMOTE resources."
+        },
+        {
+          "family": "exact_emote_vocabulary",
+          "detail": "The class owns the complete visible action list including Yes, No, Bow, Angry, Think, Wave, Shrug, Cheer, Beckon, Laugh, Dance, Jig, Spin, Headbang, Cry, Blow kiss, Panic, Salute, Goblin Bow/Salute, Glass Box/Wall, Zombie Walk/Dance, Rabbit Hop and Skillcape Emote."
+        },
+        {
+          "family": "exact_interface_role",
+          "detail": "The class maps those actions into one fixed emote-button grid with no unrelated interface responsibility."
+        }
+      ],
+      "note": "Descriptive exact-v308 interface name fixed by surviving UI vocabulary and bounded widget responsibility."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/Z",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PkLeaderboardsInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_titles",
+          "detail": "Exact v308 preserves 'Daily PK Leaderboards', 'Tournament Leaderboard', 'Daily PK leaderboards' and 'Tournament PK leaderboard'."
+        },
+        {
+          "family": "exact_selection_surface",
+          "detail": "The class owns a Leaderboard Selection Menu switching between daily and tournament PK leaderboard panels using one misc/hs widget family."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "Because the root spans both daily and tournament views, the name uses the broader PkLeaderboardsInterface rather than naming only one tab."
+        }
+      ],
+      "note": "Descriptive exact-v308 interface name fixed by surviving UI vocabulary and bounded widget responsibility."
+    }
+  ],
+  "conflicts": []
+}
