@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_F44CA4AD45209B25930B",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_44D6A25447470D416C3C",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000627",
+      "owner_logical_id": "CLIENT_CLASS_000627",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aw",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DonationShoppingCartInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_title",
+          "detail": "Exact v308 builds root widget 60200 and preserves the literal title '@or1@Donation Shopping Cart'."
+        },
+        {
+          "family": "exact_cart_surface",
+          "detail": "The class owns exact subtotal/checkout/purchase-option text including '@or1@Subtotal: @yel@$0.00', 'Checkout', 'Checkout @yel@($0.00)', 'Purchase Options' and Shopping Cart resources."
+        },
+        {
+          "family": "exact_scriptpacket_join",
+          "detail": "R128 already proves ScriptPacket ID 36 is registered from rs/n/c/aw.d; its concrete handler updates the Donation Shopping Cart particle/progress presentation graph rooted by this interface."
+        },
+        {
+          "family": "exact_registry_role",
+          "detail": "The class is constructed by the central interface registry and builds the complete 600xx/602xx cart widget tree; it has no unrelated service responsibility."
+        }
+      ],
+      "note": "Exact-v308 self-identifying interface name completing the ScriptPacket-36 donation-shopping-cart subsystem."
+    }
+  ],
+  "unresolved": []
+}
