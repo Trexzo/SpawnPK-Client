@@ -1,0 +1,26 @@
+{
+  "schema_version":1,
+  "kind":"semantic_candidate_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[{
+    "schema_version":1,
+    "kind":"semantic_name_candidate",
+    "canonical":false,
+    "status":"CANDIDATE",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target":{"kind":"class","owner":"rs/a/b/a$a","name":null,"descriptor":null},
+    "proposed_name":"ModelRecolorCycle",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_recolor_group_state","detail":"R399 ModelRecolorTransform constructs one nested instance per int[][][] recolor group, stores that group's source-color ids in an int set and stores the group's destination int[] sequence."},
+      {"family":"exact_cyclic_destination","detail":"The nested a() method returns the current destination color, increments its cursor and wraps the cursor to zero at the end of the destination array."},
+      {"family":"exact_transform_application","detail":"ModelRecolorTransform tests each model color/id against each nested source set and, on a matching group, replaces that value with the nested cycle's next destination color."},
+      {"family":"exact_outer_contract","detail":"R399 already fixes the enclosing class as ModelRecolorTransform and explicitly identifies per-source cyclic destination sequences as part of its exact recolor behavior."}
+    ],
+    "note":"Descriptive exact-v308 identity for one source-color group and its cyclic replacement-color sequence inside R399 ModelRecolorTransform."
+  }],
+  "conflicts":[]
+}
