@@ -96,6 +96,15 @@ both exact v308 and Procyon SHA-256 pins. It then runs this fail-closed chain:
 9. build and reproduce the Source Milestone manifest;
 10. build and independently verify the source-only publication bundle.
 
+Source normalization is also allowed to repair a JVM-legal but Java-source
+ambiguous nested-type static-field spelling when exact bytecode proves the
+access. For example, if Procyon emits `pkg.Outer.Inner.FIELD` but the
+enclosing-class hierarchy exposes a visible field named `Inner`, javac can
+bind `Inner` as a value instead of the nested type. The normalizer may force
+that owner through type context as `((pkg.Outer.Inner)null).FIELD` only when
+the nested class, static field, visible shadow and exact per-method
+getstatic/putstatic access counts all agree.
+
 If current-main clean rebuild is still blocked, the wrapper stops before any
 publication step and prints the new compiler frontier from clean-rebuild.json,
 including the deterministic javac frontier ID when available. The same

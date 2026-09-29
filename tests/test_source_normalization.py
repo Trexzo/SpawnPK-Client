@@ -997,6 +997,182 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
             )
             self.assertEqual(action["method_descriptor"], "()V")
 
+    def test_nested_type_static_field_shadow_forces_type_context(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/Base.java": (
+                        "package pkg;\n"
+                        "public class Base { public Object b; }\n"
+                    ),
+                    "pkg/Outer.java": (
+                        "package pkg;\n"
+                        "public class Outer extends Base {\n"
+                        "    public static class b {\n"
+                        "        public static int h = 7;\n"
+                        "        public static int i = 8;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "public class Current {\n"
+                        "    public static int m() {\n"
+                        "        return ((pkg.Outer.b)null).h"
+                        " + ((pkg.Outer.b)null).i;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package use;\n"
+                "public class Current {\n"
+                "    public static int m() {\n"
+                "        return pkg.Outer.b.h + pkg.Outer.b.i;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn(
+                "non-static variable b cannot be referenced",
+                before.stderr,
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            text = source.read_text(encoding="utf-8")
+
+            self.assertIn("((pkg.Outer.b)null).h", text)
+            self.assertIn("((pkg.Outer.b)null).i", text)
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_nested_static_field_method_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_nested_static_field_reference_count"
+                ],
+                2,
+            )
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "shadowed_nested_static_field_owner_type_context"
+            )
+            self.assertEqual(action["method_descriptor"], "()I")
+            self.assertEqual(
+                action["nested_owners"],
+                ["pkg/Outer$b"],
+            )
+            self.assertEqual(
+                action["shadow_declaring_owners"],
+                ["pkg/Base"],
+            )
+            self.assertEqual(
+                action["field_access_counts"],
+                {
+                    "pkg/Outer$b.h": 1,
+                    "pkg/Outer$b.i": 1,
+                },
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_nested_type_static_field_shadow_count_mismatch_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/Base.java": (
+                        "package pkg;\n"
+                        "public class Base { public Object b; }\n"
+                    ),
+                    "pkg/Outer.java": (
+                        "package pkg;\n"
+                        "public class Outer extends Base {\n"
+                        "    public static class b {\n"
+                        "        public static int h = 7;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "public class Current {\n"
+                        "    public static int m() {\n"
+                        "        return ((pkg.Outer.b)null).h;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package use;\n"
+                "public class Current {\n"
+                "    public static int m() {\n"
+                "        return pkg.Outer.b.h + pkg.Outer.b.h;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_nested_static_field_reference_count"
+                ],
+                0,
+            )
+
     def test_discarded_string_expression_preserves_evaluation(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
