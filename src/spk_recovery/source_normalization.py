@@ -1703,13 +1703,13 @@ def _normalize_shadowed_nested_static_field_owners(
     return actions
 
 _PACKAGE_DECL_RE = re.compile(
-    r"(?m)^\\s*package\\s+"
-    r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*(?:\\.[A-Za-z_$][A-Za-z0-9_$]*)*)"
-    r"\\s*;"
+    r"(?m)^\s*package\s+"
+    r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)*)"
+    r"\s*;"
 )
 _SINGLE_TYPE_IMPORT_RE = re.compile(
-    r"(?m)^\\s*import\\s+(?!static\\s+)"
-    r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*(?:\\.[A-Za-z_$][A-Za-z0-9_$]*)+)"
+    r"(?m)^\s*import\s+(?!static\s+)"
+    r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)+)"
     r"\\s*;"
 )
 
@@ -1737,12 +1737,12 @@ def _parameter_type_spans(
     for left, right in bounds:
         raw = params[left:right]
         match = re.fullmatch(
-            r"(?P<prefix>\\s*(?:(?:final)\\s+)*)"
+            r"(?P<prefix>\s*(?:(?:final)\s+)*)"
             r"(?P<type>.+?)"
-            r"(?P<gap>\\s+)"
+            r"(?P<gap>\s+)"
             r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)"
-            r"(?P<var_arrays>(?:\\[\\])*)"
-            r"\\s*",
+            r"(?P<var_arrays>(?:\[\])*)"
+            r"\s*",
             raw,
         )
         if match is None:
