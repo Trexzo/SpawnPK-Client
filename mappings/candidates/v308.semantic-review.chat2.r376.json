@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_A62DC181EBDBC3D633D2",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_4D81363E7AFE32DDD2C6",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000287",
+      "owner_logical_id": "CLIENT_CLASS_000287",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/z",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherSidePanelToggleActionListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_attachment",
+          "detail": "Launcher attaches this ActionListener to the JButton whose exact tooltip is 'Hide/show side panel'."
+        },
+        {
+          "family": "exact_toggle_signal",
+          "detail": "actionPerformed sets the exact client boolean side-panel toggle signal and performs no unrelated action."
+        },
+        {
+          "family": "exact_owner_scope",
+          "detail": "The listener stores only the Launcher owner and is constructed only for that side-panel control button."
+        }
+      ],
+      "note": "Descriptive generated-listener name anchored by the exact Hide/show side panel control."
+    },
+    {
+      "proposal_id": "SEMPROP_6056866F1C6D7739FBF9",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000286",
+      "owner_logical_id": "CLIENT_CLASS_000286",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/y",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherTrayIconRestoreMouseListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_tray_attachment",
+          "detail": "Launcher constructs this MouseAdapter only for its TrayIcon and registers it through TrayIcon.addMouseListener."
+        },
+        {
+          "family": "exact_restore_behavior",
+          "detail": "mouseClicked obtains the launcher's JFrame, sets state NORMAL and makes the frame visible; no other mouse behavior or state exists."
+        },
+        {
+          "family": "exact_owner_scope",
+          "detail": "The listener stores only its Launcher owner and is not shared with SwingUtil's separately recovered tray-icon listener."
+        }
+      ],
+      "note": "Descriptive generated-listener name for the Launcher's own tray-icon restore behavior."
+    }
+  ],
+  "unresolved": []
+}
