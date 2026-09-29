@@ -84,6 +84,10 @@ both exact v308 and Procyon SHA-256 pins. It then runs this fail-closed chain:
    collision edges;
 5. decompile only project classes from that transformed JAR with pinned
    Procyon, binding the collision transform into the recovered workspace;
+   on Windows the wrapper first creates the empty collision-source directory,
+   elevates one fsutil call to enable per-directory NTFS case sensitivity,
+   and relies on inherited case sensitivity for Procyon's resolver/source
+   children before the Python source-workspace gate independently probes them;
 6. run current-main recovered-workspace release orchestration with the exact
    generated private collision plan;
 7. verify the release including private collision-plan provenance;
