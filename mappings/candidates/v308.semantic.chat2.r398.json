@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [{
+    "schema_version": 1,
+    "kind": "semantic_name_candidate",
+    "canonical": false,
+    "status": "CANDIDATE",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target": {"kind":"class","owner":"rs/l/M","name":null,"descriptor":null},
+    "proposed_name": "DrawingArea474",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"exact_drawingarea_subclass","detail":"Exact v308 rs/l/M extends R55 DrawingArea and owns a second static raster state: pixel array plus clip bounds/row offsets and initialization/reset helpers."},
+      {"family":"exact_2d_primitive_surface","detail":"The class implements clipped horizontal/vertical lines, rectangle outlines/fills, alpha variants, arbitrary lines and gradient-style primitive drawing directly against its raster state."},
+      {"family":"exact_rsfont_consumer","detail":"R55 RSFont calls rs/l/M.h(int,int,int,int) from live rich-text rendering for underline/strikethrough rules, proving the class is the auxiliary drawing layer used by the newer font renderer."},
+      {"family":"historical_lineage_crosscheck","detail":"Public 474-era RSPS clients contain a separate DrawingArea474 class beside DrawingArea and RSFont, with the same role as the newer-font 2D primitive raster helper; exact-v308 behavior is primary authority."}
+    ],
+    "note":"DrawingArea474 preserves the established historical identity of the auxiliary 474-era 2D raster layer used by RSFont. Exact-v308 behavior and live consumers are primary authority."
+  }],
+  "conflicts": []
+}
