@@ -278,6 +278,11 @@ def _import_shadow_parameter_fixture(
         encoding="utf-8",
     )
     parameter_type = "other.h" if descriptor_owner == "imported" else "p.h"
+    body = (
+        "        if (h != null) { h.a(n, new int[] { 1 }); }\n"
+        if descriptor_owner == "imported"
+        else "        if (h != null) { h.a(Integer.valueOf(n)); }\n"
+    )
     current.write_text(
         "package p;\n"
         "import other.h;\n"
@@ -285,8 +290,8 @@ def _import_shadow_parameter_fixture(
         "    public static void m(final "
         + parameter_type
         + " h, final int n) {\n"
-        "        if (h != null) { h.a(n, new int[] { 1 }); }\n"
-        "    }\n"
+        + body
+        + "    }\n"
         "}\n",
         encoding="utf-8",
     )
@@ -1388,7 +1393,7 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 "import other.h;\n"
                 "public class Current {\n"
                 "    public static void m(final h h, final int n) {\n"
-                "        if (h != null) { h.a((Object)n); }\n"
+                "        if (h != null) { h.a(Integer.valueOf(n)); }\n"
                 "    }\n"
                 "}\n"
             )
