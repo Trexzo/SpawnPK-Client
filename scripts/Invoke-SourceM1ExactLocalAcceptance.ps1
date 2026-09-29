@@ -44,6 +44,105 @@ function Invoke-PyChecked {
     }
 }
 
+function Enable-CaseSensitiveWorkspace {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    if (Test-Path -LiteralPath $Path) {
+        $Existing = @(Get-ChildItem -LiteralPath $Path -Force)
+        if ($Existing.Count -ne 0) {
+            throw "Case-sensitive workspace must be empty before preparation: $Path"
+        }
+    } else {
+        New-Item -ItemType Directory -Path $Path | Out-Null
+    }
+
+    if ($env:OS -ne "Windows_NT") {
+        Write-Host "CASE_SENSITIVE_WORKSPACE_NATIVE=$Path" -ForegroundColor Green
+        return
+    }
+
+    $AdminScript = Join-Path (
+        [System.IO.Path]::GetTempPath()
+    ) (
+        "SpawnPK-EnableCaseSensitive-" +
+        [guid]::NewGuid().ToString("N") +
+        ".ps1"
+    )
+
+    $AdminSource = @'
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$Target
+)
+
+$ErrorActionPreference = "Continue"
+
+& fsutil.exe file setCaseSensitiveInfo "$Target" enable
+$Code = $LASTEXITCODE
+if ($Code -ne 0) {
+    exit $Code
+}
+
+& fsutil.exe file queryCaseSensitiveInfo "$Target"
+if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+}
+
+exit 0
+'@
+
+    $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText(
+        $AdminScript,
+        $AdminSource,
+        $Utf8NoBom
+    )
+
+    $Process = $null
+    try {
+        Write-Host ""
+        Write-Host (
+            "Windows requires one UAC prompt to enable per-directory " +
+            "case sensitivity for the Source M1 resolver workspace."
+        ) -ForegroundColor Yellow
+
+        $Process = Start-Process `
+            -FilePath "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" `
+            -Verb RunAs `
+            -Wait `
+            -PassThru `
+            -ArgumentList @(
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "`"$AdminScript`"",
+                "-Target",
+                "`"$Path`""
+            )
+    }
+    catch {
+        throw (
+            "Could not launch elevated case-sensitivity preparation: " +
+            $_.Exception.Message
+        )
+    }
+    finally {
+        Remove-Item `
+            -LiteralPath $AdminScript `
+            -Force `
+            -ErrorAction SilentlyContinue
+    }
+
+    if ($null -eq $Process -or $Process.ExitCode -ne 0) {
+        $Code = if ($null -eq $Process) { "not_started" } else { $Process.ExitCode }
+        throw "Could not enable Windows directory case sensitivity. Exit=$Code"
+    }
+
+    Write-Host "CASE_SENSITIVE_WORKSPACE_PREPARED=$Path" -ForegroundColor Green
+}
+
+
 Write-Host ""
 Write-Host "=== SOURCE M1 EXACT LOCAL ACCEPTANCE ===" -ForegroundColor Cyan
 
@@ -213,6 +312,8 @@ if ([int]$CollisionTransformDoc.summary.post_collision_edge_count -ne 0) {
 if ([string]$CollisionTransformDoc.plan_id -ne [string]$CollisionPlanDoc.plan_id) {
     throw "Collision transform is not bound to the generated private plan."
 }
+
+Enable-CaseSensitiveWorkspace -Path $CollisionWorkspace
 
 $WorkspaceArgs = @(
     "-3.13",
