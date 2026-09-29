@@ -83,7 +83,7 @@ class Chat2SemanticReviewR176Tests(unittest.TestCase):
         expected = _load("mappings/candidates/v308.semantic-review.chat2.r176.json")
         self.assertEqual(actual["proposal_count"], 4)
         self.assertEqual(actual["unresolved"], [])
-        self.assertEqual(actual["review_id"], "SEMREVIEW_94F90E37D246C76E53F7")
+        self.assertEqual(actual["review_id"], "SEMREVIEW_AD7D3B772B7FE26D3F4A")
         self.assertEqual(actual, expected)
 
     def test_r176_expected_stable_ids(self):
@@ -91,9 +91,9 @@ class Chat2SemanticReviewR176Tests(unittest.TestCase):
         self.assertEqual(
             {row["proposed_name"]: row["stable_id"] for row in review["proposals"]},
             {
-                "ClientClock": "CLIENT_CLASS_000180",
-                "MillisClientClock": "CLIENT_CLASS_000181",
-                "NanoClientClock": "CLIENT_CLASS_000182",
+                "Clock": "CLIENT_CLASS_000180",
+                "MilliClock": "CLIENT_CLASS_000181",
+                "NanoClock": "CLIENT_CLASS_000182",
                 "SleepUtil": "CLIENT_CLASS_000183",
             },
         )

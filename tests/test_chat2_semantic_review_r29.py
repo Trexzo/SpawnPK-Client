@@ -107,7 +107,7 @@ class Chat2SemanticReviewR29Tests(unittest.TestCase):
         self.assertEqual(actual["unresolved"], [])
         self.assertEqual(
             actual["review_id"],
-            "SEMREVIEW_058934E269FB8E9BAFBF",
+            "SEMREVIEW_968453E93260EAA5F8C9",
         )
         self.assertEqual(actual, expected)
 
@@ -123,7 +123,7 @@ class Chat2SemanticReviewR29Tests(unittest.TestCase):
         self.assertEqual(
             by_name,
             {
-                "IsaacCipher": "CLIENT_CLASS_000743",
+                "ISAACRandomGen": "CLIENT_CLASS_000743",
                 "BZip2Decompressor": "CLIENT_CLASS_001115",
                 "BZip2State": "CLIENT_CLASS_001116",
                 "Stream": "CLIENT_CLASS_001119",

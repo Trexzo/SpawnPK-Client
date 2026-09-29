@@ -12,13 +12,13 @@ Main/Core's accepted R2 semantic authority or prior R3-R28 review batches.
 - candidate classes: **5**
 - resolved proposals: **5**
 - unresolved: **0**
-- review ID: `SEMREVIEW_058934E269FB8E9BAFBF`
+- review ID: `SEMREVIEW_968453E93260EAA5F8C9`
 - field/method proposals: **0**
 
 ## Stream + ISAAC
 
 - `rs/x/e` -> `Stream`
-- `rs/q/a` -> `IsaacCipher`
+- `rs/q/a` -> `ISAACRandomGen`
 
 `Stream` extends the R25 `NodeSub` identity and owns the classic byte payload,
 offset/bit-position state and a very broad primitive/string/byte-array read/write surface.
@@ -26,7 +26,7 @@ offset/bit-position state and a very broad primitive/string/byte-array read/writ
 It also carries the RSA path through `BigInteger`, and its opcode writer adds the next
 integer from `rs/q/a` before storing the opcode byte.
 
-`IsaacCipher` is fixed by the standard ISAAC algorithm:
+`ISAACRandomGen` is fixed by the standard ISAAC algorithm and its legacy 317 source identity:
 
 - two 256-int arrays;
 - accumulator/counter state;
@@ -34,7 +34,7 @@ integer from `rs/q/a` before storing the opcode byte.
 - standard ISAAC mix/generation shifts;
 - one pseudorandom integer emitted per call.
 
-The Stream dependency confirms its packet-opcode cipher role.
+The Stream dependency confirms its packet-opcode generator role. Public legacy 317 source preserves the same seed constructor, 256-word state, golden-ratio initialization and ISAAC round under the class name `ISAACRandomGen`.
 
 ## Archive loading
 
@@ -76,4 +76,4 @@ survived unchanged.
 
 Chat 2 does not promote R29. Main/Core may accept any desired subset only through an
 explicit `semantic_acceptance_spec` bound to
-`SEMREVIEW_058934E269FB8E9BAFBF`.
+`SEMREVIEW_968453E93260EAA5F8C9`.

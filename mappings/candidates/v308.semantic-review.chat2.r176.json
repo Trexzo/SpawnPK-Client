@@ -5,10 +5,10 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 4,
-  "review_id": "SEMREVIEW_94F90E37D246C76E53F7",
+  "review_id": "SEMREVIEW_AD7D3B772B7FE26D3F4A",
   "proposals": [
     {
-      "proposal_id": "SEMPROP_72DE0F315D73954E26F7",
+      "proposal_id": "SEMPROP_0FF39CD18F722F0FF005",
       "target_kind": "class",
       "stable_id": "CLIENT_CLASS_000181",
       "owner_logical_id": "CLIENT_CLASS_000181",
@@ -19,61 +19,57 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "MillisClientClock",
+      "proposed_name": "MilliClock",
       "confidence": 0.999,
       "evidence": [
         {
+          "family": "exact_clock_shape",
+          "detail": "Exact v308 rs/g/c extends Clock and owns the classic ten-entry long timestamp history plus 256/1 rate-step fields used by the millisecond cycle scheduler."
+        },
+        {
           "family": "exact_time_source",
-          "detail": "rs/g/c extends the abstract client clock and uses System.currentTimeMillis through a synchronized monotonic-adjustment helper."
+          "detail": "The implementation is backed by a monotonicized System.currentTimeMillis() helper and recalculates sleep/rate from the ten-sample history before returning the number of client cycles to process."
         },
         {
-          "family": "exact_smoothing_algorithm",
-          "detail": "The clock keeps a ten-entry long timestamp ring, derives a bounded 25..256 cycle-rate accumulator and minimum sleep delay, shifts prior samples when sleeping, and returns the number of accumulated client cycles."
+          "family": "factory_fallback",
+          "detail": "The AWT game-loop factory constructs MilliClock when NanoClock construction fails."
         },
         {
-          "family": "exact_fallback_role",
-          "detail": "rs/C.be() instantiates this class only when construction of the nanosecond clock throws, making it the exact millisecond fallback implementation."
-        },
-        {
-          "family": "exact_sleep_dependency",
-          "detail": "Its wait path delegates millisecond sleeping to rs/g/e before advancing the fixed-point cycle accumulator."
+          "family": "upstream_structural_match",
+          "detail": "Public RuneScape deobfuscations identify the same ten-long-array Clock subtype as MilliClock."
         }
       ],
-      "note": "MillisClientClock is fixed by currentTimeMillis timing, ten-sample smoothing and exact fallback selection in rs/C.be(). Confidence is 0.999."
+      "note": "Recovered RuneScape MilliClock identity from exact structural and game-loop factory match."
     },
     {
-      "proposal_id": "SEMPROP_AB2377D8CD78ABDA5C8B",
+      "proposal_id": "SEMPROP_5416EBF75F5F6AADAF90",
       "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000182",
-      "owner_logical_id": "CLIENT_CLASS_000182",
+      "stable_id": "CLIENT_CLASS_000180",
+      "owner_logical_id": "CLIENT_CLASS_000180",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "source_coordinate": {
-        "owner": "rs/g/d",
+        "owner": "rs/g/b",
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "NanoClientClock",
+      "proposed_name": "Clock",
       "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_time_source",
-          "detail": "rs/g/d extends the abstract client clock and initializes/resets its primary timestamp exclusively from System.nanoTime()."
+          "family": "exact_abstract_contract",
+          "detail": "Exact v308 rs/g/b is the abstract client timing base with exactly reset/mark semantics plus an int-returning wait(cycleMillis,minSleepMillis) style operation used by the AWT game loop."
         },
         {
-          "family": "exact_cycle_scheduler",
-          "detail": "Its wait method computes target cycle duration in nanoseconds, sleeps against the next scheduled timestamp, advances by cycleMillis * 1,000,000 and caps catch-up cycles at 10."
+          "family": "exact_game_loop_factory",
+          "detail": "rs/C stores this base as the active game-loop clock and its factory returns rs/g/d first with rs/g/c as fallback."
         },
         {
-          "family": "exact_primary_factory_role",
-          "detail": "rs/C.be() attempts to construct this implementation first and returns it directly; only a thrown Throwable causes the millisecond clock fallback."
-        },
-        {
-          "family": "exact_runtime_mode_branch",
-          "detail": "The clock also contains a live-client branch using Launcher.n().o(), Client.au() and Client.cc while preserving the same nanosecond cycle scheduling responsibility."
+          "family": "upstream_lineage",
+          "detail": "RuneScape/OpenOSRS deobfuscations preserve this exact hierarchy as Clock with concrete MilliClock and NanoClock implementations."
         }
       ],
-      "note": "NanoClientClock is fixed by System.nanoTime scheduling and exact primary selection in rs/C.be(). Confidence is 0.999."
+      "note": "Recovered long-standing RuneScape client timing hierarchy identity."
     },
     {
       "proposal_id": "SEMPROP_B89CB967D71F1068F016",
@@ -106,34 +102,38 @@
       "note": "SleepUtil is descriptive exact-behavior recovery for the clock family's shared millisecond Thread.sleep wrapper. Confidence is 0.998."
     },
     {
-      "proposal_id": "SEMPROP_E461B3581152D159F9DC",
+      "proposal_id": "SEMPROP_BF1A4EE1EE8D9818AB3A",
       "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000180",
-      "owner_logical_id": "CLIENT_CLASS_000180",
+      "stable_id": "CLIENT_CLASS_000182",
+      "owner_logical_id": "CLIENT_CLASS_000182",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "source_coordinate": {
-        "owner": "rs/g/b",
+        "owner": "rs/g/d",
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "ClientClock",
+      "proposed_name": "NanoClock",
       "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_abstract_contract",
-          "detail": "rs/g/b is abstract and defines exactly two clock operations: reset via void a() and wait/advance via int a(int,int), returning the number of client cycles to process."
+          "family": "exact_clock_shape",
+          "detail": "Exact v308 rs/g/d extends Clock, initializes its timing state from System.nanoTime() and advances cycle deadlines in nanoseconds."
         },
         {
-          "family": "exact_client_factory",
-          "detail": "The base client rs/C stores this abstract type as its runtime clock and its exact factory be() constructs rs/g/d first, catching any Throwable and falling back to rs/g/c."
+          "family": "exact_game_loop_role",
+          "detail": "The AWT game-loop factory prefers this implementation and invokes it through the Clock base on every client loop iteration."
         },
         {
-          "family": "exact_main_loop_use",
-          "detail": "The base client main loop repeatedly calls ClientClock.a(cycleMillis, minimumSleep), uses the returned integer as the number of logic cycles to run, then renders once."
+          "family": "exact_nano_scheduler",
+          "detail": "Its wait operation computes nanosecond cycle duration from the requested millisecond period, sleeps when ahead and returns the number of due game cycles, capped at ten."
+        },
+        {
+          "family": "upstream_structural_match",
+          "detail": "Public RuneScape deobfuscations identify the System.nanoTime-backed Clock subtype as NanoClock."
         }
       ],
-      "note": "ClientClock is fixed by the abstract reset/wait-for-cycles contract and direct ownership by the base client main loop. Confidence is 0.999."
+      "note": "Recovered RuneScape NanoClock identity. SpawnPK contains local scheduling modifications but retains the same core class role."
     }
   ],
   "unresolved": []

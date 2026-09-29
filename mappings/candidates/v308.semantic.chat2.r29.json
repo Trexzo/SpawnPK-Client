@@ -49,23 +49,27 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "IsaacCipher",
+      "proposed_name": "ISAACRandomGen",
       "confidence": 0.999,
       "evidence": [
         {
           "family": "exact_algorithm_role",
-          "detail": "Class owns two 256-int arrays plus ISAAC accumulator/counter state and emits one pseudorandom int per call."
+          "detail": "Class owns two 256-int arrays plus ISAAC accumulator/counter state and emits one pseudorandom int per call for the client packet stream."
         },
         {
           "family": "exact_algorithm_constants",
-          "detail": "Initialization uses the golden-ratio constant -1640531527 and the standard ISAAC shift/mix sequence; generation uses the canonical 13,6,2,16 shifts."
+          "detail": "Initialization uses -1640531527 (0x9e3779b9) and the standard ISAAC mixing sequence; generation uses the characteristic 13-left, 6-right, 2-left and 16-right xor shifts."
         },
         {
           "family": "exact_dependency_role",
-          "detail": "Stream holds this type and adds its next value to outgoing opcodes."
+          "detail": "Stream holds this exact type and adds its next generated value to outgoing opcodes."
+        },
+        {
+          "family": "legacy_source_identity",
+          "detail": "Public 317 client sources preserve the same seed constructor, 256-word memory/results state, golden-ratio initialization and ISAAC round under the class name ISAACRandomGen."
         }
       ],
-      "note": "IsaacCipher is fixed by the standard ISAAC algorithm and packet-opcode usage."
+      "note": "Source-name correction: original legacy 317 ISAACRandomGen identity is stronger than the earlier descriptive IsaacCipher label."
     },
     {
       "schema_version": 1,
