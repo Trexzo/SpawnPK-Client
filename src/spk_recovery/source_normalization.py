@@ -1702,6 +1702,252 @@ def _normalize_shadowed_nested_static_field_owners(
     path.write_text(text, encoding="utf-8")
     return actions
 
+_PACKAGE_DECL_RE = re.compile(
+    r"(?m)^\\s*package\\s+"
+    r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*(?:\\.[A-Za-z_$][A-Za-z0-9_$]*)*)"
+    r"\\s*;"
+)
+_SINGLE_TYPE_IMPORT_RE = re.compile(
+    r"(?m)^\\s*import\\s+(?!static\\s+)"
+    r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*(?:\\.[A-Za-z_$][A-Za-z0-9_$]*)+)"
+    r"\\s*;"
+)
+
+
+def _parameter_type_spans(
+    params: str,
+) -> list[tuple[int, int, str]] | None:
+    if not params.strip():
+        return []
+
+    bounds: list[tuple[int, int]] = []
+    start = 0
+    depth = 0
+    for index, ch in enumerate(params):
+        if ch == "<":
+            depth += 1
+        elif ch == ">" and depth:
+            depth -= 1
+        elif ch == "," and depth == 0:
+            bounds.append((start, index))
+            start = index + 1
+    bounds.append((start, len(params)))
+
+    out: list[tuple[int, int, str]] = []
+    for left, right in bounds:
+        raw = params[left:right]
+        match = re.fullmatch(
+            r"(?P<prefix>\\s*(?:(?:final)\\s+)*)"
+            r"(?P<type>.+?)"
+            r"(?P<gap>\\s+)"
+            r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)"
+            r"(?P<var_arrays>(?:\\[\\])*)"
+            r"\\s*",
+            raw,
+        )
+        if match is None:
+            return None
+        type_text = match.group("type").strip()
+        type_left = left + match.start("type")
+        type_right = left + match.end("type")
+        # Exclude surrounding whitespace captured by the lazy type group.
+        while type_left < type_right and params[type_left].isspace():
+            type_left += 1
+        while type_right > type_left and params[type_right - 1].isspace():
+            type_right -= 1
+        out.append((type_left, type_right, type_text))
+    return out
+
+
+def _normalize_imported_parameter_types_shadowed_by_same_package(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Qualify imported parameter types hidden by a same-package source type.
+
+    Java gives a same-package type precedence during a multi-source compile.
+    Procyon can still emit a single-type import and a simple parameter type
+    matching an exact descriptor from the imported package. When another
+    recovered source unit declares the same simple name in the current
+    package, javac silently rebinds the parameter to that local package type.
+
+    Rewrite only the parameter type token whose exact bytecode descriptor
+    resolves to the imported owner. Method bodies are left untouched.
+    """
+    rel = path.relative_to(source_root).as_posix()
+    text = path.read_text(encoding="utf-8")
+
+    package_match = _PACKAGE_DECL_RE.search(text)
+    if package_match is None:
+        return []
+    package_name = package_match.group("name")
+    package_internal = package_name.replace(".", "/")
+
+    imports: dict[str, str] = {}
+    duplicate_imports: set[str] = set()
+    for import_match in _SINGLE_TYPE_IMPORT_RE.finditer(text):
+        dotted = import_match.group("name")
+        simple = dotted.rsplit(".", 1)[-1]
+        internal = dotted.replace(".", "/")
+        previous = imports.get(simple)
+        if previous is not None and previous != internal:
+            duplicate_imports.add(simple)
+        else:
+            imports[simple] = internal
+    for simple in duplicate_imports:
+        imports.pop(simple, None)
+    if not imports:
+        return []
+
+    shadowed: dict[str, tuple[str, str]] = {}
+    for simple, imported_internal in imports.items():
+        same_package_internal = package_internal + "/" + simple
+        if same_package_internal == imported_internal:
+            continue
+        if not (source_root / package_internal / (simple + ".java")).is_file():
+            continue
+        try:
+            readable_zip.getinfo(imported_internal + ".class")
+            readable_zip.getinfo(same_package_internal + ".class")
+        except KeyError:
+            continue
+        shadowed[simple] = (imported_internal, same_package_internal)
+    if not shadowed:
+        return []
+
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError:
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for match in _METHOD_DECL_RE.finditer(text):
+        params = match.group("params")
+        spans = _parameter_type_spans(params)
+        shapes = _source_parameter_shapes(params)
+        if spans is None or shapes is None or len(spans) != len(shapes):
+            continue
+
+        shadow_positions: dict[int, tuple[str, str, str]] = {}
+        for index, ((_, _, type_text), shape) in enumerate(zip(spans, shapes)):
+            arrays, kind, source_name = shape
+            if kind != "simple_ref":
+                continue
+            details = shadowed.get(source_name)
+            if details is None:
+                continue
+            imported_internal, same_package_internal = details
+            # Parameter arrays do not affect the owner identity; the exact
+            # descriptor shape check below still requires matching dimensions.
+            shadow_positions[index] = (
+                source_name,
+                imported_internal,
+                same_package_internal,
+            )
+        if not shadow_positions:
+            continue
+
+        candidates: list[tuple[dict[str, Any], list[tuple[int, str, str]]]] = []
+        for method in profile.get("methods", []):
+            if method.get("name") != match.group("name"):
+                continue
+            descriptor = str(method.get("descriptor", ""))
+            if _source_parameters_match_descriptor(
+                params,
+                descriptor,
+                current_package=package_internal,
+            ) is False:
+                continue
+            descriptor_shapes = _descriptor_parameter_shapes(descriptor)
+            if descriptor_shapes is None or len(descriptor_shapes) != len(shapes):
+                continue
+            candidates.append((method, descriptor_shapes))
+
+        if len(candidates) != 1:
+            continue
+
+        exact_method, descriptor_shapes = candidates
+        replacements: list[dict[str, Any]] = []
+
+        for index, (simple, imported_internal, same_package_internal) in sorted(
+            shadow_positions.items()
+        ):
+            s_arrays, _s_kind, _s_name = shapes[index]
+            t_arrays, t_kind, t_name = descriptor_shapes[index]
+            if s_arrays != t_arrays or t_kind != "ref":
+                continue
+            if t_name == same_package_internal:
+                continue
+            if t_name != imported_internal:
+                continue
+
+            type_left, type_right, type_text = spans[index]
+            if type_text != simple:
+                continue
+            absolute_left = match.start("params") + type_left
+            absolute_right = match.start("params") + type_right
+            replacement = imported_internal.replace("/", ".")
+            edits.append((absolute_left, absolute_right, replacement))
+            replacements.append(
+                {
+                    "parameter_index": index,
+                    "simple_name": simple,
+                    "imported_owner": imported_internal,
+                    "same_package_owner": same_package_internal,
+                    "qualified_type": replacement,
+                }
+            )
+
+        if replacements:
+            actions.append(
+                {
+                    "kind": (
+                        "imported_parameter_type_shadowed_by_same_package"
+                    ),
+                    "source_path": rel,
+                    "method_name": match.group("name"),
+                    "method_descriptor": exact_method["descriptor"],
+                    "replacements": replacements,
+                    "replacement_count": len(replacements),
+                    "provenance": {
+                        "kind": "source_safety",
+                        "reason": (
+                            "procyon_imported_simple_type_hidden_by_same_package_source"
+                        ),
+                        "strategy": (
+                            "exact_method_descriptor_parameter_qualification"
+                        ),
+                    },
+                }
+            )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping imported-parameter qualification edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
 def normalize_procyon_source(
     source_root: Path,
     readable_jar: Path,
@@ -1756,6 +2002,13 @@ def normalize_procyon_source(
                 )
                 actions.extend(
                     _normalize_shadowed_nested_static_field_owners(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
+                    _normalize_imported_parameter_types_shadowed_by_same_package(
                         source_root=source_root,
                         path=path,
                         readable_zip=z,
@@ -1830,6 +2083,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "shadowed_nested_static_field_owner_type_context"
+        ),
+        "imported_parameter_shadow_method_count": sum(
+            action["kind"]
+            == "imported_parameter_type_shadowed_by_same_package"
+            for action in actions
+        ),
+        "imported_parameter_shadow_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "imported_parameter_type_shadowed_by_same_package"
         ),
         "java_file_count": after_count,
         "source_bytes_before": before_bytes,
