@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_875277F48B818C9E8E36",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_6874406B47241F558794",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000603",
+      "owner_logical_id": "CLIENT_CLASS_000603",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/ab",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemLibraryInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_title",
+          "detail": "Exact v308 builds root widget 47500 and preserves the literal title 'Official SpawnPK Item Library'."
+        },
+        {
+          "family": "exact_item_guide_surface",
+          "detail": "The class owns selected-item guide state, ITEM_GUIDE_SELECTED_* keys, wiki/item resources, category and description rendering, item search controls, and the exact 'Selected Item Guide Title Text' placeholder."
+        },
+        {
+          "family": "exact_equipment_stats_surface",
+          "detail": "The same interface builds 'View equipment bonuses' plus attack/defence bonus rows such as Stab, Slash, Crush, Magic and Range, proving the item-library scope extends into the selected item's guide/stat presentation."
+        },
+        {
+          "family": "exact_search_surface",
+          "detail": "Exact controls include 'Search by item' and '<img=39> Search for an item', with the search field/button living inside the same 47500/478xx widget family."
+        }
+      ],
+      "note": "Name follows the exact visible 'Official SpawnPK Item Library' title and the complete item-guide/search/stat widget responsibility."
+    }
+  ],
+  "unresolved": []
+}
