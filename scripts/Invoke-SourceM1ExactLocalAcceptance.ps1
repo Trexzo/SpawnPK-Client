@@ -211,6 +211,12 @@ if (Test-Path -LiteralPath $OutDir) {
     New-Item -ItemType Directory -Path $OutDir | Out-Null
 }
 
+# Prepare the empty top-level output root before any child directories are
+# created. On Windows, newly created descendants inherit per-directory NTFS
+# case sensitivity, covering both Procyon resolver staging and clean-javac
+# release/rebuild staging with one UAC elevation.
+Enable-CaseSensitiveWorkspace -Path $OutDir
+
 $BootstrapReadableDir = Join-Path $OutDir "bootstrap-readable"
 $CollisionDir = Join-Path $OutDir "collision-authority"
 $CollisionWorkspace = Join-Path $OutDir "collision-source"
@@ -312,8 +318,6 @@ if ([int]$CollisionTransformDoc.summary.post_collision_edge_count -ne 0) {
 if ([string]$CollisionTransformDoc.plan_id -ne [string]$CollisionPlanDoc.plan_id) {
     throw "Collision transform is not bound to the generated private plan."
 }
-
-Enable-CaseSensitiveWorkspace -Path $CollisionWorkspace
 
 $WorkspaceArgs = @(
     "-3.13",
