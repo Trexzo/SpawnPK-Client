@@ -73,6 +73,8 @@ class ReleaseWorkspaceOrchestratorCliTests(unittest.TestCase):
                 "v308",
                 "--source-prefix",
                 "rs/",
+                "--private-diagnostic-report-out",
+                str(root / "private-javac.json"),
                 "--out-dir",
                 str(root / "out"),
             ]
@@ -106,6 +108,10 @@ class ReleaseWorkspaceOrchestratorCliTests(unittest.TestCase):
             self.assertEqual(
                 call.kwargs["source_prefixes"],
                 ["rs/"],
+            )
+            self.assertEqual(
+                call.kwargs["private_diagnostic_report_out"],
+                root / "private-javac.json",
             )
 
         text = output.getvalue()
