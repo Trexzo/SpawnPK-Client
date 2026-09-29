@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [{
+    "schema_version": 1,
+    "kind": "semantic_name_candidate",
+    "canonical": false,
+    "status": "CANDIDATE",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target": {"kind":"class","owner":"rs/A/n","name":null,"descriptor":null},
+    "proposed_name": "OSXFullScreenAdapter",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"exact_fullscreen_contract","detail":"Exact v308 rs/A/n extends com.apple.eawt.FullScreenAdapter, owns one java.awt.Frame and registers itself through FullScreenUtilities.addFullScreenListenerTo(Frame, listener)."},
+      {"family":"exact_enter_exit_behavior","detail":"On fullscreen enter it logs the transition and sets Frame.MAXIMIZED_BOTH; on fullscreen exit it logs the transition and restores Frame.NORMAL."},
+      {"family":"historical_source_identity","detail":"Historical RuneLite-derived source contains class OSXFullScreenAdapter with the same superclass, frame field, addFullScreenListenerTo helper, identical enter/exit log strings and identical extended-state transitions."},
+      {"family":"stable_id_neighborhood","detail":"Canonical class ordering places rs/A/n at CLIENT_CLASS_000017 immediately before R82 rs/A/o -> CLIENT_CLASS_000018 MacOSWindowUtil."}
+    ],
+    "note":"Source-proven historical RuneLite identifier; exact-v308 behavior remains primary authority."
+  }],
+  "conflicts": []
+}
