@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutsPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_plugin_ownership",
+          "detail": "R386 LoadoutsPlugin constructs rs/gui/b/h during startup, installs it as the loadout panel singleton and registers it as the navigation content titled 'Loadouts'."
+        },
+        {
+          "family": "exact_panel_role",
+          "detail": "Exact v308 rs/gui/b/h extends the plugin-panel base rs/ui/m and owns the complete Loadouts Swing surface, including folder selection, popup/actions and loadout-list presentation."
+        },
+        {
+          "family": "exact_loadout_actions",
+          "detail": "The panel contains exact UI tooltips 'Create a new loadout', 'Delete this loadout' and 'Rename the active loadout', plus the persistent 'Main folder' root."
+        },
+        {
+          "family": "exact_reviewed_family",
+          "detail": "Its owned graph is the already-reviewed LoadoutManager, LoadoutPersistence, DefaultLoadoutSeeder, LoadoutPreviewRenderer, LoadoutDefinition/Folder/ItemEntry/Icon and related loadout actions."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the main Loadouts plugin panel; paired directly with R386 LoadoutsPlugin."
+    }
+  ],
+  "conflicts": []
+}
