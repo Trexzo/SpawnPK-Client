@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_56022316A4A2498C3AE5",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_11A248926D7384C1549F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000668",
+      "owner_logical_id": "CLIENT_CLASS_000668",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BossTeleportationNetworkInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_title",
+          "detail": "Exact v308 preserves the literal title '@or1@Boss Teleportation Network' in the 604xx interface family."
+        },
+        {
+          "family": "exact_boss_teleport_surface",
+          "detail": "The builder owns Name of Boss, Bosses, Description, Possible drops and rewards, and a numbered Teleport #1.. selection list whose actions are 'Select this teleport'."
+        },
+        {
+          "family": "exact_interface_role",
+          "detail": "The complete class is one boss catalogue/detail/teleport-selection presentation surface and is constructed by the central interface registry."
+        }
+      ],
+      "note": "Name uses the exact visible Boss Teleportation Network title."
+    },
+    {
+      "proposal_id": "SEMPROP_A0D1E5860B48B182EAC5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000665",
+      "owner_logical_id": "CLIENT_CLASS_000665",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodSlayerInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_title",
+          "detail": "Exact v308 builds root 54100 and preserves the title 'Blood Slayer' with the heading 'Choose a Task'."
+        },
+        {
+          "family": "exact_task_surface",
+          "detail": "The interface exposes Monster hunter (PvM), Boss hunter (PvM), Bounty hunter (PK), Slaughter (PK), 'Get a blood slayer task', reward points, Blood slayer points and Slayer points."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The class is a self-contained interface builder for selecting Blood Slayer task categories and viewing points; no unrelated service role is present."
+        }
+      ],
+      "note": "Name follows the exact visible Blood Slayer title and complete task-selection/reward-point interface role."
+    },
+    {
+      "proposal_id": "SEMPROP_AA7BD015C0CA74AADD51",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000560",
+      "owner_logical_id": "CLIENT_CLASS_000560",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/N",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HalloweenEventChestInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_event_chest_surface",
+          "detail": "Exact v308 builds the 60600-series event-chest interface with Tier I/II prize panels, Roll, Exchange, roll/token progress, Enter next tier, Event Guide and reset controls."
+        },
+        {
+          "family": "exact_halloween_identity",
+          "detail": "The interface preserves 'Tier I - @yel@Halloween Event 2020' and the same 606xx widgets/fountain event resources consumed by the already-reviewed Halloween Event Chest overlay/handler subsystem."
+        },
+        {
+          "family": "exact_existing_join",
+          "detail": "R130 HalloweenEventChestOverlay and HalloweenEventChestOverlayPacketHandler operate on this exact 606xx widget family, while R317's event-chest widget callback targets widget 60612 from the same interface."
+        }
+      ],
+      "note": "Name completes the already-reviewed Halloween Event Chest overlay/handler/callback subsystem by naming its root interface builder."
+    }
+  ],
+  "unresolved": []
+}
