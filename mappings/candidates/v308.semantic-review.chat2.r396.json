@@ -1,0 +1,28 @@
+{
+  "schema_version":1,
+  "kind":"semantic_review_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count":1,
+  "review_id":"SEMREVIEW_3F108BF84AB8720175A2",
+  "proposals":[{
+    "proposal_id":"SEMPROP_A60C16070088805024F6",
+    "target_kind":"class",
+    "stable_id":"CLIENT_CLASS_000137",
+    "owner_logical_id":"CLIENT_CLASS_000137",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate":{"owner":"rs/d/v","name":null,"descriptor":null},
+    "proposed_name":"DefinitionIdDebugAccess",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_privilege_predicates","detail":"The class contains only two static integer predicates: one admits login privilege value 2; the other admits exactly 2, 26, 204 and 205."},
+      {"family":"exact_login_authority_source","detail":"Client.cT is populated directly from the successful login-response stream before the live client session is initialized, fixing the predicate input as server-supplied login privilege/access state."},
+      {"family":"exact_definition_debug_consumers","detail":"Object/item/NPC menu construction uses these predicates only on debug-definition presentation paths. One exact string-concat recipe appends '@gre@(@cya@ID: @whi@<id>@gre@)' to Examine text, while ItemDefinition conditionally decorates definition names with IDs under the narrower predicate."},
+      {"family":"exact_scope_boundary","detail":"The class owns no role labels, permission mutation, authentication logic or gameplay entitlement checks; it only decides whether definition-ID debug presentation is exposed for particular login privilege values."}
+    ],
+    "note":"Descriptive exact-v308 name for the login-privilege predicates controlling definition-ID debug/examine presentation. Specific staff/rank titles for values 2/26/204/205 are intentionally not invented."
+  }],
+  "unresolved":[]
+}
