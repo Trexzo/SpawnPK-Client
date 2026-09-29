@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_07DB30ADA301EECBCB6E",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_0A51A52536475FADBD94",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000193",
+      "owner_logical_id": "CLIENT_CLASS_000193",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/J",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherSidePanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_tabbed_surface",
+          "detail": "The class extends JPanel, owns a JTabbedPane and constructs the launcher-side content tabs with exact labels 'Loadouts', 'PvP Tracker', 'GPU (Beta)', and either 'Development' or 'Item Search'."
+        },
+        {
+          "family": "exact_side_panel_literal",
+          "detail": "Its placeholder-tab helper contains the exact developer-facing text 'By the way, I'm going to theme this whole side panel.', directly identifying the enclosing surface as the side panel."
+        },
+        {
+          "family": "exact_launcher_ownership",
+          "detail": "The panel aggregates launcher-only Swing components (loadout panel, PvP tracker panel, GPU panel, item search/development panel) and exposes the tabbed pane/components back to Launcher code; it owns no gameplay/network protocol state."
+        }
+      ],
+      "note": "Descriptive exact-v308 name anchored by the explicit side-panel literal and launcher tab composition."
+    },
+    {
+      "proposal_id": "SEMPROP_E681A1B654FF18DF37FA",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000195",
+      "owner_logical_id": "CLIENT_CLASS_000195",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/L",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherSidePanelTabChangeListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_ownership",
+          "detail": "The class is constructed only by LauncherSidePanel and installed on its JTabbedPane via addChangeListener."
+        },
+        {
+          "family": "exact_change_contract",
+          "detail": "stateChanged casts the event source to JTabbedPane, reads its selected index, then calls the active Launcher refresh/update method; no unrelated state or behavior exists."
+        },
+        {
+          "family": "exact_listener_scope",
+          "detail": "The class stores only the synthetic LauncherSidePanel owner and implements ChangeListener, fixing it as the tab-selection change listener for that panel."
+        }
+      ],
+      "note": "Generated-listener name follows exact JTabbedPane attachment and launcher refresh behavior."
+    }
+  ],
+  "unresolved": []
+}
