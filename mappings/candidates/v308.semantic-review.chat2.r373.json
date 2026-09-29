@@ -1,0 +1,28 @@
+{
+  "schema_version":1,
+  "kind":"semantic_review_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count":1,
+  "review_id":"SEMREVIEW_49EB6237A9C765E8B723",
+  "proposals":[{
+    "proposal_id":"SEMPROP_D1E91044A982113CAA1D",
+    "target_kind":"class",
+    "stable_id":"CLIENT_CLASS_000112",
+    "owner_logical_id":"CLIENT_CLASS_000112",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate":{"owner":"rs/d/c","name":null,"descriptor":null},
+    "proposed_name":"Censor",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_wordenc_inputs","detail":"Exact v308 loads fragmentsenc.txt, badenc.txt, domainenc.txt and tldlist.txt from the word-encoding archive into the class's fragment/bad-word/domain/TLD tables."},
+      {"family":"exact_filter_pipeline","detail":"The class normalizes/filter-scans char arrays with bad-word pair tables, domain/TLD rules, fragment lookup and leetspeak-equivalent matching, then restores allowed/case behavior."},
+      {"family":"exact_client_usage","detail":"Client initializes the class during startup from rs/x/f and invokes rs/d/c.b(String) on multiple decoded/displayed chat-message paths before publishing text to chat/player state."},
+      {"family":"historical_source_identity","detail":"Historical Jagex/317 client source exposes the same four wordenc resources and matching multi-stage filtering under class name Censor, including the familiar exception-word family."}
+    ],
+    "note":"Source-proven historical class identity; pinned exact-v308 bytecode remains runtime authority."
+  }],
+  "unresolved":[]
+}
