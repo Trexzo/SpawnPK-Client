@@ -1,0 +1,222 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 7,
+  "review_id": "SEMREVIEW_084A93102197E0ECF162",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_05C1B3DC4EB3C5F24DA3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000592",
+      "owner_logical_id": "CLIENT_CLASS_000592",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aQ",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SkillTabInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_literals",
+          "detail": "skills/SKILL interface with Total Level and the complete skill list from Combat through Defence"
+        },
+        {
+          "family": "exact_interface_builder_shape",
+          "detail": "The class builds a concrete RSInterface hierarchy with only domain-specific widget presentation state."
+        },
+        {
+          "family": "exact_resource_domain",
+          "detail": "The embedded resource/text namespace independently matches the SkillTabInterface presentation domain."
+        }
+      ],
+      "note": "Descriptive exact-v308 interface name from literal UI text/resources and widget-tree behavior; no server authority or verbatim original source name is claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_2D3E681043B3EB984232",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000590",
+      "owner_logical_id": "CLIENT_CLASS_000590",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aO",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ShopTabsInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_literals",
+          "detail": "exact slayer/image shop tab selector with 'Select shop tab', Tab 1..5 and Main stock"
+        },
+        {
+          "family": "exact_interface_builder_shape",
+          "detail": "The class builds a concrete RSInterface hierarchy with only domain-specific widget presentation state."
+        },
+        {
+          "family": "exact_resource_domain",
+          "detail": "The embedded resource/text namespace independently matches the ShopTabsInterface presentation domain."
+        }
+      ],
+      "note": "Descriptive exact-v308 interface name from literal UI text/resources and widget-tree behavior; no server authority or verbatim original source name is claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_6702AC901983749E44D9",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000596",
+      "owner_logical_id": "CLIENT_CLASS_000596",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aU",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TeleportationInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_literals",
+          "detail": "teleport/SPRITE surface with Close Window, Teleport and Title of Location"
+        },
+        {
+          "family": "exact_interface_builder_shape",
+          "detail": "The class builds a concrete RSInterface hierarchy with only domain-specific widget presentation state."
+        },
+        {
+          "family": "exact_resource_domain",
+          "detail": "The embedded resource/text namespace independently matches the TeleportationInterface presentation domain."
+        }
+      ],
+      "note": "Descriptive exact-v308 interface name from literal UI text/resources and widget-tree behavior; no server authority or verbatim original source name is claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_73F28BE72A9967178F86",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000599",
+      "owner_logical_id": "CLIENT_CLASS_000599",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aX",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WorldTournamentInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_literals",
+          "detail": "exact SpawnPK World Tournaments surface with next tournament, prize, previous winners, tournament-point shop, enter and spectate actions"
+        },
+        {
+          "family": "exact_interface_builder_shape",
+          "detail": "The class builds a concrete RSInterface hierarchy with only domain-specific widget presentation state."
+        },
+        {
+          "family": "exact_resource_domain",
+          "detail": "The embedded resource/text namespace independently matches the WorldTournamentInterface presentation domain."
+        }
+      ],
+      "note": "Descriptive exact-v308 interface name from literal UI text/resources and widget-tree behavior; no server authority or verbatim original source name is claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_884E5794C08FB389B63D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000601",
+      "owner_logical_id": "CLIENT_CLASS_000601",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aZ",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WellOfGoodwillInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_literals",
+          "detail": "exact 'Well of Good Will' interface with requested item text and server-wide progress meter"
+        },
+        {
+          "family": "exact_interface_builder_shape",
+          "detail": "The class builds a concrete RSInterface hierarchy with only domain-specific widget presentation state."
+        },
+        {
+          "family": "exact_resource_domain",
+          "detail": "The embedded resource/text namespace independently matches the WellOfGoodwillInterface presentation domain."
+        }
+      ],
+      "note": "Descriptive exact-v308 interface name from literal UI text/resources and widget-tree behavior; no server authority or verbatim original source name is claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_8AC614FC63B57FC9FE0E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000594",
+      "owner_logical_id": "CLIENT_CLASS_000594",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aS",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TaskScrollInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_literals",
+          "detail": "tasks/SPRITE interface with Task Scroll Title, Task Information, Potential Rewards, Completion Progress, Collect and Track"
+        },
+        {
+          "family": "exact_interface_builder_shape",
+          "detail": "The class builds a concrete RSInterface hierarchy with only domain-specific widget presentation state."
+        },
+        {
+          "family": "exact_resource_domain",
+          "detail": "The embedded resource/text namespace independently matches the TaskScrollInterface presentation domain."
+        }
+      ],
+      "note": "Descriptive exact-v308 interface name from literal UI text/resources and widget-tree behavior; no server authority or verbatim original source name is claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_C30283FA5C69A4C56A06",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000598",
+      "owner_logical_id": "CLIENT_CLASS_000598",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aW",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WorldTournamentLeaderboardsInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_literals",
+          "detail": "exact World Tournament Leaderboards interface with Top Players, Top Clans, This week and All time selectors"
+        },
+        {
+          "family": "exact_interface_builder_shape",
+          "detail": "The class builds a concrete RSInterface hierarchy with only domain-specific widget presentation state."
+        },
+        {
+          "family": "exact_resource_domain",
+          "detail": "The embedded resource/text namespace independently matches the WorldTournamentLeaderboardsInterface presentation domain."
+        }
+      ],
+      "note": "Descriptive exact-v308 interface name from literal UI text/resources and widget-tree behavior; no server authority or verbatim original source name is claimed."
+    }
+  ],
+  "unresolved": []
+}
