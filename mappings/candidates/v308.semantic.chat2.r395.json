@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutSelectorRenderer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_renderer_role",
+          "detail": "Exact v308 rs/gui/b/a/f extends DefaultListCellRenderer and is installed only as the renderer for rs/gui/b/a/k."
+        },
+        {
+          "family": "exact_loadout_presentation",
+          "detail": "For each loadout row it resolves the active LoadoutDefinition from LoadoutManager, applies that definition's text color and optional LoadoutIcon, and otherwise falls back safely."
+        },
+        {
+          "family": "exact_scope",
+          "detail": "It owns no mutation or non-selector UI behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts selector identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutSelectorComboBox",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_widget_shape",
+          "detail": "Exact v308 rs/gui/b/a/k extends JComboBox<String>, stores LoadoutManager, installs LoadoutSelectorRenderer plus one popup listener and one selection ActionListener, and uses fixed 150x25 sizing."
+        },
+        {
+          "family": "exact_panel_ownership",
+          "detail": "The only external owner is R390 LoadoutsPanel, which embeds it as the active-loadout selector."
+        },
+        {
+          "family": "exact_family",
+          "detail": "Its listeners are the exact popup synchronization and selection mutation classes recovered in the same batch."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts selector identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutSelectorPopupListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_popup_lifecycle",
+          "detail": "The PopupMenuListener is owned only by LoadoutSelectorComboBox."
+        },
+        {
+          "family": "exact_behavior",
+          "detail": "Popup-visible/canceled repaint LoadoutsPanel; popup-invisible invokes LoadoutsPanel refresh/synchronization, with no other state or mutation."
+        },
+        {
+          "family": "exact_scope",
+          "detail": "The class is strictly selector-popup lifecycle plumbing."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts selector identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutSelectionAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_selection_mutation",
+          "detail": "The ActionListener is owned only by LoadoutSelectorComboBox and reads its selected index."
+        },
+        {
+          "family": "exact_manager_call",
+          "detail": "It calls LoadoutManager with the active folder plus selected index, then repaints LoadoutsPanel."
+        },
+        {
+          "family": "exact_scope",
+          "detail": "It performs no create/rename/delete/reorder behavior, fixing it as active-loadout selection."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts selector identity."
+    }
+  ],
+  "conflicts": []
+}
