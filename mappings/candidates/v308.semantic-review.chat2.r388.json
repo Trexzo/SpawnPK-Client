@@ -1,0 +1,41 @@
+{
+  "schema_version":1,"kind":"semantic_review_set","canonical":false,
+  "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","proposal_count":3,
+  "review_id":"SEMREVIEW_D5066D4170E05213F6DE",
+  "proposals":[
+    {
+      "proposal_id":"SEMPROP_7B9B486AD8AC0F6FF6D7","target_kind":"class","stable_id":"CLIENT_CLASS_000957","owner_logical_id":"CLIENT_CLASS_000957",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","source_coordinate":{"owner":"rs/s/q/d","name":null,"descriptor":null},
+      "proposed_name":"PvPTrackerPlugin","confidence":0.999,
+      "evidence":[
+        {"family":"exact_plugin_descriptor","detail":"Exact v308 rs/s/q/d carries plugin/navigation identity 'PvP Tracker', config group 'pvptracker' and pvp_icon.png."},
+        {"family":"exact_feature_lifecycle","detail":"The plugin owns fight-history persistence/filtering, current/recent fight updates and the PvP Tracker panel/navigation lifecycle."},
+        {"family":"exact_reviewed_family","detail":"Its owned graph includes already-reviewed PvPTrackerFight, PvPTrackerFighterStats, FightPerformancePanel, PvPTrackerSectionHeaderPanel and PvPTrackerFilterDocumentListener."}
+      ],
+      "note":"Exact-v308 plugin identity from preserved PvP Tracker descriptor and complete feature ownership."
+    },
+    {
+      "proposal_id":"SEMPROP_A57999B466CCA4AFEF0E","target_kind":"class","stable_id":"CLIENT_CLASS_000953","owner_logical_id":"CLIENT_CLASS_000953",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","source_coordinate":{"owner":"rs/s/q/b","name":null,"descriptor":null},
+      "proposed_name":"PvPTrackerPanel","confidence":0.999,
+      "evidence":[
+        {"family":"exact_panel_text","detail":"Exact v308 rs/s/q/b owns the panel sections 'Current Fight', 'Fight History (Filter by Usernames:)' and filter text field 'Filter Usernames:'."},
+        {"family":"exact_helper_ownership","detail":"The panel directly owns the already-reviewed FightPerformancePanel, PvPTrackerSectionHeaderPanel and PvPTrackerFilterDocumentListener family."},
+        {"family":"exact_plugin_pairing","detail":"rs/s/q/d constructs/injects this panel and registers it as the PvP Tracker navigation surface."}
+      ],
+      "note":"Descriptive exact-v308 name for the main PvP Tracker plugin panel."
+    },
+    {
+      "proposal_id":"SEMPROP_FB2FAC743B40E6BEE7D8","target_kind":"class","stable_id":"CLIENT_CLASS_000950","owner_logical_id":"CLIENT_CLASS_000950",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","source_coordinate":{"owner":"rs/s/q/a","name":null,"descriptor":null},
+      "proposed_name":"PvPTrackerConfig","confidence":0.999,
+      "evidence":[
+        {"family":"exact_config_group","detail":"Exact v308 rs/s/q/a is config group 'pvptracker' and owns fightHistoryRenderLimit, nameFilter and exact-name-filter controls used only by the PvP Tracker UI/plugin."},
+        {"family":"exact_config_semantics","detail":"The config descriptions explicitly reference previous fights, fight history side-panel rendering and username filtering."},
+        {"family":"exact_family_join","detail":"Already-reviewed PvPTrackerFight/PvPTrackerFighterStats plus PvPTracker panel helpers consume this config family and no unrelated subsystem does."}
+      ],
+      "note":"Descriptive exact-v308 root config name for the preserved PvP Tracker feature."
+    }
+  ],
+  "unresolved":[]
+}
