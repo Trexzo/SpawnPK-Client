@@ -1,0 +1,34 @@
+{
+  "schema_version":1,
+  "kind":"semantic_review_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count":2,
+  "review_id":"SEMREVIEW_0B3F519745ACEE12748B",
+  "proposals":[
+    {
+      "proposal_id":"SEMPROP_BAAE67005036B55F6F12","target_kind":"class","stable_id":"CLIENT_CLASS_000962","owner_logical_id":"CLIENT_CLASS_000962",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","source_coordinate":{"owner":"rs/s/s/b","name":null,"descriptor":null},
+      "proposed_name":"HoverDescriptionsPlugin","confidence":0.999,
+      "evidence":[
+        {"family":"exact_plugin_descriptor","detail":"Exact v308 rs/s/s/b carries plugin name 'Hover Descriptions' and config group 'hoverdesc'."},
+        {"family":"exact_config_application","detail":"The plugin injects HoverDescriptionsConfig, copies item/entity/color settings into live static hover state, reacts to ConfigChanged and resets the presentation state during lifecycle transitions."},
+        {"family":"exact_domain_scope","detail":"The plugin controls item descriptions and player/NPC/object/guide hover presentation only; it does not own generic TooltipOverlay rendering itself."}
+      ],
+      "note":"Exact-v308 plugin identity from the preserved descriptor and behavior."
+    },
+    {
+      "proposal_id":"SEMPROP_E5C4E67A5982CC432913","target_kind":"class","stable_id":"CLIENT_CLASS_000961","owner_logical_id":"CLIENT_CLASS_000961",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","source_coordinate":{"owner":"rs/s/s/a","name":null,"descriptor":null},
+      "proposed_name":"HoverDescriptionsConfig","confidence":0.998,
+      "evidence":[
+        {"family":"exact_config_contract","detail":"Exact v308 rs/s/s/a is the hover-description config interface. Its sections cover Color scheme, Item hovers and Entity hovers, with background/border colors and item/entity hover visibility controls."},
+        {"family":"exact_spawnpk_extensions","detail":"The config contains SpawnPK-specific controls including wandering-merchant task icons, sink values, guides, bank/equipment/inventory descriptions and wilderness suppression rules."},
+        {"family":"exact_plugin_pairing","detail":"Sibling rs/s/s/b resolves this config and publishes its values into the live hover-description presentation state under config group hoverdesc."}
+      ],
+      "note":"Conservative exact-v308 name from the preserved Hover Descriptions plugin identity; no upstream RuneLite source identity is claimed."
+    }
+  ],
+  "unresolved":[]
+}
