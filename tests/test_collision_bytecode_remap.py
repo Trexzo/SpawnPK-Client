@@ -303,9 +303,10 @@ class CollisionBytecodeRemapTests(unittest.TestCase):
                     root / "out.jar",
                 )
 
-    def test_constant_string_alias_is_refused(self):
+    def test_constant_string_alias_preserves_literal_and_rewrites_structure(self):
         # Minimal valid class where CONSTANT_Class and CONSTANT_String
-        # deliberately share the same Utf8 "a/b".
+        # deliberately share the same Utf8 "a/b". The structural class
+        # identity must be rewritten without changing the runtime literal.
         cp = [
             None,
             bytes([1]) + struct.pack(">H", 3) + b"a/b",
@@ -348,15 +349,19 @@ class CollisionBytecodeRemapTests(unittest.TestCase):
 
         parsed = parse_class(data)
         self.assertEqual(parsed.name, "a/b")
+        self.assertEqual(parsed.literal_strings, ["a/b"])
 
-        with self.assertRaisesRegex(
-            CollisionBytecodeRemapError,
-            "CONSTANT_String",
-        ):
-            remap_class_bytes(
-                data,
-                {"a/b": "a/Recovered"},
-            )
+        rewritten, changed_utf8 = remap_class_bytes(
+            data,
+            {"a/b": "a/Recovered"},
+        )
+
+        reparsed = parse_class(rewritten)
+        self.assertEqual(reparsed.name, "a/Recovered")
+        self.assertEqual(reparsed.literal_strings, ["a/b"])
+        self.assertIn("a/Recovered", reparsed.utf8_strings)
+        self.assertIn("a/b", reparsed.utf8_strings)
+        self.assertGreaterEqual(changed_utf8, 1)
 
 
 if __name__ == "__main__":
