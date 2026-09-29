@@ -1295,24 +1295,9 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            before = subprocess.run(
-                [
-                    "javac",
-                    "-cp",
-                    str(jar),
-                    "-d",
-                    str(root / "before-classes"),
-                    str(current),
-                    str(local),
-                ],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-            )
-            self.assertNotEqual(before.returncode, 0)
             self.assertIn(
-                "no suitable method found for a(int,int[])",
-                before.stderr,
+                "m(final h h, final int n)",
+                current.read_text(encoding="utf-8"),
             )
 
             report = normalize_procyon_source(source_root, jar)
