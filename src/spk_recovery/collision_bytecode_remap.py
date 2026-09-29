@@ -110,6 +110,7 @@ def _cp_layout(
             entries[index] = {
                 "tag": tag,
                 "raw": data[start:offset],
+                "utf8_index": utf8_index,
             }
         elif tag in (9, 10, 11, 12, 17, 18):
             offset += 4
@@ -173,15 +174,10 @@ def remap_class_bytes(
         _cp_layout(data)
     )
 
-    changed_utf8 = 0
-    encoded_entries: list[bytes] = []
-
+    rewrites: dict[int, bytes] = {}
     for index in range(1, cp_count):
         entry = entries[index]
-        if entry is None:
-            continue
-        if entry["tag"] != 1:
-            encoded_entries.append(entry["raw"])
+        if entry is None or entry["tag"] != 1:
             continue
 
         old_payload = entry["payload"]
@@ -189,28 +185,89 @@ def remap_class_bytes(
             old_payload,
             mappings,
         )
-        if new_payload != old_payload:
-            if index in string_utf8_indices:
-                raise CollisionBytecodeRemapError(
-                    "refusing class remap because a rewritten "
-                    f"CONSTANT_Utf8 is also CONSTANT_String cp#{index}"
-                )
-            if len(new_payload) > 0xFFFF:
-                raise CollisionBytecodeRemapError(
-                    "rewritten CONSTANT_Utf8 exceeds JVM u2 length"
-                )
-            changed_utf8 += 1
+        if new_payload == old_payload:
+            continue
+        if len(new_payload) > 0xFFFF:
+            raise CollisionBytecodeRemapError(
+                "rewritten CONSTANT_Utf8 exceeds JVM u2 length"
+            )
+        rewrites[index] = new_payload
+
+    # A JVM constant pool may deliberately reuse one CONSTANT_Utf8 for
+    # both structural metadata and a CONSTANT_String literal. Rewriting
+    # that shared Utf8 in place would silently mutate the runtime string.
+    #
+    # Preserve literal semantics by cloning the original Utf8 value at
+    # the end of the pool and retargeting every CONSTANT_String alias to
+    # that clone. Existing structural references keep their original
+    # index and therefore receive the class/package rewrite.
+    aliased_utf8_indices = sorted(
+        set(rewrites) & string_utf8_indices
+    )
+    if cp_count + len(aliased_utf8_indices) > 0xFFFF:
+        raise CollisionBytecodeRemapError(
+            "CONSTANT_String alias preservation exceeds JVM constant-pool limit"
+        )
+
+    alias_index_by_utf8 = {
+        source_index: cp_count + offset
+        for offset, source_index in enumerate(
+            aliased_utf8_indices
+        )
+    }
+
+    encoded_entries: list[bytes] = []
+    for index in range(1, cp_count):
+        entry = entries[index]
+        if entry is None:
+            continue
+
+        if entry["tag"] == 1:
+            new_payload = rewrites.get(index)
+            if new_payload is None:
+                encoded_entries.append(entry["raw"])
+                continue
             encoded_entries.append(
                 bytes([1])
                 + struct.pack(">H", len(new_payload))
                 + new_payload
             )
-        else:
-            encoded_entries.append(entry["raw"])
+            continue
 
+        if entry["tag"] == 8:
+            source_index = int(entry["utf8_index"])
+            alias_index = alias_index_by_utf8.get(
+                source_index
+            )
+            if alias_index is not None:
+                encoded_entries.append(
+                    bytes([8])
+                    + struct.pack(">H", alias_index)
+                )
+                continue
+
+        encoded_entries.append(entry["raw"])
+
+    alias_entries: list[bytes] = []
+    for source_index in aliased_utf8_indices:
+        entry = entries[source_index]
+        if entry is None or entry["tag"] != 1:
+            raise CollisionBytecodeRemapError(
+                "CONSTANT_String alias source is not CONSTANT_Utf8"
+            )
+        payload = entry["payload"]
+        alias_entries.append(
+            bytes([1])
+            + struct.pack(">H", len(payload))
+            + payload
+        )
+
+    new_cp_count = cp_count + len(alias_entries)
     rebuilt = (
-        data[:10]
+        data[:8]
+        + struct.pack(">H", new_cp_count)
         + b"".join(encoded_entries)
+        + b"".join(alias_entries)
         + data[tail_offset:]
     )
     try:
@@ -220,8 +277,7 @@ def remap_class_bytes(
             f"rewritten class failed to parse: {exc}"
         ) from exc
 
-    return rebuilt, changed_utf8
-
+    return rebuilt, len(rewrites)
 
 def _load_plan(path: Path) -> dict[str, Any]:
     try:
