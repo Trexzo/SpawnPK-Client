@@ -1,0 +1,196 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/p/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PlayerOutlineConfig",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "Exact v308 rs/s/p/a is the playeroutline config interface and preserves Outline Color, Border Width and Outline Feather options, plus the SpawnPK pet-outline extension."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "Meteor/RuneLite-derived PlayerOutlineConfig uses @ConfigGroup(\"playeroutline\") with the same inherited Outline Color, Border Width and Outline Feather keys/default role."
+        },
+        {
+          "family": "exact_sibling_authority",
+          "detail": "R187 already fixes rs/s/p/b and rs/s/p/c as PlayerOutlineOverlay and PetOutlineOverlay, independently corroborating the config domain."
+        }
+      ],
+      "note": "Source-proven RuneLite/plugin identity; exact-v308 behavior and SpawnPK-specific extensions remain primary authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/p/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PlayerOutlinePlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_plugin_descriptor",
+          "detail": "Exact v308 rs/s/p/d carries the Player Outline plugin identity and the descriptor text 'A simple plugin that outlines the player allowing you to see the player behind objects.'."
+        },
+        {
+          "family": "exact_plugin_pairing",
+          "detail": "The plugin consumes rs/s/p/a and coordinates the R187 PlayerOutlineOverlay/PetOutlineOverlay siblings."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "Historical PlayerOutlinePlugin sources preserve the same plugin name and distinctive descriptor text."
+        }
+      ],
+      "note": "Source-proven RuneLite/plugin identity; exact-v308 behavior and SpawnPK-specific extensions remain primary authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/r/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TileIndicatorsConfig",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "Exact v308 rs/s/r/a is the tileindicators config interface and owns Current Tile / Destination Tile configuration, fill/highlight colors and border-width options."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "RuneLite TileIndicatorsConfig uses @ConfigGroup(\"tileindicators\") and the same Current/Destination Tile configuration vocabulary."
+        },
+        {
+          "family": "exact_sibling_authority",
+          "detail": "R190 already fixes sibling rs/s/r/b as TileIndicatorsOverlay."
+        }
+      ],
+      "note": "Source-proven RuneLite/plugin identity; exact-v308 behavior and SpawnPK-specific extensions remain primary authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/r/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TileIndicatorsPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_plugin_descriptor",
+          "detail": "Exact v308 rs/s/r/c carries plugin name Tile Indicators and descriptor 'Highlight the tile you are currently moving to'."
+        },
+        {
+          "family": "exact_plugin_pairing",
+          "detail": "The plugin consumes rs/s/r/a and drives the R190 TileIndicatorsOverlay sibling."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "RuneLite TileIndicatorsPlugin preserves the same plugin name and exact descriptor text."
+        }
+      ],
+      "note": "Source-proven RuneLite/plugin identity; exact-v308 behavior and SpawnPK-specific extensions remain primary authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/i/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InteractHighlightConfig",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "Exact v308 rs/s/i/a owns interacthighlight NPC/object hover and interaction outline settings."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "RuneLite InteractHighlightConfig uses @ConfigGroup(\"interacthighlight\") and matching NPC/object outline configuration sections."
+        },
+        {
+          "family": "exact_sibling_authority",
+          "detail": "R191 already fixes sibling rs/s/i/b as InteractHighlightOverlay."
+        }
+      ],
+      "note": "Source-proven RuneLite/plugin identity; exact-v308 behavior and SpawnPK-specific extensions remain primary authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/i/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InteractHighlightPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_plugin_descriptor",
+          "detail": "Exact v308 rs/s/i/c carries plugin name Interact Highlight and descriptor 'Outlines npcs and objects you interact with or hover over'."
+        },
+        {
+          "family": "exact_plugin_pairing",
+          "detail": "The plugin consumes rs/s/i/a and coordinates the R191 InteractHighlightOverlay sibling."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "RuneLite InteractHighlightPlugin preserves the same plugin identity and matching descriptor text."
+        }
+      ],
+      "note": "Source-proven RuneLite/plugin identity; exact-v308 behavior and SpawnPK-specific extensions remain primary authority."
+    }
+  ],
+  "conflicts": []
+}
