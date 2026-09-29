@@ -1,0 +1,45 @@
+{
+  "schema_version":1,
+  "kind":"semantic_review_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count":3,
+  "review_id":"SEMREVIEW_560F61FDFE4E438191E8",
+  "proposals":[
+    {
+      "proposal_id":"SEMPROP_71E663302D99CB1E890C","target_kind":"class","stable_id":"CLIENT_CLASS_000937","owner_logical_id":"CLIENT_CLASS_000937",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","source_coordinate":{"owner":"rs/s/n/c","name":null,"descriptor":null},
+      "proposed_name":"Notifier","confidence":0.999,
+      "evidence":[
+        {"family":"exact_notification_service","detail":"Exact v308 rs/s/n/c owns client/UI/config/executor/EventBus notification infrastructure and public notify(String) / notify(String, TrayIcon.MessageType) entry points."},
+        {"family":"exact_platform_delivery","detail":"It implements tray delivery, notify-send/process execution, focus/flash behavior, JavaSound Clip handling and posts rs/runelite/events/NotificationFired."},
+        {"family":"historical_source_identity","detail":"RuneLite source contains class Notifier with the same notification-delivery role, NotificationFired publication, platform-specific delivery and sound/focus integration."}
+      ],
+      "note":"Source-proven RuneLite Notifier identity; exact-v308 SpawnPK configuration extensions remain authoritative."
+    },
+    {
+      "proposal_id":"SEMPROP_9CAE5675B9B04FFC69CB","target_kind":"class","stable_id":"CLIENT_CLASS_000935","owner_logical_id":"CLIENT_CLASS_000935",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","source_coordinate":{"owner":"rs/s/n/a","name":null,"descriptor":null},
+      "proposed_name":"NotificationsConfig","confidence":0.998,
+      "evidence":[
+        {"family":"exact_config_scope","detail":"Exact v308 rs/s/n/a is a dedicated config interface whose sections are Alerts and Settings and whose keys cover alertAggroTimer, alertSuperior, alertPrivateMessages, trayIcon, notificationTray, notificationRequestFocus, notificationSound, notificationTimeout, notificationFocused and notificationFlashColor."},
+        {"family":"upstream_notification_lineage","detail":"The notification settings preserve RuneLite notification vocabulary and exact descriptions such as 'Configures the window focus request type on notification' and 'Send notifications when focused', while SpawnPK adds dedicated alert toggles."},
+        {"family":"exact_plugin_pairing","detail":"Sibling rs/s/n/b resolves this interface as its injected config and routes its alert toggles into the shared rs/s/n/c notification service."}
+      ],
+      "note":"Conservative exact-v308 name for the dedicated SpawnPK notifications config; upstream RuneLite originally hosts many matching settings in RuneLiteConfig."
+    },
+    {
+      "proposal_id":"SEMPROP_E44976B2F8CCFCCFACF5","target_kind":"class","stable_id":"CLIENT_CLASS_000936","owner_logical_id":"CLIENT_CLASS_000936",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","source_coordinate":{"owner":"rs/s/n/b","name":null,"descriptor":null},
+      "proposed_name":"NotificationsPlugin","confidence":0.999,
+      "evidence":[
+        {"family":"exact_plugin_descriptor","detail":"Exact v308 rs/s/n/b carries plugin name 'Notifications', tags notify/alert/notification, and is enabled by default."},
+        {"family":"exact_event_behavior","detail":"The plugin handles FocusChanged, ChatMessage and PrivateChatMessage events, including PM alerts and superior-spawn alerts, through the shared notification service."},
+        {"family":"exact_config_pairing","detail":"The plugin injects rs/s/n/a and uses its focused/private-message/superior alert controls; no unrelated subsystem state is owned."}
+      ],
+      "note":"Exact-v308 plugin identity from its preserved Notifications descriptor and live alert event routing."
+    }
+  ],
+  "unresolved":[]
+}
