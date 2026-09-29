@@ -1402,6 +1402,306 @@ def _normalize_hierarchy_shadowed_self_static_field_owners(
     return actions
 
 
+_DOTTED_STATIC_FIELD_RE = re.compile(
+    r"(?<![A-Za-z0-9_$])"
+    r"(?P<owner>[A-Za-z_$][A-Za-z0-9_$]*"
+    r"(?:\.[A-Za-z_$][A-Za-z0-9_$]*){2,})"
+    r"\.(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+    r"(?!\s*\()"
+)
+
+
+def _java_owner_binary_candidates(owner: str) -> list[str]:
+    parts = owner.split(".")
+    candidates: list[str] = []
+    for split in range(1, len(parts) + 1):
+        package = "/".join(parts[:split])
+        nested = "$".join(parts[split:])
+        candidate = package + (("$" + nested) if nested else "")
+        if candidate not in candidates:
+            candidates.append(candidate)
+    return candidates
+
+
+def _nested_owner_has_visible_name_shadow(
+    *,
+    nested_internal: str,
+    current_owner: str,
+    readable_zip: zipfile.ZipFile,
+) -> tuple[bool, list[str]]:
+    if "$" not in nested_internal.rsplit("/", 1)[-1]:
+        return False, []
+
+    outer_internal, nested_simple = nested_internal.rsplit("$", 1)
+    if not _is_java_identifier(nested_simple):
+        return False, []
+
+    hierarchy = _read_readable_hierarchy(
+        readable_zip=readable_zip,
+        internal_name=outer_internal,
+    )
+    if not hierarchy:
+        return False, []
+
+    shadow_owners: list[str] = []
+    for declaring_owner, parsed in hierarchy:
+        for field in parsed.fields:
+            if str(field.get("name", "")) != nested_simple:
+                continue
+            if not _field_visible_from(
+                declaring_owner=declaring_owner,
+                current_owner=current_owner,
+                access=int(field.get("access", 0)),
+            ):
+                continue
+            shadow_owners.append(declaring_owner)
+
+    return bool(shadow_owners), sorted(set(shadow_owners))
+
+
+def _resolve_shadowed_nested_static_field(
+    *,
+    owner: str,
+    field_name: str,
+    current_owner: str,
+    readable_zip: zipfile.ZipFile,
+    entries: set[str],
+    class_cache: dict[str, Any],
+) -> tuple[str, list[str]] | None:
+    matches: list[tuple[str, list[str]]] = []
+
+    for candidate in _java_owner_binary_candidates(owner):
+        entry = candidate + ".class"
+        if entry not in entries:
+            continue
+        if "$" not in candidate.rsplit("/", 1)[-1]:
+            continue
+
+        parsed = class_cache.get(candidate)
+        if parsed is None:
+            try:
+                parsed = parse_class(readable_zip.read(entry))
+            except (KeyError, ClassFormatError):
+                continue
+            class_cache[candidate] = parsed
+
+        declarations = [
+            field
+            for field in parsed.fields
+            if (
+                str(field.get("name", "")) == field_name
+                and int(field.get("access", 0)) & 0x0008
+            )
+        ]
+        if len(declarations) != 1:
+            continue
+
+        shadowed, shadow_owners = _nested_owner_has_visible_name_shadow(
+            nested_internal=candidate,
+            current_owner=current_owner,
+            readable_zip=readable_zip,
+        )
+        if not shadowed:
+            continue
+
+        matches.append((candidate, shadow_owners))
+
+    if len(matches) != 1:
+        return None
+    return matches[0]
+
+
+def _normalize_shadowed_nested_static_field_owners(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Force shadowed nested static-field owners into Java type context.
+
+    Procyon can emit pkg.Outer.Inner.FIELD for a JVM getstatic/putstatic
+    owned by pkg/Outer$Inner. If Outer or one of its superclasses also
+    exposes a field named Inner, javac resolves Inner as that value in
+    expression context and the otherwise exact source becomes illegal.
+
+    A null cast to pkg.Outer.Inner forces the owner through a type context
+    while preserving Java static-field semantics. Rewrites are made only
+    when one source method and one exact readable bytecode method agree on
+    every affected nested-owner static-field access.
+    """
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError:
+        # Some synthetic/unit-test workspaces intentionally use placeholder
+        # class bytes. This optional normalization has no exact bytecode
+        # authority in that case, so fail closed by making no source edit.
+        return []
+
+    current_owner = str(profile["internal_name"])
+    text = path.read_text(encoding="utf-8")
+    if "." not in text:
+        return []
+
+    entries = {
+        info.filename
+        for info in readable_zip.infolist()
+        if not info.is_dir() and info.filename.endswith(".class")
+    }
+    class_cache: dict[str, Any] = {}
+
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for match in _METHOD_DECL_RE.finditer(text):
+        brace_start = text.find("{", match.start(), match.end())
+        if brace_start < 0:
+            continue
+        body_end = _matching_brace_end(text, brace_start)
+        method_text = text[match.start():body_end]
+        method_code = _java_code_mask(method_text)
+
+        source_counts: dict[tuple[str, str, str], int] = {}
+        source_occurrences: dict[
+            tuple[str, str, str],
+            list[tuple[int, int, str]],
+        ] = {}
+        shadow_owners_by_key: dict[
+            tuple[str, str, str],
+            list[str],
+        ] = {}
+
+        for token in _DOTTED_STATIC_FIELD_RE.finditer(method_code):
+            owner = token.group("owner")
+            field_name = token.group("field")
+            resolved = _resolve_shadowed_nested_static_field(
+                owner=owner,
+                field_name=field_name,
+                current_owner=current_owner,
+                readable_zip=readable_zip,
+                entries=entries,
+                class_cache=class_cache,
+            )
+            if resolved is None:
+                continue
+
+            nested_internal, shadow_owners = resolved
+            key = (nested_internal, field_name, owner)
+            source_counts[key] = source_counts.get(key, 0) + 1
+            shadow_owners_by_key[key] = shadow_owners
+            source_occurrences.setdefault(key, []).append(
+                (
+                    match.start() + token.start(),
+                    match.start() + token.end(),
+                    "((" + owner + ")null)." + field_name,
+                )
+            )
+
+        if not source_counts:
+            continue
+
+        candidates: list[dict[str, Any]] = []
+        source_arity = _source_parameter_count(match.group("params"))
+        for method in profile.get("methods", []):
+            if method.get("name") != match.group("name"):
+                continue
+            descriptor = str(method.get("descriptor", ""))
+            if _descriptor_parameter_count(descriptor) != source_arity:
+                continue
+            parameter_match = _source_parameters_match_descriptor(
+                match.group("params"),
+                descriptor,
+                current_package=current_owner.rpartition("/")[0],
+            )
+            if parameter_match is False:
+                continue
+
+            byte_counts: dict[tuple[str, str, str], int] = {}
+            for access in method.get("field_accesses", []):
+                if access.get("operation") not in {"getstatic", "putstatic"}:
+                    continue
+                for key in source_counts:
+                    nested_internal, field_name, _owner = key
+                    if (
+                        str(access.get("owner", "")) == nested_internal
+                        and str(access.get("name", "")) == field_name
+                    ):
+                        byte_counts[key] = byte_counts.get(key, 0) + 1
+
+            if all(
+                byte_counts.get(key, 0) == count
+                for key, count in source_counts.items()
+            ):
+                candidates.append(method)
+
+        if len(candidates) != 1:
+            continue
+
+        exact_method = candidates[0]
+        method_edits = [
+            edit
+            for key in source_counts
+            for edit in source_occurrences[key]
+        ]
+        edits.extend(method_edits)
+
+        actions.append(
+            {
+                "kind": (
+                    "shadowed_nested_static_field_owner_type_context"
+                ),
+                "source_path": rel,
+                "method_name": match.group("name"),
+                "method_descriptor": exact_method["descriptor"],
+                "nested_owners": sorted(
+                    {key[0] for key in source_counts}
+                ),
+                "shadow_declaring_owners": sorted(
+                    {
+                        shadow_owner
+                        for key in source_counts
+                        for shadow_owner in shadow_owners_by_key[key]
+                    }
+                ),
+                "field_access_counts": {
+                    nested + "." + field: count
+                    for (nested, field, _owner), count in sorted(
+                        source_counts.items()
+                    )
+                },
+                "replacement_count": sum(source_counts.values()),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_nested_type_hidden_by_enclosing_hierarchy_field"
+                    ),
+                    "strategy": (
+                        "exact_bytecode_static_field_type_context_qualification"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping nested-owner type-context edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
 def normalize_procyon_source(
     source_root: Path,
     readable_jar: Path,
@@ -1449,6 +1749,13 @@ def normalize_procyon_source(
                 )
                 actions.extend(
                     _normalize_hierarchy_shadowed_self_static_field_owners(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
+                    _normalize_shadowed_nested_static_field_owners(
                         source_root=source_root,
                         path=path,
                         readable_zip=z,
@@ -1512,6 +1819,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "hierarchy_shadowed_self_static_field_owner_qualification"
+        ),
+        "shadowed_nested_static_field_method_count": sum(
+            action["kind"]
+            == "shadowed_nested_static_field_owner_type_context"
+            for action in actions
+        ),
+        "shadowed_nested_static_field_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "shadowed_nested_static_field_owner_type_context"
         ),
         "java_file_count": after_count,
         "source_bytes_before": before_bytes,
