@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutColorSelectorRenderer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_metadata_owner",
+          "detail": "R392 LoadoutMetadataEditorDialog creates this renderer for its color JComboBox and supplies the dialog's exact color/name arrays."
+        },
+        {
+          "family": "exact_render_behavior",
+          "detail": "The renderer validates equal color/string array lengths and sets each row/selected label foreground to the corresponding configured Color."
+        },
+        {
+          "family": "exact_scope",
+          "detail": "It owns no loadout mutation or unrelated Swing behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout metadata selector renderer."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutIconSelectorRenderer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_metadata_owner",
+          "detail": "R392 LoadoutMetadataEditorDialog creates this renderer only for the LoadoutIcon selector JComboBox."
+        },
+        {
+          "family": "exact_render_behavior",
+          "detail": "It leaves the exact 'None (Default)' entry without an icon and otherwise maps the selected/indexed entry to the reviewed LoadoutIcon enum icon."
+        },
+        {
+          "family": "exact_scope",
+          "detail": "It owns no metadata mutation or unrelated UI behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout metadata selector renderer."
+    }
+  ],
+  "conflicts": []
+}
