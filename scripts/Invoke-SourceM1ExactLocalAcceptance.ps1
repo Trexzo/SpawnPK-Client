@@ -340,6 +340,7 @@ Invoke-PyChecked "BUILD COLLISION-DERIVED SOURCE WORKSPACE" $WorkspaceArgs
 
 $RecoveredManifest = Join-Path $CollisionWorkspace "recovered-source-manifest.json"
 $RecoveredSourceRoot = Join-Path $CollisionWorkspace "src"
+$PrivateDiagnostic = Join-Path $ReleaseDir "javac-diagnostic-private.json"
 Require-File $RecoveredManifest
 if (-not (Test-Path -LiteralPath $RecoveredSourceRoot -PathType Container)) {
     throw "Collision-derived source root is missing."
@@ -399,6 +400,8 @@ $ReleaseArgs = @(
     $Java,
     "--javac-command",
     $Javac,
+    "--private-diagnostic-report-out",
+    $PrivateDiagnostic,
     "--out-dir",
     $ReleaseDir
 )
@@ -431,6 +434,9 @@ if ($ReleaseExit -ne 0) {
                 Write-Host "javac_cannot_find_symbol=$($Summary.cannot_find_symbol.count)"
                 Write-Host "javac_frontier_id=$($CleanDoc.compiler.diagnostic_classification.frontier_id)"
             }
+        }
+        if (Test-Path -LiteralPath $PrivateDiagnostic -PathType Leaf) {
+            Write-Host "private_javac_diagnostic=$PrivateDiagnostic"
         }
     }
     exit 3
