@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RichTextTagParser",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_rsfont_dispatch",
+          "detail": "R55 RSFont calls rs/l/k repeatedly while scanning rich-text markup, using its return values to mutate current color, transparency, shadow, underline, strikethrough, tab/y-offset and inline-image state."
+        },
+        {
+          "family": "exact_tag_vocabulary",
+          "detail": "Direct bytecode identifies low-level tag families including pu1/pu2, fla/fla2, col, trans, shad, u, str, tab and yoff; the same class delegates glow/typewriter/text-particle/image parsing to the already-reviewed markup helpers."
+        },
+        {
+          "family": "exact_registry_distinction",
+          "detail": "R343 RichTextMarkupRegistry owns shared color/icon definitions, while rs/l/k consumes string coordinates and returns per-tag parsed control values, fixing a parser/dispatcher role rather than a registry role."
+        },
+        {
+          "family": "exact_pulse_state",
+          "detail": "The parser owns four rs/l/i counters initialized with bounds 25, 50, 125 and 250 and uses their current values in animated/pulsing tag color calculations."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the low-level RSFont rich-text control-tag parser/dispatcher."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RichTextPulseCounter",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_ping_pong_state",
+          "detail": "Each instance stores one positive bound, a current integer initialized to zero and a direction initialized to +1; tick adds direction, reverses at the upper bound and reverses again at zero."
+        },
+        {
+          "family": "exact_parser_ownership",
+          "detail": "R393 RichTextTagParser owns exactly four instances with bounds 25, 50, 125 and 250 and reads their current values for animated/pulsing rich-text controls."
+        },
+        {
+          "family": "exact_client_tick",
+          "detail": "Client's live update path ticks all four RichTextTagParser-owned counters every cycle before advancing its own animation timing state."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the bounded ping-pong counters that drive RichTextTagParser animation values."
+    }
+  ],
+  "conflicts": []
+}
