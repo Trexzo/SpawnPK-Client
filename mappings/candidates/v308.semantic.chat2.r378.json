@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/f/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorTileMarker",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_value_shape",
+          "detail": "Exact v308 stores WorldPoint, optional Color and label state and renders the ColorTileMarker value identity; it is the in-memory marker representation consumed by the plugin/overlay."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "RuneLite groundmarkers source preserves class ColorTileMarker with the same WorldPoint + nullable Color role and explicit linkage to GroundMarkerPoint."
+        }
+      ],
+      "note": "Source-proven RuneLite Ground Markers identity; exact-v308 behavior and SpawnPK-specific extensions remain primary authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/f/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GroundMarkerConfig",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "Exact v308 is the groundMarker config interface, exposing marker color, border width/opacity and marker rendering/import-export controls."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "RuneLite GroundMarkerConfig uses the exact groundMarker configuration group and the same tile-marker configuration role."
+        }
+      ],
+      "note": "Source-proven RuneLite Ground Markers identity; exact-v308 behavior and SpawnPK-specific extensions remain primary authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/f/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GroundMarkerPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_plugin_role",
+          "detail": "Exact v308 extends the plugin base, owns the marker collection, consumes GroundMarkerConfig and R188 GroundMarkerOverlay, handles game-state/menu-hover marker operations and persists per-region marker JSON under group groundMarker."
+        },
+        {
+          "family": "exact_menu_behavior",
+          "detail": "Exact menu paths include Mark, Unmark, Label, Color, Pick color, Reset color and Reset all."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "RuneLite GroundMarkerPlugin preserves plugin description 'Enable marking of tiles using the Shift key', groundMarker storage group and Mark/Unmark tile workflow."
+        }
+      ],
+      "note": "Source-proven RuneLite Ground Markers identity; exact-v308 behavior and SpawnPK-specific extensions remain primary authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/f/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GroundMarkerPoint",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_persistent_shape",
+          "detail": "Exact v308 stores regionId, regionX, regionY, z, Color and label and excludes presentation color/label from coordinate equality semantics."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "RuneLite GroundMarkerPoint preserves the same regionId/regionX/regionY/z plus color/label persistence shape; public historical builds expose the exact GroundMarkerPoint(regionId=..., regionX=..., regionY=..., z=..., color=..., label=...) identity."
+        }
+      ],
+      "note": "Source-proven RuneLite Ground Markers identity; exact-v308 behavior and SpawnPK-specific extensions remain primary authority."
+    }
+  ],
+  "conflicts": []
+}
