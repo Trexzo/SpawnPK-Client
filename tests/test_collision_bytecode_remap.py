@@ -320,6 +320,7 @@ class CollisionBytecodeRemapTests(unittest.TestCase):
             bytes([1]) + struct.pack(">H", 4) + b"Code",
             bytes([12]) + struct.pack(">HH", 5, 6),
             bytes([10]) + struct.pack(">HH", 4, 8),
+            bytes([1]) + struct.pack(">H", 1) + b"I",
         ]
 
         init_code = (
@@ -352,7 +353,8 @@ class CollisionBytecodeRemapTests(unittest.TestCase):
             + b"".join(entry for entry in cp[1:] if entry is not None)
             + struct.pack(">HHH", 0x0021, 2, 4)
             + struct.pack(">H", 0)
-            + struct.pack(">H", 0)
+            + struct.pack(">H", 1)
+            + struct.pack(">HHHH", 0x0009, 1, 10, 0)
             + struct.pack(">H", 2)
             + init_method
             + shared_name_method
@@ -362,6 +364,7 @@ class CollisionBytecodeRemapTests(unittest.TestCase):
         parsed = parse_class(data)
         self.assertEqual(parsed.name, "h")
         self.assertIn("h", {method["name"] for method in parsed.methods})
+        self.assertIn("h", {field["name"] for field in parsed.fields})
 
         rewritten, changed_utf8 = remap_class_bytes(
             data,
@@ -381,6 +384,15 @@ class CollisionBytecodeRemapTests(unittest.TestCase):
         self.assertNotIn(
             "Recovered_JNSBLOCKER_0076",
             method_names,
+        )
+        field_names = {
+            field["name"]
+            for field in reparsed.fields
+        }
+        self.assertIn("h", field_names)
+        self.assertNotIn(
+            "Recovered_JNSBLOCKER_0076",
+            field_names,
         )
         self.assertGreaterEqual(changed_utf8, 1)
 
