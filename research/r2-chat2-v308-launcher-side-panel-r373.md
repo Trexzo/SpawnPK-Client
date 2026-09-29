@@ -1,45 +1,34 @@
-# Chat 2 — launcher side panel R373
+# Chat 2 — side-panel tab listener R373 correction
 
 Exact client authority:
 
 `854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`
 
-## Result
+## Retained result
 
-- `rs/gui/J` -> `CLIENT_CLASS_000193` -> `LauncherSidePanel`
 - `rs/gui/L` -> `CLIENT_CLASS_000195` -> `LauncherSidePanelTabChangeListener`
-- review: `SEMREVIEW_07DB30ADA301EECBCB6E`
+- proposal: `SEMPROP_E681A1B654FF18DF37FA`
+- review: `SEMREVIEW_216F22959F8625C8A76B`
 
-## LauncherSidePanel
+## Parent ownership correction
 
-The panel directly owns the launcher tab surface. Exact labels include:
+The initial R373 draft also proposed `rs/gui/J -> LauncherSidePanel`.
 
-- `Loadouts`
-- `PvP Tracker`
-- `GPU (Beta)`
-- `Development` when developer mode is enabled
-- otherwise `Item Search`
+That was rejected after reconciling older authority: R145 already owns the exact class as:
 
-It aggregates the corresponding Swing panels and exposes the tabbed pane/components back to
-the launcher.
+- `rs/gui/J`
+- `CLIENT_CLASS_000193`
+- `ClientSidebarPanel`
+- R145 review `SEMREVIEW_CEECF5480BE96957E887`
 
-Most decisively, its placeholder-tab helper contains the exact literal:
+R373 therefore retains **no** proposal for `rs/gui/J`.
 
-`By the way, I'm going to theme this whole side panel.`
+## Listener behavior
 
-That literal plus the launcher-only component composition fixes the semantic role.
+The surviving `rs/gui/L` class is constructed only by R145 `ClientSidebarPanel` and
+installed as its JTabbedPane ChangeListener.
 
-## Tab-change listener
-
-`rs/gui/L` is created only by the side panel and installed on its JTabbedPane.
-
-On every change it reads the selected tab index and invokes the active Launcher refresh/update
-method. It owns no second role.
-
-## Rejected neighbor
-
-`rs/gui/K` is intentionally withheld. It is a MouseAdapter attached to the side panel, but
-its exact-v308 mouseEntered/mouseExited bodies are effectively no-op and do not justify a
-meaningful semantic identity.
+On state change it reads the selected tab index and calls the active Launcher refresh/update
+path. It has no second responsibility.
 
 R373 remains non-canonical semantic research only.
