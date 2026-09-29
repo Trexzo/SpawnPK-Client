@@ -1710,7 +1710,7 @@ _PACKAGE_DECL_RE = re.compile(
 _SINGLE_TYPE_IMPORT_RE = re.compile(
     r"(?m)^\s*import\s+(?!static\s+)"
     r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)+)"
-    r"\\s*;"
+    r"\s*;"
 )
 
 
