@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_95F9CD7EF2B2706AFBC4",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_54CDF920BE8A8E19F552",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000259",
+      "owner_logical_id": "CLIENT_CLASS_000259",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RuneLiteSkinButtonShaper",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_substance_contract",
+          "detail": "The class extends org.pushingpixels.substance.api.shaper.ClassicButtonShaper and overrides getCornerRadius(AbstractButton,float) to return exactly 0.0f."
+        },
+        {
+          "family": "exact_skin_ownership",
+          "detail": "The only exact-v308 owner/constructor path is R22 rs/gui/b RuneLiteSkin, which installs this shaper into the RuneLite Substance skin configuration."
+        },
+        {
+          "family": "exact_family_boundary",
+          "detail": "R177 owns a separate rs/ui/c/b RuneLiteSquareButtonShaper family. This raw class belongs specifically to the older R22 rs/gui/b RuneLiteSkin surface, so the semantic name is kept distinct."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the zero-radius ClassicButtonShaper owned by R22 RuneLiteSkin; no standalone upstream source identifier is claimed."
+    }
+  ],
+  "unresolved": []
+}
