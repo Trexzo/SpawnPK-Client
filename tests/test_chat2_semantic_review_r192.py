@@ -88,7 +88,7 @@ class Chat2SemanticReviewR192Tests(unittest.TestCase):
         )
         self.assertEqual(actual["proposal_count"], 1)
         self.assertEqual(actual["unresolved"], [])
-        self.assertEqual(actual["review_id"], "SEMREVIEW_A2A2D557F097BBEE9A6F")
+        self.assertEqual(actual["review_id"], "SEMREVIEW_FA113A52F76213DB2A58")
         self.assertEqual(actual, expected)
 
     def test_r192_expected_stable_id(self):
@@ -96,7 +96,7 @@ class Chat2SemanticReviewR192Tests(unittest.TestCase):
         self.assertEqual(
             {row["proposed_name"]: row["stable_id"] for row in review["proposals"]},
             {
-                "KeyRemappingKeyListener": "CLIENT_CLASS_000923",
+                "KeyRemappingListener": "CLIENT_CLASS_000923",
             },
         )
 
