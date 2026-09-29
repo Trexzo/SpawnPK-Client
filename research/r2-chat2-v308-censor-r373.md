@@ -1,4 +1,4 @@
-# Chat 2 — source-proven Censor R373
+# Chat 2 — R373 duplicate Censor audit
 
 Exact client authority:
 
@@ -6,44 +6,39 @@ Exact client authority:
 
 ## Result
 
+R373 retains **no semantic proposal**.
+
+A later exact-v308/source-comparison pass independently rediscovered:
+
+- `rs/d/c`
+- `CLIENT_CLASS_000112`
+- `Censor`
+
+but this exact class identity had already been recovered in R57.
+
+Authoritative prior ownership:
+
 - `rs/d/c` -> `CLIENT_CLASS_000112` -> `Censor`
 - proposal: `SEMPROP_D1E91044A982113CAA1D`
 - review: `SEMREVIEW_49EB6237A9C765E8B723`
 
-## Exact wordenc authority
+## New corroboration
 
-The class loads:
+The later pass independently reconfirmed the same exact word-filter authority:
 
 - `fragmentsenc.txt`
 - `badenc.txt`
 - `domainenc.txt`
 - `tldlist.txt`
+- bad-word/domain/TLD/fragment lookup tables;
+- normalization and leetspeak-equivalent matching;
+- exact Client startup initialization and live chat filtering;
+- historical 317/Jagex source identity `Censor`.
 
-from the exact-v308 archive abstraction.
+This strengthens R57 but does not create a second semantic identity.
 
-Its state and methods implement the classic Jagex word-filter pipeline:
+## Boundary
 
-- bad-word tables plus permitted surrounding byte pairs;
-- domain and TLD detection;
-- fragment-table lookup;
-- character normalization and symbol handling;
-- leetspeak-equivalent matching;
-- exception/allowed-word restoration;
-- case restoration/collapse.
+The duplicate R373 candidate/review/test artifacts were removed.
 
-## Exact Client usage
-
-Client calls the wordenc initializer during startup.
-
-The filtered-string path is then invoked on multiple live decoded/displayed chat-message
-paths before message text is published into chat/player presentation state.
-
-## Historical identity
-
-Historical 317/Jagex client source uses the class name `Censor` for the same four resource
-files and matching filtering architecture.
-
-The historical source supplies the semantic identifier only; exact v308 remains runtime
-authority.
-
-R373 remains non-canonical semantic research only.
+R373 is a correction/corroboration note only and remains non-canonical.
