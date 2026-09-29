@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind":"class","owner":"rs/s/l/b","name":null,"descriptor":null},
+      "proposed_name": "MenuEntrySwapperConfig",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_config_contract","detail":"Exact v308 rs/s/l/b is the menuentryswapper config interface and preserves Item Swaps, NPC Swaps, item left-click customization and shift-click customization controls."},
+        {"family":"historical_source_identity","detail":"RuneLite MenuEntrySwapperConfig uses config group 'menuentryswapper' and preserves the same distinctive descriptions including 'Allows customization of left-clicks on NPCs' and item/shift-click customization vocabulary."},
+        {"family":"exact_plugin_pairing","detail":"The only live sibling consumer rs/s/l/c injects this interface and carries the Menu Entry Swapper plugin descriptor."}
+      ],
+      "note":"Source-proven RuneLite config identity; exact-v308 SpawnPK extensions remain primary authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind":"class","owner":"rs/s/l/c","name":null,"descriptor":null},
+      "proposed_name": "MenuEntrySwapperPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_plugin_descriptor","detail":"Exact v308 rs/s/l/c carries plugin name 'Menu Entry Swapper' and descriptor text 'Change the default option that is displayed when hovering over objects'."},
+        {"family":"exact_behavior","detail":"The plugin consumes MenuHover/MenuOpened events, tracks NPC/item/object swap maps and rewrites default menu entries using its injected MenuEntrySwapperConfig."},
+        {"family":"historical_source_identity","detail":"RuneLite MenuEntrySwapperPlugin preserves the exact plugin name and exact distinctive descriptor text together with the same NPC/inventory/items/objects domain."}
+      ],
+      "note":"Source-proven RuneLite plugin identity; exact-v308 menu behavior remains primary authority."
+    }
+  ],
+  "conflicts": []
+}
