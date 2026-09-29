@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodcoreTokenSynthesisInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_title",
+          "detail": "Exact v308 preserves '<img=180> Bloodcore Token Synthesis <img=180>' as the interface title."
+        },
+        {
+          "family": "exact_synthesis_surface",
+          "detail": "The class owns Bloodcore lottery, Bloodcore token shop, Synthesize items, Synthesis item guide, Remove 1/5/10/All/X and fountain token/icon resources."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The builder is a dedicated Bloodcore synthesis/item-input presentation surface and does not encode server-side synthesis rules."
+        }
+      ],
+      "note": "Descriptive exact-v308 interface name fixed by surviving product vocabulary and widget responsibility."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodcoreTokenLotteryInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_title",
+          "detail": "Exact v308 preserves the title 'Bloodcore Token Lottery'."
+        },
+        {
+          "family": "exact_lottery_surface",
+          "detail": "The class owns participant-count, pot, countdown, enter-lottery and latest-winners presentation including 'Latest Bloodcore Lottery Winners' and 'Enter bloodcore lottery'."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The interface displays lottery state only; winner selection, entry validation and pot authority are not inferred."
+        }
+      ],
+      "note": "Descriptive exact-v308 interface name fixed by surviving product vocabulary and widget responsibility."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/ba",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "KnowledgebaseInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_title",
+          "detail": "Exact v308 preserves the literal title 'Official SpawnPK Knowledgebase'."
+        },
+        {
+          "family": "exact_knowledgebase_surface",
+          "detail": "The class owns Category List, Selected Article Title Text, Select option, Go back, wiki/guide and wiki/sprite resources plus category/description overflow handling."
+        },
+        {
+          "family": "exact_article_role",
+          "detail": "The interface renders selectable guide/article categories and descriptions, fixing a knowledgebase role rather than a generic wiki image panel."
+        }
+      ],
+      "note": "Descriptive exact-v308 interface name fixed by surviving product vocabulary and widget responsibility."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClanSetupInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_setup_controls",
+          "detail": "Exact v308 preserves clan configuration vocabulary including Clan name, Enter Name, Any friends, Only me, Recruit+, Corporal+, Sergeant+, Lieutenant+, Captain+, General+ and co-owner privilege controls."
+        },
+        {
+          "family": "exact_help_text",
+          "detail": "The class includes the explicit instruction 'Right click on\\nwhite text to\\nchange options.', consistent with one clan permissions/setup configuration surface."
+        },
+        {
+          "family": "exact_family_join",
+          "detail": "The builder sits immediately beside the self-identifying Clan Chat interface and owns configuration rather than chat-member presentation."
+        }
+      ],
+      "note": "Descriptive exact-v308 interface name fixed by surviving product vocabulary and widget responsibility."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClanChatInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_title",
+          "detail": "Exact v308 preserves 'Clan Chat (0/100)' as the interface heading."
+        },
+        {
+          "family": "exact_clan_chat_surface",
+          "detail": "The class owns Join Chat, Clan Setup, Manage clan member, Owner status and 'Talking in: @yel@Not in chat' presentation."
+        },
+        {
+          "family": "exact_family_boundary",
+          "detail": "The class presents clan chat membership/navigation while sibling rs/n/c/p owns the permission/setup surface, supporting the specific ClanChatInterface identity."
+        }
+      ],
+      "note": "Descriptive exact-v308 interface name fixed by surviving product vocabulary and widget responsibility."
+    }
+  ],
+  "conflicts": []
+}
