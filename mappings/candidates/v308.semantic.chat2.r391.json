@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutFolderPopupMouseHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_attachment",
+          "detail": "LoadoutsPanel attaches this MouseAdapter only to the button whose exact tooltip is '<html>Loadout folders</html>'."
+        },
+        {
+          "family": "exact_behavior",
+          "detail": "On left-button mouse release it shows the panel-owned JPopupMenu at the triggering component; it has no other behavior or state."
+        },
+        {
+          "family": "exact_scope",
+          "detail": "The helper stores only the LoadoutsPanel parent reference, fixing it as the folder-popup mouse handler."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts UI helper identity; no original stripped identifier is claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RenameLoadoutAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_attachment",
+          "detail": "LoadoutsPanel attaches this ActionListener to the button with exact tooltip 'Rename the active loadout'."
+        },
+        {
+          "family": "exact_behavior",
+          "detail": "It resolves the active LoadoutDefinition and folder, opens the loadout editor dialog with title 'Rename', and seeds the dialog with the existing name, color and icon."
+        },
+        {
+          "family": "exact_workflow_pair",
+          "detail": "The dialog installs rs/gui/b/m as its commit callback, making this class the rename-workflow launcher rather than the mutation itself."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts UI helper identity; no original stripped identifier is claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RenameLoadoutCommitAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_rename_commit",
+          "detail": "The listener reads the edited name from the rename dialog, copies edited color and icon into the active LoadoutDefinition, then calls LoadoutManager with old folder/name plus the new name."
+        },
+        {
+          "family": "exact_workflow_pair",
+          "detail": "It is constructed only by RenameLoadoutAction and owns exactly the rename dialog, active LoadoutDefinition and prior folder/name state needed to commit the edit."
+        },
+        {
+          "family": "exact_scope",
+          "detail": "No unrelated loadout action or generic dialog behavior exists."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts UI helper identity; no original stripped identifier is claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MoveLoadoutUpAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_attachment",
+          "detail": "LoadoutsPanel attaches this listener to the button with exact tooltip 'Move loadout up in the list'."
+        },
+        {
+          "family": "exact_reorder",
+          "detail": "It reads the selected combo-box index and invokes LoadoutManager reorder with source index and destination index source-1 for the active folder."
+        },
+        {
+          "family": "exact_scope",
+          "detail": "The listener owns no other mutation or UI behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts UI helper identity; no original stripped identifier is claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MoveLoadoutDownAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_attachment",
+          "detail": "LoadoutsPanel attaches this listener to the button with exact tooltip 'Move loadout down in the list'."
+        },
+        {
+          "family": "exact_reorder",
+          "detail": "It reads the selected combo-box index and invokes LoadoutManager reorder with source index and destination index source+1 for the active folder."
+        },
+        {
+          "family": "exact_scope",
+          "detail": "The listener owns no other mutation or UI behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts UI helper identity; no original stripped identifier is claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutEquipmentSlotMouseHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_panel_attachment",
+          "detail": "LoadoutsPanel installs this MouseListener on the panel itself after laying out the loadout/equipment controls."
+        },
+        {
+          "family": "exact_slot_geometry",
+          "detail": "mouseClicked maps fixed x/y rectangles onto slot indexes 0 through 6, covering two columns of visible equipment-slot regions."
+        },
+        {
+          "family": "exact_editor_launch",
+          "detail": "For a valid slot it closes the prior slot editor, constructs rs/gui/b/a/A with LoadoutManager plus the chosen slot index, stores it on LoadoutsPanel and opens it."
+        },
+        {
+          "family": "exact_scope",
+          "detail": "All other MouseListener methods are no-ops, fixing the class as the equipment-slot click handler."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadouts UI helper identity; no original stripped identifier is claimed."
+    }
+  ],
+  "conflicts": []
+}
