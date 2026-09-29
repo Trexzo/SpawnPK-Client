@@ -1,0 +1,17 @@
+{
+  "schema_version":1,"kind":"semantic_candidate_set","canonical":false,
+  "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[{
+    "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE",
+    "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target":{"kind":"class","owner":"rs/s/k/a","name":null,"descriptor":null},
+    "proposed_name":"LoadoutsPlugin","confidence":0.999,
+    "evidence":[
+      {"family":"exact_plugin_descriptor","detail":"Exact v308 rs/s/k/a carries plugin name 'Loadouts', config group 'loadouts', description 'Set up and switch between loadouts', panel tag and enabled/hidden plugin metadata."},
+      {"family":"exact_panel_lifecycle","detail":"Startup constructs rs/gui/b/h, installs it as the loadout panel singleton, loads ldt_icon.png, creates a navigation button titled 'Loadouts' at priority 0 and registers it with ClientUI."},
+      {"family":"exact_scope_boundary","detail":"The wrapper owns only plugin/navigation lifecycle for the Loadouts panel; R386 does not infer a semantic identity for rs/gui/b/h beyond that ownership relation."}
+    ],
+    "note":"Exact-v308 SpawnPK plugin identity normalized to LoadoutsPlugin."
+  }],
+  "conflicts":[]
+}
