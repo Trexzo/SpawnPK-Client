@@ -1879,7 +1879,7 @@ def _normalize_imported_parameter_types_shadowed_by_same_package(
         if len(candidates) != 1:
             continue
 
-        exact_method, descriptor_shapes = candidates
+        exact_method, descriptor_shapes = candidates[0]
         replacements: list[dict[str, Any]] = []
 
         for index, (simple, imported_internal, same_package_internal) in sorted(
