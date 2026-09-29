@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind":"class","owner":"rs/l/D","name":null,"descriptor":null},
+      "proposed_name": "ClientWindowLayoutTask",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_parent_ownership","detail":"The class is constructed only by R85 DepthBufferedImageSurface and holds only the synthetic parent-surface reference."},
+        {"family":"exact_first_draw_scheduling","detail":"DepthBufferedImageSurface schedules the task exactly once through SwingUtilities.invokeLater from its live draw path after the first framebuffer blit, guarded by a static one-shot flag."},
+        {"family":"exact_window_layout_behavior","detail":"run() obtains the active Launcher JFrame, selects either 1134x537 or 1312x800 from the client layout-mode flag, centers the frame on Toolkit screen dimensions, makes it visible when appropriate, and maximizes it when the larger layout exceeds available screen width."},
+        {"family":"exact_ui_boundary","detail":"The task owns no rendering pixels, packet state or gameplay logic; its only effect is deferred top-level client-window sizing/positioning after surface initialization."}
+      ],
+      "note":"Descriptive exact-v308 name for the one-shot Swing EDT task that sizes, centers and conditionally maximizes the client Launcher window after the first DepthBufferedImageSurface draw."
+    }
+  ],
+  "conflicts": []
+}
