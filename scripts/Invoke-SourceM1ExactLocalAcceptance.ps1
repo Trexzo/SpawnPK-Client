@@ -325,7 +325,13 @@ $BootstrapReadableJar = Join-Path $BootstrapReadableDir "readable-client.jar"
 Require-File $BootstrapReadableManifest
 Require-File $BootstrapReadableJar
 
-$ReadableDoc = Get-Content -LiteralPath $BootstrapReadableManifest -Raw | ConvertFrom-Json
+$ReadableDoc = Get-JsonProjection `
+    -Path $BootstrapReadableManifest `
+    -Fields @{
+        status = "/status"
+        verification_pass = "/verification_pass"
+        source_sha256 = "/source_sha256"
+    }
 if ($ReadableDoc.status -ne "complete" -or $ReadableDoc.verification_pass -ne $true) {
     throw "Readable authority is not complete and independently verified."
 }
@@ -348,14 +354,21 @@ $CollisionPlanArgs = @(
 )
 Invoke-PyChecked "BUILD PRIVATE COLLISION PLAN" $CollisionPlanArgs
 
-$CollisionPlanDoc = Get-Content -LiteralPath $CollisionPlan -Raw | ConvertFrom-Json
+$CollisionPlanDoc = Get-JsonProjection `
+    -Path $CollisionPlan `
+    -Fields @{
+        identifiers_included = "/identifiers_included"
+        plan_eliminates_all_collisions = "/summary/plan_eliminates_all_collisions"
+        blocker_remap_count = "/summary/blocker_remap_count"
+        plan_id = "/plan_id"
+    }
 if ($CollisionPlanDoc.identifiers_included -ne $true) {
     throw "Collision plan is not the required identifier-bearing private authority."
 }
-if ($CollisionPlanDoc.summary.plan_eliminates_all_collisions -ne $true) {
+if ($CollisionPlanDoc.plan_eliminates_all_collisions -ne $true) {
     throw "Collision plan does not eliminate all namespace collisions."
 }
-if ([int]$CollisionPlanDoc.summary.blocker_remap_count -lt 1) {
+if ([int]$CollisionPlanDoc.blocker_remap_count -lt 1) {
     throw "Exact readable authority unexpectedly has no collision blockers to remap."
 }
 
@@ -374,8 +387,14 @@ Invoke-PyChecked "APPLY COLLISION-SAFE READABLE REMAP" $CollisionApplyArgs
 Require-File $CollisionReadableJar
 Require-File $CollisionTransform
 
-$CollisionTransformDoc = Get-Content -LiteralPath $CollisionTransform -Raw | ConvertFrom-Json
-if ([int]$CollisionTransformDoc.summary.post_collision_edge_count -ne 0) {
+$CollisionTransformDoc = Get-JsonProjection `
+    -Path $CollisionTransform `
+    -Fields @{
+        post_collision_edge_count = "/summary/post_collision_edge_count"
+        plan_id = "/plan_id"
+        transform_id = "/transform_id"
+    }
+if ([int]$CollisionTransformDoc.post_collision_edge_count -ne 0) {
     throw "Collision-remapped readable JAR still has namespace collision edges."
 }
 if ([string]$CollisionTransformDoc.plan_id -ne [string]$CollisionPlanDoc.plan_id) {
@@ -409,7 +428,18 @@ if (-not (Test-Path -LiteralPath $RecoveredSourceRoot -PathType Container)) {
     throw "Collision-derived source root is missing."
 }
 
-$Recovered = Get-Content -LiteralPath $RecoveredManifest -Raw | ConvertFrom-Json
+$Recovered = Get-JsonProjection `
+    -Path $RecoveredManifest `
+    -Fields @{
+        build_id = "/build_id"
+        source_authority_sha256 = "/source_authority_sha256"
+        collision_transform_id = "/collision_transform_id"
+        collision_plan_id = "/collision_plan_id"
+        collision_report_id = "/collision_report_id"
+        base_readable_jar_sha256 = "/base_readable_jar_sha256"
+        workspace_id = "/workspace_id"
+        java_file_count = "/java_file_count"
+    }
 if ([string]$Recovered.build_id -ne "v308") {
     throw "Recovered workspace is not v308."
 }
