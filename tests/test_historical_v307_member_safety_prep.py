@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
+import shutil
+import subprocess
 import unittest
 
 
@@ -89,6 +92,45 @@ class HistoricalV307MemberSafetyPrepTests(unittest.TestCase):
         self.assertIn(
             "Invoke-HistoricalV307RecoveryRelease.ps1",
             text,
+        )
+
+    @unittest.skipUnless(
+        os.name == "nt" and shutil.which("powershell.exe"),
+        "Windows PowerShell required",
+    )
+    def test_prep_wrapper_parses_in_windows_powershell(self):
+        repo = Path(__file__).resolve().parents[1]
+        script = (
+            repo
+            / "scripts"
+            / "Prepare-HistoricalV307MemberSafety.ps1"
+        )
+        literal = str(script).replace("'", "''")
+        command = (
+            "$tokens=$null; $errors=$null; "
+            "[System.Management.Automation.Language.Parser]::ParseFile("
+            f"'{literal}', [ref]$tokens, [ref]$errors) | Out-Null; "
+            "if ($errors.Count -ne 0) { "
+            "$errors | ForEach-Object { Write-Error $_.Message }; exit 1 "
+            "}; exit 0"
+        )
+        proc = subprocess.run(
+            [
+                "powershell.exe",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                command,
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        self.assertEqual(
+            proc.returncode,
+            0,
+            proc.stdout + proc.stderr,
         )
 
 
