@@ -247,6 +247,14 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
             "Normalization report ID is not bound to recovered workspace.",
             text,
         )
+        self.assertIn(
+            "PRIMITIVE_SCOPE_SELF_SHADOW_METHODS=",
+            text,
+        )
+        self.assertIn(
+            "PRIMITIVE_SCOPE_SELF_SHADOW_REFERENCES=",
+            text,
+        )
 
 
 if __name__ == "__main__":
