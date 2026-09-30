@@ -147,12 +147,88 @@ def summarize(
     return out
 
 
+
+def focus_diagnostics(
+    report: dict[str, Any],
+    *,
+    focus_files: int,
+) -> list[str]:
+    if focus_files <= 0:
+        return []
+
+    rows = report.get("diagnostics")
+    if not isinstance(rows, list):
+        raise JavacFrontierSummaryError(
+            "diagnostics must be an array"
+        )
+
+    files: Counter[str] = Counter()
+    by_file: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            raise JavacFrontierSummaryError(
+                "diagnostic row must be an object"
+            )
+        source_path = row.get("source_path")
+        if not source_path:
+            continue
+        path = str(source_path).replace("\\", "/")
+        files[path] += 1
+        by_file.setdefault(path, []).append(row)
+
+    out: list[str] = []
+    for path, total in _rank(files, focus_files):
+        file_rows = by_file[path]
+        categories = Counter(
+            str(row.get("category") or "unknown")
+            for row in file_rows
+        )
+        out.extend(
+            [
+                "",
+                "============================================================",
+                f" FOCUSED JAVAC DIAGNOSTICS: {path}",
+                "============================================================",
+                f"FOCUSED_TOTAL_ERRORS={total}",
+                "FOCUSED_CATEGORIES="
+                + json.dumps(
+                    dict(sorted(categories.items())),
+                    sort_keys=True,
+                    separators=(",", ":"),
+                ),
+            ]
+        )
+        for row in sorted(
+            file_rows,
+            key=lambda item: (
+                int(item.get("line") or 0),
+                str(item.get("category") or ""),
+                str(item.get("message") or ""),
+                str(item.get("symbol_kind") or ""),
+                str(item.get("symbol") or ""),
+                str(item.get("location_kind") or ""),
+                str(item.get("location") or ""),
+            ),
+        ):
+            out.append(
+                "DIAG: "
+                f"line={row.get('line')} | "
+                f"category={row.get('category')} | "
+                f"message={row.get('message')} | "
+                f"symbol_kind={row.get('symbol_kind')} | "
+                f"symbol={row.get('symbol')} | "
+                f"location_kind={row.get('location_kind')} | "
+                f"location={row.get('location')}"
+            )
+    return out
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="spk-javac-frontier-summary"
     )
     parser.add_argument("private_diagnostic", type=Path)
     parser.add_argument("--top", type=int, default=20)
+    parser.add_argument("--focus-files", type=int, default=0)
     args = parser.parse_args(argv)
 
     if args.top < 1 or args.top > 100:
@@ -161,10 +237,22 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 2
+    if args.focus_files < 0 or args.focus_files > 20:
+        print(
+            "REFUSED: --focus-files must be between 0 and 20",
+            file=sys.stderr,
+        )
+        return 2
 
     try:
         report = _load(args.private_diagnostic)
         lines = summarize(report, top=args.top)
+        lines.extend(
+            focus_diagnostics(
+                report,
+                focus_files=args.focus_files,
+            )
+        )
     except JavacFrontierSummaryError as exc:
         print(f"REFUSED: {exc}", file=sys.stderr)
         return 2
