@@ -35,6 +35,46 @@ function Invoke-PyChecked {
         throw ($Label + " failed with exit=" + $LASTEXITCODE)
     }
 }
+function Get-JsonProjection {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+        [Parameter(Mandatory = $true)]
+        [hashtable]$Fields
+    )
+
+    Require-File $Path
+
+    $Arguments = @(
+        "-3.13",
+        "-m",
+        "spk_recovery.json_projection_cli",
+        $Path
+    )
+    foreach ($Name in @($Fields.Keys | Sort-Object)) {
+        $Arguments += @(
+            "--field",
+            ($Name + "=" + [string]$Fields[$Name])
+        )
+    }
+
+    $Output = @(& py @Arguments)
+    $Code = $LASTEXITCODE
+    if ($Code -ne 0) {
+        throw (
+            "Case-safe JSON projection failed for " +
+            $Path +
+            " with exit=" +
+            $Code
+        )
+    }
+
+    $Raw = ($Output -join "`n").Trim()
+    if ([string]::IsNullOrWhiteSpace($Raw)) {
+        throw "Case-safe JSON projection returned empty output: $Path"
+    }
+    return ($Raw | ConvertFrom-Json)
+}
 
 function Invoke-PyJsonStdout {
     param(
@@ -54,7 +94,12 @@ function Invoke-PyJsonStdout {
         $Text,
         (New-Object System.Text.UTF8Encoding($false))
     )
-    $null = Get-Content -LiteralPath $Out -Raw | ConvertFrom-Json
+        & py -3.13 -m spk_recovery.json_projection_cli `
+        $Out `
+        --validate-only | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        throw ($Label + " produced invalid JSON: " + $Out)
+    }
 }
 
 function Add-OfficialArtifactArgs {
@@ -325,26 +370,46 @@ Invoke-PyChecked "R8DEP36 SUBSTITUTION READINESS" (
     ) $RuntimeReadiness $false $true
 )
 
-$Readiness = Get-Content -LiteralPath $RuntimeReadiness -Raw | ConvertFrom-Json
-if ($Readiness.summary.runtime_dependency_substitution_ready -ne $true) {
+$Readiness = Get-JsonProjection `
+    -Path $RuntimeReadiness `
+    -Fields @{
+        runtime_dependency_substitution_ready = "/summary/runtime_dependency_substitution_ready"
+        runtime_readiness_id = "/runtime_readiness_id"
+        class_closure_ready = "/summary/class_closure_ready"
+        dynamic_target_ready = "/summary/dynamic_target_ready"
+        resource_equivalence_ready = "/summary/resource_equivalence_ready"
+        native_runtime_ready = "/summary/native_runtime_ready"
+        static_class_closure_blocker_count = "/summary/static_class_closure_blocker_count"
+        dynamic_class_closure_blocker_count = "/summary/dynamic_class_closure_blocker_count"
+        remaining_mapping_gap_count = "/summary/remaining_mapping_gap_count"
+        dynamic_target_blocker_count = "/summary/dynamic_target_blocker_count"
+        service_provider_discovery_blocker_count = "/summary/service_provider_discovery_blocker_count"
+        dynamic_resource_target_blocker_count = "/summary/dynamic_resource_target_blocker_count"
+        native_dynamic_loading_blocker_count = "/summary/native_dynamic_loading_blocker_count"
+        non_native_resource_blocker_count = "/summary/non_native_resource_blocker_count"
+        native_resource_entry_count = "/summary/native_resource_entry_count"
+        native_resource_blocker_count = "/summary/native_resource_blocker_count"
+        native_dynamic_requirement_count = "/summary/native_dynamic_requirement_count"
+    }
+if ($Readiness.runtime_dependency_substitution_ready -ne $true) {
     Write-Host ""
     Write-Host "SPK_R8DEP_EXACT_LOCAL_BLOCKED" -ForegroundColor Yellow
     Write-Host "runtime_readiness_id=$($Readiness.runtime_readiness_id)"
-    Write-Host "class_closure_ready=$($Readiness.summary.class_closure_ready)"
-    Write-Host "dynamic_target_ready=$($Readiness.summary.dynamic_target_ready)"
-    Write-Host "resource_equivalence_ready=$($Readiness.summary.resource_equivalence_ready)"
-    Write-Host "native_runtime_ready=$($Readiness.summary.native_runtime_ready)"
-    Write-Host "static_class_closure_blocker_count=$($Readiness.summary.static_class_closure_blocker_count)"
-    Write-Host "dynamic_class_closure_blocker_count=$($Readiness.summary.dynamic_class_closure_blocker_count)"
-    Write-Host "remaining_mapping_gap_count=$($Readiness.summary.remaining_mapping_gap_count)"
-    Write-Host "dynamic_target_blocker_count=$($Readiness.summary.dynamic_target_blocker_count)"
-    Write-Host "service_provider_discovery_blocker_count=$($Readiness.summary.service_provider_discovery_blocker_count)"
-    Write-Host "dynamic_resource_target_blocker_count=$($Readiness.summary.dynamic_resource_target_blocker_count)"
-    Write-Host "native_dynamic_loading_blocker_count=$($Readiness.summary.native_dynamic_loading_blocker_count)"
-    Write-Host "non_native_resource_blocker_count=$($Readiness.summary.non_native_resource_blocker_count)"
-    Write-Host "native_resource_entry_count=$($Readiness.summary.native_resource_entry_count)"
-    Write-Host "native_resource_blocker_count=$($Readiness.summary.native_resource_blocker_count)"
-    Write-Host "native_dynamic_requirement_count=$($Readiness.summary.native_dynamic_requirement_count)"
+    Write-Host "class_closure_ready=$($Readiness.class_closure_ready)"
+    Write-Host "dynamic_target_ready=$($Readiness.dynamic_target_ready)"
+    Write-Host "resource_equivalence_ready=$($Readiness.resource_equivalence_ready)"
+    Write-Host "native_runtime_ready=$($Readiness.native_runtime_ready)"
+    Write-Host "static_class_closure_blocker_count=$($Readiness.static_class_closure_blocker_count)"
+    Write-Host "dynamic_class_closure_blocker_count=$($Readiness.dynamic_class_closure_blocker_count)"
+    Write-Host "remaining_mapping_gap_count=$($Readiness.remaining_mapping_gap_count)"
+    Write-Host "dynamic_target_blocker_count=$($Readiness.dynamic_target_blocker_count)"
+    Write-Host "service_provider_discovery_blocker_count=$($Readiness.service_provider_discovery_blocker_count)"
+    Write-Host "dynamic_resource_target_blocker_count=$($Readiness.dynamic_resource_target_blocker_count)"
+    Write-Host "native_dynamic_loading_blocker_count=$($Readiness.native_dynamic_loading_blocker_count)"
+    Write-Host "non_native_resource_blocker_count=$($Readiness.non_native_resource_blocker_count)"
+    Write-Host "native_resource_entry_count=$($Readiness.native_resource_entry_count)"
+    Write-Host "native_resource_blocker_count=$($Readiness.native_resource_blocker_count)"
+    Write-Host "native_dynamic_requirement_count=$($Readiness.native_dynamic_requirement_count)"
     exit 3
 }
 
@@ -387,7 +452,12 @@ Invoke-PyChecked "R8DEP38 VERIFY EXACT RUNTIME POSTIMAGE" ([string[]]$VerifyArgs
 
 $ManifestPath = Join-Path $Postimage "DEPENDENCY-RUNTIME-SUBSTITUTION.json"
 Require-File $ManifestPath
-$Manifest = Get-Content -LiteralPath $ManifestPath -Raw | ConvertFrom-Json
+$Manifest = Get-JsonProjection `
+    -Path $ManifestPath `
+    -Fields @{
+        verified = "/verified"
+        runtime_postimage_id = "/runtime_postimage_id"
+    }
 if ($Manifest.verified -ne $true) {
     throw "Runtime postimage manifest is not verified."
 }
