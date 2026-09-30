@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "UrlFileDownloader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_url_file_contract",
+          "detail": "The abstract class owns exactly a source URL and destination File plus download byte-count/start-time/content-length state; its public download method streams URL bytes into that File and returns the destination."
+        },
+        {
+          "family": "exact_streaming_behavior",
+          "detail": "The downloader uses a 16 KiB BufferedInputStream buffer, obtains content length through HttpURLConnection, tracks bytes written and invokes one abstract progress callback after every chunk."
+        },
+        {
+          "family": "exact_updater_consumers",
+          "detail": "All live exact-v308 consumers are updater/download classes for main game assets, client, configs and sprites; the base itself remains generic to URL-to-file transfer."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the abstract URL-to-file streaming downloader used by the cache/client updater family."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientProgressFileDownloader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_base_contract",
+          "detail": "The class extends UrlFileDownloader and adds only a Client reference, caller-supplied progress label and progress-rate timestamp."
+        },
+        {
+          "family": "exact_progress_reporting",
+          "detail": "Its progress callback computes integer percent from downloaded/content-length bytes, formats transfer speed as kb/s or mb/s after one second, and publishes the progress through Client.b(percent,label,status)."
+        },
+        {
+          "family": "exact_multi_lane_use",
+          "detail": "Exact-v308 updater classes construct this same implementation for 'Downloading main game assets..', 'Downloading client..', 'Downloading game configs..' and 'Downloading sprites..', proving it is a shared client-progress downloader rather than one asset-specific updater."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the concrete URL file downloader that reports percentage/rate to the live Client UI."
+    }
+  ],
+  "conflicts": []
+}
