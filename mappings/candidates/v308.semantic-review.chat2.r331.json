@@ -1,46 +1,27 @@
 {
-  "schema_version": 1,
-  "kind": "semantic_review_set",
-  "canonical": false,
-  "source_build": "v308",
-  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-  "proposal_count": 1,
-  "review_id": "SEMREVIEW_62352781CEFAD27F9C25",
-  "proposals": [
-    {
-      "proposal_id": "SEMPROP_D0513B2948BB84C051CF",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000294",
-      "owner_logical_id": "CLIENT_CLASS_000294",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/h/f",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "DefinitionReloadManager",
-      "confidence": 0.998,
-      "evidence": [
-        {
-          "family": "exact_item_definition_reload",
-          "detail": "The first gated reload path resets the ItemDefinition backing loader/cache state, clears the ItemDefinition cache, invokes the client definition reset path, clears three shared sprite/model caches, refreshes the client and reloads associated definition-backed resources before returning true."
-        },
-        {
-          "family": "exact_npc_definition_reload",
-          "detail": "The second gated path clears NpcDefinition model/cache state, rebuilds the 20-entry definition cache array, re-resolves every live NPC's NpcDefinition by id and copies the refreshed size/animation/movement fields back onto the live NPC instances."
-        },
-        {
-          "family": "exact_main_loop_gate",
-          "detail": "The main Client loop invokes both static reload methods after shortcut/command handling; if either performs work the client displays 'Loading - please wait.', sleeps briefly and returns early from that cycle."
-        },
-        {
-          "family": "exact_command_trigger",
-          "detail": "The live client-command dispatcher rs/n/a sets the two rs/h/f request flags, including an explicit 'reset' branch for the item-definition reload path, so reload work is deferred from command parsing into the client loop."
-        }
-      ],
-      "note": "Descriptive exact-v308 name for the deferred ItemDefinition/NpcDefinition hot-reload coordinator. It is distinct from the callback interfaces/managers sharing package rs/h."
-    }
-  ],
-  "unresolved": []
+  "schema_version":1,
+  "kind":"semantic_review_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count":1,
+  "review_id":"SEMREVIEW_D88D49F93F75009319DF",
+  "proposals":[{
+    "proposal_id":"SEMPROP_773FEE692A57923E574A",
+    "target_kind":"class",
+    "stable_id":"CLIENT_CLASS_000029",
+    "owner_logical_id":"CLIENT_CLASS_000029",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate":{"owner":"rs/D","name":null,"descriptor":null},
+    "proposed_name":"RSAppletComponentMoveListener",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_parent_ownership","detail":"R48 RSApplet constructs rs/D directly and installs it as a ComponentListener on the same render/input Component that already carries the RSApplet listeners."},
+      {"family":"exact_listener_contract","detail":"rs/D extends ComponentAdapter and overrides only componentMoved(ComponentEvent); it stores exactly one synthetic/reference field back to RSApplet."},
+      {"family":"exact_move_debounce","detail":"componentMoved debounces against Client.j with a 100 ms threshold, sets Client.h=true when movement is accepted, and refreshes Client.j from System.currentTimeMillis(). No resize/focus/input behavior is present."}
+    ],
+    "note":"Descriptive exact-v308 name for the RSApplet-owned component-movement listener. The downstream meaning of Client.h is intentionally not renamed here."
+  }],
+  "unresolved":[]
 }
