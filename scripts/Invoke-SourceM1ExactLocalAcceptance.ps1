@@ -43,6 +43,68 @@ function Invoke-PyChecked {
         throw ($Label + " failed with exit=" + $LASTEXITCODE)
     }
 }
+function Get-JsonProjection {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+        [Parameter(Mandatory = $true)]
+        [hashtable]$Fields,
+        [hashtable]$OptionalFields = @{}
+    )
+
+    Require-File $Path
+
+    $Arguments = @(
+        "-3.13",
+        "-m",
+        "spk_recovery.json_projection_cli",
+        $Path
+    )
+
+    foreach ($Name in @($Fields.Keys | Sort-Object)) {
+        $Arguments += @(
+            "--field",
+            ($Name + "=" + [string]$Fields[$Name])
+        )
+    }
+
+    foreach ($Name in @($OptionalFields.Keys | Sort-Object)) {
+        $Arguments += @(
+            "--optional-field",
+            ($Name + "=" + [string]$OptionalFields[$Name])
+        )
+    }
+
+    $Output = @(& py @Arguments)
+    $Code = $LASTEXITCODE
+    if ($Code -ne 0) {
+        throw (
+            "Case-safe JSON projection failed for " +
+            $Path +
+            " with exit=" +
+            $Code
+        )
+    }
+
+    $Raw = ($Output -join "`n").Trim()
+    if ([string]::IsNullOrWhiteSpace($Raw)) {
+        throw "Case-safe JSON projection returned empty output: $Path"
+    }
+
+    try {
+        # ConvertFrom-Json is safe here because Python emits only controlled
+        # projection aliases. Raw authority keys never enter PowerShell.
+        return ($Raw | ConvertFrom-Json)
+    }
+    catch {
+        throw (
+            "Case-safe JSON projection output was invalid for " +
+            $Path +
+            ": " +
+            $_.Exception.Message
+        )
+    }
+}
 
 function Enable-CaseSensitiveWorkspace {
     param([Parameter(Mandatory = $true)][string]$Path)
@@ -262,7 +324,13 @@ $BootstrapReadableJar = Join-Path $BootstrapReadableDir "readable-client.jar"
 Require-File $BootstrapReadableManifest
 Require-File $BootstrapReadableJar
 
-$ReadableDoc = Get-Content -LiteralPath $BootstrapReadableManifest -Raw | ConvertFrom-Json
+$ReadableDoc = Get-JsonProjection `
+    -Path $BootstrapReadableManifest `
+    -Fields @{
+        status = "/status"
+        verification_pass = "/verification_pass"
+        source_sha256 = "/source_sha256"
+    }
 if ($ReadableDoc.status -ne "complete" -or $ReadableDoc.verification_pass -ne $true) {
     throw "Readable authority is not complete and independently verified."
 }
@@ -285,14 +353,21 @@ $CollisionPlanArgs = @(
 )
 Invoke-PyChecked "BUILD PRIVATE COLLISION PLAN" $CollisionPlanArgs
 
-$CollisionPlanDoc = Get-Content -LiteralPath $CollisionPlan -Raw | ConvertFrom-Json
+$CollisionPlanDoc = Get-JsonProjection `
+    -Path $CollisionPlan `
+    -Fields @{
+        identifiers_included = "/identifiers_included"
+        plan_eliminates_all_collisions = "/summary/plan_eliminates_all_collisions"
+        blocker_remap_count = "/summary/blocker_remap_count"
+        plan_id = "/plan_id"
+    }
 if ($CollisionPlanDoc.identifiers_included -ne $true) {
     throw "Collision plan is not the required identifier-bearing private authority."
 }
-if ($CollisionPlanDoc.summary.plan_eliminates_all_collisions -ne $true) {
+if ($CollisionPlanDoc.plan_eliminates_all_collisions -ne $true) {
     throw "Collision plan does not eliminate all namespace collisions."
 }
-if ([int]$CollisionPlanDoc.summary.blocker_remap_count -lt 1) {
+if ([int]$CollisionPlanDoc.blocker_remap_count -lt 1) {
     throw "Exact readable authority unexpectedly has no collision blockers to remap."
 }
 
@@ -311,8 +386,14 @@ Invoke-PyChecked "APPLY COLLISION-SAFE READABLE REMAP" $CollisionApplyArgs
 Require-File $CollisionReadableJar
 Require-File $CollisionTransform
 
-$CollisionTransformDoc = Get-Content -LiteralPath $CollisionTransform -Raw | ConvertFrom-Json
-if ([int]$CollisionTransformDoc.summary.post_collision_edge_count -ne 0) {
+$CollisionTransformDoc = Get-JsonProjection `
+    -Path $CollisionTransform `
+    -Fields @{
+        post_collision_edge_count = "/summary/post_collision_edge_count"
+        plan_id = "/plan_id"
+        transform_id = "/transform_id"
+    }
+if ([int]$CollisionTransformDoc.post_collision_edge_count -ne 0) {
     throw "Collision-remapped readable JAR still has namespace collision edges."
 }
 if ([string]$CollisionTransformDoc.plan_id -ne [string]$CollisionPlanDoc.plan_id) {
@@ -346,7 +427,18 @@ if (-not (Test-Path -LiteralPath $RecoveredSourceRoot -PathType Container)) {
     throw "Collision-derived source root is missing."
 }
 
-$Recovered = Get-Content -LiteralPath $RecoveredManifest -Raw | ConvertFrom-Json
+$Recovered = Get-JsonProjection `
+    -Path $RecoveredManifest `
+    -Fields @{
+        build_id = "/build_id"
+        source_authority_sha256 = "/source_authority_sha256"
+        collision_transform_id = "/collision_transform_id"
+        collision_plan_id = "/collision_plan_id"
+        collision_report_id = "/collision_report_id"
+        base_readable_jar_sha256 = "/base_readable_jar_sha256"
+        workspace_id = "/workspace_id"
+        java_file_count = "/java_file_count"
+    }
 if ([string]$Recovered.build_id -ne "v308") {
     throw "Recovered workspace is not v308."
 }
@@ -413,7 +505,13 @@ $ReleaseExit = $LASTEXITCODE
 if ($ReleaseExit -ne 0) {
     $RunPath = Join-Path $ReleaseDir "release-run.json"
     if (Test-Path -LiteralPath $RunPath -PathType Leaf) {
-        $Run = Get-Content -LiteralPath $RunPath -Raw | ConvertFrom-Json
+        $Run = Get-JsonProjection `
+    -Path $RunPath `
+    -Fields @{
+        terminal_stage = "/terminal_stage"
+        status = "/status"
+        run_id = "/run_id"
+    }
         Write-Host ""
         Write-Host "SPK_SOURCE_M1_EXACT_LOCAL_BLOCKED" -ForegroundColor Yellow
         Write-Host "terminal_stage=$($Run.terminal_stage)"
@@ -421,18 +519,31 @@ if ($ReleaseExit -ne 0) {
         Write-Host "run_id=$($Run.run_id)"
         $CleanPath = Join-Path $ReleaseDir "rebuild\clean-rebuild.json"
         if (Test-Path -LiteralPath $CleanPath -PathType Leaf) {
-            $CleanDoc = Get-Content -LiteralPath $CleanPath -Raw | ConvertFrom-Json
+            $CleanDoc = Get-JsonProjection `
+                -Path $CleanPath `
+                -Fields @{
+                    rebuild_id = "/rebuild_id"
+                    status = "/status"
+                    generated_project_classes = "/project_classes/generated_count"
+                    expected_project_classes = "/project_classes/expected_count"
+                    project_binary_fallback_count = "/project_classes/binary_fallback_count"
+                } `
+                -OptionalFields @{
+                    javac_total_errors = "/compiler/diagnostic_classification/summary/total_errors"
+                    javac_affected_files = "/compiler/diagnostic_classification/summary/affected_files"
+                    javac_cannot_find_symbol = "/compiler/diagnostic_classification/summary/cannot_find_symbol/count"
+                    javac_frontier_id = "/compiler/diagnostic_classification/frontier_id"
+                }
             Write-Host "clean_rebuild_id=$($CleanDoc.rebuild_id)"
             Write-Host "clean_status=$($CleanDoc.status)"
-            Write-Host "generated_project_classes=$($CleanDoc.project_classes.generated_count)"
-            Write-Host "expected_project_classes=$($CleanDoc.project_classes.expected_count)"
-            Write-Host "project_binary_fallback_count=$($CleanDoc.project_classes.binary_fallback_count)"
-            if ($null -ne $CleanDoc.compiler.diagnostic_classification) {
-                $Summary = $CleanDoc.compiler.diagnostic_classification.summary
-                Write-Host "javac_total_errors=$($Summary.total_errors)"
-                Write-Host "javac_affected_files=$($Summary.affected_files)"
-                Write-Host "javac_cannot_find_symbol=$($Summary.cannot_find_symbol.count)"
-                Write-Host "javac_frontier_id=$($CleanDoc.compiler.diagnostic_classification.frontier_id)"
+            Write-Host "generated_project_classes=$($CleanDoc.generated_project_classes)"
+            Write-Host "expected_project_classes=$($CleanDoc.expected_project_classes)"
+            Write-Host "project_binary_fallback_count=$($CleanDoc.project_binary_fallback_count)"
+            if ($null -ne $CleanDoc.javac_frontier_id) {
+                Write-Host "javac_total_errors=$($CleanDoc.javac_total_errors)"
+                Write-Host "javac_affected_files=$($CleanDoc.javac_affected_files)"
+                Write-Host "javac_cannot_find_symbol=$($CleanDoc.javac_cannot_find_symbol)"
+                Write-Host "javac_frontier_id=$($CleanDoc.javac_frontier_id)"
             }
         }
         if (Test-Path -LiteralPath $PrivateDiagnostic -PathType Leaf) {
@@ -620,9 +731,24 @@ $BundleVerifyArgs = @(
 )
 Invoke-PyChecked "VERIFY SOURCE-ONLY PUBLICATION BUNDLE" $BundleVerifyArgs
 
-$Milestone = Get-Content -LiteralPath $MilestoneManifest -Raw | ConvertFrom-Json
-$MilestoneVerify = Get-Content -LiteralPath $MilestoneVerification -Raw | ConvertFrom-Json
-$BundleVerify = Get-Content -LiteralPath $BundleVerification -Raw | ConvertFrom-Json
+$Milestone = Get-JsonProjection `
+    -Path $MilestoneManifest `
+    -Fields @{
+        publishable = "/publishable"
+        milestone_id = "/milestone_id"
+        source_tree_sha256 = "/source_tree/sha256"
+    }
+$MilestoneVerify = Get-JsonProjection `
+    -Path $MilestoneVerification `
+    -Fields @{
+        verified = "/verified"
+        publishable = "/publishable"
+    }
+$BundleVerify = Get-JsonProjection `
+    -Path $BundleVerification `
+    -Fields @{
+        verified = "/verified"
+    }
 
 if ($Milestone.publishable -ne $true) {
     throw "Milestone publishable flag is false."
@@ -636,7 +762,7 @@ if ($BundleVerify.verified -ne $true) {
 
 Write-Host ""
 Write-Host "MILESTONE_ID=$($Milestone.milestone_id)" -ForegroundColor Green
-Write-Host "SOURCE_TREE_SHA256=$($Milestone.source_tree.sha256)" -ForegroundColor Green
+Write-Host "SOURCE_TREE_SHA256=$($Milestone.source_tree_sha256)" -ForegroundColor Green
 Write-Host "PUBLICATION_BUNDLE=$BundleDir"
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Green
