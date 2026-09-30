@@ -75,10 +75,9 @@ function Get-JsonProjection {
         )
     }
 
-    $Output = @(& py @Arguments 2>&1)
+    $Output = @(& py @Arguments)
     $Code = $LASTEXITCODE
     if ($Code -ne 0) {
-        $Output | ForEach-Object { Write-Host $_ }
         throw (
             "Case-safe JSON projection failed for " +
             $Path +
