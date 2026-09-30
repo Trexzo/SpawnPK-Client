@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "historical_source_regeneration_fixture",
+  "fixture_id": "SPK_V307_V308_SOURCE_REGEN",
+  "old": {
+    "build_id": "v307",
+    "client_sha256": "6232bae206846a4ba8d09766a2dee886b69016066a3f50f83b201bf705f93662"
+  },
+  "new": {
+    "build_id": "v308",
+    "client_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
+  },
+  "binary_authority": {
+    "backtest_id": "XVERBIN_E56BD2FB8CCC172D6184",
+    "old_entry_count": 10970,
+    "new_entry_count": 10970,
+    "old_only_count": 0,
+    "new_only_count": 0,
+    "changed_entry_count": 1,
+    "changed_entries": [
+      "rs/f/a.class"
+    ],
+    "changed_class_old_sha256": "556a4de8b49afc3ea5a82af2a7394062fc824c6cc3da795b2f3ab29a014ca68d",
+    "changed_class_new_sha256": "7bf992941766a40fddaead4c8bfe5e94a46c19c63d06800e26f45b78d001bbc6"
+  },
+  "decompiler_authority": {
+    "engine": "procyon",
+    "version": "0.6.0",
+    "filename": "procyon-decompiler-0.6.0.jar",
+    "size_bytes": 2004704,
+    "sha256": "821da96012fc69244fa1ea298c90455ee4e021434bc796d3b9546ab24601b779",
+    "official_release_url": "https://github.com/mstrobel/procyon/releases/download/v0.6.0/procyon-decompiler-0.6.0.jar"
+  },
+  "source_backtest_requirements": {
+    "old_release_ready": true,
+    "new_release_ready": true,
+    "compare_by_logical_class_identity": true,
+    "require_exact_source_tree_hashes": true,
+    "require_exact_class_lineage_pair": true,
+    "changed_source_unit_count_must_be_explained_by_binary_or_normalization_delta": true,
+    "independent_old_source_regeneration_required": true,
+    "forbid_deriving_old_source_by_editing_new_source": true
+  },
+  "provenance_note": "The decompiler URL/size/SHA identify the official Procyon v0.6.0 release artifact. Client/decompiler bytes and generated recovered source remain outside public Git."
+}
