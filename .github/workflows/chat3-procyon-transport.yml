@@ -1,9 +1,9 @@
 name: Chat 3 Procyon Transport
 
 on:
-  pull_request:
-    paths:
-      - ".github/workflows/chat3-procyon-transport.yml"
+  push:
+    branches:
+      - "chat3/procyon-artifact-transport"
 
 permissions:
   contents: read
