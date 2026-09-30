@@ -52,6 +52,64 @@ def _arg(value: str) -> str:
     return '"' + value.replace("\\", "/").replace('"', '\\"') + '"'
 
 
+def _stage_explicit_javac_sources(
+    source_files: list[Path],
+    source_root: Path,
+    staging_root: Path,
+) -> tuple[list[Path], dict[str, str]]:
+    """Stage explicit javac inputs under case-unique physical parents.
+
+    Windows javac/file-manager paths can case-fold even when the underlying
+    NTFS directory is case-sensitive.  Keep package/type declarations
+    untouched, but give each explicit compilation unit a unique physical
+    parent so source-path transport cannot collapse case-distinct identities.
+    """
+    staging_root.mkdir(parents=True, exist_ok=True)
+
+    staged: list[Path] = []
+    diagnostic_map: dict[str, str] = {}
+
+    for index, source in enumerate(source_files):
+        source.relative_to(source_root)
+        target = staging_root / f"{index:06d}" / source.name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(source.read_bytes())
+
+        staged.append(target)
+        diagnostic_map[str(target)] = str(source)
+        diagnostic_map[target.as_posix()] = source.as_posix()
+
+    if len(staged) != len(source_files):
+        raise CollisionDerivedCompileError(
+            "javac source staging count drifted"
+        )
+
+    casefolded = {
+        str(path).casefold()
+        for path in staged
+    }
+    if len(casefolded) != len(staged):
+        raise CollisionDerivedCompileError(
+            "javac source staging did not eliminate casefold collisions"
+        )
+
+    return staged, diagnostic_map
+
+
+def _remap_staged_diagnostics(
+    text: str,
+    diagnostic_map: dict[str, str],
+) -> str:
+    value = text
+    for staged in sorted(
+        diagnostic_map,
+        key=len,
+        reverse=True,
+    ):
+        value = value.replace(staged, diagnostic_map[staged])
+    return value
+
+
 def _require_executable(command: str) -> str:
     candidate = Path(command)
     if candidate.is_absolute():
@@ -341,6 +399,16 @@ def compile_collision_derived_source(
             "collision-derived source root contains no Java files"
         )
 
+    staged_sources, staged_diagnostic_map = (
+        _stage_explicit_javac_sources(
+            sources,
+            source_root,
+            out_dir / "source-inputs",
+        )
+    )
+    empty_sourcepath = out_dir / "empty-sourcepath"
+    empty_sourcepath.mkdir(parents=True)
+
     generated_dir.mkdir(parents=True)
     args = [
         "-proc:none",
@@ -349,6 +417,8 @@ def compile_collision_derived_source(
         "-Xlint:none",
         "-Xmaxerrs",
         "10000",
+        "-sourcepath",
+        str(empty_sourcepath),
         "-classpath",
         str(transformed_dependency),
         "-d",
@@ -356,7 +426,7 @@ def compile_collision_derived_source(
     ]
     if release is not None:
         args.extend(["--release", str(release)])
-    args.extend(str(path) for path in sources)
+    args.extend(str(path) for path in staged_sources)
     argfile.write_text(
         "\n".join(_arg(value) for value in args) + "\n",
         encoding="utf-8",
@@ -378,8 +448,12 @@ def compile_collision_derived_source(
                 + proc.stderr
             )
 
-        remapped = _remap_diagnostic_root(
+        staged_remapped = _remap_staged_diagnostics(
             proc.stdout + proc.stderr,
+            staged_diagnostic_map,
+        )
+        remapped = _remap_diagnostic_root(
+            staged_remapped,
             source_root=source_root,
             diagnostic_root=diagnostic_root,
         )
@@ -422,6 +496,7 @@ def compile_collision_derived_source(
             "compile_dependency_sha256": dependency_sha,
             "release": release,
             "source_count": len(sources),
+            "source_transport": "case_unique_explicit_inputs",
             "status": "compile_failed",
             "javac_frontier_id": public_diagnostic["frontier_id"],
         }
@@ -461,6 +536,8 @@ def compile_collision_derived_source(
             "compiler": {
                 "target_release": release,
                 "source_count": len(sources),
+                "staged_source_count": len(staged_sources),
+                "source_transport": "case_unique_explicit_inputs",
                 "exit_code": proc.returncode,
                 "diagnostic_classification": (
                     _public_diagnostic_summary(
@@ -576,6 +653,7 @@ def compile_collision_derived_source(
         "compile_dependency_sha256": dependency_sha,
         "release": release,
         "source_count": len(sources),
+        "source_transport": "case_unique_explicit_inputs",
         "generated_class_tree_sha256": generated_sha,
         "restored_class_tree_sha256": restored_sha,
         "restore_replacement_count": replacement_count,
@@ -615,6 +693,8 @@ def compile_collision_derived_source(
         "compiler": {
             "target_release": release,
             "source_count": len(sources),
+            "staged_source_count": len(staged_sources),
+            "source_transport": "case_unique_explicit_inputs",
             "exit_code": 0,
             "diagnostic_classification": None,
         },

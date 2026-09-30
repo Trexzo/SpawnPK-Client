@@ -248,6 +248,96 @@ def _compile_java_fixture(root: Path, files: dict[str, str]) -> Path:
     return jar
 
 
+def _import_shadow_parameter_fixture(
+    root: Path,
+    *,
+    descriptor_owner: str = "imported",
+) -> Path:
+    legal = root / ("import-shadow-" + descriptor_owner)
+    other = legal / "other" / "h.java"
+    local = legal / "p" / "h.java"
+    current = legal / "p" / "Current.java"
+    other.parent.mkdir(parents=True, exist_ok=True)
+    local.parent.mkdir(parents=True, exist_ok=True)
+
+    other.write_text(
+        "package other;\n"
+        "public class h {\n"
+        "    public void a(final int n, final int[] array) {}\n"
+        "}\n",
+        encoding="utf-8",
+    )
+    local.write_text(
+        "package p;\n"
+        "public class h {\n"
+        "    public void a(final Object value) {}\n"
+        "    public int a(final int x, final int y, final int z) {\n"
+        "        return x + y + z;\n"
+        "    }\n"
+        "}\n",
+        encoding="utf-8",
+    )
+    parameter_type = "other.h" if descriptor_owner == "imported" else "p.h"
+    body = (
+        "        if (h != null) { h.a(n, new int[] { 1 }); }\n"
+        if descriptor_owner == "imported"
+        else "        if (h != null) { h.a(Integer.valueOf(n)); }\n"
+    )
+    current.write_text(
+        "package p;\n"
+        "import other.h;\n"
+        "public class Current {\n"
+        "    public static void m(final "
+        + parameter_type
+        + " h, final int n) {\n"
+        + body
+        + "    }\n"
+        "}\n",
+        encoding="utf-8",
+    )
+
+    classes = root / ("import-shadow-classes-" + descriptor_owner)
+    classes.mkdir()
+
+    first_sources = [other, local]
+    proc = subprocess.run(
+        ["javac", "-d", str(classes), *map(str, first_sources)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if proc.returncode != 0:
+        raise AssertionError(
+            "javac import-shadow dependency fixture failed: " + proc.stderr
+        )
+
+    proc = subprocess.run(
+        [
+            "javac",
+            "-cp",
+            str(classes),
+            "-d",
+            str(classes),
+            str(current),
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if proc.returncode != 0:
+        raise AssertionError(
+            "javac import-shadow current fixture failed: " + proc.stderr
+        )
+
+    jar = root / ("import-shadow-" + descriptor_owner + ".jar")
+    with zipfile.ZipFile(jar, "w") as z:
+        for class_file in sorted(classes.rglob("*.class")):
+            z.write(
+                class_file,
+                class_file.relative_to(classes).as_posix(),
+            )
+    return jar
+
 class ProcyonSourceNormalizationTests(unittest.TestCase):
     def test_reconstructs_proven_synthetic_switch_class(self):
         with tempfile.TemporaryDirectory() as td:
@@ -1169,6 +1259,407 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
             self.assertEqual(
                 report["summary"][
                     "shadowed_nested_static_field_reference_count"
+                ],
+                0,
+            )
+
+
+    def test_nested_type_static_field_shadow_in_constructor_forces_type_context(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/Base.java": (
+                        "package pkg;\n"
+                        "public class Base { public Object b; }\n"
+                    ),
+                    "pkg/Outer.java": (
+                        "package pkg;\n"
+                        "public class Outer extends Base {\n"
+                        "    public static class b {\n"
+                        "        public static int h = 7;\n"
+                        "        public static int i = 8;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "public class Current {\n"
+                        "    public int value;\n"
+                        "    public Current() {\n"
+                        "        value = ((pkg.Outer.b)null).h"
+                        " + ((pkg.Outer.b)null).i;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package use;\n"
+                "public class Current {\n"
+                "    public int value;\n"
+                "    public Current() {\n"
+                "        value = pkg.Outer.b.h + pkg.Outer.b.i;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-constructor-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn("((pkg.Outer.b)null).h", normalized)
+            self.assertIn("((pkg.Outer.b)null).i", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if (
+                    row["kind"]
+                    == "shadowed_nested_static_field_owner_type_context"
+                    and row.get("method_name") == "<init>"
+                )
+            )
+            self.assertEqual(action["method_descriptor"], "()V")
+            self.assertEqual(action["replacement_count"], 2)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-constructor-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_imported_static_field_shadow_in_clinit_forces_type_context(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/E.java": (
+                        "package dep;\n"
+                        "public class E {\n"
+                        "    public static int v = 1;\n"
+                        "    public static int w = 2;\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "import dep.E;\n"
+                        "public class Current {\n"
+                        "    public int E;\n"
+                        "    public static int value;\n"
+                        "    static {\n"
+                        "        value = ((dep.E)null).v"
+                        " + ((dep.E)null).w;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package use;\n"
+                "import dep.E;\n"
+                "public class Current {\n"
+                "    public int E;\n"
+                "    public static int value;\n"
+                "    static {\n"
+                "        value = E.v + E.w;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-import-clinit-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn(
+                "non-static variable E cannot be referenced",
+                before.stderr,
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn("((dep.E)null).v", normalized)
+            self.assertIn("((dep.E)null).w", normalized)
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_imported_static_field_block_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_imported_static_field_reference_count"
+                ],
+                2,
+            )
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "shadowed_imported_static_field_owner_type_context"
+            )
+            self.assertEqual(action["method_name"], "<clinit>")
+            self.assertEqual(action["method_descriptor"], "()V")
+            self.assertEqual(action["imported_owners"], ["dep/E"])
+            self.assertEqual(action["replacement_count"], 2)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-import-clinit-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_imported_static_field_shadow_in_clinit_count_mismatch_fails_closed(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/E.java": (
+                        "package dep;\n"
+                        "public class E { public static int v = 1; }\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "import dep.E;\n"
+                        "public class Current {\n"
+                        "    public int E;\n"
+                        "    public static int value;\n"
+                        "    static { value = ((dep.E)null).v; }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package use;\n"
+                "import dep.E;\n"
+                "public class Current {\n"
+                "    public int E;\n"
+                "    public static int value;\n"
+                "    static { value = E.v + E.v; }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_imported_static_field_reference_count"
+                ],
+                0,
+            )
+
+    def test_qualifies_imported_parameter_shadowed_by_same_package_type(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _import_shadow_parameter_fixture(
+                root,
+                descriptor_owner="imported",
+            )
+            source_root = root / "src"
+            current = source_root / "p" / "Current.java"
+            local = source_root / "p" / "h.java"
+            current.parent.mkdir(parents=True)
+            current.write_text(
+                "package p;\n"
+                "import other.h;\n"
+                "public class Current {\n"
+                "    public static void m(final h h, final int n) {\n"
+                "        if (h != null) { h.a(n, new int[] { 1 }); }\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            local.write_text(
+                "package p;\n"
+                "public class h {\n"
+                "    public void a(final Object value) {}\n"
+                "    public int a(final int x, final int y, final int z) {\n"
+                "        return x + y + z;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            self.assertIn(
+                "m(final h h, final int n)",
+                current.read_text(encoding="utf-8"),
+            )
+
+            report = normalize_procyon_source(source_root, jar)
+            normalized = current.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "m(final other.h h, final int n)",
+                normalized,
+            )
+            self.assertEqual(
+                report["summary"]["imported_parameter_shadow_method_count"],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "imported_parameter_shadow_reference_count"
+                ],
+                1,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "imported_parameter_type_shadowed_by_same_package"
+            )
+            self.assertEqual(
+                action["method_descriptor"],
+                "(Lother/h;I)V",
+            )
+            self.assertEqual(
+                action["replacements"],
+                [
+                    {
+                        "parameter_index": 0,
+                        "simple_name": "h",
+                        "imported_owner": "other/h",
+                        "same_package_owner": "p/h",
+                        "qualified_type": "other.h",
+                    }
+                ],
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-classes"),
+                    str(current),
+                    str(local),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_imported_parameter_shadow_fails_closed_for_same_package_descriptor(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _import_shadow_parameter_fixture(
+                root,
+                descriptor_owner="same_package",
+            )
+            source_root = root / "src"
+            current = source_root / "p" / "Current.java"
+            local = source_root / "p" / "h.java"
+            current.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import other.h;\n"
+                "public class Current {\n"
+                "    public static void m(final h h, final int n) {\n"
+                "        if (h != null) { h.a(Integer.valueOf(n)); }\n"
+                "    }\n"
+                "}\n"
+            )
+            current.write_text(original, encoding="utf-8")
+            local.write_text(
+                "package p;\n"
+                "public class h {\n"
+                "    public void a(final Object value) {}\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(source_root, jar)
+
+            self.assertEqual(
+                current.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "imported_parameter_shadow_reference_count"
                 ],
                 0,
             )
