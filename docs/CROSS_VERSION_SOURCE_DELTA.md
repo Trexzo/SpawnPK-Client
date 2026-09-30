@@ -13,12 +13,13 @@ Inputs:
 - canonical `class-lineage.json` containing both builds;
 - old class `remap_plan`;
 - new class `remap_plan`;
+- optional identifier-bearing old/new namespace-collision plans for collision-derived Source M1 trees;
 - old recovered source root;
 - new recovered source root.
 
 Each source root is recomputed with the repository's canonical source-tree digest and must exactly equal its release manifest `final_source_tree_sha256`.
 
-Each release authority SHA must exactly match the same build in canonical class lineage. Each remap plan must bind the same build and exact binary authority.
+Each release authority SHA must exactly match the same build in canonical class lineage. Each remap plan must bind the same build and exact binary authority. When a collision plan is supplied, it must contain exact identifiers and its readable-JAR SHA-256 must equal that release's readable-JAR authority.
 
 ## Logical source units
 
@@ -28,9 +29,10 @@ For each build:
 
 1. take the exact class-lineage entry for the logical class;
 2. apply that build's class remap plan when the class was renamed for semantics or Java source safety;
-3. derive the effective Java source path;
-4. hash canonicalized Java text;
-5. compare the same logical class across builds.
+3. apply that build's identifier-bearing namespace-collision plan, when the recovered tree is collision-derived;
+4. derive the effective Java source path;
+5. hash canonicalized Java text;
+6. compare the same logical class across builds.
 
 Nested JVM classes (`$` binary names) are intentionally not indexed as separate Java source units because the Source M1 Procyon flow reconstructs them inside the outer top-level Java unit.
 
