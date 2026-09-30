@@ -255,6 +255,14 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
             "PRIMITIVE_SCOPE_SELF_SHADOW_REFERENCES=",
             text,
         )
+        self.assertIn(
+            "PRIMITIVE_INSTANCE_RECEIVER_REFERENCES=",
+            text,
+        )
+        self.assertIn(
+            "IMPORTED_STATIC_METHOD_SHADOW_REFERENCES=",
+            text,
+        )
 
 
 if __name__ == "__main__":
