@@ -61,3 +61,11 @@ blocked. The affected member must receive fresh review.
 This does not claim that two client binaries are equivalent in general. It
 proves only that the exact member-name safety review surface supplied to this
 gate is unchanged.
+
+## Historical v307 preparation wrapper
+
+`scripts/Prepare-HistoricalV307MemberSafety.ps1` composes this gate for the exact historical v307 -> v308 fixture. It SHA-verifies both client JARs, deterministically regenerates the v307 index, checks canonical coverage for both builds, builds the exact source-safe semantic namespace/member plans for v307 and v308, rescans both member-safety surfaces, and first revalidates the archived reviewed v308 acceptance against the freshly reproduced v308 report.
+
+Only after that reproduction succeeds does it invoke `spk-member-safety-carry-forward`. The resulting v307 acceptance is independently validated again and its path is printed for `scripts/Invoke-HistoricalV307RecoveryRelease.ps1`.
+
+If v307 lineage is absent, the build-specific coverage/semantic namespace stages fail closed; identity must then be restored through the existing R3 migration authority rather than fabricated in this wrapper.
