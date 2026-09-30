@@ -1,0 +1,47 @@
+{
+  "schema_version":1,
+  "kind":"semantic_candidate_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[
+    {
+      "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/l/G","name":null,"descriptor":null},
+      "proposed_name":"SpriteColorKeyFilter","confidence":0.999,
+      "evidence":[
+        {"family":"exact_sprite_api_attachment","detail":"R55 Sprite exposes a static Image+Color helper that constructs rs/l/G and applies it through FilteredImageSource before Toolkit.createImage."},
+        {"family":"exact_color_key_behavior","detail":"rs/l/G extends RGBImageFilter, normalizes the configured key Color to opaque ARGB, and for exact matching pixels clears the alpha byte while preserving RGB; nonmatching pixels are returned unchanged."},
+        {"family":"exact_scope_boundary","detail":"The class stores only the configured key Color/ARGB value and implements no unrelated rendering or resource-loading behavior."}
+      ],
+      "note":"Descriptive exact-v308 name for Sprite's RGBImageFilter that makes one exact key color transparent; no original source identifier is claimed."
+    },
+    {
+      "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/l/H","name":null,"descriptor":null},
+      "proposed_name":"SpriteRecolorFilter","confidence":0.999,
+      "evidence":[
+        {"family":"exact_sprite_api_attachment","detail":"R55 Sprite exposes a BufferedImage+sourceColor+replacementColor helper that constructs rs/l/H and applies it through FilteredImageSource."},
+        {"family":"exact_recolor_behavior","detail":"For each pixel the filter reads source image RGBA, compares each RGB channel to the source color with Sprite's exact tolerance predicate, applies the source-to-replacement channel delta through Sprite's exact transform helper, clamps channels to 0..255, and preserves alpha."},
+        {"family":"exact_scope_boundary","detail":"The class stores only the source image, source Color and replacement Color; it owns no independent sprite state or unrelated filter mode."}
+      ],
+      "note":"Descriptive exact-v308 name for Sprite's thresholded source-color to replacement-color RGBImageFilter."
+    },
+    {
+      "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/l/I","name":null,"descriptor":null},
+      "proposed_name":"SpriteLoader","confidence":0.999,
+      "evidence":[
+        {"family":"exact_sprite_registry","detail":"rs/l/I owns one static List<Sprite>; its path-taking factory creates a new Sprite, stores the requested resource path on that Sprite, appends it to the registry and returns it."},
+        {"family":"exact_bulk_load_lifecycle","detail":"Its bulk loader iterates every registered Sprite, loads the image from Sprite's shared resource root through Toolkit, resolves dimensions with ImageIcon, allocates the pixel array, fills it with PixelGrabber and normalizes key colors for non-exempt sprites."},
+        {"family":"exact_live_consumers","detail":"R308 CombatHudSpriteAssets registers all of its named sprite resources through rs/l/I, and Client invokes the loader in the live startup/resource path."},
+        {"family":"exact_lineage_join","detail":"The stable IDs are contiguous with R55 Sprite at CLIENT_CLASS_000355 and R308 CombatHudSpriteAssets at CLIENT_CLASS_000359, fixing rs/l/I as the shared loader between the sprite type and its static asset bundles."}
+      ],
+      "note":"Descriptive exact-v308 name for the shared named-Sprite registration and bulk AWT image/pixel loading utility."
+    }
+  ],
+  "conflicts":[]
+}
