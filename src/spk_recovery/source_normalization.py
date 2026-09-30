@@ -1166,6 +1166,87 @@ def _hierarchy_static_field_access_counts(
     return counts
 
 
+def _nearest_visible_instance_reference_field(
+    *,
+    hierarchy: list[tuple[str, Any]],
+    current_owner: str,
+    field_name: str,
+) -> tuple[str, str] | None:
+    """Resolve the nearest visible instance reference field by Java name."""
+    for owner, parsed in hierarchy:
+        declarations = [
+            field
+            for field in parsed.fields
+            if (
+                str(field.get("name", "")) == field_name
+                and _field_visible_from(
+                    declaring_owner=owner,
+                    current_owner=current_owner,
+                    access=int(field.get("access", 0)),
+                )
+            )
+        ]
+        if not declarations:
+            continue
+        if len(declarations) != 1:
+            return None
+        field = declarations[0]
+        if int(field.get("access", 0)) & 0x0008:
+            return None
+        descriptor = str(field.get("descriptor", ""))
+        if not (
+            descriptor.startswith("L")
+            and descriptor.endswith(";")
+        ):
+            return None
+        return owner, descriptor[1:-1]
+    return None
+
+
+def _hierarchy_instance_field_get_count(
+    method: dict[str, Any],
+    *,
+    hierarchy: list[tuple[str, Any]],
+    field_name: str,
+    declaring_owner: str,
+    descriptor: str,
+) -> int:
+    hierarchy_index = {
+        owner: index for index, (owner, _parsed) in enumerate(hierarchy)
+    }
+    count = 0
+    for access in method.get("field_accesses", []):
+        if access.get("operation") != "getfield":
+            continue
+        if str(access.get("name", "")) != field_name:
+            continue
+        if str(access.get("descriptor", "")) != descriptor:
+            continue
+        symbolic_owner = str(access.get("owner", ""))
+        start = hierarchy_index.get(symbolic_owner)
+        if start is None:
+            continue
+
+        resolved_owner: str | None = None
+        for owner, parsed in hierarchy[start:]:
+            declarations = [
+                field
+                for field in parsed.fields
+                if (
+                    str(field.get("name", "")) == field_name
+                    and not (int(field.get("access", 0)) & 0x0008)
+                    and str(field.get("descriptor", "")) == descriptor
+                )
+            ]
+            if declarations:
+                resolved_owner = owner if len(declarations) == 1 else None
+                break
+
+        if resolved_owner == declaring_owner:
+            count += 1
+    return count
+
+
 def _normalize_hierarchy_shadowed_self_static_field_owners(
     *,
     source_root: Path,
@@ -1723,6 +1804,257 @@ def _normalize_primitive_scope_shadowed_self_static_field_owners(
         if left[1] > right[0]:
             raise SourceNormalizationError(
                 f"{rel}: overlapping primitive-scope self-owner edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
+def _normalize_primitive_shadowed_instance_field_receivers(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore instance-field receivers hidden by scalar primitive values.
+
+    Procyon can emit h.a(...) while a primitive parameter/local named h
+    shadows the current object's reference field h. Rewriting to this.h is
+    permitted only when one exact readable method proves both the complete
+    getfield count for h and the matching invokevirtual/invokeinterface
+    owner/name multiset.
+    """
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError:
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+
+    hierarchy = _read_readable_hierarchy(
+        readable_zip=readable_zip,
+        internal_name=current_owner,
+    )
+    if not hierarchy:
+        return []
+
+    visible_names = sorted(
+        {
+            str(field.get("name", ""))
+            for owner, parsed in hierarchy
+            for field in parsed.fields
+            if (
+                _is_java_identifier(str(field.get("name", "")))
+                and _field_visible_from(
+                    declaring_owner=owner,
+                    current_owner=current_owner,
+                    access=int(field.get("access", 0)),
+                )
+            )
+        }
+    )
+    receivers: dict[str, tuple[str, str]] = {}
+    for simple in visible_names:
+        resolved = _nearest_visible_instance_reference_field(
+            hierarchy=hierarchy,
+            current_owner=current_owner,
+            field_name=simple,
+        )
+        if resolved is not None:
+            receivers[simple] = resolved
+    if not receivers:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for match in _METHOD_DECL_RE.finditer(text):
+        brace_start = text.find("{", match.start(), match.end())
+        if brace_start < 0:
+            continue
+        header_code = whole_code[match.start():brace_start]
+        if re.search(r"\bstatic\b", header_code) is not None:
+            continue
+
+        body_end = _matching_brace_end(text, brace_start)
+        method_text = text[match.start():body_end]
+        method_code = _java_code_mask(method_text)
+
+        for simple, (declaring_owner, receiver_owner) in sorted(
+            receivers.items()
+        ):
+            reference_parameter, reference_local_spans = (
+                _same_name_value_shadow_spans(
+                    method_match=match,
+                    method_code=method_code,
+                    simple_name=simple,
+                )
+            )
+            if reference_parameter:
+                continue
+            primitive_parameter, primitive_local_spans = (
+                _primitive_same_name_value_shadow_spans(
+                    method_match=match,
+                    method_code=method_code,
+                    simple_name=simple,
+                )
+            )
+            if not primitive_parameter and not primitive_local_spans:
+                continue
+
+            simple_call = re.compile(
+                r"(?<![A-Za-z0-9_$.])"
+                + re.escape(simple)
+                + r"\.(?P<method>[A-Za-z_$][A-Za-z0-9_$]*)\s*\("
+            )
+            simple_hits = [
+                hit
+                for hit in simple_call.finditer(method_code)
+                if not any(
+                    start <= hit.start() < end
+                    for start, end in reference_local_spans
+                )
+            ]
+            affected_hits = [
+                hit
+                for hit in simple_hits
+                if (
+                    primitive_parameter
+                    or any(
+                        start <= hit.start() < end
+                        for start, end in primitive_local_spans
+                    )
+                )
+            ]
+            if not affected_hits:
+                continue
+
+            qualified_call = re.compile(
+                r"(?<![A-Za-z0-9_$.])this\."
+                + re.escape(simple)
+                + r"\.(?P<method>[A-Za-z_$][A-Za-z0-9_$]*)\s*\("
+            )
+            qualified_hits = list(qualified_call.finditer(method_code))
+
+            affected_counts: dict[str, int] = {}
+            total_counts: dict[str, int] = {}
+            for hit in affected_hits:
+                name = hit.group("method")
+                affected_counts[name] = affected_counts.get(name, 0) + 1
+            for hit in simple_hits + qualified_hits:
+                name = hit.group("method")
+                total_counts[name] = total_counts.get(name, 0) + 1
+
+            source_arity = _source_parameter_count(match.group("params"))
+            candidates: list[dict[str, Any]] = []
+            field_descriptor = "L" + receiver_owner + ";"
+            for method in profile.get("methods", []):
+                if method.get("name") != match.group("name"):
+                    continue
+                descriptor = str(method.get("descriptor", ""))
+                if _descriptor_parameter_count(descriptor) != source_arity:
+                    continue
+                parameter_match = _source_parameters_match_descriptor(
+                    match.group("params"),
+                    descriptor,
+                    current_package=current_owner.rpartition("/")[0],
+                )
+                if parameter_match is False:
+                    continue
+
+                field_get_count = _hierarchy_instance_field_get_count(
+                    method,
+                    hierarchy=hierarchy,
+                    field_name=simple,
+                    declaring_owner=declaring_owner,
+                    descriptor=field_descriptor,
+                )
+                if field_get_count != sum(total_counts.values()):
+                    continue
+
+                invocation_counts: dict[str, int] = {}
+                for invocation in method.get("method_invocations", []):
+                    if invocation.get("operation") not in {
+                        "invokevirtual",
+                        "invokeinterface",
+                    }:
+                        continue
+                    if str(invocation.get("owner", "")) != receiver_owner:
+                        continue
+                    name = str(invocation.get("name", ""))
+                    if name not in total_counts:
+                        continue
+                    invocation_counts[name] = (
+                        invocation_counts.get(name, 0) + 1
+                    )
+
+                if all(
+                    invocation_counts.get(name, 0) == count
+                    for name, count in total_counts.items()
+                ):
+                    candidates.append(method)
+
+            if len(candidates) != 1:
+                continue
+
+            exact_method = candidates[0]
+            for hit in affected_hits:
+                edits.append(
+                    (
+                        match.start() + hit.start(),
+                        match.start() + hit.start() + len(simple),
+                        "this." + simple,
+                    )
+                )
+            actions.append(
+                {
+                    "kind": (
+                        "primitive_shadowed_instance_field_receiver_qualification"
+                    ),
+                    "source_path": rel,
+                    "method_name": match.group("name"),
+                    "method_descriptor": exact_method["descriptor"],
+                    "receiver_field_name": simple,
+                    "receiver_declaring_owner": declaring_owner,
+                    "receiver_type_owner": receiver_owner,
+                    "primitive_parameter_shadow": primitive_parameter,
+                    "primitive_local_shadow_scope_count": len(
+                        primitive_local_spans
+                    ),
+                    "call_counts": dict(sorted(affected_counts.items())),
+                    "total_call_counts": dict(sorted(total_counts.items())),
+                    "replacement_count": len(affected_hits),
+                    "provenance": {
+                        "kind": "source_safety",
+                        "reason": (
+                            "procyon_primitive_scope_shadowed_instance_field_receiver"
+                        ),
+                        "strategy": (
+                            "exact_getfield_and_virtual_invocation_multiset_qualification"
+                        ),
+                    },
+                }
+            )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping instance-receiver qualification edits"
             )
     for start, end, replacement in reversed(edits):
         text = text[:start] + replacement + text[end:]
@@ -3407,6 +3739,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_primitive_shadowed_instance_field_receivers(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_reference_shadowed_self_static_field_owners(
                         source_root=source_root,
                         path=path,
@@ -3510,6 +3849,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "primitive_scope_shadowed_self_static_field_owner_qualification"
+        ),
+        "primitive_shadowed_instance_receiver_method_count": sum(
+            action["kind"]
+            == "primitive_shadowed_instance_field_receiver_qualification"
+            for action in actions
+        ),
+        "primitive_shadowed_instance_receiver_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "primitive_shadowed_instance_field_receiver_qualification"
         ),
         "reference_shadowed_self_static_field_method_count": sum(
             action["kind"]
