@@ -732,9 +732,24 @@ $BundleVerifyArgs = @(
 )
 Invoke-PyChecked "VERIFY SOURCE-ONLY PUBLICATION BUNDLE" $BundleVerifyArgs
 
-$Milestone = Get-Content -LiteralPath $MilestoneManifest -Raw | ConvertFrom-Json
-$MilestoneVerify = Get-Content -LiteralPath $MilestoneVerification -Raw | ConvertFrom-Json
-$BundleVerify = Get-Content -LiteralPath $BundleVerification -Raw | ConvertFrom-Json
+$Milestone = Get-JsonProjection `
+    -Path $MilestoneManifest `
+    -Fields @{
+        publishable = "/publishable"
+        milestone_id = "/milestone_id"
+        source_tree_sha256 = "/source_tree/sha256"
+    }
+$MilestoneVerify = Get-JsonProjection `
+    -Path $MilestoneVerification `
+    -Fields @{
+        verified = "/verified"
+        publishable = "/publishable"
+    }
+$BundleVerify = Get-JsonProjection `
+    -Path $BundleVerification `
+    -Fields @{
+        verified = "/verified"
+    }
 
 if ($Milestone.publishable -ne $true) {
     throw "Milestone publishable flag is false."
@@ -748,7 +763,7 @@ if ($BundleVerify.verified -ne $true) {
 
 Write-Host ""
 Write-Host "MILESTONE_ID=$($Milestone.milestone_id)" -ForegroundColor Green
-Write-Host "SOURCE_TREE_SHA256=$($Milestone.source_tree.sha256)" -ForegroundColor Green
+Write-Host "SOURCE_TREE_SHA256=$($Milestone.source_tree_sha256)" -ForegroundColor Green
 Write-Host "PUBLICATION_BUNDLE=$BundleDir"
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Green
