@@ -4,6 +4,8 @@ import contextlib
 import io
 import json
 from pathlib import Path
+import shutil
+import subprocess
 import tempfile
 import unittest
 
@@ -136,6 +138,70 @@ class JsonProjectionTests(unittest.TestCase):
                 stderr.getvalue(),
             )
 
+    def test_source_m1_acceptance_never_deserializes_raw_json_in_powershell(self):
+        repo = Path(__file__).resolve().parents[1]
+        script = repo / "scripts" / "Invoke-SourceM1ExactLocalAcceptance.ps1"
+        text = script.read_text(encoding="utf-8")
+
+        self.assertEqual(
+            text.count("| ConvertFrom-Json"),
+            1,
+            "only the controlled projection helper may use ConvertFrom-Json",
+        )
+        self.assertIn(
+            "spk_recovery.json_projection_cli",
+            text,
+        )
+        for raw_path in (
+            "$BootstrapReadableManifest",
+            "$CollisionPlan",
+            "$CollisionTransform",
+            "$RecoveredManifest",
+            "$RunPath",
+            "$CleanPath",
+            "$MilestoneManifest",
+            "$MilestoneVerification",
+            "$BundleVerification",
+        ):
+            self.assertNotIn(
+                f"Get-Content -LiteralPath {raw_path} -Raw | ConvertFrom-Json",
+                text,
+            )
+
+    @unittest.skipUnless(
+        shutil.which("powershell.exe"),
+        "Windows PowerShell parser is unavailable",
+    )
+    def test_source_m1_acceptance_parses_in_windows_powershell(self):
+        repo = Path(__file__).resolve().parents[1]
+        script = repo / "scripts" / "Invoke-SourceM1ExactLocalAcceptance.ps1"
+        command = (
+            "$tokens=$null; $errors=$null; "
+            "[System.Management.Automation.Language.Parser]::ParseFile("
+            "'" + str(script).replace("'", "''") + "', "
+            "[ref]$tokens, [ref]$errors) | Out-Null; "
+            "if ($errors.Count -ne 0) { "
+            "$errors | ForEach-Object { Write-Error $_.Message }; exit 1 }; "
+            "exit 0"
+        )
+        proc = subprocess.run(
+            [
+                "powershell.exe",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                command,
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        self.assertEqual(
+            proc.returncode,
+            0,
+            proc.stdout + proc.stderr,
+        )
     def test_cli_refuses_missing_required_pointer(self):
         with tempfile.TemporaryDirectory() as td:
             path = Path(td) / "missing.json"
