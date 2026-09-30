@@ -1,0 +1,284 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 10,
+  "review_id": "SEMREVIEW_79704318FC6BB5F6D955",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_02A56101D3CC6D4A6755",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000207",
+      "owner_logical_id": "CLIENT_CLASS_000207",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/A",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutSkillLevelEditor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_skill_surface",
+          "detail": "The JFrame maps indices 0..6 exactly to Attack, Range, Strength, Prayer, Defence, Magic and Hitpoints, exposes one numeric text field plus Apply, and titles itself from the selected skill."
+        },
+        {
+          "family": "exact_level_mutation",
+          "detail": "Apply parses the text value, clamps it to 1..99, writes the result into the active R143 LoadoutDefinition skill-level array at the selected index, persists through LoadoutManager and refreshes Launcher UI."
+        },
+        {
+          "family": "exact_loadout_scope",
+          "detail": "The only construction path found in this control surface is R374 LoadoutSkillLevelMouseHandler, which opens the editor from fixed skill-stat regions inside the LoadoutSidebarPanel."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_0696F949D847DA315541",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000251",
+      "owner_logical_id": "CLIENT_CLASS_000251",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutFolderPopupMouseHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_binding",
+          "detail": "LoadoutSidebarPanel attaches rs/gui/b/i directly as the mouse listener on the button whose tooltip is 'Loadout folders'."
+        },
+        {
+          "family": "exact_popup_behavior",
+          "detail": "On left-button mouseReleased the handler resolves the panel-owned JPopupMenu and shows it at coordinates (1,1) relative to the clicked component; no other mouse behavior exists."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_06C3FAFE8EB44A83CB14",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000258",
+      "owner_logical_id": "CLIENT_CLASS_000258",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutSkillLevelMouseHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_panel_binding",
+          "detail": "LoadoutSidebarPanel installs rs/gui/b/p directly as its MouseListener."
+        },
+        {
+          "family": "exact_skill_hit_regions",
+          "detail": "mouseClicked maps fixed panel coordinate rectangles to exactly seven indices 0..6 and ignores clicks outside those regions."
+        },
+        {
+          "family": "exact_editor_dispatch",
+          "detail": "For a matched index it closes the prior editor, constructs R374 LoadoutSkillLevelEditor with the shared LoadoutManager and selected skill index, stores it on the parent panel and opens it."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_115A3D0AE0D16D455EF2",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000255",
+      "owner_logical_id": "CLIENT_CLASS_000255",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutRenameCommitAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_commit_source",
+          "detail": "The handler is installed only on the rename editor created by R374 LoadoutRenameAction and owns the active LoadoutDefinition plus prior folder/name state."
+        },
+        {
+          "family": "exact_rename_commit",
+          "detail": "actionPerformed reads the edited name, copies edited color and icon into the LoadoutDefinition, then calls LoadoutManager.a(folder,loadout,newName) to persist the rename/update."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_12442213DB7028D9C8CE",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000252",
+      "owner_logical_id": "CLIENT_CLASS_000252",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutDeleteConfirmAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_delete_dialog",
+          "detail": "LoadoutSidebarPanel constructs rs/gui/b/j for the affirmative button in the active-loadout deletion confirmation JFrame."
+        },
+        {
+          "family": "exact_delete_commit",
+          "detail": "actionPerformed calls LoadoutManager.d(folderName,loadoutName), then hides and disposes the confirmation frame."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_63FFD6A828F805F2A7BC",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000254",
+      "owner_logical_id": "CLIENT_CLASS_000254",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutRenameAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_binding",
+          "detail": "LoadoutSidebarPanel attaches rs/gui/b/l to the button whose exact tooltip is 'Rename the active loadout'."
+        },
+        {
+          "family": "exact_editor_launch",
+          "detail": "The action resolves the active LoadoutDefinition and folder, constructs the dedicated rename/editor window with title 'Rename', seeds name/color/icon from the current loadout and installs R374 LoadoutRenameCommitAction."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_644E5BFCD491B7BD4A22",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000250",
+      "owner_logical_id": "CLIENT_CLASS_000250",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutSidebarPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_sidebar_attachment",
+          "detail": "R145 ClientSidebarPanel instantiates rs/gui/b/h as the component for the exact 'Loadouts' tab."
+        },
+        {
+          "family": "exact_loadout_components",
+          "detail": "The panel owns R143 LoadoutManager and LoadoutPersistence, R144 LoadoutPreviewRenderer, the active-loadout JComboBox and the shared loadout folder/create/delete/rename/up/down controls."
+        },
+        {
+          "family": "exact_visible_contract",
+          "detail": "Exact tooltips/literals include 'Loadout folders', 'Create a new loadout', 'Delete this loadout', 'Rename the active loadout', and move-up/down labels, fixing the panel as the loadout sidebar surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_8D307A9499794F44E0BB",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000256",
+      "owner_logical_id": "CLIENT_CLASS_000256",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutMoveUpAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_binding",
+          "detail": "LoadoutSidebarPanel attaches rs/gui/b/n to the button whose tooltip is 'Move loadout up in the list'."
+        },
+        {
+          "family": "exact_reorder_behavior",
+          "detail": "The handler resolves the active loadout and current combo-box index, then calls LoadoutManager.a(folder,index,index-1)."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_AE9E311EC79EE4372661",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000257",
+      "owner_logical_id": "CLIENT_CLASS_000257",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutMoveDownAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_binding",
+          "detail": "LoadoutSidebarPanel attaches rs/gui/b/o to the button whose tooltip is 'Move loadout down in the list'."
+        },
+        {
+          "family": "exact_reorder_behavior",
+          "detail": "The handler resolves the active loadout and current combo-box index, then calls LoadoutManager.a(folder,index,index+1)."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_E9ED8E1251432960FB63",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000253",
+      "owner_logical_id": "CLIENT_CLASS_000253",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutDeleteCancelAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_cancel_binding",
+          "detail": "LoadoutSidebarPanel constructs rs/gui/b/k for the confirmation button whose exact label is 'No, Nevermind.'."
+        },
+        {
+          "family": "exact_cancel_behavior",
+          "detail": "actionPerformed only hides and disposes the deletion confirmation JFrame; it performs no loadout mutation."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}
