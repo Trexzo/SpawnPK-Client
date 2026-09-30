@@ -1,0 +1,25 @@
+{
+  "schema_version":1,
+  "kind":"semantic_candidate_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[{
+    "schema_version":1,
+    "kind":"semantic_name_candidate",
+    "canonical":false,
+    "status":"CANDIDATE",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target":{"kind":"class","owner":"rs/c","name":null,"descriptor":null},
+    "proposed_name":"ChunkRotation",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_8x8_rotation","detail":"Exact v308 rs/c masks rotation with 3 and maps local x/y through the four canonical 8x8 chunk rotations, including 7-coordinate inversion for 180/270 degree cases."},
+      {"family":"exact_object_footprint_rotation","detail":"Its two five-argument helpers additionally subtract width/height minus one under rotated orientations, matching placement of rectangular object footprints inside an 8x8 map chunk."},
+      {"family":"exact_pure_utility_shape","detail":"The class is final/package-private, owns no fields or mutable state, and consists entirely of the four coordinate-rotation helpers."}
+    ],
+    "note":"Conservative descriptive name for the exact 8x8 map-chunk coordinate rotation utility. No lost original source class name is claimed."
+  }],
+  "conflicts":[]
+}
