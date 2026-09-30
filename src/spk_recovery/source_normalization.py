@@ -705,6 +705,19 @@ _PRIMITIVE_FIELD_DESCRIPTORS = {
 }
 
 
+def _is_primitive_value_shadow_descriptor(descriptor: str) -> bool:
+    """Return true for primitive scalars or arrays of primitive values."""
+    if descriptor in _PRIMITIVE_FIELD_DESCRIPTORS:
+        return True
+    value = descriptor
+    while value.startswith("["):
+        value = value[1:]
+    return (
+        value in _PRIMITIVE_FIELD_DESCRIPTORS
+        and value != descriptor
+    )
+
+
 def _read_readable_hierarchy(
     *,
     readable_zip: zipfile.ZipFile,
@@ -1093,10 +1106,10 @@ def _normalize_hierarchy_shadowed_self_static_field_owners(
     path: Path,
     readable_zip: zipfile.ZipFile,
 ) -> list[dict[str, Any]]:
-    """Qualify class-static fields hidden by a primitive same-name field.
+    """Qualify class-static fields hidden by primitive-value shadows.
 
     Procyon can emit h.ae inside class h while h (or a superclass) also
-    declares a primitive field named h. javac then resolves h as a value
+    declares a primitive scalar/array field named h. javac resolves h as a value
     expression and reports "int cannot be dereferenced". Rewriting is
     allowed only when hierarchy shape, source occurrence counts and one
     exact bytecode method agree.
@@ -1144,8 +1157,9 @@ def _normalize_hierarchy_shadowed_self_static_field_owners(
         for field in parsed.fields
         if (
             str(field.get("name", "")) == simple_name
-            and str(field.get("descriptor", ""))
-            in _PRIMITIVE_FIELD_DESCRIPTORS
+            and _is_primitive_value_shadow_descriptor(
+                str(field.get("descriptor", ""))
+            )
             and _field_visible_from(
                 declaring_owner=owner,
                 current_owner=internal_name,
@@ -1285,7 +1299,7 @@ def _normalize_hierarchy_shadowed_self_static_field_owners(
                 "provenance": {
                     "kind": "source_safety",
                     "reason": (
-                        "procyon_hierarchy_primitive_shadowed_class_owner"
+                        "procyon_hierarchy_primitive_value_shadowed_class_owner"
                     ),
                     "strategy": (
                         "exact_hierarchy_static_field_access_sufficiency_qualification"
@@ -1295,6 +1309,174 @@ def _normalize_hierarchy_shadowed_self_static_field_owners(
         )
 
     whole_code = _java_code_mask(text)
+
+    for method_match in _METHOD_DECL_RE.finditer(text):
+        brace_start = text.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+
+        header_code = whole_code[method_match.start():brace_start]
+        if re.search(r"\bstatic\b", header_code) is None:
+            continue
+
+        body_end = _matching_brace_end(text, brace_start)
+        method_text = text[method_match.start():body_end]
+        method_code = _java_code_mask(method_text)
+
+        source_counts: dict[tuple[str, str, str], int] = {}
+        occurrences: list[tuple[int, int, str]] = []
+        shadow_owners_by_simple: dict[str, list[str]] = {}
+
+        for simple, (
+            imported_internal,
+            shadow_owners,
+            imported,
+        ) in sorted(shadowed.items()):
+            parameter_shadow, local_shadow_spans = (
+                _same_name_value_shadow_spans(
+                    method_match=method_match,
+                    method_code=method_code,
+                    simple_name=simple,
+                )
+            )
+            if parameter_shadow:
+                continue
+
+            shadow_owners_by_simple[simple] = shadow_owners
+
+            for field in imported.fields:
+                field_name = str(field.get("name", ""))
+                access = int(field.get("access", 0))
+                if (
+                    not (access & 0x0008)
+                    or not _is_java_identifier(field_name)
+                    or not _field_visible_from(
+                        declaring_owner=imported_internal,
+                        current_owner=current_owner,
+                        access=access,
+                    )
+                ):
+                    continue
+
+                token = re.compile(
+                    r"(?<![A-Za-z0-9_$.])"
+                    + re.escape(simple)
+                    + r"\."
+                    + re.escape(field_name)
+                    + r"\b(?!\s*\()"
+                )
+                hits = [
+                    hit
+                    for hit in token.finditer(method_code)
+                    if not any(
+                        start <= hit.start() < end
+                        for start, end in local_shadow_spans
+                    )
+                ]
+                if not hits:
+                    continue
+
+                key = (imported_internal, field_name, simple)
+                source_counts[key] = len(hits)
+                qualified = imported_internal.replace("/", ".")
+                for hit in hits:
+                    occurrences.append(
+                        (
+                            method_match.start() + hit.start(),
+                            method_match.start() + hit.end(),
+                            "((" + qualified + ")null)." + field_name,
+                        )
+                    )
+
+        if not source_counts:
+            continue
+
+        candidates: list[dict[str, Any]] = []
+        source_arity = _source_parameter_count(
+            method_match.group("params")
+        )
+
+        for method in profile.get("methods", []):
+            if method.get("name") != method_match.group("name"):
+                continue
+            if not (int(method.get("access", 0)) & 0x0008):
+                continue
+
+            descriptor = str(method.get("descriptor", ""))
+            if _descriptor_parameter_count(descriptor) != source_arity:
+                continue
+
+            parameter_match = _source_parameters_match_descriptor(
+                method_match.group("params"),
+                descriptor,
+                current_package=current_owner.rpartition("/")[0],
+            )
+            if parameter_match is False:
+                continue
+
+            byte_counts: dict[tuple[str, str, str], int] = {}
+            for access in method.get("field_accesses", []):
+                if access.get("operation") not in {"getstatic", "putstatic"}:
+                    continue
+                for key in source_counts:
+                    imported_internal, field_name, _simple = key
+                    if (
+                        str(access.get("owner", ""))
+                        == imported_internal
+                        and str(access.get("name", "")) == field_name
+                    ):
+                        byte_counts[key] = byte_counts.get(key, 0) + 1
+
+            if all(
+                byte_counts.get(key, 0) == count
+                for key, count in source_counts.items()
+            ):
+                candidates.append(method)
+
+        if len(candidates) != 1:
+            continue
+
+        exact_method = candidates[0]
+        edits.extend(occurrences)
+        actions.append(
+            {
+                "kind": (
+                    "shadowed_imported_static_field_owner_type_context"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": exact_method["descriptor"],
+                "imported_owners": sorted(
+                    {key[0] for key in source_counts}
+                ),
+                "shadow_declaring_owners": sorted(
+                    {
+                        owner
+                        for _imported, _field, simple in source_counts
+                        for owner in shadow_owners_by_simple[simple]
+                    }
+                ),
+                "field_access_counts": {
+                    imported + "." + field: count
+                    for (imported, field, _simple), count in sorted(
+                        source_counts.items()
+                    )
+                },
+                "replacement_count": sum(source_counts.values()),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_imported_type_hidden_by_visible_value_in_static_method"
+                    ),
+                    "strategy": (
+                        "exact_static_method_field_type_context_qualification"
+                    ),
+                },
+            }
+        )
+
     static_block_re = re.compile(r"(?m)^[ \t]*static[ \t]*\{")
     exact_clinits = [
         method
