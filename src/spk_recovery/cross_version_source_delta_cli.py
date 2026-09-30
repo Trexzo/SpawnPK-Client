@@ -35,6 +35,8 @@ def main() -> int:
     )
     parser.add_argument("old_release", type=Path)
     parser.add_argument("new_release", type=Path)
+    parser.add_argument("old_recovered_manifest", type=Path)
+    parser.add_argument("new_recovered_manifest", type=Path)
     parser.add_argument("class_lineage", type=Path)
     parser.add_argument("old_class_plan", type=Path)
     parser.add_argument("new_class_plan", type=Path)
@@ -49,6 +51,8 @@ def main() -> int:
         report = build_cross_version_source_delta(
             _load(args.old_release),
             _load(args.new_release),
+            _load(args.old_recovered_manifest),
+            _load(args.new_recovered_manifest),
             _load(args.class_lineage),
             _load(args.old_class_plan),
             _load(args.new_class_plan),
