@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_28AB359108917C39768E",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_31D041343FA83A603FF7",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000553",
+      "owner_logical_id": "CLIENT_CLASS_000553",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/H",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EquipmentStatsInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_identity",
+          "detail": "The class extends R436 CustomInterfaceBuilder and presents 'Equip Your Character...' with Attack bonus, Defence bonus, Other bonuses, Drop rate bonus, Blood money bonus, Range strength, Magic damage and Risk value."
+        },
+        {
+          "family": "exact_family_separation",
+          "detail": "R275 already owns rs/n/c/I as EquipmentInterface. rs/n/c/H is the distinct stats/bonuses screen reached through the equipment family."
+        },
+        {
+          "family": "exact_reverse_references",
+          "detail": "Outside its own class, exact v308 references rs/n/c/H only from R436 CustomInterfaceRegistry."
+        }
+      ],
+      "note": "Exact-v308 descriptive interface identity from literal screen text plus an already-recovered sibling/handler contract where available."
+    },
+    {
+      "proposal_id": "SEMPROP_6D7855B7CB200263C6A0",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000590",
+      "owner_logical_id": "CLIENT_CLASS_000590",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aO",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ShopTabInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_role",
+          "detail": "The class extends R436 CustomInterfaceBuilder and constructs the shop-tab surface with exact text 'Right-click on shop', 'Select shop tab', Tab 1..5 and Main stock."
+        },
+        {
+          "family": "exact_handler_pair",
+          "detail": "R129 already identifies rs/n/c/aP as ShopTabInterfacePacketHandler; exact v308 reverse references rs/n/c/aO from that handler, R436 CustomInterfaceRegistry, rs/n/c/ac and rs/q/a/a/b."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The name is limited to the shop-tab UI contract; shop inventory, pricing and transaction rules are not inferred."
+        }
+      ],
+      "note": "Exact-v308 descriptive interface identity from literal screen text plus an already-recovered sibling/handler contract where available."
+    },
+    {
+      "proposal_id": "SEMPROP_D3BB2540499AC306E926",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000670",
+      "owner_logical_id": "CLIENT_CLASS_000670",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClanChatInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_identity",
+          "detail": "The class extends R436 CustomInterfaceBuilder and builds the exact Clan Chat surface with 'Join Chat', 'Clan Setup', 'Clan Chat (0/100)', talking-in status, owner status and Manage clan member controls."
+        },
+        {
+          "family": "exact_family_separation",
+          "detail": "R2 already owns rs/n/c/p as ClanChatSetupInterface. This class is the separate live clan-chat panel itself, not the setup screen."
+        },
+        {
+          "family": "exact_reverse_references",
+          "detail": "Outside its own class, exact v308 references rs/n/c/q only from R436 CustomInterfaceRegistry."
+        }
+      ],
+      "note": "Exact-v308 descriptive interface identity from literal screen text plus an already-recovered sibling/handler contract where available."
+    }
+  ],
+  "unresolved": []
+}
