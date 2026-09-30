@@ -160,6 +160,28 @@ class JavacFrontierSummaryTests(unittest.TestCase):
                 text,
             )
 
+    def test_focus_source_lines_fail_soft_when_source_is_missing(self):
+        report = _report()
+        report["diagnostics"] = [
+            {
+                "category": "cannot_be_dereferenced",
+                "source_path": "Z:/definitely-missing/source.java",
+                "line": 7,
+                "message": "int cannot be dereferenced",
+            }
+        ]
+
+        text = "\n".join(
+            focus_diagnostics(
+                report,
+                focus_files=1,
+                include_source_lines=True,
+            )
+        )
+
+        self.assertIn("SOURCE_LINES_UNAVAILABLE=", text)
+        self.assertIn("FOCUSED_TOTAL_ERRORS=1", text)
+
     def test_focus_diagnostics_zero_is_noop(self):
         self.assertEqual(
             focus_diagnostics(_report(), focus_files=0),
