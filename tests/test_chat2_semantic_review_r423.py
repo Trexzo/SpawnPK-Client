@@ -34,7 +34,7 @@ class Chat2SemanticReviewR423Tests(unittest.TestCase):
         owners={r["source_coordinate"]["owner"] for r in current["proposals"]}
         stable_ids={r["stable_id"] for r in current["proposals"]}
         pn=set(); po=set(); ps=set()
-        for batch in range(2,372):
+        for batch in range(2,423):
             p=ROOT/"mappings"/"candidates"/f"v308.semantic-review.chat2.r{batch}.json"
             if not p.is_file(): continue
             prior=json.loads(p.read_text(encoding="utf-8"))
