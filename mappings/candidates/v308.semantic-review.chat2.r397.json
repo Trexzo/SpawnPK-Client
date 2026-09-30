@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 5,
+  "review_id": "SEMREVIEW_9C4DA4D11355DB50047F",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_5AF36BE3A3E142FF91A3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000212",
+      "owner_logical_id": "CLIENT_CLASS_000212",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CloneCurrentCharacterStateToLoadoutAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_live_state_capture",
+          "detail": "The Yes action clears the active LoadoutDefinition's stored item maps/arrays, reads the live client inventory/equipment widget item arrays, and repopulates the loadout entries with item ids and quantities."
+        },
+        {
+          "family": "exact_character_metadata_capture",
+          "detail": "The same action captures current spellbook, prayer book, and seven skill-level values into the active LoadoutDefinition rather than cloning equipment alone."
+        },
+        {
+          "family": "exact_ui_refresh",
+          "detail": "After successful capture it refreshes the LoadoutManager/panel views and closes the confirmation window; when the client character is unavailable it shows the exact not-logged-in guidance dialog instead."
+        },
+        {
+          "family": "exact_command_join",
+          "detail": "The action also emits the exact ::cldt client command used by the clone flow after refreshing the local loadout state."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the clone commit action; 'CharacterState' reflects the proven inventory/equipment + spellbook + prayer + skill capture surface."
+    },
+    {
+      "proposal_id": "SEMPROP_9FA07208B23A0C2847E6",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000210",
+      "owner_logical_id": "CLIENT_CLASS_000210",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CloneLoadoutButtonFactory",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_surface",
+          "detail": "The class exposes one static JButton factory for LoadoutsPanel, loading clone.png, setting visible label 'Clone', and installing rs/gui/b/a/b as its sole ActionListener."
+        },
+        {
+          "family": "exact_user_contract",
+          "detail": "The exact tooltip states that Clone takes the items currently equipped in game and sets them as the current active loadout."
+        },
+        {
+          "family": "exact_family_ownership",
+          "detail": "The factory accepts only R390 LoadoutsPanel and creates no independent state or unrelated controls."
+        }
+      ],
+      "note": "Exact-v308 factory role for the Clone button in the loadout panel."
+    },
+    {
+      "proposal_id": "SEMPROP_AC9811DB784C014E2BA5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000211",
+      "owner_logical_id": "CLIENT_CLASS_000211",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "OpenCloneLoadoutConfirmationAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_listener_ownership",
+          "detail": "The class is constructed only by CloneLoadoutButtonFactory and holds the owning LoadoutsPanel."
+        },
+        {
+          "family": "exact_confirmation_surface",
+          "detail": "On action it requires an active LoadoutDefinition, then creates a small JFrame tied to that loadout name with exact Yes/No buttons."
+        },
+        {
+          "family": "exact_child_actions",
+          "detail": "Yes installs rs/gui/b/a/c and No installs rs/gui/b/a/d, separating commit and cancel behavior without performing the clone itself."
+        }
+      ],
+      "note": "Exact-v308 action that opens the Clone confirmation UI for the active loadout."
+    },
+    {
+      "proposal_id": "SEMPROP_B5039C960D14A985E7B3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000235",
+      "owner_logical_id": "CLIENT_CLASS_000235",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/z",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CloseLoadoutMetadataEditorAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_editor_ownership",
+          "detail": "The listener holds only R392 LoadoutMetadataEditorDialog and is created as part of that dialog's action surface."
+        },
+        {
+          "family": "exact_close_behavior",
+          "detail": "actionPerformed does exactly two operations on the metadata editor: setVisible(false) and dispose(). No loadout mutation or unrelated state is touched."
+        }
+      ],
+      "note": "Exact-v308 close action for LoadoutMetadataEditorDialog."
+    },
+    {
+      "proposal_id": "SEMPROP_BE11DF9B64A2F9D6ECE8",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000213",
+      "owner_logical_id": "CLIENT_CLASS_000213",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CloneLoadoutCancelAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_cancel_behavior",
+          "detail": "The No-button ActionListener only hides and disposes the clone confirmation JFrame."
+        },
+        {
+          "family": "exact_parent_flow",
+          "detail": "It is constructed exclusively by OpenCloneLoadoutConfirmationAction as the confirmation dialog's No action."
+        }
+      ],
+      "note": "Exact-v308 cancel action for the Clone loadout confirmation dialog."
+    }
+  ],
+  "unresolved": []
+}
