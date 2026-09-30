@@ -36,6 +36,7 @@ jobs:
     if: ${{ github.event_name == 'pull_request' && github.head_ref == 'chat3/procyon-artifact-transport' }}
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Fetch exact official Procyon 0.6.0
         shell: bash
         run: |
@@ -49,10 +50,22 @@ jobs:
           echo "PROCYON_SIZE=$size"
           test "$actual" = "$expected"
           test "$size" = "2004704"
+      - name: Package recovery toolchain snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar --exclude=.git -czf spawnpk-client-toolchain.tar.gz .
       - name: Upload exact public Procyon artifact
         uses: actions/upload-artifact@v4
         with:
           name: procyon-decompiler-0.6.0-exact
           path: procyon-decompiler-0.6.0.jar
+          if-no-files-found: error
+          retention-days: 1
+      - name: Upload recovery toolchain snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: spawnpk-client-toolchain-snapshot
+          path: spawnpk-client-toolchain.tar.gz
           if-no-files-found: error
           retention-days: 1
