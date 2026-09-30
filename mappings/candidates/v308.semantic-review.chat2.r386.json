@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_0476EECA2A30E7976B1C",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_2AB349ED91BA55879C0F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000353",
+      "owner_logical_id": "CLIENT_CLASS_000353",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/D",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DepthBufferedSurfaceFrameSetupTask",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_parent_ownership",
+          "detail": "The class is constructed only by R85 DepthBufferedImageSurface from its first software-surface blit path and is submitted directly to SwingUtilities.invokeLater."
+        },
+        {
+          "family": "exact_frame_setup",
+          "detail": "run() selects one of two exact launcher JFrame sizes (1134x537 or 1312x800), applies the size, reads the current screen dimensions and centers the frame on screen."
+        },
+        {
+          "family": "exact_visibility_maximize_path",
+          "detail": "Under the same wide-layout state it makes the launcher frame visible and, when the physical screen width is narrower than the requested wide frame, sets the JFrame extended state to 6."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The task stores only its synthetic DepthBufferedImageSurface owner and performs no raster, packet, gameplay or persistent UI-service work beyond this deferred frame setup."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the one-shot EDT launcher-frame setup task spawned by DepthBufferedImageSurface."
+    }
+  ],
+  "unresolved": []
+}
