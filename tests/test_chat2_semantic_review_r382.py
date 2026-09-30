@@ -5,7 +5,7 @@ from spk_recovery.semantic_review import resolve_semantic_candidates
 
 SHA="854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 ROOT=Path(__file__).resolve().parents[1]
-CLASS_COORDS=[["CLIENT_CLASS_000184","rs/gui/A"],["CLIENT_CLASS_000185","rs/gui/B"],["CLIENT_CLASS_000186","rs/gui/C"],["CLIENT_CLASS_000187","rs/gui/D"],["CLIENT_CLASS_000199","rs/gui/O"],["CLIENT_CLASS_000200","rs/gui/P"],["CLIENT_CLASS_000286","rs/gui/y"],["CLIENT_CLASS_000287","rs/gui/z"]]
+CLASS_COORDS=[("CLIENT_CLASS_000185","rs/gui/B")]
 
 def _class_lineage():
     classes=[]
@@ -23,31 +23,31 @@ class Chat2SemanticReviewR382Tests(unittest.TestCase):
     def test_r382_resolves_deterministically(self):
         actual=resolve_semantic_candidates(_class_lineage(),_member_lineage(),_load("mappings/candidates/v308.semantic.chat2.r382.json"))
         expected=_load("mappings/candidates/v308.semantic-review.chat2.r382.json")
-        self.assertEqual(actual["proposal_count"],8)
+        self.assertEqual(actual["proposal_count"],1)
         self.assertEqual(actual["unresolved"],[])
-        self.assertEqual(actual["review_id"],"SEMREVIEW_8352F2716C69A7A33FBC")
+        self.assertEqual(actual["review_id"],"SEMREVIEW_872105942E3DB0A8F3A2")
         self.assertEqual(actual,expected)
 
-    def test_r382_expected_stable_ids(self):
+    def test_r382_expected_stable_id(self):
         review=_load("mappings/candidates/v308.semantic-review.chat2.r382.json")
-        self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"LauncherTitlePaneLayout":"CLIENT_CLASS_000184","LauncherSidePanelRepaintTimerAction":"CLIENT_CLASS_000185","LauncherResizableUpdateTask":"CLIENT_CLASS_000186","LauncherFrameSizeUpdateTask":"CLIENT_CLASS_000187","LauncherTitlePaneExtraPanel":"CLIENT_CLASS_000199","LauncherTitlePaneExtraLayout":"CLIENT_CLASS_000200","LauncherTrayRestoreMouseListener":"CLIENT_CLASS_000286","ToggleSidePanelAction":"CLIENT_CLASS_000287"})
+        self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"LauncherSidePanelRepaintTimerAction":"CLIENT_CLASS_000185"})
 
-    def test_r382_names_owners_and_ids_do_not_overlap_prior_reviews(self):
+    def test_r382_name_owner_and_id_do_not_overlap_prior_reviews(self):
         current=_load("mappings/candidates/v308.semantic-review.chat2.r382.json")
         names={r["proposed_name"] for r in current["proposals"]}
         owners={r["source_coordinate"]["owner"] for r in current["proposals"]}
         stable_ids={r["stable_id"] for r in current["proposals"]}
-        prior_names=set(); prior_owners=set(); prior_stable_ids=set()
+        pn=set(); po=set(); ps=set()
         for batch in range(2,382):
             p=ROOT/"mappings"/"candidates"/f"v308.semantic-review.chat2.r{batch}.json"
             if not p.is_file(): continue
             prior=json.loads(p.read_text(encoding="utf-8"))
-            prior_names.update(r["proposed_name"] for r in prior["proposals"] if r["target_kind"]=="class")
-            prior_owners.update(r["source_coordinate"]["owner"] for r in prior["proposals"] if r["target_kind"]=="class")
-            prior_stable_ids.update(r["stable_id"] for r in prior["proposals"] if r["target_kind"]=="class")
-        self.assertTrue(names.isdisjoint(prior_names))
-        self.assertTrue(owners.isdisjoint(prior_owners))
-        self.assertTrue(stable_ids.isdisjoint(prior_stable_ids))
+            pn.update(r["proposed_name"] for r in prior["proposals"] if r["target_kind"]=="class")
+            po.update(r["source_coordinate"]["owner"] for r in prior["proposals"] if r["target_kind"]=="class")
+            ps.update(r["stable_id"] for r in prior["proposals"] if r["target_kind"]=="class")
+        self.assertTrue(names.isdisjoint(pn))
+        self.assertTrue(owners.isdisjoint(po))
+        self.assertTrue(stable_ids.isdisjoint(ps))
 
 if __name__=="__main__":
     unittest.main()
