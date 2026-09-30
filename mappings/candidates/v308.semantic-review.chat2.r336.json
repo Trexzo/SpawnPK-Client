@@ -1,19 +1,72 @@
 {
-  "schema_version":1,"kind":"semantic_review_set","canonical":false,
-  "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","proposal_count":1,
-  "review_id":"SEMREVIEW_A25105B9DE6D869CE14E",
-  "proposals":[{
-    "proposal_id":"SEMPROP_44A7680D61FEC50ABC64",
-    "target_kind":"class","stable_id":"CLIENT_CLASS_000095","owner_logical_id":"CLIENT_CLASS_000095",
-    "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-    "source_coordinate":{"owner":"rs/cache/b/f","name":null,"descriptor":null},
-    "proposed_name":"AssetVersionHyperlinkListener","confidence":0.999,
-    "evidence":[
-      {"family":"exact_owner","detail":"R23 AssetVersion creates this class directly and installs it as the HyperlinkListener on its connection-failure JEditorPane; no other exact-v308 class constructs it."},
-      {"family":"exact_hyperlink_behavior","detail":"hyperlinkUpdate reacts only to HyperlinkEvent.EventType.ACTIVATED, converts the event URL to a URI and opens it with Desktop.browse, printing IOException on failure."},
-      {"family":"exact_connection_help_surface","detail":"The owning AssetVersion error pane contains the exact SpawnPK connectivity troubleshooting text and forum hyperlink, fixing this listener to the AssetVersion error/help UI rather than a generic browser utility."}
-    ],
-    "note":"Descriptive exact-v308 name for the hyperlink listener owned exclusively by AssetVersion's connection-failure UI."
-  }],
-  "unresolved":[]
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_8805027A68F87B17DA49",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_0B6AD7AE2950E718CB8D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000199",
+      "owner_logical_id": "CLIENT_CLASS_000199",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/O",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherTitleBarExtraControlsPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_substance_role",
+          "detail": "Launcher constructs rs/gui/O and tags it with Substance property substancelaf.internal.titlePane.extraComponentKind = TRAILING before adding it directly to the title-pane component."
+        },
+        {
+          "family": "exact_control_content",
+          "detail": "In the normal client path Launcher adds the 23x22 button whose exact tooltip is 'Hide/show side panel' and whose R280 SidePanelToggleAction sets the side-panel toggle request."
+        },
+        {
+          "family": "exact_layout_join",
+          "detail": "Launcher replaces the panel's constructor-installed legacy layout with GridBagLayout, adds it to the title pane, then installs LauncherTitleBarExtraControlsLayout to keep this panel aligned at the trailing edge."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the Launcher's Substance title-bar trailing extra-controls panel."
+    },
+    {
+      "proposal_id": "SEMPROP_74474485F4E07DE2F916",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000184",
+      "owner_logical_id": "CLIENT_CLASS_000184",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/A",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherTitleBarExtraControlsLayout",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_title_pane_install",
+          "detail": "Launcher obtains the Substance title-pane JComponent, saves its existing LayoutManager, then replaces it with rs/gui/A while passing the Launcher, original layout manager and title-pane component."
+        },
+        {
+          "family": "exact_delegate_layout",
+          "detail": "The class delegates add/remove/preferred/minimum/layout operations to the original LayoutManager before applying its own extra-control positioning."
+        },
+        {
+          "family": "exact_extra_controls_position",
+          "detail": "After delegate layout, it reads the preferred width of Launcher field rs/gui/O and pins that panel at x = titlePaneWidth - 75 - panelWidth, y=0, height=titlePaneHeight."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the title-pane layout wrapper that positions the Launcher's trailing extra-controls panel."
+    }
+  ],
+  "unresolved": []
 }
