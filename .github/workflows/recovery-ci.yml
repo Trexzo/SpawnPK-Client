@@ -31,3 +31,28 @@ jobs:
         run: python -m spk_recovery.cli --help
       - name: Repository hygiene
         run: python scripts/check_repo_hygiene.py
+
+  chat3-procyon-transport:
+    if: ${{ github.event_name == 'pull_request' && github.head_ref == 'chat3/procyon-artifact-transport' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch exact official Procyon 0.6.0
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="https://github.com/mstrobel/procyon/releases/download/v0.6.0/procyon-decompiler-0.6.0.jar"
+          expected="821da96012fc69244fa1ea298c90455ee4e021434bc796d3b9546ab24601b779"
+          curl --fail --location --retry 3 --output procyon-decompiler-0.6.0.jar "$url"
+          actual="$(sha256sum procyon-decompiler-0.6.0.jar | awk '{print $1}')"
+          size="$(stat -c %s procyon-decompiler-0.6.0.jar)"
+          echo "PROCYON_SHA256=$actual"
+          echo "PROCYON_SIZE=$size"
+          test "$actual" = "$expected"
+          test "$size" = "2004704"
+      - name: Upload exact public Procyon artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: procyon-decompiler-0.6.0-exact
+          path: procyon-decompiler-0.6.0.jar
+          if-no-files-found: error
+          retention-days: 1
