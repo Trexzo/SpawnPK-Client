@@ -2672,9 +2672,21 @@ def normalize_procyon_source(
             if action["kind"]
             == "imported_parameter_type_shadowed_by_same_package"
         ),
+        "shadowed_imported_static_field_action_count": sum(
+            action["kind"]
+            == "shadowed_imported_static_field_owner_type_context"
+            for action in actions
+        ),
+        "shadowed_imported_static_field_method_count": sum(
+            action["kind"]
+            == "shadowed_imported_static_field_owner_type_context"
+            and action.get("method_name") != "<clinit>"
+            for action in actions
+        ),
         "shadowed_imported_static_field_block_count": sum(
             action["kind"]
             == "shadowed_imported_static_field_owner_type_context"
+            and action.get("method_name") == "<clinit>"
             for action in actions
         ),
         "shadowed_imported_static_field_reference_count": sum(
