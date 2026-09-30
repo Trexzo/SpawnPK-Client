@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_2FA18C288B46381C3B30",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_66751912BB45CEC29C6A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000039",
+      "owner_logical_id": "CLIENT_CLASS_000039",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner":"rs/L","name":null,"descriptor":null},
+      "proposed_name": "SoundPlayer",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_java_sound_role","detail":"rs/L implements Runnable, accepts an InputStream plus volume and delay, converts the source AudioInputStream to PCM_SIGNED 16-bit audio, opens a javax.sound.sampled.Clip, starts playback, waits for completion and closes/flushes the clip and stream."},
+        {"family":"exact_gain_control","detail":"Playback obtains FloatControl.Type.MASTER_GAIN and maps the per-sound volume together with the global sound-level setting to a clamped linear amplitude and 20*log10 decibel value before applying the Clip gain control."},
+        {"family":"exact_delayed_playback","detail":"The constructor stores the requested delay and starts a dedicated Thread; run() sleeps that delay before Clip.start(), then monitors the global volume level while the clip is active and reapplies gain when it changes."},
+        {"family":"exact_client_sound_control","detail":"The class owns the global sound-level state used by playback. Its static level setter emits ::soundoff for level 4 or ::soundon otherwise through the client command path before storing the new level, while another helper can provide a byte[] audio source."},
+        {"family":"exact_live_consumer","detail":"Client is the only exact-v308 external class with a direct rs/L type reference, fixing this as the client sound-effect playback helper rather than a general media utility."},
+        {"family":"historical_rsps_source_fingerprint","detail":"Multiple historical RSPS clients preserve a custom class named SoundPlayer with the same Runnable + AudioInputStream + Java Sound Clip/MASTER_GAIN playback shape. This source family is corroborative only; exact-v308 bytecode is primary authority."}
+      ],
+      "note": "SoundPlayer is strongly corroborated historical RSPS terminology for this exact Java Sound playback role. The name does not imply that the class owns music/MIDI playback, which remains a separate subsystem."
+    }
+  ],
+  "unresolved": []
+}
