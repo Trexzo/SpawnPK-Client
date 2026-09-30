@@ -12,6 +12,7 @@ from spk_recovery.source_digest import source_tree_digest
 
 OLD_SHA = "1" * 64
 NEW_SHA = "2" * 64
+READABLE = "3" * 64
 
 
 def _lineage():
@@ -178,6 +179,7 @@ def _release(build, sha, root, release_id):
         "release_id": release_id,
         "build_id": build,
         "authority_sha256": sha,
+        "readable_jar_sha256": READABLE,
         "final_source_tree_sha256": tree,
         "ready_for_release": True,
         "blockers": [],
@@ -366,6 +368,81 @@ class CrossVersionSourceDeltaTests(unittest.TestCase):
                 "CLIENT_CLASS_000001",
                 [row["logical_id"] for row in report["unchanged"]],
             )
+
+    def test_collision_plan_resolves_final_source_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            old, new = self._roots(root)
+
+            (new / "rs" / "C.java").unlink()
+            (new / "rs" / "Recovered_Blocker.java").write_text(
+                "package rs; class C { static final int BUILD = 308; }\n",
+                encoding="utf-8",
+            )
+            collision = {
+                "schema_version": 1,
+                "kind": "class_package_namespace_collision_plan",
+                "plan_id": "JNSPLAN_" + "A" * 20,
+                "collision_report_id": "JNSCOLLISION_TEST",
+                "readable_jar_sha256": READABLE,
+                "identifiers_included": True,
+                "remaps": [
+                    {
+                        "old_internal_name": "rs/C",
+                        "new_internal_name": "rs/Recovered_Blocker",
+                    }
+                ],
+            }
+
+            report = build_cross_version_source_delta(
+                _release("v307", OLD_SHA, old, "RECOVERY_OLD"),
+                _release("v308", NEW_SHA, new, "RECOVERY_NEW"),
+                _lineage(),
+                _plan("v307", OLD_SHA),
+                _plan("v308", NEW_SHA),
+                old,
+                new,
+                new_collision_plan=collision,
+            )
+            changed = {
+                row["logical_id"]: row
+                for row in report["changed"]
+            }
+            self.assertEqual(
+                changed["CLIENT_CLASS_000002"]["new_source_path"],
+                "rs/Recovered_Blocker.java",
+            )
+            self.assertEqual(
+                report["new_collision_plan_id"],
+                collision["plan_id"],
+            )
+
+    def test_collision_plan_readable_authority_drift_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            old, new = self._roots(Path(tmp))
+            collision = {
+                "schema_version": 1,
+                "kind": "class_package_namespace_collision_plan",
+                "plan_id": "JNSPLAN_" + "B" * 20,
+                "readable_jar_sha256": "9" * 64,
+                "identifiers_included": True,
+                "remaps": [],
+            }
+            with self.assertRaises(CrossVersionSourceDeltaError):
+                build_cross_version_source_delta(
+                    _release(
+                        "v307", OLD_SHA, old, "RECOVERY_OLD"
+                    ),
+                    _release(
+                        "v308", NEW_SHA, new, "RECOVERY_NEW"
+                    ),
+                    _lineage(),
+                    _plan("v307", OLD_SHA),
+                    _plan("v308", NEW_SHA),
+                    old,
+                    new,
+                    new_collision_plan=collision,
+                )
 
     def test_class_plan_row_lineage_drift_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
