@@ -1,41 +1,25 @@
 {
-  "schema_version": 1,
-  "kind": "semantic_candidate_set",
-  "canonical": false,
-  "source_build": "v308",
-  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-  "candidates": [
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/g/a",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "Bounds",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_bounds_shape",
-          "detail": "Exact v308 rs/g/a stores exactly four mutable ints and has constructors (x,y,width,height) plus (width,height), where the two-arg form delegates to (0,0,width,height); its two mutators set the low/origin pair and high/size pair respectively."
-        },
-        {
-          "family": "exact_client_consumer",
-          "detail": "The base client rs/C returns rs/g/a from its container-bounds method, constructs it from the live container width/height after subtracting frame insets, and reads the high/size pair to update the active client width/height."
-        },
-        {
-          "family": "historical_lineage_match",
-          "detail": "Public RuneLite/OSRS client lineage exposes the structurally identical utility as Bounds with lowX, lowY, highX, highY, setLow, setHigh, the same two constructors and the same null toString implementation."
-        }
-      ],
-      "note": "Bounds is fixed by exact-v308 structure/client use and a field-for-field inherited RuneLite/OSRS lineage match."
-    }
-  ],
-  "conflicts": []
+  "schema_version":1,
+  "kind":"semantic_candidate_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[{
+    "schema_version":1,
+    "kind":"semantic_name_candidate",
+    "canonical":false,
+    "status":"CANDIDATE",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target":{"kind":"class","owner":"rs/o/a/a/a/q","name":null,"descriptor":null},
+    "proposed_name":"RegionLoadCompletePacket",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_outgoing_opcode","detail":"The concrete R322 OutgoingPacket writes fixed C2S opcode 121 and no payload."},
+      {"family":"exact_client_lifecycle","detail":"Exact client region-loader analysis shows rs.Client.bw() emits opcode 121 only after required terrain/object resources are present and Client.l() completes the synchronous scene rebuild."},
+      {"family":"exact_runtime_sequence","detail":"Six captured normal-region transitions produced six packet-73 region changes followed by six opcode-121 completions, consistently ordered SCENE_REBUILD_EXIT -> opcode 121 -> bw() status 0."}
+    ],
+    "note":"Exact-v308 normal-region/scene loading completion acknowledgement. Constructed-region behavior remains a separate evidence boundary."
+  }],
+  "conflicts":[]
 }
