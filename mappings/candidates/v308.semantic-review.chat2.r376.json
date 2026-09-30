@@ -1,0 +1,386 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 15,
+  "review_id": "SEMREVIEW_A2484E9A590A5C459C14",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_1CA26FDDEFD08027C6E8",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000224",
+      "owner_logical_id": "CLIENT_CLASS_000224",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutFolderSelectAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_folder_item_binding",
+          "detail": "The action is created once per existing folder menu item and retains the popup, menu item, sidebar and folder name."
+        },
+        {
+          "family": "exact_selection_effect",
+          "detail": "It resets menu-item backgrounds, highlights the chosen item orange, calls LoadoutManager.a(folderName,0), then rebuilds the LoadoutSidebarPanel."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout folder/selector UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_2E19C7946D6136B69ECA",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000230",
+      "owner_logical_id": "CLIENT_CLASS_000230",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/u",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutFolderMoveDownAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_next_folder",
+          "detail": "The action iterates folder insertion order to find the folder immediately following the current folder."
+        },
+        {
+          "family": "exact_reorder_commit",
+          "detail": "When a successor exists it calls LoadoutManager.c(currentFolder,nextFolder), implementing the menu's exact 'Move down' operation."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout folder/selector UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_3D4EDC0946FB01C6BD24",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000215",
+      "owner_logical_id": "CLIENT_CLASS_000215",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutSelectorListCellRenderer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_selector_rendering",
+          "detail": "The renderer is installed only on R376 LoadoutSelectorComboBox and resolves the corresponding active-folder LoadoutDefinition by list index."
+        },
+        {
+          "family": "exact_style_projection",
+          "detail": "For each loadout it applies the definition color and, when present, the recovered loadout icon to the rendered JLabel."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout folder/selector UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_5F48E1FC3F646CB062DA",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000221",
+      "owner_logical_id": "CLIENT_CLASS_000221",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutSelectorPopupListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_popup_lifecycle",
+          "detail": "When the selector popup becomes visible/canceled it repaints the live LoadoutSidebarPanel; when it becomes invisible it calls the panel refresh/rebuild method."
+        },
+        {
+          "family": "exact_selector_owner",
+          "detail": "The listener is constructed only by R376 LoadoutSelectorComboBox."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout folder/selector UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_7869D485E270AEEA0ADC",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000232",
+      "owner_logical_id": "CLIENT_CLASS_000232",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/w",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutFolderDeleteConfirmAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_delete_commit",
+          "detail": "The affirmative delete action calls LoadoutManager.b(folderName), then hides and disposes the confirmation JFrame."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout folder/selector UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_82DB10F7DA1B33EE1011",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000222",
+      "owner_logical_id": "CLIENT_CLASS_000222",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutSelectionAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_selection_commit",
+          "detail": "The action reads the selector's current index and calls LoadoutManager.a(currentFolder,selectedIndex), then repaints the LoadoutSidebarPanel."
+        },
+        {
+          "family": "exact_selector_owner",
+          "detail": "The action is installed only by R376 LoadoutSelectorComboBox."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout folder/selector UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_869CBC99E1947EC8A765",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000229",
+      "owner_logical_id": "CLIENT_CLASS_000229",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/t",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutFolderMoveUpAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_previous_folder",
+          "detail": "The action iterates folder insertion order to find the folder immediately preceding the current folder."
+        },
+        {
+          "family": "exact_reorder_commit",
+          "detail": "When a predecessor exists it calls LoadoutManager.c(currentFolder,previousFolder), implementing the menu's exact 'Move up' operation."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout folder/selector UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_87204AA7B184E687CCD1",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000225",
+      "owner_logical_id": "CLIENT_CLASS_000225",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutFolderCreateAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_create_dialog",
+          "detail": "The 'Create new folder' menu item opens a JFrame titled 'Name Your Folder' with a text field and Create button."
+        },
+        {
+          "family": "exact_commit_wiring",
+          "detail": "The Create button installs only R376 LoadoutFolderCreateCommitAction."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout folder/selector UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_A3094B2EA4028E7FB208",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000231",
+      "owner_logical_id": "CLIENT_CLASS_000231",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/v",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutFolderDeleteAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_delete_dialog",
+          "detail": "The 'Delete' folder action resolves the current folder and opens a Yes/No confirmation JFrame; the negative button text is exactly 'No, Nevermind.'."
+        },
+        {
+          "family": "exact_listener_wiring",
+          "detail": "The confirmation buttons install R376 LoadoutFolderDeleteConfirmAction and LoadoutFolderDeleteCancelAction."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout folder/selector UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_C4D31910942C58AE5BBF",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000233",
+      "owner_logical_id": "CLIENT_CLASS_000233",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/x",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutFolderDeleteCancelAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_cancel_effect",
+          "detail": "The negative delete action only hides and disposes the confirmation JFrame and performs no folder mutation."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout folder/selector UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_D870BA49C978FE3BA5F2",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000223",
+      "owner_logical_id": "CLIENT_CLASS_000223",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutFolderMenuFactory",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_folder_menu",
+          "detail": "The factory builds a JPopupMenu titled 'Loadout folders', enumerates every LoadoutManager folder as a menu item and highlights the current folder in orange."
+        },
+        {
+          "family": "exact_management_actions",
+          "detail": "It adds exact menu actions 'Create new folder', 'Rename', 'Move up', 'Move down' and 'Delete', wiring R376 folder action classes."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout folder/selector UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_DC0BE8FC79FA5E0BF903",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000227",
+      "owner_logical_id": "CLIENT_CLASS_000227",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/r",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutFolderRenameAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_rename_dialog",
+          "detail": "The 'Rename' folder menu item opens a JFrame titled 'Re-name Your Folder' with a text field and Rename button."
+        },
+        {
+          "family": "exact_commit_wiring",
+          "detail": "The Rename button installs only R376 LoadoutFolderRenameCommitAction."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout folder/selector UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_E1740622A7B90B64AE68",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000220",
+      "owner_logical_id": "CLIENT_CLASS_000220",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutSelectorComboBox",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_loadout_selector",
+          "detail": "The JComboBox subclass is constructed from loadout names, installs R376 LoadoutSelectorListCellRenderer, and fixes its preferred size to 150x25."
+        },
+        {
+          "family": "exact_listener_pair",
+          "detail": "The selector installs exactly R376 LoadoutSelectorPopupListener and LoadoutSelectionAction for popup lifecycle and active selection changes."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout folder/selector UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_E19B4E9A712E02DA98EA",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000226",
+      "owner_logical_id": "CLIENT_CLASS_000226",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutFolderCreateCommitAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_create_commit",
+          "detail": "The action reads the folder-name text field and calls LoadoutManager.a(String) to create the folder, then closes the frame."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout folder/selector UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_F8BFFE7346955E18E197",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000228",
+      "owner_logical_id": "CLIENT_CLASS_000228",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/b/a/s",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutFolderRenameCommitAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_rename_commit",
+          "detail": "The action reads the new folder name, obtains the current folder name from LoadoutManager.e(), calls LoadoutManager.a(currentName,newName), then closes the frame."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout folder/selector UI role; original stripped source identifier is not claimed."
+    }
+  ],
+  "unresolved": []
+}
