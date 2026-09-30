@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "class", "owner": "rs/gui/b/j", "name": null, "descriptor": null},
+      "proposed_name": "DeleteLoadoutConfirmAction",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_dialog_ownership","detail":"LoadoutsPanel creates this ActionListener for the affirmative button in its delete-active-loadout confirmation JFrame."},
+        {"family":"exact_delete_behavior","detail":"actionPerformed calls LoadoutManager.d(folderName, loadoutName) using the active folder name and active LoadoutDefinition name, then hides and disposes the confirmation frame."},
+        {"family":"exact_scope_boundary","detail":"The class owns only the panel, folder name, selected LoadoutDefinition and confirmation frame required by that delete operation."}
+      ],
+      "note":"Exact-v308 affirmative delete action for the active loadout confirmation dialog."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "class", "owner": "rs/gui/b/k", "name": null, "descriptor": null},
+      "proposed_name": "DeleteLoadoutCancelAction",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_dialog_ownership","detail":"LoadoutsPanel creates this listener exclusively for the exact 'No, Nevermind.' button in the delete-active-loadout confirmation JFrame."},
+        {"family":"exact_cancel_behavior","detail":"actionPerformed only hides and disposes that JFrame and performs no LoadoutManager mutation."}
+      ],
+      "note":"Exact-v308 cancel action for the active-loadout delete confirmation dialog."
+    }
+  ],
+  "conflicts": []
+}
