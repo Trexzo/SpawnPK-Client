@@ -1,36 +1,94 @@
 {
-  "schema_version":1,"kind":"semantic_review_set","canonical":false,
-  "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","proposal_count":2,
-  "review_id":"SEMREVIEW_6E97CC5F38F394054F04",
-  "proposals":[
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_D1590A0DCE0671141200",
+  "proposals": [
     {
-      "proposal_id":"SEMPROP_1B5EAB9795E70A01197D","target_kind":"class",
-      "stable_id":"CLIENT_CLASS_000005","owner_logical_id":"CLIENT_CLASS_000005",
-      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate":{"owner":"rs/A/b","name":null,"descriptor":null},
-      "proposed_name":"AssetIconItemCacheLoader","confidence":0.999,
-      "evidence":[
-        {"family":"exact_cache_loader_type","detail":"The class extends the cache-loader base with key type rs/A/a$a and value type rs/A/d. R19 identifies those exact types as AssetIconItemKey and AsyncBufferedImage."},
-        {"family":"exact_manager_ownership","detail":"R19 AssetIconManager constructs this loader exclusively for its first expiring cache and passes the manager instance into the loader constructor."},
-        {"family":"exact_item_key_decode","detail":"load(AssetIconItemKey) extracts the key's three exact values itemId, itemQuantity and size and delegates them to AssetIconManager's item-image creation path."},
-        {"family":"exact_pair_separation","detail":"The sibling rs/A/c loader handles AssetIconSpriteKey instead, proving this class is specifically the item-icon cache loader."}
+      "proposal_id": "SEMPROP_0285EB69491B4DAC78C2",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000186",
+      "owner_logical_id": "CLIENT_CLASS_000186",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/C",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherFrameResizableTask",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_launcher_scheduling",
+          "detail": "Launcher.b(boolean) constructs rs/gui/C with itself plus the requested boolean and submits it through SwingUtilities.invokeLater."
+        },
+        {
+          "family": "exact_frame_mutation",
+          "detail": "run() obtains Launcher.i() JFrame and calls setResizable(requestedBoolean); no second mutation or unrelated state exists."
+        }
       ],
-      "note":"Name follows exact typed cache-loader role inside AssetIconManager."
+      "note": "Descriptive exact-v308 name for the Swing runnable that applies Launcher frame resizability."
     },
     {
-      "proposal_id":"SEMPROP_BDF0650E9161B8DFBD0A","target_kind":"class",
-      "stable_id":"CLIENT_CLASS_000006","owner_logical_id":"CLIENT_CLASS_000006",
-      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate":{"owner":"rs/A/c","name":null,"descriptor":null},
-      "proposed_name":"AssetIconSpriteCacheLoader","confidence":0.999,
-      "evidence":[
-        {"family":"exact_cache_loader_type","detail":"The class extends the cache-loader base with key type rs/A/a$b and value type rs/A/d. R19 identifies those exact types as AssetIconSpriteKey and AsyncBufferedImage."},
-        {"family":"exact_manager_ownership","detail":"R19 AssetIconManager constructs this loader exclusively for its second expiring cache and passes the manager instance into the loader constructor."},
-        {"family":"exact_sprite_key_decode","detail":"load(AssetIconSpriteKey) extracts the key's exact sprite directory and size and delegates them to AssetIconManager's sprite-image creation path."},
-        {"family":"exact_pair_separation","detail":"The sibling rs/A/b loader handles AssetIconItemKey instead, proving this class is specifically the sprite-icon cache loader."}
+      "proposal_id": "SEMPROP_704DB6C3D1A74A2EBD7A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000188",
+      "owner_logical_id": "CLIENT_CLASS_000188",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/E",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientCanvasHostPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_panel_shape",
+          "detail": "The class extends JPanel, initializes to the Launcher client dimension, uses BorderLayout and a black background."
+        },
+        {
+          "family": "exact_launcher_composition",
+          "detail": "Launcher constructs exactly one rs/gui/E, initializes/starts the live rs/Client, then adds that Client component to this panel at BorderLayout.CENTER."
+        },
+        {
+          "family": "exact_window_join",
+          "detail": "Launcher adds this panel to the main Swing content container beside the optional R145 ClientSidebarPanel, fixing it as the game-client/canvas host surface."
+        }
       ],
-      "note":"Name follows exact typed cache-loader role inside AssetIconManager."
+      "note": "Descriptive exact-v308 name for the black Swing host panel containing the live Client component."
+    },
+    {
+      "proposal_id": "SEMPROP_ECF5AE8390A8231401F4",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000187",
+      "owner_logical_id": "CLIENT_CLASS_000187",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/D",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherFrameSizeTask",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_launcher_ownership",
+          "detail": "rs/gui/D stores only the owning Launcher plus four integer dimensions supplied at construction."
+        },
+        {
+          "family": "exact_frame_mutation",
+          "detail": "run() obtains the Launcher JFrame, applies the first width/height pair as setMinimumSize(Dimension), then applies the second pair through setSize(width,height)."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the Swing runnable that applies Launcher minimum/current frame dimensions."
     }
   ],
-  "unresolved":[]
+  "unresolved": []
 }
