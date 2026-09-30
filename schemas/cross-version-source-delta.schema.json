@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/cross-version-source-delta.schema.json",
+  "title": "SpawnPK cross-version recovered-source delta",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "report_id",
+    "old_build_id",
+    "new_build_id",
+    "old_authority_sha256",
+    "new_authority_sha256",
+    "old_release_id",
+    "new_release_id",
+    "old_recovered_workspace_id",
+    "new_recovered_workspace_id",
+    "old_source_tree_sha256",
+    "new_source_tree_sha256",
+    "old_collision_plan_id",
+    "new_collision_plan_id",
+    "summary",
+    "old_only",
+    "new_only",
+    "changed",
+    "moved",
+    "unchanged",
+    "note"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "cross_version_source_delta"},
+    "report_id": {
+      "type": "string",
+      "pattern": "^XVERSRC_[0-9A-F]{20}$"
+    },
+    "old_build_id": {"type": "string", "minLength": 1},
+    "new_build_id": {"type": "string", "minLength": 1},
+    "old_authority_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "new_authority_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "old_release_id": {"type": "string", "minLength": 1},
+    "new_release_id": {"type": "string", "minLength": 1},
+    "old_recovered_workspace_id": {"type": "string", "minLength": 1},
+    "new_recovered_workspace_id": {"type": "string", "minLength": 1},
+    "old_source_tree_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "new_source_tree_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "old_collision_plan_id": {
+      "type": ["string", "null"],
+      "pattern": "^JNSPLAN_[0-9A-F]{20}$"
+    },
+    "new_collision_plan_id": {
+      "type": ["string", "null"],
+      "pattern": "^JNSPLAN_[0-9A-F]{20}$"
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "old_source_units",
+        "new_source_units",
+        "common_logical_units",
+        "unchanged_source_units",
+        "changed_source_units",
+        "moved_source_paths",
+        "old_only_source_units",
+        "new_only_source_units"
+      ],
+      "properties": {
+        "old_source_units": {"type": "integer", "minimum": 0},
+        "new_source_units": {"type": "integer", "minimum": 0},
+        "common_logical_units": {"type": "integer", "minimum": 0},
+        "unchanged_source_units": {"type": "integer", "minimum": 0},
+        "changed_source_units": {"type": "integer", "minimum": 0},
+        "moved_source_paths": {"type": "integer", "minimum": 0},
+        "old_only_source_units": {"type": "integer", "minimum": 0},
+        "new_only_source_units": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "old_only": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^CLIENT_CLASS_[0-9]{6}$"}
+    },
+    "new_only": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^CLIENT_CLASS_[0-9]{6}$"}
+    },
+    "changed": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/source_unit_delta"}
+    },
+    "moved": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/source_unit_delta"}
+    },
+    "unchanged": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/source_unit_delta"}
+    },
+    "note": {"type": "string"}
+  },
+  "$defs": {
+    "source_unit_delta": {
+      "type": "object",
+      "required": [
+        "logical_id",
+        "old_source_path",
+        "new_source_path",
+        "old_source_sha256",
+        "new_source_sha256",
+        "old_source_bytes",
+        "new_source_bytes"
+      ],
+      "properties": {
+        "logical_id": {
+          "type": "string",
+          "pattern": "^CLIENT_CLASS_[0-9]{6}$"
+        },
+        "old_source_path": {"type": "string", "minLength": 1},
+        "new_source_path": {"type": "string", "minLength": 1},
+        "old_source_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "new_source_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "old_source_bytes": {"type": "integer", "minimum": 0},
+        "new_source_bytes": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
