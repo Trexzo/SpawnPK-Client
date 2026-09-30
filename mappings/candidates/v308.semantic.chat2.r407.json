@@ -1,0 +1,17 @@
+{
+  "schema_version":1,"kind":"semantic_candidate_set","canonical":false,
+  "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[{
+    "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE",
+    "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target":{"kind":"class","owner":"rs/b/a","name":null,"descriptor":null},
+    "proposed_name":"MouseDetection","confidence":0.999,
+    "evidence":[
+      {"family":"exact_sampler_shape","detail":"Exact v308 rs/b/a implements Runnable, owns two int[500] coordinate arrays, one synchronized sample index and a running boolean, and holds the live Client."},
+      {"family":"exact_50ms_sampling","detail":"While enabled, run() synchronizes on its lock, samples Client.hP and Client.hQ into the paired arrays while index<500, increments the index and sleeps exactly 50 ms before repeating."},
+      {"family":"classic_client_identity","detail":"This field shape and 50 ms mouse-coordinate sampling loop is the long-standing classic RuneScape MouseDetection helper rather than a general timer or input dispatcher."}
+    ],
+    "note":"Recovered classic RuneScape MouseDetection identity from exact-v308 shape and behavior."
+  }],
+  "conflicts":[]
+}
