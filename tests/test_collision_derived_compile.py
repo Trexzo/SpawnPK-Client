@@ -214,6 +214,27 @@ class CollisionDerivedCompileTests(unittest.TestCase):
             self.assertEqual(report["status"], "complete")
             self.assertFalse(report["canonical_source_modified"])
             self.assertEqual(
+                report["compiler"]["source_transport"],
+                "case_unique_explicit_inputs",
+            )
+            self.assertEqual(
+                report["compiler"]["staged_source_count"],
+                report["compiler"]["source_count"],
+            )
+
+            javac_args = (
+                root / "compile" / "javac.args"
+            ).read_text(encoding="utf-8").replace("\\", "/")
+            self.assertIn(
+                "/source-inputs/000000/A.java",
+                javac_args,
+            )
+            self.assertIn("/empty-sourcepath", javac_args)
+            self.assertNotIn(
+                (recovered / "rs" / "A.java").resolve().as_posix(),
+                javac_args,
+            )
+            self.assertEqual(
                 report["collision_transform_id"],
                 transform["transform_id"],
             )
@@ -264,6 +285,68 @@ class CollisionDerivedCompileTests(unittest.TestCase):
                 self.assertIn(new_name + ".class", names)
                 self.assertNotIn(old_name + ".class", names)
                 self.assertNotIn("rs/A.class", names)
+
+    def test_compile_failure_restores_canonical_diagnostic_path(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                readable,
+                plan_path,
+                recovered,
+                manifest,
+                _old_name,
+                _new_name,
+                _transform,
+            ) = self._fixture(root)
+
+            bad_source = recovered / "rs" / "A.java"
+            bad_source.write_text(
+                "package rs; public class A { MissingType value; }\n",
+                encoding="utf-8",
+            )
+            manifest = dict(manifest)
+            manifest["source_tree_sha256"] = source_tree_digest(
+                recovered
+            )[0]
+
+            private_diagnostic = root / "private-diagnostic.json"
+            report = compile_collision_derived_source(
+                manifest,
+                recovered,
+                readable,
+                plan_path,
+                ["rs/"],
+                root / "compile-fail",
+                javac_command="javac",
+                release=9,
+                report_compile_failure=True,
+                private_diagnostic_report_out=private_diagnostic,
+            )
+
+            self.assertEqual(report["status"], "compile_failed")
+            self.assertEqual(
+                report["compiler"]["source_transport"],
+                "case_unique_explicit_inputs",
+            )
+
+            diagnostic = json.loads(
+                private_diagnostic.read_text(encoding="utf-8")
+            )
+            source_paths = {
+                str(row.get("source_path", "")).replace("\\", "/")
+                for row in diagnostic.get("diagnostics", [])
+            }
+            self.assertIn(
+                bad_source.resolve().as_posix(),
+                source_paths,
+            )
+            self.assertFalse(
+                any(
+                    "/source-inputs/" in path
+                    for path in source_paths
+                )
+            )
+
 
     def _clean_rebuild_authorities(
         self,
