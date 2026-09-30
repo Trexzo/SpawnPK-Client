@@ -143,7 +143,7 @@ class JavacFrontierSummaryTests(unittest.TestCase):
             text,
         )
         self.assertIn("--top 20", text)
-        self.assertIn("--focus-files 1", text)
+        self.assertIn("--focus-files 3", text)
         self.assertIn("private_javac_summary_failed=", text)
         self.assertIn("exit 3", text)
     def test_cli_top_limit(self):
