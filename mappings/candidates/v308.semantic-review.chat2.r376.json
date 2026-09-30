@@ -1,0 +1,298 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 11,
+  "review_id": "SEMREVIEW_DC539ED693085F245C9C",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_0367BF5E94900C505C1E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000585",
+      "owner_logical_id": "CLIENT_CLASS_000585",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aJ",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "QuickPrayerSelectionInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible surface says 'Select your quick prayers:' / 'Select your quick curses:' with 'Confirm Selection'."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side behavior is inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_10970536280C282E5183",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000615",
+      "owner_logical_id": "CLIENT_CLASS_000615",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/an",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LootingBagInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible title is 'Looting bag' with Deposit 1/5/10/All and 'Deposit all to bank'; empty-state text is 'This bag is empty.'."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side behavior is inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_1B3D8B44D0FB7615B756",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000664",
+      "owner_logical_id": "CLIENT_CLASS_000664",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodShardSalvagingInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible title is 'Blood Shard Salvaging Kit' with item guide/read guide and remove quantity controls."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side behavior is inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_23079C933AF66A88AA6C",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000663",
+      "owner_logical_id": "CLIENT_CLASS_000663",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodDiamondFuserInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible title is 'Blood Diamond Fuser' with text 'Fuse items to sacrifice them into blood diamonds!' and cycle-item controls."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side behavior is inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_6874406B47241F558794",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000603",
+      "owner_logical_id": "CLIENT_CLASS_000603",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/ab",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemLibraryInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible title is 'Official SpawnPK Item Library' with item search, equipment bonus groups and preview controls."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side behavior is inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_7A196B0F313CFF4F6B25",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000613",
+      "owner_logical_id": "CLIENT_CLASS_000613",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/al",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutModificationInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible title is 'Item Loadout Modification Interface' with LMS Loadout, Save loadout and Set as default actions."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side behavior is inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_8C0B63E4CF94FEEDB2AA",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000667",
+      "owner_logical_id": "CLIENT_CLASS_000667",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodcoreTokenLotteryInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible title is 'Bloodcore Token Lottery' with enter-lottery, pot, timer and latest-winners presentation."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side behavior is inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_99000DBDB2BF00A0F218",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000631",
+      "owner_logical_id": "CLIENT_CLASS_000631",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/az",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MonsterItemDropSearchInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible title is 'Monster item drop search' with Search by item/monster, Search item/npc and monster selection."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side behavior is inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_B1F993E463FD5A32C0C5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000581",
+      "owner_logical_id": "CLIENT_CLASS_000581",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aF",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PlankMakeInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible controls are Make-all Wood/Oak/Teak/Mahogany with per-type coin prices."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side behavior is inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_D3BB2540499AC306E926",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000670",
+      "owner_logical_id": "CLIENT_CLASS_000670",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClanChatInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible surface contains 'Clan Chat', 'Clan Setup', Join Chat, owner/talking-in state and clan-member management."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side behavior is inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_DDF905EA91C5F5920817",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000616",
+      "owner_logical_id": "CLIENT_CLASS_000616",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/ao",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LotteryInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible surface contains 'Lottery title', Enter lottery, winning pot, countdown and Latest Raffle Winners."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side behavior is inferred."
+    }
+  ],
+  "unresolved": []
+}
