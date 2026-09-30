@@ -104,6 +104,6 @@ A supporting historical backtest is pinned in `fixtures/v307-v308-r8-readable-so
 
 It applies the same recovered R8 rename authority independently to the exact historical v307 and v308 client binaries. Both deterministic remapped archives contain 10,970 identical entry paths and differ in exactly one entry: the original `rs/f/a.class` update is carried into the readable identity `rs/Configuration.class`.
 
-The exact pinned Procyon v0.6.0 decompiler then independently produces `rs/Configuration.java` for both remapped binaries. The Java delta is one assignment only: `field1628 = 307` becomes `field1628 = 308`.
+The exact pinned Procyon v0.6.0 decompiler then independently decompiles all 1,129 remapped project classes for each build in bounded batches. Both source trees contain the same 1,129 Java paths, zero empty files, and exactly one differing Java file: `rs/Configuration.java`. That Java delta is one assignment only: `field1628 = 307` becomes `field1628 = 308`. Canonical tree digests and byte counts are pinned in the fixture.
 
 This is evidence that the recovered readable-name mapping survives the real v307 -> v308 client update without class-identity drift. It is deliberately **not** treated as the final modern Source-M1 historical release-manifest PASS tracked by issue #283.
