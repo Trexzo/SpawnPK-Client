@@ -14,25 +14,25 @@ def _report() -> dict:
     rows = [
         {
             "category": "cannot_find_symbol",
-            "source_path": r"C:\\src\\rs\\a\\k.java",
+            "source_path": r"C:\src\rs\a\k.java",
             "symbol_kind": "variable",
             "symbol": "x",
         },
         {
             "category": "cannot_find_symbol",
-            "source_path": r"C:\\src\\rs\\a\\k.java",
+            "source_path": r"C:\src\rs\a\k.java",
             "symbol_kind": "variable",
             "symbol": "x",
         },
         {
             "category": "non_static_from_static_context",
-            "source_path": r"C:\\src\\rs\\A\\k.java",
+            "source_path": r"C:\src\rs\A\k.java",
             "symbol_kind": None,
             "symbol": None,
         },
         {
             "category": "cannot_be_dereferenced",
-            "source_path": r"C:\\src\\rs\\u\\g.java",
+            "source_path": r"C:\src\rs\u\g.java",
             "symbol_kind": None,
             "symbol": None,
         },
