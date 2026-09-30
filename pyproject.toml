@@ -82,6 +82,7 @@ spk-cross-version-source-delta = "spk_recovery.cross_version_source_delta_cli:ma
 spk-cross-version-binary-delta = "spk_recovery.cross_version_binary_delta_cli:main"
 spk-source-milestone = "spk_recovery.source_milestone_cli:main"
 spk-source-authority-artifact = "spk_recovery.source_authority_artifact_cli:main"
+spk-member-safety-carry-forward = "spk_recovery.member_safety_carryforward_cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
