@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/I",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpriteResourceRegistry",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_registered_sprite_storage",
+          "detail": "The class owns one static List<Sprite>. Its path-taking factory constructs a new R55 Sprite, stores the supplied resource path on that Sprite and appends the same object to the registry before returning it."
+        },
+        {
+          "family": "exact_materialization_pass",
+          "detail": "The no-arg static reload walks every registered Sprite, loads its path-backed AWT image, recalculates width/height/offset state, allocates the exact pixel array and fills it through PixelGrabber, including the Sprite color-key cleanup path."
+        },
+        {
+          "family": "exact_startup_lifecycle",
+          "detail": "Client invokes the registry materialization method once during its shared asset startup sequence after static sprite-holder classes have registered resources."
+        },
+        {
+          "family": "exact_named_resource_consumers",
+          "detail": "R308 CombatHudSpriteAssets registers exact paths including misc/singlesplus, misc/singlesplushot, popups/hp 0..3, hitmarks/old/poise and popups/scope through this registry, fixing the role to path-backed Sprite resource registration/materialization."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the global path-backed Sprite registration and startup materialization registry. No original stripped identifier is claimed."
+    }
+  ],
+  "conflicts": []
+}
