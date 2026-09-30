@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/Z",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PkLeaderboardSelectionInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_nouns",
+          "detail": "The builder creates root 61000 and exact labels 'Daily PK Leaderboards', 'Tournament Leaderboard', 'Tournament PK leaderboard' and 'Leaderboard Selection Menu'."
+        },
+        {
+          "family": "exact_dual_selection_surface",
+          "detail": "It creates two selectable leaderboard controls side-by-side and associated title/selection text, fixing the role as a PK leaderboard selector rather than a generic high-score panel."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the common rs/n/c interface-builder base and contains only deterministic widget construction/layout behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the Daily/Tournament PK leaderboard selection interface."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/ak",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BountyTeleportInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_nouns",
+          "detail": "The interface contains exact actions 'Bounty teleport', 'Home teleport' and 'Edgeville teleport' plus 'Close Window'."
+        },
+        {
+          "family": "exact_construction_surface",
+          "detail": "All widgets are built from the construction/sprite and LOGS/ICON resource family into one dedicated teleport-selection surface."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends rs/n/c and owns only this deterministic widget layout."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the bounty/home/Edgeville teleport interface."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/M",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "VotingRewardsInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_nouns",
+          "detail": "The interface headline is '@or1@Vote for us and receive rewards!' and exposes exact vote actions for Moparscape, RSPS-List, RuneLocus and TopG."
+        },
+        {
+          "family": "exact_dedicated_layout",
+          "detail": "Root/widget IDs 60050..60061 and 60163..60166 form one self-contained voting/reward surface using misc/event assets."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends rs/n/c and contains only deterministic voting-interface construction."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the vote-link/reward interface."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/E",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DuelTypeSelectionInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_nouns",
+          "detail": "The interface title is 'Select a duel type..' with exact selectable modes 'Standard duel', 'Whip only' and 'Whip + dds only' plus an Invite action."
+        },
+        {
+          "family": "exact_duel_assets",
+          "detail": "The builder uses popups/duel and gambling/SPRITE assets and produces the complete mode-selection popup."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends rs/n/c and has no behavior outside deterministic duel-selection widget construction."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the duel-mode selection popup."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aE",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LegendaryPetFusingInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_nouns",
+          "detail": "The surface contains exact strings '@or1@Legendary Pet Fusing', '@gre@Limited time pet fusion!', 'Fuse pets', 'Fuse' and 'New pet ETA'."
+        },
+        {
+          "family": "exact_pet_fusion_layout",
+          "detail": "The builder creates the fusion input/result widgets, item slots and fuse control on root 65551 using fountain sprites."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends rs/n/c and owns only this deterministic legendary-pet fusion UI construction."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the legendary pet fusion interface."
+    }
+  ],
+  "conflicts": []
+}
