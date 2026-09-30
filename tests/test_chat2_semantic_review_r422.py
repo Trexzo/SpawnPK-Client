@@ -16,10 +16,10 @@ class Chat2SemanticReviewR422Tests(unittest.TestCase):
     def test_r422_resolves_deterministically(self):
         actual=resolve_semantic_candidates(_class_lineage(),_member_lineage(),_load("mappings/candidates/v308.semantic.chat2.r422.json"))
         expected=_load("mappings/candidates/v308.semantic-review.chat2.r422.json")
-        self.assertEqual(actual["proposal_count"],3); self.assertEqual(actual["unresolved"],[]); self.assertEqual(actual["review_id"],"SEMREVIEW_BA0257E3F23B02A0DFFB"); self.assertEqual(actual,expected)
+        self.assertEqual(actual["proposal_count"],2); self.assertEqual(actual["unresolved"],[]); self.assertEqual(actual["review_id"],"SEMREVIEW_A4FC27CB56D5DAD4182E"); self.assertEqual(actual,expected)
     def test_r422_expected_stable_ids(self):
         review=_load("mappings/candidates/v308.semantic-review.chat2.r422.json")
-        self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"DrawingArea":"CLIENT_CLASS_000492","LauncherFrameLayoutTask":"CLIENT_CLASS_000353","TypingTextEffectProcessor":"CLIENT_CLASS_000350"})
+        self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"DrawingArea":"CLIENT_CLASS_000492","LauncherFrameLayoutTask":"CLIENT_CLASS_000353"})
     def test_r422_names_owners_and_ids_do_not_overlap_prior_reviews(self):
         current=_load("mappings/candidates/v308.semantic-review.chat2.r422.json")
         names={r["proposed_name"] for r in current["proposals"]}; owners={r["source_coordinate"]["owner"] for r in current["proposals"]}; ids={r["stable_id"] for r in current["proposals"]}

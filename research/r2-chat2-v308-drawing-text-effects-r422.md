@@ -9,7 +9,7 @@ Exact client authority:
 - `rs/l/c` -> `CLIENT_CLASS_000492` -> `DrawingArea`
 - `rs/l/D` -> `CLIENT_CLASS_000353` -> `LauncherFrameLayoutTask`
 - `rs/l/A` -> `CLIENT_CLASS_000350` -> `TypingTextEffectProcessor`
-- review: `SEMREVIEW_BA0257E3F23B02A0DFFB`
+- review: `SEMREVIEW_A4FC27CB56D5DAD4182E`
 
 `DrawingArea` is backed by the exact-v308 global pixel/depth/clip surface and historical 317
 source fingerprint.
@@ -21,3 +21,4 @@ source fingerprint.
 The adjacent `rs/l/l` class handles the separate `<fla>/<fla2>` effect family.
 
 R422 remains non-canonical semantic research only.
+\n## Duplicate correction\n\nThe attempted `rs/l/A -> TypingTextEffectProcessor` addition was removed after the global ownership audit confirmed R356 already owns the exact class as `TypewriterTextEffect` (`CLIENT_CLASS_000350`). R422 retains no competing proposal for that owner.\n

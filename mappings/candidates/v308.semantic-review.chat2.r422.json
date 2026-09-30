@@ -4,8 +4,8 @@
   "canonical": false,
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-  "proposal_count": 3,
-  "review_id": "SEMREVIEW_BA0257E3F23B02A0DFFB",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_A4FC27CB56D5DAD4182E",
   "proposals": [
     {
       "proposal_id": "SEMPROP_036BD1649B1FB114FBF9",
@@ -66,36 +66,6 @@
         }
       ],
       "note": "Historical 317 source identity is corroborative; exact-v308 pixel/clip behavior is primary authority."
-    },
-    {
-      "proposal_id": "SEMPROP_E379C5BBED3593810DEF",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000350",
-      "owner_logical_id": "CLIENT_CLASS_000350",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/l/A",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "TypingTextEffectProcessor",
-      "confidence": 0.998,
-      "evidence": [
-        {
-          "family": "exact_tag_surface",
-          "detail": "rs/l/A recognizes @type@, <type>, </type> and <type=N> markers, strips or rewrites them into timestamp-bearing <type=N:timestamp> state, and bounds configurable typing speed to the exact accepted range."
-        },
-        {
-          "family": "exact_animation_state",
-          "detail": "The processor tracks one expiry timestamp plus an active flag; its boolean predicate remains true while typing animation is active and causes Client chat redraw state to remain live."
-        },
-        {
-          "family": "exact_chat_pipeline",
-          "detail": "Client applies rs/l/A around public/private chat text after the neighboring rs/l/l flash-animation processor, proving this is the dedicated typing-text effect stage rather than a generic markup parser."
-        }
-      ],
-      "note": "Descriptive exact-v308 role; original stripped source identifier is not claimed."
     }
   ],
   "unresolved": []

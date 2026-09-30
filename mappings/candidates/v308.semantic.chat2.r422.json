@@ -66,37 +66,6 @@
         }
       ],
       "note": "Descriptive exact-v308 role; original stripped source identifier is not claimed."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/l/A",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "TypingTextEffectProcessor",
-      "confidence": 0.998,
-      "evidence": [
-        {
-          "family": "exact_tag_surface",
-          "detail": "rs/l/A recognizes @type@, <type>, </type> and <type=N> markers, strips or rewrites them into timestamp-bearing <type=N:timestamp> state, and bounds configurable typing speed to the exact accepted range."
-        },
-        {
-          "family": "exact_animation_state",
-          "detail": "The processor tracks one expiry timestamp plus an active flag; its boolean predicate remains true while typing animation is active and causes Client chat redraw state to remain live."
-        },
-        {
-          "family": "exact_chat_pipeline",
-          "detail": "Client applies rs/l/A around public/private chat text after the neighboring rs/l/l flash-animation processor, proving this is the dedicated typing-text effect stage rather than a generic markup parser."
-        }
-      ],
-      "note": "Descriptive exact-v308 role; original stripped source identifier is not claimed."
     }
   ],
   "conflicts": []
