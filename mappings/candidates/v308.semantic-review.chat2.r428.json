@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_F661854FA178ACDB3DB0",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_5DB53882E872168FACE3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000350",
+      "owner_logical_id": "CLIENT_CLASS_000350",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner":"rs/l/A","name":null,"descriptor":null},
+      "proposed_name": "TypewriterTextEffect",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_markup_contract","detail":"The class recognizes @type@, <type>, <type=N> and </type> markers; default type delay is 75 ms and explicit delay is clamped to 10..2000 ms."},
+        {"family":"exact_timing_rewrite","detail":"Its preprocessing path rewrites typing markers into timestamped <type=delay:startMillis> form using System.nanoTime()/1_000_000 and records the expected completion deadline from visible-character count."},
+        {"family":"exact_reveal_math","detail":"The static parser returns the currently revealable character count as floor((now-start)/delay)+1, returns a dedicated close-tag sentinel for </type>, and rejects malformed timing metadata."},
+        {"family":"exact_live_consumers","detail":"Exact-v308 reverse references are limited to Client, R55 RSFont and R418 RichTextStyleParser. Client preprocesses displayed strings through this class, RSFont consults its type-tag parser during live glyph traversal, and Client checks the effect-completion latch to force redraw while typing is active."},
+        {"family":"exact_scope_boundary","detail":"The class owns only typing-effect timing/completion state and markup parsing; other rich-text color, flashing, particle and sprite effects remain in separate recovered classes."}
+      ],
+      "note": "Descriptive exact-v308 name for the timed character-reveal rich-text effect implemented by <type> markup. No original stripped source identifier is claimed."
+    }
+  ],
+  "unresolved": []
+}
