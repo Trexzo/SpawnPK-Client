@@ -718,6 +718,14 @@ def _is_primitive_value_shadow_descriptor(descriptor: str) -> bool:
     )
 
 
+def _is_reference_value_shadow_descriptor(descriptor: str) -> bool:
+    """Return true for reference scalars or arrays of references."""
+    value = descriptor
+    while value.startswith("["):
+        value = value[1:]
+    return value.startswith("L") and value.endswith(";")
+
+
 def _read_readable_hierarchy(
     *,
     readable_zip: zipfile.ZipFile,
@@ -1409,6 +1417,255 @@ def _normalize_hierarchy_shadowed_self_static_field_owners(
         if left[1] > right[0]:
             raise SourceNormalizationError(
                 f"{rel}: overlapping hierarchy owner-qualification edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
+def _normalize_reference_shadowed_self_static_field_owners(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Qualify self static fields hidden by a same-name reference field.
+
+    This is the reference-valued counterpart to the primitive hierarchy rule,
+    but intentionally narrower: only static source methods are considered,
+    parameter/local value shadows remain excluded, and the exact readable
+    bytecode must account for the complete source field-access multiset.
+    """
+    rel = path.relative_to(source_root).as_posix()
+    simple_name_from_path = Path(rel).stem
+    text = path.read_text(encoding="utf-8")
+    code = _java_code_mask(text)
+    candidate = re.compile(
+        r"(?<![A-Za-z0-9_$.])"
+        + re.escape(simple_name_from_path)
+        + r"\.[A-Za-z_$][A-Za-z0-9_$]*\b"
+    )
+    if candidate.search(code) is None:
+        return []
+
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError as exc:
+        raise SourceNormalizationError(
+            f"{rel}: exact readable class field profile failed: {exc}"
+        ) from exc
+
+    internal_name = str(profile["internal_name"])
+    simple_name = internal_name.rsplit("/", 1)[-1]
+    if Path(rel).stem != simple_name:
+        return []
+
+    hierarchy = _read_readable_hierarchy(
+        readable_zip=readable_zip,
+        internal_name=internal_name,
+    )
+    if not hierarchy:
+        return []
+
+    reference_shadow_owners = [
+        owner
+        for owner, parsed in hierarchy
+        for field in parsed.fields
+        if (
+            str(field.get("name", "")) == simple_name
+            and not (int(field.get("access", 0)) & 0x0008)
+            and _is_reference_value_shadow_descriptor(
+                str(field.get("descriptor", ""))
+            )
+            and _field_visible_from(
+                declaring_owner=owner,
+                current_owner=internal_name,
+                access=int(field.get("access", 0)),
+            )
+        )
+    ]
+    if not reference_shadow_owners:
+        return []
+
+    static_by_name: dict[str, list[str]] = {}
+    for owner, parsed in hierarchy:
+        for field in parsed.fields:
+            name = str(field.get("name", ""))
+            if (
+                int(field.get("access", 0)) & 0x0008
+                and _is_java_identifier(name)
+                and _field_visible_from(
+                    declaring_owner=owner,
+                    current_owner=internal_name,
+                    access=int(field.get("access", 0)),
+                )
+            ):
+                static_by_name.setdefault(name, []).append(owner)
+    static_targets = {
+        name: owners[0]
+        for name, owners in static_by_name.items()
+        if len(owners) == 1
+    }
+    if not static_targets:
+        return []
+
+    qualified_owner = internal_name.replace("/", ".")
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for match in _METHOD_DECL_RE.finditer(text):
+        brace_start = text.find("{", match.start(), match.end())
+        if brace_start < 0:
+            continue
+        header_code = code[match.start():brace_start]
+        if re.search(r"\bstatic\b", header_code) is None:
+            continue
+
+        body_end = _matching_brace_end(text, brace_start)
+        method_text = text[match.start():body_end]
+        method_code = _java_code_mask(method_text)
+
+        parameter_shadow, local_shadow_spans = (
+            _same_name_value_shadow_spans(
+                method_match=match,
+                method_code=method_code,
+                simple_name=simple_name,
+            )
+        )
+        if parameter_shadow:
+            continue
+
+        source_counts: dict[tuple[str, str], int] = {}
+        total_source_counts: dict[tuple[str, str], int] = {}
+        occurrences: list[tuple[int, int, str]] = []
+
+        for field_name, declaring_owner in sorted(static_targets.items()):
+            simple_token = re.compile(
+                r"(?<![A-Za-z0-9_$.])"
+                + re.escape(simple_name)
+                + r"\."
+                + re.escape(field_name)
+                + r"\b(?!\s*\()"
+            )
+            simple_hits = [
+                hit
+                for hit in simple_token.finditer(method_code)
+                if not any(
+                    start <= hit.start() < end
+                    for start, end in local_shadow_spans
+                )
+            ]
+            if not simple_hits:
+                continue
+
+            qualified_token = re.compile(
+                r"(?<![A-Za-z0-9_$.])"
+                + re.escape(qualified_owner)
+                + r"\."
+                + re.escape(field_name)
+                + r"\b(?!\s*\()"
+            )
+            qualified_hits = list(qualified_token.finditer(method_code))
+
+            key = (declaring_owner, field_name)
+            source_counts[key] = len(simple_hits)
+            total_source_counts[key] = len(simple_hits) + len(qualified_hits)
+            for hit in simple_hits:
+                occurrences.append(
+                    (
+                        match.start() + hit.start(),
+                        match.start() + hit.end(),
+                        qualified_owner + "." + field_name,
+                    )
+                )
+
+        if not source_counts:
+            continue
+
+        candidates: list[dict[str, Any]] = []
+        source_arity = _source_parameter_count(match.group("params"))
+        for method in profile.get("methods", []):
+            if method.get("name") != match.group("name"):
+                continue
+            if not (int(method.get("access", 0)) & 0x0008):
+                continue
+            descriptor = str(method.get("descriptor", ""))
+            if _descriptor_parameter_count(descriptor) != source_arity:
+                continue
+            parameter_match = _source_parameters_match_descriptor(
+                match.group("params"),
+                descriptor,
+                current_package=internal_name.rpartition("/")[0],
+            )
+            if parameter_match is False:
+                continue
+
+            exact_counts = _hierarchy_static_field_access_counts(
+                method,
+                hierarchy=hierarchy,
+                targets=static_targets,
+            )
+            if all(
+                exact_counts.get(key, 0) == count
+                for key, count in total_source_counts.items()
+            ):
+                candidates.append(method)
+
+        if len(candidates) != 1:
+            continue
+
+        exact_method = candidates[0]
+        edits.extend(occurrences)
+        actions.append(
+            {
+                "kind": (
+                    "reference_shadowed_self_static_field_owner_qualification"
+                ),
+                "source_path": rel,
+                "method_name": match.group("name"),
+                "method_descriptor": exact_method["descriptor"],
+                "qualified_owner": internal_name,
+                "reference_shadow_owners": sorted(
+                    set(reference_shadow_owners)
+                ),
+                "field_access_counts": {
+                    owner + "." + name: count
+                    for (owner, name), count in sorted(source_counts.items())
+                },
+                "total_field_access_counts": {
+                    owner + "." + name: count
+                    for (owner, name), count in sorted(
+                        total_source_counts.items()
+                    )
+                },
+                "replacement_count": sum(source_counts.values()),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_reference_value_shadowed_self_class_owner"
+                    ),
+                    "strategy": (
+                        "exact_static_method_complete_field_access_qualification"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping reference self-owner edits"
             )
     for start, end, replacement in reversed(edits):
         text = text[:start] + replacement + text[end:]
@@ -2837,6 +3094,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_reference_shadowed_self_static_field_owners(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_shadowed_nested_static_field_owners(
                         source_root=source_root,
                         path=path,
@@ -2922,6 +3186,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "hierarchy_shadowed_self_static_field_owner_qualification"
+        ),
+        "reference_shadowed_self_static_field_method_count": sum(
+            action["kind"]
+            == "reference_shadowed_self_static_field_owner_qualification"
+            for action in actions
+        ),
+        "reference_shadowed_self_static_field_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "reference_shadowed_self_static_field_owner_qualification"
         ),
         "shadowed_nested_static_field_method_count": sum(
             action["kind"]
