@@ -25,6 +25,10 @@ def _stable_json(value: Any) -> bytes:
     ).encode("utf-8")
 
 
+def _json_digest(value: Any) -> str:
+    return hashlib.sha256(_stable_json(value)).hexdigest()
+
+
 def _require_doc(
     doc: dict[str, Any],
     *,
@@ -219,6 +223,7 @@ def _collision_targets(
 def _index_source_units(
     *,
     release: dict[str, Any],
+    recovered_manifest: dict[str, Any],
     class_lineage: dict[str, Any],
     class_plan: dict[str, Any],
     collision_plan: dict[str, Any] | None,
@@ -234,6 +239,11 @@ def _index_source_units(
         raise CrossVersionSourceDeltaError(
             f"{label}_release: source comparison requires ready_for_release=true"
         )
+    _require_doc(
+        recovered_manifest,
+        kind="recovered_source_workspace_manifest",
+        label=f"{label}_recovered_manifest",
+    )
 
     build_id = str(release.get("build_id") or "")
     authority_sha = str(release.get("authority_sha256") or "").lower()
@@ -251,6 +261,44 @@ def _index_source_units(
     ):
         raise CrossVersionSourceDeltaError(
             f"{label}_release: incomplete build/source authority"
+        )
+
+    pins = release.get("authority_pins")
+    if not isinstance(pins, dict):
+        raise CrossVersionSourceDeltaError(
+            f"{label}_release: missing authority_pins"
+        )
+    expected_recovered_digest = str(
+        pins.get("recovered_source_manifest_sha256") or ""
+    ).lower()
+    if expected_recovered_digest != _json_digest(recovered_manifest):
+        raise CrossVersionSourceDeltaError(
+            f"{label}: recovered-source manifest digest does not match release pin"
+        )
+    if recovered_manifest.get("build_id") != build_id:
+        raise CrossVersionSourceDeltaError(
+            f"{label}: recovered manifest build_id does not match release"
+        )
+    if (
+        str(recovered_manifest.get("source_authority_sha256") or "").lower()
+        != authority_sha
+    ):
+        raise CrossVersionSourceDeltaError(
+            f"{label}: recovered manifest authority SHA does not match release"
+        )
+    if (
+        str(recovered_manifest.get("readable_jar_sha256") or "").lower()
+        != readable_sha
+    ):
+        raise CrossVersionSourceDeltaError(
+            f"{label}: recovered manifest readable SHA does not match release"
+        )
+    if (
+        release.get("recovered_workspace_id")
+        != recovered_manifest.get("workspace_id")
+    ):
+        raise CrossVersionSourceDeltaError(
+            f"{label}: recovered workspace ID does not match release"
         )
 
     build = _build_row(class_lineage, build_id)
@@ -278,11 +326,35 @@ def _index_source_units(
         authority_sha256=authority_sha,
         label=f"{label}_class_plan",
     )
+    if (
+        str(recovered_manifest.get("class_plan_digest") or "").lower()
+        != _json_digest(class_plan)
+    ):
+        raise CrossVersionSourceDeltaError(
+            f"{label}: class plan digest does not match recovered source authority"
+        )
     collision_remaps = _collision_targets(
         collision_plan,
         readable_jar_sha256=readable_sha,
         label=f"{label}_collision_plan",
     )
+    expected_collision_plan_id = recovered_manifest.get(
+        "collision_plan_id"
+    )
+    if expected_collision_plan_id is None:
+        if collision_plan is not None:
+            raise CrossVersionSourceDeltaError(
+                f"{label}: collision plan supplied but recovered source is not collision-derived"
+            )
+    else:
+        if collision_plan is None:
+            raise CrossVersionSourceDeltaError(
+                f"{label}: collision-derived recovered source requires collision plan"
+            )
+        if collision_plan.get("plan_id") != expected_collision_plan_id:
+            raise CrossVersionSourceDeltaError(
+                f"{label}: collision plan ID does not match recovered source authority"
+            )
 
     units: dict[str, dict[str, Any]] = {}
     expected_paths: set[str] = set()
@@ -355,6 +427,7 @@ def _index_source_units(
         "build_id": build_id,
         "authority_sha256": authority_sha,
         "release_id": release.get("release_id"),
+        "recovered_workspace_id": recovered_manifest.get("workspace_id"),
         "readable_jar_sha256": readable_sha,
         "collision_plan_id": (
             collision_plan.get("plan_id")
@@ -370,6 +443,8 @@ def _index_source_units(
 def build_cross_version_source_delta(
     old_release: dict[str, Any],
     new_release: dict[str, Any],
+    old_recovered_manifest: dict[str, Any],
+    new_recovered_manifest: dict[str, Any],
     class_lineage: dict[str, Any],
     old_class_plan: dict[str, Any],
     new_class_plan: dict[str, Any],
@@ -384,6 +459,7 @@ def build_cross_version_source_delta(
 
     old = _index_source_units(
         release=old_release,
+        recovered_manifest=old_recovered_manifest,
         class_lineage=class_lineage,
         class_plan=old_class_plan,
         collision_plan=old_collision_plan,
@@ -392,6 +468,7 @@ def build_cross_version_source_delta(
     )
     new = _index_source_units(
         release=new_release,
+        recovered_manifest=new_recovered_manifest,
         class_lineage=class_lineage,
         class_plan=new_class_plan,
         collision_plan=new_collision_plan,
@@ -456,6 +533,8 @@ def build_cross_version_source_delta(
         "new_authority_sha256": new["authority_sha256"],
         "old_release_id": old["release_id"],
         "new_release_id": new["release_id"],
+        "old_recovered_workspace_id": old["recovered_workspace_id"],
+        "new_recovered_workspace_id": new["recovered_workspace_id"],
         "old_source_tree_sha256": old["source_tree_sha256"],
         "new_source_tree_sha256": new["source_tree_sha256"],
         "old_collision_plan_id": old["collision_plan_id"],
