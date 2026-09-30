@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_D27D4B151B3A1212872D",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_D76E6A24DCD6CA19BF58",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000517",
+      "owner_logical_id": "CLIENT_CLASS_000517",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner":"rs/l/x$a","name":null,"descriptor":null},
+      "proposed_name": "RichTextAlignment",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_enum_constants","detail":"The nested enum preserves exact source-level constant names LEFT, CENTER and RIGHT in v308 bytecode."},
+        {"family":"exact_owner_contract","detail":"Its only exact owner is rs/l/x RichTextAlignmentState, which stores the enum as the parsed/current alignment state."},
+        {"family":"exact_scope","detail":"The enum contains no unrelated fields or behavior beyond ordinary values/valueOf plumbing."}
+      ],
+      "note":"Exact semantic enum identity from surviving LEFT/CENTER/RIGHT constants; the enclosing class name remains descriptive."
+    },
+    {
+      "proposal_id": "SEMPROP_F8CA9BA8B9C9881EA899",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000516",
+      "owner_logical_id": "CLIENT_CLASS_000516",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner":"rs/l/x","name":null,"descriptor":null},
+      "proposed_name": "RichTextAlignmentState",
+      "confidence": 0.998,
+      "evidence": [
+        {"family":"exact_markup_parser","detail":"The static parser resets one singleton state object, scans angle-bracket tags in the supplied String and recognizes exact 'align' and 'hov=' tag prefixes."},
+        {"family":"exact_alignment_state","detail":"The state owns one rs/l/x$a enum field plus one integer field; exact reset clears the enum and sets the integer to -1, while the align tag assigns the enum's LEFT value."},
+        {"family":"exact_numeric_tag_state","detail":"The hov= parser consumes decimal/hex-like digits through the existing rs/l/h numeric helpers and stores the resulting integer without any second behavior. Its product meaning is intentionally left opaque."},
+        {"family":"exact_isolation_boundary","detail":"A whole-JAR exact class-reference scan finds rs/l/x only in itself and its nested enum; no external exact-v308 consumer survives, so the name describes the self-contained rich-text alignment/state role only."}
+      ],
+      "note":"Descriptive exact-v308 name for the isolated rich-text alignment/tag state parser. The opaque hov integer is not given a guessed domain meaning."
+    }
+  ],
+  "unresolved": []
+}
