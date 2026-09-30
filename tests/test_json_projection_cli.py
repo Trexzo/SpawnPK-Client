@@ -109,6 +109,61 @@ class JsonProjectionTests(unittest.TestCase):
                 },
             )
 
+    def test_cli_validate_only_accepts_case_distinct_keys(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "valid.json"
+            path.write_text(
+                '{"payload":{"D":1,"d":2}}',
+                encoding="utf-8",
+            )
+
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with (
+                contextlib.redirect_stdout(stdout),
+                contextlib.redirect_stderr(stderr),
+            ):
+                code = main(
+                    [
+                        str(path),
+                        "--validate-only",
+                    ]
+                )
+
+            self.assertEqual(code, 0, stderr.getvalue())
+            self.assertEqual(
+                stdout.getvalue().strip(),
+                "SPK_JSON_VALIDATION_PASS",
+            )
+
+    def test_cli_validate_only_rejects_field_projection_mix(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "valid.json"
+            path.write_text(
+                '{"status":"complete"}',
+                encoding="utf-8",
+            )
+
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with (
+                contextlib.redirect_stdout(stdout),
+                contextlib.redirect_stderr(stderr),
+            ):
+                code = main(
+                    [
+                        str(path),
+                        "--validate-only",
+                        "--field",
+                        "status=/status",
+                    ]
+                )
+
+            self.assertEqual(code, 2)
+            self.assertIn(
+                "cannot be combined",
+                stderr.getvalue(),
+            )
     def test_cli_rejects_exact_duplicate_json_keys(self):
         with tempfile.TemporaryDirectory() as td:
             path = Path(td) / "duplicate.json"
