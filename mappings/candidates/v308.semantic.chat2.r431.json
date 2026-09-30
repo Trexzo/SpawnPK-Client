@@ -1,0 +1,18 @@
+{
+  "schema_version":1,"kind":"semantic_candidate_set","canonical":false,
+  "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[{
+    "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE",
+    "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target":{"kind":"class","owner":"rs/D","name":null,"descriptor":null},
+    "proposed_name":"RSAppletComponentMoveListener","confidence":0.998,
+    "evidence":[
+      {"family":"exact_owner_registration","detail":"R48 RSApplet constructs rs/D with only the applet parent reference and immediately registers it through the applet host Component.addComponentListener path."},
+      {"family":"exact_event_contract","detail":"rs/D extends ComponentAdapter and overrides only componentMoved(ComponentEvent); it owns no resize/show/hide behavior or unrelated state."},
+      {"family":"exact_throttle_behavior","detail":"componentMoved compares System.currentTimeMillis against the client-global previous-move timestamp, ignores events within 100 ms, and otherwise flips one client move/redraw marker boolean and records the new timestamp."},
+      {"family":"exact_scope_boundary","detail":"The class is a tiny host-component move listener only. The meaning of the downstream client marker is intentionally not broadened beyond the exact move-event signal."}
+    ],
+    "note":"Descriptive exact-v308 helper name; no standalone historical source identifier is claimed."
+  }],
+  "conflicts":[]
+}
