@@ -1,4 +1,4 @@
-# Chat 2 — exact-v308 ObjectManager R425
+# Chat 2 — R425 duplicate ObjectManager audit
 
 Exact client authority:
 
@@ -6,58 +6,31 @@ Exact client authority:
 
 ## Result
 
-- `rs/x` -> `CLIENT_CLASS_001114` -> `ObjectManager`
-- proposal: `SEMPROP_3CB4FC4EF6994A842D12`
-- review: `SEMREVIEW_E80B92D2470E8CC80E1D`
+R425 retains **no semantic proposal**.
 
-## Exact-v308 role
+The R425 investigation independently recovered:
 
-`rs/x` is the terrain/landscape scene manager.
+- `rs/x`;
+- `CLIENT_CLASS_001114`;
+- `ObjectManager`;
+- the terrain/landscape scene-build role.
 
-Its constructor receives:
+Its exact evidence confirms the constructor from tile flags/heights, four-plane 104x104 region
+state, collision-map integration, terrain/chunk decode, object placement and final scene-build
+responsibilities. It also independently joins the terrain decoder to the `rs/p` noise utility.
 
-- `byte[][][]` tile/plane flags;
-- `int[][][]` terrain heights.
+However, R53 already owns the exact same semantic identity:
 
-It initializes the characteristic classic-client region state:
+- `rs/x` -> `CLIENT_CLASS_001114` -> `ObjectManager`;
+- proposal: `SEMPROP_3CB4FC4EF6994A842D12`;
+- review: `SEMREVIEW_E80B92D2470E8CC80E1D`.
 
-- minimum/active plane sentinel = 99;
-- region dimensions = 104 x 104;
-- four-plane 104x104 tile work arrays;
-- 105x105 lighting/shading working state.
+R53 already records the exact constructor state, region decode, collision updates, scene-object
+placement, final scene construction and historical ObjectManager identity. R425 therefore
+establishes no distinct semantic owner.
 
-Its scene-build pass accepts the collision-map array plus the scene/world-controller object
-and walks the four 104x104 planes to:
+The former R425 candidate/review/test are removed. R425 is retained only as independent
+corroboration for R53 and as a cross-check linking the terrain-noise audit back into the
+established ObjectManager recovery.
 
-- apply collision blocking;
-- derive tile lighting;
-- accumulate floor underlay/overlay colour state;
-- construct scene tiles;
-- apply occlusion/plane information.
-
-The class also owns terrain-region/chunk decode and landscape-object placement paths.
-
-## R424 join
-
-R424 `TerrainHeightNoise` has exactly one live external class consumer: `rs/x`.
-
-The plane-0 terrain decode path stores:
-
-`-8 * TerrainHeightNoise(worldX + 932731, worldY + 556238)`
-
-Higher planes derive height from the preceding plane instead.
-
-## Historical source identity
-
-Classic 317 source trees preserve the exact class name `ObjectManager` with the same:
-
-- `ObjectManager(byte[][][], int[][][])` constructor shape;
-- initial 99/104/104 region state;
-- collision-map + world-controller scene-build architecture;
-- terrain/object region responsibilities.
-
-That exact structural continuity is stronger than a merely descriptive modern name.
-
-## Boundary
-
-R425 is non-canonical semantic research only. Chat 2 does not perform acceptance or source rewrite.
+R425 is a correction/audit batch only. Chat 2 performs no canonical acceptance or source rewrite.
