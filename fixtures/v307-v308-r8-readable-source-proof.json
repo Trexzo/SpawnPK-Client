@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "kind": "historical_readable_source_cross_version_proof",
+  "fixture_id": "SPK_R8_V307_V308_READABLE_SOURCE_PROOF",
+  "scope": "historical_r8_readability_backtest",
+  "truth_boundary": {
+    "proves": [
+      "the same recovered readable-name authority can be applied independently to exact v307 and exact v308",
+      "the independently remapped archives preserve identical entry identity except for the one known updated class",
+      "the one changed readable class independently decompiles to a one-line build-number source delta"
+    ],
+    "does_not_prove": [
+      "current Source Milestone 1 release readiness for historical v307",
+      "that inferred or generated names are original developer identifiers",
+      "a modern recovery_release_manifest cross-version PASS"
+    ]
+  },
+  "inputs": {
+    "v307_client_sha256": "6232bae206846a4ba8d09766a2dee886b69016066a3f50f83b201bf705f93662",
+    "v308_client_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "original_changed_entry": "rs/f/a.class",
+    "v307_original_changed_class_sha256": "556a4de8b49afc3ea5a82af2a7394062fc824c6cc3da795b2f3ab29a014ca68d",
+    "v308_original_changed_class_sha256": "7bf992941766a40fddaead4c8bfe5e94a46c19c63d06800e26f45b78d001bbc6"
+  },
+  "recovered_r8_authority": {
+    "stage0_rename_manifest_sha256": "1c8f930bf414f0b22953eb4eca86786ef90207a53acd00432f8c3bd327af439f",
+    "spk_map_sha256": "43c6092e8066821af7438e80978efeffa31604f4774adb46c74fce060d126853",
+    "derived_remap_tsv_sha256": "e4e1349247f962d2241ffcaaef624cfc58438dcf8b0a82a9b6f24ca3ee157c45",
+    "class_rename_count": 1187,
+    "field_rename_count": 7194,
+    "method_rename_count": 5735,
+    "total_changed_member_rename_count": 12929,
+    "remapper_repo_blob_sha": "0f2997fddc369e28b14c2e18f752219b6b6665a6"
+  },
+  "decompiler_authority": {
+    "engine": "procyon",
+    "version": "0.6.0",
+    "filename": "procyon-decompiler-0.6.0.jar",
+    "size_bytes": 2004704,
+    "sha256": "821da96012fc69244fa1ea298c90455ee4e021434bc796d3b9546ab24601b779",
+    "official_release_url": "https://github.com/mstrobel/procyon/releases/download/v0.6.0/procyon-decompiler-0.6.0.jar"
+  },
+  "independently_remapped_archives": {
+    "v307_sha256": "fbb4eec05b4343df9e2a69aa52b83a5b6fa1fa50232093567ca611b53747f484",
+    "v308_sha256": "c3b4d300c7115f062755b11421022eada92730f318041ca5bfd6dfd3fc8056a9",
+    "v307_size_bytes": 39279258,
+    "v308_size_bytes": 39279258,
+    "v307_entry_count": 10970,
+    "v308_entry_count": 10970,
+    "same_entry_paths": true,
+    "differing_entry_count": 1,
+    "differing_entries": [
+      "rs/Configuration.class"
+    ],
+    "v307_changed_readable_class_sha256": "00ef53b89d15b04714320f2be84ed784843445497854b57a12da0db49348c6bd",
+    "v308_changed_readable_class_sha256": "8aeec67de23406ac905d04b26ea3c62f41fbc4025038a18466b04ca8be597e6d"
+  },
+  "independently_decompiled_changed_source": {
+    "path": "rs/Configuration.java",
+    "v307_sha256": "c1f5f24a1ed1dc72f495afb4a0ee952507d188ebcfad00f3c8a04a2dce0afe9b",
+    "v308_sha256": "ca72323e76c909f8447c26b4c8e9408c2863168ddfd8de6bd1eb93a80a6eba5e",
+    "v307_size_bytes": 35391,
+    "v308_size_bytes": 35391,
+    "unified_diff_line_count": 1,
+    "semantic_delta": {
+      "field": "field1628",
+      "old_value": 307,
+      "new_value": 308
+    }
+  },
+  "notes": [
+    "The v307 readable class/source was produced from exact v307 bytes with the recovered R8 rename authority; it was not produced by editing v308 source.",
+    "Archive JAR hashes differ because v307 and v308 contain the known build-number change. Their entry path sets are identical and only rs/Configuration.class differs after deterministic remap.",
+    "A stricter current Source-M1 historical release-manifest backtest remains tracked separately.",
+    "The exhaustive project-only decompile produced 1,129 Java files for each build with identical paths and exactly one source difference, rs/Configuration.java."
+  ],
+  "exhaustive_project_source_backtest": {
+    "selection": "all 1129 independently remapped rs/ class files, decompiled in bounded Procyon batches",
+    "v307_java_file_count": 1129,
+    "v308_java_file_count": 1129,
+    "same_java_path_set": true,
+    "old_only_java_file_count": 0,
+    "new_only_java_file_count": 0,
+    "zero_byte_java_file_count_v307": 0,
+    "zero_byte_java_file_count_v308": 0,
+    "differing_java_file_count": 1,
+    "differing_java_files": [
+      "rs/Configuration.java"
+    ],
+    "v307_source_tree_sha256": "ca2b34c77638c16f431e913d9c2d80027d6a7648a7bdcd98df31a6c0930f1a05",
+    "v308_source_tree_sha256": "23e16c08f405fbdfd8649c2c490cc56087accdd87be881ac2a5140c831f70442",
+    "v307_canonical_source_bytes": 6844468,
+    "v308_canonical_source_bytes": 6844468,
+    "batch_count": 57,
+    "batch_size_max": 20,
+    "v307_failed_batches": 0,
+    "v308_failed_batches": 0
+  }
+}
