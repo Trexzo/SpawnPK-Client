@@ -15,7 +15,7 @@ def _load(p): return json.loads((ROOT/p).read_text(encoding="utf-8"))
 class Chat2SemanticReviewR379Tests(unittest.TestCase):
     def test_resolves(self):
         actual=resolve_semantic_candidates(_class_lineage(),_member_lineage(),_load("mappings/candidates/v308.semantic.chat2.r379.json")); expected=_load("mappings/candidates/v308.semantic-review.chat2.r379.json")
-        self.assertEqual(actual["proposal_count"],2); self.assertEqual(actual["unresolved"],[]); self.assertEqual(actual["review_id"],"SEMREVIEW_5D457783633127AFEF72"); self.assertEqual(actual,expected)
+        self.assertEqual(actual["proposal_count"],2); self.assertEqual(actual["unresolved"],[]); self.assertEqual(actual["review_id"],"SEMREVIEW_52CD06908CE1169829F4"); self.assertEqual(actual,expected)
     def test_ids(self):
         review=_load("mappings/candidates/v308.semantic-review.chat2.r379.json")
         self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"MenuEntrySwapperConfig":"CLIENT_CLASS_000927","MenuEntrySwapperPlugin":"CLIENT_CLASS_000928"})

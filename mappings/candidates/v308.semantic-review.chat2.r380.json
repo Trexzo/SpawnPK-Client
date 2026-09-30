@@ -35,7 +35,7 @@
       "proposed_name":"NotesConfig","confidence":0.999,
       "evidence":[
         {"family":"exact_config_contract","detail":"Exact v308 rs/s/m/a is the notes config interface: it uses the notes group and exposes one notesData String getter/setter pair."},
-        {"family":"historical_source_identity","detail":"RuneLite NotesConfig uses @ConfigGroup("notes") and the same hidden notesData String getter plus notesData(String) setter contract."},
+        {"family":"historical_source_identity","detail":"RuneLite NotesConfig uses @ConfigGroup('notes') and the same hidden notesData String getter plus notesData(String) setter contract."},
         {"family":"exact_plugin_pairing","detail":"Sibling rs/s/m/f resolves this config and rs/s/m/b consumes it to load/save editor text."}
       ],
       "note":"Source-proven RuneLite Notes config identity."
