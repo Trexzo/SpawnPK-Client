@@ -1,34 +1,76 @@
 {
-  "schema_version":1,"kind":"semantic_review_set","canonical":false,
-  "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","proposal_count":2,
-  "review_id":"SEMREVIEW_926C5322EA2395C46095",
-  "proposals":[
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_D496D8951B0148D8D379",
+  "proposals": [
     {
-      "proposal_id":"SEMPROP_5B795494F1F39FBAD2A7","target_kind":"class",
-      "stable_id":"CLIENT_CLASS_000990","owner_logical_id":"CLIENT_CLASS_000990",
-      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate":{"owner":"rs/t/b","name":null,"descriptor":null},
-      "proposed_name":"IntegerConfigMapTypeReference","confidence":0.999,
-      "evidence":[
-        {"family":"exact_generic_signature","detail":"The class is exactly a Jackson TypeReference<Map<Integer, Map<String, Object>>> with no fields or unrelated behavior."},
-        {"family":"exact_mapper_consumer","detail":"R248 ConfigDataMapper constructs this type token in its MessagePack read path and passes it directly to MessagePackMapper.readValue(byte[], TypeReference)."},
-        {"family":"exact_definition_schema","detail":"The returned integer-keyed nested map is the raw configuration corpus consumed by R247 DefinitionConfigLoader and the reviewed definition-loader family."}
+      "proposal_id": "SEMPROP_6C5A42CA2490C2372BCD",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000198",
+      "owner_logical_id": "CLIENT_CLASS_000198",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/N",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TrayIconFrameRestoreMouseAdapter",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_swingutil_owner",
+          "detail": "R180 SwingUtil.createTrayIcon(Image,String,Frame) constructs rs/gui/N with the supplied Frame and installs it directly on the newly created TrayIcon through addMouseListener."
+        },
+        {
+          "family": "exact_restore_behavior",
+          "detail": "mouseClicked makes the supplied Frame visible and sets Frame state 0 (normal). Under one exact rs/k/j mode, if the frame is not focused it briefly hides the frame and invokes rs/A/o.b() before restoring it."
+        },
+        {
+          "family": "exact_scope",
+          "detail": "The class stores only the target Frame and owns no other UI, packet or client state."
+        }
       ],
-      "note":"Name describes the exact Jackson generic type token used by ConfigDataMapper."
+      "note": "Descriptive exact-v308 name for the generic SwingUtil TrayIcon mouse adapter that restores the supplied Frame."
     },
     {
-      "proposal_id":"SEMPROP_8CABB2253EC5D5369972","target_kind":"class",
-      "stable_id":"CLIENT_CLASS_000994","owner_logical_id":"CLIENT_CLASS_000994",
-      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate":{"owner":"rs/t/d","name":null,"descriptor":null},
-      "proposed_name":"StringConfigMapTypeReference","confidence":0.999,
-      "evidence":[
-        {"family":"exact_generic_signature","detail":"The class is exactly a Jackson TypeReference<Map<String, Map<String, Object>>> with no fields or unrelated behavior."},
-        {"family":"exact_loader_consumer","detail":"R81 WanderingMerchantItemConfigLoader constructs this type token in its compiled MessagePack path and passes it directly to MessagePackMapper.readValue(byte[], TypeReference)."},
-        {"family":"exact_schema_role","detail":"The resulting string-keyed nested map is traversed by merchant section name and then by the exact nested 'items' map before item ids are extracted."}
+      "proposal_id": "SEMPROP_F729E5CD090C12B79555",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000285",
+      "owner_logical_id": "CLIENT_CLASS_000285",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/x",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GuiImageAsset",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_image_state",
+          "detail": "The class stores one java.awt.Image plus x/y draw coordinates and a constructor-supplied integer mode/state."
+        },
+        {
+          "family": "exact_resource_loading",
+          "detail": "Its String loader supports development/file execution by Toolkit.getImage(path) and packaged execution by getResource + ImageIO.read, returning whether an Image was successfully obtained."
+        },
+        {
+          "family": "exact_render_contract",
+          "detail": "The class can replace its Image, update draw coordinates, and draw the Image through a Graphics2D copy at those coordinates."
+        },
+        {
+          "family": "exact_live_consumers",
+          "detail": "Exact-v308 consumers use this type for loadout backgrounds, prayer/skill/book-tag assets, item/icon caching and enum-backed GUI icons; R280 neighboring rs/gui/y and z occupy stable IDs 000286/000287, fixing this missing helper at 000285."
+        }
       ],
-      "note":"Name describes the exact Jackson generic type token used by the string-keyed wandering-merchant config path."
+      "note": "Descriptive exact-v308 name for the reusable GUI image resource/draw wrapper. No narrower feature-specific noun is appropriate because it is shared across multiple UI subsystems."
     }
   ],
-  "unresolved":[]
+  "unresolved": []
 }
