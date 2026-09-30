@@ -1,0 +1,258 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/A",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherTitlePaneLayout",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_delegate_layout",
+          "detail": "The class implements LayoutManager, stores the title pane's original LayoutManager and delegates add/remove/preferred/minimum/layout calls to it before applying its own launcher-specific adjustment."
+        },
+        {
+          "family": "exact_trailing_panel_placement",
+          "detail": "After delegate layout it reads Launcher.w, the rs/gui/O trailing title-pane panel, and explicitly repositions that panel to the right side of the Substance title pane based on the host JComponent width and the panel preferred width."
+        },
+        {
+          "family": "exact_launcher_attachment",
+          "detail": "Launcher installs this layout directly onto the Substance title-pane JComponent immediately after adding the rs/gui/O extra component, so the class role is confined to launcher title-pane layout."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the launcher-specific wrapper around the Substance title-pane layout."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/B",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherSidePanelRepaintTimerAction",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_timer_contract",
+          "detail": "The class implements ActionListener and its actionPerformed source is cast to javax.swing.Timer, which it always stops before clearing Launcher.r."
+        },
+        {
+          "family": "exact_side_panel_refresh",
+          "detail": "When the live ClientSidebarPanel exists and its loadout JComboBox popup is not visible, the listener repaints the sidebar panel before stopping the timer."
+        },
+        {
+          "family": "exact_launcher_scope",
+          "detail": "The class stores only its synthetic Launcher owner and touches only launcher/sidebar repaint state plus the one-shot Timer lifecycle."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the one-shot launcher timer action that repaints the side panel and clears the pending-refresh flag."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/C",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherResizableUpdateTask",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runnable_contract",
+          "detail": "The class implements Runnable and stores exactly one boolean plus its Launcher owner."
+        },
+        {
+          "family": "exact_frame_mutation",
+          "detail": "run() obtains the Launcher's JFrame and calls setResizable(boolean) with the captured value; no other behavior exists."
+        },
+        {
+          "family": "exact_edt_submission",
+          "detail": "Launcher.b(boolean) constructs this task and passes it directly to SwingUtilities.invokeLater."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the EDT task that updates launcher frame resizability."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/D",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherFrameSizeUpdateTask",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runnable_contract",
+          "detail": "The class implements Runnable and stores four integers plus its Launcher owner."
+        },
+        {
+          "family": "exact_frame_size_mutation",
+          "detail": "run() sets the Launcher's JFrame minimum size from the first two integers and current frame size from the second pair."
+        },
+        {
+          "family": "exact_edt_submission",
+          "detail": "Launcher.a(int,int,int,int) constructs this task and submits it directly with SwingUtilities.invokeLater."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the EDT task that applies launcher minimum/current frame dimensions."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/O",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherTitlePaneExtraPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_title_pane_attachment",
+          "detail": "Launcher constructs exactly one rs/gui/O and adds it to the Substance title-pane JComponent with client property substancelaf.internal.titlePane.extraComponentKind = TRAILING."
+        },
+        {
+          "family": "exact_button_host",
+          "detail": "Launcher places its 'Hide/show side panel' JButton into this panel (outside the guarded game-only branch), fixing the panel as the trailing title-pane extra-component host."
+        },
+        {
+          "family": "exact_layout_ownership",
+          "detail": "The panel's constructor installs rs/gui/P as its dedicated LayoutManager2; no unrelated client-domain behavior exists."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the trailing extra-component panel mounted in the launcher Substance title pane."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/P",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherTitlePaneExtraLayout",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_ownership",
+          "detail": "The class is constructed only by rs/gui/O LauncherTitlePaneExtraPanel and implements LayoutManager2 for that panel."
+        },
+        {
+          "family": "exact_compact_geometry",
+          "detail": "preferred/minimum/maximum size use 27 pixels per component by 23 pixels high, and layoutContainer places each child sequentially in a compact 23-pixel-high title-bar row."
+        },
+        {
+          "family": "exact_no_other_scope",
+          "detail": "All add/remove/invalidation hooks are no-ops and the class stores only its parent panel, fixing it as the panel's small title-pane layout."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the compact layout used exclusively by LauncherTitlePaneExtraPanel."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/y",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherTrayRestoreMouseListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_tray_attachment",
+          "detail": "Launcher constructs this MouseAdapter only when creating its java.awt.TrayIcon and immediately attaches it with TrayIcon.addMouseListener."
+        },
+        {
+          "family": "exact_restore_behavior",
+          "detail": "mouseClicked restores the launcher JFrame to state NORMAL and sets it visible; no other mouse callback or state exists."
+        },
+        {
+          "family": "exact_launcher_scope",
+          "detail": "The class stores only its Launcher owner and is not referenced outside the launcher's tray-icon path."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the launcher's tray-icon click listener that restores the frame."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/z",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ToggleSidePanelAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_attachment",
+          "detail": "Launcher attaches this ActionListener directly to the JButton whose exact tooltip is 'Hide/show side panel' in the trailing title-pane panel."
+        },
+        {
+          "family": "exact_toggle_signal",
+          "detail": "actionPerformed sets the exact global Client.i boolean signal to true; the action owns no other state mutation."
+        },
+        {
+          "family": "exact_launcher_scope",
+          "detail": "The class stores only its Launcher owner and is constructed only for that side-panel toggle button."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the launcher title-bar action that signals a side-panel visibility toggle."
+    }
+  ],
+  "conflicts": []
+}
