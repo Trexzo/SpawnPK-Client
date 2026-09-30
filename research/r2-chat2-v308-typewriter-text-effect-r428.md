@@ -1,4 +1,4 @@
-# Chat 2 — exact-v308 typewriter text effect R428
+# Chat 2 — R428 duplicate typewriter text effect audit
 
 Exact client authority:
 
@@ -6,64 +6,35 @@ Exact client authority:
 
 ## Result
 
-- `rs/l/A` -> `CLIENT_CLASS_000350` -> `TypewriterTextEffect`
+R428 retains **no semantic proposal**.
+
+The R428 investigation independently recovered:
+
+- `rs/l/A`
+- `CLIENT_CLASS_000350`
+- `TypewriterTextEffect`
+- attempted proposal: `SEMPROP_5DB53882E872168FACE3`
+
+Direct exact-v308 inspection confirmed:
+
+- `@type@`, `<type>`, `<type=N>`, and `</type>` markup;
+- default 75 ms character delay;
+- explicit delay clamped to 10..2000 ms;
+- timestamp rewrite into `<type=delay:startMillis>`;
+- elapsed-time reveal math;
+- Client/RSFont/RichTextStyleParser integration;
+- active-effect redraw state.
+
+However, R356 already owns this **exact class, stable ID, semantic name, and proposal ID**:
+
+- `rs/l/A -> CLIENT_CLASS_000350 -> TypewriterTextEffect`
 - proposal: `SEMPROP_5DB53882E872168FACE3`
-- review: `SEMREVIEW_F661854FA178ACDB3DB0`
+- review: `SEMREVIEW_9A97D3BC816564588632`
 
-## Markup surface
+The earlier R422 duplicate-correction commit had already removed a second competing
+`TypingTextEffectProcessor` proposal for the same owner.
 
-The class recognizes four typing markers:
+Therefore R428's candidate/review/test are removed. This note is retained only as independent
+bytecode corroboration for R356.
 
-- `@type@`
-- `<type>`
-- `<type=N>`
-- `</type>`
-
-Default delay is **75 ms** per visible character.
-
-Explicit `N` is clamped to **10..2000 ms**.
-
-## Timestamp rewrite
-
-The preprocessing path converts a typing marker to:
-
-`<type=delay:startMillis>`
-
-where `startMillis` is derived from `System.nanoTime()/1_000_000`.
-
-When invoked in the stateful path, it also computes and stores the expected completion
-deadline from the largest active delay and the count of visible characters after stripping
-markup.
-
-## RSFont reveal behavior
-
-R55 RSFont delegates type-tag parsing to this class during glyph traversal.
-
-For a timestamped type tag, the parser computes the currently revealable character count as
-approximately:
-
-`floor((now - startMillis) / delayMillis) + 1`
-
-and returns a dedicated close-tag sentinel for `</type>`.
-
-Malformed type metadata is rejected rather than guessed.
-
-## Client lifecycle
-
-Client owns exactly one instance.
-
-Client:
-
-- preprocesses display strings through the effect;
-- combines it with the other recovered rich-text effect pipeline;
-- checks its completion/redraw latch during the live frame path.
-
-The class therefore owns the timed character-reveal effect itself, not generic rich-text
-parsing.
-
-## Boundary
-
-`TypewriterTextEffect` is descriptive exact-v308 terminology. No verbatim original source
-identifier is claimed.
-
-R428 remains non-canonical Chat 2 research only.
+R428 is a correction/audit batch only. Chat 2 performs no canonical acceptance or source rewrite.
