@@ -1263,6 +1263,266 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+
+    def test_nested_type_static_field_shadow_in_constructor_forces_type_context(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/Base.java": (
+                        "package pkg;\n"
+                        "public class Base { public Object b; }\n"
+                    ),
+                    "pkg/Outer.java": (
+                        "package pkg;\n"
+                        "public class Outer extends Base {\n"
+                        "    public static class b {\n"
+                        "        public static int h = 7;\n"
+                        "        public static int i = 8;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "public class Current {\n"
+                        "    public int value;\n"
+                        "    public Current() {\n"
+                        "        value = ((pkg.Outer.b)null).h"
+                        " + ((pkg.Outer.b)null).i;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package use;\n"
+                "public class Current {\n"
+                "    public int value;\n"
+                "    public Current() {\n"
+                "        value = pkg.Outer.b.h + pkg.Outer.b.i;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-constructor-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn("((pkg.Outer.b)null).h", normalized)
+            self.assertIn("((pkg.Outer.b)null).i", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if (
+                    row["kind"]
+                    == "shadowed_nested_static_field_owner_type_context"
+                    and row.get("method_name") == "<init>"
+                )
+            )
+            self.assertEqual(action["method_descriptor"], "()V")
+            self.assertEqual(action["replacement_count"], 2)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-constructor-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_imported_static_field_shadow_in_clinit_forces_type_context(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/E.java": (
+                        "package dep;\n"
+                        "public class E {\n"
+                        "    public static int v = 1;\n"
+                        "    public static int w = 2;\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "import dep.E;\n"
+                        "public class Current {\n"
+                        "    public int E;\n"
+                        "    public static int value;\n"
+                        "    static {\n"
+                        "        value = ((dep.E)null).v"
+                        " + ((dep.E)null).w;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package use;\n"
+                "import dep.E;\n"
+                "public class Current {\n"
+                "    public int E;\n"
+                "    public static int value;\n"
+                "    static {\n"
+                "        value = E.v + E.w;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-import-clinit-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn(
+                "non-static variable E cannot be referenced",
+                before.stderr,
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn("((dep.E)null).v", normalized)
+            self.assertIn("((dep.E)null).w", normalized)
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_imported_static_field_block_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_imported_static_field_reference_count"
+                ],
+                2,
+            )
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "shadowed_imported_static_field_owner_type_context"
+            )
+            self.assertEqual(action["method_name"], "<clinit>")
+            self.assertEqual(action["method_descriptor"], "()V")
+            self.assertEqual(action["imported_owners"], ["dep/E"])
+            self.assertEqual(action["replacement_count"], 2)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-import-clinit-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_imported_static_field_shadow_in_clinit_count_mismatch_fails_closed(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/E.java": (
+                        "package dep;\n"
+                        "public class E { public static int v = 1; }\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "import dep.E;\n"
+                        "public class Current {\n"
+                        "    public int E;\n"
+                        "    public static int value;\n"
+                        "    static { value = ((dep.E)null).v; }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package use;\n"
+                "import dep.E;\n"
+                "public class Current {\n"
+                "    public int E;\n"
+                "    public static int value;\n"
+                "    static { value = E.v + E.v; }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_imported_static_field_reference_count"
+                ],
+                0,
+            )
+
     def test_qualifies_imported_parameter_shadowed_by_same_package_type(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
