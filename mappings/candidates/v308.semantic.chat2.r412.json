@@ -1,0 +1,469 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Alpha",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runelite_source_identity",
+          "detail": "Runtime METHOD annotation with no members; exact RuneLite Alpha annotation shape."
+        },
+        {
+          "family": "exact_config_family_join",
+          "detail": "The class participates in the same rs/e RuneLite configuration framework centered on ConfigManager, dynamic Config proxies, annotations, descriptors and file-backed ConfigData; exact-v308 type relationships match the public RuneLite source architecture."
+        }
+      ],
+      "note": "Source identity recovered from exact class shape, surviving literals/enum constants and RuneLite public source. This is stronger than a descriptive rename."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Config",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runelite_source_identity",
+          "detail": "Empty marker interface used as the generic bound T extends rs.e.b by the config manager; exact RuneLite Config contract."
+        },
+        {
+          "family": "exact_config_family_join",
+          "detail": "The class participates in the same rs/e RuneLite configuration framework centered on ConfigManager, dynamic Config proxies, annotations, descriptors and file-backed ConfigData; exact-v308 type relationships match the public RuneLite source architecture."
+        }
+      ],
+      "note": "Source identity recovered from exact class shape, surviving literals/enum constants and RuneLite public source. This is stronger than a descriptive rename."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigData",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runelite_source_identity",
+          "detail": "Package-private file-backed configuration store with ConcurrentHashMap properties, Properties load/store, dirty map, atomic temp-file replacement and surviving RuneLite config persistence diagnostics; exact RuneLite ConfigData shape."
+        },
+        {
+          "family": "exact_config_family_join",
+          "detail": "The class participates in the same rs/e RuneLite configuration framework centered on ConfigManager, dynamic Config proxies, annotations, descriptors and file-backed ConfigData; exact-v308 type relationships match the public RuneLite source architecture."
+        }
+      ],
+      "note": "Source identity recovered from exact class shape, surviving literals/enum constants and RuneLite public source. This is stronger than a descriptive rename."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigDescriptor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runelite_source_identity",
+          "detail": "Owns ConfigGroup plus collections of ConfigSectionDescriptor and ConfigItemDescriptor; exact RuneLite ConfigDescriptor constructor/field shape."
+        },
+        {
+          "family": "exact_config_family_join",
+          "detail": "The class participates in the same rs/e RuneLite configuration framework centered on ConfigManager, dynamic Config proxies, annotations, descriptors and file-backed ConfigData; exact-v308 type relationships match the public RuneLite source architecture."
+        }
+      ],
+      "note": "Source identity recovered from exact class shape, surviving literals/enum constants and RuneLite public source. This is stronger than a descriptive rename."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigGroup",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runelite_source_identity",
+          "detail": "Runtime TYPE annotation exposing exactly one String group key; exact RuneLite ConfigGroup annotation."
+        },
+        {
+          "family": "exact_config_family_join",
+          "detail": "The class participates in the same rs/e RuneLite configuration framework centered on ConfigManager, dynamic Config proxies, annotations, descriptors and file-backed ConfigData; exact-v308 type relationships match the public RuneLite source architecture."
+        }
+      ],
+      "note": "Source identity recovered from exact class shape, surviving literals/enum constants and RuneLite public source. This is stronger than a descriptive rename."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigInvocationHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runelite_source_identity",
+          "detail": "Implements InvocationHandler, owns ConfigManager and a Method cache, and backs dynamic Config proxy calls; exact RuneLite ConfigInvocationHandler role."
+        },
+        {
+          "family": "exact_config_family_join",
+          "detail": "The class participates in the same rs/e RuneLite configuration framework centered on ConfigManager, dynamic Config proxies, annotations, descriptors and file-backed ConfigData; exact-v308 type relationships match the public RuneLite source architecture."
+        }
+      ],
+      "note": "Source identity recovered from exact class shape, surviving literals/enum constants and RuneLite public source. This is stronger than a descriptive rename."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigItem",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runelite_source_identity",
+          "detail": "Runtime METHOD annotation with position/key/name/description/hidden-style metadata methods and defaults matching RuneLite ConfigItem."
+        },
+        {
+          "family": "exact_config_family_join",
+          "detail": "The class participates in the same rs/e RuneLite configuration framework centered on ConfigManager, dynamic Config proxies, annotations, descriptors and file-backed ConfigData; exact-v308 type relationships match the public RuneLite source architecture."
+        }
+      ],
+      "note": "Source identity recovered from exact class shape, surviving literals/enum constants and RuneLite public source. This is stronger than a descriptive rename."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigItemDescriptor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runelite_source_identity",
+          "detail": "Descriptor owns ConfigItem annotation, reflected Type, Range, Alpha and Units metadata and implements the shared ConfigObject ordering/name contract; exact RuneLite ConfigItemDescriptor."
+        },
+        {
+          "family": "exact_config_family_join",
+          "detail": "The class participates in the same rs/e RuneLite configuration framework centered on ConfigManager, dynamic Config proxies, annotations, descriptors and file-backed ConfigData; exact-v308 type relationships match the public RuneLite source architecture."
+        }
+      ],
+      "note": "Source identity recovered from exact class shape, surviving literals/enum constants and RuneLite public source. This is stronger than a descriptive rename."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runelite_source_identity",
+          "detail": "Owns Gson, EventBus, ConfigData and ConfigInvocationHandler; creates typed Config proxies, gets/sets/unsets values, emits config events and builds ConfigDescriptor metadata; exact RuneLite ConfigManager."
+        },
+        {
+          "family": "exact_config_family_join",
+          "detail": "The class participates in the same rs/e RuneLite configuration framework centered on ConfigManager, dynamic Config proxies, annotations, descriptors and file-backed ConfigData; exact-v308 type relationships match the public RuneLite source architecture."
+        }
+      ],
+      "note": "Source identity recovered from exact class shape, surviving literals/enum constants and RuneLite public source. This is stronger than a descriptive rename."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigObject",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runelite_source_identity",
+          "detail": "Shared descriptor interface exposing name/description/position-style accessors, implemented by item and section descriptors; exact RuneLite ConfigObject."
+        },
+        {
+          "family": "exact_config_family_join",
+          "detail": "The class participates in the same rs/e RuneLite configuration framework centered on ConfigManager, dynamic Config proxies, annotations, descriptors and file-backed ConfigData; exact-v308 type relationships match the public RuneLite source architecture."
+        }
+      ],
+      "note": "Source identity recovered from exact class shape, surviving literals/enum constants and RuneLite public source. This is stronger than a descriptive rename."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigProfile",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runelite_source_identity",
+          "detail": "Data object whose surviving toString is exactly ConfigProfile(id=..., name=..., sync=..., active=..., rev=...), fixing the RuneLite ConfigProfile identity."
+        },
+        {
+          "family": "exact_config_family_join",
+          "detail": "The class participates in the same rs/e RuneLite configuration framework centered on ConfigManager, dynamic Config proxies, annotations, descriptors and file-backed ConfigData; exact-v308 type relationships match the public RuneLite source architecture."
+        }
+      ],
+      "note": "Source identity recovered from exact class shape, surviving literals/enum constants and RuneLite public source. This is stronger than a descriptive rename."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigSection",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runelite_source_identity",
+          "detail": "Runtime FIELD annotation with name, description, position and closed-by-default boolean metadata; exact RuneLite ConfigSection."
+        },
+        {
+          "family": "exact_config_family_join",
+          "detail": "The class participates in the same rs/e RuneLite configuration framework centered on ConfigManager, dynamic Config proxies, annotations, descriptors and file-backed ConfigData; exact-v308 type relationships match the public RuneLite source architecture."
+        }
+      ],
+      "note": "Source identity recovered from exact class shape, surviving literals/enum constants and RuneLite public source. This is stronger than a descriptive rename."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigSectionDescriptor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runelite_source_identity",
+          "detail": "Descriptor owns a section key plus ConfigSection annotation and implements ConfigObject; exact RuneLite ConfigSectionDescriptor."
+        },
+        {
+          "family": "exact_config_family_join",
+          "detail": "The class participates in the same rs/e RuneLite configuration framework centered on ConfigManager, dynamic Config proxies, annotations, descriptors and file-backed ConfigData; exact-v308 type relationships match the public RuneLite source architecture."
+        }
+      ],
+      "note": "Source identity recovered from exact class shape, surviving literals/enum constants and RuneLite public source. This is stronger than a descriptive rename."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FlashNotification",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runelite_source_identity",
+          "detail": "Enum preserves exact RuneLite constants DISABLED, FLASH_TWO_SECONDS, SOLID_TWO_SECONDS, FLASH_UNTIL_CANCELLED and SOLID_UNTIL_CANCELLED plus their exact display labels."
+        },
+        {
+          "family": "exact_config_family_join",
+          "detail": "The class participates in the same rs/e RuneLite configuration framework centered on ConfigManager, dynamic Config proxies, annotations, descriptors and file-backed ConfigData; exact-v308 type relationships match the public RuneLite source architecture."
+        }
+      ],
+      "note": "Source identity recovered from exact class shape, surviving literals/enum constants and RuneLite public source. This is stronger than a descriptive rename."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Range",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runelite_source_identity",
+          "detail": "Documented runtime METHOD annotation with exactly two integer bounds/defaults; exact RuneLite Range annotation."
+        },
+        {
+          "family": "exact_config_family_join",
+          "detail": "The class participates in the same rs/e RuneLite configuration framework centered on ConfigManager, dynamic Config proxies, annotations, descriptors and file-backed ConfigData; exact-v308 type relationships match the public RuneLite source architecture."
+        }
+      ],
+      "note": "Source identity recovered from exact class shape, surviving literals/enum constants and RuneLite public source. This is stronger than a descriptive rename."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RequestFocusType",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runelite_source_identity",
+          "detail": "Enum preserves exact RuneLite RequestFocusType constants OFF, REQUEST and FORCE and is consumed by notifier/UI focus configuration paths."
+        },
+        {
+          "family": "exact_config_family_join",
+          "detail": "The class participates in the same rs/e RuneLite configuration framework centered on ConfigManager, dynamic Config proxies, annotations, descriptors and file-backed ConfigData; exact-v308 type relationships match the public RuneLite source architecture."
+        }
+      ],
+      "note": "Source identity recovered from exact class shape, surviving literals/enum constants and RuneLite public source. This is stronger than a descriptive rename."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Units",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runelite_source_identity",
+          "detail": "Documented runtime METHOD annotation with one String value and exact RuneLite unit constants ms, mins, %, px, s and ticks."
+        },
+        {
+          "family": "exact_config_family_join",
+          "detail": "The class participates in the same rs/e RuneLite configuration framework centered on ConfigManager, dynamic Config proxies, annotations, descriptors and file-backed ConfigData; exact-v308 type relationships match the public RuneLite source architecture."
+        }
+      ],
+      "note": "Source identity recovered from exact class shape, surviving literals/enum constants and RuneLite public source. This is stronger than a descriptive rename."
+    }
+  ],
+  "conflicts": []
+}
