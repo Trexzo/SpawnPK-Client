@@ -107,3 +107,11 @@ It applies the same recovered R8 rename authority independently to the exact his
 The exact pinned Procyon v0.6.0 decompiler then independently decompiles all 1,129 remapped project classes for each build in bounded batches. Both source trees contain the same 1,129 Java paths, zero empty files, and exactly one differing Java file: `rs/Configuration.java`. That Java delta is one assignment only: `field1628 = 307` becomes `field1628 = 308`. Canonical tree digests and byte counts are pinned in the fixture.
 
 This is evidence that the recovered readable-name mapping survives the real v307 -> v308 client update without class-identity drift. It is deliberately **not** treated as the final modern Source-M1 historical release-manifest PASS tracked by issue #283.
+
+## Modern historical v307 recovery-release runner
+
+`scripts/Invoke-HistoricalV307RecoveryRelease.ps1` drives the stricter historical gate tracked by issue #283. It reuses the current recovery primitives with `build_id=v307`: exact readable authority, private namespace-collision plan, collision-derived Procyon source workspace, clean project rebuild, round-trip verification, `recovery_release_manifest`, and independent release verification.
+
+The script pins exact v307/decompiler authority through `fixtures/v307-v308-source-regeneration.json` and refuses a source index that is not bound to the same exact v307 SHA-256. On Windows it prepares a case-sensitive output root before any recovered source is written.
+
+The runner deliberately stops after verified historical recovery release. It does **not** call `source_milestone_cli`, build a source publication bundle, or alter the v308-only Source Milestone publication rule.
