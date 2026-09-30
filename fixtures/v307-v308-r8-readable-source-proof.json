@@ -71,6 +71,29 @@
   "notes": [
     "The v307 readable class/source was produced from exact v307 bytes with the recovered R8 rename authority; it was not produced by editing v308 source.",
     "Archive JAR hashes differ because v307 and v308 contain the known build-number change. Their entry path sets are identical and only rs/Configuration.class differs after deterministic remap.",
-    "A stricter current Source-M1 historical release-manifest backtest remains tracked separately."
-  ]
+    "A stricter current Source-M1 historical release-manifest backtest remains tracked separately.",
+    "The exhaustive project-only decompile produced 1,129 Java files for each build with identical paths and exactly one source difference, rs/Configuration.java."
+  ],
+  "exhaustive_project_source_backtest": {
+    "selection": "all 1129 independently remapped rs/ class files, decompiled in bounded Procyon batches",
+    "v307_java_file_count": 1129,
+    "v308_java_file_count": 1129,
+    "same_java_path_set": true,
+    "old_only_java_file_count": 0,
+    "new_only_java_file_count": 0,
+    "zero_byte_java_file_count_v307": 0,
+    "zero_byte_java_file_count_v308": 0,
+    "differing_java_file_count": 1,
+    "differing_java_files": [
+      "rs/Configuration.java"
+    ],
+    "v307_source_tree_sha256": "ca2b34c77638c16f431e913d9c2d80027d6a7648a7bdcd98df31a6c0930f1a05",
+    "v308_source_tree_sha256": "23e16c08f405fbdfd8649c2c490cc56087accdd87be881ac2a5140c831f70442",
+    "v307_canonical_source_bytes": 6844468,
+    "v308_canonical_source_bytes": 6844468,
+    "batch_count": 57,
+    "batch_size_max": 20,
+    "v307_failed_batches": 0,
+    "v308_failed_batches": 0
+  }
 }
