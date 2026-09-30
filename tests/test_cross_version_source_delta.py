@@ -319,6 +319,54 @@ class CrossVersionSourceDeltaTests(unittest.TestCase):
                     new,
                 )
 
+    def test_class_plan_target_resolves_effective_source_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            old, new = self._roots(root)
+
+            # Move logical class 1 through an explicit build-specific remap.
+            (new / "rs" / "B.java").unlink()
+            (new / "rs" / "ReadableB.java").write_text(
+                "package rs; class Shared {}\n",
+                encoding="utf-8",
+            )
+            new_plan = _plan("v308", NEW_SHA)
+            new_plan["class_count"] = 1
+            new_plan["classes"] = [
+                {
+                    "logical_id": "CLIENT_CLASS_000001",
+                    "source_internal_name": "rs/B",
+                    "source_entry_path": "rs/B.class",
+                    "source_entry_sha256": "c" * 64,
+                    "target_internal_name": "rs/ReadableB",
+                    "target_entry_path": "rs/ReadableB.class",
+                    "confidence": 1.0,
+                    "provenance": [{"kind": "test"}],
+                }
+            ]
+
+            report = build_cross_version_source_delta(
+                _release("v307", OLD_SHA, old, "RECOVERY_OLD"),
+                _release("v308", NEW_SHA, new, "RECOVERY_NEW"),
+                _lineage(),
+                _plan("v307", OLD_SHA),
+                new_plan,
+                old,
+                new,
+            )
+            moved = {
+                row["logical_id"]: row
+                for row in report["moved"]
+            }
+            self.assertEqual(
+                moved["CLIENT_CLASS_000001"]["new_source_path"],
+                "rs/ReadableB.java",
+            )
+            self.assertIn(
+                "CLIENT_CLASS_000001",
+                [row["logical_id"] for row in report["unchanged"]],
+            )
+
     def test_class_plan_authority_drift_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             old, new = self._roots(Path(tmp))
