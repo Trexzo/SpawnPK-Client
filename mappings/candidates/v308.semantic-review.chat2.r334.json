@@ -1,28 +1,27 @@
 {
-  "schema_version": 1,
-  "kind": "semantic_review_set",
-  "canonical": false,
-  "source_build": "v308",
-  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-  "proposal_count": 1,
-  "review_id": "SEMREVIEW_F3237D35F41211170652",
-  "proposals": [{
-    "proposal_id": "SEMPROP_2954CFF2870D5050F667",
-    "target_kind": "class",
-    "stable_id": "CLIENT_CLASS_000298",
-    "owner_logical_id": "CLIENT_CLASS_000298",
-    "source_build": "v308",
-    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-    "source_coordinate": {"owner":"rs/i/b$a","name":null,"descriptor":null},
-    "proposed_name": "GameframeSidebarTab",
-    "confidence": 0.999,
-    "evidence": [
-      {"family":"exact_enum_constants","detail":"The enum preserves the exact 14 classic client tab constants ATTACK, STATS, QUEST, INVENTORY, EQUIPMENT, PRAYER, MAGIC, CLAN, FRIENDS, IGNORE, LOGOUT, OPTIONS, EMOTES and MUSIC."},
-      {"family":"exact_tab_index_mapping","detail":"Every enum value stores a unique primary integer 0..13 and the static lookup a(int) returns the value whose stored primary id matches the supplied tab id."},
-      {"family":"exact_gameframe_owner","detail":"The enum is nested under rs/i/b, the reviewed gameframe/adventure-orb renderer that also consumes ChatMessageClassifier while drawing gameframe chat controls; its constants are precisely the client sidebar/tab categories rather than arbitrary gameplay modes."},
-      {"family":"exact_metadata_shape","detail":"Each value carries three integer presentation/index metadata values plus a small boolean variant flag, consistent with tab-placement/render metadata; no unrelated domain state exists."}
+  "schema_version":1,
+  "kind":"semantic_review_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count":1,
+  "review_id":"SEMREVIEW_51523639FA40BCB1E765",
+  "proposals":[{
+    "proposal_id":"SEMPROP_6CC0B81B2E3B79F8DBE5",
+    "target_kind":"class",
+    "stable_id":"CLIENT_CLASS_000195",
+    "owner_logical_id":"CLIENT_CLASS_000195",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate":{"owner":"rs/gui/L","name":null,"descriptor":null},
+    "proposed_name":"ClientSidebarTabChangeListener",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_parent_ownership","detail":"R145 ClientSidebarPanel constructs exactly one rs/gui/L and installs it on the panel's JTabbedPane through addChangeListener."},
+      {"family":"exact_listener_contract","detail":"rs/gui/L implements javax.swing.event.ChangeListener, casts the ChangeEvent source to JTabbedPane and reads the selected tab index on every state change."},
+      {"family":"exact_launcher_callback","detail":"After a tab selection change the listener calls Launcher.n().d(); Launcher.d() is the shared sidebar/window follow-up callback. The class owns no unrelated state or input behavior."}
     ],
-    "note":"GameframeSidebarTab is a descriptive exact-v308 name fixed by the self-identifying tab constants and integer lookup contract. The separate TOP/BOTTOM nested enum remains unnamed because no surviving behavior consumes it."
+    "note":"Descriptive exact-v308 name for the ChangeListener installed on ClientSidebarPanel's tabbed pane. The downstream Launcher.d() effect is not overinterpreted."
   }],
-  "unresolved": []
+  "unresolved":[]
 }
