@@ -17,12 +17,18 @@ class BytecodeMethodInvocationProfileTests(unittest.TestCase):
             source.mkdir(parents=True)
             classes.mkdir(parents=True)
 
+            (source / "I.java").write_text(
+                "package p;\n"
+                "public interface I { int f(int x); }\n",
+                encoding="utf-8",
+            )
             (source / "B.java").write_text(
                 "package p;\n"
-                "public class B {\n"
+                "public class B implements I {\n"
                 "    public B() {}\n"
                 "    public static int s(int x) { return x + 1; }\n"
                 "    public int v(int x) { return x + 2; }\n"
+                "    public int f(int x) { return x + 3; }\n"
                 "}\n",
                 encoding="utf-8",
             )
@@ -33,6 +39,9 @@ class BytecodeMethodInvocationProfileTests(unittest.TestCase):
                 "        B b = new B();\n"
                 "        return B.s(1) + b.v(2);\n"
                 "    }\n"
+                "    public static int runInterface(I i) {\n"
+                "        return i.f(3);\n"
+                "    }\n"
                 "}\n",
                 encoding="utf-8",
             )
@@ -42,6 +51,7 @@ class BytecodeMethodInvocationProfileTests(unittest.TestCase):
                     "javac",
                     "-d",
                     str(classes),
+                    str(source / "I.java"),
                     str(source / "B.java"),
                     str(source / "A.java"),
                 ],
@@ -85,6 +95,26 @@ class BytecodeMethodInvocationProfileTests(unittest.TestCase):
             self.assertIn(
                 ("invokevirtual", "p/B", "v", "(I)I"),
                 observed,
+            )
+
+            interface_method = next(
+                row
+                for row in profile["methods"]
+                if row["name"] == "runInterface"
+                and row["descriptor"] == "(Lp/I;)I"
+            )
+            interface_observed = {
+                (
+                    row["operation"],
+                    row["owner"],
+                    row["name"],
+                    row["descriptor"],
+                )
+                for row in interface_method["method_invocations"]
+            }
+            self.assertIn(
+                ("invokeinterface", "p/I", "f", "(I)I"),
+                interface_observed,
             )
 
 
