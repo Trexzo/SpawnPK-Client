@@ -1,0 +1,28 @@
+name: Chat 3 Toolchain Snapshot Transport
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/chat3-toolchain-snapshot-transport.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package recovery toolchain source
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar --exclude=.git -czf spawnpk-client-toolchain.tar.gz .
+          sha256sum spawnpk-client-toolchain.tar.gz
+      - name: Upload source snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: spawnpk-client-toolchain-snapshot
+          path: spawnpk-client-toolchain.tar.gz
+          if-no-files-found: error
+          retention-days: 1
