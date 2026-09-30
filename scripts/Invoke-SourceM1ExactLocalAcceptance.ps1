@@ -43,6 +43,69 @@ function Invoke-PyChecked {
         throw ($Label + " failed with exit=" + $LASTEXITCODE)
     }
 }
+function Get-JsonProjection {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Path,
+        [Parameter(Mandatory = $true)]
+        [hashtable]$Fields,
+        [hashtable]$OptionalFields = @{}
+    )
+
+    Require-File $Path
+
+    $Arguments = @(
+        "-3.13",
+        "-m",
+        "spk_recovery.json_projection_cli",
+        $Path
+    )
+
+    foreach ($Name in @($Fields.Keys | Sort-Object)) {
+        $Arguments += @(
+            "--field",
+            ($Name + "=" + [string]$Fields[$Name])
+        )
+    }
+
+    foreach ($Name in @($OptionalFields.Keys | Sort-Object)) {
+        $Arguments += @(
+            "--optional-field",
+            ($Name + "=" + [string]$OptionalFields[$Name])
+        )
+    }
+
+    $Output = @(& py @Arguments 2>&1)
+    $Code = $LASTEXITCODE
+    if ($Code -ne 0) {
+        $Output | ForEach-Object { Write-Host $_ }
+        throw (
+            "Case-safe JSON projection failed for " +
+            $Path +
+            " with exit=" +
+            $Code
+        )
+    }
+
+    $Raw = ($Output -join "`n").Trim()
+    if ([string]::IsNullOrWhiteSpace($Raw)) {
+        throw "Case-safe JSON projection returned empty output: $Path"
+    }
+
+    try {
+        # ConvertFrom-Json is safe here because Python emits only controlled
+        # projection aliases. Raw authority keys never enter PowerShell.
+        return ($Raw | ConvertFrom-Json)
+    }
+    catch {
+        throw (
+            "Case-safe JSON projection output was invalid for " +
+            $Path +
+            ": " +
+            $_.Exception.Message
+        )
+    }
+}
 
 function Enable-CaseSensitiveWorkspace {
     param([Parameter(Mandatory = $true)][string]$Path)
