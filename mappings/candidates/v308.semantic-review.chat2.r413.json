@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_BC5E6AB3E6207F6BD98B",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_F6DC28793F0CE1517C28",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000166",
+      "owner_logical_id": "CLIENT_CLASS_000166",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner":"rs/f","name":null,"descriptor":null},
+      "proposed_name": "CollisionMap",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_clipping_grid","detail":"Exact v308 rs/f owns one int[][] adjacency/clipping grid plus base offsets/dimensions and resets the grid to open/interior versus closed/border clipping masks."},
+        {"family":"exact_wall_object_mutation","detail":"Its mutators add/remove directional wall flags, rectangular object occupancy flags and blocked-tile state using the classic RuneScape clipping bit masks."},
+        {"family":"exact_reachability","detail":"Its boolean query methods implement wall/object/decor reachability tests against the same directional clipping masks and local coordinates."},
+        {"family":"historical_source_identity","detail":"Historical RuneScape client sources expose the structurally and algorithmically equivalent class as CollisionMap, including the int[][] flags grid and the classic method219-style reachability logic."}
+      ],
+      "note": "Historical RuneScape source identity recovered from exact clipping-grid structure, mutation algorithms and reachability behavior."
+    }
+  ],
+  "unresolved": []
+}
