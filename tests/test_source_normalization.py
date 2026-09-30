@@ -549,6 +549,55 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 2,
             )
 
+    def test_qualifies_primitive_array_hierarchy_shadow(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/h.java": (
+                        "package pkg;\n"
+                        "public class h {\n"
+                        "    public int[] h;\n"
+                        "    public static int x;\n"
+                        "    public static void m() {\n"
+                        "        pkg.h.x = 7;\n"
+                        "        int y = pkg.h.x;\n"
+                        "    }\n"
+                        "    static { pkg.h.x = 9; }\n"
+                        "}\n"
+                    )
+                },
+            )
+            source = root / "src" / "pkg" / "h.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package pkg;\n"
+                "public class h {\n"
+                "    public int[] h;\n"
+                "    public static int x;\n"
+                "    public static void m() {\n"
+                "        h.x = 7;\n"
+                "        int y = h.x;\n"
+                "    }\n"
+                "    static { h.x = 9; }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            text = source.read_text(encoding="utf-8")
+
+            self.assertIn("pkg.h.x = 7;", text)
+            self.assertIn("int y = pkg.h.x;", text)
+            self.assertIn("static { pkg.h.x = 9; }", text)
+            self.assertEqual(
+                report["summary"][
+                    "hierarchy_shadowed_self_static_field_reference_count"
+                ],
+                3,
+            )
+
     def test_qualifies_inherited_primitive_hierarchy_shadow(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -1361,6 +1410,151 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 after.returncode,
                 0,
                 after.stdout + after.stderr,
+            )
+
+    def test_imported_static_field_shadow_in_static_method_forces_type_context(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/E.java": (
+                        "package dep;\n"
+                        "public class E {\n"
+                        "    public static int[] v = new int[] { 7 };\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "import dep.E;\n"
+                        "public class Current {\n"
+                        "    public int[] E;\n"
+                        "    public static int read() {\n"
+                        "        return ((dep.E)null).v[0];\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package use;\n"
+                "import dep.E;\n"
+                "public class Current {\n"
+                "    public int[] E;\n"
+                "    public static int read() {\n"
+                "        return E.v[0];\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-import-method-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn("((dep.E)null).v[0]", normalized)
+            action = next(
+                row
+                for row in report["actions"]
+                if (
+                    row["kind"]
+                    == "shadowed_imported_static_field_owner_type_context"
+                    and row.get("method_name") == "read"
+                )
+            )
+            self.assertEqual(action["method_descriptor"], "()I")
+            self.assertEqual(action["replacement_count"], 1)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-import-method-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_imported_static_field_shadow_static_method_count_mismatch_fails_closed(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/E.java": (
+                        "package dep;\n"
+                        "public class E { public static int v = 7; }\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "import dep.E;\n"
+                        "public class Current {\n"
+                        "    public int E;\n"
+                        "    public static int read() {\n"
+                        "        return ((dep.E)null).v;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package use;\n"
+                "import dep.E;\n"
+                "public class Current {\n"
+                "    public int E;\n"
+                "    public static int read() {\n"
+                "        return E.v + E.v;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "shadowed_imported_static_field_owner_type_context"
+                    and row.get("method_name") == "read"
+                    for row in report["actions"]
+                )
             )
 
     def test_imported_static_field_shadow_in_clinit_forces_type_context(self):
