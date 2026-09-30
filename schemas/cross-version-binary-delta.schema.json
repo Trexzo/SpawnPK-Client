@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/cross-version-binary-delta.schema.json",
+  "title": "SpawnPK cross-version binary delta",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "report_id",
+    "old_build_id",
+    "new_build_id",
+    "old_sha256",
+    "new_sha256",
+    "summary",
+    "old_only",
+    "new_only",
+    "changed",
+    "note"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "cross_version_binary_delta"},
+    "report_id": {
+      "type": "string",
+      "pattern": "^XVERBIN_[0-9A-F]{20}$"
+    },
+    "old_build_id": {"type": "string", "minLength": 1},
+    "new_build_id": {"type": "string", "minLength": 1},
+    "old_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "new_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "old_entry_count",
+        "new_entry_count",
+        "old_only_entries",
+        "new_only_entries",
+        "changed_entries",
+        "changed_class_entries"
+      ],
+      "properties": {
+        "old_entry_count": {"type": "integer", "minimum": 0},
+        "new_entry_count": {"type": "integer", "minimum": 0},
+        "old_only_entries": {"type": "integer", "minimum": 0},
+        "new_only_entries": {"type": "integer", "minimum": 0},
+        "changed_entries": {"type": "integer", "minimum": 0},
+        "changed_class_entries": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "old_only": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "new_only": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "changed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "class_entry",
+          "old_sha256",
+          "new_sha256",
+          "old_size",
+          "new_size",
+          "old_crc32",
+          "new_crc32"
+        ],
+        "properties": {
+          "path": {"type": "string"},
+          "class_entry": {"type": "boolean"},
+          "old_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "new_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "old_size": {"type": "integer", "minimum": 0},
+          "new_size": {"type": "integer", "minimum": 0},
+          "old_crc32": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}$"
+          },
+          "new_crc32": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{8}$"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "note": {"type": "string"}
+  },
+  "additionalProperties": false
+}

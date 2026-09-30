@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/cross-version-backtest.schema.json",
+  "title": "SpawnPK cross-version recovered-source backtest",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "backtest_id",
+    "old_build_id",
+    "new_build_id",
+    "old_authority_sha256",
+    "new_authority_sha256",
+    "old_source_tree_sha256",
+    "new_source_tree_sha256",
+    "old_release_id",
+    "new_release_id",
+    "migration_id",
+    "semantic_carryforward_id",
+    "source_name_carryforward_id",
+    "binary_delta_id",
+    "binary_delta_required",
+    "source_name_carryforward_required",
+    "passed",
+    "required_check_count",
+    "failed_required_check_count",
+    "checks",
+    "migration_summary",
+    "note"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "cross_version_recovery_backtest"},
+    "backtest_id": {
+      "type": "string",
+      "pattern": "^XVER_[0-9A-F]{20}$"
+    },
+    "old_build_id": {"type": "string", "minLength": 1},
+    "new_build_id": {"type": "string", "minLength": 1},
+    "old_authority_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "new_authority_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "old_source_tree_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "new_source_tree_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "old_release_id": {"type": ["string", "null"]},
+    "new_release_id": {"type": ["string", "null"]},
+    "migration_id": {"type": ["string", "null"]},
+    "semantic_carryforward_id": {"type": ["string", "null"]},
+    "source_name_carryforward_id": {"type": ["string", "null"]},
+    "binary_delta_id": {"type": ["string", "null"]},
+    "binary_delta_required": {"type": "boolean"},
+    "source_name_carryforward_required": {"type": "boolean"},
+    "passed": {"type": "boolean"},
+    "required_check_count": {"type": "integer", "minimum": 0},
+    "failed_required_check_count": {"type": "integer", "minimum": 0},
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "required",
+          "passed",
+          "expected",
+          "actual"
+        ],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "required": {"type": "boolean"},
+          "passed": {"type": "boolean"},
+          "expected": {},
+          "actual": {}
+        },
+        "additionalProperties": false
+      }
+    },
+    "migration_summary": {
+      "type": "object",
+      "required": [
+        "old_scope_classes",
+        "new_scope_classes",
+        "matched_classes",
+        "class_identity_reuse_percent",
+        "changed_same_path_classes",
+        "analysis_queue_items",
+        "ambiguous_classes",
+        "unmatched_old_classes",
+        "unmatched_new_classes"
+      ],
+      "properties": {
+        "old_scope_classes": {"type": ["integer", "null"], "minimum": 0},
+        "new_scope_classes": {"type": ["integer", "null"], "minimum": 0},
+        "matched_classes": {"type": ["integer", "null"], "minimum": 0},
+        "class_identity_reuse_percent": {"type": ["number", "null"]},
+        "changed_same_path_classes": {"type": ["integer", "null"], "minimum": 0},
+        "analysis_queue_items": {"type": ["integer", "null"], "minimum": 0},
+        "ambiguous_classes": {"type": ["integer", "null"], "minimum": 0},
+        "unmatched_old_classes": {"type": ["integer", "null"], "minimum": 0},
+        "unmatched_new_classes": {"type": ["integer", "null"], "minimum": 0}
+      },
+      "additionalProperties": false
+    },
+    "note": {"type": "string"}
+  },
+  "additionalProperties": false
+}
