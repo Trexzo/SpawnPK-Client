@@ -234,6 +234,17 @@ class CollisionDerivedCompileTests(unittest.TestCase):
                 (recovered / "rs" / "A.java").resolve().as_posix(),
                 javac_args,
             )
+            staged_source = (
+                root
+                / "compile"
+                / "source-inputs"
+                / "000000"
+                / "A.java"
+            )
+            self.assertEqual(
+                staged_source.read_bytes(),
+                (recovered / "rs" / "A.java").read_bytes(),
+            )
             self.assertEqual(
                 report["collision_transform_id"],
                 transform["transform_id"],
