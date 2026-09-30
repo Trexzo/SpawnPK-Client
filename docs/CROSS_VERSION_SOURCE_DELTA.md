@@ -10,6 +10,8 @@ Inputs:
 
 - old `recovery_release_manifest` with `ready_for_release=true`;
 - new `recovery_release_manifest` with `ready_for_release=true`;
+- old `recovered_source_workspace_manifest` exactly pinned by the old release;
+- new `recovered_source_workspace_manifest` exactly pinned by the new release;
 - canonical `class-lineage.json` containing both builds;
 - old class `remap_plan`;
 - new class `remap_plan`;
@@ -17,9 +19,9 @@ Inputs:
 - old recovered source root;
 - new recovered source root.
 
-Each source root is recomputed with the repository's canonical source-tree digest and must exactly equal its release manifest `final_source_tree_sha256`.
+Each source root is recomputed with the repository's canonical source-tree digest and must exactly equal its release manifest `final_source_tree_sha256`. Each recovered-source manifest must reproduce the release's `recovered_source_manifest_sha256` authority pin and `recovered_workspace_id`.
 
-Each release authority SHA must exactly match the same build in canonical class lineage. Each remap plan must bind the same build and exact binary authority. When a collision plan is supplied, it must contain exact identifiers and its readable-JAR SHA-256 must equal that release's readable-JAR authority.
+Each release authority SHA must exactly match the same build in canonical class lineage. Each remap plan must bind the same build and exact binary authority, and its deterministic digest must equal the `class_plan_digest` recorded by that recovered-source manifest. When a collision plan is supplied, it must contain exact identifiers, its readable-JAR SHA-256 must equal that release's readable-JAR authority, and its `JNSPLAN_*` ID must equal the recovered-source manifest's collision-plan authority.
 
 ## Logical source units
 
