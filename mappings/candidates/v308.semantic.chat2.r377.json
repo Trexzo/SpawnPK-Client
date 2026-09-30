@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/a/b/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelMaterialOverrides",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_item_config_aggregate",
+          "detail": "Exact item-config parsing stores rs/a/b/c as the item definition's model override aggregate and routes the keys opacity, recolor/recolors, retexture/retextures and reshade into this object."
+        },
+        {
+          "family": "exact_model_application",
+          "detail": "The aggregate's a(Model) method applies its configured recolor, reshade, retexture and opacity operations across the recovered R30 Model before the model is returned/rendered."
+        },
+        {
+          "family": "exact_copy_semantics",
+          "detail": "Item-definition cloning deep-copies this aggregate with the rs/a/b/c copy constructor, confirming it is definition-owned model material/face override state rather than transient renderer state."
+        }
+      ],
+      "note": "Descriptive exact-v308 aggregate name for item-definition model material overrides."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/a/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelRecolorOverride",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parser_keys",
+          "detail": "Exact item-config cases 'recolor' and 'recolors' construct rs/a/b/a from the decoded int[][][] value and attach it to ModelMaterialOverrides."
+        },
+        {
+          "family": "exact_face_color_mapping",
+          "detail": "The class indexes Model face-color values, maps configured source colors to one or more destination colors and replaces matching face colors during per-face application."
+        },
+        {
+          "family": "exact_override_contract",
+          "detail": "It extends the shared rs/a/b/b face-override base and implements whole-model plus per-face application only."
+        }
+      ],
+      "note": "Exact-v308 recolor override from parser-key and Model face-color mutation evidence."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/a/b/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelRetextureOverride",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parser_keys",
+          "detail": "Exact item-config cases 'retexture' and 'retextures' obtain/create rs/a/b/e and feed decoded source/destination texture mappings into it."
+        },
+        {
+          "family": "exact_texture_face_conversion",
+          "detail": "For matching Model faces the class marks the face as transformed, replaces the mapped face value, allocates/updates texture-triangle metadata and copies the face vertex indices into the texture coordinate arrays."
+        },
+        {
+          "family": "exact_override_contract",
+          "detail": "It extends the shared rs/a/b/b face-override base and exposes the configured source-value set used by item/model consumers."
+        }
+      ],
+      "note": "Exact-v308 retexture override from parser-key and texture-triangle mutation evidence."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/a/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelFaceOverride",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_abstract_contract",
+          "detail": "The class is the abstract base for the exact recolor, retexture and reshade override implementations and defines whole-Model and per-face application methods."
+        },
+        {
+          "family": "exact_face_iteration",
+          "detail": "Its concrete helper iterates Model face count and dispatches the subclass per-face transformation for every face."
+        },
+        {
+          "family": "exact_family_boundary",
+          "detail": "No unrelated behavior or state exists; all exact subclasses are item-definition-driven Model face/material transforms."
+        }
+      ],
+      "note": "Descriptive exact-v308 abstract base for per-face Model overrides."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/a/b/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelReshadeOverride",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parser_key",
+          "detail": "Exact item-config key 'reshade' constructs rs/a/b/d from the configured integer and attaches it to ModelMaterialOverrides."
+        },
+        {
+          "family": "exact_face_mutation",
+          "detail": "Its per-face method replaces the Model face color/shade integer with the configured value unless that face has already been claimed by the retexture transform."
+        },
+        {
+          "family": "exact_override_contract",
+          "detail": "It extends the shared rs/a/b/b face-override base and owns only the single configured reshade value."
+        }
+      ],
+      "note": "Exact-v308 reshade override from the parser key and direct per-face shade/color replacement."
+    }
+  ],
+  "conflicts": []
+}
