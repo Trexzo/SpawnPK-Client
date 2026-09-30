@@ -1858,6 +1858,186 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+    def test_same_package_static_field_shadow_in_static_method_forces_type_context(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/i.java": (
+                        "package p;\n"
+                        "public class i {\n"
+                        "    public static final i a = new i();\n"
+                        "}\n"
+                    ),
+                    "p/f.java": (
+                        "package p;\n"
+                        "public class f {\n"
+                        "    public static float a = 0.5f;\n"
+                        "}\n"
+                    ),
+                    "p/g.java": (
+                        "package p;\n"
+                        "public class g {\n"
+                        "    public i f;\n"
+                        "    public float i;\n"
+                        "    public static float read() {\n"
+                        "        return ((p.f)null).a"
+                        " + (((p.i)null).a == null ? 0.0f : 1.0f);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "p" / "g.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "public class g {\n"
+                "    public i f;\n"
+                "    public float i;\n"
+                "    public static float read() {\n"
+                "        return f.a + (i.a == null ? 0.0f : 1.0f);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-same-package-owner-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn("((p.f)null).a", normalized)
+            self.assertIn("((p.i)null).a", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "shadowed_same_package_static_field_owner_type_context"
+            )
+            self.assertEqual(action["method_name"], "read")
+            self.assertEqual(action["method_descriptor"], "()F")
+            self.assertEqual(
+                action["same_package_owners"],
+                ["p/f", "p/i"],
+            )
+            self.assertEqual(
+                action["field_access_counts"],
+                {
+                    "p/f.a": 1,
+                    "p/i.a": 1,
+                },
+            )
+            self.assertEqual(action["replacement_count"], 2)
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_same_package_static_field_method_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_same_package_static_field_reference_count"
+                ],
+                2,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-same-package-owner-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_same_package_static_field_shadow_count_mismatch_fails_closed(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/f.java": (
+                        "package p;\n"
+                        "public class f {\n"
+                        "    public static float a = 0.5f;\n"
+                        "}\n"
+                    ),
+                    "p/g.java": (
+                        "package p;\n"
+                        "public class g {\n"
+                        "    public Object f;\n"
+                        "    public static float read() {\n"
+                        "        return ((p.f)null).a;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "p" / "g.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "public class g {\n"
+                "    public Object f;\n"
+                "    public static float read() {\n"
+                "        return f.a + f.a;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_same_package_static_field_reference_count"
+                ],
+                0,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "shadowed_same_package_static_field_owner_type_context"
+                    for row in report["actions"]
+                )
+            )
+
     def test_discarded_string_expression_preserves_evaluation(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
