@@ -1,45 +1,26 @@
 {
-  "schema_version": 1,
-  "kind": "semantic_candidate_set",
-  "canonical": false,
-  "source_build": "v308",
-  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-  "candidates": [
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/D",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "ClientComponentMoveListener",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_component_listener_contract",
-          "detail": "rs/D extends java.awt.event.ComponentAdapter and overrides only componentMoved(ComponentEvent); it contains no resize, focus, key, mouse or window callbacks."
-        },
-        {
-          "family": "exact_base_client_installation",
-          "detail": "RSApplet rs/C constructs exactly one rs/D and installs it with addComponentListener on the active client drawing component during input/window listener setup."
-        },
-        {
-          "family": "exact_move_debounce",
-          "detail": "componentMoved compares currentTimeMillis against the last move timestamp, and after more than 100 ms marks the shared client relocation/layout flag and records the new timestamp."
-        },
-        {
-          "family": "exact_lineage_id",
-          "detail": "The canonical lineage generator sorts baseline classes by internal_name; recomputing against the exact v308 JAR places rs/D at deterministic ordinal CLIENT_CLASS_000031 between Client$a 000030 and RSFrame rs/E 000032."
-        }
-      ],
-      "note": "Descriptive exact-v308 name for the dedicated debounced ComponentAdapter installed on the client component."
-    }
-  ],
-  "conflicts": []
+  "schema_version":1,
+  "kind":"semantic_candidate_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[{
+    "schema_version":1,
+    "kind":"semantic_name_candidate",
+    "canonical":false,
+    "status":"CANDIDATE",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target":{"kind":"class","owner":"rs/q/a/a","name":null,"descriptor":null},
+    "proposed_name":"InventoryOption2QueueEntry",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_menu_action_source","detail":"The exact Client menu-dispatch branch for action 454 creates rs/q/a/a from the three action integers and appends it to Client.ie when the action is deferred rather than written immediately."},
+      {"family":"exact_protocol_contract","detail":"The exact-current outbound action matrix identifies menu action 454 as C2S41 inventory option 2 / equip alias with payload widgetId, slot, itemId; the class stores exactly three ints and exposes only getters for them."},
+      {"family":"exact_queue_flush","detail":"A later Client flush path iterates Client.ie and serializes every rs/q/a/a entry as opcode 41 using record.a(), record.b(), record.c(), then clears the queue."},
+      {"family":"exact_context_boundary","detail":"Opcode 41 is context-dependent and is not intrinsically Equip: exact-current authority records both normal inventory option-2 behavior and an equip alias. The name therefore identifies the queue/transport slot, not a gameplay verb."}
+    ],
+    "note":"Descriptive exact-v308 name for one deferred C2S41 inventory-option/equip-alias queue record. It is not itself an OutgoingPacket implementation."
+  }],
+  "conflicts":[]
 }
