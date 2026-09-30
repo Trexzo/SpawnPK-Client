@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DrawingArea",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_pixel_surface",
+          "detail": "Exact v308 rs/l/c owns the global int[] pixel buffer, optional float depth buffer, raster width/height and clip bounds, and exposes fill/line/rectangle/alpha drawing operations plus a Graphics2D bridge."
+        },
+        {
+          "family": "historical_source_fingerprint",
+          "detail": "Historical 317 DrawingArea sources expose the same global pixel buffer, width/height, clip rectangle and primitive 2D draw surface; v308 extends that surface with depth/Graphics2D support."
+        },
+        {
+          "family": "exact_renderer_join",
+          "detail": "R421 Rasterizer reads rs/l/c pixels, width and clip bounds directly, while R421 TextDrawingArea extends rs/l/c and sprite/UI renderers draw into the same surface."
+        }
+      ],
+      "note": "Historical 317 source identity is corroborative; exact-v308 pixel/clip behavior is primary authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/D",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherFrameLayoutTask",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_owner",
+          "detail": "rs/l/D is constructed only by R421 RSImageProducer on the first successful BufferedImage draw and is submitted with SwingUtilities.invokeLater."
+        },
+        {
+          "family": "exact_frame_layout",
+          "detail": "run() sizes the Launcher JFrame to 1134x537 or 1312x800 depending on the client mode flag, centers it on the screen, ensures visibility where required, and maximizes when the configured layout exceeds the display width."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The Runnable owns no rendering state beyond its synthetic RSImageProducer parent reference and performs only one-shot Launcher JFrame layout/visibility work."
+        }
+      ],
+      "note": "Descriptive exact-v308 role; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/A",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TypingTextEffectProcessor",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_tag_surface",
+          "detail": "rs/l/A recognizes @type@, <type>, </type> and <type=N> markers, strips or rewrites them into timestamp-bearing <type=N:timestamp> state, and bounds configurable typing speed to the exact accepted range."
+        },
+        {
+          "family": "exact_animation_state",
+          "detail": "The processor tracks one expiry timestamp plus an active flag; its boolean predicate remains true while typing animation is active and causes Client chat redraw state to remain live."
+        },
+        {
+          "family": "exact_chat_pipeline",
+          "detail": "Client applies rs/l/A around public/private chat text after the neighboring rs/l/l flash-animation processor, proving this is the dedicated typing-text effect stage rather than a generic markup parser."
+        }
+      ],
+      "note": "Descriptive exact-v308 role; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}
