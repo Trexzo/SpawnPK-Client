@@ -1,27 +1,15 @@
-# Chat 2 — exact-v308 RSApplet component-move listener R431
+# Chat 2 — R431 duplicate component-move listener audit
 
-Exact client authority:
+R431 retains **no semantic proposal**.
 
-`854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`
+The attempted `rs/D -> RSAppletComponentMoveListener` proposal duplicates R332:
 
-## Result
+- `rs/D`
+- `CLIENT_CLASS_000031`
+- R332 name: `ClientComponentMoveListener`
+- R332 review: `SEMREVIEW_F8F8ABA22C4D9A92D585`
 
-- `rs/D` -> `CLIENT_CLASS_000031` -> `RSAppletComponentMoveListener`
-- proposal: `SEMPROP_CC9EE7B9A7F3E3629B1F`
-- review: `SEMREVIEW_CF3FF129C054BB1845DC`
+R431's owner-registration and 100 ms move-throttle evidence strengthens R332's existing
+interpretation. The narrower RSApplet-qualified spelling is not a separate class identity.
 
-R48 already recovers the surrounding `RSApplet` / `RSFrame` shell.
-
-Exact v308 constructs `rs/D` from RSApplet and registers it through
-`Component.addComponentListener`.
-
-The class extends `ComponentAdapter` and implements one callback only:
-`componentMoved(ComponentEvent)`.
-
-Move events are throttled to a 100 ms window. When accepted, the listener flips the
-client-global move/redraw marker and updates the previous-move timestamp.
-
-The semantic name stops at the exact event role; it does not guess a stronger downstream
-layout or persistence responsibility.
-
-R431 remains non-canonical Chat 2 research only.
+R431 is therefore a correction/corroboration note only.
