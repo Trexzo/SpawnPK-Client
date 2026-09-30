@@ -71,6 +71,7 @@ def _lineage_entry(
 
 def _plan_targets(
     plan: dict[str, Any],
+    class_lineage: dict[str, Any],
     *,
     build_id: str,
     authority_sha256: str,
@@ -89,7 +90,14 @@ def _plan_targets(
             f"{label}: source_sha256 does not match release authority"
         )
 
+    records = {
+        str(record.get("logical_id")): record
+        for record in class_lineage.get("classes", [])
+        if isinstance(record, dict)
+        and isinstance(record.get("logical_id"), str)
+    }
     out: dict[str, str] = {}
+    targets: set[str] = set()
     for row in plan.get("classes", []):
         if not isinstance(row, dict):
             raise CrossVersionSourceDeltaError(
@@ -109,6 +117,36 @@ def _plan_targets(
             raise CrossVersionSourceDeltaError(
                 f"{label}: duplicate logical_id {logical_id}"
             )
+        record = records.get(logical_id)
+        if record is None:
+            raise CrossVersionSourceDeltaError(
+                f"{label}: unknown logical_id {logical_id}"
+            )
+        entry = _lineage_entry(record, build_id)
+        if entry is None:
+            raise CrossVersionSourceDeltaError(
+                f"{label}: {logical_id} has no lineage entry for {build_id}"
+            )
+        expected_source = str(entry.get("internal_name") or "")
+        expected_path = str(entry.get("entry_path") or "")
+        expected_sha = str(entry.get("entry_sha256") or "").lower()
+        if row.get("source_internal_name") != expected_source:
+            raise CrossVersionSourceDeltaError(
+                f"{label}: {logical_id} source_internal_name drift"
+            )
+        if row.get("source_entry_path") != expected_path:
+            raise CrossVersionSourceDeltaError(
+                f"{label}: {logical_id} source_entry_path drift"
+            )
+        if str(row.get("source_entry_sha256") or "").lower() != expected_sha:
+            raise CrossVersionSourceDeltaError(
+                f"{label}: {logical_id} source_entry_sha256 drift"
+            )
+        if target in targets:
+            raise CrossVersionSourceDeltaError(
+                f"{label}: duplicate target_internal_name {target!r}"
+            )
+        targets.add(target)
         out[logical_id] = target
     return out
 
@@ -166,6 +204,7 @@ def _index_source_units(
 
     remaps = _plan_targets(
         class_plan,
+        class_lineage,
         build_id=build_id,
         authority_sha256=authority_sha,
         label=f"{label}_class_plan",
