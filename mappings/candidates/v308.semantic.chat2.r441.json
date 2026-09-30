@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/al",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemLoadoutModificationInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_identity",
+          "detail": "The class extends R436 CustomInterfaceBuilder, builds root 33000 and contains exact literal title 'Item Loadout Modification Interface' with equipment/loadout resources."
+        },
+        {
+          "family": "exact_loadout_controls",
+          "detail": "The screen presents LMS Loadout state plus Save loadout, Set as default, Reset to default and related loadout modification controls."
+        },
+        {
+          "family": "exact_live_consumers",
+          "detail": "Exact v308 references the builder from both Client and R436 CustomInterfaceRegistry, proving it is a live in-game interface rather than only a Swing loadout helper."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The recovery names only the exact client interface/presentation role; gameplay rules, persistence and server-side action semantics are not inferred."
+        }
+      ],
+      "note": "Exact-v308 descriptive interface identity from literal screen text/resources and dedicated controls."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aq",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MakeQuantitySelectionInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_identity",
+          "detail": "The class extends R436 CustomInterfaceBuilder and builds the exact prompt 'How many would you like to make?' with options/make resources."
+        },
+        {
+          "family": "exact_quantity_surface",
+          "detail": "The screen presents 1, 5, 10, X and All quantity choices, 'Select quantity', selectable product images and the instruction 'Choose a quantity, then click an image to begin.'"
+        },
+        {
+          "family": "exact_reverse_references",
+          "detail": "Exact v308 references the builder from R436 CustomInterfaceRegistry plus tightly-coupled rs/n/c/ar and rs/q/a/a/b only."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The recovery names only the exact client interface/presentation role; gameplay rules, persistence and server-side action semantics are not inferred."
+        }
+      ],
+      "note": "Exact-v308 descriptive interface identity from literal screen text/resources and dedicated controls."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/w",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TextColorSelectionInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_identity",
+          "detail": "The class extends R436 CustomInterfaceBuilder and contains the exact title 'Text Color Selection Menu'."
+        },
+        {
+          "family": "exact_color_controls",
+          "detail": "The screen presents font-color and shadow-color selection, a color palette, Confirm colors and Cancel colors controls, plus the ::compcolors command literal."
+        },
+        {
+          "family": "exact_live_consumers",
+          "detail": "Exact v308 references this builder from Client, rs/a/k and R436 CustomInterfaceRegistry."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The recovery names only the exact client interface/presentation role; gameplay rules, persistence and server-side action semantics are not inferred."
+        }
+      ],
+      "note": "Exact-v308 descriptive interface identity from literal screen text/resources and dedicated controls."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AttackOptionsInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_interface_identity",
+          "detail": "The class extends R436 CustomInterfaceBuilder and explicitly titles its two sections '<u>Player attack options' and '<u>NPC/Bot attack options'."
+        },
+        {
+          "family": "exact_option_surface",
+          "detail": "The screen builds selectable attack-option controls plus the exact toggle 'Always right-click clan members'."
+        },
+        {
+          "family": "exact_live_consumers",
+          "detail": "Exact v308 references the builder from R436 CustomInterfaceRegistry and rs/l/b/a only, with no unrelated interface identity."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The recovery names only the exact client interface/presentation role; gameplay rules, persistence and server-side action semantics are not inferred."
+        }
+      ],
+      "note": "Exact-v308 descriptive interface identity from literal screen text/resources and dedicated controls."
+    }
+  ],
+  "conflicts": []
+}
