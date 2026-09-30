@@ -91,3 +91,9 @@ Do not manufacture a v307 tree by copying the v308 tree and replacing the build 
 ## Truth boundary
 
 A `XVERSRC_*` report proves deterministic source-tree comparison across independently accepted build authorities. It does not prove inferred local or parameter names are original developer identifiers, and it does not replace the clean-rebuild or round-trip gates.
+
+## Historical v307 -> v308 regeneration fixture
+
+The exact private historical source-regeneration contract is pinned in `fixtures/v307-v308-source-regeneration.json`. It records the exact v307/v308 client SHA-256 pair, the already-proven one-entry binary delta, and the official Procyon v0.6.0 decompiler authority (`821da96012fc69244fa1ea298c90455ee4e021434bc796d3b9546ab24601b779`, 2,004,704 bytes).
+
+A future exact run may use either the archived private Procyon copy or the official release artifact, but `run_decompiler()` must verify that exact SHA before execution. The fixture explicitly forbids deriving historical v307 source by editing the v308 tree; v307 must be independently regenerated from the exact v307 binary.
