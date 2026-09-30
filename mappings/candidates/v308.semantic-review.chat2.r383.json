@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_7D9DBA7A441C1DF416B2",
+  "proposals": [{
+    "proposal_id": "SEMPROP_C6914C85109D6A28CD13",
+    "target_kind": "class",
+    "stable_id": "CLIENT_CLASS_000285",
+    "owner_logical_id": "CLIENT_CLASS_000285",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate": {"owner":"rs/gui/x","name":null,"descriptor":null},
+    "proposed_name": "PositionedUiImage",
+    "confidence": 0.998,
+    "evidence": [
+      {"family":"exact_image_loader","detail":"The class owns one java.awt.Image plus mutable x/y coordinates. a(String) loads a classpath image through Toolkit for file-backed resources or ImageIO for packaged resources, stores it and reports success."},
+      {"family":"exact_positioned_draw","detail":"a(int,int) updates the stored x/y position and a(Graphics) draws the stored image at exactly those coordinates through Graphics2D.drawImage when the live Launcher surface is available."},
+      {"family":"exact_ui_consumers","detail":"Exact-v308 reverse references come from launcher/loadout UI classes including rs/gui/b/e, rs/gui/b/f, rs/gui/b/g, rs/gui/b/b/b and rs/gui/b/c/b/c; no gameplay/world subsystem owns the type."},
+      {"family":"exact_role_boundary","detail":"The constructor's auxiliary int does not acquire a stronger surviving semantic meaning, so the proposed name stops at the proven reusable positioned UI-image role rather than inventing an icon/sprite subtype."}
+    ],
+    "note": "Descriptive exact-v308 name for the reusable UI image loader/holder/drawer at a mutable x/y position. No original source identifier is claimed."
+  }],
+  "unresolved": []
+}
