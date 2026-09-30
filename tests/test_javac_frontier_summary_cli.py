@@ -94,6 +94,18 @@ class JavacFrontierSummaryTests(unittest.TestCase):
         ):
             summarize(report, top=20)
 
+    def test_source_m1_wrapper_prints_private_frontier_summary(self):
+        repo = Path(__file__).resolve().parents[1]
+        script = repo / "scripts" / "Invoke-SourceM1ExactLocalAcceptance.ps1"
+        text = script.read_text(encoding="utf-8")
+
+        self.assertIn(
+            "spk_recovery.javac_frontier_summary_cli",
+            text,
+        )
+        self.assertIn("--top 20", text)
+        self.assertIn("private_javac_summary_failed=", text)
+        self.assertIn("exit 3", text)
     def test_cli_top_limit(self):
         with tempfile.TemporaryDirectory() as td:
             path = Path(td) / "private.json"
