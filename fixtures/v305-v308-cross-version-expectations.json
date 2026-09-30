@@ -1,0 +1,37 @@
+{
+  "old_scope_classes": 1099,
+  "new_scope_classes": 1129,
+  "matched_classes": 1074,
+  "class_identity_reuse_percent": 97.7252,
+  "changed_same_path_classes": 370,
+  "analysis_queue_items": 118,
+  "ambiguous_classes": 10,
+  "unmatched_old_classes": 25,
+  "unmatched_new_classes": 55,
+  "classifications": {
+    "byte_identical_same_path": 513,
+    "structurally_equivalent_same_path": 278,
+    "structurally_equivalent_moved": 255,
+    "package_anchor_identity_candidate": 23,
+    "weighted_identity_candidate": 5
+  },
+  "class_delta_summary": {
+    "byte_identical": 513,
+    "structurally_equivalent": 550,
+    "modified_class": 11,
+    "matched_classes": 1074,
+    "path_moved": 278,
+    "ambiguous_classes": 10,
+    "unmatched_old_classes": 25,
+    "unmatched_new_classes": 55
+  },
+  "binary_summary": {
+    "old_entry_count": 10939,
+    "new_entry_count": 10970,
+    "old_only_entries": 246,
+    "new_only_entries": 277,
+    "changed_entries": 372,
+    "changed_class_entries": 370
+  },
+  "binary_report_id": "XVERBIN_C5DDFB581E208052ADF6"
+}

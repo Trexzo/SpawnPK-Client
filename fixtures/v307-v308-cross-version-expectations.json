@@ -1,0 +1,39 @@
+{
+  "old_scope_classes": 1129,
+  "new_scope_classes": 1129,
+  "matched_classes": 1129,
+  "class_identity_reuse_percent": 100,
+  "changed_same_path_classes": 1,
+  "analysis_queue_items": 0,
+  "ambiguous_classes": 0,
+  "unmatched_old_classes": 0,
+  "unmatched_new_classes": 0,
+  "changed_same_path_class_paths": [
+    "rs/f/a.class"
+  ],
+  "classifications": {
+    "byte_identical_same_path": 1128,
+    "structurally_equivalent_same_path": 1
+  },
+  "class_delta_summary": {
+    "byte_identical": 1128,
+    "structurally_equivalent": 1,
+    "matched_classes": 1129,
+    "path_moved": 0,
+    "ambiguous_classes": 0,
+    "unmatched_old_classes": 0,
+    "unmatched_new_classes": 0
+  },
+  "binary_summary": {
+    "old_entry_count": 10970,
+    "new_entry_count": 10970,
+    "old_only_entries": 0,
+    "new_only_entries": 0,
+    "changed_entries": 1,
+    "changed_class_entries": 1
+  },
+  "changed_entry_paths": [
+    "rs/f/a.class"
+  ],
+  "binary_report_id": "XVERBIN_E56BD2FB8CCC172D6184"
+}
