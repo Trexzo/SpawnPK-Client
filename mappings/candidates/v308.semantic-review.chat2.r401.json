@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 4,
+  "review_id": "SEMREVIEW_868F1DBBBEE924509E73",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_35EDEF07F04F6D56A803",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000187",
+      "owner_logical_id": "CLIENT_CLASS_000187",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/D",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ResizeLauncherFrameTask",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_launcher_wrapper",
+          "detail": "Launcher.a(int,int,int,int) constructs only this Runnable and dispatches it with SwingUtilities.invokeLater."
+        },
+        {
+          "family": "exact_frame_size_mutation",
+          "detail": "run() sets the live Launcher JFrame minimum size from the first width/height pair and current size from the second width/height pair."
+        }
+      ],
+      "note": "Exact-v308 EDT task that applies launcher minimum dimensions and current frame size."
+    },
+    {
+      "proposal_id": "SEMPROP_483152BA79C2D7FA8717",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000287",
+      "owner_logical_id": "CLIENT_CLASS_000287",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/z",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RequestSidePanelToggleAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_registration",
+          "detail": "Launcher installs this ActionListener exclusively on the JButton whose exact tooltip is 'Hide/show side panel'."
+        },
+        {
+          "family": "exact_request_behavior",
+          "detail": "actionPerformed performs exactly one state mutation: sets static Client.i = true, the request flag consumed by the client-side side-panel toggle path."
+        }
+      ],
+      "note": "Exact-v308 action that raises the side-panel-toggle request from the launcher control button."
+    },
+    {
+      "proposal_id": "SEMPROP_9C51B7CC3693B7D6DFFC",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000186",
+      "owner_logical_id": "CLIENT_CLASS_000186",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/C",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SetLauncherFrameResizableTask",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_launcher_wrapper",
+          "detail": "Launcher.b(boolean) constructs only this Runnable and dispatches it with SwingUtilities.invokeLater."
+        },
+        {
+          "family": "exact_frame_mutation",
+          "detail": "run() obtains the live Launcher JFrame and calls setResizable(boolean) with the constructor-supplied flag; no other frame state is changed."
+        }
+      ],
+      "note": "Exact-v308 EDT task used by Launcher to apply JFrame resizability."
+    },
+    {
+      "proposal_id": "SEMPROP_F2BA328F5DE85F4E15C6",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000286",
+      "owner_logical_id": "CLIENT_CLASS_000286",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/y",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RestoreLauncherWindowFromTrayMouseHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_tray_registration",
+          "detail": "Launcher tray setup creates this MouseAdapter and installs it directly on the SpawnPK TrayIcon."
+        },
+        {
+          "family": "exact_restore_behavior",
+          "detail": "mouseClicked obtains the Launcher JFrame, sets its state to NORMAL (0), then makes it visible; it owns no unrelated mouse behavior."
+        }
+      ],
+      "note": "Exact-v308 tray-icon click handler that restores and shows the launcher window."
+    }
+  ],
+  "unresolved": []
+}
