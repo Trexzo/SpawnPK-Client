@@ -132,6 +132,10 @@ def main(argv: list[str] | None = None) -> int:
         default=[],
         metavar="ALIAS=/POINTER",
     )
+    parser.add_argument(
+        "--validate-only",
+        action="store_true",
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -140,11 +144,18 @@ def main(argv: list[str] | None = None) -> int:
             _parse_field(value)
             for value in args.optional_field
         ]
-        if not required and not optional:
+        if args.validate_only and (required or optional):
+            raise JsonProjectionError(
+                "--validate-only cannot be combined with field projections"
+            )
+        if not args.validate_only and not required and not optional:
             raise JsonProjectionError(
                 "at least one field projection is required"
             )
         document = _load(args.json_path)
+        if args.validate_only:
+            print("SPK_JSON_VALIDATION_PASS")
+            return 0
         result = project(
             document,
             required=required,

@@ -109,6 +109,61 @@ class JsonProjectionTests(unittest.TestCase):
                 },
             )
 
+    def test_cli_validate_only_accepts_case_distinct_keys(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "valid.json"
+            path.write_text(
+                '{"payload":{"D":1,"d":2}}',
+                encoding="utf-8",
+            )
+
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with (
+                contextlib.redirect_stdout(stdout),
+                contextlib.redirect_stderr(stderr),
+            ):
+                code = main(
+                    [
+                        str(path),
+                        "--validate-only",
+                    ]
+                )
+
+            self.assertEqual(code, 0, stderr.getvalue())
+            self.assertEqual(
+                stdout.getvalue().strip(),
+                "SPK_JSON_VALIDATION_PASS",
+            )
+
+    def test_cli_validate_only_rejects_field_projection_mix(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "valid.json"
+            path.write_text(
+                '{"status":"complete"}',
+                encoding="utf-8",
+            )
+
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with (
+                contextlib.redirect_stdout(stdout),
+                contextlib.redirect_stderr(stderr),
+            ):
+                code = main(
+                    [
+                        str(path),
+                        "--validate-only",
+                        "--field",
+                        "status=/status",
+                    ]
+                )
+
+            self.assertEqual(code, 2)
+            self.assertIn(
+                "cannot be combined",
+                stderr.getvalue(),
+            )
     def test_cli_rejects_exact_duplicate_json_keys(self):
         with tempfile.TemporaryDirectory() as td:
             path = Path(td) / "duplicate.json"
@@ -175,6 +230,62 @@ class JsonProjectionTests(unittest.TestCase):
     def test_source_m1_acceptance_parses_in_windows_powershell(self):
         repo = Path(__file__).resolve().parents[1]
         script = repo / "scripts" / "Invoke-SourceM1ExactLocalAcceptance.ps1"
+        command = (
+            "$tokens=$null; $errors=$null; "
+            "[System.Management.Automation.Language.Parser]::ParseFile("
+            "'" + str(script).replace("'", "''") + "', "
+            "[ref]$tokens, [ref]$errors) | Out-Null; "
+            "if ($errors.Count -ne 0) { "
+            "$errors | ForEach-Object { Write-Error $_.Message }; exit 1 }; "
+            "exit 0"
+        )
+        proc = subprocess.run(
+            [
+                "powershell.exe",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                command,
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        self.assertEqual(
+            proc.returncode,
+            0,
+            proc.stdout + proc.stderr,
+        )
+    def test_r8dep_acceptance_never_deserializes_raw_json_in_powershell(self):
+        repo = Path(__file__).resolve().parents[1]
+        script = repo / "scripts" / "Invoke-R8DEP38ExactLocalAcceptance.ps1"
+        text = script.read_text(encoding="utf-8")
+
+        self.assertEqual(
+            text.count("| ConvertFrom-Json"),
+            1,
+            "only the controlled projection helper may use ConvertFrom-Json",
+        )
+        self.assertIn("--validate-only", text)
+        self.assertIn("spk_recovery.json_projection_cli", text)
+        for raw_path in (
+            "$Out",
+            "$RuntimeReadiness",
+            "$ManifestPath",
+        ):
+            self.assertNotIn(
+                f"Get-Content -LiteralPath {raw_path} -Raw | ConvertFrom-Json",
+                text,
+            )
+
+    @unittest.skipUnless(
+        shutil.which("powershell.exe"),
+        "Windows PowerShell parser is unavailable",
+    )
+    def test_r8dep_acceptance_parses_in_windows_powershell(self):
+        repo = Path(__file__).resolve().parents[1]
+        script = repo / "scripts" / "Invoke-R8DEP38ExactLocalAcceptance.ps1"
         command = (
             "$tokens=$null; $errors=$null; "
             "[System.Management.Automation.Language.Parser]::ParseFile("
