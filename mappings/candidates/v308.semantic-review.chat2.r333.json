@@ -1,0 +1,28 @@
+{
+  "schema_version":1,
+  "kind":"semantic_review_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count":1,
+  "review_id":"SEMREVIEW_7F159A01C3D883460EC6",
+  "proposals":[{
+    "proposal_id":"SEMPROP_F159EAC69D27C423AEA2",
+    "target_kind":"class",
+    "stable_id":"CLIENT_CLASS_000680",
+    "owner_logical_id":"CLIENT_CLASS_000680",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate":{"owner":"rs/n/d","name":null,"descriptor":null},
+    "proposed_name":"CustomInterfaceBuilderRegistry",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_builder_population","detail":"The central initialization method constructs roughly ninety rs/n/c/* custom interface-builder instances, passing the shared font array where required, and routes every builder through the same registration helper."},
+      {"family":"exact_registration_contract","detail":"The registration helper invokes rs/n/c.a() to build each custom interface and retains the builder in a shared List<rs/n/c> only when its c() predicate is true."},
+      {"family":"exact_rsinterface_boundary","detail":"R56 already identifies rs/n/e as RSInterface, the core decoded widget/interface object. rs/n/d finishes its custom-builder pass by handing the font array into the RSInterface base setup rather than replacing that core loader."},
+      {"family":"exact_layout_lineage","detail":"Stable lineage places rs/n/d at CLIENT_CLASS_000680 immediately before R284 InterfaceRelativeLayoutConstraint, InterfaceLayoutEntry and InterfaceLayoutManager (000681-000683), with RSInterface at 000684, fixing this class in the custom-interface construction/registration layer."}
+    ],
+    "note":"Descriptive exact-v308 name for the central registry/initialization pass over custom rs/n/c/* interface builders. It is not the core archive-decoded RSInterface loader."
+  }],
+  "unresolved":[]
+}
