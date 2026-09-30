@@ -1,0 +1,307 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutCloneButtonFactory",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_factory",
+          "detail": "The static factory builds the exact JButton labeled 'Clone' with clone.png and tooltip describing copying the items currently equipped in game into the active loadout."
+        },
+        {
+          "family": "exact_listener_wiring",
+          "detail": "The factory installs only rs/gui/b/a/b on that Clone button and returns it to the Loadout sidebar surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutCloneAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_clone_trigger",
+          "detail": "The listener is attached only to the Clone button produced by LoadoutCloneButtonFactory."
+        },
+        {
+          "family": "exact_confirmation_flow",
+          "detail": "If no loadout is selected it shows the exact message 'You don't have a loadout selected!'; otherwise it opens a Yes/No confirmation JFrame and wires rs/gui/b/a/c and rs/gui/b/a/d."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutCloneConfirmAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_live_client_copy",
+          "detail": "The affirmative clone action reads the live Client/player equipment and inventory state, clears and repopulates the active LoadoutDefinition item/equipment data and persists the updated loadout."
+        },
+        {
+          "family": "exact_clone_command",
+          "detail": "The same path sends the exact client command '::cldt' after cloning and emits the explicit not-logged-in guidance if no live character is available."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutCloneCancelAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_cancel_role",
+          "detail": "The listener is installed only on the No button of the clone confirmation JFrame."
+        },
+        {
+          "family": "exact_cancel_effect",
+          "detail": "actionPerformed only hides and disposes that confirmation frame and performs no loadout mutation."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutColorListCellRenderer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_color_renderer",
+          "detail": "The renderer owns parallel Color[] and String[] arrays, validates equal lengths and applies the corresponding foreground color to each combo/list label."
+        },
+        {
+          "family": "exact_editor_scope",
+          "detail": "R375 LoadoutEditorWindow creates this renderer for the loadout color JComboBox whose exact choices are Default, Red, Orange, Blue, Green, Yellow and Magenta."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutCreateButton",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_create_control",
+          "detail": "The JButton subclass installs exactly one rs/gui/b/a/h listener and retains the LoadoutManager used by the create flow."
+        },
+        {
+          "family": "exact_editor_launch",
+          "detail": "Its create method opens R375 LoadoutEditorWindow with title 'Name Your Loadout' and action label 'Create', then installs LoadoutCreateCommitAction."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutCreateAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_owner",
+          "detail": "The listener is created only by LoadoutCreateButton and attached directly to that button."
+        },
+        {
+          "family": "exact_single_effect",
+          "detail": "actionPerformed delegates directly to the button's create/editor-launch method and owns no independent mutation."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutCreateCommitAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_create_commit",
+          "detail": "The action reads the current loadout folder plus editor name/color/icon, creates or resolves the LoadoutDefinition through LoadoutManager, applies icon/color and persists the updated folder."
+        },
+        {
+          "family": "exact_editor_binding",
+          "detail": "LoadoutCreateButton installs this action specifically as the external commit listener on the 'Name Your Loadout' editor's Create button."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutIconListCellRenderer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_icon_renderer",
+          "detail": "The renderer is created only for the loadout editor's icon JComboBox and maps selected/list indices to rs/gui/b/e loadout icons, using no icon for the 'None' entry."
+        },
+        {
+          "family": "exact_editor_scope",
+          "detail": "R375 LoadoutEditorWindow uses the renderer for the exact icon list headed by 'None (Default)' plus the recovered loadout icon enum values."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/y",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutEditorWindow",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_editor_surface",
+          "detail": "The JFrame owns a name JTextField, action JButton, color JComboBox and icon JComboBox with exact labels 'Color:' and 'Icon:'; callers supply titles/actions such as 'Name Your Loadout'/'Create' and 'Rename'."
+        },
+        {
+          "family": "exact_value_contract",
+          "detail": "The window exposes getters/setters for selected name, color and loadout icon and installs both an external commit ActionListener and its own close action on the action button."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a/z",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutEditorCloseAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_editor_binding",
+          "detail": "LoadoutEditorWindow always installs rs/gui/b/a/z on its action button in addition to the caller-supplied commit listener."
+        },
+        {
+          "family": "exact_close_effect",
+          "detail": "actionPerformed only hides and disposes the owning LoadoutEditorWindow, so it is the editor-close side of successful create/rename actions."
+        }
+      ],
+      "note": "Descriptive exact-v308 Loadout UI role; original stripped source identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}
