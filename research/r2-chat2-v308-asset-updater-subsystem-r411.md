@@ -13,9 +13,8 @@ Exact client authority:
 - `rs/cache/b/c` -> 000092 -> `AssetUpdateManager`
 - `rs/cache/b/d` -> 000093 -> `AssetUpdater`
 - `rs/cache/b/e` -> 000094 -> `AssetVersionTracker`
-- `rs/cache/b/f` -> 000095 -> `UpdateConnectionHelpLinkListener`
 
-Review: `SEMREVIEW_2895E054E58758F44CC2`
+Review: `SEMREVIEW_1488388A9570A04E4674`
 
 ## Manager and strategies
 
@@ -53,7 +52,17 @@ diagnostics such as:
 - writes the updated local version after success;
 - shows the connection-help dialog when remote version retrieval fails.
 
-The dialog's hyperlink listener simply opens activated URLs with `Desktop.browse`.
+The dialog's hyperlink listener is already independently owned by R336 as
+`AssetVersionHyperlinkListener` and is therefore excluded from R411.
+
+## Existing authority reconciled
+
+R336 already owns:
+
+- `rs/cache/b/f` -> `CLIENT_CLASS_000095` -> `AssetVersionHyperlinkListener`
+
+The initial R411 draft duplicated this owner under a different listener name. That proposal
+has been removed; R336 remains sole authority.
 
 ## Withheld classes
 

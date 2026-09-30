@@ -193,33 +193,6 @@
         }
       ],
       "note": "Descriptive exact-v308 updater identity; no verbatim original developer class name is claimed."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/cache/b/f",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "UpdateConnectionHelpLinkListener",
-      "confidence": 0.998,
-      "evidence": [
-        {
-          "family": "exact_subsystem_role",
-          "detail": "Created only by AssetVersionTracker's connection-error HTML dialog; on ACTIVATED hyperlink events it opens the event URL with Desktop.browse and owns no other behavior."
-        },
-        {
-          "family": "exact_updater_family",
-          "detail": "The class belongs to the isolated rs/cache/b updater subsystem whose live manager checks remote/local asset versions and downloads/replaces client asset content before normal startup proceeds."
-        }
-      ],
-      "note": "Descriptive exact-v308 updater identity; no verbatim original developer class name is claimed."
     }
   ],
   "conflicts": []

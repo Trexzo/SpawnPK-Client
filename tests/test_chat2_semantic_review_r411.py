@@ -4,7 +4,7 @@ import unittest
 from spk_recovery.semantic_review import resolve_semantic_candidates
 SHA="854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 ROOT=Path(__file__).resolve().parents[1]
-CLASS_COORDS=[["CLIENT_CLASS_000087","rs/cache/b/a/a"],["CLIENT_CLASS_000089","rs/cache/b/a/c"],["CLIENT_CLASS_000090","rs/cache/b/a/d"],["CLIENT_CLASS_000091","rs/cache/b/b"],["CLIENT_CLASS_000092","rs/cache/b/c"],["CLIENT_CLASS_000093","rs/cache/b/d"],["CLIENT_CLASS_000094","rs/cache/b/e"],["CLIENT_CLASS_000095","rs/cache/b/f"]]
+CLASS_COORDS=[["CLIENT_CLASS_000087","rs/cache/b/a/a"],["CLIENT_CLASS_000089","rs/cache/b/a/c"],["CLIENT_CLASS_000090","rs/cache/b/a/d"],["CLIENT_CLASS_000091","rs/cache/b/b"],["CLIENT_CLASS_000092","rs/cache/b/c"],["CLIENT_CLASS_000093","rs/cache/b/d"],["CLIENT_CLASS_000094","rs/cache/b/e"]]
 def _class_lineage():
     classes=[]
     for logical_id, internal_name in CLASS_COORDS:
@@ -16,7 +16,7 @@ def _load(p): return json.loads((ROOT/p).read_text(encoding="utf-8"))
 class Chat2SemanticReviewR411Tests(unittest.TestCase):
     def test_r411_resolves_deterministically(self):
         actual=resolve_semantic_candidates(_class_lineage(),_member_lineage(),_load("mappings/candidates/v308.semantic.chat2.r411.json")); expected=_load("mappings/candidates/v308.semantic-review.chat2.r411.json")
-        self.assertEqual(actual["proposal_count"],8); self.assertEqual(actual["unresolved"],[]); self.assertEqual(actual["review_id"],"SEMREVIEW_2895E054E58758F44CC2"); self.assertEqual(actual,expected)
+        self.assertEqual(actual["proposal_count"],7); self.assertEqual(actual["unresolved"],[]); self.assertEqual(actual["review_id"],"SEMREVIEW_1488388A9570A04E4674"); self.assertEqual(actual,expected)
     def test_r411_expected_stable_ids(self):
-        review=_load("mappings/candidates/v308.semantic-review.chat2.r411.json"); self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"CacheUpdater":"CLIENT_CLASS_000087","ConfigUpdater":"CLIENT_CLASS_000089","SpriteUpdater":"CLIENT_CLASS_000090","AssetUpdateError":"CLIENT_CLASS_000091","AssetUpdateManager":"CLIENT_CLASS_000092","AssetUpdater":"CLIENT_CLASS_000093","AssetVersionTracker":"CLIENT_CLASS_000094","UpdateConnectionHelpLinkListener":"CLIENT_CLASS_000095"})
+        review=_load("mappings/candidates/v308.semantic-review.chat2.r411.json"); self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"CacheUpdater":"CLIENT_CLASS_000087","ConfigUpdater":"CLIENT_CLASS_000089","SpriteUpdater":"CLIENT_CLASS_000090","AssetUpdateError":"CLIENT_CLASS_000091","AssetUpdateManager":"CLIENT_CLASS_000092","AssetUpdater":"CLIENT_CLASS_000093","AssetVersionTracker":"CLIENT_CLASS_000094"})
 if __name__=="__main__": unittest.main()
