@@ -1,0 +1,19 @@
+{
+  "schema_version":1,"kind":"semantic_review_set","canonical":false,
+  "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","proposal_count":1,
+  "review_id":"SEMREVIEW_4E74912844D1F6296FC4",
+  "proposals":[{
+    "proposal_id":"SEMPROP_7E023E2EA223D9262EA7","target_kind":"class",
+    "stable_id":"CLIENT_CLASS_000177","owner_logical_id":"CLIENT_CLASS_000177",
+    "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate":{"owner":"rs/g/a","name":null,"descriptor":null},
+    "proposed_name":"Bounds","confidence":0.999,
+    "evidence":[
+      {"family":"exact_four_int_shape","detail":"Exact v308 rs/g/a owns exactly four public int fields, two constructors (four-int and two-int), and two pair setters matching the classic low/high bounds record shape."},
+      {"family":"exact_game_shell_consumer","detail":"The AWT game shell rs/C.aZ() computes usable container width/height after subtracting frame insets and returns new rs/g/a(width,height); resize/rebuild logic then reads the record's high-dimension pair."},
+      {"family":"exact_source_fingerprint","detail":"The class preserves the long-standing RuneScape Bounds fingerprint: low-coordinate setter, high-coordinate setter, two-arg convenience constructor using low=(0,0), and a toString() implementation returning null."}
+    ],
+    "note":"Recovered long-standing RuneScape Bounds identity from the exact class shape and game-shell consumer; not a canvas-specific invented name."
+  }],
+  "unresolved":[]
+}
