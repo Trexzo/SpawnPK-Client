@@ -321,7 +321,7 @@ def profile_class_constant_pool_references(
 def profile_class_field_accesses(
     data: bytes,
 ) -> dict[str, Any]:
-    """Extract declared fields and per-method field GET/PUT observations."""
+    """Extract declared fields plus per-method field and invocation observations."""
     r = _Reader(data)
     if r.u4() != 0xCAFEBABE:
         raise BytecodeProfileError("not a JVM class")
