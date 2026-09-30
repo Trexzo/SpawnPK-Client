@@ -1688,6 +1688,144 @@ def _normalize_shadowed_nested_static_field_owners(
             }
         )
 
+
+    simple_name = current_owner.rsplit("/", 1)[-1]
+    constructor_re = re.compile(
+        r"(?m)^(?P<indent>[ \t]*)"
+        r"(?:(?:public|private|protected)\s+)*"
+        + re.escape(simple_name)
+        + r"\s*\((?P<params>[^()\n]*)\)\s*"
+        r"(?:throws\s+[^\{\n]+\s*)?\{"
+    )
+    for match in constructor_re.finditer(text):
+        brace_start = text.find("{", match.start(), match.end())
+        if brace_start < 0:
+            continue
+        body_end = _matching_brace_end(text, brace_start)
+        constructor_text = text[match.start():body_end]
+        constructor_code = _java_code_mask(constructor_text)
+
+        source_counts: dict[tuple[str, str, str], int] = {}
+        source_occurrences: dict[
+            tuple[str, str, str],
+            list[tuple[int, int, str]],
+        ] = {}
+        shadow_owners_by_key: dict[
+            tuple[str, str, str],
+            list[str],
+        ] = {}
+
+        for token in _DOTTED_STATIC_FIELD_RE.finditer(constructor_code):
+            owner = token.group("owner")
+            field_name = token.group("field")
+            resolved = _resolve_shadowed_nested_static_field(
+                owner=owner,
+                field_name=field_name,
+                current_owner=current_owner,
+                readable_zip=readable_zip,
+                entries=entries,
+                class_cache=class_cache,
+            )
+            if resolved is None:
+                continue
+
+            nested_internal, shadow_owners = resolved
+            key = (nested_internal, field_name, owner)
+            source_counts[key] = source_counts.get(key, 0) + 1
+            shadow_owners_by_key[key] = shadow_owners
+            source_occurrences.setdefault(key, []).append(
+                (
+                    match.start() + token.start(),
+                    match.start() + token.end(),
+                    "((" + owner + ")null)." + field_name,
+                )
+            )
+
+        if not source_counts:
+            continue
+
+        candidates: list[dict[str, Any]] = []
+        source_arity = _source_parameter_count(match.group("params"))
+        for method in profile.get("methods", []):
+            if method.get("name") != "<init>":
+                continue
+            descriptor = str(method.get("descriptor", ""))
+            if _descriptor_parameter_count(descriptor) != source_arity:
+                continue
+            parameter_match = _source_parameters_match_descriptor(
+                match.group("params"),
+                descriptor,
+                current_package=current_owner.rpartition("/")[0],
+            )
+            if parameter_match is False:
+                continue
+
+            byte_counts: dict[tuple[str, str, str], int] = {}
+            for access in method.get("field_accesses", []):
+                if access.get("operation") not in {"getstatic", "putstatic"}:
+                    continue
+                for key in source_counts:
+                    nested_internal, field_name, _owner = key
+                    if (
+                        str(access.get("owner", "")) == nested_internal
+                        and str(access.get("name", "")) == field_name
+                    ):
+                        byte_counts[key] = byte_counts.get(key, 0) + 1
+
+            if all(
+                byte_counts.get(key, 0) == count
+                for key, count in source_counts.items()
+            ):
+                candidates.append(method)
+
+        if len(candidates) != 1:
+            continue
+
+        exact_method = candidates[0]
+        constructor_edits = [
+            edit
+            for key in source_counts
+            for edit in source_occurrences[key]
+        ]
+        edits.extend(constructor_edits)
+
+        actions.append(
+            {
+                "kind": (
+                    "shadowed_nested_static_field_owner_type_context"
+                ),
+                "source_path": rel,
+                "method_name": "<init>",
+                "method_descriptor": exact_method["descriptor"],
+                "nested_owners": sorted(
+                    {key[0] for key in source_counts}
+                ),
+                "shadow_declaring_owners": sorted(
+                    {
+                        shadow_owner
+                        for key in source_counts
+                        for shadow_owner in shadow_owners_by_key[key]
+                    }
+                ),
+                "field_access_counts": {
+                    nested + "." + field: count
+                    for (nested, field, _owner), count in sorted(
+                        source_counts.items()
+                    )
+                },
+                "replacement_count": sum(source_counts.values()),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_nested_type_hidden_by_enclosing_hierarchy_field"
+                    ),
+                    "strategy": (
+                        "exact_constructor_descriptor_static_field_type_context_qualification"
+                    ),
+                },
+            }
+        )
+
     if not edits:
         return []
 
@@ -1948,6 +2086,245 @@ def _normalize_imported_parameter_types_shadowed_by_same_package(
     path.write_text(text, encoding="utf-8")
     return actions
 
+
+def _normalize_imported_static_field_owners_shadowed_by_values(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Force imported static-field owners through type context in <clinit>.
+
+    Procyon may emit ImportedType.FIELD inside a class-level static
+    initializer even when the current class hierarchy exposes a non-static
+    field named ImportedType. In expression context javac then binds the
+    simple owner to the value instead of the imported type.
+
+    Rewrite only explicit single-type imports whose owner/field accesses are
+    proven one-for-one by the exact readable <clinit> bytecode.
+    """
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError:
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    imports: dict[str, str] = {}
+    duplicates: set[str] = set()
+    for import_match in _SINGLE_TYPE_IMPORT_RE.finditer(text):
+        dotted = import_match.group("name")
+        simple = dotted.rsplit(".", 1)[-1]
+        internal = dotted.replace(".", "/")
+        previous = imports.get(simple)
+        if previous is not None and previous != internal:
+            duplicates.add(simple)
+        else:
+            imports[simple] = internal
+    for simple in duplicates:
+        imports.pop(simple, None)
+    if not imports:
+        return []
+
+    hierarchy = _read_readable_hierarchy(
+        readable_zip=readable_zip,
+        internal_name=current_owner,
+    )
+
+    shadowed: dict[str, tuple[str, list[str], Any]] = {}
+    for simple, imported_internal in sorted(imports.items()):
+        shadow_owners: list[str] = []
+        for owner, parsed in hierarchy:
+            for field in parsed.fields:
+                if (
+                    str(field.get("name", "")) == simple
+                    and not (int(field.get("access", 0)) & 0x0008)
+                    and _field_visible_from(
+                        declaring_owner=owner,
+                        current_owner=current_owner,
+                        access=int(field.get("access", 0)),
+                    )
+                ):
+                    shadow_owners.append(owner)
+
+        if not shadow_owners:
+            continue
+
+        try:
+            imported = parse_class(
+                readable_zip.read(imported_internal + ".class")
+            )
+        except (KeyError, ClassFormatError):
+            continue
+        if imported.name != imported_internal:
+            continue
+
+        shadowed[simple] = (
+            imported_internal,
+            sorted(set(shadow_owners)),
+            imported,
+        )
+
+    if not shadowed:
+        return []
+
+    exact_clinits = [
+        method
+        for method in profile.get("methods", [])
+        if method.get("name") == "<clinit>"
+        and method.get("descriptor") == "()V"
+    ]
+    if len(exact_clinits) != 1:
+        return []
+    exact_clinit = exact_clinits[0]
+
+    whole_code = _java_code_mask(text)
+    static_block_re = re.compile(r"(?m)^[ \t]*static[ \t]*\{")
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for block_match in static_block_re.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", block_match.start(), block_match.end()
+        )
+        if (
+            brace_start < 0
+            or _brace_depth_before(whole_code, brace_start) != 1
+        ):
+            continue
+        block_end = _matching_brace_end(whole_code, brace_start)
+        block_code = whole_code[block_match.start():block_end]
+
+        source_counts: dict[tuple[str, str, str], int] = {}
+        occurrences: list[tuple[int, int, str]] = []
+        shadow_owners_by_simple: dict[str, list[str]] = {}
+
+        for simple, (
+            imported_internal,
+            shadow_owners,
+            imported,
+        ) in sorted(shadowed.items()):
+            shadow_owners_by_simple[simple] = shadow_owners
+            for field in imported.fields:
+                field_name = str(field.get("name", ""))
+                access = int(field.get("access", 0))
+                if (
+                    not (access & 0x0008)
+                    or not _is_java_identifier(field_name)
+                    or not _field_visible_from(
+                        declaring_owner=imported_internal,
+                        current_owner=current_owner,
+                        access=access,
+                    )
+                ):
+                    continue
+
+                token = re.compile(
+                    r"(?<![A-Za-z0-9_$.])"
+                    + re.escape(simple)
+                    + r"\."
+                    + re.escape(field_name)
+                    + r"\b(?!\s*\()"
+                )
+                hits = list(token.finditer(block_code))
+                if not hits:
+                    continue
+
+                key = (imported_internal, field_name, simple)
+                source_counts[key] = len(hits)
+                qualified = imported_internal.replace("/", ".")
+                for hit in hits:
+                    occurrences.append(
+                        (
+                            block_match.start() + hit.start(),
+                            block_match.start() + hit.end(),
+                            "((" + qualified + ")null)." + field_name,
+                        )
+                    )
+
+        if not source_counts:
+            continue
+
+        byte_counts: dict[tuple[str, str, str], int] = {}
+        for access in exact_clinit.get("field_accesses", []):
+            if access.get("operation") not in {"getstatic", "putstatic"}:
+                continue
+            for key in source_counts:
+                imported_internal, field_name, _simple = key
+                if (
+                    str(access.get("owner", "")) == imported_internal
+                    and str(access.get("name", "")) == field_name
+                ):
+                    byte_counts[key] = byte_counts.get(key, 0) + 1
+
+        if not all(
+            byte_counts.get(key, 0) == count
+            for key, count in source_counts.items()
+        ):
+            continue
+
+        edits.extend(occurrences)
+        actions.append(
+            {
+                "kind": (
+                    "shadowed_imported_static_field_owner_type_context"
+                ),
+                "source_path": rel,
+                "method_name": "<clinit>",
+                "method_descriptor": "()V",
+                "imported_owners": sorted(
+                    {key[0] for key in source_counts}
+                ),
+                "shadow_declaring_owners": sorted(
+                    {
+                        owner
+                        for _imported, _field, simple in source_counts
+                        for owner in shadow_owners_by_simple[simple]
+                    }
+                ),
+                "field_access_counts": {
+                    imported + "." + field: count
+                    for (imported, field, _simple), count in sorted(
+                        source_counts.items()
+                    )
+                },
+                "replacement_count": sum(source_counts.values()),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_imported_type_hidden_by_visible_value_in_static_initializer"
+                    ),
+                    "strategy": (
+                        "exact_clinit_static_field_type_context_qualification"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping imported-owner type-context edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
 def normalize_procyon_source(
     source_root: Path,
     readable_jar: Path,
@@ -2009,6 +2386,13 @@ def normalize_procyon_source(
                 )
                 actions.extend(
                     _normalize_imported_parameter_types_shadowed_by_same_package(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
+                    _normalize_imported_static_field_owners_shadowed_by_values(
                         source_root=source_root,
                         path=path,
                         readable_zip=z,
@@ -2094,6 +2478,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "imported_parameter_type_shadowed_by_same_package"
+        ),
+        "shadowed_imported_static_field_block_count": sum(
+            action["kind"]
+            == "shadowed_imported_static_field_owner_type_context"
+            for action in actions
+        ),
+        "shadowed_imported_static_field_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "shadowed_imported_static_field_owner_type_context"
         ),
         "java_file_count": after_count,
         "source_bytes_before": before_bytes,
