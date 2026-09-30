@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind":"class","owner":"rs/b","name":null,"descriptor":null},
+      "proposed_name": "RSCanvas",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_canvas_shape","detail":"Exact v308 rs/b extends java.awt.Canvas, stores one delegated Component, and forwards both update(Graphics) and paint(Graphics) directly to that component."},
+        {"family":"historical_source_identity","detail":"Historical refactored RuneScape clients contain the same wrapper class as RSCanvas: a Canvas holding a delegated Component and forwarding paint/update to it."},
+        {"family":"spawnpk_extensions","detail":"SpawnPK v308 extends the classic wrapper with focus suppression/requestFocusInWindow behavior and client-aware setSize handling, but retains the defining RSCanvas delegation contract."},
+        {"family":"adjacent_class_family","detail":"Sibling rs/b/a is R407 MouseDetection, placing rs/b inside the classic low-level client shell/input utility cluster rather than a modern plugin/UI namespace."}
+      ],
+      "note": "Historical RuneScape source identity recovered from exact structural/behavioral match. SpawnPK-specific focus and resize extensions are retained as implementation drift, not a reason to rename the class."
+    }
+  ],
+  "conflicts": []
+}
