@@ -1,0 +1,16 @@
+{
+  "schema_version":1,"kind":"semantic_candidate_set","canonical":false,
+  "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[{
+    "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE",
+    "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target":{"kind":"class","owner":"rs/gui/L","name":null,"descriptor":null},
+    "proposed_name":"ClientSidebarTabChangeListener","confidence":0.999,
+    "evidence":[
+      {"family":"exact_parent_registration","detail":"R145 ClientSidebarPanel constructs rs/gui/L with itself and installs it directly on the panel's live JTabbedPane through addChangeListener."},
+      {"family":"exact_change_contract","detail":"stateChanged casts the event source to JTabbedPane, reads the selected tab index, and invokes the Launcher refresh/update path; it owns no unrelated state or second event role."}
+    ],
+    "note":"Exact-v308 ChangeListener bound specifically to ClientSidebarPanel tab selection changes."
+  }],
+  "conflicts":[]
+}
