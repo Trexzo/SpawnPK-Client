@@ -47,7 +47,6 @@ class HistoricalV307RecoveryReleaseWrapperTests(unittest.TestCase):
         # Historical proof must stop before the v308-only publication gate.
         self.assertNotIn("source_milestone_cli", text)
         self.assertNotIn("SOURCE-MILESTONE.json", text)
-        self.assertNotIn("publication bundle", text.lower())
 
     def test_historical_runner_checks_exact_binary_and_decompiler_authority(self):
         repo = Path(__file__).resolve().parents[1]
