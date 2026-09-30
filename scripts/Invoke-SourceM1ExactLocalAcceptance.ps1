@@ -506,7 +506,13 @@ $ReleaseExit = $LASTEXITCODE
 if ($ReleaseExit -ne 0) {
     $RunPath = Join-Path $ReleaseDir "release-run.json"
     if (Test-Path -LiteralPath $RunPath -PathType Leaf) {
-        $Run = Get-Content -LiteralPath $RunPath -Raw | ConvertFrom-Json
+        $Run = Get-JsonProjection `
+    -Path $RunPath `
+    -Fields @{
+        terminal_stage = "/terminal_stage"
+        status = "/status"
+        run_id = "/run_id"
+    }
         Write-Host ""
         Write-Host "SPK_SOURCE_M1_EXACT_LOCAL_BLOCKED" -ForegroundColor Yellow
         Write-Host "terminal_stage=$($Run.terminal_stage)"
@@ -514,18 +520,31 @@ if ($ReleaseExit -ne 0) {
         Write-Host "run_id=$($Run.run_id)"
         $CleanPath = Join-Path $ReleaseDir "rebuild\clean-rebuild.json"
         if (Test-Path -LiteralPath $CleanPath -PathType Leaf) {
-            $CleanDoc = Get-Content -LiteralPath $CleanPath -Raw | ConvertFrom-Json
+            $CleanDoc = Get-JsonProjection `
+                -Path $CleanPath `
+                -Fields @{
+                    rebuild_id = "/rebuild_id"
+                    status = "/status"
+                    generated_project_classes = "/project_classes/generated_count"
+                    expected_project_classes = "/project_classes/expected_count"
+                    project_binary_fallback_count = "/project_classes/binary_fallback_count"
+                } `
+                -OptionalFields @{
+                    javac_total_errors = "/compiler/diagnostic_classification/summary/total_errors"
+                    javac_affected_files = "/compiler/diagnostic_classification/summary/affected_files"
+                    javac_cannot_find_symbol = "/compiler/diagnostic_classification/summary/cannot_find_symbol/count"
+                    javac_frontier_id = "/compiler/diagnostic_classification/frontier_id"
+                }
             Write-Host "clean_rebuild_id=$($CleanDoc.rebuild_id)"
             Write-Host "clean_status=$($CleanDoc.status)"
-            Write-Host "generated_project_classes=$($CleanDoc.project_classes.generated_count)"
-            Write-Host "expected_project_classes=$($CleanDoc.project_classes.expected_count)"
-            Write-Host "project_binary_fallback_count=$($CleanDoc.project_classes.binary_fallback_count)"
-            if ($null -ne $CleanDoc.compiler.diagnostic_classification) {
-                $Summary = $CleanDoc.compiler.diagnostic_classification.summary
-                Write-Host "javac_total_errors=$($Summary.total_errors)"
-                Write-Host "javac_affected_files=$($Summary.affected_files)"
-                Write-Host "javac_cannot_find_symbol=$($Summary.cannot_find_symbol.count)"
-                Write-Host "javac_frontier_id=$($CleanDoc.compiler.diagnostic_classification.frontier_id)"
+            Write-Host "generated_project_classes=$($CleanDoc.generated_project_classes)"
+            Write-Host "expected_project_classes=$($CleanDoc.expected_project_classes)"
+            Write-Host "project_binary_fallback_count=$($CleanDoc.project_binary_fallback_count)"
+            if ($null -ne $CleanDoc.javac_frontier_id) {
+                Write-Host "javac_total_errors=$($CleanDoc.javac_total_errors)"
+                Write-Host "javac_affected_files=$($CleanDoc.javac_affected_files)"
+                Write-Host "javac_cannot_find_symbol=$($CleanDoc.javac_cannot_find_symbol)"
+                Write-Host "javac_frontier_id=$($CleanDoc.javac_frontier_id)"
             }
         }
         if (Test-Path -LiteralPath $PrivateDiagnostic -PathType Leaf) {
