@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_56D88538BCF98F6D16C2",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_37FD54B700B507B53128",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000041",
+      "owner_logical_id": "CLIENT_CLASS_000041",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner":"rs/N","name":null,"descriptor":null},
+      "proposed_name": "SpawnObjectNode",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_node_shape","detail":"rs/N extends the recovered Node base and is stored in Client's dedicated Node list. Its constructor initializes one object-id field to -1, matching an empty/original-object sentinel."},
+        {"family":"exact_scene_lookup_state","detail":"Client resolves the record's plane/x/y plus object-category selector through the recovered Scene API, reads the current scene object tag/config and stores the existing object id, shape and orientation back into the record."},
+        {"family":"exact_spawn_countdowns","detail":"The live client loop decrements two independent countdown fields. When each reaches zero it validates the stored/replacement object definition and invokes the scene-object update routine with the record's coordinates, category, object id, shape and orientation, removing the Node after completion."},
+        {"family":"exact_enqueue_contract","detail":"The client update/enqueue path searches the list for an existing record with the same plane/x/y/category, creates rs/N when absent, captures the previous scene state, then writes replacement object id/orientation/shape and lifetime/delay values into the record."},
+        {"family":"historical_317_source_identity","detail":"Historical 317 client sources expose an exact structural match named SpawnObjectNode: a Node subclass with the same constructor default of -1 and the same queued spawned-object processing pattern. Historical naming is corroborative; exact-v308 behavior is primary authority."}
+      ],
+      "note": "Source-proven historical identity strongly corroborated by exact-v308 scene lookup, replacement state, two countdowns and Node-list lifecycle."
+    }
+  ],
+  "unresolved": []
+}
