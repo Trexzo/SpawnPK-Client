@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/O",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherTitleBarControlsPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_title_pane_registration",
+          "detail": "Launcher creates rs/gui/O and sets client property 'substancelaf.internal.titlePane.extraComponentKind' to Substance ExtraComponentKind.TRAILING before inserting it into the live Substance title pane."
+        },
+        {
+          "family": "exact_control_ownership",
+          "detail": "Launcher adds its small 23x22 side-panel control button to this panel; the panel contains no gameplay content or unrelated state."
+        },
+        {
+          "family": "exact_layout_pair",
+          "detail": "The panel installs rs/gui/P as its sole custom LayoutManager2, forming one dedicated title-bar-controls component family."
+        }
+      ],
+      "note": "Exact-v308 trailing launcher title-pane control panel."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/P",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherTitleBarControlsLayout",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_panel_ownership",
+          "detail": "LauncherTitleBarControlsPanel constructs this LayoutManager2 in its constructor and no other component owns it."
+        },
+        {
+          "family": "exact_horizontal_control_layout",
+          "detail": "preferred/minimum/maximum width is componentCount*27 with height 23; layoutContainer places children left-to-right in 23-pixel slots with 4-pixel leading spacing and vertical centering."
+        }
+      ],
+      "note": "Exact-v308 layout manager for the trailing launcher title-bar controls panel."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/A",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherTitleBarControlsPositioningLayout",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_title_pane_wrapper",
+          "detail": "Launcher wraps the Substance title-pane component's existing LayoutManager with this class, retaining the original manager and the title-pane JComponent."
+        },
+        {
+          "family": "exact_delegate_then_position",
+          "detail": "layoutContainer first delegates normal layout, then measures LauncherTitleBarControlsPanel preferred width and sets that panel's bounds at titlePaneWidth - 75 - controlsWidth, y=0, full title-pane height."
+        },
+        {
+          "family": "exact_control_strip_join",
+          "detail": "The only extra component it repositions is the same trailing rs/gui/O panel explicitly registered by Launcher as the Substance title-pane trailing component."
+        }
+      ],
+      "note": "Exact-v308 layout wrapper that positions the launcher trailing title-bar controls after normal Substance title-pane layout."
+    }
+  ],
+  "conflicts": []
+}
