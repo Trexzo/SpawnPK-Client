@@ -333,9 +333,13 @@ def _index_source_units(
         raise CrossVersionSourceDeltaError(
             f"{label}: class plan digest does not match recovered source authority"
         )
+    collision_base_readable_sha = str(
+        recovered_manifest.get("base_readable_jar_sha256")
+        or readable_sha
+    ).lower()
     collision_remaps = _collision_targets(
         collision_plan,
-        readable_jar_sha256=readable_sha,
+        readable_jar_sha256=collision_base_readable_sha,
         label=f"{label}_collision_plan",
     )
     expected_collision_plan_id = recovered_manifest.get(
