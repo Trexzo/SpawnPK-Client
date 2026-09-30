@@ -156,11 +156,72 @@ def _tree_sha(root: Path) -> str:
     return digest
 
 
+def _collision_targets(
+    plan: dict[str, Any] | None,
+    *,
+    readable_jar_sha256: str,
+    label: str,
+) -> dict[str, str]:
+    if plan is None:
+        return {}
+    _require_doc(
+        plan,
+        kind="class_package_namespace_collision_plan",
+        label=label,
+    )
+    if plan.get("identifiers_included") is not True:
+        raise CrossVersionSourceDeltaError(
+            f"{label}: identifier-bearing private collision plan required"
+        )
+    if (
+        str(plan.get("readable_jar_sha256") or "").lower()
+        != readable_jar_sha256.lower()
+    ):
+        raise CrossVersionSourceDeltaError(
+            f"{label}: readable_jar_sha256 does not match release"
+        )
+    plan_id = plan.get("plan_id")
+    if not isinstance(plan_id, str) or not plan_id.startswith("JNSPLAN_"):
+        raise CrossVersionSourceDeltaError(
+            f"{label}: invalid collision plan_id"
+        )
+
+    out: dict[str, str] = {}
+    targets: set[str] = set()
+    for row in plan.get("remaps", []):
+        if not isinstance(row, dict):
+            raise CrossVersionSourceDeltaError(
+                f"{label}: remap rows must be objects"
+            )
+        old = row.get("old_internal_name")
+        new = row.get("new_internal_name")
+        if not isinstance(old, str) or not old:
+            raise CrossVersionSourceDeltaError(
+                f"{label}: remap lacks old_internal_name"
+            )
+        if not isinstance(new, str) or not new:
+            raise CrossVersionSourceDeltaError(
+                f"{label}: remap lacks new_internal_name"
+            )
+        if old in out and out[old] != new:
+            raise CrossVersionSourceDeltaError(
+                f"{label}: conflicting collision remap for {old}"
+            )
+        if new in targets:
+            raise CrossVersionSourceDeltaError(
+                f"{label}: duplicate collision target {new}"
+            )
+        out[old] = new
+        targets.add(new)
+    return out
+
+
 def _index_source_units(
     *,
     release: dict[str, Any],
     class_lineage: dict[str, Any],
     class_plan: dict[str, Any],
+    collision_plan: dict[str, Any] | None,
     source_root: Path,
     label: str,
 ) -> dict[str, Any]:
@@ -179,7 +240,15 @@ def _index_source_units(
     expected_tree = str(
         release.get("final_source_tree_sha256") or ""
     ).lower()
-    if not build_id or len(authority_sha) != 64 or len(expected_tree) != 64:
+    readable_sha = str(
+        release.get("readable_jar_sha256") or ""
+    ).lower()
+    if (
+        not build_id
+        or len(authority_sha) != 64
+        or len(expected_tree) != 64
+        or len(readable_sha) != 64
+    ):
         raise CrossVersionSourceDeltaError(
             f"{label}_release: incomplete build/source authority"
         )
@@ -209,6 +278,11 @@ def _index_source_units(
         authority_sha256=authority_sha,
         label=f"{label}_class_plan",
     )
+    collision_remaps = _collision_targets(
+        collision_plan,
+        readable_jar_sha256=readable_sha,
+        label=f"{label}_collision_plan",
+    )
 
     units: dict[str, dict[str, Any]] = {}
     expected_paths: set[str] = set()
@@ -233,7 +307,11 @@ def _index_source_units(
         if "$" in source_internal.rsplit("/", 1)[-1]:
             continue
 
-        effective_internal = remaps.get(logical_id, source_internal)
+        semantic_internal = remaps.get(logical_id, source_internal)
+        effective_internal = collision_remaps.get(
+            semantic_internal,
+            semantic_internal,
+        )
         rel = effective_internal + ".java"
         if rel in expected_paths:
             raise CrossVersionSourceDeltaError(
@@ -251,6 +329,7 @@ def _index_source_units(
         units[logical_id] = {
             "logical_id": logical_id,
             "source_internal_name": source_internal,
+            "semantic_internal_name": semantic_internal,
             "effective_internal_name": effective_internal,
             "source_path": rel,
             "source_sha256": hashlib.sha256(data).hexdigest(),
@@ -276,6 +355,12 @@ def _index_source_units(
         "build_id": build_id,
         "authority_sha256": authority_sha,
         "release_id": release.get("release_id"),
+        "readable_jar_sha256": readable_sha,
+        "collision_plan_id": (
+            collision_plan.get("plan_id")
+            if collision_plan is not None
+            else None
+        ),
         "source_tree_sha256": actual_tree,
         "unit_count": len(units),
         "units": units,
@@ -290,6 +375,9 @@ def build_cross_version_source_delta(
     new_class_plan: dict[str, Any],
     old_source_root: Path,
     new_source_root: Path,
+    *,
+    old_collision_plan: dict[str, Any] | None = None,
+    new_collision_plan: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Compare independently recovered source trees by stable logical class ID."""
     validate_lineage(class_lineage)
@@ -298,6 +386,7 @@ def build_cross_version_source_delta(
         release=old_release,
         class_lineage=class_lineage,
         class_plan=old_class_plan,
+        collision_plan=old_collision_plan,
         source_root=old_source_root,
         label="old",
     )
@@ -305,6 +394,7 @@ def build_cross_version_source_delta(
         release=new_release,
         class_lineage=class_lineage,
         class_plan=new_class_plan,
+        collision_plan=new_collision_plan,
         source_root=new_source_root,
         label="new",
     )
@@ -368,6 +458,8 @@ def build_cross_version_source_delta(
         "new_release_id": new["release_id"],
         "old_source_tree_sha256": old["source_tree_sha256"],
         "new_source_tree_sha256": new["source_tree_sha256"],
+        "old_collision_plan_id": old["collision_plan_id"],
+        "new_collision_plan_id": new["collision_plan_id"],
         "summary": summary,
         "old_only": old_only,
         "new_only": new_only,
