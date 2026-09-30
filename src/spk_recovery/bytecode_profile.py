@@ -17,6 +17,13 @@ _FIELD_OPS = {
     0xB5: "putfield",
 }
 
+_INVOKE_OPS = {
+    0xB6: "invokevirtual",
+    0xB7: "invokespecial",
+    0xB8: "invokestatic",
+    0xB9: "invokeinterface",
+}
+
 _MEMBER_REF_KINDS = {
     9: "field",
     10: "method",
@@ -207,6 +214,46 @@ def _field_accesses(
     return result
 
 
+def _method_invocations(
+    code: bytes,
+    cp: list[Any],
+) -> list[dict[str, Any]]:
+    result: list[dict[str, Any]] = []
+    offset = 0
+    while offset < len(code):
+        opcode = code[offset]
+        if opcode in _INVOKE_OPS:
+            if offset + 3 > len(code):
+                raise BytecodeProfileError(
+                    "truncated method invocation"
+                )
+            cp_index = struct.unpack_from(
+                ">H",
+                code,
+                offset + 1,
+            )[0]
+            owner, name, descriptor = _member_ref(
+                cp,
+                cp_index,
+            )
+            result.append(
+                {
+                    "operation": _INVOKE_OPS[opcode],
+                    "owner": owner,
+                    "name": name,
+                    "descriptor": descriptor,
+                    "offset": offset,
+                }
+            )
+        length = _instruction_length(code, offset)
+        if length <= 0 or offset + length > len(code):
+            raise BytecodeProfileError(
+                f"invalid instruction length at {offset}"
+            )
+        offset += length
+    return result
+
+
 def _normalized_class_reference(name: str) -> str | None:
     if not name.startswith("["):
         return name
@@ -310,6 +357,7 @@ def profile_class_field_accesses(
         name = _utf8(cp, r.u2())
         descriptor = _utf8(cp, r.u2())
         accesses: list[dict[str, str]] = []
+        invocations: list[dict[str, Any]] = []
         code_length = None
         for _ in range(r.u2()):
             attr_name = _utf8(cp, r.u2())
@@ -323,6 +371,7 @@ def profile_class_field_accesses(
             code_length = cr.u4()
             code = cr.take(code_length)
             accesses = _field_accesses(code, cp)
+            invocations = _method_invocations(code, cp)
 
         methods.append(
             {
@@ -331,6 +380,7 @@ def profile_class_field_accesses(
                 "access": access,
                 "code_length": code_length,
                 "field_accesses": accesses,
+                "method_invocations": invocations,
             }
         )
 
