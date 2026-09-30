@@ -1,4 +1,4 @@
-# Chat 2 — exact-v308 terrain height noise R424
+# Chat 2 — R424 duplicate terrain-noise audit
 
 Exact client authority:
 
@@ -6,40 +6,33 @@ Exact client authority:
 
 ## Result
 
-- `rs/p` -> `CLIENT_CLASS_000739` -> `TerrainHeightNoise`
-- proposal: `SEMPROP_00D9935988755F54F41F`
-- review: `SEMREVIEW_50850EAD03B9D0DAA49B`
+R424 retains **no semantic proposal**.
 
-## Exact behavior
+The R424 investigation independently recovered:
 
-`rs/p` is a stateless static numeric helper. Its live external consumer is the terrain
-decode path in `rs/x`.
+- `rs/p`;
+- `CLIENT_CLASS_000739`;
+- a procedural base-terrain height-noise role.
 
-For plane 0, that path stores tile height as:
+Its exact evidence confirms:
 
-`-8 * rs/p.a(worldX + 932731, worldY + 556238)`
+- plane-0 terrain height generation consumed by `rs/x`;
+- three noise scales (4 / 2 / 1);
+- deterministic coordinate hashing and smoothed/interpolated noise;
+- final 10..60 clamp.
 
-For higher planes the decoder instead derives the tile from the preceding plane by subtracting
-240, separating `rs/p` specifically as the base-plane terrain-height source.
+However, R104 already owns this exact class and stable ID:
 
-The public two-coordinate helper combines three exact noise scales:
+- `rs/p` -> `CLIENT_CLASS_000739` -> `PerlinNoise`;
+- proposal: `SEMPROP_664562B273117DBCA98E`;
+- review: `SEMREVIEW_7E5DE83AA771BC1BB53C`.
 
-- scale 4;
-- scale 2 with half weighting;
-- scale 1 with quarter weighting.
+R104 is also stronger naming authority because it records the same exact-v308 algorithm together
+with matching historical/deobfuscated `PerlinNoise` identity and the classic ObjectManager
+terrain-height consumer.
 
-The combined value is transformed through `35 + 0.3 * value` and clamped to `10..60`.
+Therefore the former R424 `TerrainHeightNoise` candidate/review/test are removed. The R424
+work is retained only as independent corroboration for R104 and as supporting context for
+R425 ObjectManager.
 
-Supporting methods implement deterministic coordinate hashing, neighbor-smoothed noise,
-cosine-interpolated sampling and 2048-entry trigonometric lookup initialization.
-
-## Boundary
-
-The proposal deliberately names only the numeric terrain-height noise role. `rs/p` owns no
-scene-object placement, tile storage, archive decoding or rendering state.
-
-`TerrainHeightNoise` is a descriptive exact-v308 recovery; no verbatim stripped developer
-identifier is claimed.
-
-R424 remains non-canonical Chat 2 semantic research only. No acceptance or source rewrite is
-performed.
+R424 is a correction/audit batch only. Chat 2 performs no canonical acceptance or source rewrite.
