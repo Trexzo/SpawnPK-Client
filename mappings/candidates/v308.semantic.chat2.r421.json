@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/C",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RSImageProducer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_surface_shape",
+          "detail": "Exact v308 rs/l/C has constructor (int,int,Component), owns an int pixel array, float depth array, BufferedImage, Component and Rectangle, and exposes image-consumer/draw/update methods matching the classic client image-producer surface."
+        },
+        {
+          "family": "historical_source_fingerprint",
+          "detail": "Historical 317 RSImageProducer sources expose the same (int,int,Component) construction role, pixel buffer, AWT image producer/observer surface and drawing lifecycle."
+        },
+        {
+          "family": "exact_client_consumers",
+          "detail": "Client and live UI/render paths hold rs/l/C instances as the AWT-backed frame/image surfaces; no unrelated semantic role is present."
+        }
+      ],
+      "note": "Historical source identity is corroborative; exact-v308 structure and live use are primary authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/E",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Rasterizer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_rasterizer_role",
+          "detail": "Exact v308 rs/l/E owns brightness/palette state, texture tables, scanline/triangle routines and depth-aware raster paths while reading rs/l/c pixel/clip state directly."
+        },
+        {
+          "family": "historical_source_fingerprint",
+          "detail": "Historical 317 Rasterizer sources expose the same brightness adjustment, texture/palette tables and triangle rasterization surface coupled to DrawingArea state."
+        },
+        {
+          "family": "exact_render_consumers",
+          "detail": "Client, scene/model renderers and drawing code reference rs/l/E as the shared 3D rasterization engine; no UI/widget-only role fits the class."
+        }
+      ],
+      "note": "Historical source identity is corroborative; exact-v308 structure and live use are primary authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/F",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Sprite",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_sprite_shape",
+          "detail": "Exact v308 rs/l/F owns Image plus int[] pixels, width/height/full-width/full-height offsets, PixelGrabber-based constructors, archive/image constructors and a large family of clipped/alpha/rotated sprite draw operations."
+        },
+        {
+          "family": "historical_source_fingerprint",
+          "detail": "Historical 317 Sprite sources use the same int pixel buffer, width/height/offset state, PixelGrabber constructor and DrawingArea-backed draw routines."
+        },
+        {
+          "family": "exact_live_usage",
+          "detail": "rs/l/F is referenced throughout interfaces, overlays, scene/UI renderers and sprite utilities as the concrete 2D sprite image object."
+        }
+      ],
+      "note": "Historical source identity is corroborative; exact-v308 structure and live use are primary authority."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/K",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TextDrawingArea",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_font_shape",
+          "detail": "Exact v308 rs/l/K has constructor (boolean,String,rs/x/f), loads font glyph bytes plus index.dat, owns byte[][] glyph masks and glyph metric arrays, and exposes width measurement plus multiple string draw methods."
+        },
+        {
+          "family": "historical_source_fingerprint",
+          "detail": "Historical 317 TextDrawingArea sources have the same (boolean,String,StreamLoader) constructor, byte[][] glyph masks, metric arrays, Random state and text drawing API."
+        },
+        {
+          "family": "exact_live_usage",
+          "detail": "Client, interfaces and renderers reference rs/l/K as the bitmap-font/text drawing object; font resource names include hit_full/critical_full variants in exact v308."
+        }
+      ],
+      "note": "Historical source identity is corroborative; exact-v308 structure and live use are primary authority."
+    }
+  ],
+  "conflicts": []
+}
