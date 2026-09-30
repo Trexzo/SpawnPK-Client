@@ -546,8 +546,19 @@ if ($ReleaseExit -ne 0) {
                 Write-Host "javac_frontier_id=$($CleanDoc.javac_frontier_id)"
             }
         }
-        if (Test-Path -LiteralPath $PrivateDiagnostic -PathType Leaf) {
-            Write-Host "private_javac_diagnostic=$PrivateDiagnostic"
+    }
+    if (Test-Path -LiteralPath $PrivateDiagnostic -PathType Leaf) {
+        Write-Host "private_javac_diagnostic=$PrivateDiagnostic"
+        Write-Host ""
+        & py -3.13 -m spk_recovery.javac_frontier_summary_cli `
+            $PrivateDiagnostic `
+            --top 20
+        $PrivateSummaryExit = $LASTEXITCODE
+        if ($PrivateSummaryExit -ne 0) {
+            Write-Host (
+                "private_javac_summary_failed=" +
+                $PrivateSummaryExit
+            ) -ForegroundColor Yellow
         }
     }
     exit 3
