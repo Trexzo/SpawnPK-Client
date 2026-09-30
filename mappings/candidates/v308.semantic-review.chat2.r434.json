@@ -1,0 +1,20 @@
+{
+  "schema_version":1,"kind":"semantic_review_set","canonical":false,
+  "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","proposal_count":1,
+  "review_id":"SEMREVIEW_C015FA9C259CB75645A6",
+  "proposals":[{
+    "proposal_id":"SEMPROP_77FDBAE752FF8E5D392C","target_kind":"class",
+    "stable_id":"CLIENT_CLASS_000771","owner_logical_id":"CLIENT_CLASS_000771",
+    "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate":{"owner":"rs/r","name":null,"descriptor":null},
+    "proposed_name":"RewardContainerTooltipResolver","confidence":0.998,
+    "evidence":[
+      {"family":"exact_reward_name_catalog","detail":"The single public resolver matches dozens of exact presentation names including Donator/PvP/Exotic mystery boxes, Blood/Grand blood keys, bond caskets/keys, event caskets and seasonal packages."},
+      {"family":"exact_preview_item_sets","detail":"Each recognized name selects a hardcoded int[] of representative item-definition ids and may normalize/augment the tooltip label before presentation."},
+      {"family":"exact_tooltip_join","detail":"For a recognized container the resolver calls Client.a(int,int,String,int[]); that Client method constructs R207 TooltipContent, attaches the int[] through TooltipContent.a(int[]), then submits it to R207 TooltipOverlay."},
+      {"family":"exact_presentation_boundary","detail":"The method returns only handled/not-handled and never performs RNG, quantity selection, inventory mutation or server action. The item arrays are therefore client tooltip preview content, not authoritative reward tables."}
+    ],
+    "note":"Descriptive exact-v308 presentation name. Hardcoded preview item IDs must not be treated as authoritative reward probabilities or server loot definitions."
+  }],
+  "unresolved":[]
+}
