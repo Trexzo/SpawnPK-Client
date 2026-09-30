@@ -40,6 +40,8 @@ def main() -> int:
     parser.add_argument("new_class_plan", type=Path)
     parser.add_argument("old_source_root", type=Path)
     parser.add_argument("new_source_root", type=Path)
+    parser.add_argument("--old-collision-plan", type=Path, default=None)
+    parser.add_argument("--new-collision-plan", type=Path, default=None)
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
 
@@ -52,6 +54,16 @@ def main() -> int:
             _load(args.new_class_plan),
             args.old_source_root,
             args.new_source_root,
+            old_collision_plan=(
+                _load(args.old_collision_plan)
+                if args.old_collision_plan is not None
+                else None
+            ),
+            new_collision_plan=(
+                _load(args.new_collision_plan)
+                if args.new_collision_plan is not None
+                else None
+            ),
         )
         write_cross_version_source_delta(report, args.out)
     except CrossVersionSourceDeltaError as exc:
