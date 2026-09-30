@@ -1,0 +1,272 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 10,
+  "review_id": "SEMREVIEW_B01F73305AF0A905E3FF",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_0640B99E68AD12E93421",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000601",
+      "owner_logical_id": "CLIENT_CLASS_000601",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aZ",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WellOfGoodWillInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible text names 'Well of Good Will', 'Donate to well of goodwill' and server-wide progress/reward messaging."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this named feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface titles/actions; no server-side feature behavior is inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_1B7AC87DA5272CB44932",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000674",
+      "owner_logical_id": "CLIENT_CLASS_000674",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/u",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "UnclaimedRewardsCofferInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact title is 'Coffer of Unclaimed Rewards & Prizes' with deposit-to-bank/inventory actions and explanatory prize/reward text."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this named feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface titles/actions; no server-side feature behavior is inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_1FE18BC5615C50527884",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000665",
+      "owner_logical_id": "CLIENT_CLASS_000665",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodSlayerTaskInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible nouns include 'Blood Slayer', 'Choose a Task', task categories and reward-point labels."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this named feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface titles/actions; no server-side feature behavior is inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_318377C9DEB3E2F715FE",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000666",
+      "owner_logical_id": "CLIENT_CLASS_000666",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodcoreSynthesisInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact surface is titled 'Bloodcore Token Synthesis' and contains synthesis guide/shop/lottery/remove/synthesize controls."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this named feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface titles/actions; no server-side feature behavior is inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_443E4879BA5D234FA867",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000623",
+      "owner_logical_id": "CLIENT_CLASS_000623",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/as",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MarketplaceMainInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact title is 'SpawnPK Marketplace' with recent sales, item/player search, sell/listing/history actions."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this named feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface titles/actions; no server-side feature behavior is inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_6FA4F7AFBC7231032488",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000566",
+      "owner_logical_id": "CLIENT_CLASS_000566",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/T",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MonsterSpawnerInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact surface contains 'Monster Spawner', 'Monster Selections', NPC index, spawn/toggle and activation controls."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this named feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface titles/actions; no server-side feature behavior is inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_73F28BE72A9967178F86",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000599",
+      "owner_logical_id": "CLIENT_CLASS_000599",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aX",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WorldTournamentInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact title is 'SpawnPK World Tournaments' with enter/spectate/tournament shop/previous winners/next tournament controls."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this named feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface titles/actions; no server-side feature behavior is inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_7B77BDB6C583AFC8678A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000605",
+      "owner_logical_id": "CLIENT_CLASS_000605",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/ad",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemRepairCofferInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible title is 'Item repairing coffer' with stored gold/shards/repair scrolls and auto-repair toggles."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this named feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface titles/actions; no server-side feature behavior is inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_81C36B6886BA1E9C29DA",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000611",
+      "owner_logical_id": "CLIENT_CLASS_000611",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aj",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FeaturesToolsInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact heading is 'Features / Tools' and exposes vote, mail, donate, collection logs, drop/item searches, Discord and Forums shortcuts."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this named feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface titles/actions; no server-side feature behavior is inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_FD63D2218F0AE61AC4B7",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000662",
+      "owner_logical_id": "CLIENT_CLASS_000662",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodFountainInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact title is 'The Blood Fountain' with blood shard/diamond/pool stores, perk tree, diamond fuser and shard salvaging controls."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this named feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface titles/actions; no server-side feature behavior is inferred."
+    }
+  ],
+  "unresolved": []
+}
