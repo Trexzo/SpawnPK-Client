@@ -2101,6 +2101,283 @@ def _normalize_imported_parameter_types_shadowed_by_same_package(
     return actions
 
 
+
+def _normalize_same_package_static_field_owners_shadowed_by_values(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Force same-package static-field owners through type context.
+
+    Procyon may emit f.a inside a static method of class g when the current
+    hierarchy also exposes a visible non-static field named f. If package
+    rs/u contains a class rs/u/f, javac binds f to the value field rather
+    than the same-package type. Rewrite only when exact readable bytecode
+    proves the same-package static-field owner and one-for-one access count.
+    """
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError:
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+
+    current_package = current_owner.rpartition("/")[0]
+    if not current_package:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+
+    imported_simples: set[str] = set()
+    for import_match in _SINGLE_TYPE_IMPORT_RE.finditer(text):
+        dotted = import_match.group("name")
+        imported_simples.add(dotted.rsplit(".", 1)[-1])
+
+    hierarchy = _read_readable_hierarchy(
+        readable_zip=readable_zip,
+        internal_name=current_owner,
+    )
+
+    visible_shadows: dict[str, list[str]] = {}
+    for owner, parsed in hierarchy:
+        for field in parsed.fields:
+            simple = str(field.get("name", ""))
+            access = int(field.get("access", 0))
+            if (
+                not simple
+                or simple in imported_simples
+                or not _is_java_identifier(simple)
+                or (access & 0x0008)
+                or not _field_visible_from(
+                    declaring_owner=owner,
+                    current_owner=current_owner,
+                    access=access,
+                )
+            ):
+                continue
+            visible_shadows.setdefault(simple, []).append(owner)
+
+    shadowed: dict[str, tuple[str, list[str], Any]] = {}
+    for simple, shadow_owners in sorted(visible_shadows.items()):
+        same_package_internal = current_package + "/" + simple
+        if same_package_internal == current_owner:
+            continue
+        try:
+            same_package = parse_class(
+                readable_zip.read(same_package_internal + ".class")
+            )
+        except (KeyError, ClassFormatError):
+            continue
+        if same_package.name != same_package_internal:
+            continue
+
+        shadowed[simple] = (
+            same_package_internal,
+            sorted(set(shadow_owners)),
+            same_package,
+        )
+
+    if not shadowed:
+        return []
+
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(text):
+        brace_start = text.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+
+        header_code = whole_code[method_match.start():brace_start]
+        if re.search(r"\bstatic\b", header_code) is None:
+            continue
+
+        body_end = _matching_brace_end(text, brace_start)
+        method_text = text[method_match.start():body_end]
+        method_code = _java_code_mask(method_text)
+
+        source_counts: dict[tuple[str, str, str], int] = {}
+        occurrences: list[tuple[int, int, str]] = []
+        shadow_owners_by_simple: dict[str, list[str]] = {}
+
+        for simple, (
+            same_package_internal,
+            shadow_owners,
+            same_package,
+        ) in sorted(shadowed.items()):
+            parameter_shadow, local_shadow_spans = (
+                _same_name_value_shadow_spans(
+                    method_match=method_match,
+                    method_code=method_code,
+                    simple_name=simple,
+                )
+            )
+            if parameter_shadow:
+                continue
+
+            shadow_owners_by_simple[simple] = shadow_owners
+
+            for field in same_package.fields:
+                field_name = str(field.get("name", ""))
+                access = int(field.get("access", 0))
+                if (
+                    not (access & 0x0008)
+                    or not _is_java_identifier(field_name)
+                    or not _field_visible_from(
+                        declaring_owner=same_package_internal,
+                        current_owner=current_owner,
+                        access=access,
+                    )
+                ):
+                    continue
+
+                token = re.compile(
+                    r"(?<![A-Za-z0-9_$.])"
+                    + re.escape(simple)
+                    + r"\."
+                    + re.escape(field_name)
+                    + r"\b(?!\s*\()"
+                )
+                hits = [
+                    hit
+                    for hit in token.finditer(method_code)
+                    if not any(
+                        start <= hit.start() < end
+                        for start, end in local_shadow_spans
+                    )
+                ]
+                if not hits:
+                    continue
+
+                key = (
+                    same_package_internal,
+                    field_name,
+                    simple,
+                )
+                source_counts[key] = len(hits)
+                qualified = same_package_internal.replace("/", ".")
+                for hit in hits:
+                    occurrences.append(
+                        (
+                            method_match.start() + hit.start(),
+                            method_match.start() + hit.end(),
+                            "((" + qualified + ")null)." + field_name,
+                        )
+                    )
+
+        if not source_counts:
+            continue
+
+        candidates: list[dict[str, Any]] = []
+        source_arity = _source_parameter_count(
+            method_match.group("params")
+        )
+
+        for method in profile.get("methods", []):
+            if method.get("name") != method_match.group("name"):
+                continue
+            if not (int(method.get("access", 0)) & 0x0008):
+                continue
+
+            descriptor = str(method.get("descriptor", ""))
+            if _descriptor_parameter_count(descriptor) != source_arity:
+                continue
+
+            parameter_match = _source_parameters_match_descriptor(
+                method_match.group("params"),
+                descriptor,
+                current_package=current_package,
+            )
+            if parameter_match is False:
+                continue
+
+            byte_counts: dict[tuple[str, str, str], int] = {}
+            for access in method.get("field_accesses", []):
+                if access.get("operation") not in {"getstatic", "putstatic"}:
+                    continue
+                for key in source_counts:
+                    target_owner, field_name, _simple = key
+                    if (
+                        str(access.get("owner", "")) == target_owner
+                        and str(access.get("name", "")) == field_name
+                    ):
+                        byte_counts[key] = byte_counts.get(key, 0) + 1
+
+            if all(
+                byte_counts.get(key, 0) == count
+                for key, count in source_counts.items()
+            ):
+                candidates.append(method)
+
+        if len(candidates) != 1:
+            continue
+
+        exact_method = candidates[0]
+        edits.extend(occurrences)
+        actions.append(
+            {
+                "kind": (
+                    "shadowed_same_package_static_field_owner_type_context"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": exact_method["descriptor"],
+                "same_package_owners": sorted(
+                    {key[0] for key in source_counts}
+                ),
+                "shadow_declaring_owners": sorted(
+                    {
+                        owner
+                        for _target, _field, simple in source_counts
+                        for owner in shadow_owners_by_simple[simple]
+                    }
+                ),
+                "field_access_counts": {
+                    owner + "." + field: count
+                    for (owner, field, _simple), count in sorted(
+                        source_counts.items()
+                    )
+                },
+                "replacement_count": sum(source_counts.values()),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_same_package_type_hidden_by_visible_value_in_static_method"
+                    ),
+                    "strategy": (
+                        "exact_static_method_field_type_context_qualification"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping same-package owner type-context edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
 def _normalize_imported_static_field_owners_shadowed_by_values(
     *,
     source_root: Path,
@@ -2591,6 +2868,13 @@ def normalize_procyon_source(
                         readable_zip=z,
                     )
                 )
+                actions.extend(
+                    _normalize_same_package_static_field_owners_shadowed_by_values(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
     except zipfile.BadZipFile as exc:
         raise SourceNormalizationError(
             f"readable JAR is invalid: {readable_jar}"
@@ -2694,6 +2978,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "shadowed_imported_static_field_owner_type_context"
+        ),
+        "shadowed_same_package_static_field_method_count": sum(
+            action["kind"]
+            == "shadowed_same_package_static_field_owner_type_context"
+            for action in actions
+        ),
+        "shadowed_same_package_static_field_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "shadowed_same_package_static_field_owner_type_context"
         ),
         "java_file_count": after_count,
         "source_bytes_before": before_bytes,
