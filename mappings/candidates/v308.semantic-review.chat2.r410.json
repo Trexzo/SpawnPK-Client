@@ -1,0 +1,28 @@
+{
+  "schema_version":1,
+  "kind":"semantic_review_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count":1,
+  "review_id":"SEMREVIEW_1ABDCE274ED42667B0B0",
+  "proposals":[{
+    "proposal_id":"SEMPROP_213778F492F005BD153D",
+    "target_kind":"class",
+    "stable_id":"CLIENT_CLASS_000080",
+    "owner_logical_id":"CLIENT_CLASS_000080",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate":{"owner":"rs/c/a/a","name":null,"descriptor":null},
+    "proposed_name":"OldSchoolItemDefinitionOverrides",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_definition_mutation_table","detail":"Exact v308 rs/c/a/a contains a large ID-keyed mutation table operating only on rs/d/r definitions; it changes action arrays, model arrays and other presentation/definition fields for hundreds of concrete IDs."},
+      {"family":"exact_oldschool_mode_gate","detail":"The rs/d/r decode/finalize path invokes rs/c/a/a.a(definition,id) only when rs/d/r.E equals enum value OLDSCHOOL."},
+      {"family":"exact_bidirectional_dependency","detail":"jdeps shows the only project dependency pair is rs.c.a.a <-> rs.d.r: the override table depends on the definition type and the definition loader calls the table directly."},
+      {"family":"exact_item_definition_shape","detail":"The target rs/d/r definition owns item-style name/action/model state, item-ID lookup/caching and definition decode methods, fixing the override domain as item definitions rather than generic interface or object data."}
+    ],
+    "note":"Descriptive exact-v308 name for the OLDSCHOOL-mode item-definition mutation table. It does not claim a verbatim original developer class name."
+  }],
+  "unresolved":[]
+}
