@@ -1,0 +1,272 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 10,
+  "review_id": "SEMREVIEW_E224BA4614C6D7CAF372",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_11A248926D7384C1549F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000668",
+      "owner_logical_id": "CLIENT_CLASS_000668",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BossTeleportationNetworkInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible title is '@or1@Boss Teleportation Network' with boss list, description, stats, achievements and possible-drop presentation."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side feature semantics are inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_149BA3043732F26230E9",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000584",
+      "owner_logical_id": "CLIENT_CLASS_000584",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aI",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DonorPanelInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible titles include '@or1@Main Donor Panel' and '@or1@Donor options and features' with donor shops/zones/perks/donation actions."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side feature semantics are inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_4E5EB23CF0B90C4AB9EA",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000625",
+      "owner_logical_id": "CLIENT_CLASS_000625",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/au",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MarketplaceListingInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible title is 'SpawnPK Marketplace Listing' with currency, price, quantity and item-history controls."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side feature semantics are inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_5B428B874CDCC6B6CC6F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000614",
+      "owner_logical_id": "CLIENT_CLASS_000614",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/am",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WelcomeBackEventInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact surface says 'Welcome back to SpawnPK! Limited Time Event', shows a named seasonal event and next daily reward/login messaging."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side feature semantics are inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_7CFBCFB979D2523164CE",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000608",
+      "owner_logical_id": "CLIENT_CLASS_000608",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/ag",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemsKeptOnDeathInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible title is 'Items kept on death' with sections for items kept, lost and auto-kept plus red-skull/tradeability explanatory text."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side feature semantics are inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_7F794D5CA7E8A003BB5F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000675",
+      "owner_logical_id": "CLIENT_CLASS_000675",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/v",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CollectionLogInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible title is 'Collection Log' with collection selection, obtained count, kill count and completion reward presentation."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side feature semantics are inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_8AC614FC63B57FC9FE0E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000594",
+      "owner_logical_id": "CLIENT_CLASS_000594",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aS",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TaskScrollInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible surface contains 'Task Scroll Title', Task Information, Completion Progress, Potential Rewards and Collect/Track actions."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side feature semantics are inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_D7B95D18AD8E8752324F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000624",
+      "owner_logical_id": "CLIENT_CLASS_000624",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/at",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MarketplaceSearchResultsInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible title is 'SpawnPK Marketplace Search Results' with listing selection, paging, offer count, price and sort controls."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side feature semantics are inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_E2457EEEA7864BF0985E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000598",
+      "owner_logical_id": "CLIENT_CLASS_000598",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aW",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WorldTournamentLeaderboardInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible title is 'World Tournament Leaderboards' with Top Players, Top Clans, weekly/all-time toggles."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side feature semantics are inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_EAD08F14A9EF4A45BD3B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000561",
+      "owner_logical_id": "CLIENT_CLASS_000561",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/O",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ActiveEventsInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_visible_interface_noun",
+          "detail": "Exact visible actions are 'View Active Events' and 'View all events' with active tournament/event rows and timers."
+        },
+        {
+          "family": "exact_interface_builder_contract",
+          "detail": "The class extends the shared rs/n/c interface-builder base and its meaningful behavior is deterministic widget construction/layout for this exact visible feature surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 UI builder name from surviving interface title/actions; no server-side feature semantics are inferred."
+    }
+  ],
+  "unresolved": []
+}
