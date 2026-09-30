@@ -1,4 +1,6 @@
 import copy
+import hashlib
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -13,6 +15,17 @@ from spk_recovery.source_digest import source_tree_digest
 OLD_SHA = "1" * 64
 NEW_SHA = "2" * 64
 READABLE = "3" * 64
+
+
+def _digest(value):
+    return hashlib.sha256(
+        json.dumps(
+            value,
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=False,
+        ).encode("utf-8")
+    ).hexdigest()
 
 
 def _lineage():
@@ -171,19 +184,77 @@ def _plan(build, sha):
     }
 
 
-def _release(build, sha, root, release_id):
-    tree, _files, _bytes = source_tree_digest(root)
+def _collision(plan_id, *, readable=READABLE, remaps=None):
     return {
+        "schema_version": 1,
+        "kind": "class_package_namespace_collision_plan",
+        "plan_id": plan_id,
+        "collision_report_id": "JNSCOLLISION_TEST",
+        "readable_jar_sha256": readable,
+        "identifiers_included": True,
+        "remaps": list(remaps or []),
+    }
+
+
+def _authority_bundle(
+    build,
+    sha,
+    root,
+    release_id,
+    *,
+    plan=None,
+    collision_plan=None,
+):
+    plan = copy.deepcopy(plan or _plan(build, sha))
+    tree, _files, total_bytes = source_tree_digest(root)
+    workspace_id = "SRCWS_" + (
+        "A" * 20 if build == "v307" else "B" * 20
+    )
+    recovered = {
+        "schema_version": 1,
+        "kind": "recovered_source_workspace_manifest",
+        "workspace_id": workspace_id,
+        "build_id": build,
+        "source_authority_sha256": sha,
+        "readable_jar_sha256": READABLE,
+        "namespace_id": "SEMNS_TEST",
+        "class_plan_digest": _digest(plan),
+        "member_plan_digest": "4" * 64,
+        "engine": "procyon",
+        "decompiler_sha256": "5" * 64,
+        "source_tree_sha256": tree,
+        "java_file_count": len(list(root.rglob("*.java"))),
+        "source_bytes": total_bytes,
+        "source_directory": "src",
+    }
+    if collision_plan is not None:
+        recovered.update(
+            {
+                "collision_plan_id": collision_plan["plan_id"],
+                "collision_transform_id": "JNSREWRITE_" + "C" * 20,
+                "collision_report_id": collision_plan[
+                    "collision_report_id"
+                ],
+                "base_readable_jar_sha256": READABLE,
+            }
+        )
+
+    release = {
         "schema_version": 1,
         "kind": "recovery_release_manifest",
         "release_id": release_id,
         "build_id": build,
         "authority_sha256": sha,
         "readable_jar_sha256": READABLE,
+        "recovered_workspace_id": workspace_id,
         "final_source_tree_sha256": tree,
         "ready_for_release": True,
         "blockers": [],
+        "authority_pins": {
+            "recovered_source_manifest_sha256": _digest(recovered),
+        },
     }
+    return release, recovered, plan
 
 
 class CrossVersionSourceDeltaTests(unittest.TestCase):
@@ -193,7 +264,6 @@ class CrossVersionSourceDeltaTests(unittest.TestCase):
         (old / "rs").mkdir(parents=True)
         (new / "rs").mkdir(parents=True)
 
-        # Logical class 1 moves A -> B but canonical text happens to stay equal.
         (old / "rs" / "A.java").write_text(
             "package rs; class Shared {}\n",
             encoding="utf-8",
@@ -202,8 +272,6 @@ class CrossVersionSourceDeltaTests(unittest.TestCase):
             "package rs; class Shared {}\n",
             encoding="utf-8",
         )
-
-        # Logical class 2 stays at C and has one source-level delta.
         (old / "rs" / "C.java").write_text(
             "package rs; class C { static final int BUILD = 307; }\n",
             encoding="utf-8",
@@ -214,18 +282,37 @@ class CrossVersionSourceDeltaTests(unittest.TestCase):
         )
         return old, new
 
+    def _args(self, old, new, *, old_plan=None, new_plan=None):
+        old_release, old_recovered, old_plan = _authority_bundle(
+            "v307",
+            OLD_SHA,
+            old,
+            "RECOVERY_OLD",
+            plan=old_plan,
+        )
+        new_release, new_recovered, new_plan = _authority_bundle(
+            "v308",
+            NEW_SHA,
+            new,
+            "RECOVERY_NEW",
+            plan=new_plan,
+        )
+        return (
+            old_release,
+            new_release,
+            old_recovered,
+            new_recovered,
+            _lineage(),
+            old_plan,
+            new_plan,
+            old,
+            new,
+        )
+
     def test_logical_source_delta_is_deterministic(self):
         with tempfile.TemporaryDirectory() as tmp:
             old, new = self._roots(Path(tmp))
-            args = (
-                _release("v307", OLD_SHA, old, "RECOVERY_OLD"),
-                _release("v308", NEW_SHA, new, "RECOVERY_NEW"),
-                _lineage(),
-                _plan("v307", OLD_SHA),
-                _plan("v308", NEW_SHA),
-                old,
-                new,
-            )
+            args = self._args(old, new)
             a = build_cross_version_source_delta(*args)
             b = build_cross_version_source_delta(*copy.deepcopy(args))
 
@@ -260,13 +347,7 @@ class CrossVersionSourceDeltaTests(unittest.TestCase):
                 b"package rs; class Shared {}\r\n"
             )
             report = build_cross_version_source_delta(
-                _release("v307", OLD_SHA, old, "RECOVERY_OLD"),
-                _release("v308", NEW_SHA, new, "RECOVERY_NEW"),
-                _lineage(),
-                _plan("v307", OLD_SHA),
-                _plan("v308", NEW_SHA),
-                old,
-                new,
+                *self._args(old, new)
             )
             self.assertIn(
                 "CLIENT_CLASS_000001",
@@ -276,57 +357,33 @@ class CrossVersionSourceDeltaTests(unittest.TestCase):
     def test_release_tree_hash_drift_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             old, new = self._roots(Path(tmp))
-            old_release = _release(
-                "v307", OLD_SHA, old, "RECOVERY_OLD"
-            )
-            old_release["final_source_tree_sha256"] = "0" * 64
+            args = list(self._args(old, new))
+            args[0]["final_source_tree_sha256"] = "0" * 64
             with self.assertRaises(CrossVersionSourceDeltaError):
-                build_cross_version_source_delta(
-                    old_release,
-                    _release(
-                        "v308", NEW_SHA, new, "RECOVERY_NEW"
-                    ),
-                    _lineage(),
-                    _plan("v307", OLD_SHA),
-                    _plan("v308", NEW_SHA),
-                    old,
-                    new,
-                )
+                build_cross_version_source_delta(*args)
+
+    def test_recovered_manifest_release_pin_drift_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            old, new = self._roots(Path(tmp))
+            args = list(self._args(old, new))
+            args[2]["source_bytes"] += 1
+            with self.assertRaises(CrossVersionSourceDeltaError):
+                build_cross_version_source_delta(*args)
 
     def test_extra_unmapped_source_file_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             old, new = self._roots(Path(tmp))
-            old_release = _release(
-                "v307", OLD_SHA, old, "RECOVERY_OLD"
-            )
-            new_release = _release(
-                "v308", NEW_SHA, new, "RECOVERY_NEW"
-            )
             (new / "rs" / "Extra.java").write_text(
                 "package rs; class Extra {}\n",
                 encoding="utf-8",
             )
-            # Rebind release hash so the failure is specifically coverage.
-            new_release = _release(
-                "v308", NEW_SHA, new, "RECOVERY_NEW"
-            )
+            args = self._args(old, new)
             with self.assertRaises(CrossVersionSourceDeltaError):
-                build_cross_version_source_delta(
-                    old_release,
-                    new_release,
-                    _lineage(),
-                    _plan("v307", OLD_SHA),
-                    _plan("v308", NEW_SHA),
-                    old,
-                    new,
-                )
+                build_cross_version_source_delta(*args)
 
     def test_class_plan_target_resolves_effective_source_path(self):
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            old, new = self._roots(root)
-
-            # Move logical class 1 through an explicit build-specific remap.
+            old, new = self._roots(Path(tmp))
             (new / "rs" / "B.java").unlink()
             (new / "rs" / "ReadableB.java").write_text(
                 "package rs; class Shared {}\n",
@@ -346,15 +403,8 @@ class CrossVersionSourceDeltaTests(unittest.TestCase):
                     "provenance": [{"kind": "test"}],
                 }
             ]
-
             report = build_cross_version_source_delta(
-                _release("v307", OLD_SHA, old, "RECOVERY_OLD"),
-                _release("v308", NEW_SHA, new, "RECOVERY_NEW"),
-                _lineage(),
-                _plan("v307", OLD_SHA),
-                new_plan,
-                old,
-                new,
+                *self._args(old, new, new_plan=new_plan)
             )
             moved = {
                 row["logical_id"]: row
@@ -364,42 +414,61 @@ class CrossVersionSourceDeltaTests(unittest.TestCase):
                 moved["CLIENT_CLASS_000001"]["new_source_path"],
                 "rs/ReadableB.java",
             )
-            self.assertIn(
-                "CLIENT_CLASS_000001",
-                [row["logical_id"] for row in report["unchanged"]],
+
+    def test_class_plan_digest_drift_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            old, new = self._roots(Path(tmp))
+            args = list(self._args(old, new))
+            args[6]["classes"].append(
+                {
+                    "logical_id": "CLIENT_CLASS_999999",
+                    "source_internal_name": "rs/X",
+                    "source_entry_path": "rs/X.class",
+                    "source_entry_sha256": "0" * 64,
+                    "target_internal_name": "rs/Y",
+                    "target_entry_path": "rs/Y.class",
+                    "confidence": 1.0,
+                    "provenance": [{"kind": "test"}],
+                }
             )
+            with self.assertRaises(CrossVersionSourceDeltaError):
+                build_cross_version_source_delta(*args)
 
     def test_collision_plan_resolves_final_source_path(self):
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            old, new = self._roots(root)
-
+            old, new = self._roots(Path(tmp))
             (new / "rs" / "C.java").unlink()
             (new / "rs" / "Recovered_Blocker.java").write_text(
                 "package rs; class C { static final int BUILD = 308; }\n",
                 encoding="utf-8",
             )
-            collision = {
-                "schema_version": 1,
-                "kind": "class_package_namespace_collision_plan",
-                "plan_id": "JNSPLAN_" + "A" * 20,
-                "collision_report_id": "JNSCOLLISION_TEST",
-                "readable_jar_sha256": READABLE,
-                "identifiers_included": True,
-                "remaps": [
+            collision = _collision(
+                "JNSPLAN_" + "A" * 20,
+                remaps=[
                     {
                         "old_internal_name": "rs/C",
                         "new_internal_name": "rs/Recovered_Blocker",
                     }
                 ],
-            }
-
+            )
+            old_release, old_rec, old_plan = _authority_bundle(
+                "v307", OLD_SHA, old, "RECOVERY_OLD"
+            )
+            new_release, new_rec, new_plan = _authority_bundle(
+                "v308",
+                NEW_SHA,
+                new,
+                "RECOVERY_NEW",
+                collision_plan=collision,
+            )
             report = build_cross_version_source_delta(
-                _release("v307", OLD_SHA, old, "RECOVERY_OLD"),
-                _release("v308", NEW_SHA, new, "RECOVERY_NEW"),
+                old_release,
+                new_release,
+                old_rec,
+                new_rec,
                 _lineage(),
-                _plan("v307", OLD_SHA),
-                _plan("v308", NEW_SHA),
+                old_plan,
+                new_plan,
                 old,
                 new,
                 new_collision_plan=collision,
@@ -417,28 +486,62 @@ class CrossVersionSourceDeltaTests(unittest.TestCase):
                 collision["plan_id"],
             )
 
+    def test_collision_plan_id_drift_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            old, new = self._roots(Path(tmp))
+            collision = _collision("JNSPLAN_" + "A" * 20)
+            old_release, old_rec, old_plan = _authority_bundle(
+                "v307", OLD_SHA, old, "RECOVERY_OLD"
+            )
+            new_release, new_rec, new_plan = _authority_bundle(
+                "v308",
+                NEW_SHA,
+                new,
+                "RECOVERY_NEW",
+                collision_plan=collision,
+            )
+            wrong = copy.deepcopy(collision)
+            wrong["plan_id"] = "JNSPLAN_" + "B" * 20
+            with self.assertRaises(CrossVersionSourceDeltaError):
+                build_cross_version_source_delta(
+                    old_release,
+                    new_release,
+                    old_rec,
+                    new_rec,
+                    _lineage(),
+                    old_plan,
+                    new_plan,
+                    old,
+                    new,
+                    new_collision_plan=wrong,
+                )
+
     def test_collision_plan_readable_authority_drift_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             old, new = self._roots(Path(tmp))
-            collision = {
-                "schema_version": 1,
-                "kind": "class_package_namespace_collision_plan",
-                "plan_id": "JNSPLAN_" + "B" * 20,
-                "readable_jar_sha256": "9" * 64,
-                "identifiers_included": True,
-                "remaps": [],
-            }
+            collision = _collision(
+                "JNSPLAN_" + "A" * 20,
+                readable="9" * 64,
+            )
+            old_release, old_rec, old_plan = _authority_bundle(
+                "v307", OLD_SHA, old, "RECOVERY_OLD"
+            )
+            new_release, new_rec, new_plan = _authority_bundle(
+                "v308",
+                NEW_SHA,
+                new,
+                "RECOVERY_NEW",
+                collision_plan=collision,
+            )
             with self.assertRaises(CrossVersionSourceDeltaError):
                 build_cross_version_source_delta(
-                    _release(
-                        "v307", OLD_SHA, old, "RECOVERY_OLD"
-                    ),
-                    _release(
-                        "v308", NEW_SHA, new, "RECOVERY_NEW"
-                    ),
+                    old_release,
+                    new_release,
+                    old_rec,
+                    new_rec,
                     _lineage(),
-                    _plan("v307", OLD_SHA),
-                    _plan("v308", NEW_SHA),
+                    old_plan,
+                    new_plan,
                     old,
                     new,
                     new_collision_plan=collision,
@@ -461,35 +564,34 @@ class CrossVersionSourceDeltaTests(unittest.TestCase):
                     "provenance": [{"kind": "test"}],
                 }
             ]
+            args = self._args(old, new, new_plan=bad_plan)
             with self.assertRaises(CrossVersionSourceDeltaError):
-                build_cross_version_source_delta(
-                    _release(
-                        "v307", OLD_SHA, old, "RECOVERY_OLD"
-                    ),
-                    _release(
-                        "v308", NEW_SHA, new, "RECOVERY_NEW"
-                    ),
-                    _lineage(),
-                    _plan("v307", OLD_SHA),
-                    bad_plan,
-                    old,
-                    new,
-                )
+                build_cross_version_source_delta(*args)
 
     def test_class_plan_authority_drift_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             old, new = self._roots(Path(tmp))
             bad_plan = _plan("v308", "9" * 64)
+            # Bind the recovered manifest to the bad plan so the intended
+            # failure is exact client authority, not plan digest drift.
+            new_release, new_rec, _ = _authority_bundle(
+                "v308",
+                NEW_SHA,
+                new,
+                "RECOVERY_NEW",
+                plan=bad_plan,
+            )
+            old_release, old_rec, old_plan = _authority_bundle(
+                "v307", OLD_SHA, old, "RECOVERY_OLD"
+            )
             with self.assertRaises(CrossVersionSourceDeltaError):
                 build_cross_version_source_delta(
-                    _release(
-                        "v307", OLD_SHA, old, "RECOVERY_OLD"
-                    ),
-                    _release(
-                        "v308", NEW_SHA, new, "RECOVERY_NEW"
-                    ),
+                    old_release,
+                    new_release,
+                    old_rec,
+                    new_rec,
                     _lineage(),
-                    _plan("v307", OLD_SHA),
+                    old_plan,
                     bad_plan,
                     old,
                     new,
