@@ -438,6 +438,10 @@ $Recovered = Get-JsonProjection `
         base_readable_jar_sha256 = "/base_readable_jar_sha256"
         workspace_id = "/workspace_id"
         java_file_count = "/java_file_count"
+        normalization_id = "/normalization_id"
+        normalization_action_count = "/normalization_summary/action_count"
+        same_package_shadow_method_count = "/normalization_summary/shadowed_same_package_static_field_method_count"
+        same_package_shadow_reference_count = "/normalization_summary/shadowed_same_package_static_field_reference_count"
     }
 if ([string]$Recovered.build_id -ne "v308") {
     throw "Recovered workspace is not v308."
@@ -467,6 +471,10 @@ Write-Host "COLLISION_PLAN_ID=$($Recovered.collision_plan_id)" -ForegroundColor 
 Write-Host "COLLISION_TRANSFORM_ID=$($Recovered.collision_transform_id)" -ForegroundColor Green
 Write-Host "RECOVERED_WORKSPACE_ID=$($Recovered.workspace_id)" -ForegroundColor Green
 Write-Host "RECOVERED_JAVA_FILES=$($Recovered.java_file_count)" -ForegroundColor Green
+Write-Host "SOURCE_NORMALIZATION_ID=$($Recovered.normalization_id)" -ForegroundColor Green
+Write-Host "SOURCE_NORMALIZATION_ACTIONS=$($Recovered.normalization_action_count)"
+Write-Host "SAME_PACKAGE_SHADOW_METHODS=$($Recovered.same_package_shadow_method_count)"
+Write-Host "SAME_PACKAGE_SHADOW_REFERENCES=$($Recovered.same_package_shadow_reference_count)"
 
 $ReleaseArgs = @(
     "-3.13",
