@@ -14,37 +14,6 @@
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "target": {
         "kind": "class",
-        "owner": "rs/l/c",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "DrawingArea",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_pixel_surface",
-          "detail": "Exact v308 rs/l/c owns the global int[] pixel buffer, optional float depth buffer, raster width/height and clip bounds, and exposes fill/line/rectangle/alpha drawing operations plus a Graphics2D bridge."
-        },
-        {
-          "family": "historical_source_fingerprint",
-          "detail": "Historical 317 DrawingArea sources expose the same global pixel buffer, width/height, clip rectangle and primitive 2D draw surface; v308 extends that surface with depth/Graphics2D support."
-        },
-        {
-          "family": "exact_renderer_join",
-          "detail": "R421 Rasterizer reads rs/l/c pixels, width and clip bounds directly, while R421 TextDrawingArea extends rs/l/c and sprite/UI renderers draw into the same surface."
-        }
-      ],
-      "note": "Historical 317 source identity is corroborative; exact-v308 pixel/clip behavior is primary authority."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
         "owner": "rs/l/D",
         "name": null,
         "descriptor": null

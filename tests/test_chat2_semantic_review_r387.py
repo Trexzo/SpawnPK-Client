@@ -4,7 +4,7 @@ import unittest
 from spk_recovery.semantic_review import resolve_semantic_candidates
 SHA="854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 ROOT=Path(__file__).resolve().parents[1]
-CLASS_COORDS=[("CLIENT_CLASS_000900","rs/s/e/a"),("CLIENT_CLASS_000902","rs/s/e/c"),("CLIENT_CLASS_000903","rs/s/e/d"),("CLIENT_CLASS_000905","rs/s/e/e")]
+CLASS_COORDS=[("CLIENT_CLASS_000900","rs/s/e/a")]
 def _class_lineage():
     classes=[]
     for logical_id, internal_name in CLASS_COORDS:
@@ -14,11 +14,12 @@ def _member_lineage(): return {"schema_version":1,"kind":"member_lineage","class
 def _load(p): return json.loads((ROOT/p).read_text(encoding="utf-8"))
 class Chat2SemanticReviewR387Tests(unittest.TestCase):
     def test_resolves(self):
-        actual=resolve_semantic_candidates(_class_lineage(),_member_lineage(),_load("mappings/candidates/v308.semantic.chat2.r387.json")); expected=_load("mappings/candidates/v308.semantic-review.chat2.r387.json")
-        self.assertEqual(actual["proposal_count"],4); self.assertEqual(actual["unresolved"],[]); self.assertEqual(actual["review_id"],"SEMREVIEW_9A8F337EA1F3FC2FDD18"); self.assertEqual(actual,expected)
+        actual=resolve_semantic_candidates(_class_lineage(),_member_lineage(),_load("mappings/candidates/v308.semantic.chat2.r387.json"))
+        expected=_load("mappings/candidates/v308.semantic-review.chat2.r387.json")
+        self.assertEqual(actual["proposal_count"],1); self.assertEqual(actual["unresolved"],[]); self.assertEqual(actual["review_id"],"SEMREVIEW_73AA6877D6A31AC66FA0"); self.assertEqual(actual,expected)
     def test_ids(self):
         review=_load("mappings/candidates/v308.semantic-review.chat2.r387.json")
-        self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"ColorBlindMode":"CLIENT_CLASS_000900","GpuPlugin":"CLIENT_CLASS_000902","GpuPluginConfig":"CLIENT_CLASS_000903","UIScalingMode":"CLIENT_CLASS_000905"})
+        self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"ColorBlindMode":"CLIENT_CLASS_000900"})
     def test_unique(self):
         current=_load("mappings/candidates/v308.semantic-review.chat2.r387.json"); names={r["proposed_name"] for r in current["proposals"]}; owners={r["source_coordinate"]["owner"] for r in current["proposals"]}; ids={r["stable_id"] for r in current["proposals"]}
         pn=set();po=set();pi=set()

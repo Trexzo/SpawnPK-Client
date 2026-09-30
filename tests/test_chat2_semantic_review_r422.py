@@ -4,7 +4,7 @@ import unittest
 from spk_recovery.semantic_review import resolve_semantic_candidates
 SHA="854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 ROOT=Path(__file__).resolve().parents[1]
-CLASS_COORDS=[["CLIENT_CLASS_000492","rs/l/c"],["CLIENT_CLASS_000353","rs/l/D"],["CLIENT_CLASS_000350","rs/l/A"]]
+CLASS_COORDS=[("CLIENT_CLASS_000353","rs/l/D")]
 def _class_lineage():
     classes=[]
     for logical_id, internal_name in CLASS_COORDS:
@@ -16,14 +16,13 @@ class Chat2SemanticReviewR422Tests(unittest.TestCase):
     def test_r422_resolves_deterministically(self):
         actual=resolve_semantic_candidates(_class_lineage(),_member_lineage(),_load("mappings/candidates/v308.semantic.chat2.r422.json"))
         expected=_load("mappings/candidates/v308.semantic-review.chat2.r422.json")
-        self.assertEqual(actual["proposal_count"],2); self.assertEqual(actual["unresolved"],[]); self.assertEqual(actual["review_id"],"SEMREVIEW_A4FC27CB56D5DAD4182E"); self.assertEqual(actual,expected)
+        self.assertEqual(actual["proposal_count"],1); self.assertEqual(actual["unresolved"],[]); self.assertEqual(actual["review_id"],"SEMREVIEW_4925308596E8819F3E33"); self.assertEqual(actual,expected)
     def test_r422_expected_stable_ids(self):
         review=_load("mappings/candidates/v308.semantic-review.chat2.r422.json")
-        self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"DrawingArea":"CLIENT_CLASS_000492","LauncherFrameLayoutTask":"CLIENT_CLASS_000353"})
+        self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"LauncherFrameLayoutTask":"CLIENT_CLASS_000353"})
     def test_r422_names_owners_and_ids_do_not_overlap_prior_reviews(self):
-        current=_load("mappings/candidates/v308.semantic-review.chat2.r422.json")
-        names={r["proposed_name"] for r in current["proposals"]}; owners={r["source_coordinate"]["owner"] for r in current["proposals"]}; ids={r["stable_id"] for r in current["proposals"]}
-        pn=set(); po=set(); pi=set()
+        current=_load("mappings/candidates/v308.semantic-review.chat2.r422.json"); names={r["proposed_name"] for r in current["proposals"]}; owners={r["source_coordinate"]["owner"] for r in current["proposals"]}; ids={r["stable_id"] for r in current["proposals"]}
+        pn=set();po=set();pi=set()
         for batch in range(2,422):
             p=ROOT/"mappings"/"candidates"/f"v308.semantic-review.chat2.r{batch}.json"
             if not p.is_file(): continue

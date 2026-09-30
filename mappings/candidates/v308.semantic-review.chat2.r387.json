@@ -1,52 +1,42 @@
 {
-  "schema_version":1,"kind":"semantic_review_set","canonical":false,
-  "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","proposal_count":4,
-  "review_id":"SEMREVIEW_9A8F337EA1F3FC2FDD18",
-  "proposals":[
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_73AA6877D6A31AC66FA0",
+  "proposals": [
     {
-      "proposal_id":"SEMPROP_41B34742DBF70527DB5F","target_kind":"class","stable_id":"CLIENT_CLASS_000902","owner_logical_id":"CLIENT_CLASS_000902",
-      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","source_coordinate":{"owner":"rs/s/e/c","name":null,"descriptor":null},
-      "proposed_name":"GpuPlugin","confidence":0.999,
-      "evidence":[
-        {"family":"exact_plugin_descriptor","detail":"Exact v308 rs/s/e/c carries plugin name 'GPU Mode', group 'gpu', description 'Enhance the graphics and performance of the game' and gpu_icon.png."},
-        {"family":"exact_renderer_lifecycle","detail":"The plugin owns GpuRenderer/OpenCL-related startup, config-change and synchronization behavior and registers the already-reviewed GpuPluginPanel."},
-        {"family":"historical_source_identity","detail":"RuneLite source class GpuPlugin owns the same GPU renderer/config lifecycle, shader recompilation, scaling/colorblind mode changes and GPU synchronization concerns."}
+      "proposal_id": "SEMPROP_BDB8ABF88ECF37DEB1B6",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000900",
+      "owner_logical_id": "CLIENT_CLASS_000900",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/e/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorBlindMode",
+      "confidence": 1,
+      "evidence": [
+        {
+          "family": "exact_enum_constants",
+          "detail": "Exact v308 enum rs/s/e/a preserves NONE, PROTANOPE, DEUTERANOPE and TRITANOPE."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "RuneLite GPU config source exposes enum ColorBlindMode with the identical four constants."
+        },
+        {
+          "family": "exact_config_use",
+          "detail": "rs/s/e/d returns this enum from the GPU colorblindness-correction config option."
+        }
       ],
-      "note":"Source-proven RuneLite GpuPlugin identity with SpawnPK descriptor text retained as exact authority."
-    },
-    {
-      "proposal_id":"SEMPROP_5A72530C4754AA6EBFBE","target_kind":"class","stable_id":"CLIENT_CLASS_000905","owner_logical_id":"CLIENT_CLASS_000905",
-      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","source_coordinate":{"owner":"rs/s/e/e","name":null,"descriptor":null},
-      "proposed_name":"UIScalingMode","confidence":1.0,
-      "evidence":[
-        {"family":"exact_enum_constants","detail":"Exact v308 rs/s/e/e preserves NEAREST, LINEAR, MITCHELL, CATMULL_ROM and XBR together with display names Nearest Neighbor, Bilinear, Bicubic (Mitchell), Bicubic (Catmull-Rom) and xBR."},
-        {"family":"historical_source_identity","detail":"RuneLite GPU source/API exposes enum UIScalingMode with the same named scaling algorithms; later source adds HYBRID but preserves these exact constants."},
-        {"family":"exact_config_use","detail":"GpuPluginConfig uses this enum directly for its UI scaling mode setting."}
-      ],
-      "note":"Source-identical RuneLite GPU UI scaling enum for the v308 constant set."
-    },
-    {
-      "proposal_id":"SEMPROP_BDB8ABF88ECF37DEB1B6","target_kind":"class","stable_id":"CLIENT_CLASS_000900","owner_logical_id":"CLIENT_CLASS_000900",
-      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","source_coordinate":{"owner":"rs/s/e/a","name":null,"descriptor":null},
-      "proposed_name":"ColorBlindMode","confidence":1.0,
-      "evidence":[
-        {"family":"exact_enum_constants","detail":"Exact v308 enum rs/s/e/a preserves NONE, PROTANOPE, DEUTERANOPE and TRITANOPE."},
-        {"family":"historical_source_identity","detail":"RuneLite GPU config source exposes enum ColorBlindMode with the identical four constants."},
-        {"family":"exact_config_use","detail":"rs/s/e/d returns this enum from the GPU colorblindness-correction config option."}
-      ],
-      "note":"Source-identical RuneLite GPU enum."
-    },
-    {
-      "proposal_id":"SEMPROP_E09294331580AC97197C","target_kind":"class","stable_id":"CLIENT_CLASS_000903","owner_logical_id":"CLIENT_CLASS_000903",
-      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","source_coordinate":{"owner":"rs/s/e/d","name":null,"descriptor":null},
-      "proposed_name":"GpuPluginConfig","confidence":0.999,
-      "evidence":[
-        {"family":"exact_config_group","detail":"Exact v308 rs/s/e/d is the gpu config interface and exposes enabled, anti-aliasing, anisotropic filtering, stretched mode, aspect ratio, UI scaling, colorblind correction, smooth banding and Vsync controls."},
-        {"family":"historical_source_identity","detail":"RuneLite source/API names the GPU configuration interface GpuPluginConfig and preserves matching anti-aliasing, anisotropic filtering, UI scaling and colorblind controls."},
-        {"family":"exact_plugin_pairing","detail":"rs/s/e/c consumes this interface as its injected GPU configuration and reacts to its vsyncMode and rendering settings."}
-      ],
-      "note":"Source-proven RuneLite GpuPluginConfig identity."
+      "note": "Source-identical RuneLite GPU enum."
     }
   ],
-  "unresolved":[]
+  "unresolved": []
 }
