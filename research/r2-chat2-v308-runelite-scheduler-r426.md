@@ -1,4 +1,4 @@
-# Chat 2 — exact-v308 RuneLite scheduler identities R426
+# Chat 2 — R426 duplicate RuneLite scheduler audit
 
 Exact client authority:
 
@@ -6,52 +6,29 @@ Exact client authority:
 
 ## Result
 
-- `rs/y/a` -> `CLIENT_CLASS_001122` -> `Schedule`
-- `rs/y/b` -> `CLIENT_CLASS_001123` -> `ScheduledMethod`
-- `rs/y/c` -> `CLIENT_CLASS_001124` -> `Scheduler`
-- review: `SEMREVIEW_0C940EC4C68D5DDC6CF0`
+R426 retains **no semantic proposal**.
 
-## Exact source continuity
+The R426 investigation independently recovered the RuneLite scheduler family:
 
-The surviving scheduler implementation is structurally and textually identical to the
-RuneLite task scheduler family.
+- `rs/y/a` -> `CLIENT_CLASS_001122` -> `Schedule`;
+- `rs/y/b` -> `CLIENT_CLASS_001123` -> `ScheduledMethod`;
+- `rs/y/c` -> `CLIENT_CLASS_001124` -> `Scheduler`.
 
-### Schedule
+The exact-v308 evidence confirms the runtime method annotation, reflected scheduled-method
+record, CopyOnWriteArrayList registry, ScheduledExecutorService integration and the surviving
+scheduler log strings.
 
-The annotation exposes:
+However, R18 already owns these exact classes and proposal IDs:
 
-- a long scheduling period;
-- `ChronoUnit`;
-- asynchronous boolean.
+- `Schedule`: `SEMPROP_592193F9E3C091156288`;
+- `ScheduledMethod`: `SEMPROP_7EFB8E37CCAA8E13556A`;
+- `Scheduler`: `SEMPROP_0CD1AD892C4A033E20F1`;
+- review: `SEMREVIEW_5F86889B10D97E6837BE`.
 
-### ScheduledMethod
+R18 is also stronger direct identity authority because exact v308 preserves the self-identifying
+`ScheduledMethod(schedule=..., method=..., object=..., lambda=..., last=...)` string.
 
-The record stores:
+The former R426 candidate/review/test are removed. This file remains only as independent
+upstream-source corroboration for the established R18 semantic ownership.
 
-- Schedule metadata;
-- reflected Method;
-- target Object;
-- optional Runnable;
-- last-run Instant.
-
-### Scheduler
-
-The scheduler owns a CopyOnWriteArrayList of ScheduledMethod records and an injected
-ScheduledExecutorService. On each scheduling pass it compares elapsed time against the
-configured duration, logs:
-
-`Scheduled task triggered: {}`
-
-then updates last-run state and invokes synchronously or through the executor.
-
-The surviving warning strings also match the upstream source:
-
-- `error invoking scheduled task`
-- `error during scheduled task`
-
-## Boundary
-
-The root `rs/y` class is unrelated legacy animation-config override code and is deliberately
-not folded into this scheduler batch.
-
-R426 remains non-canonical Chat 2 semantic research only.
+R426 is a correction/audit batch only. Chat 2 performs no canonical acceptance or source rewrite.
