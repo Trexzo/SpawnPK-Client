@@ -1,0 +1,28 @@
+{
+  "schema_version":1,
+  "kind":"semantic_review_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count":1,
+  "review_id":"SEMREVIEW_2B6D2137D9E5124CF3A3",
+  "proposals":[{
+    "proposal_id":"SEMPROP_B5A56CDC71737D677553",
+    "target_kind":"class",
+    "stable_id":"CLIENT_CLASS_000576",
+    "owner_logical_id":"CLIENT_CLASS_000576",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate":{"owner":"rs/n/c/aA","name":null,"descriptor":null},
+    "proposed_name":"OptionSelectionGridInterface",
+    "confidence":0.998,
+    "evidence":[
+      {"family":"exact_dual_root_layout","detail":"The builder creates root interfaces 53500 and 53519, each containing the same 18 child option widgets 53501..53518."},
+      {"family":"exact_selectable_text_contract","detail":"Each option widget is created as selectable text with exact tooltip 'Select option', forced hover/action enablement and one-based placeholder labels derived from the option index."},
+      {"family":"exact_layout_variants","detail":"The first root places the 18 options in a fixed six-row/three-column traversal while the second root lays the same option widgets in the alternate row/column traversal; both use 160-pixel horizontal and 17-pixel vertical spacing."},
+      {"family":"exact_domain_boundary","detail":"No exact-v308 class outside this builder references roots 53500/53519, and the builder contains no feature-specific title/resource literal. The semantic recovery therefore stops at the generic option-selection grid role."}
+    ],
+    "note":"Descriptive exact-v308 name for the two-layout 18-option selection interface. No product/domain noun is inferred."
+  }],
+  "unresolved":[]
+}
