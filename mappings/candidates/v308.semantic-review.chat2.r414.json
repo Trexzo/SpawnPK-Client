@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 4,
+  "review_id": "SEMREVIEW_EF94F8616BF48BDC0E16",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_3C81410DD8C127D2A6F7",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000170",
+      "owner_logical_id": "CLIENT_CLASS_000170",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/f/a$c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ScreenMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "Exact constants are FIXED, RESIZABLE and FULLSCREEN."
+        },
+        {
+          "family": "exact_persistence_contract",
+          "detail": "The enum is written/read through the exact settings property screen_mode and the client defaults it to FIXED."
+        },
+        {
+          "family": "exact_window_consumers",
+          "detail": "Client, Launcher, gameframe/layout and rendering code branch on this enum to select fixed/resizable/fullscreen geometry and behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 settings enum name fixed by exact literals, persisted property contracts and live consumers."
+    },
+    {
+      "proposal_id": "SEMPROP_6184C0F97722A8EBA35F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000171",
+      "owner_logical_id": "CLIENT_CLASS_000171",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/f/a$d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SeasonalTheme",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "Exact constants are NONE, SPRING, SUMMER, HWEEN, DARK_WINTER and WINTER."
+        },
+        {
+          "family": "exact_persistence_contract",
+          "detail": "The active value is the second component of ground_mode=<mode>.<season>; ground-mode restoration requires the serialized seasonal component to equal the currently active theme."
+        },
+        {
+          "family": "exact_definition_consumers",
+          "detail": "R28 ItemDefinition and other presentation-definition paths branch on this enum for seasonal content/model substitutions, distinguishing it from the first ground-mode enum."
+        }
+      ],
+      "note": "Descriptive exact-v308 settings enum name fixed by exact literals, persisted property contracts and live consumers."
+    },
+    {
+      "proposal_id": "SEMPROP_D8AE0867A1C571385A54",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000168",
+      "owner_logical_id": "CLIENT_CLASS_000168",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/f/a$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientProduct",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "Exact v308 preserves exactly SPAWNPK and RUNEX, each with a display label (SpawnPK/Runex) plus a product website string; the active value drives Launcher branding and the spk/rx runtime prefix."
+        },
+        {
+          "family": "exact_runtime_consumers",
+          "detail": "Launcher reads the active enum for product display/branding, while shared settings derive product-specific path/runtime strings and definition/config paths from the selected value."
+        },
+        {
+          "family": "naming_boundary",
+          "detail": "No public source preserving the original enum class name was found, so ClientProduct is descriptive rather than presented as a verbatim identifier."
+        }
+      ],
+      "note": "Descriptive exact-v308 product selector name; no verbatim original class identifier is claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_F13D82C4BD06F4734912",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000169",
+      "owner_logical_id": "CLIENT_CLASS_000169",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/f/a$b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GroundMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_literals",
+          "detail": "Exact enum constants are NORMAL, WINTER, DARK_WINTER, HALLOWEEN and SUMMER."
+        },
+        {
+          "family": "exact_persistence_contract",
+          "detail": "The active value is serialized as the first component of the exact settings key ground_mode=<mode>.<season> and restored by valueOf from that same first component."
+        },
+        {
+          "family": "exact_definition_consumers",
+          "detail": "NpcDefinition, FloorDefinition and presentation/UI paths branch on this enum, fixing it as the selected ground/world presentation mode rather than a generic season enum."
+        }
+      ],
+      "note": "Descriptive exact-v308 settings enum name fixed by exact literals, persisted property contracts and live consumers."
+    }
+  ],
+  "unresolved": []
+}
