@@ -552,7 +552,8 @@ if ($ReleaseExit -ne 0) {
         Write-Host ""
         & py -3.13 -m spk_recovery.javac_frontier_summary_cli `
             $PrivateDiagnostic `
-            --top 20
+            --top 20 `
+            --focus-files 1
         $PrivateSummaryExit = $LASTEXITCODE
         if ($PrivateSummaryExit -ne 0) {
             Write-Host (

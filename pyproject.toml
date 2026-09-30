@@ -77,6 +77,8 @@ spk-release-build = "spk_recovery.release_orchestrator_cli:main"
 spk-release-build-recovered = "spk_recovery.release_workspace_orchestrator_cli:main"
 spk-update-release = "spk_recovery.update_release_cli:main"
 spk-release-verify = "spk_recovery.release_verify_cli:main"
+spk-cross-version-backtest = "spk_recovery.cross_version_backtest_cli:main"
+spk-cross-version-binary-delta = "spk_recovery.cross_version_binary_delta_cli:main"
 spk-source-milestone = "spk_recovery.source_milestone_cli:main"
 spk-source-authority-artifact = "spk_recovery.source_authority_artifact_cli:main"
 
