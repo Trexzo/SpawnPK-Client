@@ -367,6 +367,38 @@ class CrossVersionSourceDeltaTests(unittest.TestCase):
                 [row["logical_id"] for row in report["unchanged"]],
             )
 
+    def test_class_plan_row_lineage_drift_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            old, new = self._roots(Path(tmp))
+            bad_plan = _plan("v308", NEW_SHA)
+            bad_plan["class_count"] = 1
+            bad_plan["classes"] = [
+                {
+                    "logical_id": "CLIENT_CLASS_000001",
+                    "source_internal_name": "rs/Wrong",
+                    "source_entry_path": "rs/Wrong.class",
+                    "source_entry_sha256": "0" * 64,
+                    "target_internal_name": "rs/ReadableB",
+                    "target_entry_path": "rs/ReadableB.class",
+                    "confidence": 1.0,
+                    "provenance": [{"kind": "test"}],
+                }
+            ]
+            with self.assertRaises(CrossVersionSourceDeltaError):
+                build_cross_version_source_delta(
+                    _release(
+                        "v307", OLD_SHA, old, "RECOVERY_OLD"
+                    ),
+                    _release(
+                        "v308", NEW_SHA, new, "RECOVERY_NEW"
+                    ),
+                    _lineage(),
+                    _plan("v307", OLD_SHA),
+                    bad_plan,
+                    old,
+                    new,
+                )
+
     def test_class_plan_authority_drift_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             old, new = self._roots(Path(tmp))
