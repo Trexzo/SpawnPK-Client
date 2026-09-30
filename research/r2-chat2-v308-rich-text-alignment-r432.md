@@ -8,7 +8,7 @@ Exact client authority:
 
 - `rs/l/x` -> `CLIENT_CLASS_000516` -> `RichTextAlignmentState`
 - `rs/l/x$a` -> `CLIENT_CLASS_000517` -> `RichTextAlignment`
-- review: `SEMREVIEW_D27D4B151B3A1212872D`
+- review: `SEMREVIEW_6767592415DAA0966EA5`
 
 ## Exact enum identity
 

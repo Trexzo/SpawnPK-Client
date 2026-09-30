@@ -28,7 +28,7 @@ class Chat2SemanticReviewR432Tests(unittest.TestCase):
         expected=_load("mappings/candidates/v308.semantic-review.chat2.r432.json")
         self.assertEqual(actual["proposal_count"],2)
         self.assertEqual(actual["unresolved"],[])
-        self.assertEqual(actual["review_id"],"SEMREVIEW_D27D4B151B3A1212872D")
+        self.assertEqual(actual["review_id"],"SEMREVIEW_6767592415DAA0966EA5")
         self.assertEqual(actual,expected)
 
     def test_r432_expected_stable_ids(self):
