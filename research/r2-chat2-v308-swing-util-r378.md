@@ -1,4 +1,4 @@
-# Chat 2 — RuneLite SwingUtil source recovery R378
+# Chat 2 — R378 duplicate SwingUtil audit
 
 Exact client authority:
 
@@ -6,44 +6,49 @@ Exact client authority:
 
 ## Result
 
-- `rs/gui/M` -> `CLIENT_CLASS_000197` -> `SwingUtil`
-- proposal: `SEMPROP_2E196F5C76B692B8E849`
-- review: `SEMREVIEW_FD46994D7D0B64B86052`
+R378 retains **no semantic proposal**.
 
-## Exact utility surface
+The attempted exact-source recovery:
 
-The exact-v308 class is stateless Swing infrastructure. Its static methods cover:
+- `rs/gui/M`
+- `CLIENT_CLASS_000197`
+- attempted name `SwingUtil`
 
-- tooltip-manager defaults;
-- UIManager color/default setup;
-- LookAndFeel installation;
-- AbstractButton styling and selected/unselected tooltips;
-- icon JButton construction from the already-recovered UI icon model;
-- popup-menu item creation;
-- system-tray icon construction.
+collides with the already-retained R180 semantic name `SwingUtil`.
 
-## Source fingerprint
+The repository-wide uniqueness guard correctly rejects two distinct class owners sharing the
+same semantic class name.
 
-Historical RuneLite/OpenOSRS `net.runelite.client.util.SwingUtil` exposes the same utility
-surface.
+## Evidence retained
 
-The exact-v308 implementation also preserves the literal:
+The attempted R378 evidence remains useful as corroboration for the class role:
 
-`Unable to add system tray icon`
+- exact-v308 `rs/gui/M` is stateless Swing utility infrastructure;
+- it configures Swing/UI defaults and LookAndFeel;
+- it creates/stylizes buttons and popup-menu items;
+- it creates system-tray icons;
+- it preserves the literal `Unable to add system tray icon`;
+- it constructs R371 `SwingUtilTrayIconMouseListener`.
 
-inside the TrayIcon creation failure path, matching the historical source.
+Historical RuneLite/OpenOSRS source fingerprints strongly match
+`net.runelite.client.util.SwingUtil`.
 
-## Same-family join
+That evidence is not enough to override the project-wide one-name/one-owner invariant while
+R180 already owns the same semantic name.
 
-R371 already recovers:
+## CI failure
 
-- `rs/gui/N` -> `SwingUtilTrayIconMouseListener`
+R383 CI run `36682610648` exposed the inherited duplicate:
 
-R378 `rs/gui/M` constructs that exact listener inside its tray-icon helper, closing the
-source family cleanly.
+`duplicate class semantic name SwingUtil: R180 and R378`
 
-## Boundary
+R379-R383 per-batch uniqueness tests then failed transitively because R378 appeared in their
+prior-review corpus.
 
-This is source-name recovery, not a generic descriptive guess.
+## Correction
 
-R378 remains non-canonical Chat 2 semantic research only.
+The R378 candidate JSON, semantic-review JSON and deterministic test are removed.
+
+This file remains as a zero-retained duplicate/source-corroboration audit only.
+
+R378 performs no semantic acceptance or source rewrite.
