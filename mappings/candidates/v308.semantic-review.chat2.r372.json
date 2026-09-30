@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_BC80F4BED06E9C7AE483",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_29641FC19888F4BBA4F0",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000771",
+      "owner_logical_id": "CLIENT_CLASS_000771",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner": "rs/r", "name": null, "descriptor": null},
+      "proposed_name": "MysteryContainerRewardPreview",
+      "confidence": 0.999,
+      "evidence": [
+        {"family": "exact_item_name_dispatch", "detail": "The sole static behavior takes one item-name String and recognizes a large exact set of mystery/reward containers including Donator mystery box, Blood key, Grand blood key, PvP mystery box, Bond casket key, Easter/H'ween/Summer/Winter caskets and multiple package/chest variants."},
+        {"family": "exact_reward_preview_payload", "detail": "For every recognized container the class appends exact reward/rarity/seasonal description text and builds a representative int[] of reward item IDs; unrecognized names leave the payload null and return false."},
+        {"family": "exact_tooltip_join", "detail": "On a recognized item the class derives coordinates from live mouse state, invokes Client.a(int,int,String,int[]), and that exact Client method constructs R207 TooltipContent, attaches the reward item IDs and submits it to R207 TooltipOverlay."},
+        {"family": "exact_stateless_role", "detail": "rs/r has no fields and no second behavior: it is a stateless specialized reward-preview producer for hover/tooltips rather than a container-opening or server-reward implementation."}
+      ],
+      "note": "Descriptive exact-v308 name for the specialized mystery/casket/key/package reward preview producer. It does not claim an original stripped identifier or server reward authority."
+    }
+  ],
+  "unresolved": []
+}
