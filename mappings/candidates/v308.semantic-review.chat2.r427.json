@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_069D95205C69AD6CA660",
+  "proposals": [
+    {
+      "proposal_id":"SEMPROP_D0E62E067F874D33FC7C",
+      "target_kind":"class",
+      "stable_id":"CLIENT_CLASS_000008",
+      "owner_logical_id":"CLIENT_CLASS_000008",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate":{"owner":"rs/A/e","name":null,"descriptor":null},
+      "proposed_name":"CallableExceptionLogger",
+      "confidence":0.999,
+      "evidence":[
+        {"family":"exact_wrapper_shape","detail":"Exact v308 rs/A/e implements Callable<V>, wraps exactly one Callable<V>, invokes it in call(), logs 'Uncaught exception in callable {}' on Throwable and rethrows."},
+        {"family":"exact_factory_role","detail":"The static helper returns a new wrapper for an arbitrary Callable and is consumed by rs/A/h before executor submission."},
+        {"family":"upstream_source_identity","detail":"RuneLite CallableExceptionLogger has the same generic Callable wrapper, static wrap helper, logger string and rethrow behavior."}
+      ],
+      "note":"Verbatim upstream RuneLite source identity."
+    },
+    {
+      "proposal_id":"SEMPROP_D61CC229CE9E19BBDBAE",
+      "target_kind":"class",
+      "stable_id":"CLIENT_CLASS_000011",
+      "owner_logical_id":"CLIENT_CLASS_000011",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate":{"owner":"rs/A/h","name":null,"descriptor":null},
+      "proposed_name":"ExecutorServiceExceptionLogger",
+      "confidence":0.999,
+      "evidence":[
+        {"family":"exact_executor_contract","detail":"Exact v308 rs/A/h implements ScheduledExecutorService and delegates to one wrapped ScheduledExecutorService."},
+        {"family":"exact_exception_wrapping","detail":"submit/execute paths wrap Runnable through rs/A/r and Callable through rs/A/e before delegation, while lifecycle/invoke/schedule methods delegate to the backing service."},
+        {"family":"upstream_source_identity","detail":"RuneLite ExecutorServiceExceptionLogger implements the same ScheduledExecutorService decorator around RunnableExceptionLogger and CallableExceptionLogger."}
+      ],
+      "note":"Verbatim upstream RuneLite source identity."
+    },
+    {
+      "proposal_id":"SEMPROP_E8CDEF42CAF0A253F63A",
+      "target_kind":"class",
+      "stable_id":"CLIENT_CLASS_000023",
+      "owner_logical_id":"CLIENT_CLASS_000023",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate":{"owner":"rs/A/r","name":null,"descriptor":null},
+      "proposed_name":"RunnableExceptionLogger",
+      "confidence":0.999,
+      "evidence":[
+        {"family":"exact_wrapper_shape","detail":"Exact v308 rs/A/r implements Runnable, wraps exactly one Runnable, invokes it in run(), logs 'Uncaught exception in runnable {}' on Throwable and rethrows."},
+        {"family":"exact_factory_role","detail":"The static helper returns a new wrapper for arbitrary Runnable instances and is consumed by rs/A/h before execute/submit delegation."},
+        {"family":"upstream_source_identity","detail":"RuneLite RunnableExceptionLogger has the same Runnable wrapper, static wrap helper, logger string and rethrow behavior."}
+      ],
+      "note":"Verbatim upstream RuneLite source identity."
+    }
+  ],
+  "unresolved":[]
+}
