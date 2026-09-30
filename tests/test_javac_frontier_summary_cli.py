@@ -127,6 +127,61 @@ class JavacFrontierSummaryTests(unittest.TestCase):
             text,
         )
 
+    def test_focus_diagnostics_can_print_exact_local_source_lines(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "k.java"
+            source.write_text(
+                "line one\n"
+                "int value = i.a();\n"
+                "line three\n",
+                encoding="utf-8",
+            )
+            report = _report()
+            report["diagnostics"] = [
+                {
+                    "category": "cannot_be_dereferenced",
+                    "source_path": str(source),
+                    "line": 2,
+                    "message": "int cannot be dereferenced",
+                }
+            ]
+
+            text = "\n".join(
+                focus_diagnostics(
+                    report,
+                    focus_files=1,
+                    include_source_lines=True,
+                )
+            )
+
+            self.assertIn("=== FOCUSED SOURCE LINES ===", text)
+            self.assertIn(
+                "SRC: line=2 | text=int value = i.a();",
+                text,
+            )
+
+    def test_focus_source_lines_fail_soft_when_source_is_missing(self):
+        report = _report()
+        report["diagnostics"] = [
+            {
+                "category": "cannot_be_dereferenced",
+                "source_path": "Z:/definitely-missing/source.java",
+                "line": 7,
+                "message": "int cannot be dereferenced",
+            }
+        ]
+
+        text = "\n".join(
+            focus_diagnostics(
+                report,
+                focus_files=1,
+                include_source_lines=True,
+            )
+        )
+
+        self.assertIn("SOURCE_LINES_UNAVAILABLE=", text)
+        self.assertIn("FOCUSED_TOTAL_ERRORS=1", text)
+
     def test_focus_diagnostics_zero_is_noop(self):
         self.assertEqual(
             focus_diagnostics(_report(), focus_files=0),
@@ -144,6 +199,7 @@ class JavacFrontierSummaryTests(unittest.TestCase):
         )
         self.assertIn("--top 20", text)
         self.assertIn("--focus-files 3", text)
+        self.assertIn("--source-lines", text)
         self.assertIn("private_javac_summary_failed=", text)
         self.assertIn("exit 3", text)
     def test_cli_top_limit(self):
