@@ -1,4 +1,4 @@
-# Chat 2 — exact-v308 Player IP / UID Matcher interface R439
+# Chat 2 — R439 duplicate PlayerIpUidMatcherInterface audit
 
 Exact client authority:
 
@@ -6,43 +6,36 @@ Exact client authority:
 
 ## Result
 
-- `rs/n/c/U` -> `CLIENT_CLASS_000567` -> `PlayerIpUidMatcherInterface`
-- proposal: `SEMPROP_B3F6742C1CD5AC29C3BD`
-- review: `SEMREVIEW_C279A940BDF04AF0CC6B`
+R439 retains **no semantic proposal**.
 
-## Exact screen identity
+The attempted recovery:
 
-The builder extends R436 `CustomInterfaceBuilder` and creates root widget **51200**.
+- `rs/n/c/U`
+- `CLIENT_CLASS_000567`
+- `PlayerIpUidMatcherInterface`
+- proposal `SEMPROP_B3F6742C1CD5AC29C3BD`
 
-Its own title is:
+is already owned by R2 review:
 
-`Player IP / UID Matcher`
+- R2 review `SEMREVIEW_DD69CD752A6E46181BAC`
+- same exact proposal ID `SEMPROP_B3F6742C1CD5AC29C3BD`
 
-## Exact match/moderation surface
+## Corroborating exact-v308 evidence
 
-The interface builds:
+The rediscovery strengthens the existing R2 identity:
 
-- a 100-row match result list;
-- online / online-non-match state presentation;
-- per-row `Action` controls;
-- `IP Address: ...` ban state;
-- `UID: ...` ban state;
-- geolocation state;
-- `Ban all`;
-- `Ban this IP/UID`;
-- ordering by total matches;
-- ordering by most recent;
-- `Search new name`;
-- back navigation.
-
-## Reverse references
-
-Outside this class, exact v308 references `rs/n/c/U` only from R436
-`CustomInterfaceRegistry`.
+- root widget **51200**;
+- literal title `Player IP / UID Matcher`;
+- 100-row match list;
+- online / non-match state presentation;
+- IP Address and UID ban-status text;
+- geolocation presentation;
+- Ban all / Ban this IP/UID controls;
+- ordering by total matches or most recent;
+- Search new name and back navigation;
+- exact-v308 reverse ownership only from R436 CustomInterfaceRegistry.
 
 ## Boundary
 
-This names only the client-side interface. It does not claim details of server-side
-identity correlation, geolocation, moderation policy or enforcement behavior.
-
-R439 remains non-canonical semantic research only.
+This is a client-side interface corroboration note only. No second semantic proposal,
+candidate JSON, review JSON or deterministic review test is retained.

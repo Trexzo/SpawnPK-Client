@@ -1,4 +1,4 @@
-# Chat 2 — exact-v308 Donation Shopping Cart interface R438
+# Chat 2 — R438 duplicate DonationShoppingCartInterface audit
 
 Exact client authority:
 
@@ -6,51 +6,34 @@ Exact client authority:
 
 ## Result
 
-- `rs/n/c/aw` -> `CLIENT_CLASS_000627` -> `DonationShoppingCartInterface`
-- proposal: `SEMPROP_44D6A25447470D416C3C`
-- review: `SEMREVIEW_F44CA4AD45209B25930B`
+R438 retains **no semantic proposal**.
 
-## Exact screen identity
+The attempted recovery:
 
-The builder extends R436 `CustomInterfaceBuilder` and creates root widget **60200**.
+- `rs/n/c/aw`
+- `CLIENT_CLASS_000627`
+- `DonationShoppingCartInterface`
+- proposal `SEMPROP_44D6A25447470D416C3C`
 
-Its own exact title is:
+is already owned by R2 review:
 
-`@or1@Donation Shopping Cart`
+- R2 review `SEMREVIEW_DD69CD752A6E46181BAC`
+- same exact proposal ID `SEMPROP_44D6A25447470D416C3C`
 
-The primary root background uses:
+## Corroborating exact-v308 evidence
 
-`misc/cart 0`
+The rediscovery adds stronger evidence to the existing R2 identity:
 
-## Exact checkout/purchase presentation
-
-The interface constructs client presentation for:
-
-- Daily Offer
-- Exclusive Offers
-- Shopping Cart
-- subtotal text
-- Empty
-- Checkout
-- PayPal (Card / Bank)
-- OSRS GP
-- purchase-option and checkout button variants
-
-It also contains exact promotional strings and cart-state widgets under the 600xx/602xx
-widget ranges.
-
-## Reverse references
-
-Outside the builder itself, exact v308 references `rs/n/c/aw` only from:
-
-- R436 `CustomInterfaceRegistry`
-- `rs/q/a/a/b`
-
-No unrelated interface family owns this builder.
+- root widget **60200**;
+- literal title `@or1@Donation Shopping Cart`;
+- exact background `misc/cart 0`;
+- Daily Offer / Exclusive Offers sections;
+- Shopping Cart and subtotal presentation;
+- Empty and Checkout controls;
+- PayPal (Card / Bank) and OSRS GP purchase methods;
+- exact-v308 reverse references limited to R436 CustomInterfaceRegistry and `rs/q/a/a/b`.
 
 ## Boundary
 
-This recovery is presentation-only. The interface does not prove payment processing,
-purchase fulfilment, pricing authority or any server-side commerce implementation.
-
-R438 remains non-canonical semantic research only.
+This is corroboration only. No second candidate/review/test is retained, and no
+server-side payment or fulfilment authority is inferred.
