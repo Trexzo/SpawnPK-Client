@@ -13,6 +13,8 @@
     "new_authority_sha256",
     "old_release_id",
     "new_release_id",
+    "old_recovered_workspace_id",
+    "new_recovered_workspace_id",
     "old_source_tree_sha256",
     "new_source_tree_sha256",
     "old_collision_plan_id",
@@ -44,6 +46,8 @@
     },
     "old_release_id": {"type": "string", "minLength": 1},
     "new_release_id": {"type": "string", "minLength": 1},
+    "old_recovered_workspace_id": {"type": "string", "minLength": 1},
+    "new_recovered_workspace_id": {"type": "string", "minLength": 1},
     "old_source_tree_sha256": {
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"
