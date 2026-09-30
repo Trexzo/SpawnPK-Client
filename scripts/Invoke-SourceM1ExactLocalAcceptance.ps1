@@ -421,8 +421,10 @@ Invoke-PyChecked "BUILD COLLISION-DERIVED SOURCE WORKSPACE" $WorkspaceArgs
 
 $RecoveredManifest = Join-Path $CollisionWorkspace "recovered-source-manifest.json"
 $RecoveredSourceRoot = Join-Path $CollisionWorkspace "src"
+$NormalizationReport = Join-Path $CollisionWorkspace "source-normalization.json"
 $PrivateDiagnostic = Join-Path $ReleaseDir "javac-diagnostic-private.json"
 Require-File $RecoveredManifest
+Require-File $NormalizationReport
 if (-not (Test-Path -LiteralPath $RecoveredSourceRoot -PathType Container)) {
     throw "Collision-derived source root is missing."
 }
@@ -467,6 +469,18 @@ if ([string]$Recovered.collision_plan_id -ne [string]$CollisionPlanDoc.plan_id) 
     throw "Recovered workspace collision plan ID drifted."
 }
 
+$NormalizationDoc = Get-JsonProjection `
+    -Path $NormalizationReport `
+    -Fields @{
+        normalization_id = "/normalization_id"
+    }
+if (
+    [string]$NormalizationDoc.normalization_id -ne
+    [string]$Recovered.normalization_id
+) {
+    throw "Normalization report ID is not bound to recovered workspace."
+}
+
 Write-Host "COLLISION_PLAN_ID=$($Recovered.collision_plan_id)" -ForegroundColor Green
 Write-Host "COLLISION_TRANSFORM_ID=$($Recovered.collision_transform_id)" -ForegroundColor Green
 Write-Host "RECOVERED_WORKSPACE_ID=$($Recovered.workspace_id)" -ForegroundColor Green
@@ -475,6 +489,16 @@ Write-Host "SOURCE_NORMALIZATION_ID=$($Recovered.normalization_id)" -ForegroundC
 Write-Host "SOURCE_NORMALIZATION_ACTIONS=$($Recovered.normalization_action_count)"
 Write-Host "SAME_PACKAGE_SHADOW_METHODS=$($Recovered.same_package_shadow_method_count)"
 Write-Host "SAME_PACKAGE_SHADOW_REFERENCES=$($Recovered.same_package_shadow_reference_count)"
+
+$NormalizationSummaryArgs = @(
+    "-3.13",
+    "-m",
+    "spk_recovery.source_normalization_summary_cli",
+    $NormalizationReport,
+    "--top",
+    "10"
+)
+Invoke-PyChecked "SUMMARIZE SOURCE NORMALIZATION EVIDENCE" $NormalizationSummaryArgs
 
 $ReleaseArgs = @(
     "-3.13",
