@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutIcon",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_icon_enum",
+          "detail": "The enum contains 29 named loadout categories/icons including MELEE, RANGE, MAGIC, PURE, WELFARE, SKULL, RED_SKULL, HOTSPOT, SLAYER and BLOOD_SLAYER, each paired with a user-visible label and /assets/gui/icons/*.png resource."
+        },
+        {
+          "family": "exact_codec_reference",
+          "detail": "R345 LoadoutBinaryCodec explicitly serializes/deserializes the optional icon enum stored on R143 LoadoutDefinition; this is that exact enum type."
+        },
+        {
+          "family": "exact_ui_consumers",
+          "detail": "LoadoutsSidebarPanel and loadout editing/rendering surfaces use this enum to present/select the icon associated with a saved loadout definition."
+        }
+      ],
+      "note": "Exact-v308 semantic name for the named icon enum stored by LoadoutDefinition."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutItemEntry",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_two_int_record",
+          "detail": "The class stores exactly two immutable ints; the first is consumed as item ID for icon lookup and validity, while the second is rendered as the quantity and color-formatted through the client quantity formatter."
+        },
+        {
+          "family": "exact_codec_shape",
+          "detail": "R345 LoadoutBinaryCodec reads/writes exactly two ints for every equipment-slot and inventory-slot record and reconstructs this class from those itemId/quantity pairs."
+        },
+        {
+          "family": "exact_model_ownership",
+          "detail": "R143 LoadoutDefinition stores these entries in its equipment-slot map and 28-slot inventory array; the type has no unrelated state."
+        },
+        {
+          "family": "exact_icon_bridge",
+          "detail": "Its c() helper resolves the first/item-id field through LoadoutItemIconCache and returns a GuiImageAsset for rendering."
+        }
+      ],
+      "note": "Exact-v308 itemId/quantity value record used by LoadoutDefinition equipment and inventory slots."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutItemIconCache",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_item_id_cache",
+          "detail": "The class owns a static ConcurrentHashMap<Integer, GuiImageAsset> keyed by LoadoutItemEntry item ID and returns a cached asset when present."
+        },
+        {
+          "family": "exact_async_miss_path",
+          "detail": "On cache miss it dispatches the item ID through one of five loader helpers and returns null until the generated 32x32 item image is inserted into the cache."
+        },
+        {
+          "family": "exact_loadout_scope",
+          "detail": "The class is referenced throughout the Loadouts model/rendering family and by LoadoutsSidebarPanel, with no non-loadout consumer."
+        },
+        {
+          "family": "exact_entry_bridge",
+          "detail": "LoadoutItemEntry.c() constructs this cache wrapper from its item ID and returns the resolved GuiImageAsset."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the shared Loadouts item-image cache/resolver."
+    }
+  ],
+  "conflicts": []
+}
