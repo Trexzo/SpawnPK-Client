@@ -1,4 +1,4 @@
-# Chat 2 — exact-v308 dynamic scene object R464
+# Chat 2 — R464 duplicate DynamicObject corroboration audit
 
 Exact client authority:
 
@@ -6,55 +6,39 @@ Exact client authority:
 
 ## Result
 
-`rs/a/m` -> `CLIENT_CLASS_000076` -> `DynamicObject`
+R464 retains **no semantic proposal**.
 
-- proposal: `SEMPROP_8F8E78193D1FA2791867`
-- review: `SEMREVIEW_2CEDCB4AF982E7296103`
+The attempted recovery:
 
-## Stable-ID gap
+- `rs/a/m`
+- `CLIENT_CLASS_000076`
+- `DynamicObject`
+- proposal `SEMPROP_8F8E78193D1FA2791867`
 
-The surrounding core-renderable lineage is already owned:
+is exactly the existing R31 authority, including the same deterministic proposal ID.
 
-- 000075 / `rs/a/l` -> R31 `Projectile`
-- 000077 / `rs/b` -> R54 `RSCanvas`
+R31 therefore remains the sole semantic owner.
 
-The exact v308 class-order gap fixes `rs/a/m` as `CLIENT_CLASS_000076`.
+## Additional corroboration found during R464
 
-## Exact behavior
+Direct exact-v308 bytecode analysis strengthened the existing R31 interpretation:
 
-`rs/a/m` extends R30 `Renderable`.
+- R53 ObjectManager constructs `rs/a/m` specifically when a placed object definition has
+  animation or morph/child-definition state; otherwise it constructs the static Model directly.
+- Client runtime object-animation handling replaces existing wall objects, wall decorations,
+  game objects and floor decorations with `rs/a/m` wrappers while preserving object
+  id/type/orientation state.
+- the constructor can inherit animation frame/tick state from a prior `rs/a/m` using the
+  same compatible Sequence rather than restarting it.
 
-Its constructor stores:
+These findings corroborate R31 `DynamicObject`; they do not create a second proposal.
 
-- object definition id;
-- object shape/type;
-- orientation;
-- four tile-height samples;
-- optional animation/Sequence id;
-- optional random-start flag;
-- optional prior Renderable.
+## Nearby withheld gaps
 
-Its render-model method resolves the ObjectDefinition and, when present, advances the
-Sequence from the global client cycle before requesting the object's current Model.
-
-R53 `ObjectManager` makes the decisive semantic split:
-
-- static object definition with no animation/morph table -> build static Model directly;
-- animated or morphable object -> construct `rs/a/m`.
-
-Client's runtime scene-object animation path also replaces existing wall, decoration,
-game-object and floor-decoration renderables with fresh `rs/a/m` instances.
-
-When the previous Renderable is another `rs/a/m` using the same compatible Sequence, the
-new object can inherit frame/tick state instead of restarting.
-
-## Withheld neighboring gaps
-
-- `CLIENT_CLASS_000056` / `rs/a/a/b` is a compiler-generated synthetic enum-switch
-  table only.
-- `CLIENT_CLASS_000066` / `rs/a/c$a` is an otherwise-unused inner integer container;
-  exact v308 has no live owner/caller beyond InnerClasses metadata.
+- `rs/a/a/b` is a compiler-generated enum-switch table.
+- `rs/a/c$a` is an otherwise-unused four-int inner container with no live exact-v308
+  caller/owner beyond metadata.
 
 Neither receives a semantic proposal.
 
-R464 remains non-canonical semantic research only.
+R464 is correction/corroboration research only.
