@@ -255,6 +255,46 @@ def summarize(
                 + str(action.get("imported_owner") or "<missing>")
             ),
         },
+        {
+            "kind": (
+                "shadowed_same_package_static_method_owner_qualification"
+            ),
+            "label": "SAME-PACKAGE STATIC METHOD SHADOW",
+            "method_key": (
+                "shadowed_same_package_static_method_method_count"
+            ),
+            "reference_key": (
+                "shadowed_same_package_static_method_reference_count"
+            ),
+            "method_marker": "SAME_PACKAGE_STATIC_METHOD_SHADOW_METHODS",
+            "reference_marker": "SAME_PACKAGE_STATIC_METHOD_SHADOW_REFERENCES",
+            "detail": lambda action: (
+                "simple="
+                + str(action.get("simple_owner") or "<missing>")
+                + " | owner="
+                + str(action.get("same_package_owner") or "<missing>")
+            ),
+        },
+        {
+            "kind": (
+                "scoped_same_package_static_field_owner_qualification"
+            ),
+            "label": "SCOPED SAME-PACKAGE STATIC FIELD",
+            "method_key": (
+                "scoped_same_package_static_field_method_count"
+            ),
+            "reference_key": (
+                "scoped_same_package_static_field_reference_count"
+            ),
+            "method_marker": "SCOPED_SAME_PACKAGE_STATIC_FIELD_METHODS",
+            "reference_marker": "SCOPED_SAME_PACKAGE_STATIC_FIELD_REFERENCES",
+            "detail": lambda action: (
+                "simple="
+                + str(action.get("simple_owner") or "<missing>")
+                + " | owner="
+                + str(action.get("same_package_owner") or "<missing>")
+            ),
+        },
     ]
 
     for spec in family_specs:
