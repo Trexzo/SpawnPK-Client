@@ -41,3 +41,22 @@ spk-cross-version-javac-frontier `
   .\\v308\\javac-diagnostic-private.json `
   --out .\\cross-version-javac-frontier.json
 ```
+
+## One-command historical/current comparison
+
+After both private Source-M1 runs have produced their identifier-bearing javac
+diagnostic reports, the repository wrapper keeps the final output redacted:
+
+```powershell
+& .\scripts\Invoke-CrossVersionJavacFrontier.ps1
+```
+
+Its defaults consume the historical v307 backtest diagnostic and the current
+v308 Source-M1 exact-local diagnostic from their standard desktop output
+locations. The wrapper requires a clean checkout at exact `origin/main` and
+refuses any final report with `identifiers_included=true`.
+
+The wrapper only compares the two supplied compiler frontiers. It does not
+claim that either input was produced at the same repository commit; provenance
+for each underlying Source-M1 run remains the responsibility of that run's
+own authority/release artifacts.
