@@ -14,9 +14,27 @@ from spk_recovery.historical_lineage_backfill import (
     HistoricalLineageBackfillError,
     backfill_historical_v307_lineage,
 )
+from spk_recovery.historical_lineage_backfill_cli import (
+    _load as _historical_v307_load,
+)
 from spk_recovery.indexer import index_jar
 from spk_recovery.lineage import seed_lineage
 from spk_recovery.member_lineage import seed_member_lineage
+
+
+class HistoricalV307LineageCliTests(unittest.TestCase):
+    def test_cli_loader_rejects_nested_duplicate_json_keys(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "duplicate.json"
+            path.write_text(
+                '{"old":{"build_id":"v307","build_id":"v306"}}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                HistoricalLineageBackfillError,
+                "duplicate JSON key: 'build_id'",
+            ):
+                _historical_v307_load(path)
 
 
 @unittest.skipUnless(shutil.which("javac"), "javac required")
