@@ -470,6 +470,27 @@ def build_cross_version_javac_checkpoint_delta(
     }
 
 
+def verify_cross_version_javac_checkpoint_delta(
+    baseline_report: dict[str, Any],
+    current_report: dict[str, Any],
+    delta_report: dict[str, Any],
+) -> dict[str, Any]:
+    if not isinstance(delta_report, dict):
+        raise CrossVersionJavacCheckpointDeltaError(
+            "javac checkpoint delta must be an object"
+        )
+
+    expected = build_cross_version_javac_checkpoint_delta(
+        baseline_report,
+        current_report,
+    )
+    if delta_report != expected:
+        raise CrossVersionJavacCheckpointDeltaError(
+            "javac checkpoint delta does not match deterministic recomputation"
+        )
+    return expected
+
+
 def write_cross_version_javac_checkpoint_delta(
     report: dict[str, Any],
     path: Path,
