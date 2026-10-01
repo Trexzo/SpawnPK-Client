@@ -51,11 +51,11 @@ class HistoricalV307FullBacktestWrapperTests(unittest.TestCase):
     def test_release_stage_uses_derived_v307_lineage(self):
         text = self._text()
         self.assertIn(
-            'lineage-backfill\\migration\\class-lineage.json',
+            'lineage-backfill\\class-lineage.json',
             text,
         )
         self.assertIn(
-            'lineage-backfill\\migration\\member-lineage.json',
+            'lineage-backfill\\member-lineage.json',
             text,
         )
         self.assertIn(
