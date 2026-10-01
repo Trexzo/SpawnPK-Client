@@ -387,5 +387,124 @@ class CrossVersionJavacCheckpointDeltaTests(unittest.TestCase):
         )
 
 
+    def test_rejects_swapped_build_sides(self):
+        swapped = copy.deepcopy(self.current)
+        swapped["old"], swapped["new"] = swapped["new"], swapped["old"]
+        material = {
+            "tooling_commit": swapped["tooling_commit"],
+            "binary_backtest_id": swapped["binary_backtest_id"],
+            "old": swapped["old"],
+            "new": swapped["new"],
+            "comparison": swapped["comparison"],
+        }
+        swapped["checkpoint_id"] = (
+            "XJAVACCHECKPOINT_" + _stable_digest(material)[:20].upper()
+        )
+        with self.assertRaisesRegex(
+            CrossVersionJavacCheckpointDeltaError,
+            "old build_id changed across checkpoints",
+        ):
+            build_cross_version_javac_checkpoint_delta(
+                self.baseline,
+                swapped,
+            )
+
+    def test_rejects_binary_backtest_authority_drift(self):
+        bad = copy.deepcopy(self.current)
+        bad["binary_backtest_id"] = "XVERBIN_" + "9" * 20
+        material = {
+            "tooling_commit": bad["tooling_commit"],
+            "binary_backtest_id": bad["binary_backtest_id"],
+            "old": bad["old"],
+            "new": bad["new"],
+            "comparison": bad["comparison"],
+        }
+        bad["checkpoint_id"] = (
+            "XJAVACCHECKPOINT_" + _stable_digest(material)[:20].upper()
+        )
+        with self.assertRaisesRegex(
+            CrossVersionJavacCheckpointDeltaError,
+            "binary_backtest_id changed across checkpoints",
+        ):
+            build_cross_version_javac_checkpoint_delta(
+                self.baseline,
+                bad,
+            )
+
+    def test_identical_checkpoints_emit_zero_delta(self):
+        report = build_cross_version_javac_checkpoint_delta(
+            self.baseline,
+            copy.deepcopy(self.baseline),
+        )
+        self.assertTrue(
+            all(value == 0 for value in report["scalar_delta"].values())
+        )
+        self.assertTrue(
+            all(
+                not values
+                for values in report["category_delta"].values()
+            )
+        )
+        self.assertEqual(
+            report["exact_frontier_equality_transition"],
+            "preserved_true",
+        )
+        self.assertFalse(report["old_frontier_changed"])
+        self.assertFalse(report["new_frontier_changed"])
+        self.assertFalse(report["old_source_tree_changed"])
+        self.assertFalse(report["new_source_tree_changed"])
+        self.assertEqual(
+            report["baseline_tooling_commit"],
+            report["current_tooling_commit"],
+        )
+
+    def test_category_present_only_in_current_uses_zero_baseline(self):
+        changed = copy.deepcopy(self.current)
+        summary = changed["comparison"]["summary"]
+
+        summary["old_total_errors"] += 1
+        summary["new_total_errors"] += 1
+        summary["shared_errors"] += 1
+        summary["old_categories"]["other"] = 1
+        summary["new_categories"]["other"] = 1
+        summary["shared_categories"]["other"] = 1
+        summary["shared_percent_of_old"] = round(
+            summary["shared_errors"] * 100.0 / summary["old_total_errors"],
+            4,
+        )
+        summary["shared_percent_of_new"] = round(
+            summary["shared_errors"] * 100.0 / summary["new_total_errors"],
+            4,
+        )
+
+        material = {
+            "tooling_commit": changed["tooling_commit"],
+            "binary_backtest_id": changed["binary_backtest_id"],
+            "old": changed["old"],
+            "new": changed["new"],
+            "comparison": changed["comparison"],
+        }
+        changed["checkpoint_id"] = (
+            "XJAVACCHECKPOINT_" + _stable_digest(material)[:20].upper()
+        )
+
+        report = build_cross_version_javac_checkpoint_delta(
+            self.baseline,
+            changed,
+        )
+        self.assertEqual(
+            report["category_delta"]["old_categories"]["other"],
+            1,
+        )
+        self.assertEqual(
+            report["category_delta"]["new_categories"]["other"],
+            1,
+        )
+        self.assertEqual(
+            report["category_delta"]["shared_categories"]["other"],
+            1,
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
