@@ -1,26 +1,99 @@
 {
-  "schema_version":1,
-  "kind":"semantic_candidate_set",
-  "canonical":false,
-  "source_build":"v308",
-  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-  "candidates":[{
-    "schema_version":1,
-    "kind":"semantic_name_candidate",
-    "canonical":false,
-    "status":"CANDIDATE",
-    "source_build":"v308",
-    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-    "target":{"kind":"class","owner":"rs/l/t","name":null,"descriptor":null},
-    "proposed_name":"TextParticleMarkup",
-    "confidence":0.999,
-    "evidence":[
-      {"family":"exact_markup_tokens","detail":"Exact v308 recognizes @par@ plus par/par2..par8 tags and pimg/p2img..p8img image-selector forms inside the RSFont rich-text pipeline."},
-      {"family":"exact_particle_selection","detail":"For an active particle markup span the class counts particle controls, resolves the selected pimg family, and chooses up to three unique random palette/image variants with a 50 ms cache window."},
-      {"family":"exact_particle_spawn","detail":"Its render-side method computes randomized positions within the supplied glyph/text bounds, constructs the already-recovered UI particle object rs/l/f/a/f/a, assigns direction/motion/size/alpha/lifetime state and registers it with the active particle manager."},
-      {"family":"exact_font_integration","detail":"R55 RSFont invokes the parser during both layout and drawing, tracks the selected par mode and palette array, and calls the particle-spawn method at matching rendered character positions."}
-    ],
-    "note":"Descriptive exact-v308 name for par/pimg rich-text markup that emits UI particles from RSFont rendering."
-  }],
-  "conflicts":[]
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RuneLiteLookAndFeel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_substance_wrapper",
+          "detail": "The class directly extends SubstanceLookAndFeel and its constructor delegates with a newly-created rs/gui/b skin instance."
+        },
+        {
+          "family": "exact_skin_pair",
+          "detail": "rs/gui/b is the exact RuneLite-branded SubstanceSkin, making rs/gui/a the concrete LookAndFeel wrapper for that skin."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the Substance LookAndFeel wrapper around the RuneLite skin."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RuneLiteSubstanceSkin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_resource_identity",
+          "detail": "The skin loads the exact resource RuneLite.colorschemes and resolves many named schemes such as RuneLite Active, RuneLite Enabled, RuneLite Border, RuneLite Header Border and RuneLite Header Watermark."
+        },
+        {
+          "family": "exact_display_name",
+          "detail": "getDisplayName() returns the literal String 'RuneLite'."
+        },
+        {
+          "family": "exact_substance_skin_role",
+          "detail": "The class directly extends SubstanceSkin and configures color-scheme bundles, borders, marks, separators, title/header decoration areas, tab fades and overlay painters."
+        }
+      ],
+      "note": "Exact-v308 RuneLite-branded Substance skin."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SquareButtonShaper",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_shaper_contract",
+          "detail": "The class extends Substance ClassicButtonShaper and overrides getCornerRadius(AbstractButton,float)."
+        },
+        {
+          "family": "exact_square_behavior",
+          "detail": "getCornerRadius always returns 0.0f for every button and size, forcing square button corners."
+        },
+        {
+          "family": "exact_skin_ownership",
+          "detail": "The shaper stores only its synthetic RuneLiteSubstanceSkin parent reference and has no unrelated styling behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the zero-corner-radius button shaper used by the RuneLite skin."
+    }
+  ],
+  "conflicts": []
 }
