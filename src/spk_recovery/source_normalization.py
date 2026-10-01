@@ -2353,6 +2353,12 @@ _DOTTED_STATIC_FIELD_RE = re.compile(
     r"\.(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\b"
     r"(?!\s*\()"
 )
+_SIMPLE_STATIC_FIELD_RE = re.compile(
+    r"(?<![A-Za-z0-9_$.])"
+    r"(?P<owner>[A-Za-z_$][A-Za-z0-9_$]*)"
+    r"\.(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+    r"(?!\s*\()"
+)
 
 
 def _java_owner_binary_candidates(owner: str) -> list[str]:
@@ -2455,6 +2461,68 @@ def _resolve_shadowed_nested_static_field(
     return matches[0]
 
 
+def _resolve_shadowed_simple_nested_static_field(
+    *,
+    owner: str,
+    field_name: str,
+    current_owner: str,
+    readable_zip: zipfile.ZipFile,
+    entries: set[str],
+    class_cache: dict[str, Any],
+) -> tuple[str, list[str], str] | None:
+    """Resolve simple Inner.FIELD to exact Outer$Inner.FIELD.
+
+    The candidate must be a nested class owned by the exact current class.
+    Its target field must be declared static, and a visible hierarchy value
+    with the same nested simple name must prove the Java name-resolution
+    shadow that makes the Procyon expression illegal.
+    """
+    if not _is_java_identifier(owner):
+        return None
+
+    candidate = current_owner + "$" + owner
+    entry = candidate + ".class"
+    if entry not in entries:
+        return None
+
+    parsed = class_cache.get(candidate)
+    if parsed is None:
+        try:
+            parsed = parse_class(readable_zip.read(entry))
+        except (KeyError, ClassFormatError):
+            return None
+        class_cache[candidate] = parsed
+    if parsed.name != candidate:
+        return None
+
+    declarations = [
+        field
+        for field in parsed.fields
+        if (
+            str(field.get("name", "")) == field_name
+            and int(field.get("access", 0)) & 0x0008
+            and _field_visible_from(
+                declaring_owner=candidate,
+                current_owner=current_owner,
+                access=int(field.get("access", 0)),
+            )
+        )
+    ]
+    if len(declarations) != 1:
+        return None
+
+    shadowed, shadow_owners = _nested_owner_has_visible_name_shadow(
+        nested_internal=candidate,
+        current_owner=current_owner,
+        readable_zip=readable_zip,
+    )
+    if not shadowed:
+        return None
+
+    java_owner = current_owner.replace("/", ".") + "." + owner
+    return candidate, shadow_owners, java_owner
+
+
 def _normalize_shadowed_nested_static_field_owners(
     *,
     source_root: Path,
@@ -2521,29 +2589,53 @@ def _normalize_shadowed_nested_static_field_owners(
             list[str],
         ] = {}
 
-        for token in _DOTTED_STATIC_FIELD_RE.finditer(method_code):
+        tokens: list[tuple[re.Match[str], bool]] = [
+            (token, False)
+            for token in _DOTTED_STATIC_FIELD_RE.finditer(method_code)
+        ]
+        tokens.extend(
+            (token, True)
+            for token in _SIMPLE_STATIC_FIELD_RE.finditer(method_code)
+        )
+        tokens.sort(key=lambda row: row[0].start())
+
+        for token, simple_owner in tokens:
             owner = token.group("owner")
             field_name = token.group("field")
-            resolved = _resolve_shadowed_nested_static_field(
-                owner=owner,
-                field_name=field_name,
-                current_owner=current_owner,
-                readable_zip=readable_zip,
-                entries=entries,
-                class_cache=class_cache,
-            )
-            if resolved is None:
-                continue
+            if simple_owner:
+                simple_resolved = _resolve_shadowed_simple_nested_static_field(
+                    owner=owner,
+                    field_name=field_name,
+                    current_owner=current_owner,
+                    readable_zip=readable_zip,
+                    entries=entries,
+                    class_cache=class_cache,
+                )
+                if simple_resolved is None:
+                    continue
+                nested_internal, shadow_owners, java_owner = simple_resolved
+            else:
+                resolved = _resolve_shadowed_nested_static_field(
+                    owner=owner,
+                    field_name=field_name,
+                    current_owner=current_owner,
+                    readable_zip=readable_zip,
+                    entries=entries,
+                    class_cache=class_cache,
+                )
+                if resolved is None:
+                    continue
+                nested_internal, shadow_owners = resolved
+                java_owner = owner
 
-            nested_internal, shadow_owners = resolved
-            key = (nested_internal, field_name, owner)
+            key = (nested_internal, field_name, java_owner)
             source_counts[key] = source_counts.get(key, 0) + 1
             shadow_owners_by_key[key] = shadow_owners
             source_occurrences.setdefault(key, []).append(
                 (
                     match.start() + token.start(),
                     match.start() + token.end(),
-                    "((" + owner + ")null)." + field_name,
+                    "((" + java_owner + ")null)." + field_name,
                 )
             )
 
@@ -2659,29 +2751,53 @@ def _normalize_shadowed_nested_static_field_owners(
             list[str],
         ] = {}
 
-        for token in _DOTTED_STATIC_FIELD_RE.finditer(constructor_code):
+        tokens: list[tuple[re.Match[str], bool]] = [
+            (token, False)
+            for token in _DOTTED_STATIC_FIELD_RE.finditer(constructor_code)
+        ]
+        tokens.extend(
+            (token, True)
+            for token in _SIMPLE_STATIC_FIELD_RE.finditer(constructor_code)
+        )
+        tokens.sort(key=lambda row: row[0].start())
+
+        for token, simple_owner in tokens:
             owner = token.group("owner")
             field_name = token.group("field")
-            resolved = _resolve_shadowed_nested_static_field(
-                owner=owner,
-                field_name=field_name,
-                current_owner=current_owner,
-                readable_zip=readable_zip,
-                entries=entries,
-                class_cache=class_cache,
-            )
-            if resolved is None:
-                continue
+            if simple_owner:
+                simple_resolved = _resolve_shadowed_simple_nested_static_field(
+                    owner=owner,
+                    field_name=field_name,
+                    current_owner=current_owner,
+                    readable_zip=readable_zip,
+                    entries=entries,
+                    class_cache=class_cache,
+                )
+                if simple_resolved is None:
+                    continue
+                nested_internal, shadow_owners, java_owner = simple_resolved
+            else:
+                resolved = _resolve_shadowed_nested_static_field(
+                    owner=owner,
+                    field_name=field_name,
+                    current_owner=current_owner,
+                    readable_zip=readable_zip,
+                    entries=entries,
+                    class_cache=class_cache,
+                )
+                if resolved is None:
+                    continue
+                nested_internal, shadow_owners = resolved
+                java_owner = owner
 
-            nested_internal, shadow_owners = resolved
-            key = (nested_internal, field_name, owner)
+            key = (nested_internal, field_name, java_owner)
             source_counts[key] = source_counts.get(key, 0) + 1
             shadow_owners_by_key[key] = shadow_owners
             source_occurrences.setdefault(key, []).append(
                 (
                     match.start() + token.start(),
                     match.start() + token.end(),
-                    "((" + owner + ")null)." + field_name,
+                    "((" + java_owner + ")null)." + field_name,
                 )
             )
 
@@ -4314,11 +4430,11 @@ def _normalize_same_package_static_field_owners_shadowed_by_scoped_values(
 ) -> list[dict[str, Any]]:
     """Qualify same-package static fields hidden by parameter/local values.
 
-    This rule intentionally excludes hierarchy-field-only shadows, which are
-    owned by the older same-package static-field normalizer. It targets
-    reference or primitive parameters/locals and requires the complete exact
-    getstatic/putstatic owner/name multiset to agree with source before any
-    edit is made.
+    This rule targets reference or primitive parameters/locals, including
+    methods where the same simple name is also present in the hierarchy.
+    Hierarchy-only shadows still make no edit here because a scoped binding is
+    required. The complete exact getstatic/putstatic owner/name multiset must
+    agree with source before any edit is made.
     """
     rel = path.relative_to(source_root).as_posix()
     class_entry = Path(rel).with_suffix(".class").as_posix()
@@ -4355,30 +4471,8 @@ def _normalize_same_package_static_field_owners_shadowed_by_scoped_values(
     if not candidate_simples:
         return []
 
-    hierarchy = _read_readable_hierarchy(
-        readable_zip=readable_zip,
-        internal_name=current_owner,
-    )
-    hierarchy_value_names = {
-        str(field.get("name", ""))
-        for owner, parsed in hierarchy
-        for field in parsed.fields
-        if (
-            _is_java_identifier(str(field.get("name", "")))
-            and _field_visible_from(
-                declaring_owner=owner,
-                current_owner=current_owner,
-                access=int(field.get("access", 0)),
-            )
-        )
-    }
-
     siblings: dict[str, tuple[str, set[str]]] = {}
     for simple in candidate_simples:
-        if simple in hierarchy_value_names:
-            # Leave hierarchy-shadow cases to the established normalizer and
-            # avoid overlapping edits between the two exact rules.
-            continue
         sibling_owner = current_package + "/" + simple
         if sibling_owner == current_owner:
             continue
