@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_292A36DD3CBF1DACBFD9",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_0A95AE215FCE838836DC",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000007",
+      "owner_logical_id": "CLIENT_CLASS_000007",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/A/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AsyncBufferedImage",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_async_image_contract",
+          "detail": "Exact v308 rs/A/d extends BufferedImage, stores completion callbacks, exposes a changed/completion method that marks the image ready and runs queued callbacks, and can bind itself as an ImageIcon to JButton/JLabel consumers."
+        },
+        {
+          "family": "exact_ui_callback_behavior",
+          "detail": "When already complete, newly added callbacks are dispatched immediately through the client task helper; otherwise callbacks are queued until the image changes. Swing components are repainted asynchronously after image availability."
+        },
+        {
+          "family": "upstream_runelite_source_identity",
+          "detail": "RuneLite net.runelite.client.util.AsyncBufferedImage extends BufferedImage with the same callback/change lifecycle and JButton/JLabel ImageIcon helpers."
+        },
+        {
+          "family": "exact_manager_join",
+          "detail": "Exact v308 rs/A/a caches and asynchronously fills this type from item/sprite/image sources, confirming its asynchronous image placeholder role."
+        }
+      ],
+      "note": "Historical RuneLite source identity plus exact-v308 bytecode fixes AsyncBufferedImage."
+    },
+    {
+      "proposal_id": "SEMPROP_3AB6BDA5EEA000DFBA1B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000014",
+      "owner_logical_id": "CLIENT_CLASS_000014",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/A/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "JagexPrintableCharMatcher",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_character_contract",
+          "detail": "Exact v308 rs/A/k extends Guava CharMatcher and accepts characters in 32..126, codepoint 128, and 160..255 while rejecting other characters."
+        },
+        {
+          "family": "upstream_runelite_source_identity",
+          "detail": "RuneLite JagexPrintableCharMatcher is the same package-private CharMatcher with the identical Jagex printable character ranges."
+        },
+        {
+          "family": "exact_text_join",
+          "detail": "The matcher belongs to the same exact-v308 RuneLite text utility namespace as R466 Text and supplies the character-domain filtering used by shared text normalization."
+        }
+      ],
+      "note": "Historical RuneLite source identity plus exact-v308 bytecode fixes JagexPrintableCharMatcher."
+    }
+  ],
+  "unresolved": []
+}
