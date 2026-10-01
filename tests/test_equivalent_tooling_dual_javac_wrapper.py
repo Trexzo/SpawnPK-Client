@@ -85,6 +85,31 @@ class EquivalentToolingDualJavacWrapperTests(unittest.TestCase):
         )
         self.assertIn("exit 3", text)
 
+    def test_generates_missing_success_path_bindings(self):
+        text = self.script_text()
+        self.assertIn(
+            "spk_recovery.javac_build_binding_cli",
+            text,
+        )
+        self.assertIn(
+            "Ensure-JavacBuildBinding",
+            text,
+        )
+        self.assertIn(
+            "GENERATED_JAVAC_BUILD_BINDING=",
+            text,
+        )
+        self.assertIn(
+            "6232bae206846a4ba8d09766a2dee886"
+            "b69016066a3f50f83b201bf705f93662",
+            text,
+        )
+        self.assertIn(
+            "854f26ff9f134b0317572e7ac1688e6f"
+            "40a231d5a4c66f8db5d655b7f45ce7c6",
+            text,
+        )
+
     def test_requires_private_binding_evidence_from_each_run(self):
         text = self.script_text()
         for marker in (
