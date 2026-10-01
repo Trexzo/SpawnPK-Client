@@ -7,6 +7,7 @@
     "schema_version",
     "kind",
     "binding_id",
+    "tooling_commit",
     "build_id",
     "source_authority_sha256",
     "rebuild_id",
@@ -22,13 +23,20 @@
     "note"
   ],
   "properties": {
-    "schema_version": {"const": 1},
-    "kind": {"const": "javac_build_binding"},
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "javac_build_binding"
+    },
     "binding_id": {
       "type": "string",
       "pattern": "^JAVACBIND_[0-9A-F]{20}$"
     },
-    "build_id": {"type": "string", "minLength": 1},
+    "build_id": {
+      "type": "string",
+      "minLength": 1
+    },
     "source_authority_sha256": {
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"
@@ -37,7 +45,10 @@
       "type": "string",
       "pattern": "^CLEANBUILD_[0-9A-F]{20}$"
     },
-    "workspace_id": {"type": "string", "minLength": 1},
+    "workspace_id": {
+      "type": "string",
+      "minLength": 1
+    },
     "source_tree_sha256": {
       "type": "string",
       "pattern": "^[0-9a-f]{64}$"
@@ -54,13 +65,29 @@
       "type": "string",
       "pattern": "^JAVACFRONTIER_[0-9A-F]{20}$"
     },
-    "project_binary_fallback_count": {"const": 0},
-    "clean_rebuild_status": {
-      "enum": ["complete", "compile_failed", "class_set_mismatch"]
+    "project_binary_fallback_count": {
+      "const": 0
     },
-    "clean_project_build": {"type": "boolean"},
-    "identifiers_included": {"const": false},
-    "note": {"type": "string"}
+    "clean_rebuild_status": {
+      "enum": [
+        "complete",
+        "compile_failed",
+        "class_set_mismatch"
+      ]
+    },
+    "clean_project_build": {
+      "type": "boolean"
+    },
+    "identifiers_included": {
+      "const": false
+    },
+    "note": {
+      "type": "string"
+    },
+    "tooling_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    }
   },
   "additionalProperties": false
 }

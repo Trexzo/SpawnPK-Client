@@ -3,8 +3,10 @@ param(
     [string]$Repo = "C:\Users\Felix\Desktop\SpawnPK-Client",
     [string]$V307Diagnostic = "$env:USERPROFILE\Desktop\SpawnPK-Historical-v307-Backtest\recovery-release\release\javac-diagnostic-private.json",
     [string]$V307CleanRebuild = "$env:USERPROFILE\Desktop\SpawnPK-Historical-v307-Backtest\recovery-release\release\rebuild\clean-rebuild.json",
+    [string]$V307BindingReport = "$env:USERPROFILE\Desktop\SpawnPK-Historical-v307-Backtest\recovery-release\release\javac-build-binding.json",
     [string]$V308Diagnostic = "$env:USERPROFILE\Desktop\SpawnPK-SourceM1-Exact\release\javac-diagnostic-private.json",
     [string]$V308CleanRebuild = "$env:USERPROFILE\Desktop\SpawnPK-SourceM1-Exact\release\rebuild\clean-rebuild.json",
+    [string]$V308BindingReport = "$env:USERPROFILE\Desktop\SpawnPK-SourceM1-Exact\release\javac-build-binding.json",
     [string]$OutDir = "$env:USERPROFILE\Desktop\SpawnPK-CrossVersion-Javac"
 )
 
@@ -63,6 +65,7 @@ function Invoke-JavacBuildBinding {
         [Parameter(Mandatory = $true)][string]$CleanRebuild,
         [Parameter(Mandatory = $true)][string]$BuildId,
         [Parameter(Mandatory = $true)][string]$AuthoritySha256,
+        [Parameter(Mandatory = $true)][string]$ToolingCommit,
         [Parameter(Mandatory = $true)][string]$Out
     )
 
@@ -76,6 +79,8 @@ function Invoke-JavacBuildBinding {
         $BuildId,
         "--expected-authority-sha256",
         $AuthoritySha256,
+        "--tooling-commit",
+        $ToolingCommit,
         "--out",
         $Out
     )
@@ -118,37 +123,92 @@ if ($Head -ne $RemoteMain) {
 
 Require-File $V307Diagnostic
 Require-File $V307CleanRebuild
+Require-File $V307BindingReport
 Require-File $V308Diagnostic
 Require-File $V308CleanRebuild
+Require-File $V308BindingReport
 
 if (-not (Test-Path -LiteralPath $OutDir -PathType Container)) {
     New-Item -ItemType Directory -Path $OutDir | Out-Null
 }
 
-$V307BindingReport = Join-Path $OutDir "v307-javac-build-binding.json"
-$V308BindingReport = Join-Path $OutDir "v308-javac-build-binding.json"
+$V307VerifiedBinding = Join-Path $OutDir "v307-javac-build-binding-verified.json"
+$V308VerifiedBinding = Join-Path $OutDir "v308-javac-build-binding-verified.json"
 $Report = Join-Path $OutDir "v307-v308-javac-frontier.json"
 
 $env:PYTHONPATH = Join-Path $Repo "src"
 $env:PYTHONDONTWRITEBYTECODE = "1"
 
+$BindingFields = @{
+    binding_id = "/binding_id"
+    tooling_commit = "/tooling_commit"
+    build_id = "/build_id"
+    source_authority_sha256 = "/source_authority_sha256"
+    rebuild_id = "/rebuild_id"
+    workspace_id = "/workspace_id"
+    source_tree_sha256 = "/source_tree_sha256"
+    diagnostic_report_id = "/diagnostic_report_id"
+    diagnostic_input_sha256 = "/diagnostic_input_sha256"
+    frontier_id = "/frontier_id"
+    project_binary_fallback_count = "/project_binary_fallback_count"
+    identifiers_included = "/identifiers_included"
+}
+
+$V307RecordedBinding = Get-Projection -Path $V307BindingReport -Fields $BindingFields
+$V308RecordedBinding = Get-Projection -Path $V308BindingReport -Fields $BindingFields
+
+if (
+    [string]$V307RecordedBinding.tooling_commit -ne
+    [string]$V308RecordedBinding.tooling_commit
+) {
+    throw (
+        "Recovery tooling commit mismatch: v307=" +
+        $V307RecordedBinding.tooling_commit +
+        " v308=" +
+        $V308RecordedBinding.tooling_commit
+    )
+}
+
+$InputToolingCommit = [string]$V307RecordedBinding.tooling_commit
+if ($InputToolingCommit -notmatch "^[0-9a-f]{40}$") {
+    throw "Input tooling commit is not lowercase 40-hex."
+}
+
 Write-Host ""
-Write-Host "=== BIND v307 DIAGNOSTIC TO EXACT CLEAN REBUILD ===" -ForegroundColor Cyan
+Write-Host "=== VERIFY v307 BUILD + TOOLING BINDING ===" -ForegroundColor Cyan
 Invoke-JavacBuildBinding `
     -Diagnostic $V307Diagnostic `
     -CleanRebuild $V307CleanRebuild `
     -BuildId "v307" `
     -AuthoritySha256 $V307Authority `
-    -Out $V307BindingReport
+    -ToolingCommit $InputToolingCommit `
+    -Out $V307VerifiedBinding
 
 Write-Host ""
-Write-Host "=== BIND v308 DIAGNOSTIC TO EXACT CLEAN REBUILD ===" -ForegroundColor Cyan
+Write-Host "=== VERIFY v308 BUILD + TOOLING BINDING ===" -ForegroundColor Cyan
 Invoke-JavacBuildBinding `
     -Diagnostic $V308Diagnostic `
     -CleanRebuild $V308CleanRebuild `
     -BuildId "v308" `
     -AuthoritySha256 $V308Authority `
-    -Out $V308BindingReport
+    -ToolingCommit $InputToolingCommit `
+    -Out $V308VerifiedBinding
+
+$V307VerifiedBindingDoc = Get-Projection -Path $V307VerifiedBinding -Fields $BindingFields
+$V308VerifiedBindingDoc = Get-Projection -Path $V308VerifiedBinding -Fields $BindingFields
+
+if (
+    [string]$V307RecordedBinding.binding_id -ne
+    [string]$V307VerifiedBindingDoc.binding_id
+) {
+    throw "v307 recorded javac build binding failed verification."
+}
+if (
+    [string]$V308RecordedBinding.binding_id -ne
+    [string]$V308VerifiedBindingDoc.binding_id
+) {
+    throw "v308 recorded javac build binding failed verification."
+}
 
 $Arguments = @(
     "-3.13",
@@ -192,48 +252,31 @@ $Summary = Get-Projection -Path $Report -Fields @{
     exact_frontier_equal = "/summary/exact_frontier_equal"
 }
 
-$BindingFields = @{
-    binding_id = "/binding_id"
-    build_id = "/build_id"
-    source_authority_sha256 = "/source_authority_sha256"
-    rebuild_id = "/rebuild_id"
-    workspace_id = "/workspace_id"
-    source_tree_sha256 = "/source_tree_sha256"
-    diagnostic_report_id = "/diagnostic_report_id"
-    diagnostic_input_sha256 = "/diagnostic_input_sha256"
-    frontier_id = "/frontier_id"
-    project_binary_fallback_count = "/project_binary_fallback_count"
-    identifiers_included = "/identifiers_included"
-}
-
-$V307Binding = Get-Projection -Path $V307BindingReport -Fields $BindingFields
-$V308Binding = Get-Projection -Path $V308BindingReport -Fields $BindingFields
-
 if ($Summary.identifiers_included -ne $false) {
     throw "Refusing unexpected identifier-bearing cross-version report."
 }
 if (
-    $V307Binding.identifiers_included -ne $false -or
-    $V308Binding.identifiers_included -ne $false
+    $V307VerifiedBindingDoc.identifiers_included -ne $false -or
+    $V308VerifiedBindingDoc.identifiers_included -ne $false
 ) {
     throw "Refusing unexpected identifier-bearing build binding."
 }
 if (
-    $V307Binding.diagnostic_report_id -ne
+    $V307VerifiedBindingDoc.diagnostic_report_id -ne
     $Summary.old_diagnostic_report_id -or
-    $V307Binding.diagnostic_input_sha256 -ne
+    $V307VerifiedBindingDoc.diagnostic_input_sha256 -ne
     $Summary.old_diagnostic_input_sha256 -or
-    $V307Binding.frontier_id -ne
+    $V307VerifiedBindingDoc.frontier_id -ne
     $Summary.old_frontier_id
 ) {
     throw "v307 build binding does not match comparator input authority."
 }
 if (
-    $V308Binding.diagnostic_report_id -ne
+    $V308VerifiedBindingDoc.diagnostic_report_id -ne
     $Summary.new_diagnostic_report_id -or
-    $V308Binding.diagnostic_input_sha256 -ne
+    $V308VerifiedBindingDoc.diagnostic_input_sha256 -ne
     $Summary.new_diagnostic_input_sha256 -or
-    $V308Binding.frontier_id -ne
+    $V308VerifiedBindingDoc.frontier_id -ne
     $Summary.new_frontier_id
 ) {
     throw "v308 build binding does not match comparator input authority."
@@ -245,16 +288,17 @@ Write-Host " CROSS-VERSION JAVAC FRONTIER COMPARISON - PASS" -ForegroundColor Gr
 Write-Host "============================================================" -ForegroundColor Green
 Write-Host "COMPARATOR_COMMIT=$Head"
 Write-Host "REPORT_ID=$($Summary.report_id)"
-Write-Host "V307_BINDING_ID=$($V307Binding.binding_id)"
-Write-Host "V308_BINDING_ID=$($V308Binding.binding_id)"
-Write-Host "V307_SOURCE_AUTHORITY=$($V307Binding.source_authority_sha256)"
-Write-Host "V308_SOURCE_AUTHORITY=$($V308Binding.source_authority_sha256)"
-Write-Host "V307_REBUILD_ID=$($V307Binding.rebuild_id)"
-Write-Host "V308_REBUILD_ID=$($V308Binding.rebuild_id)"
-Write-Host "V307_WORKSPACE_ID=$($V307Binding.workspace_id)"
-Write-Host "V308_WORKSPACE_ID=$($V308Binding.workspace_id)"
-Write-Host "V307_SOURCE_TREE_SHA256=$($V307Binding.source_tree_sha256)"
-Write-Host "V308_SOURCE_TREE_SHA256=$($V308Binding.source_tree_sha256)"
+Write-Host "INPUT_TOOLING_COMMIT=$InputToolingCommit"
+Write-Host "V307_BINDING_ID=$($V307VerifiedBindingDoc.binding_id)"
+Write-Host "V308_BINDING_ID=$($V308VerifiedBindingDoc.binding_id)"
+Write-Host "V307_SOURCE_AUTHORITY=$($V307VerifiedBindingDoc.source_authority_sha256)"
+Write-Host "V308_SOURCE_AUTHORITY=$($V308VerifiedBindingDoc.source_authority_sha256)"
+Write-Host "V307_REBUILD_ID=$($V307VerifiedBindingDoc.rebuild_id)"
+Write-Host "V308_REBUILD_ID=$($V308VerifiedBindingDoc.rebuild_id)"
+Write-Host "V307_WORKSPACE_ID=$($V307VerifiedBindingDoc.workspace_id)"
+Write-Host "V308_WORKSPACE_ID=$($V308VerifiedBindingDoc.workspace_id)"
+Write-Host "V307_SOURCE_TREE_SHA256=$($V307VerifiedBindingDoc.source_tree_sha256)"
+Write-Host "V308_SOURCE_TREE_SHA256=$($V308VerifiedBindingDoc.source_tree_sha256)"
 Write-Host "V307_DIAGNOSTIC_REPORT_ID=$($Summary.old_diagnostic_report_id)"
 Write-Host "V308_DIAGNOSTIC_REPORT_ID=$($Summary.new_diagnostic_report_id)"
 Write-Host "V307_DIAGNOSTIC_INPUT_SHA256=$($Summary.old_diagnostic_input_sha256)"
@@ -274,4 +318,6 @@ Write-Host "SHARED_AFFECTED_FILES=$($Summary.shared_affected_files)"
 Write-Host "EXACT_FRONTIER_EQUAL=$($Summary.exact_frontier_equal)"
 Write-Host "V307_BINDING_REPORT=$V307BindingReport"
 Write-Host "V308_BINDING_REPORT=$V308BindingReport"
+Write-Host "V307_VERIFIED_BINDING_REPORT=$V307VerifiedBinding"
+Write-Host "V308_VERIFIED_BINDING_REPORT=$V308VerifiedBinding"
 Write-Host "REPORT=$Report"

@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
+import shutil
+import subprocess
 import unittest
 
 
@@ -43,6 +46,12 @@ class HistoricalV307RecoveryReleaseWrapperTests(unittest.TestCase):
             "HISTORICAL v307 RECOVERY RELEASE - PASS",
             text,
         )
+        self.assertIn(
+            "spk_recovery.javac_build_binding_cli",
+            text,
+        )
+        self.assertIn('"--tooling-commit"', text)
+        self.assertIn("javac_build_binding=", text)
 
         # Historical proof must stop before the v308-only publication gate.
         self.assertNotIn("source_milestone_cli", text)
@@ -100,6 +109,46 @@ class HistoricalV307RecoveryReleaseWrapperTests(unittest.TestCase):
         self.assertIn(
             "Historical release verification linkage mismatch.",
             text,
+        )
+
+
+    @unittest.skipUnless(
+        os.name == "nt" and shutil.which("powershell.exe"),
+        "Windows PowerShell required",
+    )
+    def test_historical_recovery_release_parses_in_windows_powershell(self):
+        repo = Path(__file__).resolve().parents[1]
+        script = (
+            repo
+            / "scripts"
+            / "Invoke-HistoricalV307RecoveryRelease.ps1"
+        )
+        literal = str(script).replace("'", "''")
+        command = (
+            "$tokens=$null; $errors=$null; "
+            "[System.Management.Automation.Language.Parser]::ParseFile("
+            f"'{literal}', [ref]$tokens, [ref]$errors) | Out-Null; "
+            "if ($errors.Count -ne 0) { "
+            "$errors | ForEach-Object { Write-Error $_.Message }; exit 1 "
+            "}; exit 0"
+        )
+        proc = subprocess.run(
+            [
+                "powershell.exe",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                command,
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        self.assertEqual(
+            proc.returncode,
+            0,
+            proc.stdout + proc.stderr,
         )
 
 
