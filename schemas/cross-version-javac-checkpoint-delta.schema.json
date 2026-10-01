@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/cross-version-javac-checkpoint-delta.schema.json",
+  "title": "SpawnPK cross-version javac checkpoint delta",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "delta_id",
+    "baseline_checkpoint_id",
+    "current_checkpoint_id",
+    "old_build_id",
+    "new_build_id",
+    "old_source_authority_sha256",
+    "new_source_authority_sha256",
+    "binary_backtest_id",
+    "baseline_tooling_commit",
+    "current_tooling_commit",
+    "scalar_delta",
+    "category_delta",
+    "exact_frontier_equality_transition",
+    "old_frontier_changed",
+    "new_frontier_changed",
+    "old_source_tree_changed",
+    "new_source_tree_changed",
+    "identifiers_included",
+    "note"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "cross_version_javac_checkpoint_delta"},
+    "delta_id": {
+      "type": "string",
+      "pattern": "^XJAVACCHECKDELTA_[0-9A-F]{20}$"
+    },
+    "baseline_checkpoint_id": {
+      "type": "string",
+      "pattern": "^XJAVACCHECKPOINT_[0-9A-F]{20}$"
+    },
+    "current_checkpoint_id": {
+      "type": "string",
+      "pattern": "^XJAVACCHECKPOINT_[0-9A-F]{20}$"
+    },
+    "old_build_id": {"type": "string"},
+    "new_build_id": {"type": "string"},
+    "old_source_authority_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "new_source_authority_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "binary_backtest_id": {
+      "type": ["string", "null"],
+      "pattern": "^XVERBIN_[0-9A-F]{20}$"
+    },
+    "baseline_tooling_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "current_tooling_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "scalar_delta": {
+      "type": "object",
+      "additionalProperties": {"type": "number"}
+    },
+    "category_delta": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": {"type": "integer"}
+      }
+    },
+    "exact_frontier_equality_transition": {
+      "enum": ["preserved_true", "preserved_false", "gained", "lost"]
+    },
+    "old_frontier_changed": {"type": "boolean"},
+    "new_frontier_changed": {"type": "boolean"},
+    "old_source_tree_changed": {"type": "boolean"},
+    "new_source_tree_changed": {"type": "boolean"},
+    "identifiers_included": {"const": false},
+    "note": {"type": "string"}
+  },
+  "additionalProperties": false
+}
