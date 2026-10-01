@@ -127,6 +127,87 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
         ):
             summarize(report, top=10)
 
+    def test_summarizes_new_frontier_families_by_source(self):
+        report = _report()
+        report["actions"] += [
+            {
+                "kind": "primitive_scope_shadowed_self_static_field_owner_qualification",
+                "source_path": "rs/k/i.java",
+                "method_name": "a",
+                "method_descriptor": "(I)V",
+                "qualified_owner": "rs/k/i",
+                "replacement_count": 27,
+            },
+            {
+                "kind": "primitive_shadowed_instance_field_receiver_qualification",
+                "source_path": "rs/k/i.java",
+                "method_name": "a",
+                "method_descriptor": "(I)V",
+                "receiver_field_name": "h",
+                "receiver_type_owner": "rs/a/h",
+                "replacement_count": 6,
+            },
+            {
+                "kind": "shadowed_imported_static_method_owner_qualification",
+                "source_path": "rs/k/i.java",
+                "method_name": "a",
+                "method_descriptor": "(I)V",
+                "simple_owner": "b",
+                "imported_owner": "rs/k/c/b",
+                "replacement_count": 2,
+            },
+        ]
+        report["summary"].update({
+            "primitive_scope_shadowed_self_static_field_method_count": 1,
+            "primitive_scope_shadowed_self_static_field_reference_count": 27,
+            "primitive_shadowed_instance_receiver_method_count": 1,
+            "primitive_shadowed_instance_receiver_reference_count": 6,
+            "shadowed_imported_static_method_method_count": 1,
+            "shadowed_imported_static_method_reference_count": 2,
+        })
+
+        text = "\n".join(summarize(report, top=10))
+
+        self.assertIn("PRIMITIVE_SCOPE_SELF_SHADOW_REFERENCES=27", text)
+        self.assertIn("PRIMITIVE_INSTANCE_RECEIVER_REFERENCES=6", text)
+        self.assertIn("IMPORTED_STATIC_METHOD_SHADOW_REFERENCES=2", text)
+        self.assertIn(
+            "a(I)V | references=27 | owner=rs/k/i",
+            text,
+        )
+        self.assertIn(
+            "a(I)V | references=6 | field=h | owner=rs/a/h",
+            text,
+        )
+        self.assertIn(
+            "a(I)V | references=2 | simple=b | owner=rs/k/c/b",
+            text,
+        )
+
+    def test_new_family_summary_mismatch_is_rejected(self):
+        report = _report()
+        report["actions"].append(
+            {
+                "kind": "shadowed_imported_static_method_owner_qualification",
+                "source_path": "rs/k/i.java",
+                "method_name": "a",
+                "method_descriptor": "()V",
+                "simple_owner": "b",
+                "imported_owner": "rs/k/c/b",
+                "replacement_count": 2,
+            }
+        )
+        report["summary"].update({
+            "shadowed_imported_static_method_method_count": 1,
+            "shadowed_imported_static_method_reference_count": 99,
+        })
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "IMPORTED STATIC METHOD SHADOW reference count mismatch",
+        ):
+            summarize(report, top=10)
+
     def test_cli_rejects_duplicate_json_keys(self):
         with tempfile.TemporaryDirectory() as td:
             path = Path(td) / "normalization.json"
@@ -253,6 +334,14 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
         )
         self.assertIn(
             "PRIMITIVE_SCOPE_SELF_SHADOW_REFERENCES=",
+            text,
+        )
+        self.assertIn(
+            "PRIMITIVE_INSTANCE_RECEIVER_REFERENCES=",
+            text,
+        )
+        self.assertIn(
+            "IMPORTED_STATIC_METHOD_SHADOW_REFERENCES=",
             text,
         )
 
