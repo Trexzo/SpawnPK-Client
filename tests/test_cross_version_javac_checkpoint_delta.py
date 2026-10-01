@@ -62,21 +62,38 @@ def _summary(
 
 def _build(
     *,
+    tooling: str,
     build_id: str,
     authority: str,
     suffix: str,
     frontier: str,
     source_tree: str,
 ) -> dict:
-    return {
+    material = {
+        "tooling_commit": tooling,
         "build_id": build_id,
         "source_authority_sha256": authority,
-        "binding_id": "JAVACBIND_" + suffix,
+        "rebuild_id": "CLEANBUILD_" + suffix,
+        "workspace_id": "SRCWS_" + suffix,
+        "source_tree_sha256": source_tree,
         "diagnostic_report_id": "JAVACDIAG_" + suffix,
         "diagnostic_input_sha256": suffix.lower() * 3 + suffix.lower()[:4],
         "frontier_id": frontier,
-        "rebuild_id": "CLEANBUILD_" + suffix,
-        "workspace_id": "SRCWS_" + suffix,
+        "project_binary_fallback_count": 0,
+        "clean_rebuild_status": "compile_failed",
+        "clean_project_build": False,
+    }
+    return {
+        "build_id": build_id,
+        "source_authority_sha256": authority,
+        "binding_id": (
+            "JAVACBIND_" + _stable_digest(material)[:20].upper()
+        ),
+        "diagnostic_report_id": material["diagnostic_report_id"],
+        "diagnostic_input_sha256": material["diagnostic_input_sha256"],
+        "frontier_id": frontier,
+        "rebuild_id": material["rebuild_id"],
+        "workspace_id": material["workspace_id"],
         "source_tree_sha256": source_tree,
         "clean_rebuild_status": "compile_failed",
         "clean_project_build": False,
@@ -95,6 +112,7 @@ def _checkpoint(
     summary: dict,
 ) -> dict:
     old = _build(
+        tooling=tooling,
         build_id="v307",
         authority="3" * 64,
         suffix="A" * 20,
@@ -102,6 +120,7 @@ def _checkpoint(
         source_tree=old_tree,
     )
     new = _build(
+        tooling=tooling,
         build_id="v308",
         authority="4" * 64,
         suffix="B" * 20,
@@ -519,6 +538,29 @@ class CrossVersionJavacCheckpointDeltaTests(unittest.TestCase):
                 "duplicate JSON key: 'schema_version'",
             ):
                 _load(path)
+
+
+    def test_rejects_recomputed_stale_binding_identity(self):
+        bad = copy.deepcopy(self.current)
+        bad["old"]["workspace_id"] = "SRCWS_" + "9" * 20
+        material = {
+            "tooling_commit": bad["tooling_commit"],
+            "binary_backtest_id": bad["binary_backtest_id"],
+            "old": bad["old"],
+            "new": bad["new"],
+            "comparison": bad["comparison"],
+        }
+        bad["checkpoint_id"] = (
+            "XJAVACCHECKPOINT_" + _stable_digest(material)[:20].upper()
+        )
+        with self.assertRaisesRegex(
+            CrossVersionJavacCheckpointDeltaError,
+            "old binding ID does not match public authority",
+        ):
+            build_cross_version_javac_checkpoint_delta(
+                self.baseline,
+                bad,
+            )
 
 
 if __name__ == "__main__":
