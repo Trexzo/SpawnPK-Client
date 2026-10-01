@@ -115,3 +115,11 @@ This is evidence that the recovered readable-name mapping survives the real v307
 The script pins exact v307/decompiler authority through `fixtures/v307-v308-source-regeneration.json` and refuses a source index that is not bound to the same exact v307 SHA-256. On Windows it prepares a case-sensitive output root before any recovered source is written.
 
 The runner deliberately stops after verified historical recovery release. It does **not** call `source_milestone_cli`, build a source publication bundle, or alter the v308-only Source Milestone publication rule.
+
+## One-command historical v307 backtest
+
+`scripts/Invoke-HistoricalV307FullBacktest.ps1` composes the exact historical member-safety preparation and historical recovery-release runner into one fail-closed command. Its defaults point at the preserved exact-v307 backup and archived R8N private authority paths recovered from the project's local evidence.
+
+Stage 1 must completely prepare and validate the exact v307 member-safety authority. Stage 2 then runs the modern historical recovery-release chain. Exit `3` from the release stage is preserved as `HISTORICAL_V307_BACKTEST_BLOCKED_AT_SHARED_SOURCE_FRONTIER`; this means the historical authority preparation passed but the shared Source-M1 clean-compile frontier is still blocking release readiness.
+
+A final PASS requires the generated historical recovery manifest to report `build_id=v307` and `ready_for_release=true`. The wrapper does not invoke the v308-only Source Milestone or publication bundle path.
