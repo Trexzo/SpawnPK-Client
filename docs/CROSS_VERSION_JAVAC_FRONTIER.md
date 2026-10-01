@@ -260,6 +260,12 @@ The output records `baseline_fixture_id` and `current_checkpoint_id`.
 It intentionally does **not** invent a `baseline_checkpoint_id` for the
 historical run.
 
+The standalone bridge reloads the canonical baseline, current checkpoint, and
+just-written delta after emission, then requires exact deterministic
+recomputation before reporting success. The PowerShell orchestration retains
+its separate verifier invocation, and the verifier CLI remains available for
+later audits of an existing artifact.
+
 Like the checkpoint-to-checkpoint delta, this bridge is aggregate-only. It
 reports signed error/file/category deltas plus frontier/source-tree/equality
 transitions, but does not claim stable per-diagnostic-family transitions.
