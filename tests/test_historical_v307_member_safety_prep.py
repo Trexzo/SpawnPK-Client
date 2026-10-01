@@ -28,6 +28,34 @@ class HistoricalV307MemberSafetyPrepTests(unittest.TestCase):
         ):
             self.assertIn(marker, text)
 
+    def test_backfills_v307_lineage_before_coverage(self):
+        text = self._text()
+        backfill = text.index(
+            'Invoke-PyChecked "BACKFILL EXACT v307 CANONICAL LINEAGE"'
+        )
+        coverage = text.index(
+            'Invoke-PyChecked "CHECK v307 CANONICAL COVERAGE"'
+        )
+        self.assertLess(backfill, coverage)
+        self.assertIn(
+            '"spk_recovery.historical_lineage_backfill_cli"',
+            text,
+        )
+        self.assertIn(
+            "    $Fixture,",
+            text,
+        )
+        self.assertIn(
+            '$ClassLineage = $DerivedClassLineage',
+            text,
+        )
+        self.assertIn(
+            '$MemberLineage = $DerivedMemberLineage',
+            text,
+        )
+        self.assertIn("V307_CLASS_LINEAGE=", text)
+        self.assertIn("V307_MEMBER_LINEAGE=", text)
+
     def test_generates_v307_index_and_checks_both_build_coverages(self):
         text = self._text()
         self.assertIn('"INDEX EXACT v307"', text)
