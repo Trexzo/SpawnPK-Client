@@ -23,6 +23,12 @@ _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 _HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
 _BINARY_ID_RE = re.compile(r"^XVERBIN_[0-9A-F]{20}$")
 _PUBLIC_BUILD_ID_RE = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
+_BINDING_ID_RE = re.compile(r"^JAVACBIND_[0-9A-F]{20}$")
+_DIAGNOSTIC_ID_RE = re.compile(r"^JAVACDIAG_[0-9A-F]{20}$")
+_FRONTIER_ID_RE = re.compile(r"^JAVACFRONTIER_[0-9A-F]{20}$")
+_REBUILD_ID_RE = re.compile(r"^CLEANBUILD_[0-9A-F]{20}$")
+_WORKSPACE_ID_RE = re.compile(r"^SRCWS_[0-9A-F]{20}$")
+_COMPARISON_ID_RE = re.compile(r"^XJAVACFRONTIER_[0-9A-F]{20}$")
 _TOP_KEYS = {
     "schema_version",
     "kind",
@@ -75,17 +81,49 @@ def _validate_build(value: Any, *, label: str) -> dict[str, Any]:
         f"{label} source authority",
         _HEX64_RE,
     )
+    binding_id = _require_string(
+        value.get("binding_id"),
+        f"{label} binding_id",
+        _BINDING_ID_RE,
+    )
+    diagnostic_report_id = _require_string(
+        value.get("diagnostic_report_id"),
+        f"{label} diagnostic_report_id",
+        _DIAGNOSTIC_ID_RE,
+    )
+    diagnostic_input_sha256 = _require_string(
+        value.get("diagnostic_input_sha256"),
+        f"{label} diagnostic input",
+        _HEX64_RE,
+    )
+    frontier = _require_string(
+        value.get("frontier_id"),
+        f"{label} frontier_id",
+        _FRONTIER_ID_RE,
+    )
+    rebuild_id = _require_string(
+        value.get("rebuild_id"),
+        f"{label} rebuild_id",
+        _REBUILD_ID_RE,
+    )
+    workspace_id = _require_string(
+        value.get("workspace_id"),
+        f"{label} workspace_id",
+        _WORKSPACE_ID_RE,
+    )
     source_tree = _require_string(
         value.get("source_tree_sha256"),
         f"{label} source tree",
         _HEX64_RE,
     )
-    frontier = value.get("frontier_id")
-    if not isinstance(frontier, str) or not re.fullmatch(
-        r"^JAVACFRONTIER_[0-9A-F]{20}$", frontier
-    ):
+    clean_rebuild_status = value.get("clean_rebuild_status")
+    if clean_rebuild_status not in {
+        "complete",
+        "compile_failed",
+        "class_set_mismatch",
+    }:
         raise CrossVersionJavacCheckpointDeltaError(
-            f"{label} frontier_id has invalid format"
+            f"{label} clean_rebuild_status is invalid"
         )
     if value.get("project_binary_fallback_count") != 0:
         raise CrossVersionJavacCheckpointDeltaError(
@@ -99,8 +137,14 @@ def _validate_build(value: Any, *, label: str) -> dict[str, Any]:
         **value,
         "build_id": build_id,
         "source_authority_sha256": authority,
-        "source_tree_sha256": source_tree,
+        "binding_id": binding_id,
+        "diagnostic_report_id": diagnostic_report_id,
+        "diagnostic_input_sha256": diagnostic_input_sha256,
         "frontier_id": frontier,
+        "rebuild_id": rebuild_id,
+        "workspace_id": workspace_id,
+        "source_tree_sha256": source_tree,
+        "clean_rebuild_status": clean_rebuild_status,
     }
 
 
@@ -146,13 +190,11 @@ def validate_cross_version_javac_checkpoint(
         raise CrossVersionJavacCheckpointDeltaError(
             f"{label}: comparison does not match checkpoint field contract"
         )
-    report_id = comparison.get("report_id")
-    if not isinstance(report_id, str) or not re.fullmatch(
-        r"^XJAVACFRONTIER_[0-9A-F]{20}$", report_id
-    ):
-        raise CrossVersionJavacCheckpointDeltaError(
-            f"{label}: comparison report_id has invalid format"
-        )
+    report_id = _require_string(
+        comparison.get("report_id"),
+        f"{label}: comparison report_id",
+        _COMPARISON_ID_RE,
+    )
     summary = comparison.get("summary")
     if not isinstance(summary, dict) or set(summary) != _PUBLIC_SUMMARY_KEYS:
         raise CrossVersionJavacCheckpointDeltaError(
