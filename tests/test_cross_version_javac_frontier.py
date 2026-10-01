@@ -14,11 +14,14 @@ def report(frontier: str, rows: list[dict]):
     report_digest = hashlib.sha256(
         (frontier + "-report").encode("utf-8")
     ).hexdigest()[:20].upper()
+    frontier_digest = hashlib.sha256(
+        (frontier + "-frontier").encode("utf-8")
+    ).hexdigest()[:20].upper()
     return {
         "schema_version": 1,
         "kind": "javac_diagnostic_classification_report",
         "report_id": "JAVACDIAG_" + report_digest,
-        "frontier_id": frontier,
+        "frontier_id": "JAVACFRONTIER_" + frontier_digest,
         "input_sha256": input_sha256,
         "identifiers_included": True,
         "diagnostics": rows,
@@ -223,6 +226,24 @@ class CrossVersionJavacFrontierTests(unittest.TestCase):
                 value,
                 report("JAVACFRONTIER_B", []),
             )
+
+    def test_rejects_malformed_provenance_identifiers(self):
+        old = report("old", [])
+        new = report("new", [])
+        old["report_id"] = "JAVACDIAG_SHORT"
+        with self.assertRaisesRegex(
+            CrossVersionJavacFrontierError,
+            "diagnostic report identity",
+        ):
+            compare_javac_frontiers(old, new)
+
+        old = report("old", [])
+        old["frontier_id"] = "JAVACFRONTIER_SHORT"
+        with self.assertRaisesRegex(
+            CrossVersionJavacFrontierError,
+            "frontier authority",
+        ):
+            compare_javac_frontiers(old, new)
 
 
 if __name__ == "__main__":
