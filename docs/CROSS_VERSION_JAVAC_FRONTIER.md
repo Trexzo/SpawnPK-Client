@@ -207,6 +207,22 @@ This is intentionally aggregate-only. The hardened checkpoint does not carry a
 stable cross-run diagnostic-family identity, so the delta report does **not**
 claim which exact diagnostic families disappeared or appeared.
 
+
+After writing a modern checkpoint delta, use the independent verifier:
+
+```powershell
+py -3.13 -m spk_recovery.cross_version_javac_checkpoint_delta_verify_cli `
+  .\baseline-checkpoint.json `
+  .\current-checkpoint.json `
+  .\checkpoint-delta.json
+```
+
+The verifier reloads all three JSON artifacts with duplicate-key rejection,
+recomputes the expected `XJAVACCHECKDELTA_*` report from the two checkpoint
+inputs, and requires exact report equality. This protects the emitted delta ID,
+scalar/category deltas, authority IDs, transition flags, redaction state, and
+note text from post-write drift before the artifact is promoted or consumed.
+
 ## Legacy 350/350 baseline bridge
 
 The canonical 350/350 measurement predates automatic
