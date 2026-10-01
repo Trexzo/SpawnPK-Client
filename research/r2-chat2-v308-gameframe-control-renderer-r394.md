@@ -1,47 +1,32 @@
-# Chat 2 — gameframe control renderer R394
+# Chat 2 — R394 duplicate AdventureOrbRenderer audit
 
-Exact client authority:
+R394 retains **no semantic proposal**.
 
-`854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`
+The attempted proposal:
 
-## Result
+- `rs/i/b`
+- `CLIENT_CLASS_000297`
+- attempted descriptive label: `GameframeControlRenderer`
 
-- `rs/i/b` -> `CLIENT_CLASS_000297` -> `GameframeControlRenderer`
-- proposal: `SEMPROP_F71948D3BE4EF0F787A3`
-- review: `SEMREVIEW_0AC29F47A48C06DC0CE8`
+duplicates the original accepted R2 semantic seed, where the exact same stable class is already
+owned as:
 
-## Exact asset ownership
+- `rs/i/b` -> `CLIENT_CLASS_000297` -> `AdventureOrbRenderer`
 
-The constructor loads the custom gameframe-control sprite family, including:
+The broader exact-v308 evidence discovered in R394 is still useful corroboration for that
+existing authority:
 
-- HP / prayer / run / special fills and icons;
-- orb backgrounds and drain masks;
-- adventure / promo / event orbs;
-- hit / experience / heal / refill / boss toggles;
-- bank inventory/equipment controls;
-- left/right arrows;
-- gameframe chat-button and hover-chat sprites.
+- the class owns HP/prayer/run/spec and custom gameframe orb assets;
+- it owns adventure/promo/event and multiple toggle controls;
+- it owns gameframe chat-button/hover-chat assets;
+- Client routes chat-channel/control interactions into the same class;
+- GameHudRenderer and multiple overlays query its live layout/control state.
 
-This is substantially broader than a passive orb-asset holder.
+That evidence shows the accepted `AdventureOrbRenderer` has grown into a broader gameframe
+control responsibility in exact v308, but it does **not** justify creating a second semantic
+identity for the same stable class.
 
-## Live render/layout ownership
+The R394 candidate/review/test artifacts are removed. R394 remains only as this
+zero-retained duplicate/corroboration audit.
 
-Client owns one instance and invokes its render/update methods from the live gameframe path.
-
-R304 `GameHudRenderer` also queries its state to change multiple HUD offsets. Additional
-overlay/text systems consult the same gameframe-control state for layout.
-
-## Interaction ownership
-
-Client routes chat-control menu actions into this class with the exact channel constants from
-R164 `ChatMessageClassifier`.
-
-The class therefore combines live gameframe control rendering, layout and interaction state.
-
-## Naming boundary
-
-No exact original source class identifier survives. `GameframeControlRenderer` is a
-descriptive exact-behavior name chosen to cover both status/orb controls and chat/control-strip
-interaction without narrowing the class to one subset.
-
-R394 remains non-canonical semantic research only.
+No acceptance or source rewrite is performed.
