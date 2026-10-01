@@ -18,6 +18,9 @@ $V307Authority =
 $V308Authority =
     "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 $BinaryBacktestId = "XVERBIN_E56BD2FB8CCC172D6184"
+$LegacyBaselineFixture = Join-Path $Repo (
+    "fixtures\v307-v308-source-m1-exact-javac-parity-07ed6f9.json"
+)
 
 function Require-File {
     param([Parameter(Mandatory = $true)][string]$Path)
@@ -128,6 +131,7 @@ Require-File $V307BindingReport
 Require-File $V308Diagnostic
 Require-File $V308CleanRebuild
 Require-File $V308BindingReport
+Require-File $LegacyBaselineFixture
 
 if (-not (Test-Path -LiteralPath $OutDir -PathType Container)) {
     New-Item -ItemType Directory -Path $OutDir | Out-Null
@@ -137,6 +141,7 @@ $V307VerifiedBinding = Join-Path $OutDir "v307-javac-build-binding-verified.json
 $V308VerifiedBinding = Join-Path $OutDir "v308-javac-build-binding-verified.json"
 $Report = Join-Path $OutDir "v307-v308-javac-frontier.json"
 $Checkpoint = Join-Path $OutDir "v307-v308-javac-checkpoint.json"
+$LegacyBaselineDelta = Join-Path $OutDir "legacy-350-to-current-delta.json"
 
 $env:PYTHONPATH = Join-Path $Repo "src"
 $env:PYTHONDONTWRITEBYTECODE = "1"
@@ -329,6 +334,53 @@ if (
     throw "Checkpoint does not bind the emitted comparator report."
 }
 
+$LegacyDeltaArguments = @(
+    "-3.13",
+    "-m",
+    "spk_recovery.cross_version_javac_legacy_baseline_delta_cli",
+    $LegacyBaselineFixture,
+    $Checkpoint,
+    "--out",
+    $LegacyBaselineDelta
+)
+
+Write-Host ""
+Write-Host "=== COMPARE CANONICAL 350 BASELINE -> CURRENT CHECKPOINT ===" -ForegroundColor Cyan
+& py @LegacyDeltaArguments
+$LegacyDeltaExit = $LASTEXITCODE
+if ($LegacyDeltaExit -ne 0) {
+    throw "Legacy 350 baseline delta failed with exit=$LegacyDeltaExit"
+}
+Require-File $LegacyBaselineDelta
+
+$LegacyDeltaSummary = Get-Projection -Path $LegacyBaselineDelta -Fields @{
+    delta_id = "/delta_id"
+    baseline_fixture_id = "/baseline_fixture_id"
+    current_checkpoint_id = "/current_checkpoint_id"
+    baseline_tooling_commit = "/baseline_tooling_commit"
+    current_tooling_commit = "/current_tooling_commit"
+    old_total_errors_delta = "/scalar_delta/old_total_errors"
+    new_total_errors_delta = "/scalar_delta/new_total_errors"
+    exact_frontier_equality_transition = "/exact_frontier_equality_transition"
+    identifiers_included = "/identifiers_included"
+}
+
+if ($LegacyDeltaSummary.identifiers_included -ne $false) {
+    throw "Refusing unexpected identifier-bearing legacy baseline delta."
+}
+if (
+    [string]$LegacyDeltaSummary.current_checkpoint_id -ne
+    [string]$CheckpointSummary.checkpoint_id
+) {
+    throw "Legacy baseline delta does not bind the emitted checkpoint."
+}
+if (
+    [string]$LegacyDeltaSummary.current_tooling_commit -ne
+    $InputToolingCommit
+) {
+    throw "Legacy baseline delta tooling commit does not match comparator inputs."
+}
+
 Write-Host ""
 Write-Host "============================================================" -ForegroundColor Green
 Write-Host " CROSS-VERSION JAVAC FRONTIER COMPARISON - PASS" -ForegroundColor Green
@@ -370,3 +422,11 @@ Write-Host "V308_VERIFIED_BINDING_REPORT=$V308VerifiedBinding"
 Write-Host "REPORT=$Report"
 Write-Host "CHECKPOINT_ID=$($CheckpointSummary.checkpoint_id)"
 Write-Host "CHECKPOINT=$Checkpoint"
+Write-Host "LEGACY_BASELINE_DELTA_ID=$($LegacyDeltaSummary.delta_id)"
+Write-Host "LEGACY_BASELINE_FIXTURE_ID=$($LegacyDeltaSummary.baseline_fixture_id)"
+Write-Host "LEGACY_BASELINE_TOOLING_COMMIT=$($LegacyDeltaSummary.baseline_tooling_commit)"
+Write-Host "CURRENT_CHECKPOINT_TOOLING_COMMIT=$($LegacyDeltaSummary.current_tooling_commit)"
+Write-Host "V307_ERRORS_DELTA_FROM_350=$($LegacyDeltaSummary.old_total_errors_delta)"
+Write-Host "V308_ERRORS_DELTA_FROM_350=$($LegacyDeltaSummary.new_total_errors_delta)"
+Write-Host "EXACT_FRONTIER_EQUALITY_TRANSITION=$($LegacyDeltaSummary.exact_frontier_equality_transition)"
+Write-Host "LEGACY_BASELINE_DELTA=$LegacyBaselineDelta"
