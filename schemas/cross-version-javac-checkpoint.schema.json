@@ -16,8 +16,12 @@
     "note"
   ],
   "properties": {
-    "schema_version": {"const": 1},
-    "kind": {"const": "cross_version_javac_checkpoint"},
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "cross_version_javac_checkpoint"
+    },
     "checkpoint_id": {
       "type": "string",
       "pattern": "^XJAVACCHECKPOINT_[0-9A-F]{20}$"
@@ -27,25 +31,41 @@
       "pattern": "^[0-9a-f]{40}$"
     },
     "binary_backtest_id": {
-      "type": ["string", "null"],
+      "type": [
+        "string",
+        "null"
+      ],
       "pattern": "^XVERBIN_[0-9A-F]{20}$"
     },
-    "old": {"$ref": "#/$defs/build"},
-    "new": {"$ref": "#/$defs/build"},
+    "old": {
+      "$ref": "#/$defs/build"
+    },
+    "new": {
+      "$ref": "#/$defs/build"
+    },
     "comparison": {
       "type": "object",
-      "required": ["report_id", "summary"],
+      "required": [
+        "report_id",
+        "summary"
+      ],
       "properties": {
         "report_id": {
           "type": "string",
           "pattern": "^XJAVACFRONTIER_[0-9A-F]{20}$"
         },
-        "summary": {"type": "object"}
+        "summary": {
+          "$ref": "#/$defs/summary"
+        }
       },
       "additionalProperties": false
     },
-    "identifiers_included": {"const": false},
-    "note": {"type": "string"}
+    "identifiers_included": {
+      "const": false
+    },
+    "note": {
+      "type": "string"
+    }
   },
   "$defs": {
     "build": {
@@ -65,7 +85,10 @@
         "project_binary_fallback_count"
       ],
       "properties": {
-        "build_id": {"type": "string", "minLength": 1},
+        "build_id": {
+          "type": "string",
+          "minLength": 1
+        },
         "source_authority_sha256": {
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
@@ -90,18 +113,120 @@
           "type": "string",
           "pattern": "^CLEANBUILD_[0-9A-F]{20}$"
         },
-        "workspace_id": {"type": "string", "minLength": 1},
+        "workspace_id": {
+          "type": "string",
+          "minLength": 1
+        },
         "source_tree_sha256": {
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
         },
         "clean_rebuild_status": {
-          "enum": ["complete", "compile_failed", "class_set_mismatch"]
+          "enum": [
+            "complete",
+            "compile_failed",
+            "class_set_mismatch"
+          ]
         },
-        "clean_project_build": {"type": "boolean"},
-        "project_binary_fallback_count": {"const": 0}
+        "clean_project_build": {
+          "type": "boolean"
+        },
+        "project_binary_fallback_count": {
+          "const": 0
+        }
       },
       "additionalProperties": false
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "old_total_errors",
+        "new_total_errors",
+        "shared_errors",
+        "old_only_errors",
+        "new_only_errors",
+        "shared_percent_of_old",
+        "shared_percent_of_new",
+        "old_affected_files",
+        "new_affected_files",
+        "shared_affected_files",
+        "old_categories",
+        "new_categories",
+        "shared_categories",
+        "old_only_categories",
+        "new_only_categories",
+        "exact_frontier_equal"
+      ],
+      "properties": {
+        "old_total_errors": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "new_total_errors": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "shared_errors": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "old_only_errors": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "new_only_errors": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "shared_percent_of_old": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "shared_percent_of_new": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "old_affected_files": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "new_affected_files": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "shared_affected_files": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "old_categories": {
+          "$ref": "#/$defs/categoryCounts"
+        },
+        "new_categories": {
+          "$ref": "#/$defs/categoryCounts"
+        },
+        "shared_categories": {
+          "$ref": "#/$defs/categoryCounts"
+        },
+        "old_only_categories": {
+          "$ref": "#/$defs/categoryCounts"
+        },
+        "new_only_categories": {
+          "$ref": "#/$defs/categoryCounts"
+        },
+        "exact_frontier_equal": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "categoryCounts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
     }
   },
   "additionalProperties": false
