@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "kind": "current_source_m1_frontier_proof",
+  "fixture_id": "SPK_V308_SOURCE_M1_FRONTIER_20261001",
+  "authority_commit": "ce3d43e34f53a3991f30f5911bbd0235f73fe6f9",
+  "truth_boundary": {
+    "proves": [
+      "the exact v308 Source-M1 pipeline reached the recorded clean-rebuild frontier at this authority commit",
+      "the measured public compiler frontier is reproducible as a deterministic JAVACFRONTIER identity",
+      "project binary fallback remained zero at this measured frontier"
+    ],
+    "does_not_prove": [
+      "v308 is release-ready",
+      "the post-PR-316 or later compiler frontier has been remeasured",
+      "private v307 and v308 javac diagnostic logs are byte-identical",
+      "the final strict recovered-source v307-to-v308 cross-version PASS"
+    ]
+  },
+  "inputs": {
+    "build_id": "v308",
+    "client_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
+  },
+  "source_pipeline": {
+    "readable_manifest_id": "READABLE_9D504DD205685AFB4C3B",
+    "collision_plan_id": "JNSPLAN_4C9E7148914DED177DE1",
+    "collision_transform_id": "JNSREWRITE_752E25F085E7F1307039",
+    "recovered_workspace_id": "SRCWS_65615E7AE8FCB3670CA9",
+    "normalization_id": "SRCNORM_031014E332DDF690A8C0",
+    "clean_rebuild_id": "CLEANBUILD_138F30D9FB5193E37762"
+  },
+  "clean_rebuild_frontier": {
+    "javac_frontier_id": "JAVACFRONTIER_79F76A743656F3D6EB8F",
+    "total_errors": 405,
+    "affected_files": 75,
+    "cannot_find_symbol": 178,
+    "project_binary_fallback_count": 0,
+    "categories": {
+      "cannot_find_symbol": 178,
+      "incompatible_types": 62,
+      "other": 49,
+      "cannot_be_dereferenced": 45,
+      "non_static_from_static_context": 39,
+      "cannot_apply_arguments": 11,
+      "package_does_not_exist": 9,
+      "private_access": 9,
+      "bad_operand_type": 2,
+      "protected_access": 1
+    }
+  },
+  "notes": [
+    "This fixture records only public aggregate Source-M1 frontier authority already reported from exact-local acceptance; no recovered source or identifier-bearing javac diagnostics are committed.",
+    "PR #316 merged after this measurement and explicitly did not claim a compiler reduction without another exact-local acceptance run."
+  ]
+}

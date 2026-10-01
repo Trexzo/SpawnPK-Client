@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "kind": "cross_version_public_javac_frontier_parity",
+  "fixture_id": "SPK_V307_V308_PUBLIC_JAVAC_PARITY_20261001",
+  "old_build_id": "v307",
+  "new_build_id": "v308",
+  "old_authority_sha256": "6232bae206846a4ba8d09766a2dee886b69016066a3f50f83b201bf705f93662",
+  "new_authority_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "binary_backtest_id": "XVERBIN_E56BD2FB8CCC172D6184",
+  "old_fixture": "fixtures/v307-source-m1-frontier-proof.json",
+  "new_fixture": "fixtures/v308-source-m1-frontier-proof.json",
+  "public_frontier": {
+    "old_javac_frontier_id": "JAVACFRONTIER_79F76A743656F3D6EB8F",
+    "new_javac_frontier_id": "JAVACFRONTIER_79F76A743656F3D6EB8F",
+    "frontier_ids_equal": true,
+    "old_total_errors": 405,
+    "new_total_errors": 405,
+    "old_affected_files": 75,
+    "new_affected_files": 75,
+    "old_cannot_find_symbol": 178,
+    "new_cannot_find_symbol": 178,
+    "aggregate_categories_equal": true
+  },
+  "truth_boundary": {
+    "proves": [
+      "independently measured v307 and v308 Source-M1 runs reached the same deterministic public JAVACFRONTIER identity",
+      "the public aggregate compiler counts and category distribution are equal at the recorded authority frontier",
+      "the shared source-repair problem is not specific to only one side of the real v307-to-v308 binary fixture"
+    ],
+    "does_not_prove": [
+      "the private exact javac input SHA-256 values are equal",
+      "every raw diagnostic message or recovered identifier is equal across builds",
+      "either recovery release is release-ready",
+      "the private spk-cross-version-javac-frontier report has executed successfully",
+      "the final strict recovered-source v307-to-v308 cross-version PASS"
+    ]
+  },
+  "notes": [
+    "JAVACFRONTIER identity is derived from the public diagnostic-row representation and intentionally excludes the raw javac-log SHA-256.",
+    "PR #318 therefore requires private JAVACDIAG and input-SHA provenance before an exact cross-version diagnostic comparison can be claimed.",
+    "This fixture is intentionally a public structural-parity proof only."
+  ]
+}
