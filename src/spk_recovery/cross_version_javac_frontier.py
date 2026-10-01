@@ -13,6 +13,8 @@ class CrossVersionJavacFrontierError(ValueError):
 
 
 _HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
+_DIAGNOSTIC_ID_RE = re.compile(r"^JAVACDIAG_[0-9A-F]{20}$")
+_FRONTIER_ID_RE = re.compile(r"^JAVACFRONTIER_[0-9A-F]{20}$")
 
 
 def _stable_digest(value: Any) -> str:
@@ -36,7 +38,7 @@ def _validate_report(report: dict[str, Any], label: str) -> None:
     frontier_id = report.get("frontier_id")
     if (
         not isinstance(frontier_id, str)
-        or not frontier_id.startswith("JAVACFRONTIER_")
+        or _FRONTIER_ID_RE.fullmatch(frontier_id) is None
     ):
         raise CrossVersionJavacFrontierError(
             f"{label}: missing javac frontier authority"
@@ -44,7 +46,7 @@ def _validate_report(report: dict[str, Any], label: str) -> None:
     diagnostic_report_id = report.get("report_id")
     if (
         not isinstance(diagnostic_report_id, str)
-        or not diagnostic_report_id.startswith("JAVACDIAG_")
+        or _DIAGNOSTIC_ID_RE.fullmatch(diagnostic_report_id) is None
     ):
         raise CrossVersionJavacFrontierError(
             f"{label}: missing javac diagnostic report identity"
