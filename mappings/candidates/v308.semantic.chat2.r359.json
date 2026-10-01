@@ -14,31 +14,27 @@
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "target": {
         "kind": "class",
-        "owner": "rs/l/q",
+        "owner": "rs/gui/d",
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "InteractiveTextRegionRegistry",
+      "proposed_name": "GuiColorPalette",
       "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_markup_tokens",
-          "detail": "Exact v308 recognizes <link=...>/</link> and <tool=...>/</tool> while RSFont lays out rich text, and routes those spans into this class."
+          "family": "exact_palette_shape",
+          "detail": "The class owns exactly fifteen public static java.awt.Color constants initialized from fixed RGB/RGBA tuples and has no other mutable application state or behavior."
         },
         {
-          "family": "exact_region_registry",
-          "detail": "The class owns two fixed arrays of 256 interactive-region records plus active counters and reset/switch operations used during text layout."
+          "family": "exact_cross_ui_consumers",
+          "detail": "Exact-v308 consumers span LauncherSidePanel, ItemSearchSidebarPanel, SwingDesktopUiSupport, loadout/PvP/developer/sidebar components and custom Swing controls, establishing it as a shared GUI palette rather than one feature's colors."
         },
         {
-          "family": "exact_hit_testing",
-          "detail": "Registered regions preserve source substring bounds plus screen rectangle bounds; the registry resolves the current region against Client mouse coordinates and can activate a flagged region by click coordinates."
-        },
-        {
-          "family": "exact_click_tooltip_actions",
-          "detail": "Activation extracts the registered substring and dispatches it through Client.c(String); hover over tooltip-capable regions registers the associated tooltip object with the existing tooltip manager."
+          "family": "exact_scope_boundary",
+          "detail": "The class exposes only color constants and an empty constructor; it performs no rendering, layout, networking or gameplay mutation."
         }
       ],
-      "note": "Descriptive exact-v308 name for the shared link/tool rich-text region registry, hit-testing and activation service."
+      "note": "Descriptive exact-v308 name for the shared GUI color constant registry."
     },
     {
       "schema_version": 1,
@@ -49,31 +45,27 @@
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "target": {
         "kind": "class",
-        "owner": "rs/l/q$a",
+        "owner": "rs/gui/E",
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "InteractiveTextRegion",
+      "proposed_name": "GameClientContainerPanel",
       "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_region_state",
-          "detail": "The record stores source text, substring start/end, rectangular x/y bounds, a region-kind boolean and an optional tooltip object."
+          "family": "exact_launcher_ownership",
+          "detail": "Launcher constructs exactly one rs/gui/E in field n, sizes it to the 765x503 base game dimension, gives it BorderLayout and a black background."
         },
         {
-          "family": "exact_hit_test_contract",
-          "detail": "Its predicate checks whether a supplied point lies inside the stored half-open rectangle [x1,x2) x [y1,y2)."
+          "family": "exact_client_attachment",
+          "detail": "Launcher initializes/starts the live Client and then adds that Client component directly to rs/gui/E at BorderLayout.CENTER."
         },
         {
-          "family": "exact_tooltip_materialization",
-          "detail": "For tooltip-style regions, changes in source/bounds materialize or refresh the tooltip object from up to 240 characters of the registered source substring."
-        },
-        {
-          "family": "exact_owner_scope",
-          "detail": "The class is created and consumed only by InteractiveTextRegionRegistry and RSFont's link/tool markup registration path; it owns no unrelated rendering state."
+          "family": "exact_outer_layout",
+          "detail": "The outer launcher panel adds rs/gui/E beside the R357 LauncherSidePanel before packing the R354 LauncherWindowFrame, proving E is the dedicated embedded game-client surface container."
         }
       ],
-      "note": "Descriptive exact-v308 name for one hit-testable link/tool text span registered by RSFont."
+      "note": "Descriptive exact-v308 name for the Swing panel that embeds the live Client component."
     }
   ],
   "conflicts": []
