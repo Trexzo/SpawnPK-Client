@@ -13,6 +13,11 @@ param(
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = "Stop"
 
+$V307Authority =
+    "6232bae206846a4ba8d09766a2dee886b69016066a3f50f83b201bf705f93662"
+$V308Authority =
+    "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
+
 function Require-File {
     param([Parameter(Mandatory = $true)][string]$Path)
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
@@ -92,6 +97,47 @@ function Invoke-ChildAllowBlocked {
         throw "$Label failed with exit=$Exit"
     }
     return $Exit
+}
+
+function Ensure-JavacBuildBinding {
+    param(
+        [Parameter(Mandatory = $true)][string]$Diagnostic,
+        [Parameter(Mandatory = $true)][string]$CleanRebuild,
+        [Parameter(Mandatory = $true)][string]$BindingReport,
+        [Parameter(Mandatory = $true)][string]$BuildId,
+        [Parameter(Mandatory = $true)][string]$AuthoritySha256,
+        [Parameter(Mandatory = $true)][string]$ToolingCommit
+    )
+
+    Require-File $Diagnostic
+    Require-File $CleanRebuild
+
+    if (-not (Test-Path -LiteralPath $BindingReport -PathType Leaf)) {
+        $Arguments = @(
+            "-3.13",
+            "-m",
+            "spk_recovery.javac_build_binding_cli",
+            $Diagnostic,
+            $CleanRebuild,
+            "--expected-build-id",
+            $BuildId,
+            "--expected-authority-sha256",
+            $AuthoritySha256,
+            "--tooling-commit",
+            $ToolingCommit,
+            "--out",
+            $BindingReport
+        )
+
+        & py @Arguments
+        $Exit = $LASTEXITCODE
+        if ($Exit -ne 0) {
+            throw "Could not generate missing javac build binding for $BuildId; exit=$Exit"
+        }
+        Write-Host "GENERATED_JAVAC_BUILD_BINDING=$BindingReport" -ForegroundColor Green
+    }
+
+    Require-File $BindingReport
 }
 
 if (-not (Test-Path -LiteralPath $Repo -PathType Container)) {
@@ -249,16 +295,8 @@ $V308Diagnostic = Join-Path $V308Out "release\javac-diagnostic-private.json"
 $V308CleanRebuild = Join-Path $V308Out "release\rebuild\clean-rebuild.json"
 $V308Binding = Join-Path $V308Out "release\javac-build-binding.json"
 
-foreach ($Path in @(
-    $V307Diagnostic,
-    $V307CleanRebuild,
-    $V307Binding,
-    $V308Diagnostic,
-    $V308CleanRebuild,
-    $V308Binding
-)) {
-    Require-File $Path
-}
+Ensure-JavacBuildBinding -Diagnostic $V307Diagnostic -CleanRebuild $V307CleanRebuild -BindingReport $V307Binding -BuildId "v307" -AuthoritySha256 $V307Authority -ToolingCommit $Head
+Ensure-JavacBuildBinding -Diagnostic $V308Diagnostic -CleanRebuild $V308CleanRebuild -BindingReport $V308Binding -BuildId "v308" -AuthoritySha256 $V308Authority -ToolingCommit $Head
 
 $BindingFields = @{
     binding_id = "/binding_id"
