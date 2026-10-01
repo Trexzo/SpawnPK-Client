@@ -1,4 +1,4 @@
-# Chat 2 — exact-v308 QuantityFormatter R464
+# Chat 2 — R464 duplicate QuantityFormatter audit
 
 Exact client authority:
 
@@ -6,61 +6,39 @@ Exact client authority:
 
 ## Result
 
-- `rs/A/p` -> `CLIENT_CLASS_000019` -> `QuantityFormatter`
-- proposal: `SEMPROP_7BB3024033EBBDFCF3B4`
-- review: `SEMREVIEW_2044CC3C307F95341520`
+R464 retains **no semantic proposal**.
 
-## Exact v308 surface
+The attempted R464 proposal exactly duplicated R20:
 
-The class owns the full quantity formatting/parsing utility surface:
+- owner: `rs/A/p`
+- stable ID: `CLIENT_CLASS_000019`
+- semantic name: `QuantityFormatter`
+- proposal ID: `SEMPROP_7BB3024033EBBDFCF3B4`
 
-- long quantity -> abbreviated stack string;
-- int quantity -> RuneScape-style decimal stack string;
-- optional precise decimal formatting;
-- abbreviated String -> long parsing;
-- plain comma-delimited long formatting;
-- plain comma-delimited double formatting.
+R20 already owns that exact class/name/ID tuple in
+`SEMREVIEW_E6BE3592C064143A3007`.
 
-Its suffix table is:
+The repository-wide uniqueness guard correctly rejected the duplicate and caused later
+R465-R469 overlap tests to fail transitively while R464 remained present.
 
-- empty
-- K
-- M
-- B
-- T
+## Additional corroboration retained from the attempted batch
 
-Its validation pattern is exactly:
+The later R464 investigation did add stronger provenance for the existing R20 identity:
 
-`^-?[0-9,.]+([a-zA-Z]?)$`
+- exact validation regex `^-?[0-9,.]+([a-zA-Z]?)$`;
+- exact parse diagnostics including
+  `does not resemble a properly formatted stack.` and `Invalid Suffix:`;
+- exact K/M/B/T suffix behavior;
+- English-locale number/decimal formatting;
+- direct live consumers in the trading/price presentation family;
+- historical RuneLite `net.runelite.client.util.QuantityFormatter` identity with the same
+  API/algorithm, modulo SpawnPK's T suffix extension.
 
-Surviving failure text includes:
-
-- `<value> does not resemble a properly formatted stack.`
-- `Invalid Suffix: <suffix>`
-
-## Upstream identity
-
-RuneLite's `net.runelite.client.util.QuantityFormatter` carries the same API/algorithm,
-including the same validation regex, failure strings, English-locale NumberFormat,
-`#,###.#` / `#,###.###` decimal formats, stack abbreviation, parsing and number-format
-helpers.
-
-SpawnPK's exact-v308 copy extends the suffix table with `T`; that fork-local extension does
-not change the class identity.
-
-## Exact live consumers
-
-Only the `rs/s/t/*` trading/price presentation family directly references this class in
-exact v308.
-
-Those consumers use it for:
-
-- price-each values;
-- received values;
-- displayed stack quantities;
-- multiplied quantity/value totals.
+That evidence corroborates R20. It does not create a second semantic owner.
 
 ## Boundary
 
-R464 is non-canonical semantic research only. No member proposals or source rewrite are
-performed.
+R464 is a correction/corroboration note only.
+
+No R464 candidate JSON, semantic-review JSON, deterministic review test, acceptance spec,
+or source rewrite is retained.
