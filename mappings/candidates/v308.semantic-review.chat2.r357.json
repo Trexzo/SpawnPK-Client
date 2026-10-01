@@ -5,75 +5,67 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 2,
-  "review_id": "SEMREVIEW_75098DE0E3D7EF3D9112",
+  "review_id": "SEMREVIEW_D48079A6070C39A63B8F",
   "proposals": [
     {
-      "proposal_id": "SEMPROP_B20389A256D7688E0FFD",
+      "proposal_id": "SEMPROP_0A51A52536475FADBD94",
       "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000510",
-      "owner_logical_id": "CLIENT_CLASS_000510",
+      "stable_id": "CLIENT_CLASS_000193",
+      "owner_logical_id": "CLIENT_CLASS_000193",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "source_coordinate": {
-        "owner": "rs/l/s",
+        "owner": "rs/gui/J",
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "TextMotionEffect",
+      "proposed_name": "LauncherSidePanel",
       "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_markup_tokens",
-          "detail": "Exact v308 recognizes @hov@/@shi@ plus <hover>, </hover>, <shift>, </shift>, <lift=N> and </lift> text controls."
+          "family": "exact_launcher_ownership",
+          "detail": "Launcher owns rs/gui/J in field l and exposes it through its side-panel accessor; the panel is the container attached beside the game surface."
         },
         {
-          "family": "exact_motion_offsets",
-          "detail": "The hover and shift states produce independent sinusoidal pixel offsets (amplitudes 2 and 3), while lift=N parses a signed vertical offset clamped to 40 pixels."
+          "family": "exact_tab_inventory",
+          "detail": "The panel constructs a JTabbedPane containing exact tabs Loadouts, PvP Tracker, GPU (Beta), and conditionally Development or Item Search, with fixed 344x480 child sizes."
         },
         {
-          "family": "exact_renderer_integration",
-          "detail": "R55 RSFont applies the computed offsets to inline sprite/progress/image and glyph positions throughout the live render path."
-        },
-        {
-          "family": "exact_redraw_lifecycle",
-          "detail": "When animated hover/shift text is rendered the class records a timestamp and exposes a 100 ms redraw-invalidating active state, proving it owns the motion effect lifecycle rather than simple markup recognition."
+          "family": "exact_feature_composition",
+          "detail": "It owns the already-recovered loadout, PvP tracker, GPU and item-search/development child surfaces and exposes typed accessors for those components and the JTabbedPane."
         }
       ],
-      "note": "Descriptive exact-v308 name for hover/shift/lift text-position animation and offset markup."
+      "note": "Descriptive exact-v308 name for the launcher-side tabbed auxiliary panel."
     },
     {
-      "proposal_id": "SEMPROP_DF91DC9524F6C21B30E8",
+      "proposal_id": "SEMPROP_67119FF632798AEB47FC",
       "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000502",
-      "owner_logical_id": "CLIENT_CLASS_000502",
+      "stable_id": "CLIENT_CLASS_000195",
+      "owner_logical_id": "CLIENT_CLASS_000195",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "source_coordinate": {
-        "owner": "rs/l/m",
+        "owner": "rs/gui/L",
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "GlowTextEffect",
+      "proposed_name": "SidePanelTabChangeListener",
       "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_markup_tokens",
-          "detail": "Exact v308 recognizes @glo@ plus numbered glow variants and matching glo markup, returning palette-family selectors from the text stream."
+          "family": "exact_parent_ownership",
+          "detail": "LauncherSidePanel constructs rs/gui/L and installs it directly as the JTabbedPane ChangeListener."
         },
         {
-          "family": "exact_color_cycle",
-          "detail": "The class advances a phase from System.nanoTime on a fixed 40 ms cadence, combines character index with phase, and selects colors from precomputed 256-step palette tables."
+          "family": "exact_change_contract",
+          "detail": "stateChanged casts the event source to JTabbedPane, reads the selected index, then invokes Launcher.d() to refresh/update launcher state."
         },
         {
-          "family": "exact_renderer_integration",
-          "detail": "R55 RSFont calls this class while parsing and drawing live text; returned colors feed per-character render color selection directly."
-        },
-        {
-          "family": "exact_palette_scope",
-          "detail": "The implementation owns eight numbered 256-step glow palette families plus the default glow selector and contains no non-text behavior."
+          "family": "exact_scope_boundary",
+          "detail": "The listener holds only its synthetic LauncherSidePanel reference and owns no independent feature state."
         }
       ],
-      "note": "Descriptive exact-v308 name for the glo markup color-cycling text effect."
+      "note": "Descriptive exact-v308 name for the launcher's side-panel tab selection listener."
     }
   ],
   "unresolved": []
