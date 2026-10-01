@@ -3251,6 +3251,106 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 after.stdout + after.stderr,
             )
 
+    def test_same_package_static_field_shadow_in_instance_method_forces_type_context(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/b.java": (
+                        "package p;\n"
+                        "public class b {\n"
+                        "    public static int j = 7;\n"
+                        "    public static int f = 9;\n"
+                        "}\n"
+                    ),
+                    "p/Ref.java": (
+                        "package p;\n"
+                        "public class Ref {}\n"
+                    ),
+                    "p/a.java": (
+                        "package p;\n"
+                        "public class a {\n"
+                        "    public Ref b;\n"
+                        "    public int read() {\n"
+                        "        return ((p.b)null).j + ((p.b)null).f;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "p" / "a.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "public class a {\n"
+                "    public Ref b;\n"
+                "    public int read() {\n"
+                "        return b.j + b.f;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-instance-owner-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("cannot find symbol", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn("((p.b)null).j", normalized)
+            self.assertIn("((p.b)null).f", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "shadowed_same_package_static_field_owner_type_context"
+            )
+            self.assertEqual(action["method_name"], "read")
+            self.assertEqual(action["method_descriptor"], "()I")
+            self.assertEqual(action["same_package_owners"], ["p/b"])
+            self.assertEqual(
+                action["field_access_counts"],
+                {"p/b.f": 1, "p/b.j": 1},
+            )
+            self.assertEqual(action["replacement_count"], 2)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-instance-owner-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
     def test_same_package_static_field_shadow_count_mismatch_fails_closed(
         self,
     ):
