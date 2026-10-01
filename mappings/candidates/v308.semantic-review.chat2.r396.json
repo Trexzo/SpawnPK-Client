@@ -1,0 +1,47 @@
+{
+  "schema_version":1,
+  "kind":"semantic_review_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count":2,
+  "review_id":"SEMREVIEW_C23637876E37D362B0D6",
+  "proposals":[
+    {
+      "proposal_id":"SEMPROP_3EA119C8462103D4B8A1",
+      "target_kind":"class",
+      "stable_id":"CLIENT_CLASS_000944",
+      "owner_logical_id":"CLIENT_CLASS_000944",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate":{"owner":"rs/s/o/d","name":null,"descriptor":null},
+      "proposed_name":"NpcIndicatorsConfig",
+      "confidence":0.999,
+      "evidence":[
+        {"family":"exact_config_group","detail":"The interface extends the recovered configuration contract and declares exact group key 'npcindicators' plus render-style section metadata."},
+        {"family":"exact_indicator_options","detail":"Its default methods expose NPC-indicator booleans, hull/tile/outline-style controls, highlight/fill colors, border width, name/tag filtering and persisted tagged-name text."},
+        {"family":"exact_family_join","detail":"R189 NpcIndicatorsOverlay and rs/s/o/e consume this exact interface, while R26 HighlightedNpc and R243 MemorizedNpc provide the same subsystem's entity/state models."}
+      ],
+      "note":"Exact-v308 RuneLite-style NPC Indicators configuration interface; the literal config group and consumer family make the noun explicit."
+    },
+    {
+      "proposal_id":"SEMPROP_58AF0A206F7EA87B06E6",
+      "target_kind":"class",
+      "stable_id":"CLIENT_CLASS_000945",
+      "owner_logical_id":"CLIENT_CLASS_000945",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate":{"owner":"rs/s/o/e","name":null,"descriptor":null},
+      "proposed_name":"NpcIndicatorsPlugin",
+      "confidence":0.999,
+      "evidence":[
+        {"family":"exact_plugin_contract","detail":"The class extends the recovered plugin base, injects Client/config/overlay/menu services, provides NpcIndicatorsConfig, and owns plugin start/stop lifecycle methods."},
+        {"family":"exact_menu_vocabulary","detail":"Surviving literals are 'Tag', 'Un-tag', 'Tag-All' and 'Un-tag-All'; menu-hover and custom-menu paths apply those actions to NPC indicator state."},
+        {"family":"exact_event_surface","detail":"The plugin subscribes to ConfigChanged, GameStateChanged, NpcSpawned and MenuHover and manages HighlightedNpc/ MemorizedNpc state together with R189 NpcIndicatorsOverlay."},
+        {"family":"exact_render_style_vocabulary","detail":"Surviving style literals include 'hull', 'tile', 'truetile', 'swtile', 'swtruetile' and 'outline', matching the configuration/overlay indicator rendering family."}
+      ],
+      "note":"Exact-v308 NPC Indicators plugin identity from literal config/menu/render vocabulary and complete plugin/overlay family joins."
+    }
+  ],
+  "unresolved":[]
+}
