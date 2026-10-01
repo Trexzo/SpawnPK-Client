@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind":"class","owner":"rs/gui/E","name":null,"descriptor":null},
+      "proposed_name": "ClientViewportPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_launcher_ownership","detail":"Launcher constructs exactly one rs/gui/E and stores it as the panel that directly contains the live rs.Client component."},
+        {"family":"exact_client_host_layout","detail":"Launcher configures the panel with BorderLayout, black background and 765x503 client dimensions in the fixed shell, then adds the live Client component at BorderLayout.CENTER."},
+        {"family":"exact_shell_composition","detail":"The panel is inserted into Launcher's main horizontal Swing container beside R145 ClientSidebarPanel, fixing it as the central client viewport host rather than a generic JPanel."}
+      ],
+      "note":"Descriptive exact-v308 name for the Launcher-owned panel that hosts the live Client viewport/canvas."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind":"class","owner":"rs/gui/L","name":null,"descriptor":null},
+      "proposed_name": "ClientSidebarTabChangeListener",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_sidebar_ownership","detail":"R145 ClientSidebarPanel constructs rs/gui/L and installs it directly on its live JTabbedPane through addChangeListener."},
+        {"family":"exact_tab_change_behavior","detail":"stateChanged reads the selected JTabbedPane index and invokes Launcher.d(), the launcher relayout/refresh path, on each sidebar tab selection change."},
+        {"family":"exact_scope_boundary","detail":"The class owns only its synthetic ClientSidebarPanel reference and performs no feature-specific tab logic or unrelated state mutation."}
+      ],
+      "note":"Descriptive exact-v308 name for the ClientSidebarPanel tab-selection listener that triggers Launcher relayout."
+    }
+  ],
+  "conflicts": []
+}

@@ -1,0 +1,26 @@
+{
+  "schema_version":1,
+  "kind":"semantic_candidate_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[{
+    "schema_version":1,
+    "kind":"semantic_name_candidate",
+    "canonical":false,
+    "status":"CANDIDATE",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target":{"kind":"class","owner":"rs/d/v","name":null,"descriptor":null},
+    "proposed_name":"DefinitionIdDebugAccess",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_privilege_predicates","detail":"The class contains only two static integer predicates: one admits login privilege value 2; the other admits exactly 2, 26, 204 and 205."},
+      {"family":"exact_login_authority_source","detail":"Client.cT is populated directly from the successful login-response stream before the live client session is initialized, fixing the predicate input as server-supplied login privilege/access state."},
+      {"family":"exact_definition_debug_consumers","detail":"Object/item/NPC menu construction uses these predicates only on debug-definition presentation paths. One exact string-concat recipe appends '@gre@(@cya@ID: @whi@<id>@gre@)' to Examine text, while ItemDefinition conditionally decorates definition names with IDs under the narrower predicate."},
+      {"family":"exact_scope_boundary","detail":"The class owns no role labels, permission mutation, authentication logic or gameplay entitlement checks; it only decides whether definition-ID debug presentation is exposed for particular login privilege values."}
+    ],
+    "note":"Descriptive exact-v308 name for the login-privilege predicates controlling definition-ID debug/examine presentation. Specific staff/rank titles for values 2/26/204/205 are intentionally not invented."
+  }],
+  "conflicts":[]
+}

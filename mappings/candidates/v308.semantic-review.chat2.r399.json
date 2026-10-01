@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 5,
+  "review_id": "SEMREVIEW_5A0C370F5807A65B918A",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_44F0B32FB7EFCE773169",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000061",
+      "owner_logical_id": "CLIENT_CLASS_000061",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/a/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelFaceTransform",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_abstract_contract",
+          "detail": "The abstract class defines a whole-model preparation hook plus one per-face transform hook over R30 Model and supplies the default loop across Model.ah face count."
+        },
+        {
+          "family": "exact_specialization_family",
+          "detail": "Its only exact-v308 subclasses are ModelRecolorTransform, ModelReshadeTransform and ModelRetextureTransform."
+        },
+        {
+          "family": "exact_face_scope",
+          "detail": "All concrete subclasses operate on Model face/surface arrays and respect the per-face exclusion/processed flag where applicable; no vertex-position or animation behavior is owned here."
+        }
+      ],
+      "note": "Descriptive exact-v308 model-surface transform identity derived from surviving YAML keys, concrete Model mutations and live definition/developer-overlay consumers."
+    },
+    {
+      "proposal_id": "SEMPROP_81EF069F6D721BC093E2",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000064",
+      "owner_logical_id": "CLIENT_CLASS_000064",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/a/b/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelRetextureTransform",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_yaml_identity",
+          "detail": "Definition config loaders map exact keys retexture/retextures and textures to rs/a/b/e mapping builders."
+        },
+        {
+          "family": "exact_source_destination_maps",
+          "detail": "The transform stores source face/color ids and one or more int-to-int mapping tables from source ids to destination texture/material ids."
+        },
+        {
+          "family": "exact_model_texture_materialization",
+          "detail": "Before per-face application it counts matching faces and allocates/initializes Model texture-related arrays; matching faces are marked processed, Model.ar is rewritten to the mapped destination id, texture-coordinate face indices are copied from the original face vertex indices, and per-face texture metadata is assigned."
+        },
+        {
+          "family": "exact_developer_overlay_join",
+          "detail": "R209 ModelRecoloringOverlay reads this transform's source-id set and mapping tables and labels affected model ids with exact '(texture)' and '(texturized)' diagnostics."
+        }
+      ],
+      "note": "Descriptive exact-v308 model-surface transform identity derived from surviving YAML keys, concrete Model mutations and live definition/developer-overlay consumers."
+    },
+    {
+      "proposal_id": "SEMPROP_8824FF1A49B649D70684",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000062",
+      "owner_logical_id": "CLIENT_CLASS_000062",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/a/b/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelSurfaceTransform",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_composite_role",
+          "detail": "The class composes optional recolor, retexture and reshade transforms plus one optional opacity scalar, then applies them in one deterministic pass to a Model."
+        },
+        {
+          "family": "exact_definition_ownership",
+          "detail": "NpcDefinition, ItemDefinition and SpotAnimationDefinition each store this exact type and apply it to constructed Models; config loaders lazily create it when surface-transform keys are encountered."
+        },
+        {
+          "family": "exact_opacity_path",
+          "detail": "The item-config key opacity sets the composite scalar; application allocates Model.aq when needed and fills each face entry with 100 minus the configured opacity value."
+        },
+        {
+          "family": "exact_copy_semantics",
+          "detail": "The copy constructor clones the references/settings from another ModelSurfaceTransform, and definition cloning preserves this transform object explicitly."
+        }
+      ],
+      "note": "Descriptive exact-v308 model-surface transform identity derived from surviving YAML keys, concrete Model mutations and live definition/developer-overlay consumers."
+    },
+    {
+      "proposal_id": "SEMPROP_BCFBC08973A3023D7B0D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000059",
+      "owner_logical_id": "CLIENT_CLASS_000059",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/a/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelRecolorTransform",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_yaml_identity",
+          "detail": "NpcDefinition, ItemDefinition and SpotAnimationDefinition config loaders map exact keys recolor/recolors to rs/a/b/a."
+        },
+        {
+          "family": "exact_face_color_mapping",
+          "detail": "The transform owns source face/color-id sets plus per-source destination sequences and rewrites Model.ar entries only when the current face/color id belongs to a configured source group."
+        },
+        {
+          "family": "exact_cycle_mapping",
+          "detail": "Each configured recolor group owns a cyclic destination int[] cursor, allowing repeated matching source ids to rotate through configured destination color ids."
+        },
+        {
+          "family": "exact_developer_overlay_join",
+          "detail": "R209 ModelRecoloringOverlay reads the transform's configured source-id set directly while presenting exact item/NPC/object recoloring diagnostics."
+        }
+      ],
+      "note": "Descriptive exact-v308 model-surface transform identity derived from surviving YAML keys, concrete Model mutations and live definition/developer-overlay consumers."
+    },
+    {
+      "proposal_id": "SEMPROP_C0D6C11B8537699DD1E3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000063",
+      "owner_logical_id": "CLIENT_CLASS_000063",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/a/b/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelReshadeTransform",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_yaml_identity",
+          "detail": "NpcDefinition, ItemDefinition and SpotAnimationDefinition config loaders map the exact key reshade to construction of rs/a/b/d(int)."
+        },
+        {
+          "family": "exact_face_rewrite",
+          "detail": "For every non-excluded face the per-face transform overwrites Model.ar[face] with the single constructor-supplied integer."
+        },
+        {
+          "family": "exact_shared_surface_family",
+          "detail": "The class is installed only through ModelSurfaceTransform and is applied alongside recolor/retexture/opacity configuration to definition-built Models."
+        }
+      ],
+      "note": "Descriptive exact-v308 model-surface transform identity derived from surviving YAML keys, concrete Model mutations and live definition/developer-overlay consumers."
+    }
+  ],
+  "unresolved": []
+}

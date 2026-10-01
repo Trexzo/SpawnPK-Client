@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/G",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorKeyTransparencyFilter",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_filter_contract",
+          "detail": "Exact v308 rs/l/G extends RGBImageFilter, stores one constructor-supplied Color as an ARGB comparison key, and enables canFilterIndexColorModel."
+        },
+        {
+          "family": "exact_transparency_behavior",
+          "detail": "filterRGB compares source RGB against the stored key while ignoring alpha; matching pixels are returned with alpha cleared while nonmatching pixels are preserved."
+        },
+        {
+          "family": "exact_sprite_consumer",
+          "detail": "The only exact-v308 rendering consumer is R55 Sprite, which applies this filter to image data as a color-key transparency operation."
+        }
+      ],
+      "note": "Descriptive exact-v308 helper identity derived from concrete implementation and reviewed live consumers; no original stripped identifier is claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/H",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ReferenceColorTransformFilter",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_filter_contract",
+          "detail": "Exact v308 rs/l/H extends RGBImageFilter and stores a BufferedImage plus source and target Colors."
+        },
+        {
+          "family": "exact_reference_color_transform",
+          "detail": "For each pixel the filter samples the reference image at the same coordinate, compares its RGB channels to the source color through Sprite color helpers, and conditionally transforms the input RGB toward the target color while preserving alpha."
+        },
+        {
+          "family": "exact_sprite_consumer",
+          "detail": "The filter is used only by R55 Sprite image-transformation paths, fixing it as sprite/reference-image color transformation rather than a general application filter."
+        }
+      ],
+      "note": "Descriptive exact-v308 helper identity derived from concrete implementation and reviewed live consumers; no original stripped identifier is claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/L",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpriteColorTransformMath",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_transform_primitives",
+          "detail": "Exact v308 rs/l/L is stateless and exposes only static color-transform helpers: channel clamping/bounds plus hue-like phase rotation and saturation/value-style RGB math."
+        },
+        {
+          "family": "exact_transformer_consumer",
+          "detail": "R361 SpriteStyleTransformer is the only exact-v308 consumer and invokes this class when inline-image style markup requests a nonzero sprite color transform."
+        },
+        {
+          "family": "exact_domain_boundary",
+          "detail": "The class owns no Sprite cache, markup parser or image state itself; its responsibility is the reusable color mathematics applied by SpriteStyleTransformer."
+        }
+      ],
+      "note": "Descriptive exact-v308 helper identity derived from concrete implementation and reviewed live consumers; no original stripped identifier is claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/u",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TextParticleTimestampCache",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_lru_shape",
+          "detail": "Exact v308 rs/l/u extends LinkedHashMap<Long,Long>, is constructed in access-order mode and overrides removeEldestEntry to cap the map at 512 entries."
+        },
+        {
+          "family": "exact_particle_consumer",
+          "detail": "R362 TextParticleMarkup owns this cache and stores millisecond timestamps keyed by its computed particle-markup selection key."
+        },
+        {
+          "family": "exact_50ms_suppression",
+          "detail": "TextParticleMarkup reuses the cached particle selection when the stored timestamp is less than 50 ms old; otherwise it updates the timestamp and recomputes the selected particle variants."
+        }
+      ],
+      "note": "Descriptive exact-v308 helper identity derived from concrete implementation and reviewed live consumers; no original stripped identifier is claimed."
+    }
+  ],
+  "conflicts": []
+}

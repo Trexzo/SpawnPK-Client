@@ -1,0 +1,63 @@
+{
+  "schema_version":1,
+  "kind":"semantic_review_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count":3,
+  "review_id":"SEMREVIEW_38AF12060FCDD32CC9C5",
+  "proposals":[
+    {
+      "proposal_id":"SEMPROP_171FD26D2ADB62D8A44B",
+      "target_kind":"class",
+      "stable_id":"CLIENT_CLASS_000597",
+      "owner_logical_id":"CLIENT_CLASS_000597",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate":{"owner":"rs/n/c/aV","name":null,"descriptor":null},
+      "proposed_name":"GameframeInfoSpriteInjector",
+      "confidence":0.997,
+      "evidence":[
+        {"family":"exact_resource_identity","detail":"The builder injects exactly three named resources: 'gameframe/info/sprite 2', 'gameframe/info/sprite 3' and 'gameframe/info/sprite 4'."},
+        {"family":"exact_widget_targets","detail":"It attaches those sprites as one-child surfaces to exact existing roots 29998, 29997 and 29994 using generated children 65747, 65746 and 65745 at fixed 18,12 coordinates."},
+        {"family":"exact_bootstrap_registration","detail":"The only exact-v308 constructor is R397 CustomInterfaceBootstrap, so the class is a live custom-interface resource injector."}
+      ],
+      "note":"Behavior-only exact-v308 name. The three gameframe/info images are proven; their higher-level product feature is not inferred."
+    },
+    {
+      "proposal_id":"SEMPROP_788C37436203EB6FEF87",
+      "target_kind":"class",
+      "stable_id":"CLIENT_CLASS_000576",
+      "owner_logical_id":"CLIENT_CLASS_000576",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate":{"owner":"rs/n/c/aA","name":null,"descriptor":null},
+      "proposed_name":"ToggleOptionSelectorInterface",
+      "confidence":0.997,
+      "evidence":[
+        {"family":"exact_toggle_option_surface","detail":"The builder creates 18 clickable options with exact hover text 'Select option' and per-entry display text 'Selecting this option Toggle N'; all 18 widgets are marked as active/interactive."},
+        {"family":"exact_dual_layout","detail":"It constructs two roots, 53500 and 53519, reusing the same 18 option widgets in two deterministic layouts: a multi-column selector and an alternate list/grid arrangement."},
+        {"family":"exact_bootstrap_registration","detail":"The only exact-v308 constructor is R397 CustomInterfaceBootstrap, proving this is a live custom-interface builder rather than dead utility code."}
+      ],
+      "note":"Behavior-only exact-v308 name. The product feature controlled by the 18 toggles is not preserved and is intentionally not guessed."
+    },
+    {
+      "proposal_id":"SEMPROP_CDC6A6B159C8A7BB4A9B",
+      "target_kind":"class",
+      "stable_id":"CLIENT_CLASS_000595",
+      "owner_logical_id":"CLIENT_CLASS_000595",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate":{"owner":"rs/n/c/aT","name":null,"descriptor":null},
+      "proposed_name":"TwoOptionSelectionDialogInterface",
+      "confidence":0.997,
+      "evidence":[
+        {"family":"exact_two_option_surface","detail":"The builder adds exactly two interactive widgets, 30583 and 30584, with labels '1' and '2' and hover text 'Select option'."},
+        {"family":"exact_dialog_shell","detail":"It also installs a 'Close Window'/'Close' control at widget 6961 and rewrites root 6960's six-child geometry to contain the two option buttons plus the existing dialog shell children."},
+        {"family":"exact_bootstrap_registration","detail":"The only exact-v308 constructor is R397 CustomInterfaceBootstrap, proving the dialog is part of the live custom-interface bootstrap set."}
+      ],
+      "note":"Behavior-only exact-v308 name for a generic two-choice selection dialog. The product feature using the choices is intentionally unresolved."
+    }
+  ],
+  "unresolved":[]
+}

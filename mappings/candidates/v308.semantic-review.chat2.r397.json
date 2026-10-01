@@ -1,0 +1,48 @@
+{
+  "schema_version":1,
+  "kind":"semantic_review_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count":2,
+  "review_id":"SEMREVIEW_D509A467C29613ACA64E",
+  "proposals":[
+    {
+      "proposal_id":"SEMPROP_A38383411A8B8F0AF174",
+      "target_kind":"class",
+      "stable_id":"CLIENT_CLASS_000544",
+      "owner_logical_id":"CLIENT_CLASS_000544",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate":{"owner":"rs/n/c","name":null,"descriptor":null},
+      "proposed_name":"CustomInterfaceBuilder",
+      "confidence":0.999,
+      "evidence":[
+        {"family":"exact_abstract_builder_contract","detail":"The class is abstract, extends R56 RSInterface, owns the shared TextDrawingArea[] font table, and requires one abstract no-arg build method while providing optional update/reset hooks and an enabled/retain predicate."},
+        {"family":"exact_concrete_family","detail":"More than one hundred exact-v308 rs/n/c/* classes extend this base and implement their custom widget/interface construction in the abstract build hook."},
+        {"family":"exact_bootstrap_join","detail":"Direct rs/n/d constructs each concrete subclass with the font table, invokes the base build hook through a(rs.n.c), and retains builders whose c() predicate returns true."},
+        {"family":"exact_role_boundary","detail":"This is not the RSInterface widget object itself: R56 rs/n/e owns widget definitions, while this base coordinates code-built custom interface families on top of that widget table."}
+      ],
+      "note":"Descriptive exact-v308 name for the abstract base shared by code-built custom interface definitions."
+    },
+    {
+      "proposal_id":"SEMPROP_DAD8B56BDBF49CF122A5",
+      "target_kind":"class",
+      "stable_id":"CLIENT_CLASS_000680",
+      "owner_logical_id":"CLIENT_CLASS_000680",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate":{"owner":"rs/n/d","name":null,"descriptor":null},
+      "proposed_name":"CustomInterfaceBootstrap",
+      "confidence":0.999,
+      "evidence":[
+        {"family":"exact_mass_construction","detail":"The static bootstrap method clears its retained builder list, stores the shared TextDrawingArea[] font table, then constructs and registers the complete exact-v308 rs/n/c/* custom-interface family in one deterministic sequence."},
+        {"family":"exact_builder_execution","detail":"Registration method a(rs.n.c) invokes each builder's build hook and retains the builder only when its c() predicate returns true."},
+        {"family":"exact_rsinterface_finalization","detail":"After all builders are constructed and run, the bootstrap calls the RSInterface static finalization/setup path with the same font table."},
+        {"family":"exact_live_ownership","detail":"Client and other live interface code reference this class directly; it also exposes reset behavior that clears Client.cH and resets shared interface helper state."}
+      ],
+      "note":"Descriptive exact-v308 name for the static bootstrap/registry that instantiates and executes the entire custom-interface builder catalogue."
+    }
+  ],
+  "unresolved":[]
+}

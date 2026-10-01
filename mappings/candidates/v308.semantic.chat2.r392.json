@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/I",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DeferredSpriteLoader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_deferred_registration",
+          "detail": "Exact v308 rs/l/I.a(String[,boolean]) creates an empty R55 Sprite, records the requested resource path on that Sprite and appends it to one static pending List<Sprite> without loading pixels immediately."
+        },
+        {
+          "family": "exact_bulk_load",
+          "detail": "rs/l/I.a() iterates the pending Sprite list, loads each <path>.png through Toolkit, resolves dimensions with ImageIcon, allocates the Sprite pixel array, grabs pixels with PixelGrabber and applies the standard non-alpha cleanup when required."
+        },
+        {
+          "family": "exact_live_consumers",
+          "detail": "R308 CombatHudSpriteAssets registers all of its resource Sprites through this loader during static initialization; Client later invokes the loader's bulk-load method during startup after the HUD asset bundle has registered its paths."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the register-now/load-later Sprite resource loader."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RuneLiteZeroRadiusButtonShaper",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_skin_ownership",
+          "detail": "The class is constructed only by R22 RuneLiteSkin and retained as the button shaper installed by that skin."
+        },
+        {
+          "family": "exact_shaper_contract",
+          "detail": "It extends Substance ClassicButtonShaper and overrides getCornerRadius(AbstractButton,float) with the constant result 0.0f for every button."
+        },
+        {
+          "family": "exact_visual_effect",
+          "detail": "The implementation has no other state or behavior beyond its synthetic RuneLiteSkin owner reference, fixing the role as the skin's square/zero-radius button shape policy."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for RuneLiteSkin's constant-zero corner-radius Substance button shaper."
+    }
+  ],
+  "conflicts": []
+}
