@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind":"class","owner":"rs/n/c/aZ","name":null,"descriptor":null},
+      "proposed_name": "WellOfGoodWillInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_builder_contract","detail":"The class directly extends R436 CustomInterfaceBuilder and is part of the live custom-interface registry family."},
+        {"family":"exact_title_literal","detail":"The builder contains the exact title 'Well of Good Will' and explanatory text 'The well of goodwill seeks..'."},
+        {"family":"exact_progress_surface","detail":"The screen owns exact server-wide progress presentation including '0% (0/100)', '<u=16776960>Server wide progress</u>' and a server-wide reward description."},
+        {"family":"exact_contribution_controls","detail":"Exact controls/literals include 'Donate to well of goodwill', '<img=9> Contribute', Divine spirit shield contribution text and individual Goodwill Points reward text."},
+        {"family":"exact_resource_family","detail":"The builder uses exact 'fountain/sprite' presentation resources, fixing this as the Well of Good Will client interface."}
+      ],
+      "note": "Exact-v308 literal-backed client interface identity; server-side contribution/reward rules are not inferred."
+    }
+  ],
+  "conflicts": []
+}
