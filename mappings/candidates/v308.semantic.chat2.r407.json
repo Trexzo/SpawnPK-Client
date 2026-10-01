@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind":"class","owner":"rs/l/A","name":null,"descriptor":null},
+      "proposed_name": "TypewriterTextEffectProcessor",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_tag_grammar","detail":"The class recognizes @type@, <type>, </type> and <type=N> markup, strips those tags for plain-text output, and rewrites opening type tags into timestamped <type=speed:timestamp> state."},
+        {"family":"exact_reveal_timing","detail":"Default type speed is 75 ms per visible character; explicit <type=N> speed is clamped to 10..2000 ms. The parser computes the visible character count from (now-timestamp)/speed + 1."},
+        {"family":"exact_client_lifecycle","detail":"Client constructs exactly one rs/l/A instance, runs rendered text through it after the flashing processor, and queries its active-state predicate to decide whether time-driven text requires another redraw."},
+        {"family":"exact_font_integration","detail":"Both exact-v308 font/text renderers rs/l/h and rs/l/k invoke the class's static type-tag parsing helpers while measuring/rendering strings, proving this is part of the live text-effect pipeline rather than an isolated formatter."}
+      ],
+      "note":"Descriptive exact-v308 name for the <type> time-based progressive reveal processor; original stripped identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind":"class","owner":"rs/l/l","name":null,"descriptor":null},
+      "proposed_name": "FlashingTextEffectProcessor",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_tag_grammar","detail":"The class recognizes @fla@, @fla2@, <fla>, <fla2>, </fla>, </fla2>, <fla=N> and <fla2=N>, rewriting active openings into timestamp-bearing fla/fla2 tags."},
+        {"family":"exact_flash_timing","detail":"The static render-state function alternates the supplied text color with a hidden/sentinel state every 200 ms; fla uses a 600 ms active window while fla2 uses 1200 ms."},
+        {"family":"exact_client_lifecycle","detail":"Client constructs exactly one rs/l/l instance, runs text through it before rs/l/A, and polls its active-state predicate so flashing text continues to invalidate/redraw while its timing window is live."},
+        {"family":"exact_font_integration","detail":"The live rs/l/h and rs/l/k font renderers call the fla/fla2 tag recognizers, timestamp parser and color-state function directly during string rendering."}
+      ],
+      "note":"Descriptive exact-v308 name for the fla/fla2 timed visibility/color effect processor; original stripped identifier is not claimed."
+    }
+  ],
+  "conflicts": []
+}
