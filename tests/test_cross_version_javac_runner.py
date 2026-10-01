@@ -90,6 +90,28 @@ class CrossVersionJavacRunnerTests(unittest.TestCase):
         )
         self.assertIn("CHECKPOINT_ID=", text)
         self.assertIn("CHECKPOINT=", text)
+        self.assertIn(
+            "spk_recovery.cross_version_javac_legacy_baseline_delta_cli",
+            text,
+        )
+        self.assertIn(
+            "v307-v308-source-m1-exact-javac-parity-07ed6f9.json",
+            text,
+        )
+        self.assertIn("legacy-350-to-current-delta.json", text)
+        self.assertIn(
+            "Refusing unexpected identifier-bearing legacy baseline delta.",
+            text,
+        )
+        self.assertIn(
+            "Legacy baseline delta does not bind the emitted checkpoint.",
+            text,
+        )
+        self.assertIn("LEGACY_BASELINE_DELTA_ID=", text)
+        self.assertIn("V307_ERRORS_DELTA_FROM_350=", text)
+        self.assertIn("V308_ERRORS_DELTA_FROM_350=", text)
+        self.assertIn("EXACT_FRONTIER_EQUALITY_TRANSITION=", text)
+        self.assertIn("LEGACY_BASELINE_DELTA=", text)
 
     def test_runner_pins_build_and_binary_authority(self):
         repo = Path(__file__).resolve().parents[1]
