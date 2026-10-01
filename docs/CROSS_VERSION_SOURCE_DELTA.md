@@ -48,8 +48,8 @@ The comparator fails closed if a required source unit is missing, if an unexpect
 spk-cross-version-source-delta `
   .\v307\recovery-release.json `
   .\v308\recovery-release.json `
-  .\v307\recovered-source-workspace.json `
-  .\v308\recovered-source-workspace.json `
+  .\v307\recovered-source-manifest.json `
+  .\v308\recovered-source-manifest.json `
   .\authority\class-lineage.json `
   .\v307\class-remap-plan.json `
   .\v308\class-remap-plan.json `
