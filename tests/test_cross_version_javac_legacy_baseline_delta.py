@@ -247,6 +247,42 @@ class CrossVersionJavacLegacyBaselineDeltaTests(unittest.TestCase):
         }
         self.assertEqual(actual, expected)
 
+    def test_rejects_legacy_baseline_narrative_drift(self):
+        cases = (
+            ("truth_boundary", "proves"),
+            ("truth_boundary", "does_not_prove"),
+            ("notes", None),
+        )
+        for section, key in cases:
+            with self.subTest(section=section, key=key):
+                bad = copy.deepcopy(self.baseline)
+                if section == "truth_boundary":
+                    bad[section][key][0] += " MUTATED"
+                else:
+                    bad[section][0] += " MUTATED"
+                with self.assertRaisesRegex(
+                    CrossVersionJavacLegacyBaselineDeltaError,
+                    "complete semantic content does not match canonical authority",
+                ):
+                    build_cross_version_javac_legacy_baseline_delta(
+                        bad,
+                        self.current,
+                    )
+
+    def test_legacy_baseline_semantic_digest_ignores_object_key_order(self):
+        reordered = {
+            key: self.baseline[key]
+            for key in reversed(list(self.baseline))
+        }
+        report = build_cross_version_javac_legacy_baseline_delta(
+            reordered,
+            self.current,
+        )
+        self.assertEqual(
+            report["baseline_fixture_id"],
+            self.baseline["fixture_id"],
+        )
+
     def test_rejects_mutated_legacy_baseline(self):
         bad = copy.deepcopy(self.baseline)
         bad["comparison"]["old_total_errors"] = 349
