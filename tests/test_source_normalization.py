@@ -1136,6 +1136,515 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
             )
             self.assertEqual(action["method_descriptor"], "()V")
 
+    def test_primitive_parameter_shadowed_self_static_owner_is_qualified(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/i.java": (
+                        "package pkg;\n"
+                        "public class i {\n"
+                        "    public static int[] c = new int[2];\n"
+                        "    public static void m(int i) {\n"
+                        "        pkg.i.c[0] = i;\n"
+                        "        pkg.i.c[1] = i + 1;\n"
+                        "    }\n"
+                        "}\n"
+                    )
+                },
+            )
+            source = root / "src" / "pkg" / "i.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package pkg;\n"
+                "public class i {\n"
+                "    public static int[] c = new int[2];\n"
+                "    public static void m(int i) {\n"
+                "        i.c[0] = i;\n"
+                "        i.c[1] = i + 1;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-primitive-parameter-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("int cannot be dereferenced", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn("pkg.i.c[0] = i;", normalized)
+            self.assertIn("pkg.i.c[1] = i + 1;", normalized)
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "primitive_scope_shadowed_self_static_field_owner_qualification"
+            )
+            self.assertTrue(action["primitive_parameter_shadow"])
+            self.assertEqual(
+                action["primitive_local_shadow_scope_count"],
+                0,
+            )
+            self.assertEqual(action["method_descriptor"], "(I)V")
+            self.assertEqual(
+                action["field_access_counts"],
+                {"pkg/i.c": 2},
+            )
+            self.assertEqual(
+                action["total_field_access_counts"],
+                {"pkg/i.c": 2},
+            )
+            self.assertEqual(action["replacement_count"], 2)
+            self.assertEqual(
+                report["summary"][
+                    "primitive_scope_shadowed_self_static_field_reference_count"
+                ],
+                2,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-primitive-parameter-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_primitive_local_shadow_only_rewrites_its_lexical_scope(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/i.java": (
+                        "package pkg;\n"
+                        "public class i {\n"
+                        "    public static int[] c = new int[2];\n"
+                        "    public static void m() {\n"
+                        "        { int i = 3; pkg.i.c[0] = i; }\n"
+                        "        pkg.i.c[1] = 4;\n"
+                        "    }\n"
+                        "}\n"
+                    )
+                },
+            )
+            source = root / "src" / "pkg" / "i.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package pkg;\n"
+                "public class i {\n"
+                "    public static int[] c = new int[2];\n"
+                "    public static void m() {\n"
+                "        { int i = 3; i.c[0] = i; }\n"
+                "        i.c[1] = 4;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "{ int i = 3; pkg.i.c[0] = i; }",
+                normalized,
+            )
+            self.assertIn("i.c[1] = 4;", normalized)
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "primitive_scope_shadowed_self_static_field_owner_qualification"
+            )
+            self.assertFalse(action["primitive_parameter_shadow"])
+            self.assertEqual(
+                action["primitive_local_shadow_scope_count"],
+                1,
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                action["total_field_access_counts"],
+                {"pkg/i.c": 2},
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-primitive-local-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_primitive_scope_shadow_count_mismatch_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/i.java": (
+                        "package pkg;\n"
+                        "public class i {\n"
+                        "    public static int[] c = new int[2];\n"
+                        "    public static void m(int i) {\n"
+                        "        pkg.i.c[0] = i;\n"
+                        "    }\n"
+                        "}\n"
+                    )
+                },
+            )
+            source = root / "src" / "pkg" / "i.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package pkg;\n"
+                "public class i {\n"
+                "    public static int[] c = new int[2];\n"
+                "    public static void m(int i) {\n"
+                "        i.c[0] = i;\n"
+                "        i.c[1] = i + 1;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "primitive_scope_shadowed_self_static_field_reference_count"
+                ],
+                0,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "primitive_scope_shadowed_self_static_field_owner_qualification"
+                    for row in report["actions"]
+                )
+            )
+
+    def test_primitive_shadowed_instance_receiver_uses_this_field(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/H.java": (
+                        "package dep;\n"
+                        "public class H {\n"
+                        "    public float a(int x, int y) { return x + y; }\n"
+                        "    public float b(int x, int y) { return x - y; }\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "import dep.H;\n"
+                        "public class Current {\n"
+                        "    public H h = new H();\n"
+                        "    public float m(int h) {\n"
+                        "        return this.h.a(h, 0) + this.h.b(h, 1);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package use;\n"
+                "import dep.H;\n"
+                "public class Current {\n"
+                "    public H h = new H();\n"
+                "    public float m(int h) {\n"
+                "        return h.a(h, 0) + h.b(h, 1);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-instance-receiver-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("int cannot be dereferenced", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "return this.h.a(h, 0) + this.h.b(h, 1);",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "primitive_shadowed_instance_field_receiver_qualification"
+            )
+            self.assertEqual(action["receiver_field_name"], "h")
+            self.assertEqual(action["receiver_type_owner"], "dep/H")
+            self.assertEqual(action["method_descriptor"], "(I)F")
+            self.assertEqual(action["call_counts"], {"a": 1, "b": 1})
+            self.assertEqual(action["replacement_count"], 2)
+            self.assertEqual(
+                report["summary"][
+                    "primitive_shadowed_instance_receiver_reference_count"
+                ],
+                2,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-instance-receiver-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_primitive_shadowed_instance_receiver_count_mismatch_fails_closed(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/H.java": (
+                        "package dep;\n"
+                        "public class H {\n"
+                        "    public float a(int x, int y) { return x + y; }\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "import dep.H;\n"
+                        "public class Current {\n"
+                        "    public H h = new H();\n"
+                        "    public float m(int h) {\n"
+                        "        return this.h.a(h, 0);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package use;\n"
+                "import dep.H;\n"
+                "public class Current {\n"
+                "    public H h = new H();\n"
+                "    public float m(int h) {\n"
+                "        return h.a(h, 0) + h.a(h, 1);\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "primitive_shadowed_instance_receiver_reference_count"
+                ],
+                0,
+            )
+
+    def test_reference_field_shadowed_self_static_owner_is_qualified(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/q.java": (
+                        "package pkg;\n"
+                        "public class q {\n"
+                        "    public String q;\n"
+                        "    public static int a = 1;\n"
+                        "    public static int f = 2;\n"
+                        "    public static int read() {\n"
+                        "        return pkg.q.a + pkg.q.f;\n"
+                        "    }\n"
+                        "}\n"
+                    )
+                },
+            )
+            source = root / "src" / "pkg" / "q.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package pkg;\n"
+                "public class q {\n"
+                "    public String q;\n"
+                "    public static int a = 1;\n"
+                "    public static int f = 2;\n"
+                "    public static int read() {\n"
+                "        return q.a + q.f;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-reference-self-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn(
+                "non-static variable q cannot be referenced",
+                before.stderr,
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn("return pkg.q.a + pkg.q.f;", normalized)
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "reference_shadowed_self_static_field_owner_qualification"
+            )
+            self.assertEqual(action["method_descriptor"], "()I")
+            self.assertEqual(action["reference_shadow_owners"], ["pkg/q"])
+            self.assertEqual(
+                action["field_access_counts"],
+                {"pkg/q.a": 1, "pkg/q.f": 1},
+            )
+            self.assertEqual(action["replacement_count"], 2)
+            self.assertEqual(
+                report["summary"][
+                    "reference_shadowed_self_static_field_reference_count"
+                ],
+                2,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-reference-self-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_reference_field_shadow_count_mismatch_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/q.java": (
+                        "package pkg;\n"
+                        "public class q {\n"
+                        "    public String q;\n"
+                        "    public static int a = 1;\n"
+                        "    public static int read() { return pkg.q.a; }\n"
+                        "}\n"
+                    )
+                },
+            )
+            source = root / "src" / "pkg" / "q.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package pkg;\n"
+                "public class q {\n"
+                "    public String q;\n"
+                "    public static int a = 1;\n"
+                "    public static int read() { return q.a + q.a; }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "reference_shadowed_self_static_field_reference_count"
+                ],
+                0,
+            )
+
     def test_nested_type_static_field_shadow_forces_type_context(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -1410,6 +1919,226 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 after.returncode,
                 0,
                 after.stdout + after.stderr,
+            )
+
+    def test_imported_static_method_owner_shadowed_by_primitive_parameter(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/b.java": (
+                        "package dep;\n"
+                        "public class b {\n"
+                        "    public static int a(int x) { return x + 1; }\n"
+                        "    public static int b(int x) { return x + 2; }\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "import dep.b;\n"
+                        "public class Current {\n"
+                        "    public static int m(boolean b) {\n"
+                        "        return dep.b.a(1) + dep.b.b(2);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package use;\n"
+                "import dep.b;\n"
+                "public class Current {\n"
+                "    public static int m(boolean b) {\n"
+                "        return b.a(1) + b.b(2);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-imported-static-method-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("boolean cannot be dereferenced", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "return dep.b.a(1) + dep.b.b(2);",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "shadowed_imported_static_method_owner_qualification"
+            )
+            self.assertEqual(action["imported_owner"], "dep/b")
+            self.assertTrue(action["primitive_parameter_shadow"])
+            self.assertEqual(action["call_counts"], {"a": 1, "b": 1})
+            self.assertEqual(action["replacement_count"], 2)
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_imported_static_method_reference_count"
+                ],
+                2,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-imported-static-method-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_imported_static_method_owner_shadowed_by_primitive_field(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/b.java": (
+                        "package dep;\n"
+                        "public class b {\n"
+                        "    public static int a(int x) { return x + 1; }\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "import dep.b;\n"
+                        "public class Current {\n"
+                        "    public boolean b;\n"
+                        "    public int m() {\n"
+                        "        return (b ? 1 : 0) + dep.b.a(1);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package use;\n"
+                "import dep.b;\n"
+                "public class Current {\n"
+                "    public boolean b;\n"
+                "    public int m() {\n"
+                "        return (b ? 1 : 0) + b.a(1);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "return (b ? 1 : 0) + dep.b.a(1);",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "shadowed_imported_static_method_owner_qualification"
+            )
+            self.assertEqual(
+                action["hierarchy_primitive_shadow_owner"],
+                "use/Current",
+            )
+            self.assertEqual(action["replacement_count"], 1)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-imported-field-shadow-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_imported_static_method_owner_count_mismatch_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/b.java": (
+                        "package dep;\n"
+                        "public class b {\n"
+                        "    public static int a(int x) { return x + 1; }\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "import dep.b;\n"
+                        "public class Current {\n"
+                        "    public static int m(boolean b) {\n"
+                        "        return dep.b.a(1);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package use;\n"
+                "import dep.b;\n"
+                "public class Current {\n"
+                "    public static int m(boolean b) {\n"
+                "        return b.a(1) + b.a(2);\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_imported_static_method_reference_count"
+                ],
+                0,
             )
 
     def test_imported_static_field_shadow_in_static_method_forces_type_context(

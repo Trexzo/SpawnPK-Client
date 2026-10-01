@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/member-safety-carryforward.schema.json",
+  "title": "SpawnPK member safety acceptance carry-forward report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "report_id",
+    "previous_report_id",
+    "target_report_id",
+    "previous_source_sha256",
+    "target_source_sha256",
+    "full_carryforward_ready",
+    "previous_member_count",
+    "target_member_count",
+    "transferred_member_count",
+    "blocked_member_count",
+    "transferred",
+    "blockers",
+    "note"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "member_safety_carryforward_report"},
+    "report_id": {"type": "string", "pattern": "^MEMRISKCF_[0-9A-F]{20}$"},
+    "previous_report_id": {"type": "string", "pattern": "^MEMRISKREVIEW_[0-9A-F]{20}$"},
+    "target_report_id": {"type": "string", "pattern": "^MEMRISKREVIEW_[0-9A-F]{20}$"},
+    "previous_source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "target_source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "full_carryforward_ready": {"type": "boolean"},
+    "previous_member_count": {"type": "integer", "minimum": 0},
+    "target_member_count": {"type": "integer", "minimum": 0},
+    "transferred_member_count": {"type": "integer", "minimum": 0},
+    "blocked_member_count": {"type": "integer", "minimum": 0},
+    "transferred": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "member_id",
+          "previous_risk_id",
+          "target_risk_id",
+          "previous_reason"
+        ],
+        "properties": {
+          "member_id": {"type": "string"},
+          "previous_risk_id": {"type": "string", "pattern": "^MEMRISK_[0-9A-F]{20}$"},
+          "target_risk_id": {"type": "string", "pattern": "^MEMRISK_[0-9A-F]{20}$"},
+          "previous_reason": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {"type": "object"}
+    },
+    "note": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

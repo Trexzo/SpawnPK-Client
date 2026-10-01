@@ -152,6 +152,7 @@ def focus_diagnostics(
     report: dict[str, Any],
     *,
     focus_files: int,
+    include_source_lines: bool = False,
 ) -> list[str]:
     if focus_files <= 0:
         return []
@@ -198,6 +199,38 @@ def focus_diagnostics(
                 ),
             ]
         )
+        if include_source_lines:
+            line_numbers = sorted(
+                {
+                    int(row.get("line"))
+                    for row in file_rows
+                    if isinstance(row.get("line"), int)
+                    and int(row.get("line")) > 0
+                }
+            )
+            try:
+                source_text = Path(path).read_text(encoding="utf-8")
+                source_lines = source_text.splitlines()
+            except OSError as exc:
+                out.append(
+                    "SOURCE_LINES_UNAVAILABLE="
+                    + type(exc).__name__
+                )
+            else:
+                out.append("=== FOCUSED SOURCE LINES ===")
+                for line_number in line_numbers:
+                    if line_number > len(source_lines):
+                        out.append(
+                            f"SRC: line={line_number} | <out-of-range>"
+                        )
+                        continue
+                    rendered = source_lines[line_number - 1].replace(
+                        "\t", "    "
+                    )
+                    out.append(
+                        f"SRC: line={line_number} | text={rendered}"
+                    )
+
         for row in sorted(
             file_rows,
             key=lambda item: (
@@ -229,6 +262,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("private_diagnostic", type=Path)
     parser.add_argument("--top", type=int, default=20)
     parser.add_argument("--focus-files", type=int, default=0)
+    parser.add_argument(
+        "--source-lines",
+        action="store_true",
+        help=(
+            "print exact local source lines for focused diagnostics; "
+            "intended only for private exact-local runs"
+        ),
+    )
     args = parser.parse_args(argv)
 
     if args.top < 1 or args.top > 100:
@@ -251,6 +292,7 @@ def main(argv: list[str] | None = None) -> int:
             focus_diagnostics(
                 report,
                 focus_files=args.focus_files,
+                include_source_lines=args.source_lines,
             )
         )
     except JavacFrontierSummaryError as exc:

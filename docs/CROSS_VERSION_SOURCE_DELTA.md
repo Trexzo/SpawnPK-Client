@@ -97,3 +97,29 @@ A `XVERSRC_*` report proves deterministic source-tree comparison across independ
 The exact private historical source-regeneration contract is pinned in `fixtures/v307-v308-source-regeneration.json`. It records the exact v307/v308 client SHA-256 pair, the already-proven one-entry binary delta, and the official Procyon v0.6.0 decompiler authority (`821da96012fc69244fa1ea298c90455ee4e021434bc796d3b9546ab24601b779`, 2,004,704 bytes).
 
 A future exact run may use either the archived private Procyon copy or the official release artifact, but `run_decompiler()` must verify that exact SHA before execution. The fixture explicitly forbids deriving historical v307 source by editing the v308 tree; v307 must be independently regenerated from the exact v307 binary.
+
+## Historical R8 readable-source proof
+
+A supporting historical backtest is pinned in `fixtures/v307-v308-r8-readable-source-proof.json`.
+
+It applies the same recovered R8 rename authority independently to the exact historical v307 and v308 client binaries. Both deterministic remapped archives contain 10,970 identical entry paths and differ in exactly one entry: the original `rs/f/a.class` update is carried into the readable identity `rs/Configuration.class`.
+
+The exact pinned Procyon v0.6.0 decompiler then independently decompiles all 1,129 remapped project classes for each build in bounded batches. Both source trees contain the same 1,129 Java paths, zero empty files, and exactly one differing Java file: `rs/Configuration.java`. That Java delta is one assignment only: `field1628 = 307` becomes `field1628 = 308`. Canonical tree digests and byte counts are pinned in the fixture.
+
+This is evidence that the recovered readable-name mapping survives the real v307 -> v308 client update without class-identity drift. It is deliberately **not** treated as the final modern Source-M1 historical release-manifest PASS tracked by issue #283.
+
+## Modern historical v307 recovery-release runner
+
+`scripts/Invoke-HistoricalV307RecoveryRelease.ps1` drives the stricter historical gate tracked by issue #283. It reuses the current recovery primitives with `build_id=v307`: exact readable authority, private namespace-collision plan, collision-derived Procyon source workspace, clean project rebuild, round-trip verification, `recovery_release_manifest`, and independent release verification.
+
+The script pins exact v307/decompiler authority through `fixtures/v307-v308-source-regeneration.json` and refuses a source index that is not bound to the same exact v307 SHA-256. On Windows it prepares a case-sensitive output root before any recovered source is written.
+
+The runner deliberately stops after verified historical recovery release. It does **not** call `source_milestone_cli`, build a source publication bundle, or alter the v308-only Source Milestone publication rule.
+
+## One-command historical v307 backtest
+
+`scripts/Invoke-HistoricalV307FullBacktest.ps1` composes the exact historical member-safety preparation and historical recovery-release runner into one fail-closed command. Its defaults point at the preserved exact-v307 backup and archived R8N private authority paths recovered from the project's local evidence.
+
+Stage 1 must completely prepare and validate the exact v307 member-safety authority. Stage 2 then runs the modern historical recovery-release chain. Exit `3` from the release stage is preserved as `HISTORICAL_V307_BACKTEST_BLOCKED_AT_SHARED_SOURCE_FRONTIER`; this means the historical authority preparation passed but the shared Source-M1 clean-compile frontier is still blocking release readiness.
+
+A final PASS requires the generated historical recovery manifest to report `build_id=v307` and `ready_for_release=true`. The wrapper does not invoke the v308-only Source Milestone or publication bundle path.

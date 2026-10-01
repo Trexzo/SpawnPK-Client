@@ -169,36 +169,214 @@ def summarize(
 
     if not ranked_sources:
         out.append("<none>")
-        return out
-
-    for source_path in ranked_sources:
-        out.append(
-            f"SOURCE {source_path} | "
-            f"methods={methods_by_source[source_path]} | "
-            f"references={refs_by_source[source_path]}"
-        )
-        rows = sorted(
-            actions_by_source[source_path],
-            key=lambda action: (
-                str(action["method_name"]),
-                str(action["method_descriptor"]),
-                tuple(str(v) for v in action["same_package_owners"]),
-            ),
-        )
-        for action in rows:
-            owners = ",".join(
-                str(owner)
-                for owner in action["same_package_owners"]
-            )
+    else:
+        for source_path in ranked_sources:
             out.append(
-                "  "
-                + str(action["method_name"])
-                + str(action["method_descriptor"])
-                + " | references="
-                + str(action["replacement_count"])
-                + " | owners="
-                + owners
+                f"SOURCE {source_path} | "
+                f"methods={methods_by_source[source_path]} | "
+                f"references={refs_by_source[source_path]}"
             )
+            rows = sorted(
+                actions_by_source[source_path],
+                key=lambda action: (
+                    str(action["method_name"]),
+                    str(action["method_descriptor"]),
+                    tuple(str(v) for v in action["same_package_owners"]),
+                ),
+            )
+            for action in rows:
+                owners = ",".join(
+                    str(owner)
+                    for owner in action["same_package_owners"]
+                )
+                out.append(
+                    "  "
+                    + str(action["method_name"])
+                    + str(action["method_descriptor"])
+                    + " | references="
+                    + str(action["replacement_count"])
+                    + " | owners="
+                    + owners
+                )
+
+    family_specs = [
+        {
+            "kind": (
+                "primitive_scope_shadowed_self_static_field_owner_qualification"
+            ),
+            "label": "PRIMITIVE-SCOPE SELF SHADOW",
+            "method_key": (
+                "primitive_scope_shadowed_self_static_field_method_count"
+            ),
+            "reference_key": (
+                "primitive_scope_shadowed_self_static_field_reference_count"
+            ),
+            "method_marker": "PRIMITIVE_SCOPE_SELF_SHADOW_METHODS",
+            "reference_marker": "PRIMITIVE_SCOPE_SELF_SHADOW_REFERENCES",
+            "detail": lambda action: (
+                "owner=" + str(action.get("qualified_owner") or "<missing>")
+            ),
+        },
+        {
+            "kind": (
+                "primitive_shadowed_instance_field_receiver_qualification"
+            ),
+            "label": "PRIMITIVE INSTANCE RECEIVER",
+            "method_key": (
+                "primitive_shadowed_instance_receiver_method_count"
+            ),
+            "reference_key": (
+                "primitive_shadowed_instance_receiver_reference_count"
+            ),
+            "method_marker": "PRIMITIVE_INSTANCE_RECEIVER_METHODS",
+            "reference_marker": "PRIMITIVE_INSTANCE_RECEIVER_REFERENCES",
+            "detail": lambda action: (
+                "field="
+                + str(action.get("receiver_field_name") or "<missing>")
+                + " | owner="
+                + str(action.get("receiver_type_owner") or "<missing>")
+            ),
+        },
+        {
+            "kind": (
+                "shadowed_imported_static_method_owner_qualification"
+            ),
+            "label": "IMPORTED STATIC METHOD SHADOW",
+            "method_key": "shadowed_imported_static_method_method_count",
+            "reference_key": (
+                "shadowed_imported_static_method_reference_count"
+            ),
+            "method_marker": "IMPORTED_STATIC_METHOD_SHADOW_METHODS",
+            "reference_marker": "IMPORTED_STATIC_METHOD_SHADOW_REFERENCES",
+            "detail": lambda action: (
+                "simple="
+                + str(action.get("simple_owner") or "<missing>")
+                + " | owner="
+                + str(action.get("imported_owner") or "<missing>")
+            ),
+        },
+    ]
+
+    for spec in family_specs:
+        family_methods: Counter[str] = Counter()
+        family_refs: Counter[str] = Counter()
+        family_actions: dict[str, list[dict[str, Any]]] = {}
+
+        for action in actions:
+            if action.get("kind") != spec["kind"]:
+                continue
+
+            source_path = action.get("source_path")
+            if not isinstance(source_path, str) or not source_path:
+                raise SourceNormalizationSummaryError(
+                    f"{spec['kind']}: source_path must be non-empty"
+                )
+            source_path = source_path.replace("\\", "/")
+
+            method_name = action.get("method_name")
+            descriptor = action.get("method_descriptor")
+            if not isinstance(method_name, str) or not method_name:
+                raise SourceNormalizationSummaryError(
+                    f"{source_path}: method_name must be non-empty"
+                )
+            if not isinstance(descriptor, str) or not descriptor:
+                raise SourceNormalizationSummaryError(
+                    f"{source_path}: method_descriptor must be non-empty"
+                )
+
+            replacement_count = action.get("replacement_count")
+            if (
+                isinstance(replacement_count, bool)
+                or not isinstance(replacement_count, int)
+                or replacement_count < 1
+            ):
+                raise SourceNormalizationSummaryError(
+                    f"{source_path}: replacement_count must be a positive integer"
+                )
+
+            family_methods[source_path] += 1
+            family_refs[source_path] += replacement_count
+            family_actions.setdefault(source_path, []).append(action)
+
+        computed_family_methods = sum(family_methods.values())
+        computed_family_refs = sum(family_refs.values())
+        expected_family_methods = summary.get(
+            spec["method_key"],
+            0,
+        )
+        expected_family_refs = summary.get(
+            spec["reference_key"],
+            0,
+        )
+        if expected_family_methods != computed_family_methods:
+            raise SourceNormalizationSummaryError(
+                f"{spec['label']} method count mismatch: "
+                f"summary={expected_family_methods!r} "
+                f"computed={computed_family_methods}"
+            )
+        if expected_family_refs != computed_family_refs:
+            raise SourceNormalizationSummaryError(
+                f"{spec['label']} reference count mismatch: "
+                f"summary={expected_family_refs!r} "
+                f"computed={computed_family_refs}"
+            )
+
+        ranked_family_sources = sorted(
+            family_methods,
+            key=lambda path: (
+                -family_refs[path],
+                -family_methods[path],
+                path,
+            ),
+        )[:top]
+
+        out.extend(
+            [
+                "",
+                "============================================================",
+                f" SOURCE NORMALIZATION {spec['label']} EVIDENCE",
+                "============================================================",
+                (
+                    f"{spec['method_marker']}="
+                    f"{computed_family_methods}"
+                ),
+                (
+                    f"{spec['reference_marker']}="
+                    f"{computed_family_refs}"
+                ),
+                "",
+                f"=== TOP {top} {spec['label']} SOURCES ===",
+            ]
+        )
+
+        if not ranked_family_sources:
+            out.append("<none>")
+            continue
+
+        for source_path in ranked_family_sources:
+            out.append(
+                f"SOURCE {source_path} | "
+                f"methods={family_methods[source_path]} | "
+                f"references={family_refs[source_path]}"
+            )
+            rows = sorted(
+                family_actions[source_path],
+                key=lambda action: (
+                    str(action["method_name"]),
+                    str(action["method_descriptor"]),
+                    str(spec["detail"](action)),
+                ),
+            )
+            for action in rows:
+                out.append(
+                    "  "
+                    + str(action["method_name"])
+                    + str(action["method_descriptor"])
+                    + " | references="
+                    + str(action["replacement_count"])
+                    + " | "
+                    + str(spec["detail"](action))
+                )
 
     return out
 
