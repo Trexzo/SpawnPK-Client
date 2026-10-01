@@ -1,0 +1,25 @@
+{
+  "schema_version":1,
+  "kind":"semantic_candidate_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[{
+    "schema_version":1,
+    "kind":"semantic_name_candidate",
+    "canonical":false,
+    "status":"CANDIDATE",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target":{"kind":"class","owner":"rs/gui/E","name":null,"descriptor":null},
+    "proposed_name":"GameClientPanel",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_launcher_ownership","detail":"Launcher constructs exactly one rs/gui/E immediately after constructing the live rs/Client instance and stores it as the launcher panel that hosts that client."},
+      {"family":"exact_client_container","detail":"Launcher configures the panel with BorderLayout, black background and the exact game dimensions 765x503, then initializes/starts Client and adds the Client component at BorderLayout Center."},
+      {"family":"exact_surface_boundary","detail":"The class itself is an otherwise empty JPanel subclass, so its semantic identity comes entirely from its one exact containment role rather than unrelated behavior."}
+    ],
+    "note":"Descriptive exact-v308 name for the launcher JPanel that contains the live game Client component."
+  }],
+  "conflicts":[]
+}
