@@ -1,0 +1,27 @@
+{
+  "schema_version":1,
+  "kind":"semantic_candidate_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[{
+    "schema_version":1,
+    "kind":"semantic_name_candidate",
+    "canonical":false,
+    "status":"CANDIDATE",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target":{"kind":"class","owner":"rs/l/d","name":null,"descriptor":null},
+    "proposed_name":"DepthFogRenderer",
+    "confidence":0.998,
+    "evidence":[
+      {"family":"exact_depth_buffer_consumer","detail":"R55 DrawingArea owns the global float[] depth buffer and int[] framebuffer. rs/l/d walks those exact arrays over the active DrawingArea width/height."},
+      {"family":"exact_depth_fog_blend","detail":"For each pixel, the renderer compares depth against caller-supplied near/far thresholds, replaces pixels beyond the far threshold with a configured RGB fog color, and alpha-like blends that fog color across the near-to-far interval."},
+      {"family":"exact_color_math","detail":"The interpolation uses separate red/blue and green packed-channel masks with an 8-bit 0..256 blend factor, producing the canonical depth-fog fade into the target color."},
+      {"family":"exact_offset_state","detail":"The class owns one float offset added to both supplied depth thresholds plus one static fog color, matching a configurable depth-fog pass rather than generic post-processing."},
+      {"family":"exact_liveness_boundary","detail":"No surviving exact-v308 external direct class owner invokes rs/l/d. The class is therefore semantically recoverable from its self-contained raster behavior but is not claimed as active in the live render path."}
+    ],
+    "note":"Descriptive exact-v308 name for the dormant depth-buffer fog blending pass. No original stripped source identifier is claimed."
+  }],
+  "conflicts":[]
+}
