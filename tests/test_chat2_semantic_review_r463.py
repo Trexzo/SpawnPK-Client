@@ -9,8 +9,11 @@ ROOT=Path(__file__).resolve().parents[1]
 def _class_lineage():
     return {"schema_version":1,"namespace":"spawnpk-client","id_format":"CLIENT_CLASS_%06d","baseline_build_id":"v308","builds":[{"build_id":"v308","build_number":308,"sha256":SHA,"source_name":"client(6).jar","authority":"EXACT_CURRENT_CLIENT"}],"classes":[{"logical_id":"CLIENT_CLASS_000203","semantic_name":None,"semantic_status":"UNKNOWN","semantic_confidence":0.0,"lineage":[{"build_id":"v308","internal_name":"rs/gui/c","entry_path":"rs/gui/c.class","entry_sha256":"b"*64,"structural_sha256":"c"*64,"relation":"BASELINE","confidence":1.0,"provenance":[{"authority":"EXACT_CURRENT_CLIENT","source":"chat2-r463-fixture"}]}],"semantic_provenance":[]}],"unresolved":[]}
 
-def _member_lineage(): return {"schema_version":1,"kind":"member_lineage","class_namespace":"spawnpk-client","baseline_build_id":"v308","source_sha256":SHA,"members":[],"unresolved":[]}
-def _load(p): return json.loads((ROOT/p).read_text(encoding="utf-8"))
+def _member_lineage():
+    return {"schema_version":1,"kind":"member_lineage","class_namespace":"spawnpk-client","baseline_build_id":"v308","source_sha256":SHA,"members":[],"unresolved":[]}
+
+def _load(p):
+    return json.loads((ROOT/p).read_text(encoding="utf-8"))
 
 class Chat2SemanticReviewR463Tests(unittest.TestCase):
     def test_r463_resolves_deterministically(self):
@@ -18,12 +21,12 @@ class Chat2SemanticReviewR463Tests(unittest.TestCase):
         expected=_load("mappings/candidates/v308.semantic-review.chat2.r463.json")
         self.assertEqual(actual["proposal_count"],1)
         self.assertEqual(actual["unresolved"],[])
-        self.assertEqual(actual["review_id"],"SEMREVIEW_01FD82798886B697CBFF")
+        self.assertEqual(actual["review_id"],"SEMREVIEW_8C570CBA1E780914BF90")
         self.assertEqual(actual,expected)
 
     def test_r463_expected_stable_id(self):
         review=_load("mappings/candidates/v308.semantic-review.chat2.r463.json")
-        self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"RuneLiteSquareButtonShaper":"CLIENT_CLASS_000203"})
+        self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"RuneLiteSkinSquareButtonShaper":"CLIENT_CLASS_000203"})
 
     def test_r463_name_owner_and_id_do_not_overlap_prior_reviews(self):
         current=_load("mappings/candidates/v308.semantic-review.chat2.r463.json")
