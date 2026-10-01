@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/c/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ObjectDefinitionOverrides",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_object_definition_join",
+          "detail": "Exact v308 ObjectDefinition lookup/decode in rs/d/r invokes rs/c/a/a.a(ObjectDefinition,id) on the resolved definition before returning it to callers."
+        },
+        {
+          "family": "exact_override_table_shape",
+          "detail": "rs/c/a/a is stateless and exposes only two static methods taking rs/d/r plus an object id; the primary path delegates to a very large ~680-ID switch and then applies a smaller follow-up switch."
+        },
+        {
+          "family": "exact_definition_mutation",
+          "detail": "The switch cases mutate ObjectDefinition presentation/interaction state for exact object ids, including action-array replacements and additional definition fields; the class has no decoder, cache, UI or unrelated lifecycle state."
+        },
+        {
+          "family": "exact_domain_identity",
+          "detail": "R75 already fixes rs/d/r$a as ObjectDefinitionMode and exact object-definition consumers resolve rs/d/r for scene/menu use, establishing rs/d/r as the ObjectDefinition domain that this table post-processes."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the stateless hard-coded ObjectDefinition post-decode override table. No verbatim historical source identifier is claimed."
+    }
+  ],
+  "conflicts": []
+}
