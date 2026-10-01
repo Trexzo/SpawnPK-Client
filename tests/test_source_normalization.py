@@ -2446,6 +2446,167 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+    def test_invokedynamic_helper_return_cast_uses_exact_return_descriptor(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/ProcyonInvokeDynamicHelper_1.java": (
+                        "package p;\n"
+                        "public class ProcyonInvokeDynamicHelper_1 {\n"
+                        "    public static Handler handle() { return new Handler(); }\n"
+                        "    public static class Handler {\n"
+                        "        public Object invokeExact(Object value) { return value; }\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "p/Client.java": (
+                        "package p;\n"
+                        "public class Client {\n"
+                        "    public static String concat(String p0) {\n"
+                        "        return \"value=\" + p0;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "Client.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "public class Client {\n"
+                "    public static String concat(String p0) {\n"
+                "        return ProcyonInvokeDynamicHelper_1.handle().invokeExact(p0);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-invokedynamic-cast"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn(
+                "Object cannot be converted to String",
+                before.stderr,
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "return (java.lang.String)"
+                "ProcyonInvokeDynamicHelper_1.handle().invokeExact(p0);",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"] == "invokedynamic_helper_return_cast"
+            )
+            self.assertEqual(
+                action["method_descriptor"],
+                "(Ljava/lang/String;)Ljava/lang/String;",
+            )
+            self.assertEqual(action["cast_type"], "java.lang.String")
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                len(action["invokedynamic_callsites"]),
+                1,
+            )
+            self.assertEqual(
+                action["invokedynamic_callsites"][0]["descriptor"],
+                "(Ljava/lang/String;)Ljava/lang/String;",
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_helper_return_cast_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-invokedynamic-cast"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_invokedynamic_helper_return_count_mismatch_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/ProcyonInvokeDynamicHelper_1.java": (
+                        "package p;\n"
+                        "public class ProcyonInvokeDynamicHelper_1 {\n"
+                        "    public static Handler handle() { return new Handler(); }\n"
+                        "    public static class Handler {\n"
+                        "        public Object invokeExact(Object value) { return value; }\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "p/Client.java": (
+                        "package p;\n"
+                        "public class Client {\n"
+                        "    public static String concat(String p0) {\n"
+                        "        return \"value=\" + p0;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "Client.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "public class Client {\n"
+                "    public static String concat(String p0) {\n"
+                "        if (p0 == null) {\n"
+                "            return ProcyonInvokeDynamicHelper_1.handle().invokeExact(p0);\n"
+                "        }\n"
+                "        return ProcyonInvokeDynamicHelper_1.handle().invokeExact(p0);\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_helper_return_cast_reference_count"
+                ],
+                0,
+            )
+
     def test_qualifies_imported_parameter_shadowed_by_same_package_type(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

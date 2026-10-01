@@ -907,6 +907,41 @@ def _method_has_same_name_value_binding(
     return parameter_shadow or bool(local_spans)
 
 
+def _descriptor_return_descriptor(
+    descriptor: str,
+) -> str | None:
+    close = descriptor.find(")")
+    if close < 0 or close + 1 >= len(descriptor):
+        return None
+    value = descriptor[close + 1:]
+    if value == "V":
+        return value
+    if value and value[0] in "ZBCSIJFD":
+        return value if len(value) == 1 else None
+    if value.startswith("L") and value.endswith(";"):
+        return value
+    if value.startswith("["):
+        return value
+    return None
+
+
+def _java_cast_type_from_reference_descriptor(
+    descriptor: str,
+) -> str | None:
+    if not (
+        descriptor.startswith("L")
+        and descriptor.endswith(";")
+    ):
+        return None
+    internal = descriptor[1:-1]
+    if not internal or "$" in internal:
+        return None
+    parts = internal.split("/")
+    if not all(_is_java_identifier(part) for part in parts):
+        return None
+    return ".".join(parts)
+
+
 def _source_parameter_count(params: str) -> int:
     text = params.strip()
     if not text:
@@ -2806,6 +2841,179 @@ def _parameter_type_spans(
     return out
 
 
+def _normalize_invokedynamic_helper_return_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Cast generated Procyon invokeExact returns to exact JVM return type.
+
+    Procyon can lower an invokedynamic expression through a generated
+    ProcyonInvokeDynamicHelper_N.handle().invokeExact(...) expression whose
+    Java surface type is Object. A cast is inserted only for a direct return
+    expression when one exact readable method matches and every exact
+    invokedynamic callsite in that method has the same non-Object reference
+    return descriptor as the enclosing JVM method.
+    """
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError:
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    helper_return = re.compile(
+        r"(?m)^(?P<indent>[ \t]*)return[ \t]+"
+        r"(?P<expr>"
+        r"ProcyonInvokeDynamicHelper_[0-9]+"
+        r"\.handle\(\)\.invokeExact\([^;\n]*\)"
+        r")\s*;"
+    )
+
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(text):
+        brace_start = text.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        body_end = _matching_brace_end(text, brace_start)
+        method_text = text[method_match.start():body_end]
+        method_code = _java_code_mask(method_text)
+        return_matches = list(helper_return.finditer(method_code))
+        if not return_matches:
+            continue
+
+        source_arity = _source_parameter_count(
+            method_match.group("params")
+        )
+        candidates: list[tuple[dict[str, Any], list[dict[str, Any]], str]] = []
+
+        for method in profile.get("methods", []):
+            if method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(method.get("descriptor", ""))
+            if _descriptor_parameter_count(descriptor) != source_arity:
+                continue
+            parameter_match = _source_parameters_match_descriptor(
+                method_match.group("params"),
+                descriptor,
+                current_package=current_owner.rpartition("/")[0],
+            )
+            if parameter_match is False:
+                continue
+
+            return_descriptor = _descriptor_return_descriptor(descriptor)
+            cast_type = (
+                _java_cast_type_from_reference_descriptor(
+                    return_descriptor or ""
+                )
+            )
+            if (
+                cast_type is None
+                or return_descriptor == "Ljava/lang/Object;"
+            ):
+                continue
+
+            dynamic_calls = [
+                invocation
+                for invocation in method.get("method_invocations", [])
+                if invocation.get("operation") == "invokedynamic"
+            ]
+            if len(dynamic_calls) != len(return_matches):
+                continue
+
+            dynamic_returns = [
+                _descriptor_return_descriptor(
+                    str(invocation.get("descriptor", ""))
+                )
+                for invocation in dynamic_calls
+            ]
+            if any(
+                dynamic_return != return_descriptor
+                for dynamic_return in dynamic_returns
+            ):
+                continue
+
+            candidates.append((method, dynamic_calls, cast_type))
+
+        if len(candidates) != 1:
+            continue
+
+        exact_method, dynamic_calls, cast_type = candidates[0]
+        for return_match in return_matches:
+            expression_start = (
+                method_match.start() + return_match.start("expr")
+            )
+            expression_end = (
+                method_match.start() + return_match.end("expr")
+            )
+            expression = text[expression_start:expression_end]
+            edits.append(
+                (
+                    expression_start,
+                    expression_end,
+                    "(" + cast_type + ")" + expression,
+                )
+            )
+
+        actions.append(
+            {
+                "kind": "invokedynamic_helper_return_cast",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": exact_method["descriptor"],
+                "cast_type": cast_type,
+                "invokedynamic_callsites": [
+                    {
+                        "name": str(call.get("name", "")),
+                        "descriptor": str(call.get("descriptor", "")),
+                        "bootstrap_method_attr_index": int(
+                            call.get("bootstrap_method_attr_index", -1)
+                        ),
+                    }
+                    for call in dynamic_calls
+                ],
+                "replacement_count": len(return_matches),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_invokedynamic_helper_object_return"
+                    ),
+                    "strategy": (
+                        "exact_method_and_invokedynamic_return_descriptor_cast"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping invokedynamic return-cast edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_imported_parameter_types_shadowed_by_same_package(
     *,
     source_root: Path,
@@ -4633,6 +4841,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_invokedynamic_helper_return_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_imported_parameter_types_shadowed_by_same_package(
                         source_root=source_root,
                         path=path,
@@ -4776,6 +4991,15 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "shadowed_nested_static_field_owner_type_context"
+        ),
+        "invokedynamic_helper_return_cast_method_count": sum(
+            action["kind"] == "invokedynamic_helper_return_cast"
+            for action in actions
+        ),
+        "invokedynamic_helper_return_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"] == "invokedynamic_helper_return_cast"
         ),
         "imported_parameter_shadow_method_count": sum(
             action["kind"]
