@@ -182,6 +182,71 @@ class CrossVersionJavacLegacyBaselineDeltaTests(unittest.TestCase):
         self.assertTrue(report["new_source_tree_changed"])
         self.assertFalse(report["identifiers_included"])
 
+    def test_rejects_legacy_baseline_field_shape_drift(self):
+        cases = (
+            (None, "source_path", "rs/Secret.java", "top-level"),
+            ("bindings", "message", "private", "bindings"),
+            ("comparison", "symbol", "secret", "comparison"),
+            ("run_state", "location", "secret", "run_state"),
+        )
+        for section, key, value, label in cases:
+            with self.subTest(section=section, key=key):
+                bad = copy.deepcopy(self.baseline)
+                target = bad if section is None else bad[section]
+                target[key] = value
+                with self.assertRaisesRegex(
+                    CrossVersionJavacLegacyBaselineDeltaError,
+                    rf"{label} does not match canonical field contract",
+                ):
+                    build_cross_version_javac_legacy_baseline_delta(
+                        bad,
+                        self.current,
+                    )
+
+    def test_rejects_missing_legacy_baseline_field(self):
+        bad = copy.deepcopy(self.baseline)
+        del bad["bindings"]["old_rebuild_id"]
+        with self.assertRaisesRegex(
+            CrossVersionJavacLegacyBaselineDeltaError,
+            "bindings does not match canonical field contract",
+        ):
+            build_cross_version_javac_legacy_baseline_delta(
+                bad,
+                self.current,
+            )
+
+    def test_legacy_delta_schema_restricts_public_categories(self):
+        schema = json.loads(
+            (
+                ROOT
+                / "schemas"
+                / "cross-version-javac-legacy-baseline-delta.schema.json"
+            ).read_text(encoding="utf-8")
+        )
+        actual = set(
+            schema["$defs"]["signedCategoryCounts"][
+                "propertyNames"
+            ]["enum"]
+        )
+        expected = {
+            "cannot_find_symbol",
+            "package_does_not_exist",
+            "incompatible_types",
+            "cannot_be_converted",
+            "ambiguous_reference",
+            "private_access",
+            "protected_access",
+            "cannot_apply_arguments",
+            "cannot_be_dereferenced",
+            "override_mismatch",
+            "name_clash",
+            "bad_operand_type",
+            "non_static_from_static_context",
+            "already_assigned",
+            "other",
+        }
+        self.assertEqual(actual, expected)
+
     def test_rejects_mutated_legacy_baseline(self):
         bad = copy.deepcopy(self.baseline)
         bad["comparison"]["old_total_errors"] = 349
