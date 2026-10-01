@@ -241,7 +241,39 @@ class CrossVersionJavacCheckpointTests(unittest.TestCase):
 
         with self.assertRaisesRegex(
             CrossVersionJavacCheckpointError,
-            "private family fields",
+            "public field contract",
+        ):
+            build_cross_version_javac_checkpoint(
+                bad,
+                self.old,
+                self.new,
+            )
+
+    def test_rejects_unexpected_summary_fields(self):
+        bad = json.loads(json.dumps(self.comparison))
+        bad["summary"]["source_path"] = "rs/Secret.java"
+
+        material = {
+            "old_diagnostic_report_id": bad["old_diagnostic_report_id"],
+            "new_diagnostic_report_id": bad["new_diagnostic_report_id"],
+            "old_diagnostic_input_sha256": (
+                bad["old_diagnostic_input_sha256"]
+            ),
+            "new_diagnostic_input_sha256": (
+                bad["new_diagnostic_input_sha256"]
+            ),
+            "old_frontier_id": bad["old_frontier_id"],
+            "new_frontier_id": bad["new_frontier_id"],
+            "summary": bad["summary"],
+            "families": bad["families"],
+        }
+        bad["report_id"] = (
+            "XJAVACFRONTIER_" + _digest(material)[:20].upper()
+        )
+
+        with self.assertRaisesRegex(
+            CrossVersionJavacCheckpointError,
+            "summary does not match the public field contract",
         ):
             build_cross_version_javac_checkpoint(
                 bad,
