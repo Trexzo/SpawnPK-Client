@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "class", "owner": "rs/l/L", "name": null, "descriptor": null},
+      "proposed_name": "SpriteColorAdjustmentUtil",
+      "confidence": 0.997,
+      "evidence": [
+        {"family":"exact_single_consumer","detail":"Exact-v308 reverse references outside the class itself point only to R361 SpriteStyleTransformer (rs/l/n)."},
+        {"family":"exact_color_math","detail":"The utility clamps/normalizes style parameters, adjusts packed color hue bits, and performs RGB hue/strength/percentage transformations without owning unrelated state."},
+        {"family":"exact_sprite_transform_join","detail":"SpriteStyleTransformer invokes this utility while rewriting Sprite pixel colors and preserves the source alpha channel around the transformed RGB value."}
+      ],
+      "note":"Descriptive exact-v308 utility name scoped to its only live consumer. It does not claim an original stripped source identifier."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "class", "owner": "rs/l/u", "name": null, "descriptor": null},
+      "proposed_name": "TextParticleTimestampCache",
+      "confidence": 0.997,
+      "evidence": [
+        {"family":"exact_single_consumer","detail":"Exact-v308 reverse references outside the class itself point only to R362 TextParticleMarkup (rs/l/t)."},
+        {"family":"exact_lru_contract","detail":"The class is an access-order LinkedHashMap<Long,Long> and removes the eldest entry when size exceeds exactly 512."},
+        {"family":"exact_timestamp_usage","detail":"TextParticleMarkup stores a hash-derived long key to current millisecond timestamp in this map and checks elapsed time against 50 ms before regenerating particle-related values."}
+      ],
+      "note":"Descriptive exact-v308 name for the bounded key-to-timestamp cache owned exclusively by TextParticleMarkup."
+    }
+  ],
+  "conflicts": []
+}
