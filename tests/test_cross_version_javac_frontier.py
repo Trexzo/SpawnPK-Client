@@ -409,6 +409,27 @@ class CrossVersionJavacFrontierTests(unittest.TestCase):
             new["report_id"],
         )
 
+    def test_rejects_diagnostic_rows_changed_after_authority(self):
+        row = {
+            "source_path": "/x/src/rs/A.java",
+            "category": "cannot_find_symbol",
+            "message": "cannot find symbol",
+            "symbol_kind": "variable",
+            "symbol": "hidden",
+            "location_kind": "class",
+            "location": "A",
+            "symbol_shape": "variable",
+        }
+        old = report("old", [row])
+        new = report("new", [row])
+        old["diagnostics"][0]["line"] += 1
+
+        with self.assertRaisesRegex(
+            CrossVersionJavacFrontierError,
+            "frontier ID does not match diagnostic rows",
+        ):
+            compare_javac_frontiers(old, new)
+
 
 if __name__ == "__main__":
     unittest.main()
