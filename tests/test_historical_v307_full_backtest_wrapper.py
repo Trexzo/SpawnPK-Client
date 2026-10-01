@@ -67,6 +67,25 @@ class HistoricalV307FullBacktestWrapperTests(unittest.TestCase):
             text,
         )
 
+    def test_preserves_previous_output_on_rerun(self):
+        text = self._text()
+        self.assertIn(
+            'Get-Date -Format "yyyyMMdd-HHmmss"',
+            text,
+        )
+        self.assertIn(
+            '$BackupOut = $OutDir + ".bak-" + $Stamp',
+            text,
+        )
+        self.assertIn(
+            'Move-Item -LiteralPath $OutDir -Destination $BackupOut',
+            text,
+        )
+        self.assertIn(
+            "PREVIOUS_OUTPUT_BACKED_UP=",
+            text,
+        )
+
     def test_preserves_shared_frontier_blocked_exit(self):
         text = self._text()
         self.assertIn('if ($ReleaseExit -eq 3)', text)
