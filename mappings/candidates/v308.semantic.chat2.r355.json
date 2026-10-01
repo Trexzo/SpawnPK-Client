@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/y",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TrayWindowRestoreMouseListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_tray_attachment",
+          "detail": "Launcher creates the SpawnPK TrayIcon and installs exactly one rs/gui/y instance as its MouseListener."
+        },
+        {
+          "family": "exact_restore_behavior",
+          "detail": "mouseClicked resolves Launcher's active JFrame, sets its state to NORMAL (0), then sets it visible=true; no other mouse callback is overridden."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The listener stores only its synthetic Launcher reference and performs no unrelated tray, game or network behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the tray-icon click listener that restores/shows the Launcher window."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/z",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SidePanelToggleAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_button_attachment",
+          "detail": "Launcher creates a JButton whose exact tooltip is 'Hide/show side panel' and installs rs/gui/z as that button's ActionListener."
+        },
+        {
+          "family": "exact_request_flag",
+          "detail": "actionPerformed performs exactly one mutation: Client.i = true, establishing this listener as the request trigger for the side-panel toggle path."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The listener stores only its synthetic Launcher reference and owns no independent layout or gameplay state."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the title-bar side-panel toggle action trigger."
+    }
+  ],
+  "conflicts": []
+}
