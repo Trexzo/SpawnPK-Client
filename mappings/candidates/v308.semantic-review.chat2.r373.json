@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 4,
+  "review_id": "SEMREVIEW_29093310EAE4B9BB47B5",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_1B6E07D408BFD2CAF1A0",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000353",
+      "owner_logical_id": "CLIENT_CLASS_000353",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/D",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InitialLauncherWindowLayoutTask",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_surface_ownership",
+          "detail": "The only exact-v308 owner is R85 DepthBufferedImageSurface rs/l/C, which schedules one rs/l/D with SwingUtilities.invokeLater from its first draw path."
+        },
+        {
+          "family": "exact_window_layout_behavior",
+          "detail": "run() sizes the Launcher JFrame to 1134x537 or 1312x800 depending on the existing client layout flag, centers it on the current screen and conditionally maximizes when the larger mode exceeds screen width."
+        },
+        {
+          "family": "exact_one_shot_boundary",
+          "detail": "DepthBufferedImageSurface guards creation with a static first-run flag, so the task is an initial launcher-window layout action rather than a persistent resize listener."
+        }
+      ],
+      "note": "Descriptive exact-v308 helper name derived from the sole live owner/call path; no original stripped source identifier is claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_271783AD6ABBDFA36C3B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000358",
+      "owner_logical_id": "CLIENT_CLASS_000358",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/I",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DeferredSpriteLoader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_deferred_registry",
+          "detail": "a(String[,boolean]) creates an otherwise-empty R55 Sprite, stores the asset path in the Sprite and appends it to one private static List instead of loading image pixels immediately."
+        },
+        {
+          "family": "exact_batch_materialization",
+          "detail": "a() iterates every queued Sprite, resolves Toolkit images from Sprite's asset root + stored path, captures dimensions and pixels with ImageIcon/PixelGrabber, initializes sprite bounds and applies the normal color-key cleanup when required."
+        },
+        {
+          "family": "exact_client_startup_join",
+          "detail": "Client invokes DeferredSpriteLoader.a() during its startup asset-initialization chain immediately after R308 CombatHudSpriteAssets initialization; R308 itself acquires its sprites through this loader."
+        }
+      ],
+      "note": "Descriptive exact-v308 helper name derived from the sole live owner/call path; no original stripped source identifier is claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_8EFAA6ADFB8564CC80E5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000356",
+      "owner_logical_id": "CLIENT_CLASS_000356",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/G",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorKeyTransparencyFilter",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_sprite_factory",
+          "detail": "R55 Sprite constructs this RGBImageFilter only in Sprite.a(Image, Color), then wraps it in FilteredImageSource and Toolkit.createImage."
+        },
+        {
+          "family": "exact_color_key_behavior",
+          "detail": "The constructor stores the requested Color as an opaque ARGB key; filterRGB compares each source pixel after forcing alpha opaque and, on exact equality, strips the alpha channel while preserving RGB."
+        },
+        {
+          "family": "exact_scope",
+          "detail": "No exact-v308 class other than Sprite references the filter."
+        }
+      ],
+      "note": "Descriptive exact-v308 helper name derived from the sole live owner/call path; no original stripped source identifier is claimed."
+    },
+    {
+      "proposal_id": "SEMPROP_CF66B7C05219E0FD5A67",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000357",
+      "owner_logical_id": "CLIENT_CLASS_000357",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/H",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpriteColorRangeReplacementFilter",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_sprite_factory",
+          "detail": "R55 Sprite constructs this RGBImageFilter only in Sprite.a(BufferedImage, Color, Color), passing source image, source color and replacement color."
+        },
+        {
+          "family": "exact_range_match",
+          "detail": "filterRGB samples the backing BufferedImage pixel at x/y, compares each RGB channel against the source color using Sprite's tolerance predicate, and only transforms pixels that pass all three channel checks."
+        },
+        {
+          "family": "exact_replacement_math",
+          "detail": "Matching channels are shifted toward the supplied replacement color through Sprite's bounded channel-adjustment helper while preserving source alpha; output channels are clamped to 0..255."
+        }
+      ],
+      "note": "Descriptive exact-v308 helper name derived from the sole live owner/call path; no original stripped source identifier is claimed."
+    }
+  ],
+  "unresolved": []
+}
