@@ -86,6 +86,7 @@ spk-cross-version-javac-checkpoint = "spk_recovery.cross_version_javac_checkpoin
 spk-cross-version-javac-checkpoint-delta = "spk_recovery.cross_version_javac_checkpoint_delta_cli:main"
 spk-cross-version-javac-legacy-baseline-delta = "spk_recovery.cross_version_javac_legacy_baseline_delta_cli:main"
 spk-source-symbol-probe = "spk_recovery.source_symbol_probe_cli:main"
+spk-external-source-oracle = "spk_recovery.external_source_oracle_cli:main"
 spk-generic-historical-lineage-backfill = "spk_recovery.generic_historical_lineage_cli:main"
 spk-source-milestone = "spk_recovery.source_milestone_cli:main"
 spk-source-authority-artifact = "spk_recovery.source_authority_artifact_cli:main"

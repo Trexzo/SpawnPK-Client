@@ -5,11 +5,17 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from spk_recovery.cross_version_javac_checkpoint import (
     CrossVersionJavacCheckpointError,
     build_cross_version_javac_checkpoint,
+    verify_cross_version_javac_checkpoint,
     write_cross_version_javac_checkpoint,
+)
+from spk_recovery.cross_version_javac_checkpoint_cli import (
+    _load as _checkpoint_load,
+    main as checkpoint_main,
 )
 
 
@@ -244,6 +250,64 @@ class CrossVersionJavacCheckpointTests(unittest.TestCase):
             self.assertEqual(
                 json.loads(out.read_text(encoding="utf-8")),
                 report,
+            )
+
+    def test_verifier_accepts_exact_emitted_checkpoint(self):
+        report = build_cross_version_javac_checkpoint(
+            self.comparison,
+            self.old,
+            self.new,
+            binary_backtest_id="XVERBIN_" + "F" * 20,
+        )
+        verified = verify_cross_version_javac_checkpoint(
+            self.comparison,
+            self.old,
+            self.new,
+            report,
+            binary_backtest_id="XVERBIN_" + "F" * 20,
+        )
+        self.assertEqual(verified, report)
+
+    def test_verifier_rejects_mutated_emitted_checkpoint(self):
+        report = build_cross_version_javac_checkpoint(
+            self.comparison,
+            self.old,
+            self.new,
+            binary_backtest_id="XVERBIN_" + "F" * 20,
+        )
+        mutations = (
+            ("checkpoint_id", "XJAVACCHECKPOINT_" + "0" * 20),
+            ("identifiers_included", True),
+            ("note", "mutated"),
+        )
+        for key, value in mutations:
+            with self.subTest(key=key):
+                bad = json.loads(json.dumps(report))
+                bad[key] = value
+                with self.assertRaisesRegex(
+                    CrossVersionJavacCheckpointError,
+                    "does not match deterministic recomputation",
+                ):
+                    verify_cross_version_javac_checkpoint(
+                        self.comparison,
+                        self.old,
+                        self.new,
+                        bad,
+                        binary_backtest_id="XVERBIN_" + "F" * 20,
+                    )
+
+        bad = json.loads(json.dumps(report))
+        bad["comparison"]["summary"]["old_total_errors"] = 2
+        with self.assertRaisesRegex(
+            CrossVersionJavacCheckpointError,
+            "does not match deterministic recomputation",
+        ):
+            verify_cross_version_javac_checkpoint(
+                self.comparison,
+                self.old,
+                self.new,
+                bad,
+                binary_backtest_id="XVERBIN_" + "F" * 20,
             )
 
     def test_rejects_tampered_binding_identity(self):
@@ -528,6 +592,117 @@ class CrossVersionJavacCheckpointTests(unittest.TestCase):
                 self.old,
                 bad,
             )
+
+
+    def test_cli_loader_rejects_duplicate_json_keys(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "duplicate.json"
+            path.write_text(
+                '{"schema_version":1,"schema_version":1}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                CrossVersionJavacCheckpointError,
+                "duplicate JSON key: 'schema_version'",
+            ):
+                _checkpoint_load(path)
+
+    def test_cli_reloads_and_verifies_written_checkpoint(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            comparison = root / "comparison.json"
+            old_binding = root / "old-binding.json"
+            new_binding = root / "new-binding.json"
+            out = root / "checkpoint.json"
+            comparison.write_text(
+                json.dumps(self.comparison, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            old_binding.write_text(
+                json.dumps(self.old, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            new_binding.write_text(
+                json.dumps(self.new, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            binary_id = "XVERBIN_" + "F" * 20
+
+            with patch(
+                "sys.argv",
+                [
+                    "spk-cross-version-javac-checkpoint",
+                    str(comparison),
+                    str(old_binding),
+                    str(new_binding),
+                    "--binary-backtest-id",
+                    binary_id,
+                    "--out",
+                    str(out),
+                ],
+            ):
+                self.assertEqual(checkpoint_main(), 0)
+
+            emitted = _checkpoint_load(out)
+            expected = build_cross_version_javac_checkpoint(
+                self.comparison,
+                self.old,
+                self.new,
+                binary_backtest_id=binary_id,
+            )
+            self.assertEqual(emitted, expected)
+
+    def test_cli_fails_closed_when_written_checkpoint_is_corrupted(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            comparison = root / "comparison.json"
+            old_binding = root / "old-binding.json"
+            new_binding = root / "new-binding.json"
+            out = root / "checkpoint.json"
+            comparison.write_text(
+                json.dumps(self.comparison, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            old_binding.write_text(
+                json.dumps(self.old, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            new_binding.write_text(
+                json.dumps(self.new, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            binary_id = "XVERBIN_" + "F" * 20
+
+            def corrupt_write(report, path):
+                bad = json.loads(json.dumps(report))
+                bad["checkpoint_id"] = (
+                    "XJAVACCHECKPOINT_" + "0" * 20
+                )
+                path.write_text(
+                    json.dumps(bad, sort_keys=True) + "\n",
+                    encoding="utf-8",
+                )
+
+            with patch(
+                "spk_recovery.cross_version_javac_checkpoint_cli."
+                "write_cross_version_javac_checkpoint",
+                side_effect=corrupt_write,
+            ), patch(
+                "sys.argv",
+                [
+                    "spk-cross-version-javac-checkpoint",
+                    str(comparison),
+                    str(old_binding),
+                    str(new_binding),
+                    "--binary-backtest-id",
+                    binary_id,
+                    "--out",
+                    str(out),
+                ],
+            ):
+                with self.assertRaises(SystemExit) as raised:
+                    checkpoint_main()
+                self.assertEqual(raised.exception.code, 2)
 
 
 if __name__ == "__main__":

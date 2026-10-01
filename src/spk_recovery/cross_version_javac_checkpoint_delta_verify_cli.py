@@ -7,9 +7,7 @@ from typing import Any
 
 from .cross_version_javac_checkpoint_delta import (
     CrossVersionJavacCheckpointDeltaError,
-    build_cross_version_javac_checkpoint_delta,
     verify_cross_version_javac_checkpoint_delta,
-    write_cross_version_javac_checkpoint_delta,
 )
 
 
@@ -44,25 +42,20 @@ def _load(path: Path) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Compare two verified public-safe cross-version javac checkpoints "
-            "and emit one deterministic aggregate progress delta."
+            "Independently verify one emitted modern javac checkpoint delta "
+            "against its baseline/current checkpoint inputs."
         )
     )
     parser.add_argument("baseline_checkpoint", type=Path)
     parser.add_argument("current_checkpoint", type=Path)
-    parser.add_argument("--out", type=Path, required=True)
+    parser.add_argument("delta_report", type=Path)
     args = parser.parse_args()
 
     try:
-        report = build_cross_version_javac_checkpoint_delta(
-            _load(args.baseline_checkpoint),
-            _load(args.current_checkpoint),
-        )
-        write_cross_version_javac_checkpoint_delta(report, args.out)
         report = verify_cross_version_javac_checkpoint_delta(
             _load(args.baseline_checkpoint),
             _load(args.current_checkpoint),
-            _load(args.out),
+            _load(args.delta_report),
         )
     except CrossVersionJavacCheckpointDeltaError as exc:
         parser.error(str(exc))
@@ -77,24 +70,10 @@ def main() -> int:
                 "current_checkpoint_id": report[
                     "current_checkpoint_id"
                 ],
-                "baseline_tooling_commit": report[
-                    "baseline_tooling_commit"
+                "identifiers_included": report[
+                    "identifiers_included"
                 ],
-                "current_tooling_commit": report[
-                    "current_tooling_commit"
-                ],
-                "old_total_errors_delta": report["scalar_delta"][
-                    "old_total_errors"
-                ],
-                "new_total_errors_delta": report["scalar_delta"][
-                    "new_total_errors"
-                ],
-                "exact_frontier_equality_transition": report[
-                    "exact_frontier_equality_transition"
-                ],
-                "identifiers_included": report["identifiers_included"],
                 "verified": True,
-                "out": str(args.out),
             },
             sort_keys=True,
         )

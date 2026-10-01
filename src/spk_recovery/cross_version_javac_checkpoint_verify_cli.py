@@ -7,9 +7,7 @@ from typing import Any
 
 from .cross_version_javac_checkpoint import (
     CrossVersionJavacCheckpointError,
-    build_cross_version_javac_checkpoint,
     verify_cross_version_javac_checkpoint,
-    write_cross_version_javac_checkpoint,
 )
 
 
@@ -44,34 +42,26 @@ def _load(path: Path) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Build a public-safe deterministic checkpoint from one "
-            "redacted cross-version javac report and two redacted verified "
-            "javac build bindings."
+            "Independently verify one emitted public javac checkpoint "
+            "against its redacted comparator + build-binding inputs."
         )
     )
     parser.add_argument("comparison_report", type=Path)
     parser.add_argument("old_binding_report", type=Path)
     parser.add_argument("new_binding_report", type=Path)
+    parser.add_argument("checkpoint_report", type=Path)
     parser.add_argument(
         "--binary-backtest-id",
         help="Optional XVERBIN_* authority for the compared build pair.",
     )
-    parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
 
     try:
-        report = build_cross_version_javac_checkpoint(
-            _load(args.comparison_report),
-            _load(args.old_binding_report),
-            _load(args.new_binding_report),
-            binary_backtest_id=args.binary_backtest_id,
-        )
-        write_cross_version_javac_checkpoint(report, args.out)
         report = verify_cross_version_javac_checkpoint(
             _load(args.comparison_report),
             _load(args.old_binding_report),
             _load(args.new_binding_report),
-            _load(args.out),
+            _load(args.checkpoint_report),
             binary_backtest_id=args.binary_backtest_id,
         )
     except CrossVersionJavacCheckpointError as exc:
@@ -82,17 +72,9 @@ def main() -> int:
             {
                 "checkpoint_id": report["checkpoint_id"],
                 "tooling_commit": report["tooling_commit"],
-                "old_build_id": report["old"]["build_id"],
-                "new_build_id": report["new"]["build_id"],
                 "report_id": report["comparison"]["report_id"],
-                "exact_frontier_equal": report["comparison"][
-                    "summary"
-                ].get("exact_frontier_equal"),
-                "identifiers_included": report[
-                    "identifiers_included"
-                ],
+                "identifiers_included": report["identifiers_included"],
                 "verified": True,
-                "out": str(args.out),
             },
             sort_keys=True,
         )

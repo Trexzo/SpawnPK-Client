@@ -311,6 +311,26 @@ if ($CheckpointExit -ne 0) {
 }
 Require-File $Checkpoint
 
+$CheckpointVerifyArguments = @(
+    "-3.13",
+    "-m",
+    "spk_recovery.cross_version_javac_checkpoint_verify_cli",
+    $Report,
+    $V307VerifiedBinding,
+    $V308VerifiedBinding,
+    $Checkpoint,
+    "--binary-backtest-id",
+    $BinaryBacktestId
+)
+
+Write-Host ""
+Write-Host "=== VERIFY EMITTED CROSS-VERSION CHECKPOINT ===" -ForegroundColor Cyan
+& py @CheckpointVerifyArguments
+$CheckpointVerifyExit = $LASTEXITCODE
+if ($CheckpointVerifyExit -ne 0) {
+    throw "Cross-version javac checkpoint verification failed with exit=$CheckpointVerifyExit"
+}
+
 $CheckpointSummary = Get-Projection -Path $Checkpoint -Fields @{
     checkpoint_id = "/checkpoint_id"
     tooling_commit = "/tooling_commit"

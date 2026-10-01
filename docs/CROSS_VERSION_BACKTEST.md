@@ -53,6 +53,8 @@ The binary-delta command hashes both exact JARs, rejects duplicate ZIP entry nam
 
 A passing backtest exits `0`. A well-formed but failed proof exits `2`. Malformed or unsupported authority input is rejected before a report is accepted.
 
+All JSON authority inputs are parsed with recursive duplicate-key rejection. Ambiguous last-key-wins JSON is refused before build/SHA, carry-forward, binary-delta, or expectation checks run.
+
 ## Expectations
 
 The optional expectations JSON is intentionally narrow. Supported exact keys:

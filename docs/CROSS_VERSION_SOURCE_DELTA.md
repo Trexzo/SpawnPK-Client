@@ -23,6 +23,8 @@ Each source root is recomputed with the repository's canonical source-tree diges
 
 Each release authority SHA must exactly match the same build in canonical class lineage. Each remap plan must bind the same build and exact binary authority, and its deterministic digest must equal the `class_plan_digest` recorded by that recovered-source manifest. When a collision plan is supplied, it must contain exact identifiers, its readable-JAR SHA-256 must equal that release's readable-JAR authority, and its `JNSPLAN_*` ID must equal the recovered-source manifest's collision-plan authority.
 
+The source-delta CLI rejects duplicate JSON object keys recursively across every release, recovered-manifest, lineage, remap-plan, and optional collision-plan input before authority validation. Both the generic historical-lineage backfill and the exact v307 historical-lineage backfill apply the same rule to their index, lineage, fixture, and optional expected-summary JSON authority inputs.
+
 ## Logical source units
 
 Comparison is keyed by stable logical class ID, not by obfuscated filename.
