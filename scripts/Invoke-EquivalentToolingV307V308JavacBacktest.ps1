@@ -91,12 +91,16 @@ function Invoke-ChildAllowBlocked {
 
     Write-Host ""
     Write-Host ("=== " + $Label + " ===") -ForegroundColor Cyan
-    & powershell.exe @Arguments
-    $Exit = $LASTEXITCODE
+
+    # Child stdout is evidence for the operator, not part of this function's
+    # return value. Without Out-Host, assigning this function captures every
+    # native stdout line alongside the numeric exit code.
+    & powershell.exe @Arguments | Out-Host
+    $Exit = [int]$LASTEXITCODE
     if ($Exit -ne 0 -and $Exit -ne 3) {
         throw "$Label failed with exit=$Exit"
     }
-    return $Exit
+    return [int]$Exit
 }
 
 function Ensure-JavacBuildBinding {
