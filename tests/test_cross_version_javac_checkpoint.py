@@ -448,6 +448,67 @@ class CrossVersionJavacCheckpointTests(unittest.TestCase):
                 self.new,
             )
 
+    def test_rejects_recomputed_inconsistent_shared_percent(self):
+        bad = json.loads(json.dumps(self.comparison))
+        bad["summary"]["shared_percent_of_old"] = 99.0
+        _refresh_comparison_id(bad)
+
+        with self.assertRaisesRegex(
+            CrossVersionJavacCheckpointError,
+            "summary does not match public family aggregates",
+        ):
+            build_cross_version_javac_checkpoint(
+                bad,
+                self.old,
+                self.new,
+            )
+
+    def test_rejects_recomputed_inconsistent_exact_frontier_flag(self):
+        bad = json.loads(json.dumps(self.comparison))
+        bad["summary"]["exact_frontier_equal"] = False
+        _refresh_comparison_id(bad)
+
+        with self.assertRaisesRegex(
+            CrossVersionJavacCheckpointError,
+            "summary does not match public family aggregates",
+        ):
+            build_cross_version_javac_checkpoint(
+                bad,
+                self.old,
+                self.new,
+            )
+
+    def test_rejects_recomputed_inconsistent_family_counts(self):
+        bad = json.loads(json.dumps(self.comparison))
+        bad["families"][0]["shared_count"] = 0
+        bad["families"][0]["old_only_count"] = 1
+        _refresh_comparison_id(bad)
+
+        with self.assertRaisesRegex(
+            CrossVersionJavacCheckpointError,
+            "new counts are inconsistent|shared count is inconsistent",
+        ):
+            build_cross_version_javac_checkpoint(
+                bad,
+                self.old,
+                self.new,
+            )
+
+    def test_rejects_recomputed_private_family_identifier(self):
+        bad = json.loads(json.dumps(self.comparison))
+        bad["families"][0]["file_id"] = "rs/Secret.java"
+        _refresh_comparison_id(bad)
+
+        with self.assertRaisesRegex(
+            CrossVersionJavacCheckpointError,
+            "file_id has invalid format",
+        ):
+            build_cross_version_javac_checkpoint(
+                bad,
+                self.old,
+                self.new,
+            )
+
     def test_rejects_non_public_build_label(self):
         bad = _binding(
             build_id="../secret",
