@@ -207,6 +207,70 @@ def validate_cross_version_javac_checkpoint(
             f"{label}: {exc}"
         ) from exc
 
+    expected_old_percent = (
+        100.0
+        if summary["old_total_errors"] == 0
+        else round(
+            summary["shared_errors"]
+            * 100.0
+            / summary["old_total_errors"],
+            4,
+        )
+    )
+    expected_new_percent = (
+        100.0
+        if summary["new_total_errors"] == 0
+        else round(
+            summary["shared_errors"]
+            * 100.0
+            / summary["new_total_errors"],
+            4,
+        )
+    )
+    if summary["shared_percent_of_old"] != expected_old_percent:
+        raise CrossVersionJavacCheckpointDeltaError(
+            f"{label}: shared_percent_of_old is inconsistent"
+        )
+    if summary["shared_percent_of_new"] != expected_new_percent:
+        raise CrossVersionJavacCheckpointDeltaError(
+            f"{label}: shared_percent_of_new is inconsistent"
+        )
+
+    categories = sorted(
+        set(summary["old_categories"])
+        | set(summary["new_categories"])
+        | set(summary["shared_categories"])
+        | set(summary["old_only_categories"])
+        | set(summary["new_only_categories"])
+    )
+    for category in categories:
+        shared_count = summary["shared_categories"].get(category, 0)
+        if (
+            shared_count
+            + summary["old_only_categories"].get(category, 0)
+            != summary["old_categories"].get(category, 0)
+        ):
+            raise CrossVersionJavacCheckpointDeltaError(
+                f"{label}: old category decomposition is inconsistent"
+            )
+        if (
+            shared_count
+            + summary["new_only_categories"].get(category, 0)
+            != summary["new_categories"].get(category, 0)
+        ):
+            raise CrossVersionJavacCheckpointDeltaError(
+                f"{label}: new category decomposition is inconsistent"
+            )
+
+    expected_exact = (
+        summary["old_only_errors"] == 0
+        and summary["new_only_errors"] == 0
+    )
+    if summary["exact_frontier_equal"] != expected_exact:
+        raise CrossVersionJavacCheckpointDeltaError(
+            f"{label}: exact_frontier_equal is inconsistent"
+        )
+
     material = {
         "tooling_commit": tooling_commit,
         "binary_backtest_id": binary_id,
