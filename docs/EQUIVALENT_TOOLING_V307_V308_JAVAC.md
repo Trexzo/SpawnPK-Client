@@ -8,6 +8,8 @@ The orchestrator captures one clean exact `origin/main` commit, runs v307, reche
 
 Child exit code 3 is a valid evidence state. It means that exact recovery reached the Source-M1 clean-source frontier but is not release-ready yet. When either child returns 3, the orchestrator still requires and compares the private javac diagnostic + clean-rebuild + build-binding evidence, prints the redacted overlap summary, then itself returns 3.
 
+On a future release-ready child run, the underlying runner currently does not emit a `javac-build-binding.json` because its binding step is part of the blocked diagnostic path. The orchestrator therefore deterministically generates that missing binding from the successful run's private diagnostic + clean-rebuild report using the captured exact tooling commit and pinned build authority, then feeds it through the same comparator verification.
+
 Exit 0 is reserved for the stronger case where both v307 and v308 recovery runs are independently release-ready and the equivalent-tooling comparison also passes.
 
 The wrapper does not propose semantic names, modify source-repair rules, publish private diagnostics, or relax clean-rebuild/release gates.
