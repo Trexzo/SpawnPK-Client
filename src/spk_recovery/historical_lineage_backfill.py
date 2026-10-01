@@ -571,7 +571,13 @@ def backfill_historical_v307_lineage(
         "unresolved_removed": 0,
     }
 
-    if changed_paths:
+    changed_class_paths = [
+        path
+        for path in changed_paths
+        if path.startswith("rs/") and path.endswith(".class")
+    ]
+
+    if changed_class_paths:
         (
             migrated_members,
             historical_field_report,
@@ -580,7 +586,7 @@ def backfill_historical_v307_lineage(
             migrated_members,
             v308_index,
             v307_index,
-            changed_paths,
+            changed_class_paths,
             fixture_id=fixture_id,
             binary_backtest_id=binary_backtest_id,
         )
