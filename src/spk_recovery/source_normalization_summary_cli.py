@@ -201,6 +201,21 @@ def summarize(
 
     family_specs = [
         {
+            "kind": "shadowed_nested_static_field_owner_type_context",
+            "label": "NESTED STATIC FIELD SHADOW",
+            "method_key": "shadowed_nested_static_field_method_count",
+            "reference_key": "shadowed_nested_static_field_reference_count",
+            "method_marker": "NESTED_STATIC_FIELD_SHADOW_METHODS",
+            "reference_marker": "NESTED_STATIC_FIELD_SHADOW_REFERENCES",
+            "detail": lambda action: (
+                "owners="
+                + ",".join(
+                    str(owner)
+                    for owner in action.get("nested_owners", [])
+                )
+            ),
+        },
+        {
             "kind": "invokedynamic_helper_return_cast",
             "label": "INVOKEDYNAMIC HELPER RETURN CAST",
             "method_key": (
