@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_641F4871AD329092FCE4",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_4F7D3DD338283E269A74",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000500",
+      "owner_logical_id": "CLIENT_CLASS_000500",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner":"rs/l/k","name":null,"descriptor":null},
+      "proposed_name": "TextMarkupTagParser",
+      "confidence": 0.998,
+      "evidence": [
+        {"family":"exact_rsfont_consumer","detail":"R55 RSFont calls this class repeatedly while parsing inline text markup during width/layout/render paths."},
+        {"family":"exact_tag_vocabulary","detail":"The class recognizes and decodes multiple inline tag families including pulse/color effects, fla/fla2, item=, color close/open controls, strike controls, tab= and yoff= values."},
+        {"family":"exact_markup_result_contract","detail":"Its static methods return parsed integers/sentinel values consumed directly by RSFont as colors, sprite/item ids, style toggles, offsets and other text-render state rather than mutating unrelated client systems."}
+      ],
+      "note":"Descriptive exact-v308 name for the central integer/sentinel parser used by RSFont inline markup."
+    },
+    {
+      "proposal_id": "SEMPROP_6B0353D9B778244B82FE",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000498",
+      "owner_logical_id": "CLIENT_CLASS_000498",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner":"rs/l/i","name":null,"descriptor":null},
+      "proposed_name": "TextEffectOscillator",
+      "confidence": 0.998,
+      "evidence": [
+        {"family":"exact_ping_pong_state","detail":"The class stores max/current/direction integers; each tick adds direction to current, flips to -1 at the configured upper bound, and flips back to +1 at zero."},
+        {"family":"exact_text_effect_ownership","detail":"R392 TextMarkupTagParser owns four static instances with bounds 25, 50, 125 and 250; Client advances all four once per live frame outside blocked rendering state."},
+        {"family":"exact_markup_use","detail":"The tag parser reads the 250-bound oscillator value while producing the dynamic color for its pulse-style text tag, fixing the class within text-effect animation rather than generic timing."}
+      ],
+      "note":"Descriptive exact-v308 name for the bounded ping-pong counter used by text markup effects."
+    }
+  ],
+  "unresolved": []
+}
