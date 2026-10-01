@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/u",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherWindowFrame",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_launcher_ownership",
+          "detail": "Launcher stores exactly one rs/gui/u in its JFrame field o and exposes it as the active Swing window through Launcher.i(); Client and UI/config subsystems reference that same frame."
+        },
+        {
+          "family": "exact_frame_contract",
+          "detail": "The class directly extends JFrame and overrides setLocation/setBounds while adding monitor-aware clamping, maximize bounds, side-panel width changes and resize behavior; it owns no game rendering or protocol state."
+        },
+        {
+          "family": "exact_resize_policy",
+          "detail": "The frame stores rs/gui/v and branches on KEEP_WINDOW_SIZE versus KEEP_GAME_SIZE when applying width changes, proving it is the launcher window geometry owner rather than a generic JFrame helper."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the concrete JFrame owned by Launcher."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/v",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherResizePolicy",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_enum_values",
+          "detail": "The enum has exactly two values: KEEP_WINDOW_SIZE ('Keep window size') and KEEP_GAME_SIZE ('Keep game size')."
+        },
+        {
+          "family": "exact_frame_consumer",
+          "detail": "LauncherWindowFrame stores this enum and branches on its two values while changing frame width/side-panel geometry."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The enum carries only its display String and exists solely as launcher-window resize behavior policy."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the launcher frame's two-mode resize policy."
+    }
+  ],
+  "conflicts": []
+}
