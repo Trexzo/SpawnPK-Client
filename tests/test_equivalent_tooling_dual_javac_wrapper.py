@@ -43,16 +43,29 @@ class EquivalentToolingDualJavacWrapperTests(unittest.TestCase):
             text,
         )
 
-    def test_pins_single_exact_main_across_both_runs(self):
+    def test_freezes_single_exact_main_across_both_runs(self):
         text = self.script_text()
         self.assertIn("git -C $Repo fetch origin main", text)
         self.assertIn("Local HEAD is not exact origin/main", text)
         self.assertIn("TOOLING_COMMIT=$Head", text)
         self.assertIn(
-            "Recovery tooling authority changed after v307 run",
+            "git clone --bare --no-hardlinks $Repo $FrozenOrigin",
             text,
         )
         self.assertIn(
+            "git clone --no-hardlinks --single-branch --branch main",
+            text,
+        )
+        self.assertIn("Assert-FrozenToolingRepo", text)
+        self.assertIn("FROZEN_TOOLING_COMMIT=$Head", text)
+        self.assertIn("FROZEN_TOOLING_REPO=$FrozenRepo", text)
+        self.assertIn("LIVE_MAIN_ADVANCED=true", text)
+        self.assertIn("LATEST_ORIGIN_MAIN=", text)
+        self.assertNotIn(
+            "Recovery tooling authority changed after v307 run",
+            text,
+        )
+        self.assertNotIn(
             "Recovery tooling authority changed after v308 run",
             text,
         )
@@ -62,6 +75,127 @@ class EquivalentToolingDualJavacWrapperTests(unittest.TestCase):
         )
         self.assertIn(
             "v308 binding tooling commit drifted",
+            text,
+        )
+
+    @unittest.skipUnless(shutil.which("git"), "git required")
+    def test_frozen_bare_origin_survives_source_main_advancing(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            bare = root / "frozen.git"
+            frozen = root / "frozen"
+
+            subprocess.run(
+                ["git", "init", "-b", "main", str(source)],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            subprocess.run(
+                ["git", "-C", str(source), "config", "user.email", "test@example.invalid"],
+                check=True,
+            )
+            subprocess.run(
+                ["git", "-C", str(source), "config", "user.name", "Test"],
+                check=True,
+            )
+            (source / "marker.txt").write_text("captured\n", encoding="utf-8")
+            subprocess.run(
+                ["git", "-C", str(source), "add", "marker.txt"],
+                check=True,
+            )
+            subprocess.run(
+                ["git", "-C", str(source), "commit", "-m", "captured"],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            captured = subprocess.check_output(
+                ["git", "-C", str(source), "rev-parse", "HEAD"],
+                text=True,
+            ).strip()
+
+            subprocess.run(
+                ["git", "clone", "--bare", "--no-hardlinks", str(source), str(bare)],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            subprocess.run(
+                ["git", "-C", str(bare), "update-ref", "refs/heads/main", captured],
+                check=True,
+            )
+            subprocess.run(
+                ["git", "-C", str(bare), "symbolic-ref", "HEAD", "refs/heads/main"],
+                check=True,
+            )
+            subprocess.run(
+                [
+                    "git",
+                    "clone",
+                    "--no-hardlinks",
+                    "--single-branch",
+                    "--branch",
+                    "main",
+                    str(bare),
+                    str(frozen),
+                ],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+
+            (source / "marker.txt").write_text("advanced\n", encoding="utf-8")
+            subprocess.run(
+                ["git", "-C", str(source), "add", "marker.txt"],
+                check=True,
+            )
+            subprocess.run(
+                ["git", "-C", str(source), "commit", "-m", "advanced"],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            advanced = subprocess.check_output(
+                ["git", "-C", str(source), "rev-parse", "HEAD"],
+                text=True,
+            ).strip()
+            self.assertNotEqual(captured, advanced)
+
+            subprocess.run(
+                ["git", "-C", str(frozen), "fetch", "origin", "main"],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            frozen_head = subprocess.check_output(
+                ["git", "-C", str(frozen), "rev-parse", "HEAD"],
+                text=True,
+            ).strip()
+            frozen_remote = subprocess.check_output(
+                ["git", "-C", str(frozen), "rev-parse", "origin/main"],
+                text=True,
+            ).strip()
+
+            self.assertEqual(frozen_head, captured)
+            self.assertEqual(frozen_remote, captured)
+
+    def test_frozen_snapshot_cleanup_is_normal_exit_only(self):
+        text = self.script_text()
+        self.assertIn("Remove-FrozenToolingSnapshot", text)
+        self.assertIn("FROZEN_TOOLING_CLEANED=", text)
+        self.assertIn("FROZEN_TOOLING_CLEANUP_FAILED=", text)
+        self.assertIn(
+            "unexpected failure preserves the frozen snapshot for diagnosis",
             text,
         )
 
