@@ -43,11 +43,11 @@
     },
     "old_frontier_id": {
       "type": "string",
-      "pattern": "^JAVACFRONTIER_[0-9A-Z_]+$"
+      "pattern": "^JAVACFRONTIER_[0-9A-F]{20}$"
     },
     "new_frontier_id": {
       "type": "string",
-      "pattern": "^JAVACFRONTIER_[0-9A-Z_]+$"
+      "pattern": "^JAVACFRONTIER_[0-9A-F]{20}$"
     },
     "summary": {"type": "object"},
     "families": {
