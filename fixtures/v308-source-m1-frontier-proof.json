@@ -1,17 +1,20 @@
 {
   "schema_version": 1,
-  "kind": "current_source_m1_frontier_proof",
+  "kind": "historical_source_m1_frontier_proof",
   "fixture_id": "SPK_V308_SOURCE_M1_FRONTIER_20261001",
   "authority_commit": "ce3d43e34f53a3991f30f5911bbd0235f73fe6f9",
+  "measurement_status": "historical_same_tooling_cross_version_anchor",
+  "superseded_for_latest_v308_by": "fixtures/v308-source-m1-frontier-proof-fe2e4.json",
   "truth_boundary": {
     "proves": [
       "the exact v308 Source-M1 pipeline reached the recorded clean-rebuild frontier at this authority commit",
       "the measured public compiler frontier is reproducible as a deterministic JAVACFRONTIER identity",
-      "project binary fallback remained zero at this measured frontier"
+      "project binary fallback remained zero at this measured frontier",
+      "this measurement shares the same recovery-tooling authority commit as the historical v307 405-error measurement"
     ],
     "does_not_prove": [
       "v308 is release-ready",
-      "the post-PR-316 or later compiler frontier has been remeasured",
+      "this is the latest recorded v308 compiler frontier",
       "private v307 and v308 javac diagnostic logs are byte-identical",
       "the final strict recovered-source v307-to-v308 cross-version PASS"
     ]
@@ -49,6 +52,6 @@
   },
   "notes": [
     "This fixture records only public aggregate Source-M1 frontier authority already reported from exact-local acceptance; no recovered source or identifier-bearing javac diagnostics are committed.",
-    "PR #316 merged after this measurement and explicitly did not claim a compiler reduction without another exact-local acceptance run."
+    "It is intentionally retained as the same-tooling v308 anchor for the historical v307 parity proof even after newer Source-M1 tooling advanced v308 to a lower compiler frontier."
   ]
 }

@@ -2,6 +2,7 @@
   "schema_version": 1,
   "kind": "cross_version_public_javac_frontier_parity",
   "fixture_id": "SPK_V307_V308_PUBLIC_JAVAC_PARITY_20261001",
+  "measurement_status": "historical_same_tooling_cross_version_anchor",
   "old_build_id": "v307",
   "new_build_id": "v308",
   "old_authority_sha256": "6232bae206846a4ba8d09766a2dee886b69016066a3f50f83b201bf705f93662",
@@ -9,6 +10,12 @@
   "binary_backtest_id": "XVERBIN_E56BD2FB8CCC172D6184",
   "old_fixture": "fixtures/v307-source-m1-frontier-proof.json",
   "new_fixture": "fixtures/v308-source-m1-frontier-proof.json",
+  "latest_v308_fixture": "fixtures/v308-source-m1-frontier-proof-fe2e4.json",
+  "tooling_authority": {
+    "old_authority_commit": "ce3d43e34f53a3991f30f5911bbd0235f73fe6f9",
+    "new_authority_commit": "ce3d43e34f53a3991f30f5911bbd0235f73fe6f9",
+    "same_tooling_authority": true
+  },
   "public_frontier": {
     "old_javac_frontier_id": "JAVACFRONTIER_79F76A743656F3D6EB8F",
     "new_javac_frontier_id": "JAVACFRONTIER_79F76A743656F3D6EB8F",
@@ -23,21 +30,22 @@
   },
   "truth_boundary": {
     "proves": [
-      "independently measured v307 and v308 Source-M1 runs reached the same deterministic public JAVACFRONTIER identity",
-      "the public aggregate compiler counts and category distribution are equal at the recorded authority frontier",
-      "the shared source-repair problem is not specific to only one side of the real v307-to-v308 binary fixture"
+      "independently measured v307 and v308 Source-M1 runs reached the same deterministic public JAVACFRONTIER identity under the same recovery-tooling authority commit",
+      "the public aggregate compiler counts and category distribution are equal at that same-tooling recorded frontier",
+      "the shared source-repair problem at that authority was not specific to only one side of the real v307-to-v308 binary fixture"
     ],
     "does_not_prove": [
       "the private exact javac input SHA-256 values are equal",
       "every raw diagnostic message or recovered identifier is equal across builds",
       "either recovery release is release-ready",
       "the private spk-cross-version-javac-frontier report has executed successfully",
+      "the newer v308 388-error measurement is a client-version delta relative to v307",
       "the final strict recovered-source v307-to-v308 cross-version PASS"
     ]
   },
   "notes": [
     "JAVACFRONTIER identity is derived from the public diagnostic-row representation and intentionally excludes the raw javac-log SHA-256.",
     "PR #318 therefore requires private JAVACDIAG and input-SHA provenance before an exact cross-version diagnostic comparison can be claimed.",
-    "This fixture is intentionally a public structural-parity proof only."
+    "This fixture is intentionally preserved as a same-tooling historical structural-parity proof. The latest recorded v308 frontier uses newer recovery tooling and must not be compared to v307 as a pure client-version delta until v307 is rerun under equivalent tooling."
   ]
 }
