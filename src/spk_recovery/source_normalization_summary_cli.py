@@ -201,6 +201,23 @@ def summarize(
 
     family_specs = [
         {
+            "kind": "invokedynamic_helper_return_cast",
+            "label": "INVOKEDYNAMIC HELPER RETURN CAST",
+            "method_key": (
+                "invokedynamic_helper_return_cast_method_count"
+            ),
+            "reference_key": (
+                "invokedynamic_helper_return_cast_reference_count"
+            ),
+            "method_marker": "INVOKEDYNAMIC_HELPER_RETURN_CAST_METHODS",
+            "reference_marker": (
+                "INVOKEDYNAMIC_HELPER_RETURN_CAST_REFERENCES"
+            ),
+            "detail": lambda action: (
+                "cast=" + str(action.get("cast_type") or "<missing>")
+            ),
+        },
+        {
             "kind": (
                 "primitive_scope_shadowed_self_static_field_owner_qualification"
             ),
