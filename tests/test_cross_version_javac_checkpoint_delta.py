@@ -12,6 +12,7 @@ from spk_recovery.cross_version_javac_checkpoint_delta import (
     build_cross_version_javac_checkpoint_delta,
     write_cross_version_javac_checkpoint_delta,
 )
+from spk_recovery.cross_version_javac_checkpoint_delta_cli import _load
 
 
 def _summary(
@@ -504,6 +505,20 @@ class CrossVersionJavacCheckpointDeltaTests(unittest.TestCase):
             report["category_delta"]["shared_categories"]["other"],
             1,
         )
+
+
+    def test_cli_loader_rejects_duplicate_json_keys(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "duplicate.json"
+            path.write_text(
+                '{"schema_version":1,"schema_version":1}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                CrossVersionJavacCheckpointDeltaError,
+                "duplicate JSON key: 'schema_version'",
+            ):
+                _load(path)
 
 
 if __name__ == "__main__":
