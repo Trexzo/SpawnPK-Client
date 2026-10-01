@@ -1,0 +1,47 @@
+{
+  "schema_version":1,
+  "kind":"semantic_review_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count":3,
+  "review_id":"SEMREVIEW_D3B47F1B3F32B4D052F6",
+  "proposals":[
+    {
+      "proposal_id":"SEMPROP_2A88AC3D729368A207EC","target_kind":"class","stable_id":"CLIENT_CLASS_000502","owner_logical_id":"CLIENT_CLASS_000502",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","source_coordinate":{"owner":"rs/l/m","name":null,"descriptor":null},
+      "proposed_name":"RichTextGlowEffectProcessor","confidence":0.999,
+      "evidence":[
+        {"family":"exact_glow_tag_grammar","detail":"The class recognizes @glo@ plus numbered @glo2@..@glo9@ forms, <glo>/<gloN> forms, matching closing tags, and explicit <glo=color> markup."},
+        {"family":"exact_palette_clock","detail":"Its phase function derives an 8-bit phase from System.nanoTime using a 40 ms tick, and its color lookup combines that phase with glyph position before indexing one of nine 256-entry color palettes."},
+        {"family":"exact_color_generation","detail":"Static initialization builds the nine palettes from rainbow, grayscale and multi-stop RGB interpolation formulas; explicit glow color input is normalized through hue/palette conversion helpers."},
+        {"family":"exact_renderer_integration","detail":"The live font renderer detects the glow tags, stores the glow style/phase and uses this class's palette lookup per rendered glyph, making it a live animated text-color effect rather than a passive parser."}
+      ],
+      "note":"Descriptive exact-v308 name for the glo/glo2..glo9 animated rich-text color effect."
+    },
+    {
+      "proposal_id":"SEMPROP_7B89C98D56AE2B1FC088","target_kind":"class","stable_id":"CLIENT_CLASS_000514","owner_logical_id":"CLIENT_CLASS_000514",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","source_coordinate":{"owner":"rs/l/v$a","name":null,"descriptor":null},
+      "proposed_name":"RichTextProgressBarSpec","confidence":0.999,
+      "evidence":[
+        {"family":"exact_spec_state","detail":"The immutable record stores nine parsed values: width, height, filled width, fill color, background color, border color, embedded label/text, source/tag end index and progress-bar style."},
+        {"family":"exact_parser_output","detail":"RichTextProgressBarProcessor is the only exact-v308 owner/constructor and caches these records as the result of pbar parsing."},
+        {"family":"exact_renderer_input","detail":"The progress-bar renderer reads the record fields directly to draw the frame/background/fill and to choose static versus animated gradient rendering."}
+      ],
+      "note":"Descriptive exact-v308 immutable parsed pbar element specification."
+    },
+    {
+      "proposal_id":"SEMPROP_B214E4FD6F5181A83E4C","target_kind":"class","stable_id":"CLIENT_CLASS_000513","owner_logical_id":"CLIENT_CLASS_000513",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","source_coordinate":{"owner":"rs/l/v","name":null,"descriptor":null},
+      "proposed_name":"RichTextProgressBarProcessor","confidence":0.999,
+      "evidence":[
+        {"family":"exact_pbar_grammar","detail":"The class parses pbar markup with optional style digit 2..7 and colon-delimited width/value/max/color/size-style fields, caching up to 256 parsed specs by String identity and tag range."},
+        {"family":"exact_progress_geometry","detail":"Parsed width is clamped to 20..300 pixels; current/max values are parsed as non-negative integers and converted to a clamped 0..1 fraction used to compute the interior filled width."},
+        {"family":"exact_progress_rendering","detail":"Its renderer draws outer/background rectangles and the filled progress region through rs/l/c. Static styles use the parsed fill color, while animated styles generate a per-pixel moving gradient."},
+        {"family":"exact_animation_lifecycle","detail":"Animated styles derive phase from nanoTime/8, use either 512- or 1536-step color cycles, and call R409 RichTextMotionEffectProcessor's redraw pulse helper so animated bars remain live."}
+      ],
+      "note":"Descriptive exact-v308 name for parsing/caching/rendering pbar rich-text elements."
+    }
+  ],
+  "unresolved":[]
+}
