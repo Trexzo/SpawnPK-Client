@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_388368CF1E9B397616AA",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_74C22D0C533B4DD510C8",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000262",
+      "owner_logical_id": "CLIENT_CLASS_000262",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/c/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PvpTrackerPreviousFightUpdateTask",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_dispatch",
+          "detail": "PvpTrackerSidebarPanel.b(int,String,String,String,String) constructs this Runnable and schedules it with EventQueue.invokeLater."
+        },
+        {
+          "family": "exact_previous_fight_labels",
+          "detail": "The task targets the label groups created under the exact 'Previous 1v1 Fight' heading, with selector 1 choosing one participant column and the alternate selector choosing the other."
+        },
+        {
+          "family": "exact_stat_update",
+          "detail": "run() updates outcome/opponent text and icon plus Correct overheads, Spell casts and Damage Dealt labels using the same formatting and Died)-based icon rule as the recent-fight task."
+        }
+      ],
+      "note": "Descriptive exact-v308 EDT task for the previous 1v1 fight section."
+    },
+    {
+      "proposal_id": "SEMPROP_7DA92DB0DAAD0B7AB668",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000261",
+      "owner_logical_id": "CLIENT_CLASS_000261",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/c/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PvpTrackerMostRecentFightUpdateTask",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_dispatch",
+          "detail": "PvpTrackerSidebarPanel.a(int,String,String,String,String) constructs this Runnable and schedules it with EventQueue.invokeLater."
+        },
+        {
+          "family": "exact_recent_fight_labels",
+          "detail": "The task targets the label groups created immediately under the exact 'Most Recent 1v1 Fight' section, with selector 1 choosing one participant column and the alternate selector choosing the other."
+        },
+        {
+          "family": "exact_stat_update",
+          "detail": "run() updates outcome/opponent text and icon plus Correct overheads, Spell casts and Damage Dealt labels; it switches skull/user icon based on whether the supplied outcome text contains 'Died)'."
+        }
+      ],
+      "note": "Descriptive exact-v308 EDT task for the most-recent 1v1 fight section."
+    },
+    {
+      "proposal_id": "SEMPROP_E57E21D19ECCE16C2E00",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000260",
+      "owner_logical_id": "CLIENT_CLASS_000260",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/c/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PvpTrackerSidebarPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_side_panel_tab",
+          "detail": "R357 LauncherSidePanel installs rs/gui/c/a as the exact tab labeled 'PvP Tracker' with the fixed side-panel dimensions."
+        },
+        {
+          "family": "exact_panel_labels",
+          "detail": "The panel renders exact PvP statistics text including 'Type ::pvptracker to view overlay in-game', 'Most Recent 1v1 Fight', 'Previous 1v1 Fight', 'Correct overheads', 'Spell casts' and 'Damage Dealt'."
+        },
+        {
+          "family": "exact_update_surface",
+          "detail": "Its two public update methods schedule rs/gui/c/b and rs/gui/c/c on EventQueue, updating the most-recent and previous fight participant/stat label groups respectively."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the PvP Tracker tab surface in LauncherSidePanel."
+    }
+  ],
+  "unresolved": []
+}
