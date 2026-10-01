@@ -42,6 +42,10 @@ class HistoricalV307MemberSafetyPrepTests(unittest.TestCase):
             text,
         )
         self.assertIn(
+            "    $Fixture,",
+            text,
+        )
+        self.assertIn(
             '$ClassLineage = $DerivedClassLineage',
             text,
         )
