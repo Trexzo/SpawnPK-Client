@@ -3986,6 +3986,410 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
             )
 
 
+    def test_repairs_invokedynamic_parameter_alias(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Event.java": (
+                        "package p;\n"
+                        "public class Event {\n"
+                        "    public void getButton() {}\n"
+                        "}\n"
+                    ),
+                    "p/Current.java": (
+                        "package p;\n"
+                        "import javax.swing.SwingUtilities;\n"
+                        "public class Current {\n"
+                        "    public void onAdded(final Event navigationButtonAdded) {\n"
+                        "        SwingUtilities.invokeLater(() -> use(navigationButtonAdded));\n"
+                        "    }\n"
+                        "    private void use(final Event event) {\n"
+                        "        event.getButton();\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source_root = root / "broken-src"
+            current = source_root / "p" / "Current.java"
+            event = source_root / "p" / "Event.java"
+            current.parent.mkdir(parents=True)
+            event.write_text(
+                "package p;\n"
+                "public class Event {\n"
+                "    public void getButton() {}\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            current.write_text(
+                "package p;\n"
+                "import javax.swing.SwingUtilities;\n"
+                "public class Current {\n"
+                "    public void onAdded(final Event navigationButtonAdded) {\n"
+                "        SwingUtilities.invokeLater(() -> use(navigationButtonAdded2));\n"
+                "    }\n"
+                "    private void use(final Event event) {\n"
+                "        event.getButton();\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(source_root, jar)
+            text = current.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "use(navigationButtonAdded)",
+                text,
+            )
+            self.assertNotIn(
+                "navigationButtonAdded2",
+                text,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_parameter_alias_method_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_parameter_alias_reference_count"
+                ],
+                1,
+            )
+
+            classes = root / "normalized-parameter-alias"
+            classes.mkdir()
+            proc = subprocess.run(
+                [
+                    "javac",
+                    "-d",
+                    str(classes),
+                    str(event),
+                    str(current),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+
+    def test_repairs_constructed_invokedynamic_capture_alias(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Shutdown.java": (
+                        "package p;\n"
+                        "public class Shutdown {\n"
+                        "    public void waitNow() {}\n"
+                        "}\n"
+                    ),
+                    "p/Current.java": (
+                        "package p;\n"
+                        "public class Current {\n"
+                        "    public void u() {\n"
+                        "        final Shutdown o = new Shutdown();\n"
+                        "        new Thread(() -> o.waitNow(), \"shutdown\").start();\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source_root = root / "broken-src"
+            current = source_root / "p" / "Current.java"
+            shutdown = source_root / "p" / "Shutdown.java"
+            current.parent.mkdir(parents=True)
+            shutdown.write_text(
+                "package p;\n"
+                "public class Shutdown {\n"
+                "    public void waitNow() {}\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            current.write_text(
+                "package p;\n"
+                "public class Current {\n"
+                "    public void u() {\n"
+                "        final Object o = new Shutdown();\n"
+                "        new Thread(() -> shutdown.waitNow(), \"shutdown\").start();\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(source_root, jar)
+            text = current.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "final Shutdown o = new Shutdown();",
+                text,
+            )
+            self.assertIn(
+                "new Thread(() -> o.waitNow()",
+                text,
+            )
+            self.assertNotIn(
+                "shutdown.waitNow()",
+                text,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_constructed_capture_alias_method_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_constructed_capture_alias_reference_count"
+                ],
+                1,
+            )
+
+            classes = root / "normalized-constructed-capture"
+            classes.mkdir()
+            proc = subprocess.run(
+                [
+                    "javac",
+                    "-d",
+                    str(classes),
+                    str(shutdown),
+                    str(current),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+
+    def test_repairs_hidden_constructor_arguments_from_exact_descriptor(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            layout_impl = (
+                "package p;\n"
+                "import java.awt.Component;\n"
+                "import java.awt.Container;\n"
+                "import java.awt.Dimension;\n"
+                "import java.awt.LayoutManager;\n"
+                "import javax.swing.JComponent;\n"
+                "class h implements LayoutManager {\n"
+                "    h(Current current, LayoutManager delegate, JComponent component) {}\n"
+                "    public void addLayoutComponent(String name, Component comp) {}\n"
+                "    public void removeLayoutComponent(Component comp) {}\n"
+                "    public Dimension preferredLayoutSize(Container parent) { return new Dimension(); }\n"
+                "    public Dimension minimumLayoutSize(Container parent) { return new Dimension(); }\n"
+                "    public void layoutContainer(Container parent) {}\n"
+                "}\n"
+            )
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/h.java": layout_impl,
+                    "p/Current.java": (
+                        "package p;\n"
+                        "import java.awt.LayoutManager;\n"
+                        "import javax.swing.JComponent;\n"
+                        "import javax.swing.JPanel;\n"
+                        "public class Current {\n"
+                        "    public void init() {\n"
+                        "        final JComponent component = new JPanel();\n"
+                        "        final LayoutManager layoutManager = component.getLayout();\n"
+                        "        component.setLayout(new h(this, layoutManager, component));\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source_root = root / "broken-src"
+            current = source_root / "p" / "Current.java"
+            layout = source_root / "p" / "h.java"
+            current.parent.mkdir(parents=True)
+            layout.write_text(layout_impl, encoding="utf-8")
+            current.write_text(
+                "package p;\n"
+                "import java.awt.LayoutManager;\n"
+                "import javax.swing.JComponent;\n"
+                "import javax.swing.JPanel;\n"
+                "public class Current {\n"
+                "    public void init() {\n"
+                "        final JComponent component = new JPanel();\n"
+                "        final LayoutManager layoutManager = component.getLayout();\n"
+                "        component.setLayout(new h());\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(source_root, jar)
+            text = current.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "new h(this, layoutManager, component)",
+                text,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "hidden_constructor_argument_call_count"
+                ],
+                1,
+            )
+
+            classes = root / "normalized-hidden-constructor"
+            classes.mkdir()
+            proc = subprocess.run(
+                [
+                    "javac",
+                    "-d",
+                    str(classes),
+                    str(layout),
+                    str(current),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+
+    def test_reconstructs_four_int_dimension_invokedynamic_capture(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Current.java": (
+                        "package p;\n"
+                        "import java.awt.Dimension;\n"
+                        "import javax.swing.SwingUtilities;\n"
+                        "public class Current {\n"
+                        "    public void a(final int n, final int n2, final int n3, final int n4) {\n"
+                        "        final int n5 = Math.max(Math.min(n, 7680), n3);\n"
+                        "        final int n6 = Math.max(Math.min(n2, 2160), n4);\n"
+                        "        final Dimension dimension = new Dimension(n5, n6);\n"
+                        "        final Dimension dimension2 = new Dimension(n3, n4);\n"
+                        "        SwingUtilities.invokeLater(() -> this.a(dimension, dimension2));\n"
+                        "    }\n"
+                        "    private void a(final Dimension d, final Dimension d2) {}\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source_root = root / "broken-src"
+            current = source_root / "p" / "Current.java"
+            current.parent.mkdir(parents=True)
+            current.write_text(
+                "package p;\n"
+                "import java.awt.Dimension;\n"
+                "import javax.swing.SwingUtilities;\n"
+                "public class Current {\n"
+                "    public void a(final int n, final int n2, final int n3, final int n4) {\n"
+                "        SwingUtilities.invokeLater(() -> {\n"
+                "            final Object o = new Dimension(Math.max(Math.min(a, 7680), n5), Math.max(Math.min(a2, 2160), n6));\n"
+                "            final Object o2 = new Dimension(n5, n6);\n"
+                "            this.a(dimension, dimension2);\n"
+                "        });\n"
+                "    }\n"
+                "    private void a(final Dimension d, final Dimension d2) {}\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(source_root, jar)
+            text = current.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "final int recoveredBound0 = Math.max(Math.min(n, 7680), n3);",
+                text,
+            )
+            self.assertIn(
+                "final int recoveredBound1 = Math.max(Math.min(n2, 2160), n4);",
+                text,
+            )
+            self.assertIn(
+                "final Dimension recoveredDimension = new Dimension(recoveredBound0, recoveredBound1);",
+                text,
+            )
+            self.assertIn(
+                "SwingUtilities.invokeLater(() -> this.a(recoveredDimension, recoveredMinimumDimension));",
+                text,
+            )
+            self.assertNotIn("Math.min(a, 7680)", text)
+            self.assertEqual(
+                report["summary"][
+                    "dimension_invokedynamic_capture_method_count"
+                ],
+                1,
+            )
+
+            classes = root / "normalized-dimension-capture"
+            classes.mkdir()
+            proc = subprocess.run(
+                [
+                    "javac",
+                    "-d",
+                    str(classes),
+                    str(current),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+
+    def test_capture_repairs_fail_closed_without_exact_invokedynamic(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Event.java": (
+                        "package p;\n"
+                        "public class Event {}\n"
+                    ),
+                    "p/Current.java": (
+                        "package p;\n"
+                        "public class Current {\n"
+                        "    public void onAdded(final Event event) {}\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source_root = root / "broken-src"
+            current = source_root / "p" / "Current.java"
+            event = source_root / "p" / "Event.java"
+            current.parent.mkdir(parents=True)
+            event.write_text(
+                "package p;\n"
+                "public class Event {}\n",
+                encoding="utf-8",
+            )
+            original = (
+                "package p;\n"
+                "public class Current {\n"
+                "    public void onAdded(final Event event) {\n"
+                "        Object untouched = event2;\n"
+                "    }\n"
+                "}\n"
+            )
+            current.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(source_root, jar)
+
+            self.assertEqual(
+                current.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_parameter_alias_method_count"
+                ],
+                0,
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
 

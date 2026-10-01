@@ -5259,6 +5259,873 @@ def _normalize_undeclared_linkedhashmap_cast_placeholders(
     return actions
 
 
+
+def _descriptor_parameter_descriptors(
+    descriptor: str,
+) -> list[str] | None:
+    if not descriptor.startswith("("):
+        return None
+    out: list[str] = []
+    i = 1
+    while i < len(descriptor) and descriptor[i] != ")":
+        start = i
+        while i < len(descriptor) and descriptor[i] == "[":
+            i += 1
+        if i >= len(descriptor):
+            return None
+        if descriptor[i] == "L":
+            end = descriptor.find(";", i + 1)
+            if end < 0:
+                return None
+            i = end + 1
+        elif descriptor[i] in "ZBCSIJFD":
+            i += 1
+        else:
+            return None
+        out.append(descriptor[start:i])
+    if i >= len(descriptor) or descriptor[i] != ")":
+        return None
+    return out
+
+
+def _source_parameter_declarations(
+    params: str,
+) -> list[tuple[str, str]] | None:
+    if not params.strip():
+        return []
+    bounds: list[tuple[int, int]] = []
+    start = 0
+    depth = 0
+    for index, ch in enumerate(params):
+        if ch == "<":
+            depth += 1
+        elif ch == ">" and depth:
+            depth -= 1
+        elif ch == "," and depth == 0:
+            bounds.append((start, index))
+            start = index + 1
+    bounds.append((start, len(params)))
+
+    out: list[tuple[str, str]] = []
+    for left, right in bounds:
+        raw = params[left:right].strip()
+        raw = re.sub(r"^(?:final\s+)+", "", raw)
+        match = re.fullmatch(
+            r"(?P<type>.+?)\s+"
+            r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)"
+            r"(?P<arrays>(?:\[\])*)",
+            raw,
+        )
+        if match is None:
+            return None
+        type_text = match.group("type").strip() + match.group("arrays")
+        out.append((type_text, match.group("name")))
+    return out
+
+
+def _unique_exact_method_for_source(
+    *,
+    text: str,
+    method_match: re.Match[str],
+    profile: dict[str, Any],
+    current_package: str,
+) -> dict[str, Any] | None:
+    source_arity = _source_parameter_count(method_match.group("params"))
+    prefix = text[method_match.start():method_match.start("return")]
+    source_static = bool(re.search(r"\bstatic\b", prefix))
+    candidates: list[dict[str, Any]] = []
+    for method in profile.get("methods", []):
+        if str(method.get("name", "")) != method_match.group("name"):
+            continue
+        method_static = bool(int(method.get("access", 0)) & 0x0008)
+        if method_static != source_static:
+            continue
+        descriptor = str(method.get("descriptor", ""))
+        if _descriptor_parameter_count(descriptor) != source_arity:
+            continue
+        parameter_match = _source_parameters_match_descriptor(
+            method_match.group("params"),
+            descriptor,
+            current_package=current_package,
+        )
+        if parameter_match is False:
+            continue
+        candidates.append(method)
+    return candidates[0] if len(candidates) == 1 else None
+
+
+def _source_type_internal_name(
+    *,
+    text: str,
+    current_package: str,
+    source_type: str,
+) -> str | None:
+    value = source_type.strip()
+    value = re.sub(r"<.*>", "", value).strip()
+    while value.endswith("[]"):
+        value = value[:-2].strip()
+    if not value or not _is_java_identifier(value.rsplit(".", 1)[-1]):
+        return None
+    if "." in value:
+        return value.replace(".", "/")
+    imported = [
+        match.group("name")
+        for match in _SINGLE_TYPE_IMPORT_RE.finditer(text)
+        if match.group("name").rsplit(".", 1)[-1] == value
+    ]
+    if len(imported) == 1:
+        return imported[0].replace(".", "/")
+    if len(imported) > 1:
+        return None
+    return (current_package + "/" if current_package else "") + value
+
+
+def _normalize_invokedynamic_parameter_aliases(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Repair Procyon lambda bodies that refer to suffixed parameter aliases.
+
+    Procyon may inline a generated lambda helper into its enclosing source
+    method while retaining the helper's renamed captured parameter, e.g.
+    source parameter \`event\` but lambda body references undeclared \`event2\`.
+    The rewrite is allowed only when one exact JVM method matches the source
+    signature and its invokedynamic descriptor captures that exact parameter
+    type together with the current receiver.
+    """
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError:
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    field_names = {
+        str(field.get("name", ""))
+        for field in profile.get("fields", [])
+    }
+
+    text = path.read_text(encoding="utf-8")
+    code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(text):
+        declarations = _source_parameter_declarations(
+            method_match.group("params")
+        )
+        if declarations is None or not declarations:
+            continue
+        exact_method = _unique_exact_method_for_source(
+            text=text,
+            method_match=method_match,
+            profile=profile,
+            current_package=current_package,
+        )
+        if exact_method is None:
+            continue
+        exact_params = _descriptor_parameter_descriptors(
+            str(exact_method.get("descriptor", ""))
+        )
+        if exact_params is None or len(exact_params) != len(declarations):
+            continue
+
+        brace_start = code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            method_end = _matching_brace_end(code, brace_start)
+        except SourceNormalizationError:
+            continue
+        method_code = code[method_match.start():method_end]
+        if "->" not in method_code:
+            continue
+
+        dynamic_descriptors = [
+            str(invocation.get("descriptor", ""))
+            for invocation in exact_method.get("method_invocations", [])
+            if invocation.get("operation") == "invokedynamic"
+        ]
+        if not dynamic_descriptors:
+            continue
+
+        method_edits: list[tuple[int, int, str]] = []
+        alias_counts: dict[str, int] = {}
+        captured_descriptors: dict[str, str] = {}
+        for index, ((_type_text, param_name), exact_param) in enumerate(
+            zip(declarations, exact_params)
+        ):
+            alias = param_name + "2"
+            if alias in field_names:
+                continue
+            if _block_has_same_name_local_declaration(
+                method_code,
+                simple_name=alias,
+            ):
+                continue
+
+            receiver_desc = "L" + current_owner + ";"
+            captured = [
+                descriptor
+                for descriptor in dynamic_descriptors
+                if (
+                    (parts := _descriptor_parameter_descriptors(descriptor))
+                    is not None
+                    and receiver_desc in parts
+                    and exact_param in parts
+                )
+            ]
+            if len(captured) != 1:
+                continue
+
+            token = re.compile(
+                r"(?<![A-Za-z0-9_$])"
+                + re.escape(alias)
+                + r"(?![A-Za-z0-9_$])"
+            )
+            hits = list(token.finditer(method_code))
+            if not hits:
+                continue
+            for hit in hits:
+                method_edits.append(
+                    (
+                        method_match.start() + hit.start(),
+                        method_match.start() + hit.end(),
+                        param_name,
+                    )
+                )
+            alias_counts[alias] = len(hits)
+            captured_descriptors[alias] = captured[0]
+
+        if not method_edits:
+            continue
+        edits.extend(method_edits)
+        actions.append(
+            {
+                "kind": "invokedynamic_parameter_alias_repair",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": exact_method["descriptor"],
+                "alias_counts": dict(sorted(alias_counts.items())),
+                "captured_descriptors": dict(
+                    sorted(captured_descriptors.items())
+                ),
+                "replacement_count": len(method_edits),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": "procyon_invokedynamic_captured_parameter_alias",
+                    "strategy": (
+                        "exact_method_descriptor_invokedynamic_capture_alias"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping invokedynamic parameter alias edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
+def _normalize_invokedynamic_constructed_capture_aliases(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Repair constructed locals whose inlined lambda uses another name.
+
+    The exact class must prove both construction of the concrete type and an
+    invokedynamic capture of that same concrete type. If Procyon widened the
+    declaration to Object, restore only the exact constructed reference type.
+    """
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError:
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    field_names = {
+        str(field.get("name", ""))
+        for field in profile.get("fields", [])
+    }
+
+    text = path.read_text(encoding="utf-8")
+    code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+    declaration_re = re.compile(
+        r"(?P<prefix>\b(?:final\s+)?)"
+        r"(?P<decl_type>Object|[A-Za-z_$][A-Za-z0-9_$.]*)"
+        r"(?P<gap>\s+)"
+        r"(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*=\s*new\s+"
+        r"(?P<constructed>[A-Za-z_$][A-Za-z0-9_$.]*)"
+        r"\s*\(\s*\)\s*;"
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(text):
+        exact_method = _unique_exact_method_for_source(
+            text=text,
+            method_match=method_match,
+            profile=profile,
+            current_package=current_package,
+        )
+        if exact_method is None:
+            continue
+        brace_start = code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            method_end = _matching_brace_end(code, brace_start)
+        except SourceNormalizationError:
+            continue
+        method_code = code[method_match.start():method_end]
+        if "->" not in method_code:
+            continue
+
+        for declaration in declaration_re.finditer(method_code):
+            constructed_source = declaration.group("constructed")
+            constructed_internal = _source_type_internal_name(
+                text=text,
+                current_package=current_package,
+                source_type=constructed_source,
+            )
+            if constructed_internal is None:
+                continue
+            constructed_desc = "L" + constructed_internal + ";"
+            alias = (
+                constructed_source.rsplit(".", 1)[-1][:1].lower()
+                + constructed_source.rsplit(".", 1)[-1][1:]
+            )
+            local_name = declaration.group("local")
+            if alias == local_name or alias in field_names:
+                continue
+            if _block_has_same_name_local_declaration(
+                method_code,
+                simple_name=alias,
+            ):
+                continue
+
+            constructor_calls = [
+                invocation
+                for invocation in exact_method.get("method_invocations", [])
+                if (
+                    invocation.get("operation") == "invokespecial"
+                    and invocation.get("owner") == constructed_internal
+                    and invocation.get("name") == "<init>"
+                    and invocation.get("descriptor") == "()V"
+                )
+            ]
+            dynamic_calls = [
+                invocation
+                for invocation in exact_method.get("method_invocations", [])
+                if (
+                    invocation.get("operation") == "invokedynamic"
+                    and (
+                        parts := _descriptor_parameter_descriptors(
+                            str(invocation.get("descriptor", ""))
+                        )
+                    )
+                    is not None
+                    and constructed_desc in parts
+                )
+            ]
+            if len(constructor_calls) != 1 or len(dynamic_calls) != 1:
+                continue
+
+            token = re.compile(
+                r"(?<![A-Za-z0-9_$])"
+                + re.escape(alias)
+                + r"(?![A-Za-z0-9_$])"
+            )
+            hits = list(token.finditer(method_code))
+            if not hits:
+                continue
+
+            method_edits: list[tuple[int, int, str]] = []
+            if declaration.group("decl_type") == "Object":
+                type_start = (
+                    method_match.start()
+                    + declaration.start("decl_type")
+                )
+                type_end = (
+                    method_match.start()
+                    + declaration.end("decl_type")
+                )
+                method_edits.append(
+                    (type_start, type_end, constructed_source)
+                )
+            elif (
+                _source_type_internal_name(
+                    text=text,
+                    current_package=current_package,
+                    source_type=declaration.group("decl_type"),
+                )
+                != constructed_internal
+            ):
+                continue
+
+            for hit in hits:
+                method_edits.append(
+                    (
+                        method_match.start() + hit.start(),
+                        method_match.start() + hit.end(),
+                        local_name,
+                    )
+                )
+            edits.extend(method_edits)
+            actions.append(
+                {
+                    "kind": "invokedynamic_constructed_capture_alias_repair",
+                    "source_path": rel,
+                    "method_name": method_match.group("name"),
+                    "method_descriptor": exact_method["descriptor"],
+                    "constructed_type": constructed_internal,
+                    "source_local": local_name,
+                    "broken_alias": alias,
+                    "declaration_type_restored": (
+                        declaration.group("decl_type") == "Object"
+                    ),
+                    "capture_descriptor": dynamic_calls[0]["descriptor"],
+                    "replacement_count": len(hits),
+                    "provenance": {
+                        "kind": "source_safety",
+                        "reason": (
+                            "procyon_invokedynamic_constructed_capture_alias"
+                        ),
+                        "strategy": (
+                            "exact_constructor_and_invokedynamic_capture_type"
+                        ),
+                    },
+                }
+            )
+
+    if not edits:
+        return []
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping constructed capture edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
+def _normalize_hidden_constructor_arguments(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore constructor arguments hidden by misleading Signature metadata."""
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError:
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    text = path.read_text(encoding="utf-8")
+    code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    local_decl_re = re.compile(
+        r"(?m)(?:^|[;{}]\s*)\s*(?:final\s+)?"
+        r"(?P<type>[A-Za-z_$][A-Za-z0-9_$.<>\[\]?]*)\s+"
+        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*="
+    )
+    zero_ctor_re = re.compile(
+        r"\bnew\s+(?P<type>[A-Za-z_$][A-Za-z0-9_$.]*)\s*\(\s*\)"
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(text):
+        exact_method = _unique_exact_method_for_source(
+            text=text,
+            method_match=method_match,
+            profile=profile,
+            current_package=current_package,
+        )
+        if exact_method is None:
+            continue
+        brace_start = code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            method_end = _matching_brace_end(code, brace_start)
+        except SourceNormalizationError:
+            continue
+        method_code = code[method_match.start():method_end]
+
+        for call in zero_ctor_re.finditer(method_code):
+            target_source = call.group("type")
+            target_internal = _source_type_internal_name(
+                text=text,
+                current_package=current_package,
+                source_type=target_source,
+            )
+            if target_internal is None:
+                continue
+            exact_calls = [
+                invocation
+                for invocation in exact_method.get("method_invocations", [])
+                if (
+                    invocation.get("operation") == "invokespecial"
+                    and invocation.get("owner") == target_internal
+                    and invocation.get("name") == "<init>"
+                    and _descriptor_parameter_count(
+                        str(invocation.get("descriptor", ""))
+                    )
+                    not in {None, 0}
+                )
+            ]
+            if len(exact_calls) != 1:
+                continue
+            constructor_desc = str(exact_calls[0]["descriptor"])
+            arg_descs = _descriptor_parameter_descriptors(constructor_desc)
+            if not arg_descs or arg_descs[0] != "L" + current_owner + ";":
+                continue
+
+            prefix_code = method_code[:call.start()]
+            declarations: list[tuple[str, str]] = []
+            params = _source_parameter_declarations(method_match.group("params"))
+            if params:
+                declarations.extend(params)
+            declarations.extend(
+                (
+                    local.group("type"),
+                    local.group("name"),
+                )
+                for local in local_decl_re.finditer(prefix_code)
+            )
+
+            args = ["this"]
+            proven = True
+            for arg_desc in arg_descs[1:]:
+                matches = [
+                    name
+                    for source_type, name in declarations
+                    if (
+                        _source_parameters_match_descriptor(
+                            source_type + " " + name,
+                            "(" + arg_desc + ")V",
+                            current_package=current_package,
+                        )
+                        is True
+                    )
+                ]
+                if len(matches) != 1:
+                    proven = False
+                    break
+                args.append(matches[0])
+            if not proven:
+                continue
+
+            replacement = (
+                "new " + target_source + "(" + ", ".join(args) + ")"
+            )
+            edits.append(
+                (
+                    method_match.start() + call.start(),
+                    method_match.start() + call.end(),
+                    replacement,
+                )
+            )
+            actions.append(
+                {
+                    "kind": "hidden_constructor_argument_repair",
+                    "source_path": rel,
+                    "method_name": method_match.group("name"),
+                    "method_descriptor": exact_method["descriptor"],
+                    "constructor_owner": target_internal,
+                    "constructor_descriptor": constructor_desc,
+                    "source_arguments": args,
+                    "replacement_count": 1,
+                    "provenance": {
+                        "kind": "source_safety",
+                        "reason": (
+                            "procyon_constructor_signature_hid_jvm_arguments"
+                        ),
+                        "strategy": (
+                            "exact_invokespecial_descriptor_unique_source_types"
+                        ),
+                    },
+                }
+            )
+
+    if not edits:
+        return []
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping hidden constructor argument edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
+def _normalize_dimension_invokedynamic_capture(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Reconstruct a four-int -> two-Dimension lambda capture exactly.
+
+    This targets Procyon output where locals from the outer method and the
+    generated lambda helper are interleaved, leaving undeclared scalar and
+    Dimension names. The rewrite requires the exact JVM invocation sequence
+    of two min/max bounds, two Dimension constructors, one invokedynamic
+    capturing exactly those Dimensions, and SwingUtilities.invokeLater.
+    """
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError:
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    text = path.read_text(encoding="utf-8")
+    code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    expected_non_dynamic = [
+        ("invokestatic", "java/lang/Math", "min", "(II)I"),
+        ("invokestatic", "java/lang/Math", "max", "(II)I"),
+        ("invokestatic", "java/lang/Math", "min", "(II)I"),
+        ("invokestatic", "java/lang/Math", "max", "(II)I"),
+        ("invokespecial", "java/awt/Dimension", "<init>", "(II)V"),
+        ("invokespecial", "java/awt/Dimension", "<init>", "(II)V"),
+        (
+            "invokestatic",
+            "javax/swing/SwingUtilities",
+            "invokeLater",
+            "(Ljava/lang/Runnable;)V",
+        ),
+    ]
+
+    for method_match in _METHOD_DECL_RE.finditer(text):
+        declarations = _source_parameter_declarations(
+            method_match.group("params")
+        )
+        if declarations is None or len(declarations) != 4:
+            continue
+        if any(type_text.strip() != "int" for type_text, _ in declarations):
+            continue
+        exact_method = _unique_exact_method_for_source(
+            text=text,
+            method_match=method_match,
+            profile=profile,
+            current_package=current_package,
+        )
+        if exact_method is None or exact_method.get("descriptor") != "(IIII)V":
+            continue
+
+        invocations = exact_method.get("method_invocations", [])
+        ordinary = [
+            (
+                str(inv.get("operation", "")),
+                str(inv.get("owner", "")),
+                str(inv.get("name", "")),
+                str(inv.get("descriptor", "")),
+            )
+            for inv in invocations
+            if inv.get("operation") != "invokedynamic"
+        ]
+        dynamic = [
+            inv
+            for inv in invocations
+            if inv.get("operation") == "invokedynamic"
+        ]
+        if ordinary != expected_non_dynamic or len(dynamic) != 1:
+            continue
+        expected_capture = (
+            "L"
+            + current_owner
+            + ";Ljava/awt/Dimension;Ljava/awt/Dimension;"
+        )
+        dynamic_desc = str(dynamic[0].get("descriptor", ""))
+        dynamic_args = _descriptor_parameter_descriptors(dynamic_desc)
+        if (
+            dynamic_args
+            != [
+                "L" + current_owner + ";",
+                "Ljava/awt/Dimension;",
+                "Ljava/awt/Dimension;",
+            ]
+            or not dynamic_desc.endswith(")Ljava/lang/Runnable;")
+        ):
+            continue
+
+        helpers = [
+            method
+            for method in profile.get("methods", [])
+            if (
+                str(method.get("descriptor", ""))
+                == "(Ljava/awt/Dimension;Ljava/awt/Dimension;)V"
+                and not (int(method.get("access", 0)) & 0x0008)
+            )
+        ]
+        if len(helpers) != 1:
+            continue
+        helper_name = str(helpers[0].get("name", ""))
+        if not _is_java_identifier(helper_name):
+            continue
+
+        brace_start = code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            method_end = _matching_brace_end(code, brace_start)
+        except SourceNormalizationError:
+            continue
+        method_text = text[method_match.start():method_end]
+        method_code = code[method_match.start():method_end]
+        if (
+            method_code.count("new Dimension(") != 2
+            or "SwingUtilities.invokeLater" not in method_code
+        ):
+            continue
+        limits = re.findall(
+            r"Math\.min\([^,\n]+,\s*(-?[0-9]+)\s*\)",
+            method_code,
+        )
+        if len(limits) != 2:
+            continue
+
+        names = [name for _type, name in declarations]
+        indent = method_match.group("indent") + "    "
+        body = (
+            "{\n"
+            + indent
+            + "final int recoveredBound0 = Math.max(Math.min("
+            + names[0]
+            + ", "
+            + limits[0]
+            + "), "
+            + names[2]
+            + ");\n"
+            + indent
+            + "final int recoveredBound1 = Math.max(Math.min("
+            + names[1]
+            + ", "
+            + limits[1]
+            + "), "
+            + names[3]
+            + ");\n"
+            + indent
+            + "final Dimension recoveredDimension = new Dimension("
+            + "recoveredBound0, recoveredBound1);\n"
+            + indent
+            + "final Dimension recoveredMinimumDimension = new Dimension("
+            + names[2]
+            + ", "
+            + names[3]
+            + ");\n"
+            + indent
+            + "SwingUtilities.invokeLater(() -> this."
+            + helper_name
+            + "(recoveredDimension, recoveredMinimumDimension));\n"
+            + method_match.group("indent")
+            + "}"
+        )
+        edits.append((brace_start, method_end, body))
+        actions.append(
+            {
+                "kind": "dimension_invokedynamic_capture_reconstruction",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": exact_method["descriptor"],
+                "capture_descriptor": dynamic_desc,
+                "helper_name": helper_name,
+                "helper_descriptor": helpers[0]["descriptor"],
+                "bound_constants": [int(value) for value in limits],
+                "replacement_count": 1,
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_outer_local_and_lambda_helper_scope_collapse"
+                    ),
+                    "strategy": (
+                        "exact_invocation_sequence_dimension_capture_rebuild"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping Dimension capture reconstruction edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def normalize_procyon_source(
     source_root: Path,
     readable_jar: Path,
@@ -5341,6 +6208,34 @@ def normalize_procyon_source(
                 )
                 actions.extend(
                     _normalize_invokedynamic_helper_return_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
+                    _normalize_invokedynamic_parameter_aliases(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
+                    _normalize_invokedynamic_constructed_capture_aliases(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
+                    _normalize_hidden_constructor_arguments(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
+                    _normalize_dimension_invokedynamic_capture(
                         source_root=source_root,
                         path=path,
                         readable_zip=z,
@@ -5506,6 +6401,32 @@ def normalize_procyon_source(
             int(action.get("replacement_count", 0))
             for action in actions
             if action["kind"] == "invokedynamic_helper_return_cast"
+        ),
+        "invokedynamic_parameter_alias_method_count": sum(
+            action["kind"] == "invokedynamic_parameter_alias_repair"
+            for action in actions
+        ),
+        "invokedynamic_parameter_alias_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"] == "invokedynamic_parameter_alias_repair"
+        ),
+        "invokedynamic_constructed_capture_alias_method_count": sum(
+            action["kind"] == "invokedynamic_constructed_capture_alias_repair"
+            for action in actions
+        ),
+        "invokedynamic_constructed_capture_alias_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"] == "invokedynamic_constructed_capture_alias_repair"
+        ),
+        "hidden_constructor_argument_call_count": sum(
+            action["kind"] == "hidden_constructor_argument_repair"
+            for action in actions
+        ),
+        "dimension_invokedynamic_capture_method_count": sum(
+            action["kind"] == "dimension_invokedynamic_capture_reconstruction"
+            for action in actions
         ),
         "undeclared_linkedhashmap_cast_placeholder_method_count": sum(
             action["kind"]
