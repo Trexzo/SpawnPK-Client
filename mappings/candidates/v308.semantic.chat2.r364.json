@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GpuSettingsSidebarPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_side_panel_tab",
+          "detail": "R357 LauncherSidePanel installs rs/gui/a/a as the exact 'GPU (Beta)' tab."
+        },
+        {
+          "family": "exact_gpu_settings_surface",
+          "detail": "The panel renders the exact 'GPU Settings' section with GPU Mode, Anti Aliasing, VSync Mode, Colorblind Mode, Anisotropic filtering and Smooth banding controls."
+        },
+        {
+          "family": "exact_stretched_settings_surface",
+          "detail": "The same panel renders the exact 'Stretched Mode Settings' section with Stretched Mode, Maintain aspect ratio and UI Scaling controls and emits the exact ::stretchflagoff / ::stretchflagon commands."
+        },
+        {
+          "family": "exact_gpu_integration",
+          "detail": "Its controls read/write the same GPU/config state used by the recovered GPU subsystem, while the panel itself remains launcher-side presentation/configuration."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the GPU (Beta) settings tab in LauncherSidePanel."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutsSidebarPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_side_panel_tab",
+          "detail": "R357 LauncherSidePanel installs rs/gui/b/h as the exact tab labeled 'Loadouts'."
+        },
+        {
+          "family": "exact_loadout_ui",
+          "detail": "The panel owns the visible Loadout folders selector plus Create, Delete, Rename, Move up and Move down controls, and it initializes the persisted 'Main folder' state."
+        },
+        {
+          "family": "exact_recovered_model_join",
+          "detail": "R143/R345 already recover the exact model/persistence graph consumed by this panel: LoadoutDefinition, LoadoutFolder, LoadoutManager, LoadoutPersistence, LoadoutBinaryCodec and version detector."
+        },
+        {
+          "family": "exact_active_selection_surface",
+          "detail": "The panel exposes the live loadout manager/folder UI, active folder combo box and popup/action surfaces used by the recovered spawn/edit flows."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the Loadouts tab root in LauncherSidePanel."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/c/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DevelopmentSidebarPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_side_panel_tab",
+          "detail": "R357 LauncherSidePanel installs rs/s/c/d as the exact 'Development' tab when developer UI is enabled."
+        },
+        {
+          "family": "exact_developer_commands",
+          "detail": "The panel exposes Reset Item Defs (::itemdef reset), Reset NPC Defs (::resetnpcdefs) and Repack cache (::repack) controls."
+        },
+        {
+          "family": "exact_recolor_tools",
+          "detail": "It presents and manages exact Recoloring NPC / Recoloring Item / Recoloring Object states, color-list selection, Color inverse, Hide modified and Copy selected developer controls."
+        },
+        {
+          "family": "exact_development_boundary",
+          "detail": "The same surface directly operates definition/recolor tooling and launcher refresh state; it is not a normal gameplay-facing panel."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the developer-only Development tab in LauncherSidePanel."
+    }
+  ],
+  "conflicts": []
+}
