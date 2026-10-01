@@ -4957,6 +4957,308 @@ def _normalize_same_package_static_field_owners_shadowed_by_values(
     return actions
 
 
+def _top_level_generic_argument_spans(
+    value: str,
+) -> list[tuple[int, int]] | None:
+    spans: list[tuple[int, int]] = []
+    depth = 0
+    start = 0
+    for index, ch in enumerate(value):
+        if ch == "<":
+            depth += 1
+        elif ch == ">":
+            if depth == 0:
+                return None
+            depth -= 1
+        elif ch == "," and depth == 0:
+            spans.append((start, index))
+            start = index + 1
+    if depth != 0:
+        return None
+    spans.append((start, len(value)))
+    return spans
+
+
+def _matching_generic_angle_end(
+    code: str,
+    angle_start: int,
+) -> int | None:
+    if angle_start < 0 or angle_start >= len(code) or code[angle_start] != "<":
+        return None
+    depth = 0
+    for index in range(angle_start, len(code)):
+        ch = code[index]
+        if ch == "<":
+            depth += 1
+        elif ch == ">":
+            depth -= 1
+            if depth == 0:
+                return index
+            if depth < 0:
+                return None
+    return None
+
+
+def _source_class_type_parameters(
+    code: str,
+    *,
+    simple_name: str,
+) -> set[str]:
+    brace = code.find("{")
+    if brace < 0:
+        return set()
+    header = code[:brace]
+    match = re.search(
+        r"\b(?:class|interface|enum)\s+"
+        + re.escape(simple_name)
+        + r"\s*<(?P<params>[^>{}]*)>",
+        header,
+    )
+    if match is None:
+        return set()
+    spans = _top_level_generic_argument_spans(match.group("params"))
+    if spans is None:
+        return set()
+    out: set[str] = set()
+    params = match.group("params")
+    for start, end in spans:
+        part = params[start:end].strip()
+        name = re.match(r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b", part)
+        if name is not None:
+            out.add(name.group("name"))
+    return out
+
+
+def _normalize_undeclared_linkedhashmap_cast_placeholders(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Replace only erasure-irrelevant Procyon map placeholders with '?'.
+
+    Procyon can emit casts such as LinkedHashMap<K, Value>.get(...) or
+    LinkedHashMap<Key, V>.keySet() even when K/V are not declared anywhere in
+    the recovered class.  For java.util.LinkedHashMap, K does not determine
+    get(Object)'s return type and V does not determine keySet()'s Set<K>
+    element type.  Replacing only those undeclared positions with an
+    unbounded wildcard therefore preserves the result-bearing generic
+    argument while removing an impossible source identifier.
+
+    The rule is deliberately narrow: the exact readable class must directly
+    extend java/util/LinkedHashMap, the source owner must resolve to the JDK
+    LinkedHashMap, the placeholder must be one undeclared uppercase letter,
+    and every edited source method must correlate to one unique exact JVM
+    method descriptor.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        parsed = parse_class(class_bytes)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, ClassFormatError, BytecodeProfileError):
+        return []
+
+    current_owner = class_entry[:-6]
+    if parsed.name != current_owner:
+        return []
+    if str(profile.get("internal_name", "")) != current_owner:
+        return []
+    if parsed.super_name != "java/util/LinkedHashMap":
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    simple_name = current_owner.rsplit("/", 1)[-1]
+    declared_type_parameters = _source_class_type_parameters(
+        whole_code,
+        simple_name=simple_name,
+    )
+    imported = bool(
+        re.search(
+            r"(?m)^\s*import\s+java\.util\.LinkedHashMap\s*;",
+            whole_code,
+        )
+    )
+    current_package = current_owner.rpartition("/")[0]
+    cast_start = re.compile(
+        r"\(\(\s*(?P<owner>(?:java\.util\.)?LinkedHashMap)\s*<"
+    )
+
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(text):
+        brace_start = text.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        body_end = _matching_brace_end(text, brace_start)
+        method_text = text[method_match.start():body_end]
+        method_code = _java_code_mask(method_text)
+
+        occurrences: list[dict[str, Any]] = []
+        for cast in cast_start.finditer(method_code):
+            owner = cast.group("owner")
+            if owner == "LinkedHashMap" and not imported:
+                continue
+
+            angle_start = cast.end() - 1
+            angle_end = _matching_generic_angle_end(
+                method_code,
+                angle_start,
+            )
+            if angle_end is None:
+                continue
+
+            tail = method_code[angle_end + 1:]
+            member_match = re.match(
+                r"\s*\)\s*this\s*\)\s*\.\s*"
+                r"(?P<member>get|keySet)\s*\(",
+                tail,
+            )
+            if member_match is None:
+                continue
+            member = member_match.group("member")
+
+            args_start = angle_start + 1
+            args_text = method_text[args_start:angle_end]
+            spans = _top_level_generic_argument_spans(args_text)
+            if spans is None or len(spans) != 2:
+                continue
+
+            target_index = 0 if member == "get" else 1
+            start, end = spans[target_index]
+            argument = args_text[start:end]
+            placeholder = argument.strip()
+            if not re.fullmatch(r"[A-Z]", placeholder):
+                continue
+            if placeholder in declared_type_parameters:
+                continue
+
+            leading = len(argument) - len(argument.lstrip())
+            trailing = len(argument.rstrip())
+            token_start = (
+                method_match.start()
+                + args_start
+                + start
+                + leading
+            )
+            token_end = (
+                method_match.start()
+                + args_start
+                + start
+                + trailing
+            )
+            occurrences.append(
+                {
+                    "start": token_start,
+                    "end": token_end,
+                    "placeholder": placeholder,
+                    "member": member,
+                    "generic_argument_index": target_index,
+                    "owner_spelling": owner,
+                }
+            )
+
+        if not occurrences:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        source_arity = _source_parameter_count(
+            method_match.group("params")
+        )
+        candidates: list[dict[str, Any]] = []
+        for method in profile.get("methods", []):
+            if method.get("name") != method_match.group("name"):
+                continue
+            method_static = bool(
+                int(method.get("access", 0)) & 0x0008
+            )
+            if method_static != source_static:
+                continue
+            descriptor = str(method.get("descriptor", ""))
+            if _descriptor_parameter_count(descriptor) != source_arity:
+                continue
+            parameter_match = _source_parameters_match_descriptor(
+                method_match.group("params"),
+                descriptor,
+                current_package=current_package,
+            )
+            if parameter_match is False:
+                continue
+            candidates.append(method)
+
+        if len(candidates) != 1:
+            continue
+
+        exact_method = candidates[0]
+        placeholder_counts: dict[str, int] = {}
+        member_counts: dict[str, int] = {}
+        for occurrence in occurrences:
+            placeholder = str(occurrence["placeholder"])
+            member = str(occurrence["member"])
+            placeholder_counts[placeholder] = (
+                placeholder_counts.get(placeholder, 0) + 1
+            )
+            member_counts[member] = member_counts.get(member, 0) + 1
+            edits.append(
+                (
+                    int(occurrence["start"]),
+                    int(occurrence["end"]),
+                    "?",
+                )
+            )
+
+        actions.append(
+            {
+                "kind": (
+                    "undeclared_linkedhashmap_cast_placeholder_wildcard"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": exact_method["descriptor"],
+                "placeholder_counts": dict(
+                    sorted(placeholder_counts.items())
+                ),
+                "member_counts": dict(sorted(member_counts.items())),
+                "replacement_count": len(occurrences),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_undeclared_linkedhashmap_generic_placeholder"
+                    ),
+                    "strategy": (
+                        "erasure_irrelevant_generic_position_to_wildcard"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping LinkedHashMap placeholder edits"
+            )
+
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def normalize_procyon_source(
     source_root: Path,
     readable_jar: Path,
@@ -5039,6 +5341,13 @@ def normalize_procyon_source(
                 )
                 actions.extend(
                     _normalize_invokedynamic_helper_return_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
+                    _normalize_undeclared_linkedhashmap_cast_placeholders(
                         source_root=source_root,
                         path=path,
                         readable_zip=z,
@@ -5197,6 +5506,17 @@ def normalize_procyon_source(
             int(action.get("replacement_count", 0))
             for action in actions
             if action["kind"] == "invokedynamic_helper_return_cast"
+        ),
+        "undeclared_linkedhashmap_cast_placeholder_method_count": sum(
+            action["kind"]
+            == "undeclared_linkedhashmap_cast_placeholder_wildcard"
+            for action in actions
+        ),
+        "undeclared_linkedhashmap_cast_placeholder_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "undeclared_linkedhashmap_cast_placeholder_wildcard"
         ),
         "imported_parameter_shadow_method_count": sum(
             action["kind"]
