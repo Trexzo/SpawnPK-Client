@@ -33,7 +33,7 @@ def _diagnostic():
             },
             {
                 "source_path": (
-                    "/tmp/work/src/rs/Recovered_Blocker.java"
+                    "/tmp/work/src/main/java/rs/Recovered_Blocker.java"
                 ),
                 "category": "cannot_be_dereferenced",
             },
