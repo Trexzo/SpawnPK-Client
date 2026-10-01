@@ -3462,6 +3462,209 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 normalize_procyon_source(root / "src", jar)
 
 
+    def test_simple_nested_static_owner_shadowed_by_hierarchy_field(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Base.java": (
+                        "package p;\n"
+                        "public class Base {\n"
+                        "    public Object b;\n"
+                        "    public long c;\n"
+                        "}\n"
+                    ),
+                    "p/Outer.java": (
+                        "package p;\n"
+                        "public class Outer extends Base {\n"
+                        "    public static class b {\n"
+                        "        public static int j = 7;\n"
+                        "        public static int f = 9;\n"
+                        "    }\n"
+                        "    public static class c {\n"
+                        "        public static final c a = new c();\n"
+                        "    }\n"
+                        "    public int read() {\n"
+                        "        return ((p.Outer.b)null).j"
+                        " + ((p.Outer.b)null).f"
+                        " + (((p.Outer.c)null).a == null ? 0 : 1);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "p" / "Outer.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "public class Outer extends Base {\n"
+                "    public static class b {\n"
+                "        public static int j = 7;\n"
+                "        public static int f = 9;\n"
+                "    }\n"
+                "    public static class c {\n"
+                "        public static final c a = new c();\n"
+                "    }\n"
+                "    public int read() {\n"
+                "        return b.j + b.f + (c.a == null ? 0 : 1);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-simple-nested"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn("((p.Outer.b)null).j", normalized)
+            self.assertIn("((p.Outer.b)null).f", normalized)
+            self.assertIn("((p.Outer.c)null).a", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if (
+                    row["kind"]
+                    == "shadowed_nested_static_field_owner_type_context"
+                    and row["method_name"] == "read"
+                )
+            )
+            self.assertEqual(action["method_descriptor"], "()I")
+            self.assertEqual(
+                action["nested_owners"],
+                ["p/Outer$b", "p/Outer$c"],
+            )
+            self.assertEqual(action["replacement_count"], 3)
+            self.assertEqual(
+                action["field_access_counts"],
+                {
+                    "p/Outer$b.f": 1,
+                    "p/Outer$b.j": 1,
+                    "p/Outer$c.a": 1,
+                },
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-simple-nested"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stdout + after.stderr)
+
+    def test_scoped_same_package_static_field_with_hierarchy_name_collision(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/b.java": (
+                        "package p;\n"
+                        "public class b { public static int a = 7; }\n"
+                    ),
+                    "p/Ref.java": (
+                        "package p;\n"
+                        "public class Ref { public int s = 3; }\n"
+                    ),
+                    "p/Base.java": (
+                        "package p;\n"
+                        "public class Base { public Ref b; }\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "public class A extends Base {\n"
+                        "    public int m(Ref b) {\n"
+                        "        return ((p.b)null).a + b.s;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "public class A extends Base {\n"
+                "    public int m(Ref b) {\n"
+                "        return b.a + b.s;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-mixed-same-package"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("cannot find symbol", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn("return ((p.b)null).a + b.s;", normalized)
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "scoped_same_package_static_field_owner_qualification"
+            )
+            self.assertEqual(action["same_package_owner"], "p/b")
+            self.assertTrue(action["reference_parameter_shadow"])
+            self.assertEqual(action["field_access_counts"], {"a": 1})
+            self.assertEqual(action["replacement_count"], 1)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-mixed-same-package"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stdout + after.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()
 
