@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RichTextSpriteTransformCache",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_transform_cache",
+          "detail": "The class maintains a 128-entry source/result sprite cache keyed by source sprite identity plus two transform integers, with four-way collision slots per 32 buckets."
+        },
+        {
+          "family": "exact_resample_transform",
+          "detail": "On cache miss it allocates a new rs/l/F sprite whose width/height are the source dimensions plus the parsed size adjustment, resamples source pixels into the new dimensions, and applies the requested color transform while preserving alpha."
+        },
+        {
+          "family": "exact_rich_text_consumers",
+          "detail": "The live font renderer invokes this transform for both ordinary <img=...> specs and timg labeled-image specs before drawing the embedded sprite."
+        }
+      ],
+      "note": "Descriptive exact-v308 cache for transformed embedded rich-text sprites."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RichTextImageSpecParser",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_img_grammar",
+          "detail": "The class recognizes <img=...> and parses up to five colon-delimited fields: decimal sprite id, decimal transform code, decimal size adjustment, optional RGB/hex frame color, and optional RGB/hex outer color."
+        },
+        {
+          "family": "exact_validation",
+          "detail": "Parsing bounds sprite id to 100000, transform code to 511, size adjustment to 99, and RGB values to 24 bits; parsed specs are cached in a 256-slot String-identity/range cache."
+        },
+        {
+          "family": "exact_renderer_integration",
+          "detail": "rs/l/h and rs/l/k use the parser during live text layout/rendering; the resulting spec selects/transforms the sprite and optionally draws a two-layer rectangular frame around it."
+        }
+      ],
+      "note": "Descriptive exact-v308 parser/cache for embedded rich-text image specifications."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/o$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RichTextImageSpec",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_spec_state",
+          "detail": "The immutable record stores exactly five parsed integers used by embedded-image rendering: sprite id, transform code, size adjustment, optional inner/frame color and outer color."
+        },
+        {
+          "family": "exact_frame_predicate",
+          "detail": "Its predicate reports whether the optional frame color is present, and its padding helper returns the extra two-pixel frame inset used by the live renderer."
+        },
+        {
+          "family": "exact_parser_ownership",
+          "detail": "RichTextImageSpecParser is the only exact-v308 constructor/owner; the font renderer consumes the record directly."
+        }
+      ],
+      "note": "Descriptive exact-v308 immutable parsed <img> specification."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/y",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RichTextLabeledImageProcessor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_timg_grammar",
+          "detail": "The class recognizes <timg=...> opening markup, delegates its parameter section to the same RichTextImageSpec parser, and requires a matching </timg> close tag."
+        },
+        {
+          "family": "exact_label_capture",
+          "detail": "It captures the text between the opening specification and </timg> and caches the resulting labeled-image spec by String identity and source range."
+        },
+        {
+          "family": "exact_renderer_behavior",
+          "detail": "The live font renderer transforms/draws the specified sprite, then if the captured label is non-empty measures it and renders it centered horizontally over the image with isolated white/default text state."
+        }
+      ],
+      "note": "Descriptive exact-v308 processor for timg embedded images with centered enclosed labels."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/y$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RichTextLabeledImageSpec",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_wrapper_state",
+          "detail": "The immutable record holds the underlying RichTextImageSpec, copies its sprite id/transform code into public convenience fields, stores the enclosed label String, and stores the closing-tag end index."
+        },
+        {
+          "family": "exact_processor_ownership",
+          "detail": "RichTextLabeledImageProcessor is the only exact-v308 constructor and the live font renderer consumes all retained fields while drawing the timg element."
+        }
+      ],
+      "note": "Descriptive exact-v308 parsed timg image-plus-label specification."
+    }
+  ],
+  "conflicts": []
+}
