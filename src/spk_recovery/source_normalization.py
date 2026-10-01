@@ -4690,8 +4690,9 @@ def _normalize_same_package_static_field_owners_shadowed_by_values(
             continue
 
         header_code = whole_code[method_match.start():brace_start]
-        if re.search(r"\bstatic\b", header_code) is None:
-            continue
+        source_static = (
+            re.search(r"\bstatic\b", header_code) is not None
+        )
 
         body_end = _matching_brace_end(text, brace_start)
         method_text = text[method_match.start():body_end]
@@ -4770,7 +4771,10 @@ def _normalize_same_package_static_field_owners_shadowed_by_values(
         for method in profile.get("methods", []):
             if method.get("name") != method_match.group("name"):
                 continue
-            if not (int(method.get("access", 0)) & 0x0008):
+            method_static = bool(
+                int(method.get("access", 0)) & 0x0008
+            )
+            if method_static != source_static:
                 continue
 
             descriptor = str(method.get("descriptor", ""))
@@ -4839,7 +4843,7 @@ def _normalize_same_package_static_field_owners_shadowed_by_values(
                         "procyon_same_package_type_hidden_by_visible_value_in_method"
                     ),
                     "strategy": (
-                        "exact_static_method_field_type_context_qualification"
+                        "exact_method_field_type_context_qualification"
                     ),
                 },
             }
