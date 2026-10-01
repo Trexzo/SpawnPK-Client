@@ -66,7 +66,12 @@ def _require_string(value: Any, label: str, pattern: re.Pattern[str]) -> str:
     return value
 
 
-def _validate_build(value: Any, *, label: str) -> dict[str, Any]:
+def _validate_build(
+    value: Any,
+    *,
+    label: str,
+    tooling_commit: str,
+) -> dict[str, Any]:
     if not isinstance(value, dict) or set(value) != _BUILD_KEYS:
         raise CrossVersionJavacCheckpointDeltaError(
             f"{label} build does not match checkpoint field contract"
@@ -125,14 +130,39 @@ def _validate_build(value: Any, *, label: str) -> dict[str, Any]:
         raise CrossVersionJavacCheckpointDeltaError(
             f"{label} clean_rebuild_status is invalid"
         )
-    if value.get("project_binary_fallback_count") != 0:
+    fallback_count = value.get("project_binary_fallback_count")
+    if fallback_count != 0:
         raise CrossVersionJavacCheckpointDeltaError(
             f"{label} project binary fallback must be zero"
         )
-    if not isinstance(value.get("clean_project_build"), bool):
+    clean_project_build = value.get("clean_project_build")
+    if not isinstance(clean_project_build, bool):
         raise CrossVersionJavacCheckpointDeltaError(
             f"{label} clean_project_build must be boolean"
         )
+
+    binding_material = {
+        "tooling_commit": tooling_commit,
+        "build_id": build_id,
+        "source_authority_sha256": authority,
+        "rebuild_id": rebuild_id,
+        "workspace_id": workspace_id,
+        "source_tree_sha256": source_tree,
+        "diagnostic_report_id": diagnostic_report_id,
+        "diagnostic_input_sha256": diagnostic_input_sha256,
+        "frontier_id": frontier,
+        "project_binary_fallback_count": fallback_count,
+        "clean_rebuild_status": clean_rebuild_status,
+        "clean_project_build": clean_project_build,
+    }
+    expected_binding_id = (
+        "JAVACBIND_" + _stable_digest(binding_material)[:20].upper()
+    )
+    if binding_id != expected_binding_id:
+        raise CrossVersionJavacCheckpointDeltaError(
+            f"{label} binding ID does not match public authority"
+        )
+
     return {
         **value,
         "build_id": build_id,
@@ -182,8 +212,16 @@ def validate_cross_version_javac_checkpoint(
             f"{label} binary_backtest_id",
             _BINARY_ID_RE,
         )
-    old = _validate_build(report.get("old"), label=f"{label} old")
-    new = _validate_build(report.get("new"), label=f"{label} new")
+    old = _validate_build(
+        report.get("old"),
+        label=f"{label} old",
+        tooling_commit=tooling_commit,
+    )
+    new = _validate_build(
+        report.get("new"),
+        label=f"{label} new",
+        tooling_commit=tooling_commit,
+    )
 
     comparison = report.get("comparison")
     if not isinstance(comparison, dict) or set(comparison) != _COMPARISON_KEYS:
