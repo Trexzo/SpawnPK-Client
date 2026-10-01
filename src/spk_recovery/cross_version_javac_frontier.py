@@ -319,10 +319,6 @@ def compare_javac_frontiers(
         "new_diagnostic_report_id": new_report["report_id"],
         "old_diagnostic_input_sha256": old_report["input_sha256"],
         "new_diagnostic_input_sha256": new_report["input_sha256"],
-        "old_diagnostic_report_id": old_report["report_id"],
-        "new_diagnostic_report_id": new_report["report_id"],
-        "old_diagnostic_input_sha256": old_report["input_sha256"],
-        "new_diagnostic_input_sha256": new_report["input_sha256"],
         "old_frontier_id": old_report["frontier_id"],
         "new_frontier_id": new_report["frontier_id"],
         "summary": summary,
@@ -335,6 +331,10 @@ def compare_javac_frontiers(
             "XJAVACFRONTIER_"
             + _stable_digest(material)[:20].upper()
         ),
+        "old_diagnostic_report_id": old_report["report_id"],
+        "new_diagnostic_report_id": new_report["report_id"],
+        "old_diagnostic_input_sha256": old_report["input_sha256"],
+        "new_diagnostic_input_sha256": new_report["input_sha256"],
         "old_frontier_id": old_report["frontier_id"],
         "new_frontier_id": new_report["frontier_id"],
         "summary": summary,
