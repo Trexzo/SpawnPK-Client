@@ -31,6 +31,17 @@ class HistoricalV305LineageProbeWrapperTests(unittest.TestCase):
             text,
         )
         self.assertIn(
+            "v305-v308-cross-version-expectations.json",
+            text,
+        )
+        self.assertIn(
+            "spk_recovery.cross_version_binary_delta_cli",
+            text,
+        )
+        self.assertIn("BINARY_REPORT_ID=", text)
+        self.assertIn("Binary authority report ID drifted", text)
+        self.assertIn("Binary authority summary drifted", text)
+        self.assertIn(
             "spk_recovery.generic_historical_lineage_cli",
             text,
         )
