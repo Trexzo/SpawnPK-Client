@@ -1,27 +1,25 @@
 {
-  "schema_version": 1,
-  "kind": "semantic_candidate_set",
-  "canonical": false,
-  "source_build": "v308",
-  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-  "candidates": [{
-    "schema_version": 1,
-    "kind": "semantic_name_candidate",
-    "canonical": false,
-    "status": "CANDIDATE",
-    "source_build": "v308",
-    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-    "target": {"kind": "class", "owner": "rs/l/g", "name": null, "descriptor": null},
-    "proposed_name": "LoginHoverSpriteControl",
-    "confidence": 0.999,
-    "evidence": [
-      {"family":"exact_parent_scope","detail":"The only exact-v308 external owner is R11 LoginScreen (rs/l/d/c), which constructs multiple rs/l/g instances for textbox, button and box visual controls."},
-      {"family":"exact_hover_hit_test","detail":"The control hit-tests Client.hP/hQ against the base sprite width/height at the supplied screen coordinates and exposes that hover predicate directly."},
-      {"family":"exact_dual_sprite_render","detail":"It always renders one base rs/l/F sprite and then renders a second rs/l/F sprite with a changing alpha value, switching/fading the overlay according to hover state."},
-      {"family":"exact_hover_animation","detail":"The overlay alpha increases/decreases in configurable steps, with optional frame-delay gating, while the class exposes hover/animation state and current alpha for LoginScreen interaction logic."},
-      {"family":"exact_generic_control_boundary","detail":"LoginScreen uses the same class with assets named textbox/textbox 2, button/button 2 and box/box 2/3, so the semantic role is a reusable login hover-sprite control rather than a specific button or textbox."}
+  "schema_version":1,
+  "kind":"semantic_candidate_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[{
+    "schema_version":1,
+    "kind":"semantic_name_candidate",
+    "canonical":false,
+    "status":"CANDIDATE",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target":{"kind":"class","owner":"rs/gui/c","name":null,"descriptor":null},
+    "proposed_name":"SquareButtonShaper",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_skin_installation","detail":"The only exact-v308 construction site is the custom rs/gui/b SubstanceSkin constructor, which assigns a new rs/gui/c instance directly to SubstanceSkin.buttonShaper."},
+      {"family":"exact_shaper_contract","detail":"The class extends Substance ClassicButtonShaper and overrides getCornerRadius(AbstractButton,float)."},
+      {"family":"exact_square_geometry","detail":"The override always returns 0.0f regardless of button or requested radius, forcing square/zero-radius button geometry for the skin."}
     ],
-    "note":"Descriptive exact-v308 name for the reusable dual-sprite hover/fade control owned by LoginScreen."
+    "note":"Descriptive exact-v308 name for the custom Substance button shaper that forces zero corner radius."
   }],
-  "conflicts": []
+  "conflicts":[]
 }
