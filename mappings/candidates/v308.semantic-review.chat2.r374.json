@@ -1,0 +1,28 @@
+{
+  "schema_version":1,
+  "kind":"semantic_review_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count":1,
+  "review_id":"SEMREVIEW_392BB83D0E7FE3166E21",
+  "proposals":[{
+    "proposal_id":"SEMPROP_7C7FD25D897ED8583E64",
+    "target_kind":"class",
+    "stable_id":"CLIENT_CLASS_000361",
+    "owner_logical_id":"CLIENT_CLASS_000361",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate":{"owner":"rs/l/L","name":null,"descriptor":null},
+    "proposed_name":"SpriteHueShiftColorTransform",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_single_owner","detail":"The only exact-v308 external owner is R361 SpriteStyleTransformer rs/l/n; no other class references rs/l/L."},
+      {"family":"exact_hue_rotation","detail":"The RGB transform computes max/min/chroma, derives a six-sector hue value, adds a normalized hue offset, wraps it modulo 1536 and reconstructs RGB from the shifted hue while preserving value/chroma relationships."},
+      {"family":"exact_blend_percent","detail":"The transform clamps its blend percentage to 0..100 and linearly blends the original RGB channels with the hue-shifted RGB output; helper overloads normalize the hue offset and reuse the same blend path."},
+      {"family":"exact_sprite_use","detail":"SpriteStyleTransformer applies the resulting transformed RGB only to non-transparent Sprite pixels while preserving alpha, including cached style variants."}
+    ],
+    "note":"Descriptive exact-v308 name for the hue-shift/blend color utility used exclusively by SpriteStyleTransformer."
+  }],
+  "unresolved":[]
+}
