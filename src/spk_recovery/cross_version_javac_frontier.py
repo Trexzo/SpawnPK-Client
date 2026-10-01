@@ -4,11 +4,15 @@ from collections import Counter
 import hashlib
 import json
 from pathlib import Path
+import re
 from typing import Any
 
 
 class CrossVersionJavacFrontierError(ValueError):
     pass
+
+
+_HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
 
 
 def _stable_digest(value: Any) -> str:
@@ -36,6 +40,22 @@ def _validate_report(report: dict[str, Any], label: str) -> None:
     ):
         raise CrossVersionJavacFrontierError(
             f"{label}: missing javac frontier authority"
+        )
+    diagnostic_report_id = report.get("report_id")
+    if (
+        not isinstance(diagnostic_report_id, str)
+        or not diagnostic_report_id.startswith("JAVACDIAG_")
+    ):
+        raise CrossVersionJavacFrontierError(
+            f"{label}: missing javac diagnostic report identity"
+        )
+    input_sha256 = report.get("input_sha256")
+    if (
+        not isinstance(input_sha256, str)
+        or _HEX64_RE.fullmatch(input_sha256) is None
+    ):
+        raise CrossVersionJavacFrontierError(
+            f"{label}: missing javac diagnostic input SHA-256"
         )
     if report.get("identifiers_included") is not True:
         raise CrossVersionJavacFrontierError(
@@ -228,6 +248,14 @@ def compare_javac_frontiers(
         "exact_frontier_equal": old == new,
     }
     material = {
+        "old_diagnostic_report_id": old_report["report_id"],
+        "new_diagnostic_report_id": new_report["report_id"],
+        "old_diagnostic_input_sha256": old_report["input_sha256"],
+        "new_diagnostic_input_sha256": new_report["input_sha256"],
+        "old_diagnostic_report_id": old_report["report_id"],
+        "new_diagnostic_report_id": new_report["report_id"],
+        "old_diagnostic_input_sha256": old_report["input_sha256"],
+        "new_diagnostic_input_sha256": new_report["input_sha256"],
         "old_frontier_id": old_report["frontier_id"],
         "new_frontier_id": new_report["frontier_id"],
         "summary": summary,
