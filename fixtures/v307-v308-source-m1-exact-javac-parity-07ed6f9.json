@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "kind": "cross_version_exact_javac_frontier_parity_checkpoint",
+  "fixture_id": "SPK_V307_V308_EXACT_JAVAC_PARITY_07ED6F9_20261001",
+  "measurement_status": "exact_private_comparator_executed_redacted_checkpoint",
+  "old_build_id": "v307",
+  "new_build_id": "v308",
+  "old_authority_sha256": "6232bae206846a4ba8d09766a2dee886b69016066a3f50f83b201bf705f93662",
+  "new_authority_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "binary_backtest_id": "XVERBIN_E56BD2FB8CCC172D6184",
+  "tooling_commit": "07ed6f961fd9ab67439b1d9428446f914bafeabf",
+  "historical_public_anchor_fixture": "fixtures/v307-v308-source-m1-public-frontier-parity.json",
+  "bindings": {
+    "old_binding_id": "JAVACBIND_21E319970E16BE91799B",
+    "new_binding_id": "JAVACBIND_C534A43BDA991CC6703C",
+    "old_diagnostic_report_id": "JAVACDIAG_788CFA0C3838C4FF6B2D",
+    "new_diagnostic_report_id": "JAVACDIAG_F5C704C36B8D3DB9F5ED",
+    "old_diagnostic_input_sha256": "48a074e9bf059ad67c75c01b09d8d93fd418d0974dc6b35f4ad8fbebbf55b125",
+    "new_diagnostic_input_sha256": "46a2daffeed7c4c0c00f822bf3d2782835f418bbc14d783a0d9b62bfce499452",
+    "old_rebuild_id": "CLEANBUILD_AB477016B530F36B14A8",
+    "new_rebuild_id": "CLEANBUILD_583BE791331D63209715",
+    "old_workspace_id": "SRCWS_F9828CC43A774046A278",
+    "new_workspace_id": "SRCWS_05136430C4BD0DB02ED2",
+    "old_source_tree_sha256": "acef2dacdc21e2569ec114175998b3cb9b8fd8b321ca764d92d1a32c5bb41b3f",
+    "new_source_tree_sha256": "8bbee4b6b8f8d1d12a943c2210690122331fc803f7a1b0f65ac050b464181fbf"
+  },
+  "comparison": {
+    "report_id": "XJAVACFRONTIER_3029D957ED98E41FC96D",
+    "old_frontier_id": "JAVACFRONTIER_D028FE33F2F3EC395B94",
+    "new_frontier_id": "JAVACFRONTIER_D028FE33F2F3EC395B94",
+    "exact_frontier_equal": true,
+    "old_total_errors": 350,
+    "new_total_errors": 350,
+    "shared_errors": 350,
+    "old_only_errors": 0,
+    "new_only_errors": 0,
+    "shared_percent_of_old": 100.0,
+    "shared_percent_of_new": 100.0,
+    "old_affected_files": 75,
+    "new_affected_files": 75,
+    "shared_affected_files": 75,
+    "categories": {
+      "cannot_find_symbol": 154,
+      "incompatible_types": 45,
+      "cannot_be_dereferenced": 42,
+      "non_static_from_static_context": 39,
+      "other": 38,
+      "cannot_apply_arguments": 11,
+      "package_does_not_exist": 9,
+      "private_access": 9,
+      "bad_operand_type": 2,
+      "protected_access": 1
+    }
+  },
+  "run_state": {
+    "old_release_ready": false,
+    "new_release_ready": false,
+    "equivalent_tooling_recovery_releases_ready": false,
+    "wrapper_exit": 3,
+    "frozen_tooling_cleanup_pass": true,
+    "live_main_advanced": false
+  },
+  "truth_boundary": {
+    "proves": [
+      "the private cross-version javac comparator executed successfully on exact v307 and exact v308 diagnostics generated under one frozen recovery-tooling commit",
+      "the normalized private diagnostic multisets are exactly equal across v307 and v308 at this tooling authority",
+      "all 350 measured compiler failures and all 75 affected source paths are shared between the two exact builds",
+      "no v307-only or v308-only compiler failure family remained at this measured frontier"
+    ],
+    "does_not_prove": [
+      "the raw javac logs are byte-identical; their input SHA-256 values are different",
+      "the independently regenerated v307 and v308 source trees are byte-identical",
+      "either recovery release is release-ready",
+      "the final strict recovered-source v307-to-v308 cross-version PASS",
+      "that inferred or generated identifiers are original developer names"
+    ]
+  },
+  "notes": [
+    "This fixture records only redacted IDs, hashes and aggregate counts emitted by the successful private comparator run; no client binaries, recovered Java source, source paths, symbols, locations or raw javac messages are committed.",
+    "The older 405/405 public-frontier fixture remains preserved as the historical pre-private-comparator anchor rather than being overwritten.",
+    "Issue #283 remains open until both recovery releases are independently release-ready."
+  ]
+}

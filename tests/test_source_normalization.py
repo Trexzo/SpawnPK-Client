@@ -3756,6 +3756,236 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
             self.assertEqual(after.returncode, 0, after.stdout + after.stderr)
 
 
+    def test_undeclared_linkedhashmap_non_result_placeholders_become_wildcards(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Value.java": (
+                        "package p;\n"
+                        "public class Value {}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.LinkedHashMap;\n"
+                        "import java.util.Set;\n"
+                        "public class A extends LinkedHashMap<String, Value> {\n"
+                        "    public Value byKey(String key) {\n"
+                        "        return this.get(key);\n"
+                        "    }\n"
+                        "    public Set<String> keys() {\n"
+                        "        return this.keySet();\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.LinkedHashMap;\n"
+                "import java.util.Set;\n"
+                "public class A extends LinkedHashMap<String, Value> {\n"
+                "    public Value byKey(String key) {\n"
+                "        return ((LinkedHashMap<K, Value>)this).get(key);\n"
+                "    }\n"
+                "    public Set<String> keys() {\n"
+                "        return ((LinkedHashMap<String, V>)this).keySet();\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-linkedhashmap-placeholder"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("cannot find symbol", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "((LinkedHashMap<?, Value>)this).get(key)",
+                normalized,
+            )
+            self.assertIn(
+                "((LinkedHashMap<String, ?>)this).keySet()",
+                normalized,
+            )
+            actions = [
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "undeclared_linkedhashmap_cast_placeholder_wildcard"
+            ]
+            self.assertEqual(len(actions), 2)
+            by_name = {row["method_name"]: row for row in actions}
+            self.assertEqual(
+                by_name["byKey"]["method_descriptor"],
+                "(Ljava/lang/String;)Lp/Value;",
+            )
+            self.assertEqual(
+                by_name["byKey"]["placeholder_counts"],
+                {"K": 1},
+            )
+            self.assertEqual(
+                by_name["byKey"]["member_counts"],
+                {"get": 1},
+            )
+            self.assertEqual(
+                by_name["keys"]["method_descriptor"],
+                "()Ljava/util/Set;",
+            )
+            self.assertEqual(
+                by_name["keys"]["placeholder_counts"],
+                {"V": 1},
+            )
+            self.assertEqual(
+                by_name["keys"]["member_counts"],
+                {"keySet": 1},
+            )
+            self.assertEqual(
+                report["summary"][
+                    "undeclared_linkedhashmap_cast_placeholder_method_count"
+                ],
+                2,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "undeclared_linkedhashmap_cast_placeholder_reference_count"
+                ],
+                2,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-linkedhashmap-placeholder"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stdout + after.stderr)
+
+    def test_linkedhashmap_placeholder_rule_preserves_declared_type_parameters(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Value.java": (
+                        "package p;\n"
+                        "public class Value {}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.LinkedHashMap;\n"
+                        "public class A<K, V> "
+                        "extends LinkedHashMap<String, Value> {\n"
+                        "    public Value byKey(String key) {\n"
+                        "        return this.get(key);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.util.LinkedHashMap;\n"
+                "public class A<K, V> "
+                "extends LinkedHashMap<String, Value> {\n"
+                "    public Value byKey(String key) {\n"
+                "        return ((LinkedHashMap<K, Value>)this).get(key);\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "undeclared_linkedhashmap_cast_placeholder_reference_count"
+                ],
+                0,
+            )
+
+    def test_linkedhashmap_placeholder_rule_does_not_erase_result_type(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Value.java": (
+                        "package p;\n"
+                        "public class Value {}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.LinkedHashMap;\n"
+                        "public class A extends "
+                        "LinkedHashMap<String, Value> {\n"
+                        "    public Value byKey(String key) {\n"
+                        "        return this.get(key);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.util.LinkedHashMap;\n"
+                "public class A extends LinkedHashMap<String, Value> {\n"
+                "    public Value byKey(String key) {\n"
+                "        return ((LinkedHashMap<String, V>)this).get(key);\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "undeclared_linkedhashmap_cast_placeholder_reference_count"
+                ],
+                0,
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
 

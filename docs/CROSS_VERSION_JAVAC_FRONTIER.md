@@ -103,3 +103,74 @@ a v307/v308 client-version delta. The wrapper's `v307` and `v308` labels
 are therefore build-authority-backed **and** same-tooling-bound rather than
 inferred from filenames or directory names. The comparison still does not
 claim either source tree is release-ready.
+
+## Measured exact v307/v308 checkpoint
+
+The first successful frozen equivalent-tooling private comparison is recorded in:
+
+`fixtures/v307-v308-source-m1-exact-javac-parity-07ed6f9.json`
+
+It is bound to recovery-tooling commit
+`07ed6f961fd9ab67439b1d9428446f914bafeabf` and records only redacted
+IDs, hashes, and aggregate counts.
+
+Measured result:
+
+- exact v307 and exact v308 both reached
+  `JAVACFRONTIER_D028FE33F2F3EC395B94`;
+- 350 errors on each build;
+- 75 affected files on each build;
+- 350 shared errors;
+- 0 v307-only errors;
+- 0 v308-only errors;
+- 100% overlap in both directions;
+- `EXACT_FRONTIER_EQUAL=True`;
+- redacted comparator report
+  `XJAVACFRONTIER_3029D957ED98E41FC96D`.
+
+The raw javac input hashes, recovered source-tree hashes, diagnostic report IDs,
+and build-binding IDs remain distinct across the two builds. Exact frontier
+equality therefore means equality of the normalized private diagnostic
+multisets used by the comparator, not byte identity of the raw logs or source
+trees.
+
+The older
+`fixtures/v307-v308-source-m1-public-frontier-parity.json` fixture remains
+preserved as the historical 405/405 public-only anchor from before the private
+comparator had run. It must not be rewritten to impersonate the later 350/350
+measurement.
+
+Both recovery releases were still blocked at clean rebuild during the 350/350
+measurement. This checkpoint proves cross-version compiler parity at that
+tooling authority; it does not satisfy the final release-ready cross-version
+gate.
+
+## Deterministic public-safe checkpoint export
+
+A successful `Invoke-CrossVersionJavacFrontier.ps1` run now also invokes
+`spk-cross-version-javac-checkpoint` and writes:
+
+`v307-v308-javac-checkpoint.json`
+
+The checkpoint builder does **not** consume either private diagnostic report.
+It accepts only:
+
+- the already-redacted `XJAVACFRONTIER_*` comparison report;
+- the independently regenerated redacted old/new `JAVACBIND_*` reports;
+- the optional `XVERBIN_*` authority for the compared build pair.
+
+Before emitting a checkpoint it independently rederives both `JAVACBIND_*`
+identities and the `XJAVACFRONTIER_*` identity from their public authority
+fields, requires both bindings to use the same recovery-tooling commit, and
+requires each binding's diagnostic report ID, raw-input SHA-256 and frontier
+ID to match the side of the comparator it claims to bind.
+
+The exporter also refuses any comparator family containing `source_path`,
+`message`, `symbol`, or `location`, even if the input incorrectly claims
+`identifiers_included=false`.
+
+The emitted `XJAVACCHECKPOINT_*` artifact contains only build/source authority
+hashes and IDs, compiler aggregate state, and the redacted comparator summary.
+It does not declare either recovery release ready. Its purpose is to eliminate
+manual transcription when promoting an exact-local measurement into a reviewed
+public checkpoint.

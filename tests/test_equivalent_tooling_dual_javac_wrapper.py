@@ -199,6 +199,77 @@ class EquivalentToolingDualJavacWrapperTests(unittest.TestCase):
             text,
         )
 
+    def test_child_stdout_cannot_pollute_scalar_exit(self):
+        text = self.script_text()
+        self.assertIn(
+            "& powershell.exe @Arguments | Out-Host",
+            text,
+        )
+        self.assertIn(
+            "$Exit = [int]$LASTEXITCODE",
+            text,
+        )
+        self.assertIn(
+            "return [int]$Exit",
+            text,
+        )
+        self.assertNotIn(
+            "& powershell.exe @Arguments\n    $Exit = $LASTEXITCODE",
+            text,
+        )
+
+    @unittest.skipUnless(
+        os.name == "nt" and shutil.which("powershell.exe"),
+        "Windows PowerShell required",
+    )
+    def test_actual_child_helper_returns_one_int_after_stdout(self):
+        root = Path(__file__).resolve().parents[1]
+        script = (
+            root
+            / "scripts"
+            / "Invoke-EquivalentToolingV307V308JavacBacktest.ps1"
+        )
+        literal = str(script).replace("'", "''")
+        command = (
+            "$tokens=$null; $errors=$null; "
+            "$ast=[System.Management.Automation.Language.Parser]::ParseFile("
+            f"'{literal}', [ref]$tokens, [ref]$errors); "
+            "if ($errors.Count -ne 0) { exit 10 }; "
+            "$fn=$ast.FindAll({ param($n) "
+            "$n -is [System.Management.Automation.Language.FunctionDefinitionAst] "
+            "-and $n.Name -eq 'Invoke-ChildAllowBlocked' }, $true) | "
+            "Select-Object -First 1; "
+            "if ($null -eq $fn) { exit 11 }; "
+            "Invoke-Expression $fn.Extent.Text; "
+            "$child=@('-NoProfile','-Command',"
+            "'Write-Output child-evidence; exit 3'); "
+            "$result=Invoke-ChildAllowBlocked -Label 'TEST CHILD' "
+            "-Arguments $child; "
+            "if ($result -isnot [int]) { exit 12 }; "
+            "if ($result -ne 3) { exit 13 }; "
+            "if (@($result).Count -ne 1) { exit 14 }; "
+            "exit 0"
+        )
+        proc = subprocess.run(
+            [
+                "powershell.exe",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                command,
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        self.assertEqual(
+            proc.returncode,
+            0,
+            proc.stdout + proc.stderr,
+        )
+        self.assertIn("child-evidence", proc.stdout)
+
     def test_blocked_children_still_feed_comparator(self):
         text = self.script_text()
         self.assertIn(

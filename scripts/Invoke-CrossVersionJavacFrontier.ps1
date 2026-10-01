@@ -17,6 +17,7 @@ $V307Authority =
     "6232bae206846a4ba8d09766a2dee886b69016066a3f50f83b201bf705f93662"
 $V308Authority =
     "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
+$BinaryBacktestId = "XVERBIN_E56BD2FB8CCC172D6184"
 
 function Require-File {
     param([Parameter(Mandatory = $true)][string]$Path)
@@ -135,6 +136,7 @@ if (-not (Test-Path -LiteralPath $OutDir -PathType Container)) {
 $V307VerifiedBinding = Join-Path $OutDir "v307-javac-build-binding-verified.json"
 $V308VerifiedBinding = Join-Path $OutDir "v308-javac-build-binding-verified.json"
 $Report = Join-Path $OutDir "v307-v308-javac-frontier.json"
+$Checkpoint = Join-Path $OutDir "v307-v308-javac-checkpoint.json"
 
 $env:PYTHONPATH = Join-Path $Repo "src"
 $env:PYTHONDONTWRITEBYTECODE = "1"
@@ -282,6 +284,51 @@ if (
     throw "v308 build binding does not match comparator input authority."
 }
 
+$CheckpointArguments = @(
+    "-3.13",
+    "-m",
+    "spk_recovery.cross_version_javac_checkpoint_cli",
+    $Report,
+    $V307VerifiedBinding,
+    $V308VerifiedBinding,
+    "--binary-backtest-id",
+    $BinaryBacktestId,
+    "--out",
+    $Checkpoint
+)
+
+Write-Host ""
+Write-Host "=== EXPORT REDACTED CROSS-VERSION CHECKPOINT ===" -ForegroundColor Cyan
+& py @CheckpointArguments
+$CheckpointExit = $LASTEXITCODE
+if ($CheckpointExit -ne 0) {
+    throw "Cross-version javac checkpoint export failed with exit=$CheckpointExit"
+}
+Require-File $Checkpoint
+
+$CheckpointSummary = Get-Projection -Path $Checkpoint -Fields @{
+    checkpoint_id = "/checkpoint_id"
+    tooling_commit = "/tooling_commit"
+    old_build_id = "/old/build_id"
+    new_build_id = "/new/build_id"
+    comparison_report_id = "/comparison/report_id"
+    exact_frontier_equal = "/comparison/summary/exact_frontier_equal"
+    identifiers_included = "/identifiers_included"
+}
+
+if ($CheckpointSummary.identifiers_included -ne $false) {
+    throw "Refusing unexpected identifier-bearing checkpoint."
+}
+if ([string]$CheckpointSummary.tooling_commit -ne $InputToolingCommit) {
+    throw "Checkpoint tooling commit does not match comparator inputs."
+}
+if (
+    [string]$CheckpointSummary.comparison_report_id -ne
+    [string]$Summary.report_id
+) {
+    throw "Checkpoint does not bind the emitted comparator report."
+}
+
 Write-Host ""
 Write-Host "============================================================" -ForegroundColor Green
 Write-Host " CROSS-VERSION JAVAC FRONTIER COMPARISON - PASS" -ForegroundColor Green
@@ -321,3 +368,5 @@ Write-Host "V308_BINDING_REPORT=$V308BindingReport"
 Write-Host "V307_VERIFIED_BINDING_REPORT=$V307VerifiedBinding"
 Write-Host "V308_VERIFIED_BINDING_REPORT=$V308VerifiedBinding"
 Write-Host "REPORT=$Report"
+Write-Host "CHECKPOINT_ID=$($CheckpointSummary.checkpoint_id)"
+Write-Host "CHECKPOINT=$Checkpoint"

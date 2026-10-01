@@ -201,6 +201,34 @@ def summarize(
 
     family_specs = [
         {
+            "kind": "undeclared_linkedhashmap_cast_placeholder_wildcard",
+            "label": "LINKEDHASHMAP GENERIC PLACEHOLDER",
+            "method_key": (
+                "undeclared_linkedhashmap_cast_placeholder_method_count"
+            ),
+            "reference_key": (
+                "undeclared_linkedhashmap_cast_placeholder_reference_count"
+            ),
+            "method_marker": "LINKEDHASHMAP_PLACEHOLDER_METHODS",
+            "reference_marker": "LINKEDHASHMAP_PLACEHOLDER_REFERENCES",
+            "detail": lambda action: (
+                "placeholders="
+                + ",".join(
+                    f"{name}:{count}"
+                    for name, count in sorted(
+                        action.get("placeholder_counts", {}).items()
+                    )
+                )
+                + " | members="
+                + ",".join(
+                    f"{name}:{count}"
+                    for name, count in sorted(
+                        action.get("member_counts", {}).items()
+                    )
+                )
+            ),
+        },
+        {
             "kind": "shadowed_nested_static_field_owner_type_context",
             "label": "NESTED STATIC FIELD SHADOW",
             "method_key": "shadowed_nested_static_field_method_count",
