@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_FEA4928AD76FD17E07CE",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_1AF1DE5F43F39EC6930C",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000161",
+      "owner_logical_id": "CLIENT_CLASS_000161",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/eventbus/EventBus",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EventBus",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_named_source_identity",
+          "detail": "Exact class name survives; register scans @Subscribe methods, validates subscriber signatures, tracks priority-sorted subscribers, unregisters owners/bindings and post dispatches events with exception handling."
+        },
+        {
+          "family": "exact_eventbus_join",
+          "detail": "The exact-v308 classes reference one another directly under rs/eventbus and participate in the injected application EventBus path already consumed by ConfigManager and Client."
+        },
+        {
+          "family": "source_filename_identity",
+          "detail": "Recovered source path itself preserves EventBus.java, independently matching the bytecode role."
+        }
+      ],
+      "note": "Exact-v308 identity preserved by source filename and behavioral contract."
+    },
+    {
+      "proposal_id": "SEMPROP_67C885F877E591DEB964",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000162",
+      "owner_logical_id": "CLIENT_CLASS_000162",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/eventbus/Subscribe",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Subscribe",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_named_source_identity",
+          "detail": "Exact annotation name survives; Runtime METHOD annotation with one float priority() member defaulting to 0.0f, consumed directly by EventBus.register."
+        },
+        {
+          "family": "exact_eventbus_join",
+          "detail": "The exact-v308 classes reference one another directly under rs/eventbus and participate in the injected application EventBus path already consumed by ConfigManager and Client."
+        },
+        {
+          "family": "source_filename_identity",
+          "detail": "Recovered source path itself preserves Subscribe.java, independently matching the bytecode role."
+        }
+      ],
+      "note": "Exact-v308 identity preserved by source filename and behavioral contract."
+    },
+    {
+      "proposal_id": "SEMPROP_DF4C29E1B7F90EA912E0",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000160",
+      "owner_logical_id": "CLIENT_CLASS_000160",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/eventbus/DeferredEventBus",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DeferredEventBus",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_named_source_identity",
+          "detail": "Extends EventBus but delegates register/unregister to an injected EventBus, queues posted events in a ConcurrentLinkedQueue, and replay() drains the snapshot queue into the live bus."
+        },
+        {
+          "family": "exact_eventbus_join",
+          "detail": "The exact-v308 classes reference one another directly under rs/eventbus and participate in the injected application EventBus path already consumed by ConfigManager and Client."
+        },
+        {
+          "family": "source_filename_identity",
+          "detail": "Recovered source path itself preserves DeferredEventBus.java, independently matching the bytecode role."
+        }
+      ],
+      "note": "Exact-v308 identity preserved by source filename and behavioral contract."
+    }
+  ],
+  "unresolved": []
+}
