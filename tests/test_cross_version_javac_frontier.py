@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import unittest
 
 from spk_recovery.cross_version_javac_frontier import (
@@ -9,10 +10,18 @@ from spk_recovery.cross_version_javac_frontier import (
 
 
 def report(frontier: str, rows: list[dict]):
+    input_sha256 = hashlib.sha256(frontier.encode("utf-8")).hexdigest()
     return {
         "schema_version": 1,
         "kind": "javac_diagnostic_classification_report",
+        "report_id": (
+            "JAVACDIAG_"
+            + hashlib.sha256((frontier + "-report").encode("utf-8"))
+            .hexdigest()[:20]
+            .upper()
+        ),
         "frontier_id": frontier,
+        "input_sha256": input_sha256,
         "identifiers_included": True,
         "diagnostics": rows,
     }
@@ -164,6 +173,56 @@ class CrossVersionJavacFrontierTests(unittest.TestCase):
         ):
             compare_javac_frontiers(
                 report("JAVACFRONTIER_A", [row]),
+                report("JAVACFRONTIER_B", []),
+            )
+
+    def test_output_binds_exact_diagnostic_reports(self):
+        row = {
+            "source_path": "/x/src/rs/A.java",
+            "category": "other",
+            "message": "some private message",
+            "symbol_kind": None,
+            "symbol": None,
+            "location_kind": None,
+            "location": None,
+            "symbol_shape": "none",
+        }
+        old = report("JAVACFRONTIER_A", [row])
+        new = report("JAVACFRONTIER_B", [row])
+
+        first = compare_javac_frontiers(old, new)
+        self.assertEqual(
+            first["old_diagnostic_report_id"],
+            old["report_id"],
+        )
+        self.assertEqual(
+            first["new_diagnostic_report_id"],
+            new["report_id"],
+        )
+        self.assertEqual(
+            first["old_diagnostic_input_sha256"],
+            old["input_sha256"],
+        )
+        self.assertEqual(
+            first["new_diagnostic_input_sha256"],
+            new["input_sha256"],
+        )
+
+        changed = dict(old)
+        changed["input_sha256"] = "f" * 64
+        changed["report_id"] = "JAVACDIAG_" + "F" * 20
+        second = compare_javac_frontiers(changed, new)
+        self.assertNotEqual(first["report_id"], second["report_id"])
+
+    def test_rejects_missing_diagnostic_provenance(self):
+        value = report("JAVACFRONTIER_A", [])
+        del value["input_sha256"]
+        with self.assertRaisesRegex(
+            CrossVersionJavacFrontierError,
+            "input SHA-256",
+        ):
+            compare_javac_frontiers(
+                value,
                 report("JAVACFRONTIER_B", []),
             )
 
