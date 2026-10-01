@@ -84,11 +84,15 @@ Exact binary authority already exists for the historical pair:
 
 Historical R8 recovery provenance maps v308 `rs/f/a` to `rs/Configuration`, and the saved generated source exposes the v308 build constant as `field1628 = 308`.
 
-The exact v307 recovered-source comparison is **not yet accepted**. A fresh v307 source tree must be independently generated with the pinned recovery/decompiler toolchain. The historical Procyon authority is:
+Independent historical v307 source generation is now proven. The modern exact-private historical run regenerated 1,048 Java files from exact v307 authority with pinned Procyon, rather than deriving them from the v308 source tree.
+
+Strict recovered-source v307 -> v308 acceptance is **still blocked** because the input recovery releases have not passed the clean-rebuild gate. At frozen recovery-tooling authority `07ed6f961fd9ab67439b1d9428446f914bafeabf`, both independently generated builds reached the same compiler frontier `JAVACFRONTIER_D028FE33F2F3EC395B94`: 350 errors, 75 affected files, 350 shared errors, 0 build-specific errors, and 100% overlap. The public-safe comparator checkpoint is `fixtures/v307-v308-source-m1-exact-javac-parity-07ed6f9.json`.
+
+The historical Procyon authority remains:
 
 `821da96012fc69244fa1ea298c90455ee4e021434bc796d3b9546ab24601b779`
 
-Do not manufacture a v307 tree by copying the v308 tree and replacing the build number. That would test text editing, not recovery generality.
+Do not manufacture a v307 tree by copying the v308 tree and replacing the build number. The accepted evidence comes from independent regeneration; the remaining blocker is the shared Source-M1 compiler frontier, not absence of a historical source tree.
 
 ## Truth boundary
 
