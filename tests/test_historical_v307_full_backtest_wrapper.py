@@ -48,6 +48,25 @@ class HistoricalV307FullBacktestWrapperTests(unittest.TestCase):
             text,
         )
 
+    def test_release_stage_uses_derived_v307_lineage(self):
+        text = self._text()
+        self.assertIn(
+            'lineage-backfill\\migration\\class-lineage.json',
+            text,
+        )
+        self.assertIn(
+            'lineage-backfill\\migration\\member-lineage.json',
+            text,
+        )
+        self.assertIn(
+            '$ClassLineage = $V307ClassLineage',
+            text,
+        )
+        self.assertIn(
+            '$MemberLineage = $V307MemberLineage',
+            text,
+        )
+
     def test_preserves_shared_frontier_blocked_exit(self):
         text = self._text()
         self.assertIn('if ($ReleaseExit -eq 3)', text)
