@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_D1314D25BA3E22361A20",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_40C269460882B671F6F2",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000352",
+      "owner_logical_id": "CLIENT_CLASS_000352",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/C",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RSImageProducer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_framebuffer_shape",
+          "detail": "The class owns width/height, an int pixel buffer, a parallel float depth buffer, a BufferedImage backed directly by DataBufferInt over that pixel array, and the destination AWT Component."
+        },
+        {
+          "family": "exact_raster_binding",
+          "detail": "Construction and reset bind its dimensions, pixel array and depth array into the shared rs/l/c software raster state."
+        },
+        {
+          "family": "exact_present_path",
+          "detail": "Its draw method presents the backing BufferedImage through Graphics.drawImage at the requested coordinates and schedules R394 ClientWindowLayoutTask after first presentation."
+        },
+        {
+          "family": "historical_signature_corroboration",
+          "detail": "The exact constructor shape (width,height,Component), direct int-buffer image backing and draw/present role match the long-standing RS client RSImageProducer class family."
+        }
+      ],
+      "note": "Exact-v308 semantic recovery of the classic RSImageProducer rendering primitive; historical source is corroboration only."
+    },
+    {
+      "proposal_id": "SEMPROP_82AFD0C6ED925B0F8AE8",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000355",
+      "owner_logical_id": "CLIENT_CLASS_000355",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/F",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Sprite",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_sprite_state",
+          "detail": "The class owns pixel array m, rendered width/height n/o, offsets p/q and max/canvas dimensions r/s plus numerous constructors from Image, byte[], cache archive and named image resources."
+        },
+        {
+          "family": "exact_sprite_operations",
+          "detail": "It implements direct, alpha, transformed, masked and scaled drawing into the shared software raster; it also supports image conversion, color replacement and dimension normalization."
+        },
+        {
+          "family": "exact_live_fanout",
+          "detail": "Exact-v308 has roughly one hundred class references to rs/l/F across interfaces, overlays, fonts, particles and rendering, fixing it as the central client sprite primitive."
+        },
+        {
+          "family": "historical_signature_corroboration",
+          "detail": "The cache-archive constructor and pixel/width/height/offset drawing contract match classic RS client Sprite source directly."
+        }
+      ],
+      "note": "Exact-v308 semantic recovery of the classic Sprite rendering primitive; historical source is corroboration only."
+    },
+    {
+      "proposal_id": "SEMPROP_C86B4B7AF247C018BDD3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000360",
+      "owner_logical_id": "CLIENT_CLASS_000360",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/K",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TextDrawingArea",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_font_archive_shape",
+          "detail": "The constructor takes (boolean,String,rs/x/f), loads the named font data plus index.dat, allocates per-glyph byte masks and width/height/offset/advance arrays, and derives the font height."
+        },
+        {
+          "family": "exact_text_render_surface",
+          "detail": "The class provides string width measurement, left/right/centered text drawing, color/shadow variants, wave/jitter/randomized effects and low-level glyph blitting into the software raster."
+        },
+        {
+          "family": "exact_legacy_font_names",
+          "detail": "Exact v308 preserves special named fonts hit_full and critical_full and otherwise allocates the classic 256-glyph font table."
+        },
+        {
+          "family": "historical_signature_corroboration",
+          "detail": "The (boolean,fontName,archive) constructor, index.dat loader, Random field and glyph-array layout directly match classic RS client TextDrawingArea source."
+        }
+      ],
+      "note": "Exact-v308 semantic recovery of the classic TextDrawingArea rendering primitive; historical source is corroboration only."
+    }
+  ],
+  "unresolved": []
+}
