@@ -55,6 +55,11 @@ def main(argv: list[str] | None = None) -> int:
         )
     )
     parser.add_argument(
+        "--external-repo",
+        required=True,
+        type=Path,
+    )
+    parser.add_argument(
         "--external-classes",
         required=True,
         type=Path,
@@ -80,6 +85,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     report = build_external_source_oracle(
+        external_repo=args.external_repo,
         external_classes=args.external_classes,
         external_revision=args.external_revision,
         exact_v308_jar=args.exact_v308_jar,
