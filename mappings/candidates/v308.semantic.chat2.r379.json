@@ -1,0 +1,62 @@
+{
+  "schema_version":1,
+  "kind":"semantic_candidate_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[
+    {
+      "schema_version":1,
+      "kind":"semantic_name_candidate",
+      "canonical":false,
+      "status":"CANDIDATE",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/l/i","name":null,"descriptor":null},
+      "proposed_name":"PingPongValue",
+      "confidence":0.998,
+      "evidence":[
+        {"family":"exact_oscillator_state","detail":"Exact v308 rs/l/i stores a constructor-supplied maximum, a current integer value initialized to 0, and a direction initialized to +1."},
+        {"family":"exact_ping_pong_lifecycle","detail":"Each update adds direction to the current value, flips direction to -1 when the maximum is reached, and flips back to +1 at the lower bound, producing a deterministic bounded ping-pong value."},
+        {"family":"exact_markup_consumer","detail":"R379 RSFontMarkupParser owns four static instances with maxima 25, 50, 125 and 250; Client advances all four together during the live render/update path and the parser consumes their current values for animated text colors."}
+      ],
+      "note":"Descriptive exact-v308 name for the bounded integer oscillator used by animated RSFont markup colors."
+    },
+    {
+      "schema_version":1,
+      "kind":"semantic_name_candidate",
+      "canonical":false,
+      "status":"CANDIDATE",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/l/k","name":null,"descriptor":null},
+      "proposed_name":"RSFontMarkupParser",
+      "confidence":0.998,
+      "evidence":[
+        {"family":"exact_rsfont_ownership","detail":"Exact-v308 reverse references to rs/l/k are limited to Client, R55 RSFont and the parser itself; RSFont delegates repeatedly into its static parsing methods from both text rendering and text-measurement paths."},
+        {"family":"exact_parser_surface","detail":"The class exposes fourteen static String/start/end to int recognizers which inspect inline character/tag patterns and return parsed colors, image/icon ids, offsets or formatting control values to RSFont."},
+        {"family":"exact_animated_color_tags","detail":"The parser recognizes pulsing tag forms including pu1 and pu2 and combines their results with four live PingPongValue instances advanced by Client each frame."},
+        {"family":"exact_font_markup_join","detail":"RSFont uses parser results to update live formatting state, resolve Sprite ids, alter drawing offsets and skip recognized markup in width calculations, fixing this as markup parsing rather than a generic string utility."}
+      ],
+      "note":"Descriptive exact-v308 name for the static inline-markup parser consumed exclusively by the rich-text RSFont engine."
+    },
+    {
+      "schema_version":1,
+      "kind":"semantic_name_candidate",
+      "canonical":false,
+      "status":"CANDIDATE",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/l/G","name":null,"descriptor":null},
+      "proposed_name":"ColorKeyTransparencyFilter",
+      "confidence":0.998,
+      "evidence":[
+        {"family":"exact_image_filter_contract","detail":"Exact v308 rs/l/G extends java.awt.image.RGBImageFilter and stores exactly one constructor-supplied Color plus that color's opaque ARGB value."},
+        {"family":"exact_color_key_transform","detail":"filterRGB compares each source pixel after forcing its alpha byte opaque against the stored key color; on equality it returns only the pixel's low 24 RGB bits, clearing alpha, otherwise it returns the original pixel unchanged."},
+        {"family":"exact_sprite_consumer","detail":"R55 Sprite is the only external exact-v308 owner: Sprite.a(Image,Color) constructs this filter, wraps the source image in FilteredImageSource and creates the filtered AWT Image through Toolkit."}
+      ],
+      "note":"Descriptive exact-v308 name for Sprite's one-color alpha-clearing image filter."
+    }
+  ],
+  "conflicts":[]
+}
