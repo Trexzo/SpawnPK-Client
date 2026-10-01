@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_C6895C7C5121445A234D",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_77482C7309BA1D0538C2",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000309",
+      "owner_logical_id": "CLIENT_CLASS_000309",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner": "rs/j/b/b", "name": null, "descriptor": null},
+      "proposed_name": "CustomMenuEntry",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_literal_identity","detail":"The exact-v308 value object's toString() embeds the surviving source-style literal 'CustomMenuEntry(text=..., event=...)', directly exposing the class identity and its two roles."},
+        {"family":"exact_value_shape","detail":"The class stores exactly two fields: one String display text and one rs/h/b event/action object; it exposes direct getters/setters plus value-style equals/hashCode/toString and no unrelated behavior."},
+        {"family":"exact_menu_owner","detail":"Sibling rs/j/b/a owns an array of exactly ten rs/j/b/b entries, creates each entry from a display String plus rs/h/b event/action, measures the text for menu geometry and exposes the currently selected entry."},
+        {"family":"exact_stable_id","detail":"Sorted exact-v308 rs/** class order places rs/j/b/b at zero-based index 308; the canonical CLIENT_CLASS_%06d lineage convention therefore fixes it as CLIENT_CLASS_000309, consistent with independently reviewed secure/runelite/cache families."}
+      ],
+      "note":"Exact-v308 source-style identity recovered from the surviving CustomMenuEntry toString literal and menu-value-object behavior."
+    }
+  ],
+  "unresolved": []
+}
