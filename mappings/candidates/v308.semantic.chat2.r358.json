@@ -14,62 +14,27 @@
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "target": {
         "kind": "class",
-        "owner": "rs/l/v",
+        "owner": "rs/gui/G",
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "InlineProgressBarMarkup",
+      "proposed_name": "ItemSearchSidebarPanel",
       "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_markup_syntax",
-          "detail": "Exact v308 parses inline pbar markup, including numbered pbar2..pbar7 variants, colon-delimited numeric/style fields and an optional embedded label section."
+          "family": "exact_side_panel_tab",
+          "detail": "R357 LauncherSidePanel installs rs/gui/G as the exact tab labeled 'Item Search' when developer UI is not enabled and constrains it to the side-panel 344x480 surface."
         },
         {
-          "family": "exact_dimension_contract",
-          "detail": "The first numeric width field is parsed and clamped to 20..300 pixels before a progress-bar specification is produced."
+          "family": "exact_search_controls",
+          "detail": "The panel owns the search text field, Search button, scrollable result area and item-search result rendering logic; R301 independently recovered its text-field and button listeners as ItemSearchEnterAction and ItemSearchButtonAction."
         },
         {
-          "family": "exact_rendering_behavior",
-          "detail": "The renderer draws a bordered/background rectangle and a filled region through R55 DrawingArea; animated style variants derive changing fill colors from nanoTime and request text-motion redraw invalidation."
-        },
-        {
-          "family": "exact_font_integration",
-          "detail": "R55 RSFont invokes this parser during inline text layout, advances text width by the parsed bar width, renders the bar at the current glyph position and optionally renders the spec label inside it."
+          "family": "exact_parent_child_join",
+          "detail": "R301 proves both rs/gui/H and rs/gui/I dispatch directly into this panel's private search routine, fixing G as the parent item-search surface rather than a generic list panel."
         }
       ],
-      "note": "Descriptive exact-v308 name for inline pbar markup parsing/rendering used by RSFont."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/l/v$a",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "InlineProgressBarSpec",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_immutable_state",
-          "detail": "The class is an immutable nine-field value object created only by InlineProgressBarMarkup and consumed only by that parser plus RSFont."
-        },
-        {
-          "family": "exact_layout_state",
-          "detail": "Its fields carry the parsed bar dimensions/value/style colors, optional label text, closing-tag position and pbar variant needed by the renderer."
-        },
-        {
-          "family": "exact_no_independent_behavior",
-          "detail": "The class performs no parsing or drawing itself; it is solely the parsed inline progress-bar specification passed into rendering."
-        }
-      ],
-      "note": "Descriptive exact-v308 name for the immutable result of pbar markup parsing."
+      "note": "Descriptive exact-v308 name for the item-search tab surface in LauncherSidePanel."
     }
   ],
   "conflicts": []
