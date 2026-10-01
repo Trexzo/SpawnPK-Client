@@ -207,3 +207,31 @@ This is intentionally aggregate-only. The hardened checkpoint does not carry a
 stable cross-run diagnostic-family identity, so the delta report does **not**
 claim which exact diagnostic families disappeared or appeared.
 
+## Legacy 350/350 baseline bridge
+
+The canonical 350/350 measurement predates automatic
+`XJAVACCHECKPOINT_*` export, so it cannot honestly be treated as a historical
+checkpoint artifact.
+
+Use the dedicated legacy-baseline bridge instead:
+
+```powershell
+spk-cross-version-javac-legacy-baseline-delta `
+  .\fixtures\v307-v308-source-m1-exact-javac-parity-07ed6f9.json `
+  .\v307-v308-javac-checkpoint.json `
+  --out .\legacy-350-to-current-delta.json
+```
+
+The bridge validates the exact canonical legacy fixture authority and one
+modern verified `cross_version_javac_checkpoint`, requires the exact
+v307/v308 source-authority SHA pair plus `XVERBIN_*` authority to remain
+unchanged, and emits deterministic `XJAVACLEGACYDELTA_*` authority.
+
+The output records `baseline_fixture_id` and `current_checkpoint_id`.
+It intentionally does **not** invent a `baseline_checkpoint_id` for the
+historical run.
+
+Like the checkpoint-to-checkpoint delta, this bridge is aggregate-only. It
+reports signed error/file/category deltas plus frontier/source-tree/equality
+transitions, but does not claim stable per-diagnostic-family transitions.
+
