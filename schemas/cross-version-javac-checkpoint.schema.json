@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/cross-version-javac-checkpoint.schema.json",
+  "title": "SpawnPK cross-version javac checkpoint",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "checkpoint_id",
+    "tooling_commit",
+    "binary_backtest_id",
+    "old",
+    "new",
+    "comparison",
+    "identifiers_included",
+    "note"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "cross_version_javac_checkpoint"},
+    "checkpoint_id": {
+      "type": "string",
+      "pattern": "^XJAVACCHECKPOINT_[0-9A-F]{20}$"
+    },
+    "tooling_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "binary_backtest_id": {
+      "type": ["string", "null"],
+      "pattern": "^XVERBIN_[0-9A-F]{20}$"
+    },
+    "old": {"$ref": "#/$defs/build"},
+    "new": {"$ref": "#/$defs/build"},
+    "comparison": {
+      "type": "object",
+      "required": ["report_id", "summary"],
+      "properties": {
+        "report_id": {
+          "type": "string",
+          "pattern": "^XJAVACFRONTIER_[0-9A-F]{20}$"
+        },
+        "summary": {"type": "object"}
+      },
+      "additionalProperties": false
+    },
+    "identifiers_included": {"const": false},
+    "note": {"type": "string"}
+  },
+  "$defs": {
+    "build": {
+      "type": "object",
+      "required": [
+        "build_id",
+        "source_authority_sha256",
+        "binding_id",
+        "diagnostic_report_id",
+        "diagnostic_input_sha256",
+        "frontier_id",
+        "rebuild_id",
+        "workspace_id",
+        "source_tree_sha256",
+        "clean_rebuild_status",
+        "clean_project_build",
+        "project_binary_fallback_count"
+      ],
+      "properties": {
+        "build_id": {"type": "string", "minLength": 1},
+        "source_authority_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "binding_id": {
+          "type": "string",
+          "pattern": "^JAVACBIND_[0-9A-F]{20}$"
+        },
+        "diagnostic_report_id": {
+          "type": "string",
+          "pattern": "^JAVACDIAG_[0-9A-F]{20}$"
+        },
+        "diagnostic_input_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "frontier_id": {
+          "type": "string",
+          "pattern": "^JAVACFRONTIER_[0-9A-F]{20}$"
+        },
+        "rebuild_id": {
+          "type": "string",
+          "pattern": "^CLEANBUILD_[0-9A-F]{20}$"
+        },
+        "workspace_id": {"type": "string", "minLength": 1},
+        "source_tree_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "clean_rebuild_status": {
+          "enum": ["complete", "compile_failed", "class_set_mismatch"]
+        },
+        "clean_project_build": {"type": "boolean"},
+        "project_binary_fallback_count": {"const": 0}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
