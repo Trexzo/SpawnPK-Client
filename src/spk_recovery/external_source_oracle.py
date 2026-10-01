@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import subprocess
 from typing import Any
 
 from .classfile import parse_class
@@ -145,8 +146,63 @@ def index_class_directory(root: Path) -> dict[str, Any]:
     }
 
 
+def _verify_external_revision(
+    *,
+    external_repo: Path,
+    external_classes: Path,
+    external_revision: str,
+) -> tuple[Path, Path]:
+    external_repo = external_repo.resolve()
+    external_classes = external_classes.resolve()
+    if not external_repo.is_dir():
+        raise ExternalSourceOracleError(
+            f"external repository is not a directory: {external_repo}"
+        )
+    if (
+        external_classes != external_repo
+        and external_repo not in external_classes.parents
+    ):
+        raise ExternalSourceOracleError(
+            "external class directory must be inside the pinned "
+            "external repository"
+        )
+
+    try:
+        proc = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(external_repo),
+                "rev-parse",
+                "HEAD",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False,
+        )
+    except OSError as exc:
+        raise ExternalSourceOracleError(
+            f"failed to invoke git for external revision: {exc}"
+        ) from exc
+    if proc.returncode != 0:
+        detail = (proc.stderr or proc.stdout).strip()
+        raise ExternalSourceOracleError(
+            "external repository revision could not be verified"
+            + (f": {detail}" if detail else "")
+        )
+    actual_revision = proc.stdout.strip().lower()
+    if actual_revision != external_revision:
+        raise ExternalSourceOracleError(
+            "external revision drift: "
+            f"expected={external_revision} actual={actual_revision}"
+        )
+    return external_repo, external_classes
+
+
 def build_external_source_oracle(
     *,
+    external_repo: Path,
     external_classes: Path,
     external_revision: str,
     exact_v308_jar: Path,
@@ -163,6 +219,12 @@ def build_external_source_oracle(
         raise ExternalSourceOracleError(
             "expected exact-v308 SHA-256 must be lowercase 64-hex"
         )
+
+    external_repo, external_classes = _verify_external_revision(
+        external_repo=external_repo,
+        external_classes=external_classes,
+        external_revision=external_revision,
+    )
 
     exact_v308_jar = exact_v308_jar.resolve()
     if not exact_v308_jar.is_file():
@@ -295,6 +357,7 @@ def build_external_source_oracle(
         "source_mutation_allowed": False,
         "external": {
             "revision": external_revision,
+            "repository_root_name": external_repo.name,
             "directory_sha256": external_index["sha256"],
             "rs_class_count": external_index["summary"][
                 "rs_class_count"
