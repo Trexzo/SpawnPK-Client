@@ -182,8 +182,8 @@ $V307SafetyReport = Join-Path $V307Dir "member-safety-report.json"
 $V308SafetyReport = Join-Path $V308Dir "member-safety-report.json"
 $CarryReport = Join-Path $CarryDir "member-safety-carryforward.json"
 $V307Acceptance = Join-Path $CarryDir "member-safety.accepted.v307.json"
-$DerivedClassLineage = Join-Path $LineageBackfillDir "migration\class-lineage.json"
-$DerivedMemberLineage = Join-Path $LineageBackfillDir "migration\member-lineage.json"
+$DerivedClassLineage = Join-Path $LineageBackfillDir "class-lineage.json"
+$DerivedMemberLineage = Join-Path $LineageBackfillDir "member-lineage.json"
 $LineageBackfillReport = Join-Path $LineageBackfillDir "historical-lineage-backfill.json"
 
 Write-Host ""
@@ -202,6 +202,7 @@ Invoke-PyChecked "BACKFILL EXACT v307 CANONICAL LINEAGE" @(
     $V308SourceIndex,
     $ClassLineage,
     $MemberLineage,
+    $Fixture,
     "--out-dir",
     $LineageBackfillDir
 )
