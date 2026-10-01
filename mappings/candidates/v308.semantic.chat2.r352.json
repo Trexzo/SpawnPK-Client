@@ -1,0 +1,475 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PkQuickLinksPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_panel_labels",
+          "detail": "The JPanel explicitly contains 'Check these pages out for server information!' and 'These commands will aid your PKing needs!' sections, with Server rules, Forums/Community, Latest updates and Price guide buttons followed by PK quick-command buttons."
+        },
+        {
+          "family": "exact_child_actions",
+          "detail": "The panel constructs the exact rs/gui/g..t ActionListener family for command/link buttons; command listeners inject literal :: commands into Client.ap and link listeners open fixed SpawnPK forum URLs."
+        },
+        {
+          "family": "exact_launcher_surface",
+          "detail": "The class is a standalone Swing JPanel in the Launcher GUI namespace and owns no game-state logic beyond wiring these quick actions."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the launcher-side PK command/community quick-links panel."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EntangleCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_ownership",
+          "detail": "The listener is constructed only by rs/gui/e PkQuickLinksPanel for one corresponding quick-command button."
+        },
+        {
+          "family": "exact_command_literal",
+          "detail": "When Launcher has a live logged-in Client, actionPerformed assigns the exact literal '::entangle' to Client.ap and performs no other mutation."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The listener owns only its synthetic parent-panel reference and contains no unrelated gameplay or UI behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the PkQuickLinksPanel action that injects ::entangle."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MeleePotsCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_ownership",
+          "detail": "The listener is constructed only by rs/gui/e PkQuickLinksPanel for one corresponding quick-command button."
+        },
+        {
+          "family": "exact_command_literal",
+          "detail": "When Launcher has a live logged-in Client, actionPerformed assigns the exact literal '::pots' to Client.ap and performs no other mutation."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The listener owns only its synthetic parent-panel reference and contains no unrelated gameplay or UI behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the PkQuickLinksPanel action that injects ::pots."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SaradominBrewCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_ownership",
+          "detail": "The listener is constructed only by rs/gui/e PkQuickLinksPanel for one corresponding quick-command button."
+        },
+        {
+          "family": "exact_command_literal",
+          "detail": "When Launcher has a live logged-in Client, actionPerformed assigns the exact literal '::brew' to Client.ap and performs no other mutation."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The listener owns only its synthetic parent-panel reference and contains no unrelated gameplay or UI behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the PkQuickLinksPanel action that injects ::brew."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RestorePotionCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_ownership",
+          "detail": "The listener is constructed only by rs/gui/e PkQuickLinksPanel for one corresponding quick-command button."
+        },
+        {
+          "family": "exact_command_literal",
+          "detail": "When Launcher has a live logged-in Client, actionPerformed assigns the exact literal '::rest' to Client.ap and performs no other mutation."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The listener owns only its synthetic parent-panel reference and contains no unrelated gameplay or UI behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the PkQuickLinksPanel action that injects ::rest."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RangingPotionCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_ownership",
+          "detail": "The listener is constructed only by rs/gui/e PkQuickLinksPanel for one corresponding quick-command button."
+        },
+        {
+          "family": "exact_command_literal",
+          "detail": "When Launcher has a live logged-in Client, actionPerformed assigns the exact literal '::range' to Client.ap and performs no other mutation."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The listener owns only its synthetic parent-panel reference and contains no unrelated gameplay or UI behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the PkQuickLinksPanel action that injects ::range."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MagicPotionCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_ownership",
+          "detail": "The listener is constructed only by rs/gui/e PkQuickLinksPanel for one corresponding quick-command button."
+        },
+        {
+          "family": "exact_command_literal",
+          "detail": "When Launcher has a live logged-in Client, actionPerformed assigns the exact literal '::mage' to Client.ap and performs no other mutation."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The listener owns only its synthetic parent-panel reference and contains no unrelated gameplay or UI behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the PkQuickLinksPanel action that injects ::mage."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CommunityForumLinkAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_ownership",
+          "detail": "The listener is constructed only by rs/gui/e PkQuickLinksPanel for one corresponding community/information button."
+        },
+        {
+          "family": "exact_url_literal",
+          "detail": "actionPerformed passes the exact URL 'http://spawnpk.net/forums/' to Client.f(String) and performs no other behavior."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The listener owns only its synthetic parent-panel reference and contains no unrelated gameplay or UI behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for one fixed external-link action owned by PkQuickLinksPanel."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LatestUpdatesLinkAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_ownership",
+          "detail": "The listener is constructed only by rs/gui/e PkQuickLinksPanel for one corresponding community/information button."
+        },
+        {
+          "family": "exact_url_literal",
+          "detail": "actionPerformed passes the exact URL 'https://spawnpk.net/forums/index.php?/forum/10-updates/' to Client.f(String) and performs no other behavior."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The listener owns only its synthetic parent-panel reference and contains no unrelated gameplay or UI behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for one fixed external-link action owned by PkQuickLinksPanel."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PriceGuideLinkAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_ownership",
+          "detail": "The listener is constructed only by rs/gui/e PkQuickLinksPanel for one corresponding community/information button."
+        },
+        {
+          "family": "exact_url_literal",
+          "detail": "actionPerformed passes the exact URL 'https://spawnpk.net/forums/index.php?/topic/5710-the-official-spawnpk-price-guide-for-2017/' to Client.f(String) and performs no other behavior."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The listener owns only its synthetic parent-panel reference and contains no unrelated gameplay or UI behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for one fixed external-link action owned by PkQuickLinksPanel."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpellbookSwitchCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_ownership",
+          "detail": "The listener is constructed only by rs/gui/e PkQuickLinksPanel for one corresponding quick-command button."
+        },
+        {
+          "family": "exact_command_literal",
+          "detail": "When Launcher has a live logged-in Client, actionPerformed assigns the exact literal '::switch' to Client.ap and performs no other mutation."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The listener owns only its synthetic parent-panel reference and contains no unrelated gameplay or UI behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the PkQuickLinksPanel action that injects ::switch."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FoodCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_ownership",
+          "detail": "The listener is constructed only by rs/gui/e PkQuickLinksPanel for one corresponding quick-command button."
+        },
+        {
+          "family": "exact_command_literal",
+          "detail": "When Launcher has a live logged-in Client, actionPerformed assigns the exact literal '::food' to Client.ap and performs no other mutation."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The listener owns only its synthetic parent-panel reference and contains no unrelated gameplay or UI behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the PkQuickLinksPanel action that injects ::food."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/r",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "VengeanceCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_ownership",
+          "detail": "The listener is constructed only by rs/gui/e PkQuickLinksPanel for one corresponding quick-command button."
+        },
+        {
+          "family": "exact_command_literal",
+          "detail": "When Launcher has a live logged-in Client, actionPerformed assigns the exact literal '::veng' to Client.ap and performs no other mutation."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The listener owns only its synthetic parent-panel reference and contains no unrelated gameplay or UI behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the PkQuickLinksPanel action that injects ::veng."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/s",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BarrageCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_ownership",
+          "detail": "The listener is constructed only by rs/gui/e PkQuickLinksPanel for one corresponding quick-command button."
+        },
+        {
+          "family": "exact_command_literal",
+          "detail": "When Launcher has a live logged-in Client, actionPerformed assigns the exact literal '::barrage' to Client.ap and performs no other mutation."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The listener owns only its synthetic parent-panel reference and contains no unrelated gameplay or UI behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the PkQuickLinksPanel action that injects ::barrage."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/t",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TeleblockCommandAction",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_ownership",
+          "detail": "The listener is constructed only by rs/gui/e PkQuickLinksPanel for one corresponding quick-command button."
+        },
+        {
+          "family": "exact_command_literal",
+          "detail": "When Launcher has a live logged-in Client, actionPerformed assigns the exact literal '::tb' to Client.ap and performs no other mutation."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The listener owns only its synthetic parent-panel reference and contains no unrelated gameplay or UI behavior."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the PkQuickLinksPanel action that injects ::tb."
+    }
+  ],
+  "conflicts": []
+}
