@@ -169,6 +169,13 @@ The exporter also refuses any comparator family containing `source_path`,
 `message`, `symbol`, or `location`, even if the input incorrectly claims
 `identifiers_included=false`.
 
+The standalone checkpoint CLI also rejects duplicate JSON object keys in all
+three public inputs. After writing the checkpoint it reloads the comparison,
+both bindings, and the emitted artifact with the same duplicate-key rejection,
+then requires exact deterministic checkpoint recomputation before reporting
+success. The orchestrated PowerShell path retains its separate verifier stage as
+an additional independent boundary.
+
 The emitted `XJAVACCHECKPOINT_*` artifact contains only build/source authority
 hashes and IDs, compiler aggregate state, and the redacted comparator summary.
 It does not declare either recovery release ready. Its purpose is to eliminate
