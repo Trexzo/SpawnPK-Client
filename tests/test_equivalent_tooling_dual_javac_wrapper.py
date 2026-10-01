@@ -199,6 +199,25 @@ class EquivalentToolingDualJavacWrapperTests(unittest.TestCase):
             text,
         )
 
+    def test_child_stdout_cannot_pollute_scalar_exit(self):
+        text = self.script_text()
+        self.assertIn(
+            "& powershell.exe @Arguments | Out-Host",
+            text,
+        )
+        self.assertIn(
+            "$Exit = [int]$LASTEXITCODE",
+            text,
+        )
+        self.assertIn(
+            "return [int]$Exit",
+            text,
+        )
+        self.assertNotIn(
+            "& powershell.exe @Arguments\n    $Exit = $LASTEXITCODE",
+            text,
+        )
+
     def test_blocked_children_still_feed_comparator(self):
         text = self.script_text()
         self.assertIn(
