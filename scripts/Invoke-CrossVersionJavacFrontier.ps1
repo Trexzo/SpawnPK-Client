@@ -111,6 +111,10 @@ Require-File $Report
 
 $Summary = Get-Projection -Path $Report -Fields @{
     report_id = "/report_id"
+    old_diagnostic_report_id = "/old_diagnostic_report_id"
+    new_diagnostic_report_id = "/new_diagnostic_report_id"
+    old_diagnostic_input_sha256 = "/old_diagnostic_input_sha256"
+    new_diagnostic_input_sha256 = "/new_diagnostic_input_sha256"
     old_frontier_id = "/old_frontier_id"
     new_frontier_id = "/new_frontier_id"
     identifiers_included = "/identifiers_included"
@@ -137,6 +141,10 @@ Write-Host " CROSS-VERSION JAVAC FRONTIER COMPARISON - PASS" -ForegroundColor Gr
 Write-Host "============================================================" -ForegroundColor Green
 Write-Host "COMPARATOR_COMMIT=$Head"
 Write-Host "REPORT_ID=$($Summary.report_id)"
+Write-Host "V307_DIAGNOSTIC_REPORT_ID=$($Summary.old_diagnostic_report_id)"
+Write-Host "V308_DIAGNOSTIC_REPORT_ID=$($Summary.new_diagnostic_report_id)"
+Write-Host "V307_DIAGNOSTIC_INPUT_SHA256=$($Summary.old_diagnostic_input_sha256)"
+Write-Host "V308_DIAGNOSTIC_INPUT_SHA256=$($Summary.new_diagnostic_input_sha256)"
 Write-Host "V307_FRONTIER=$($Summary.old_frontier_id)"
 Write-Host "V308_FRONTIER=$($Summary.new_frontier_id)"
 Write-Host "V307_ERRORS=$($Summary.old_total_errors)"
