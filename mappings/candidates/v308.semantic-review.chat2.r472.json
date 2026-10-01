@@ -1,0 +1,194 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 7,
+  "review_id": "SEMREVIEW_12B3FFC3AA42BACE2872",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_178B95A6670D55BE583B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000832",
+      "owner_logical_id": "CLIENT_CLASS_000832",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WorldPoint",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "preserved_source_identity",
+          "detail": "Exact v308 toString emits 'WorldPoint(x=..., y=..., plane=...)'; the class is an immutable x/y/plane coordinate value with region/local/world conversion and distance helpers matching RuneLite WorldPoint."
+        },
+        {
+          "family": "exact_value_shape",
+          "detail": "The exact field/accessor/equality/toString surface matches the preserved identity and contains no unrelated behavior."
+        }
+      ],
+      "note": "Name is source-identifying from exact-v308 generated toString/value-object metadata; nested source names are flattened to one Java identifier where required."
+    },
+    {
+      "proposal_id": "SEMPROP_2366C78C8585105159A9",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000821",
+      "owner_logical_id": "CLIENT_CLASS_000821",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/runelite/a/j$c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RectangleUnionRectangle",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "preserved_source_identity",
+          "detail": "Exact v308 toString emits 'RectangleUnion.Rectangle(x1=..., y1=..., x2=..., y2=...)'; historical RuneLite RectangleUnion has the same nested Rectangle value role."
+        },
+        {
+          "family": "exact_value_shape",
+          "detail": "The exact field/accessor/equality/toString surface matches the preserved identity and contains no unrelated behavior."
+        }
+      ],
+      "note": "Name is source-identifying from exact-v308 generated toString/value-object metadata; nested source names are flattened to one Java identifier where required."
+    },
+    {
+      "proposal_id": "SEMPROP_36637A543871801A1D8E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000907",
+      "owner_logical_id": "CLIENT_CLASS_000907",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/f/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorTileMarker",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "preserved_source_identity",
+          "detail": "Exact v308 toString emits 'ColorTileMarker(worldPoint=..., color=..., label=...)'; historical RuneLite groundmarkers ColorTileMarker carries the same WorldPoint/Color/label state."
+        },
+        {
+          "family": "exact_value_shape",
+          "detail": "The exact field/accessor/equality/toString surface matches the preserved identity and contains no unrelated behavior."
+        }
+      ],
+      "note": "Name is source-identifying from exact-v308 generated toString/value-object metadata; nested source names are flattened to one Java identifier where required."
+    },
+    {
+      "proposal_id": "SEMPROP_5E4E2C4B75F10C7A82A1",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000530",
+      "owner_logical_id": "CLIENT_CLASS_000530",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/a/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DropDownOption",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "preserved_source_identity",
+          "detail": "Exact v308 toString emits 'DropDownOption(text=..., tooltip=...)'; the class contains exactly mutable text and tooltip Strings with value-object equality/accessors."
+        },
+        {
+          "family": "exact_value_shape",
+          "detail": "The exact field/accessor/equality/toString surface matches the preserved identity and contains no unrelated behavior."
+        }
+      ],
+      "note": "Name is source-identifying from exact-v308 generated toString/value-object metadata; nested source names are flattened to one Java identifier where required."
+    },
+    {
+      "proposal_id": "SEMPROP_77482C7309BA1D0538C2",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000309",
+      "owner_logical_id": "CLIENT_CLASS_000309",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/j/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CustomMenuEntry",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "preserved_source_identity",
+          "detail": "Exact v308 toString emits 'CustomMenuEntry(text=..., event=...)'; the class contains exactly a String text and one rs/h/b event object with generated value-object methods."
+        },
+        {
+          "family": "exact_value_shape",
+          "detail": "The exact field/accessor/equality/toString surface matches the preserved identity and contains no unrelated behavior."
+        }
+      ],
+      "note": "Name is source-identifying from exact-v308 generated toString/value-object metadata; nested source names are flattened to one Java identifier where required."
+    },
+    {
+      "proposal_id": "SEMPROP_A542C4D21CEE7A35BDBB",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000912",
+      "owner_logical_id": "CLIENT_CLASS_000912",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/f/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GroundMarkerPoint",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "preserved_source_identity",
+          "detail": "Exact v308 toString emits 'GroundMarkerPoint(regionId=..., regionX=..., regionY=..., z=..., color=..., label=...)'; historical RuneLite groundmarkers GroundMarkerPoint uses this serialized marker-point role."
+        },
+        {
+          "family": "exact_value_shape",
+          "detail": "The exact field/accessor/equality/toString surface matches the preserved identity and contains no unrelated behavior."
+        }
+      ],
+      "note": "Name is source-identifying from exact-v308 generated toString/value-object metadata; nested source names are flattened to one Java identifier where required."
+    },
+    {
+      "proposal_id": "SEMPROP_B452EB74572912D62C2B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000892",
+      "owner_logical_id": "CLIENT_CLASS_000892",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/c/e$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DevToolsWidgetOverlayWidgetDisplay",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "preserved_source_identity",
+          "detail": "Exact v308 toString emits 'DevToolsWidgetOverlay.WidgetDisplay(text=..., x=..., y=..., type=...)'; fields are exactly String text, x, y and rs/s/c/h type, fixing the nested WidgetDisplay identity."
+        },
+        {
+          "family": "exact_value_shape",
+          "detail": "The exact field/accessor/equality/toString surface matches the preserved identity and contains no unrelated behavior."
+        }
+      ],
+      "note": "Name is source-identifying from exact-v308 generated toString/value-object metadata; nested source names are flattened to one Java identifier where required."
+    }
+  ],
+  "unresolved": []
+}
