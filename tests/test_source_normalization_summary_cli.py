@@ -156,6 +156,24 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
                 "imported_owner": "rs/k/c/b",
                 "replacement_count": 2,
             },
+            {
+                "kind": "shadowed_same_package_static_method_owner_qualification",
+                "source_path": "rs/l/h.java",
+                "method_name": "a",
+                "method_descriptor": "(Ljava/lang/String;I)V",
+                "simple_owner": "s",
+                "same_package_owner": "rs/l/s",
+                "replacement_count": 21,
+            },
+            {
+                "kind": "scoped_same_package_static_field_owner_qualification",
+                "source_path": "rs/a/a/a.java",
+                "method_name": "a",
+                "method_descriptor": "(Lrs/a/a/Recovered_CLIENT_CLASS_000050;)V",
+                "simple_owner": "b",
+                "same_package_owner": "rs/a/a/b",
+                "replacement_count": 17,
+            },
         ]
         report["summary"].update({
             "primitive_scope_shadowed_self_static_field_method_count": 1,
@@ -164,6 +182,10 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
             "primitive_shadowed_instance_receiver_reference_count": 6,
             "shadowed_imported_static_method_method_count": 1,
             "shadowed_imported_static_method_reference_count": 2,
+            "shadowed_same_package_static_method_method_count": 1,
+            "shadowed_same_package_static_method_reference_count": 21,
+            "scoped_same_package_static_field_method_count": 1,
+            "scoped_same_package_static_field_reference_count": 17,
         })
 
         text = "\n".join(summarize(report, top=10))
@@ -171,6 +193,14 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
         self.assertIn("PRIMITIVE_SCOPE_SELF_SHADOW_REFERENCES=27", text)
         self.assertIn("PRIMITIVE_INSTANCE_RECEIVER_REFERENCES=6", text)
         self.assertIn("IMPORTED_STATIC_METHOD_SHADOW_REFERENCES=2", text)
+        self.assertIn(
+            "SAME_PACKAGE_STATIC_METHOD_SHADOW_REFERENCES=21",
+            text,
+        )
+        self.assertIn(
+            "SCOPED_SAME_PACKAGE_STATIC_FIELD_REFERENCES=17",
+            text,
+        )
         self.assertIn(
             "a(I)V | references=27 | owner=rs/k/i",
             text,
@@ -181,6 +211,16 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
         )
         self.assertIn(
             "a(I)V | references=2 | simple=b | owner=rs/k/c/b",
+            text,
+        )
+        self.assertIn(
+            "a(Ljava/lang/String;I)V | references=21 | "
+            "simple=s | owner=rs/l/s",
+            text,
+        )
+        self.assertIn(
+            "a(Lrs/a/a/Recovered_CLIENT_CLASS_000050;)V | "
+            "references=17 | simple=b | owner=rs/a/a/b",
             text,
         )
 
@@ -342,6 +382,14 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
         )
         self.assertIn(
             "IMPORTED_STATIC_METHOD_SHADOW_REFERENCES=",
+            text,
+        )
+        self.assertIn(
+            "SAME_PACKAGE_STATIC_METHOD_SHADOW_REFERENCES=",
+            text,
+        )
+        self.assertIn(
+            "SCOPED_SAME_PACKAGE_STATIC_FIELD_REFERENCES=",
             text,
         )
 

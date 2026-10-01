@@ -450,6 +450,10 @@ $Recovered = Get-JsonProjection `
         primitive_instance_receiver_reference_count = "/normalization_summary/primitive_shadowed_instance_receiver_reference_count"
         imported_static_method_shadow_method_count = "/normalization_summary/shadowed_imported_static_method_method_count"
         imported_static_method_shadow_reference_count = "/normalization_summary/shadowed_imported_static_method_reference_count"
+        same_package_static_method_shadow_method_count = "/normalization_summary/shadowed_same_package_static_method_method_count"
+        same_package_static_method_shadow_reference_count = "/normalization_summary/shadowed_same_package_static_method_reference_count"
+        scoped_same_package_static_field_method_count = "/normalization_summary/scoped_same_package_static_field_method_count"
+        scoped_same_package_static_field_reference_count = "/normalization_summary/scoped_same_package_static_field_reference_count"
     }
 if ([string]$Recovered.build_id -ne "v308") {
     throw "Recovered workspace is not v308."
@@ -501,6 +505,10 @@ Write-Host "PRIMITIVE_INSTANCE_RECEIVER_METHODS=$($Recovered.primitive_instance_
 Write-Host "PRIMITIVE_INSTANCE_RECEIVER_REFERENCES=$($Recovered.primitive_instance_receiver_reference_count)"
 Write-Host "IMPORTED_STATIC_METHOD_SHADOW_METHODS=$($Recovered.imported_static_method_shadow_method_count)"
 Write-Host "IMPORTED_STATIC_METHOD_SHADOW_REFERENCES=$($Recovered.imported_static_method_shadow_reference_count)"
+Write-Host "SAME_PACKAGE_STATIC_METHOD_SHADOW_METHODS=$($Recovered.same_package_static_method_shadow_method_count)"
+Write-Host "SAME_PACKAGE_STATIC_METHOD_SHADOW_REFERENCES=$($Recovered.same_package_static_method_shadow_reference_count)"
+Write-Host "SCOPED_SAME_PACKAGE_STATIC_FIELD_METHODS=$($Recovered.scoped_same_package_static_field_method_count)"
+Write-Host "SCOPED_SAME_PACKAGE_STATIC_FIELD_REFERENCES=$($Recovered.scoped_same_package_static_field_reference_count)"
 
 $NormalizationSummaryArgs = @(
     "-3.13",
