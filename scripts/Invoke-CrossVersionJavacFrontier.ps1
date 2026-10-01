@@ -135,7 +135,7 @@ Write-Host ""
 Write-Host "============================================================" -ForegroundColor Green
 Write-Host " CROSS-VERSION JAVAC FRONTIER COMPARISON - PASS" -ForegroundColor Green
 Write-Host "============================================================" -ForegroundColor Green
-Write-Host "AUTHORITY_COMMIT=$Head"
+Write-Host "COMPARATOR_COMMIT=$Head"
 Write-Host "REPORT_ID=$($Summary.report_id)"
 Write-Host "V307_FRONTIER=$($Summary.old_frontier_id)"
 Write-Host "V308_FRONTIER=$($Summary.new_frontier_id)"
