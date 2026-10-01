@@ -144,4 +144,32 @@ Both recovery releases were still blocked at clean rebuild during the 350/350
 measurement. This checkpoint proves cross-version compiler parity at that
 tooling authority; it does not satisfy the final release-ready cross-version
 gate.
+## Deterministic public-safe checkpoint export
 
+A successful `Invoke-CrossVersionJavacFrontier.ps1` run now also invokes
+`spk-cross-version-javac-checkpoint` and writes:
+
+`v307-v308-javac-checkpoint.json`
+
+The checkpoint builder does **not** consume either private diagnostic report.
+It accepts only:
+
+- the already-redacted `XJAVACFRONTIER_*` comparison report;
+- the independently regenerated redacted old/new `JAVACBIND_*` reports;
+- the optional `XVERBIN_*` authority for the compared build pair.
+
+Before emitting a checkpoint it independently rederives both `JAVACBIND_*`
+identities and the `XJAVACFRONTIER_*` identity from their public authority
+fields, requires both bindings to use the same recovery-tooling commit, and
+requires each binding's diagnostic report ID, raw-input SHA-256 and frontier
+ID to match the side of the comparator it claims to bind.
+
+The exporter also refuses any comparator family containing `source_path`,
+`message`, `symbol`, or `location`, even if the input incorrectly claims
+`identifiers_included=false`.
+
+The emitted `XJAVACCHECKPOINT_*` artifact contains only build/source authority
+hashes and IDs, compiler aggregate state, and the redacted comparator summary.
+It does not declare either recovery release ready. Its purpose is to eliminate
+manual transcription when promoting an exact-local measurement into a reviewed
+public checkpoint.
