@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_B5CFE0CA554AD6C30195",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_15FB63AA5FFFAD8AA88B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000595",
+      "owner_logical_id": "CLIENT_CLASS_000595",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner": "rs/n/c/aT", "name": null, "descriptor": null},
+      "proposed_name": "DualOptionSelectionInterface",
+      "confidence": 0.998,
+      "evidence": [
+        {"family": "exact_root_extension", "detail": "Exact v308 rs/n/c/aT obtains existing root widget 6960 and rewrites its six-child layout to include two newly created selectable option widgets plus the existing supporting children."},
+        {"family": "exact_dual_option_contract", "detail": "It creates widget 30583 labelled '1' and widget 30584 labelled '2'; both use action text 'Select option', are marked interactive, and are positioned as the final two children of root 6960."},
+        {"family": "exact_close_control", "detail": "The builder also creates widget 6961 with text 'Close Window' and action 'Close', fixing the class as a self-contained two-option selection interface extension."},
+        {"family": "exact_domain_boundary", "detail": "The class shares no teleport roots/assets with adjacent R6 TeleportSelectionInterface and no surviving exact-v308 literal, resource or historical-source match identifies a narrower feature noun, so adjacency is not used as semantic authority."}
+      ],
+      "note": "Descriptive exact-v308 name for the two-option selector grafted onto root 6960. The original feature/domain noun is intentionally withheld."
+    },
+    {
+      "proposal_id": "SEMPROP_D7BACD6E795EE2850CFF",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000576",
+      "owner_logical_id": "CLIENT_CLASS_000576",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner": "rs/n/c/aA", "name": null, "descriptor": null},
+      "proposed_name": "ToggleOptionSelectionInterface",
+      "confidence": 0.998,
+      "evidence": [
+        {"family": "exact_option_surface", "detail": "Exact v308 rs/n/c/aA creates exactly eighteen numbered interactive widgets (1..18), each with action text 'Select option' and the invokedynamic tooltip recipe 'Selecting this option Toggle N'."},
+        {"family": "exact_dual_root_layout", "detail": "The builder lays the same eighteen option widget IDs 53501..53518 into exact roots 53500 and 53519 using two distinct fixed layouts, proving a reusable toggle-option selection surface rather than a passive label panel."},
+        {"family": "exact_owner_boundary", "detail": "The class has no fields and no unrelated behavior beyond constructing and positioning the eighteen selectable toggle widgets; exact-v308 constant-pool scanning finds roots 53500 and 53519 owned by this class."},
+        {"family": "exact_domain_boundary", "detail": "No surviving exact-v308 literal, resource path, caller or historical-source match identifies the feature-specific noun behind the two roots, so the name remains behavior-descriptive."}
+      ],
+      "note": "Descriptive exact-v308 name for the eighteen-option toggle selection builder. The lost product/feature noun is intentionally not guessed."
+    }
+  ],
+  "unresolved": []
+}
