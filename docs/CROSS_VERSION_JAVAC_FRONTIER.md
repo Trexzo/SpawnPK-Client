@@ -32,6 +32,10 @@ frontier and diagnostic report identities are rederived from its authority
 fields before comparison, so stale or internally inconsistent diagnostic JSON
 is refused without exposing its raw identifiers.
 
+The comparator CLI parses both private diagnostic inputs with recursive
+duplicate-key rejection before any authority derivation. Ambiguous JSON cannot
+therefore rely on last-key-wins parser behavior to enter the comparison.
+
 ## Build binding
 
 `spk-javac-build-binding` closes the separate build-identity boundary. It
@@ -49,6 +53,9 @@ binds one private diagnostic report to the exact
 The emitted `JAVACBIND_*` report contains the recovery-tooling commit plus
 build/source authority IDs, hashes and aggregate state. It never emits source paths, symbols, locations or
 raw diagnostic messages.
+
+The binding CLI applies the same recursive duplicate-key rejection to both
+the private diagnostic and clean-rebuild JSON before constructing authority.
 
 ## Boundary
 
