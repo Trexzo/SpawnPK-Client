@@ -10,6 +10,7 @@ import unittest
 from spk_recovery.cross_version_javac_legacy_baseline_delta import (
     CrossVersionJavacLegacyBaselineDeltaError,
     build_cross_version_javac_legacy_baseline_delta,
+    verify_cross_version_javac_legacy_baseline_delta,
 )
 from spk_recovery.cross_version_javac_legacy_baseline_delta_cli import _load
 
@@ -336,6 +337,54 @@ class CrossVersionJavacLegacyBaselineDeltaTests(unittest.TestCase):
         ):
             build_cross_version_javac_legacy_baseline_delta(
                 self.baseline,
+                bad,
+            )
+
+    def test_verifier_accepts_exact_emitted_delta(self):
+        report = build_cross_version_javac_legacy_baseline_delta(
+            self.baseline,
+            self.current,
+        )
+        verified = verify_cross_version_javac_legacy_baseline_delta(
+            self.baseline,
+            self.current,
+            report,
+        )
+        self.assertEqual(verified, report)
+
+    def test_verifier_rejects_mutated_emitted_delta(self):
+        report = build_cross_version_javac_legacy_baseline_delta(
+            self.baseline,
+            self.current,
+        )
+        mutations = (
+            ("delta_id", "XJAVACLEGACYDELTA_" + "F" * 20),
+            ("identifiers_included", True),
+            ("note", "mutated"),
+        )
+        for key, value in mutations:
+            with self.subTest(key=key):
+                bad = copy.deepcopy(report)
+                bad[key] = value
+                with self.assertRaisesRegex(
+                    CrossVersionJavacLegacyBaselineDeltaError,
+                    "does not match deterministic recomputation",
+                ):
+                    verify_cross_version_javac_legacy_baseline_delta(
+                        self.baseline,
+                        self.current,
+                        bad,
+                    )
+
+        bad = copy.deepcopy(report)
+        bad["scalar_delta"]["old_total_errors"] -= 1
+        with self.assertRaisesRegex(
+            CrossVersionJavacLegacyBaselineDeltaError,
+            "does not match deterministic recomputation",
+        ):
+            verify_cross_version_javac_legacy_baseline_delta(
+                self.baseline,
+                self.current,
                 bad,
             )
 

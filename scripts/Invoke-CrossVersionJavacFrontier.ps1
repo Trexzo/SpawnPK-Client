@@ -353,6 +353,23 @@ if ($LegacyDeltaExit -ne 0) {
 }
 Require-File $LegacyBaselineDelta
 
+$LegacyVerifyArguments = @(
+    "-3.13",
+    "-m",
+    "spk_recovery.cross_version_javac_legacy_baseline_delta_verify_cli",
+    $LegacyBaselineFixture,
+    $Checkpoint,
+    $LegacyBaselineDelta
+)
+
+Write-Host ""
+Write-Host "=== VERIFY EMITTED LEGACY BASELINE DELTA ===" -ForegroundColor Cyan
+& py @LegacyVerifyArguments
+$LegacyVerifyExit = $LASTEXITCODE
+if ($LegacyVerifyExit -ne 0) {
+    throw "Legacy 350 baseline delta verification failed with exit=$LegacyVerifyExit"
+}
+
 $LegacyDeltaSummary = Get-Projection -Path $LegacyBaselineDelta -Fields @{
     delta_id = "/delta_id"
     baseline_fixture_id = "/baseline_fixture_id"
