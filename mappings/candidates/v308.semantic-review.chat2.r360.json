@@ -4,72 +4,38 @@
   "canonical": false,
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-  "proposal_count": 2,
-  "review_id": "SEMREVIEW_4FF376C1639DAAA1461C",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_E123BF4BBAC74B4920B0",
   "proposals": [
     {
-      "proposal_id": "SEMPROP_B34CFE49FF674C6FD152",
+      "proposal_id": "SEMPROP_E2223B217B614818EB9E",
       "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000518",
-      "owner_logical_id": "CLIENT_CLASS_000518",
+      "stable_id": "CLIENT_CLASS_000282",
+      "owner_logical_id": "CLIENT_CLASS_000282",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "source_coordinate": {
-        "owner": "rs/l/y",
+        "owner": "rs/gui/u$a",
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "InlineLabeledImageMarkup",
+      "proposed_name": "WindowBoundsConstraintMode",
       "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_markup_syntax",
-          "detail": "Exact v308 recognizes <timg=...> and requires the matching </timg> closing tag, caching the parsed span result by source identity and indexes."
+          "family": "exact_enum_values",
+          "detail": "The enum contains exactly ALWAYS, RESIZING and NEVER."
         },
         {
-          "family": "exact_image_style_composition",
-          "detail": "The timg opening payload is parsed through the shared rs/l/o image-style specification before the closing-tag contents are captured as the inner label text."
+          "family": "exact_frame_consumer",
+          "detail": "R354 LauncherWindowFrame stores this enum and uses it to decide when setLocation/setBounds and width-change paths clamp geometry to the active GraphicsConfiguration bounds."
         },
         {
-          "family": "exact_font_rendering",
-          "detail": "R55 RSFont resolves the parsed sprite id, applies the shared resize/recolor style transform, draws the sprite inline, then—when the captured inner text is non-empty—renders that text centered inside the sprite while preserving/restoring font state."
-        },
-        {
-          "family": "exact_layout_contract",
-          "detail": "The parsed image width plus style padding participates directly in RSFont text width/position calculations, proving this is inline labeled-image markup rather than an unrelated sprite loader."
+          "family": "exact_policy_boundary",
+          "detail": "The enum owns no display text or unrelated state; its sole role is controlling when launcher-window bounds constraints are applied."
         }
       ],
-      "note": "Descriptive exact-v308 name for <timg=...>label</timg> inline sprite markup with optional centered label text."
-    },
-    {
-      "proposal_id": "SEMPROP_F3C7D17D362999219914",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000519",
-      "owner_logical_id": "CLIENT_CLASS_000519",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/l/y$a",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "InlineLabeledImageSpec",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_parsed_state",
-          "detail": "The immutable record stores the resolved image id, style/padding state from rs/l/o$a, captured inner label text and the end index after </timg>."
-        },
-        {
-          "family": "exact_renderer_consumption",
-          "detail": "R55 RSFont consumes every field to resolve/style the Sprite, position it in the text line, render the optional centered label and advance past the complete timg span."
-        },
-        {
-          "family": "exact_owner_scope",
-          "detail": "The record is created only by InlineLabeledImageMarkup and has no independent parsing/rendering behavior."
-        }
-      ],
-      "note": "Descriptive exact-v308 name for one parsed timg inline labeled-image span."
+      "note": "Descriptive exact-v308 name for LauncherWindowFrame's monitor-bounds constraint policy."
     }
   ],
   "unresolved": []
