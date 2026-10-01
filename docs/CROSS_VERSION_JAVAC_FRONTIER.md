@@ -26,6 +26,12 @@ distributions. By default, raw identifiers and source paths are removed from
 the output and replaced by report-local ordinal IDs. Use
 `--include-identifiers` only for a private diagnostic artifact.
 
+The report also binds the exact private diagnostic inputs by their
+`JAVACDIAG_*` report IDs and raw javac-log SHA-256 values. Each input's
+frontier and diagnostic report identities are rederived from its authority
+fields before comparison, so stale or internally inconsistent diagnostic JSON
+is refused without exposing its raw identifiers.
+
 ## Boundary
 
 A high overlap is evidence that a Source M1 defect family generalizes across
@@ -56,7 +62,8 @@ v308 Source-M1 exact-local diagnostic from their standard desktop output
 locations. The wrapper requires a clean checkout at exact `origin/main` and
 refuses any final report with `identifiers_included=true`.
 
-The wrapper only compares the two supplied compiler frontiers. It does not
-claim that either input was produced at the same repository commit; provenance
-for each underlying Source-M1 run remains the responsibility of that run's
-own authority/release artifacts.
+The wrapper surfaces the bound old/new diagnostic report IDs and raw-log
+SHA-256 values alongside the overlap metrics. It only compares the two
+supplied compiler frontiers and does not claim that either input was produced
+at the same repository commit; provenance for each underlying Source-M1 run
+remains the responsibility of that run's own authority/release artifacts.
