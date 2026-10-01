@@ -8,8 +8,8 @@ Exact client authority:
 
 - `rs/j/b/b` -> `CLIENT_CLASS_000309` -> `CustomMenuEntry`
 - `rs/l/f/f` -> `CLIENT_CLASS_000487` -> `OverlayMenuEntry`
-- `rs/s/b/n` -> `CLIENT_CLASS_000830` -> `PluginConfigurationDescriptor`
-- review: `SEMREVIEW_8679F3B92A8DE2D1CB50`
+- `rs/s/b/n` -> `CLIENT_CLASS_000874` -> `PluginConfigurationDescriptor`
+- review: `SEMREVIEW_A32F02B1FF9B7F11CAF4`
 
 All three names survive verbatim in exact-v308 self-identifying `toString()` templates.
 

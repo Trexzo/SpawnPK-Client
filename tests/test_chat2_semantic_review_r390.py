@@ -5,7 +5,7 @@ from spk_recovery.semantic_review import resolve_semantic_candidates
 
 SHA="854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 ROOT=Path(__file__).resolve().parents[1]
-CLASS_COORDS=[["CLIENT_CLASS_000309","rs/j/b/b"],["CLIENT_CLASS_000487","rs/l/f/f"],["CLIENT_CLASS_000830","rs/s/b/n"]]
+CLASS_COORDS=[["CLIENT_CLASS_000309","rs/j/b/b"],["CLIENT_CLASS_000487","rs/l/f/f"],["CLIENT_CLASS_000874","rs/s/b/n"]]
 
 def _class_lineage():
     classes=[]
@@ -25,12 +25,12 @@ class Chat2SemanticReviewR390Tests(unittest.TestCase):
         expected=_load("mappings/candidates/v308.semantic-review.chat2.r390.json")
         self.assertEqual(actual["proposal_count"],3)
         self.assertEqual(actual["unresolved"],[])
-        self.assertEqual(actual["review_id"],"SEMREVIEW_8679F3B92A8DE2D1CB50")
+        self.assertEqual(actual["review_id"],"SEMREVIEW_A32F02B1FF9B7F11CAF4")
         self.assertEqual(actual,expected)
 
     def test_r390_expected_stable_ids(self):
         review=_load("mappings/candidates/v308.semantic-review.chat2.r390.json")
-        self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"CustomMenuEntry":"CLIENT_CLASS_000309","OverlayMenuEntry":"CLIENT_CLASS_000487","PluginConfigurationDescriptor":"CLIENT_CLASS_000830"})
+        self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"CustomMenuEntry":"CLIENT_CLASS_000309","OverlayMenuEntry":"CLIENT_CLASS_000487","PluginConfigurationDescriptor":"CLIENT_CLASS_000874"})
 
     def test_r390_names_owners_and_ids_do_not_overlap_prior_reviews(self):
         current=_load("mappings/candidates/v308.semantic-review.chat2.r390.json")

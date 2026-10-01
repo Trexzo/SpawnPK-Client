@@ -5,13 +5,13 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 3,
-  "review_id": "SEMREVIEW_8679F3B92A8DE2D1CB50",
+  "review_id": "SEMREVIEW_A32F02B1FF9B7F11CAF4",
   "proposals": [
     {
-      "proposal_id": "SEMPROP_4F9B591C36984339EEB9",
+      "proposal_id": "SEMPROP_4A6A68B5C0A632FC57E5",
       "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000830",
-      "owner_logical_id": "CLIENT_CLASS_000830",
+      "stable_id": "CLIENT_CLASS_000874",
+      "owner_logical_id": "CLIENT_CLASS_000874",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "source_coordinate": {
