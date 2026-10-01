@@ -35,6 +35,10 @@ class HistoricalV305LineageProbeWrapperTests(unittest.TestCase):
             text,
         )
         self.assertIn(
+            '$CrossVersionExpectations = Join-Path $Repo',
+            text,
+        )
+        self.assertIn(
             "spk_recovery.cross_version_binary_delta_cli",
             text,
         )
