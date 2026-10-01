@@ -5,10 +5,10 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 2,
-  "review_id": "SEMREVIEW_2C02DF701BB8B1FC8FAF",
+  "review_id": "SEMREVIEW_5F8AE08D745D419CDB40",
   "proposals": [
     {
-      "proposal_id": "SEMPROP_B9B9989135C96B51D6EA",
+      "proposal_id": "SEMPROP_0E86D1B35EBE3B1F6A4B",
       "target_kind": "class",
       "stable_id": "CLIENT_CLASS_000009",
       "owner_logical_id": "CLIENT_CLASS_000009",
@@ -19,30 +19,26 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "ColorGsonAdapter",
+      "proposed_name": "ColorTypeAdapter",
       "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_interface_contract",
-          "detail": "rs/A/f implements the Gson JsonSerializer<Color> and JsonDeserializer<Color> contracts directly for java.awt.Color."
+          "family": "exact_gson_color_contract",
+          "detail": "Exact v308 rs/A/f implements Gson JsonSerializer<Color> and JsonDeserializer<Color>; it reads integer field 'value' into java.awt.Color and writes 'value'=getRGB() plus 'falpha'=0.0."
         },
         {
-          "family": "exact_serialization_shape",
-          "detail": "Serialization writes a JSON object containing the exact key value from Color.getRGB(), plus falpha=0.0; deserialization requires an object with value and reconstructs java.awt.Color from that integer."
+          "family": "upstream_runelite_source_identity",
+          "detail": "RuneLite ColorTypeAdapter uses the same java.awt.Color Gson adapter contract and exact JSON shape, including 'value' and 'falpha'."
         },
         {
-          "family": "exact_runtime_registration",
-          "detail": "The client Guice/Gson module rs/p/b constructs rs/A/f and registers it as the type adapter for java.awt.Color before creating the shared Gson instance."
-        },
-        {
-          "family": "exact_runtime_consumer",
-          "detail": "That shared Gson instance is bound by the module and consumed by the configuration/plugin infrastructure, so this adapter is live runtime configuration serialization rather than an isolated helper."
+          "family": "source_name_upgrade",
+          "detail": "ColorTypeAdapter is stronger historical source identity than the earlier descriptive R82 name ColorGsonAdapter."
         }
       ],
-      "note": "ColorGsonAdapter is the conservative semantic name for this exact java.awt.Color Gson serializer/deserializer. It does not claim a verbatim original developer identifier."
+      "note": "R82 corrected from descriptive ColorGsonAdapter to historical RuneLite source identity ColorTypeAdapter."
     },
     {
-      "proposal_id": "SEMPROP_E51EF389A42E35EB24EE",
+      "proposal_id": "SEMPROP_B00BB608A10D5C530952",
       "target_kind": "class",
       "stable_id": "CLIENT_CLASS_000018",
       "owner_logical_id": "CLIENT_CLASS_000018",
@@ -53,27 +49,23 @@
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "MacOSWindowUtil",
+      "proposed_name": "OSXUtil",
       "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_platform_api",
-          "detail": "rs/A/o is entirely built around com.apple.eawt Application and FullScreenUtilities APIs and first gates fullscreen setup on the client's macOS platform enum."
+          "family": "exact_macos_utility_contract",
+          "detail": "Exact v308 rs/A/o conditionally enables Apple native fullscreen, installs the fullscreen adapter, requests user attention and forces application foreground/focus."
         },
         {
-          "family": "exact_fullscreen_role",
-          "detail": "Its JFrame helper installs R21 OSXFullScreenAdapter, enables native fullscreen, and preserves the exact diagnostic \"Enabled fullscreen on macOS\"."
+          "family": "exact_surviving_literals",
+          "detail": "Diagnostics include 'Enabled fullscreen on macOS', 'Requested user attention on macOS' and 'Forced focus on macOS'."
         },
         {
-          "family": "exact_focus_attention_role",
-          "detail": "The two no-arg helpers call Application.requestUserAttention(true) and Application.requestForeground(true), preserving the exact diagnostics \"Requested user attention on macOS\" and \"Forced focus on macOS\"."
-        },
-        {
-          "family": "exact_runtime_consumers",
-          "detail": "The live UI shell rs/ui/f calls the attention/focus helpers for notification focus behavior, while the GUI frame path calls the fullscreen/focus helper; this is active platform-window plumbing."
+          "family": "upstream_runelite_source_identity",
+          "detail": "Historical RuneLite OSXUtil contains the same Apple EAWT helper surface and exact fullscreen diagnostic, making OSXUtil stronger than the earlier descriptive R82 name MacOSWindowUtil."
         }
       ],
-      "note": "MacOSWindowUtil is the conservative semantic name for this exact macOS fullscreen, focus and user-attention helper. It does not claim a verbatim original developer identifier."
+      "note": "R82 corrected from descriptive MacOSWindowUtil to historical RuneLite source identity OSXUtil."
     }
   ],
   "unresolved": []
