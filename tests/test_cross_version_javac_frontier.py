@@ -8,6 +8,7 @@ from spk_recovery.cross_version_javac_frontier import (
     CrossVersionJavacFrontierError,
     compare_javac_frontiers,
 )
+from spk_recovery.javac_diagnostics import classify_javac_diagnostics
 
 
 def _digest(value: object) -> str:
@@ -374,6 +375,39 @@ class CrossVersionJavacFrontierTests(unittest.TestCase):
             "frontier authority",
         ):
             compare_javac_frontiers(old, new)
+
+    def test_accepts_real_private_diagnostic_reports(self):
+        old_raw = (
+            "/old/src/rs/A.java:10: error: cannot find symbol\n"
+            "  symbol:   variable hidden\n"
+            "  location: class A\n"
+        )
+        new_raw = (
+            "/new/src/rs/A.java:10: error: cannot find symbol\n"
+            "  symbol:   variable hidden\n"
+            "  location: class A\n"
+        )
+        old = classify_javac_diagnostics(
+            old_raw,
+            include_identifiers=True,
+        )
+        new = classify_javac_diagnostics(
+            new_raw,
+            include_identifiers=True,
+        )
+
+        value = compare_javac_frontiers(old, new)
+        self.assertEqual(value["summary"]["shared_errors"], 1)
+        self.assertEqual(value["summary"]["old_only_errors"], 0)
+        self.assertEqual(value["summary"]["new_only_errors"], 0)
+        self.assertEqual(
+            value["old_diagnostic_report_id"],
+            old["report_id"],
+        )
+        self.assertEqual(
+            value["new_diagnostic_report_id"],
+            new["report_id"],
+        )
 
 
 if __name__ == "__main__":
