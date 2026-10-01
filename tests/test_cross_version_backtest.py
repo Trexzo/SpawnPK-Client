@@ -1,9 +1,14 @@
 import copy
+from pathlib import Path
+import tempfile
 import unittest
 
 from spk_recovery.cross_version_backtest import (
     CrossVersionBacktestError,
     build_cross_version_backtest,
+)
+from spk_recovery.cross_version_backtest_cli import (
+    _load as _backtest_load,
 )
 
 
@@ -406,6 +411,20 @@ class CrossVersionBacktestTests(unittest.TestCase):
                 _semantic(),
                 expectations={"invented_metric": 1},
             )
+
+
+    def test_cli_loader_rejects_duplicate_json_keys(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "duplicate.json"
+            path.write_text(
+                '{"kind":"a","kind":"b"}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                CrossVersionBacktestError,
+                "duplicate JSON key: 'kind'",
+            ):
+                _backtest_load(path)
 
 
 if __name__ == "__main__":
