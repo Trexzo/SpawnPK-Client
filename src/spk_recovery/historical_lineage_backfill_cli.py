@@ -33,6 +33,7 @@ def main() -> int:
     p.add_argument("v308_index", type=Path)
     p.add_argument("class_lineage", type=Path)
     p.add_argument("member_lineage", type=Path)
+    p.add_argument("fixture", type=Path)
     p.add_argument("--out-dir", type=Path, required=True)
     args = p.parse_args()
 
@@ -43,6 +44,7 @@ def main() -> int:
             _load(args.v308_index),
             _load(args.class_lineage),
             _load(args.member_lineage),
+            _load(args.fixture),
             out_dir=args.out_dir,
         )
     except (
@@ -90,6 +92,15 @@ def main() -> int:
         "field_proof_applied="
         + str(
             report["field_proof_summary"].get(
+                "applied_fields",
+                0,
+            )
+        )
+    )
+    print(
+        "historical_field_carry_applied="
+        + str(
+            report["historical_field_carry_summary"].get(
                 "applied_fields",
                 0,
             )
