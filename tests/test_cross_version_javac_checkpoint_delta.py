@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from spk_recovery.cross_version_javac_checkpoint import _stable_digest
 from spk_recovery.cross_version_javac_checkpoint_delta import (
@@ -13,7 +14,10 @@ from spk_recovery.cross_version_javac_checkpoint_delta import (
     verify_cross_version_javac_checkpoint_delta,
     write_cross_version_javac_checkpoint_delta,
 )
-from spk_recovery.cross_version_javac_checkpoint_delta_cli import _load
+from spk_recovery.cross_version_javac_checkpoint_delta_cli import (
+    _load,
+    main as checkpoint_delta_main,
+)
 from spk_recovery.cross_version_javac_checkpoint_delta_verify_cli import (
     _load as _verify_load,
 )
@@ -634,6 +638,82 @@ class CrossVersionJavacCheckpointDeltaTests(unittest.TestCase):
                 "duplicate JSON key: 'schema_version'",
             ):
                 _load(path)
+
+
+    def test_cli_reloads_and_verifies_written_delta(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            baseline = root / "baseline.json"
+            current = root / "current.json"
+            out = root / "delta.json"
+            baseline.write_text(
+                json.dumps(self.baseline, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            current.write_text(
+                json.dumps(self.current, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+
+            with patch(
+                "sys.argv",
+                [
+                    "spk-cross-version-javac-checkpoint-delta",
+                    str(baseline),
+                    str(current),
+                    "--out",
+                    str(out),
+                ],
+            ):
+                self.assertEqual(checkpoint_delta_main(), 0)
+
+            emitted = _load(out)
+            expected = build_cross_version_javac_checkpoint_delta(
+                self.baseline,
+                self.current,
+            )
+            self.assertEqual(emitted, expected)
+
+    def test_cli_fails_closed_when_written_delta_is_corrupted(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            baseline = root / "baseline.json"
+            current = root / "current.json"
+            out = root / "delta.json"
+            baseline.write_text(
+                json.dumps(self.baseline, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            current.write_text(
+                json.dumps(self.current, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+
+            def corrupt_write(report, path):
+                bad = copy.deepcopy(report)
+                bad["delta_id"] = "XJAVACCHECKDELTA_" + "0" * 20
+                path.write_text(
+                    json.dumps(bad, sort_keys=True) + "\n",
+                    encoding="utf-8",
+                )
+
+            with patch(
+                "spk_recovery.cross_version_javac_checkpoint_delta_cli."
+                "write_cross_version_javac_checkpoint_delta",
+                side_effect=corrupt_write,
+            ), patch(
+                "sys.argv",
+                [
+                    "spk-cross-version-javac-checkpoint-delta",
+                    str(baseline),
+                    str(current),
+                    "--out",
+                    str(out),
+                ],
+            ):
+                with self.assertRaises(SystemExit) as raised:
+                    checkpoint_delta_main()
+                self.assertEqual(raised.exception.code, 2)
 
 
     def test_rejects_recomputed_stale_binding_identity(self):

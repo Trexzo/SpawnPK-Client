@@ -8,6 +8,7 @@ from typing import Any
 from .cross_version_javac_checkpoint_delta import (
     CrossVersionJavacCheckpointDeltaError,
     build_cross_version_javac_checkpoint_delta,
+    verify_cross_version_javac_checkpoint_delta,
     write_cross_version_javac_checkpoint_delta,
 )
 
@@ -58,6 +59,11 @@ def main() -> int:
             _load(args.current_checkpoint),
         )
         write_cross_version_javac_checkpoint_delta(report, args.out)
+        report = verify_cross_version_javac_checkpoint_delta(
+            _load(args.baseline_checkpoint),
+            _load(args.current_checkpoint),
+            _load(args.out),
+        )
     except CrossVersionJavacCheckpointDeltaError as exc:
         parser.error(str(exc))
 
@@ -87,6 +93,7 @@ def main() -> int:
                     "exact_frontier_equality_transition"
                 ],
                 "identifiers_included": report["identifiers_included"],
+                "verified": True,
                 "out": str(args.out),
             },
             sort_keys=True,

@@ -208,7 +208,14 @@ stable cross-run diagnostic-family identity, so the delta report does **not**
 claim which exact diagnostic families disappeared or appeared.
 
 
-After writing a modern checkpoint delta, use the independent verifier:
+The primary `spk-cross-version-javac-checkpoint-delta` generator now
+reloads the baseline checkpoint, current checkpoint, and just-written output
+with duplicate-key rejection, then deterministically recomputes the expected
+`XJAVACCHECKDELTA_*` report before it prints success. A corrupted or drifting
+post-write artifact therefore fails closed in the generation command itself.
+
+For a later independent audit of an already-emitted delta, the verifier remains
+available:
 
 ```powershell
 py -3.13 -m spk_recovery.cross_version_javac_checkpoint_delta_verify_cli `
@@ -217,11 +224,10 @@ py -3.13 -m spk_recovery.cross_version_javac_checkpoint_delta_verify_cli `
   .\checkpoint-delta.json
 ```
 
-The verifier reloads all three JSON artifacts with duplicate-key rejection,
-recomputes the expected `XJAVACCHECKDELTA_*` report from the two checkpoint
-inputs, and requires exact report equality. This protects the emitted delta ID,
-scalar/category deltas, authority IDs, transition flags, redaction state, and
-note text from post-write drift before the artifact is promoted or consumed.
+The verifier performs the same exact recomputation boundary without regenerating
+the artifact. Together these paths protect the emitted delta ID, scalar/category
+deltas, authority IDs, transition flags, redaction state, and note text from
+post-write drift before the artifact is promoted or consumed.
 
 ## Legacy 350/350 baseline bridge
 
