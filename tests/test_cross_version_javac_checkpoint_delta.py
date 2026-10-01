@@ -51,9 +51,9 @@ def _summary(
         "old_affected_files": old_files,
         "new_affected_files": new_files,
         "shared_affected_files": shared_files,
-        "old_categories": old_categories,
-        "new_categories": new_categories,
-        "shared_categories": shared_categories,
+        "old_categories": dict(old_categories),
+        "new_categories": dict(new_categories),
+        "shared_categories": dict(shared_categories),
         "old_only_categories": old_only_categories,
         "new_only_categories": new_only_categories,
         "exact_frontier_equal": exact,
@@ -247,6 +247,23 @@ class CrossVersionJavacCheckpointDeltaTests(unittest.TestCase):
     def test_rejects_authority_pair_drift(self):
         bad = copy.deepcopy(self.current)
         bad["old"]["source_authority_sha256"] = "9" * 64
+        binding_material = {
+            "tooling_commit": bad["tooling_commit"],
+            "build_id": bad["old"]["build_id"],
+            "source_authority_sha256": bad["old"]["source_authority_sha256"],
+            "rebuild_id": bad["old"]["rebuild_id"],
+            "workspace_id": bad["old"]["workspace_id"],
+            "source_tree_sha256": bad["old"]["source_tree_sha256"],
+            "diagnostic_report_id": bad["old"]["diagnostic_report_id"],
+            "diagnostic_input_sha256": bad["old"]["diagnostic_input_sha256"],
+            "frontier_id": bad["old"]["frontier_id"],
+            "project_binary_fallback_count": 0,
+            "clean_rebuild_status": bad["old"]["clean_rebuild_status"],
+            "clean_project_build": bad["old"]["clean_project_build"],
+        }
+        bad["old"]["binding_id"] = (
+            "JAVACBIND_" + _stable_digest(binding_material)[:20].upper()
+        )
         material = {
             "tooling_commit": bad["tooling_commit"],
             "binary_backtest_id": bad["binary_backtest_id"],
@@ -268,7 +285,9 @@ class CrossVersionJavacCheckpointDeltaTests(unittest.TestCase):
 
     def test_rejects_stale_checkpoint_identity(self):
         bad = copy.deepcopy(self.current)
-        bad["comparison"]["summary"]["old_total_errors"] -= 1
+        bad["comparison"]["report_id"] = (
+            "XJAVACFRONTIER_" + "9" * 20
+        )
         with self.assertRaisesRegex(
             CrossVersionJavacCheckpointDeltaError,
             "checkpoint ID does not match public authority",
