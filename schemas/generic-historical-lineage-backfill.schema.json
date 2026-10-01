@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/generic-historical-lineage-backfill.schema.json",
+  "title": "SpawnPK generic historical lineage backfill",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "backfill_id",
+    "current_build_id",
+    "historical_build_id",
+    "current_sha256",
+    "historical_sha256",
+    "scope_prefix",
+    "migration_workspace_id",
+    "authority_report_id",
+    "ready_for_authority",
+    "class_match_summary",
+    "class_transfer_summary",
+    "member_transfer_summary",
+    "field_proof_summary",
+    "focused_analysis_items",
+    "blockers",
+    "authority_summary",
+    "missing_classes",
+    "missing_members",
+    "blocking_class_unresolved",
+    "blocking_member_unresolved",
+    "paths",
+    "note"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "generic_historical_lineage_backfill"},
+    "backfill_id": {
+      "type": "string",
+      "pattern": "^HISTGEN_[0-9A-F]{20}$"
+    },
+    "current_build_id": {"type": "string", "minLength": 1},
+    "historical_build_id": {"type": "string", "minLength": 1},
+    "current_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "historical_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "scope_prefix": {"type": "string"},
+    "migration_workspace_id": {
+      "type": "string",
+      "pattern": "^MIGWORK_[0-9A-F]{20}$"
+    },
+    "authority_report_id": {
+      "type": "string",
+      "pattern": "^AUTHCAND_[0-9A-F]{20}$"
+    },
+    "ready_for_authority": {"type": "boolean"},
+    "class_match_summary": {"type": "object"},
+    "class_transfer_summary": {"type": "object"},
+    "member_transfer_summary": {"type": "object"},
+    "field_proof_summary": {"type": "object"},
+    "focused_analysis_items": {"type": "integer", "minimum": 0},
+    "blockers": {"type": "array"},
+    "authority_summary": {"type": "object"},
+    "missing_classes": {"type": "array"},
+    "missing_members": {"type": "array"},
+    "blocking_class_unresolved": {"type": "array"},
+    "blocking_member_unresolved": {"type": "array"},
+    "paths": {"type": "object"},
+    "note": {"type": "string"}
+  },
+  "additionalProperties": false
+}
