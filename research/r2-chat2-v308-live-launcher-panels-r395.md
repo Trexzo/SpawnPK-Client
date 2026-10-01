@@ -4,11 +4,17 @@ Exact client authority:
 
 `854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`
 
-## Result
+## Corrected retained result
 
 - `rs/gui/E` -> `CLIENT_CLASS_000188` -> `ClientViewportPanel`
+- review: `SEMREVIEW_EB60905443023635BE59`
+
+The earlier stale-branch R395 draft also repeated:
+
 - `rs/gui/L` -> `CLIENT_CLASS_000195` -> `ClientSidebarTabChangeListener`
-- review: `SEMREVIEW_17A28801248FFC49896B`
+
+That proposal is removed here because **R372 already owns the exact same class/name/stable ID**.
+R395 therefore retains only its unique viewport-panel recovery.
 
 ## ClientViewportPanel
 
@@ -22,18 +28,9 @@ Launcher then places this panel in the main Swing shell beside R145
 
 That fixes the role as the central live client viewport host.
 
-## ClientSidebarTabChangeListener
+## Boundary
 
-R145 `ClientSidebarPanel` owns one JTabbedPane and installs `rs/gui/L` as its
-ChangeListener.
-
-On every stateChanged event the listener reads the selected tab index and calls the
-Launcher's relayout/refresh path.
-
-The listener owns no feature-specific tab behavior.
-
-## Withheld nearby classes
-
+- R372 remains authoritative for `ClientSidebarTabChangeListener`.
 - `rs/gui/B`: stale timer ActionListener; current Launcher uses an invokedynamic listener.
 - `rs/gui/F`: effectively empty JPanel shell.
 - `rs/gui/K`: inert MouseAdapter.
