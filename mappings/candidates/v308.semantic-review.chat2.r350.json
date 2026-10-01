@@ -4,25 +4,43 @@
   "canonical": false,
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-  "proposal_count": 1,
-  "review_id": "SEMREVIEW_CDE25DFEBEFB618396DD",
-  "proposals": [{
-    "proposal_id": "SEMPROP_AA02B66A159291F2A957",
-    "target_kind": "class",
-    "stable_id": "CLIENT_CLASS_000080",
-    "owner_logical_id": "CLIENT_CLASS_000080",
-    "source_build": "v308",
-    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-    "source_coordinate": {"owner":"rs/c/a/a","name":null,"descriptor":null},
-    "proposed_name": "OldSchoolObjectModelOverrides",
-    "confidence": 0.999,
-    "evidence": [
-      {"family":"exact_definition_target","detail":"The class exposes only static methods accepting R28 ObjectDefinition plus object id; it has no unrelated state or target type."},
-      {"family":"exact_mode_gate","detail":"ObjectDefinition invokes rs/c/a/a.a(definition,id) only when its exact definition-mode enum equals the preserved OLDSCHOOL constant."},
-      {"family":"exact_model_only_mutation","detail":"Both override methods mutate only ObjectDefinition.an, the integer model-id array. The large method contains an approximately 680-id lookup table assigning replacement model-id arrays, and the wrapper performs a second eight-id model-array correction pass."},
-      {"family":"exact_scope_boundary","detail":"No name, action, size, collision, recolor, animation or other ObjectDefinition field is written by this class, so the semantic role is specifically old-school object model overrides rather than generic definition patching."}
-    ],
-    "note": "Descriptive exact-v308 name for the OLDSCHOOL-only ObjectDefinition model-id override table. No broader object-definition semantics are claimed."
-  }],
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_E07F22ABF391A0B446AD",
+  "proposals": [
+    {
+      "proposal_id":"SEMPROP_3B0C05DB64DE0C3A4997",
+      "target_kind":"class",
+      "stable_id":"CLIENT_CLASS_000200",
+      "owner_logical_id":"CLIENT_CLASS_000200",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate":{"owner":"rs/gui/P","name":null,"descriptor":null},
+      "proposed_name":"TitlePaneControlPanelLayout",
+      "confidence":0.999,
+      "evidence":[
+        {"family":"exact_parent_ownership","detail":"The class is constructed only by R344 TitlePaneControlPanel rs/gui/O and immediately installed as that panel's LayoutManager."},
+        {"family":"exact_layout_contract","detail":"preferredLayoutSize returns componentCount*27 by 23, while layoutContainer places every child in one 23-pixel-high horizontal strip with four-pixel leading spacing and 23-pixel advancement."},
+        {"family":"exact_role_separation","detail":"R344 TitlePaneControlLayout rs/gui/A positions the entire TitlePaneControlPanel within the launcher title area; rs/gui/P independently lays out the individual controls inside that panel, so the roles are complementary rather than duplicate."}
+      ],
+      "note":"Descriptive exact-v308 name for the LayoutManager2 internal to TitlePaneControlPanel."
+    },
+    {
+      "proposal_id":"SEMPROP_7FCEEF8AD67739752D5C",
+      "target_kind":"class",
+      "stable_id":"CLIENT_CLASS_000198",
+      "owner_logical_id":"CLIENT_CLASS_000198",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate":{"owner":"rs/gui/N","name":null,"descriptor":null},
+      "proposed_name":"TrayIconRestoreWindowListener",
+      "confidence":0.999,
+      "evidence":[
+        {"family":"exact_installation_site","detail":"The only exact-v308 construction site is the GUI utility path that creates java.awt.TrayIcon and installs rs/gui/N via TrayIcon.addMouseListener."},
+        {"family":"exact_restore_behavior","detail":"On click the listener makes the captured Frame visible and sets Frame state to 0 (NORMAL), restoring/unminimizing the launcher window from the system tray."},
+        {"family":"exact_special_refresh_path","detail":"For the exact special display/platform state, when the frame is not focused it briefly hides the frame and invokes the existing refresh helper before showing/restoring it, confirming this listener owns tray-triggered window restoration."}
+      ],
+      "note":"Descriptive exact-v308 name for the system-tray click listener that restores the launcher Frame."
+    }
+  ],
   "unresolved": []
 }
