@@ -38,26 +38,30 @@ def _build(
     frontier: str,
     source_tree: str,
 ) -> dict:
-    material = {
-        "tooling_commit": tooling,
+    build = {
         "build_id": build_id,
         "source_authority_sha256": authority,
         "rebuild_id": "CLEANBUILD_" + suffix,
         "workspace_id": "SRCWS_" + suffix,
         "source_tree_sha256": source_tree,
         "diagnostic_report_id": "JAVACDIAG_" + suffix,
-        "diagnostic_input_sha256": suffix.lower() * 3 + suffix.lower()[:4],
+        "diagnostic_input_sha256": hashlib.sha256(
+            (build_id + suffix).encode()
+        ).hexdigest(),
         "frontier_id": frontier,
         "project_binary_fallback_count": 0,
         "clean_rebuild_status": "compile_failed",
         "clean_project_build": False,
     }
-    material["diagnostic_input_sha256"] = (
-        hashlib.sha256((build_id + suffix).encode()).hexdigest()
-    )
+    binding_material = {
+        "tooling_commit": tooling,
+        **build,
+    }
     return {
-        "binding_id": "JAVACBIND_" + _digest(material)[:20].upper(),
-        **material,
+        "binding_id": (
+            "JAVACBIND_" + _digest(binding_material)[:20].upper()
+        ),
+        **build,
     }
 
 
@@ -194,21 +198,23 @@ class CrossVersionJavacLegacyBaselineDeltaTests(unittest.TestCase):
         bad = copy.deepcopy(self.current)
         bad["old"]["source_authority_sha256"] = "9" * 64
         binding_material = {
-            key: bad["old"][key]
-            for key in (
-                "tooling_commit",
-                "build_id",
-                "source_authority_sha256",
-                "rebuild_id",
-                "workspace_id",
-                "source_tree_sha256",
-                "diagnostic_report_id",
-                "diagnostic_input_sha256",
-                "frontier_id",
-                "project_binary_fallback_count",
-                "clean_rebuild_status",
-                "clean_project_build",
-            )
+            "tooling_commit": bad["tooling_commit"],
+            **{
+                key: bad["old"][key]
+                for key in (
+                    "build_id",
+                    "source_authority_sha256",
+                    "rebuild_id",
+                    "workspace_id",
+                    "source_tree_sha256",
+                    "diagnostic_report_id",
+                    "diagnostic_input_sha256",
+                    "frontier_id",
+                    "project_binary_fallback_count",
+                    "clean_rebuild_status",
+                    "clean_project_build",
+                )
+            },
         }
         bad["old"]["binding_id"] = (
             "JAVACBIND_" + _digest(binding_material)[:20].upper()
