@@ -87,7 +87,7 @@
       "properties": {
         "build_id": {
           "type": "string",
-          "minLength": 1
+          "pattern": "^[A-Za-z0-9._-]{1,64}$"
         },
         "source_authority_sha256": {
           "type": "string",
@@ -115,7 +115,7 @@
         },
         "workspace_id": {
           "type": "string",
-          "minLength": 1
+          "pattern": "^SRCWS_[0-9A-F]{20}$"
         },
         "source_tree_sha256": {
           "type": "string",
@@ -226,6 +226,25 @@
       "additionalProperties": {
         "type": "integer",
         "minimum": 0
+      },
+      "propertyNames": {
+        "enum": [
+          "cannot_find_symbol",
+          "package_does_not_exist",
+          "incompatible_types",
+          "cannot_be_converted",
+          "ambiguous_reference",
+          "private_access",
+          "protected_access",
+          "cannot_apply_arguments",
+          "cannot_be_dereferenced",
+          "override_mismatch",
+          "name_clash",
+          "bad_operand_type",
+          "non_static_from_static_context",
+          "already_assigned",
+          "other"
+        ]
       }
     }
   },
