@@ -1,0 +1,61 @@
+{
+  "schema_version":1,
+  "kind":"semantic_candidate_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[
+    {
+      "schema_version":1,
+      "kind":"semantic_name_candidate",
+      "canonical":false,
+      "status":"CANDIDATE",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/n/b/a","name":null,"descriptor":null},
+      "proposed_name":"InterfaceTask",
+      "confidence":0.999,
+      "evidence":[
+        {"family":"exact_task_gate","detail":"Exact v308 rs/n/b/a stores a task interval and last-run timestamp; b() compares System.currentTimeMillis() against them, invokes the abstract c() work hook when interval is zero or due, then records the new last-run timestamp."},
+        {"family":"exact_typed_registries","detail":"The class owns three typed static registries for R288 DeferredHoverTask, rs/n/b/a/a TimedInterfaceTask and R288 InterfaceRenderTask, plus a shared registry list that is globally ticked."},
+        {"family":"exact_interface_dispatch_family","detail":"Accepted R288 evidence fixes the three subclasses as interface hover/render/timed task categories keyed and dispatched by RSInterface/widget id, binding the base abstraction to interface tasks rather than a generic scheduler."}
+      ],
+      "note":"Base exact-v308 interface task abstraction beneath the already-reviewed R288 task categories."
+    },
+    {
+      "schema_version":1,
+      "kind":"semantic_name_candidate",
+      "canonical":false,
+      "status":"CANDIDATE",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/n/b/a/a","name":null,"descriptor":null},
+      "proposed_name":"TimedInterfaceTask",
+      "confidence":0.999,
+      "evidence":[
+        {"family":"exact_interval_constructor","detail":"Exact v308 rs/n/b/a/a is an abstract InterfaceTask subtype whose constructor accepts a long interval and stores it in the inherited interval field, leaving only the abstract work hook c()."},
+        {"family":"exact_registry_slot","detail":"InterfaceTask owns a dedicated InterfaceTaskRegistry<rs/n/b/a/a> separate from the DeferredHoverTask and InterfaceRenderTask registries."},
+        {"family":"accepted_r288_language","detail":"R288's accepted InterfaceRenderTask evidence explicitly identifies the shared inherited interval behavior as the 'TimedInterfaceTask interval gate'; R380 closes that previously unproposed base semantic identity."}
+      ],
+      "note":"Exact-v308 plain timed interface-task category already referenced semantically by accepted R288 evidence."
+    },
+    {
+      "schema_version":1,
+      "kind":"semantic_name_candidate",
+      "canonical":false,
+      "status":"CANDIDATE",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/n/b/b","name":null,"descriptor":null},
+      "proposed_name":"InterfaceTaskRegistry",
+      "confidence":0.999,
+      "evidence":[
+        {"family":"exact_generic_contract","detail":"Exact v308 rs/n/b/b<T extends rs.n.b.a> stores an int-keyed Trove map whose values are List<T>, giving a widget/interface-id to task-list multimap."},
+        {"family":"exact_registration_dispatch","detail":"a(int,T) lazily creates the list for an integer key and appends the task; a(int) retrieves that key's list and runs every task through InterfaceTask.b(), the shared elapsed-time gate."},
+        {"family":"exact_registry_ownership","detail":"InterfaceTask constructs three instances of this exact generic type for DeferredHoverTask, TimedInterfaceTask and InterfaceRenderTask and also exposes clear/map access operations."}
+      ],
+      "note":"Exact-v308 widget-id keyed task multimap/dispatcher for the interface task hierarchy."
+    }
+  ],
+  "conflicts":[]
+}
