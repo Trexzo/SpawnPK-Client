@@ -10,6 +10,7 @@ from spk_recovery.cross_version_javac_checkpoint import _stable_digest
 from spk_recovery.cross_version_javac_checkpoint_delta import (
     CrossVersionJavacCheckpointDeltaError,
     build_cross_version_javac_checkpoint_delta,
+    verify_cross_version_javac_checkpoint_delta,
     write_cross_version_javac_checkpoint_delta,
 )
 from spk_recovery.cross_version_javac_checkpoint_delta_cli import _load
@@ -425,6 +426,66 @@ class CrossVersionJavacCheckpointDeltaTests(unittest.TestCase):
             report["note"],
         )
 
+
+    def test_verifier_accepts_exact_emitted_delta(self):
+        report = build_cross_version_javac_checkpoint_delta(
+            self.baseline,
+            self.current,
+        )
+        verified = verify_cross_version_javac_checkpoint_delta(
+            self.baseline,
+            self.current,
+            report,
+        )
+        self.assertEqual(verified, report)
+
+    def test_verifier_rejects_mutated_emitted_delta(self):
+        report = build_cross_version_javac_checkpoint_delta(
+            self.baseline,
+            self.current,
+        )
+        mutations = (
+            ("delta_id", "XJAVACCHECKDELTA_" + "0" * 20),
+            ("identifiers_included", True),
+            ("note", "mutated"),
+        )
+        for key, value in mutations:
+            with self.subTest(key=key):
+                bad = copy.deepcopy(report)
+                bad[key] = value
+                with self.assertRaisesRegex(
+                    CrossVersionJavacCheckpointDeltaError,
+                    "does not match deterministic recomputation",
+                ):
+                    verify_cross_version_javac_checkpoint_delta(
+                        self.baseline,
+                        self.current,
+                        bad,
+                    )
+
+        bad = copy.deepcopy(report)
+        bad["scalar_delta"]["old_total_errors"] += 1
+        with self.assertRaisesRegex(
+            CrossVersionJavacCheckpointDeltaError,
+            "does not match deterministic recomputation",
+        ):
+            verify_cross_version_javac_checkpoint_delta(
+                self.baseline,
+                self.current,
+                bad,
+            )
+
+        bad = copy.deepcopy(report)
+        bad["category_delta"]["old_categories"]["cannot_find_symbol"] = 999
+        with self.assertRaisesRegex(
+            CrossVersionJavacCheckpointDeltaError,
+            "does not match deterministic recomputation",
+        ):
+            verify_cross_version_javac_checkpoint_delta(
+                self.baseline,
+                self.current,
+                bad,
+            )
 
     def test_rejects_swapped_build_sides(self):
         swapped = copy.deepcopy(self.current)
