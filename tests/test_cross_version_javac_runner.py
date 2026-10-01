@@ -58,6 +58,10 @@ class CrossVersionJavacRunnerTests(unittest.TestCase):
 
         for marker in (
             "REPORT_ID=",
+            "V307_DIAGNOSTIC_REPORT_ID=",
+            "V308_DIAGNOSTIC_REPORT_ID=",
+            "V307_DIAGNOSTIC_INPUT_SHA256=",
+            "V308_DIAGNOSTIC_INPUT_SHA256=",
             "V307_FRONTIER=",
             "V308_FRONTIER=",
             "SHARED_ERRORS=",
