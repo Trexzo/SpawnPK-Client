@@ -9,6 +9,7 @@ import tempfile
 import unittest
 import zipfile
 
+from spk_recovery.diffing import diff_indexes
 from spk_recovery.historical_lineage_backfill import (
     HistoricalLineageBackfillError,
     backfill_historical_v307_lineage,
@@ -20,6 +21,49 @@ from spk_recovery.member_lineage import seed_member_lineage
 
 @unittest.skipUnless(shutil.which("javac"), "javac required")
 class HistoricalV307LineageBackfillTests(unittest.TestCase):
+    def _historical_fixture(
+        self,
+        v307_index: dict,
+        v308_index: dict,
+    ) -> dict:
+        delta = diff_indexes(v307_index, v308_index)
+        changed = list(delta["changed_same_path"])
+        binary = {
+            "backtest_id": "TEST_XVERBIN",
+            "old_entry_count": v307_index["summary"]["entry_count"],
+            "new_entry_count": v308_index["summary"]["entry_count"],
+            "old_only_count": len(delta["removed"]),
+            "new_only_count": len(delta["added"]),
+            "changed_entry_count": len(changed),
+            "changed_entries": changed,
+        }
+        changed_classes = [
+            path for path in changed
+            if path.startswith("rs/") and path.endswith(".class")
+        ]
+        if len(changed_classes) == 1:
+            path = changed_classes[0]
+            binary["changed_class_old_sha256"] = (
+                v307_index["entries"][path]["sha256"]
+            )
+            binary["changed_class_new_sha256"] = (
+                v308_index["entries"][path]["sha256"]
+            )
+        return {
+            "schema_version": 1,
+            "kind": "historical_source_regeneration_fixture",
+            "fixture_id": "TEST_V307_V308_SOURCE_REGEN",
+            "old": {
+                "build_id": "v307",
+                "client_sha256": v307_index["sha256"],
+            },
+            "new": {
+                "build_id": "v308",
+                "client_sha256": v308_index["sha256"],
+            },
+            "binary_authority": binary,
+        }
+
     def _fixture(self, root: Path):
         src = root / "src" / "rs"
         src.mkdir(parents=True)
@@ -94,6 +138,10 @@ class HistoricalV307LineageBackfillTests(unittest.TestCase):
                 v308_index,
                 class_lineage,
                 member_lineage,
+                self._historical_fixture(
+                    index_jar(v307),
+                    v308_index,
+                ),
                 out_dir=root / "out",
             )
 
@@ -250,6 +298,10 @@ class HistoricalV307LineageBackfillTests(unittest.TestCase):
                 v308_index,
                 class_lineage,
                 member_lineage,
+                self._historical_fixture(
+                    v307_index,
+                    v308_index,
+                ),
                 out_dir=root / "constant-out",
             )
 
@@ -262,8 +314,14 @@ class HistoricalV307LineageBackfillTests(unittest.TestCase):
                 report["class_transfer_summary"]["trusted_exact"],
                 1,
             )
-            self.assertGreaterEqual(
+            self.assertEqual(
                 report["field_proof_summary"]["applied_fields"],
+                0,
+            )
+            self.assertGreaterEqual(
+                report["historical_field_carry_summary"][
+                    "applied_fields"
+                ],
                 1,
             )
             self.assertEqual(report["focused_analysis_items"], 0)
@@ -285,6 +343,10 @@ class HistoricalV307LineageBackfillTests(unittest.TestCase):
                 v308_index,
                 class_lineage,
                 member_lineage,
+                self._historical_fixture(
+                    index_jar(v307),
+                    v308_index,
+                ),
                 out_dir=root / "first",
             )
 
@@ -306,6 +368,10 @@ class HistoricalV307LineageBackfillTests(unittest.TestCase):
                     v308_index,
                     derived_classes,
                     derived_members,
+                    self._historical_fixture(
+                        index_jar(v307),
+                        v308_index,
+                    ),
                     out_dir=root / "second",
                 )
 
