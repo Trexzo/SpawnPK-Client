@@ -127,8 +127,8 @@ if ($PrepExit -ne 0) {
 
 $V307Index = Join-Path $SafetyOut "v307\index.json"
 $V307Acceptance = Join-Path $SafetyOut "carry-forward\member-safety.accepted.v307.json"
-$V307ClassLineage = Join-Path $SafetyOut "lineage-backfill\migration\class-lineage.json"
-$V307MemberLineage = Join-Path $SafetyOut "lineage-backfill\migration\member-lineage.json"
+$V307ClassLineage = Join-Path $SafetyOut "lineage-backfill\class-lineage.json"
+$V307MemberLineage = Join-Path $SafetyOut "lineage-backfill\member-lineage.json"
 Require-File $V307Index
 Require-File $V307Acceptance
 Require-File $V307ClassLineage
