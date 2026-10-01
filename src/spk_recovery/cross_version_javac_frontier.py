@@ -4,11 +4,17 @@ from collections import Counter
 import hashlib
 import json
 from pathlib import Path
+import re
 from typing import Any
 
 
 class CrossVersionJavacFrontierError(ValueError):
     pass
+
+
+_HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
+_DIAGNOSTIC_ID_RE = re.compile(r"^JAVACDIAG_[0-9A-F]{20}$")
+_FRONTIER_ID_RE = re.compile(r"^JAVACFRONTIER_[0-9A-F]{20}$")
 
 
 def _stable_digest(value: Any) -> str:
@@ -19,6 +25,70 @@ def _stable_digest(value: Any) -> str:
         ensure_ascii=False,
     ).encode("utf-8")
     return hashlib.sha256(raw).hexdigest()
+
+
+def _public_rows(report: dict[str, Any]) -> list[dict[str, Any]]:
+    diagnostics = report.get("diagnostics")
+    if not isinstance(diagnostics, list):
+        raise CrossVersionJavacFrontierError(
+            "javac diagnostic report lacks diagnostic rows"
+        )
+
+    rows: list[dict[str, Any]] = []
+    public_keys = (
+        "category",
+        "symbol_kind",
+        "symbol_shape",
+        "location_kind",
+        "shape_cluster_id",
+        "cluster_id",
+        "symbol_id",
+        "location_id",
+        "file_id",
+        "line",
+    )
+    for row in diagnostics:
+        if not isinstance(row, dict):
+            raise CrossVersionJavacFrontierError(
+                "javac diagnostic row is not an object"
+            )
+        try:
+            rows.append({key: row[key] for key in public_keys})
+        except KeyError as exc:
+            raise CrossVersionJavacFrontierError(
+                "javac diagnostic row lacks public authority fields"
+            ) from exc
+    return rows
+
+
+def _validate_diagnostic_authority(
+    report: dict[str, Any],
+    label: str,
+) -> None:
+    rows = _public_rows(report)
+    expected_frontier = (
+        "JAVACFRONTIER_"
+        + _stable_digest({"rows": rows})[:20].upper()
+    )
+    if report.get("frontier_id") != expected_frontier:
+        raise CrossVersionJavacFrontierError(
+            f"{label}: javac frontier ID does not match diagnostic rows"
+        )
+
+    input_sha256 = report["input_sha256"]
+    expected_report = (
+        "JAVACDIAG_"
+        + _stable_digest(
+            {
+                "input_sha256": input_sha256,
+                "rows": rows,
+            }
+        )[:20].upper()
+    )
+    if report.get("report_id") != expected_report:
+        raise CrossVersionJavacFrontierError(
+            f"{label}: javac diagnostic report ID does not match authority"
+        )
 
 
 def _validate_report(report: dict[str, Any], label: str) -> None:
@@ -32,10 +102,26 @@ def _validate_report(report: dict[str, Any], label: str) -> None:
     frontier_id = report.get("frontier_id")
     if (
         not isinstance(frontier_id, str)
-        or not frontier_id.startswith("JAVACFRONTIER_")
+        or _FRONTIER_ID_RE.fullmatch(frontier_id) is None
     ):
         raise CrossVersionJavacFrontierError(
             f"{label}: missing javac frontier authority"
+        )
+    diagnostic_report_id = report.get("report_id")
+    if (
+        not isinstance(diagnostic_report_id, str)
+        or _DIAGNOSTIC_ID_RE.fullmatch(diagnostic_report_id) is None
+    ):
+        raise CrossVersionJavacFrontierError(
+            f"{label}: missing javac diagnostic report identity"
+        )
+    input_sha256 = report.get("input_sha256")
+    if (
+        not isinstance(input_sha256, str)
+        or _HEX64_RE.fullmatch(input_sha256) is None
+    ):
+        raise CrossVersionJavacFrontierError(
+            f"{label}: missing javac diagnostic input SHA-256"
         )
     if report.get("identifiers_included") is not True:
         raise CrossVersionJavacFrontierError(
@@ -46,6 +132,7 @@ def _validate_report(report: dict[str, Any], label: str) -> None:
         raise CrossVersionJavacFrontierError(
             f"{label}: diagnostics must be an array"
         )
+    _validate_diagnostic_authority(report, label)
 
 
 def _relative_source_path(value: str) -> str:
@@ -228,6 +315,10 @@ def compare_javac_frontiers(
         "exact_frontier_equal": old == new,
     }
     material = {
+        "old_diagnostic_report_id": old_report["report_id"],
+        "new_diagnostic_report_id": new_report["report_id"],
+        "old_diagnostic_input_sha256": old_report["input_sha256"],
+        "new_diagnostic_input_sha256": new_report["input_sha256"],
         "old_frontier_id": old_report["frontier_id"],
         "new_frontier_id": new_report["frontier_id"],
         "summary": summary,
@@ -240,6 +331,10 @@ def compare_javac_frontiers(
             "XJAVACFRONTIER_"
             + _stable_digest(material)[:20].upper()
         ),
+        "old_diagnostic_report_id": old_report["report_id"],
+        "new_diagnostic_report_id": new_report["report_id"],
+        "old_diagnostic_input_sha256": old_report["input_sha256"],
+        "new_diagnostic_input_sha256": new_report["input_sha256"],
         "old_frontier_id": old_report["frontier_id"],
         "new_frontier_id": new_report["frontier_id"],
         "summary": summary,
