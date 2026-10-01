@@ -19,7 +19,37 @@ _FRONTIER_ID_RE = re.compile(r"^JAVACFRONTIER_[0-9A-F]{20}$")
 _REBUILD_ID_RE = re.compile(r"^CLEANBUILD_[0-9A-F]{20}$")
 _COMPARISON_ID_RE = re.compile(r"^XJAVACFRONTIER_[0-9A-F]{20}$")
 _BINARY_BACKTEST_ID_RE = re.compile(r"^XVERBIN_[0-9A-F]{20}$")
-_PRIVATE_FAMILY_KEYS = {"source_path", "message", "symbol", "location"}
+_PUBLIC_FAMILY_KEYS = {
+    "family_id",
+    "file_id",
+    "category",
+    "symbol_kind",
+    "symbol_shape",
+    "location_kind",
+    "old_count",
+    "new_count",
+    "shared_count",
+    "old_only_count",
+    "new_only_count",
+}
+_PUBLIC_SUMMARY_KEYS = {
+    "old_total_errors",
+    "new_total_errors",
+    "shared_errors",
+    "old_only_errors",
+    "new_only_errors",
+    "shared_percent_of_old",
+    "shared_percent_of_new",
+    "old_affected_files",
+    "new_affected_files",
+    "shared_affected_files",
+    "old_categories",
+    "new_categories",
+    "shared_categories",
+    "old_only_categories",
+    "new_only_categories",
+    "exact_frontier_equal",
+}
 
 
 def _stable_digest(value: Any) -> str:
@@ -224,6 +254,20 @@ def _validate_comparison(
         raise CrossVersionJavacCheckpointError(
             "comparison summary must be an object"
         )
+    summary_keys = set(summary)
+    if summary_keys != _PUBLIC_SUMMARY_KEYS:
+        unexpected = sorted(summary_keys - _PUBLIC_SUMMARY_KEYS)
+        missing = sorted(_PUBLIC_SUMMARY_KEYS - summary_keys)
+        detail = []
+        if unexpected:
+            detail.append("unexpected=" + ",".join(unexpected))
+        if missing:
+            detail.append("missing=" + ",".join(missing))
+        raise CrossVersionJavacCheckpointError(
+            "comparison summary does not match the public field contract"
+            + (": " + " ".join(detail) if detail else "")
+        )
+
     families = comparison.get("families")
     if not isinstance(families, list):
         raise CrossVersionJavacCheckpointError(
@@ -234,11 +278,19 @@ def _validate_comparison(
             raise CrossVersionJavacCheckpointError(
                 f"comparison family {index} must be an object"
             )
-        leaked = sorted(_PRIVATE_FAMILY_KEYS & set(family))
-        if leaked:
+        family_keys = set(family)
+        if family_keys != _PUBLIC_FAMILY_KEYS:
+            unexpected = sorted(family_keys - _PUBLIC_FAMILY_KEYS)
+            missing = sorted(_PUBLIC_FAMILY_KEYS - family_keys)
+            detail = []
+            if unexpected:
+                detail.append("unexpected=" + ",".join(unexpected))
+            if missing:
+                detail.append("missing=" + ",".join(missing))
             raise CrossVersionJavacCheckpointError(
-                "comparison report contains private family fields: "
-                + ", ".join(leaked)
+                f"comparison family {index} does not match the public "
+                "field contract"
+                + (": " + " ".join(detail) if detail else "")
             )
 
     material = {
