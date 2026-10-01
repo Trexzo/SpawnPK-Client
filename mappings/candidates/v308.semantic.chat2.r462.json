@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [{
+    "schema_version": 1,
+    "kind": "semantic_name_candidate",
+    "canonical": false,
+    "status": "CANDIDATE",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target": {"kind": "class", "owner": "rs/a/b/a$a", "name": null, "descriptor": null},
+    "proposed_name": "ModelRecolorCycle",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"exact_parent_role","detail":"R461 fixes the enclosing rs/a/b/a class as ModelRecolorOverride, constructed from exact definition config keys 'recolor'/'recolors'."},
+      {"family":"exact_group_state","detail":"Each inner instance stores one int-set of source face-color ids, one destination-color int[] and one cursor; the parent creates one instance per configured source/destination recolor group."},
+      {"family":"exact_cycle_behavior","detail":"Its sole public operation returns destinationColors[cursor], increments the cursor and wraps it to zero at array length, providing the deterministic replacement-color cycle used by ModelRecolorOverride."},
+      {"family":"exact_parent_consumption","detail":"ModelRecolorOverride looks up the inner group by source face-color id and uses this cycle result as the replacement value written into the Model face-color array."}
+    ],
+    "note": "Descriptive exact-v308 name for the per-recolor-group cyclic destination selector owned exclusively by ModelRecolorOverride."
+  }],
+  "conflicts": []
+}

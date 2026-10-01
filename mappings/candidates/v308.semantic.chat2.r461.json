@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/a/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelRecolorOverride",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_keys",
+          "detail": "NpcDefinitionConfigLoader and ItemDefinitionConfigLoader construct this exact helper for the surviving YAML keys 'recolor' and 'recolors' inside the shared rs/a/b/c model-override aggregate."
+        },
+        {
+          "family": "exact_face_color_mapping",
+          "detail": "The constructor accepts grouped source/destination integer arrays, indexes all source color ids, and the per-face apply path rewrites Model.ar entries that match each source group to the next destination value in that group's configured cycle."
+        },
+        {
+          "family": "exact_developer_recolor_join",
+          "detail": "R209 ModelRecoloringOverlay reads this helper's tracked color set while inventorying model colors for the exact 'Recoloring NPC/Item/Object' development surface."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the definition-driven Model face recolor mapping; original stripped identifier is not claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/a/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelFaceOverride",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_abstract_contract",
+          "detail": "The class is the abstract common base of the recolor, reshade and retexture helpers and defines one whole-Model preparation hook plus one per-face mutation hook."
+        },
+        {
+          "family": "exact_face_iteration",
+          "detail": "Its concrete b(Model) implementation iterates exactly Model.ah face entries and dispatches the per-face override method for each index."
+        },
+        {
+          "family": "exact_subclass_boundary",
+          "detail": "The only exact-v308 subclasses are rs/a/b/a, rs/a/b/d and rs/a/b/e, each populated from model appearance override keys and mutating Model face presentation state."
+        }
+      ],
+      "note": "Conservative base name for the exact per-face Model override contract shared by recolor/reshade/retexture operations."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/a/b/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelAppearanceOverride",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_definition_ownership",
+          "detail": "NpcDefinition, ItemDefinition and SpotAnimationDefinition each own this exact type as their optional definition-driven model override state; item/NPC developer recoloring overlays also consume it directly."
+        },
+        {
+          "family": "exact_config_surface",
+          "detail": "The definition config loaders populate this aggregate from surviving keys including 'opacity', 'recolor/recolors', 'retexture/retextures', 'textures' and 'reshade'."
+        },
+        {
+          "family": "exact_composition",
+          "detail": "The aggregate composes ModelRecolorOverride, ModelRetextureOverride and ModelReshadeOverride plus the scalar opacity override and applies all enabled components to one Model."
+        },
+        {
+          "family": "exact_model_mutation",
+          "detail": "Its apply(Model) method prepares/applies each configured helper over Model faces and writes the opacity-derived face array when configured; it owns no unrelated definition/gameplay state."
+        }
+      ],
+      "note": "Descriptive exact-v308 aggregate for definition-driven Model appearance mutations: opacity, recolor, retexture/texture and reshade."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/a/b/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelReshadeOverride",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_key",
+          "detail": "NpcDefinition, ItemDefinition and SpotAnimationDefinition config loaders construct this helper specifically from the surviving YAML key 'reshade'."
+        },
+        {
+          "family": "exact_face_mutation",
+          "detail": "The helper stores one configured integer and writes that value into Model.ar for every eligible face, skipping faces already marked by the texture/retexture preparation mask."
+        },
+        {
+          "family": "exact_aggregate_role",
+          "detail": "ModelAppearanceOverride owns this helper as the dedicated reshade component and applies it independently from recolor and retexture operations."
+        }
+      ],
+      "note": "Exact-v308 name fixed by the surviving 'reshade' config key and its per-face Model mutation."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/a/b/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ModelRetextureOverride",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_keys",
+          "detail": "NpcDefinition and ItemDefinition config loaders route the surviving keys 'retexture'/'retextures' and 'textures' into this exact helper inside ModelAppearanceOverride."
+        },
+        {
+          "family": "exact_texture_mapping",
+          "detail": "The helper builds source-to-destination integer mappings, tracks affected Model face ids, initializes texture-support arrays/masks and remaps matching face presentation ids while preserving original vertex triplets into texture coordinate arrays."
+        },
+        {
+          "family": "exact_developer_recolor_join",
+          "detail": "R209 ModelRecoloringOverlay explicitly unions this helper's tracked source ids and source/destination mapping sets when labeling model entries '(texture)' and '(texturized)'."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for definition-driven Model texture/retexture mapping."
+    }
+  ],
+  "conflicts": []
+}
