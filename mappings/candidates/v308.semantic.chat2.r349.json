@@ -11,16 +11,16 @@
     "status": "CANDIDATE",
     "source_build": "v308",
     "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-    "target": {"kind":"class","owner":"rs/f/c","name":null,"descriptor":null},
-    "proposed_name": "IncomingPacketDefinitions",
+    "target": {"kind": "class", "owner": "rs/c/a/a", "name": null, "descriptor": null},
+    "proposed_name": "ObjectDefinitionCustomizer",
     "confidence": 0.999,
     "evidence": [
-      {"family":"exact_opcode_catalog","detail":"Exact v308 rs/f/c consists of a dense catalog of S2C opcode constants whose values match independently recovered incoming contracts, including 219 CLOSE_INTERFACES, 27 OPEN_AMOUNT_INPUT_PROMPT, 50 FRIEND_STATUS_UPDATE, 44 GROUND_ITEM_SPAWN, 117 PROJECTILE and 241 CONSTRUCTED_REGION_CHANGE."},
-      {"family":"exact_length_definition_table","detail":"The class initializes one 256-entry int array indexed by raw incoming opcode. Fixed packets receive their exact byte lengths while variable-byte and variable-short packets receive -1 and -2 sentinels respectively."},
-      {"family":"exact_protocol_crosscheck","detail":"Representative entries match the exact-current protocol corpus and the live R342 IncomingPacketLengthTable framing values: opcode 34=-2, 53=-2, 81=-2, 126=-2, 196=-1, 214=-2, 241=-2 and 253=-1."},
-      {"family":"exact_sibling_boundary","detail":"R342 rs/f/d is the separate live IncomingPacketLengthTable consumed directly by Client framing. rs/f/c instead packages the raw incoming opcode constants together with their canonical raw length definitions, so the proposed name stops at Definitions rather than Parser or Dispatcher."}
+      {"family":"exact_target_type","detail":"The class imports only rs.d.r and every mutating entry point accepts an rs.d.r instance plus its definition id. Exact-v308 rs.d.r owns the object-definition model/action/transform state and is paired with R80 ObjectDefinitionConfigLoader rs/t/a/f."},
+      {"family":"exact_override_surface","detail":"The recovered class is ~72 KB and contains a hard-coded switch over roughly 680 object definition ids. Each matched id mutates definition fields such as model arrays, action arrays and other presentation/interaction properties."},
+      {"family":"exact_special_case_overlay","detail":"The public apply path first runs the large common override switch and then applies additional id-specific model-array replacements for ids including 6926, 11986, 38847/38848, 41451/41453 and 42517/42518."},
+      {"family":"exact_scope_boundary","detail":"The class owns no cache, parser or instance state; it is a pure static post-decode customization layer over ObjectDefinition instances rather than the definition loader itself."}
     ],
-    "note": "Descriptive exact-v308 name for the static incoming/server packet opcode-and-length definition catalog. No individual field names are proposed in this class-only batch."
+    "note":"Descriptive exact-v308 name for the hard-coded post-decode ObjectDefinition override/customization layer. No original stripped developer identifier is claimed."
   }],
   "conflicts": []
 }
