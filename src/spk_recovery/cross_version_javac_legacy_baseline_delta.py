@@ -100,6 +100,10 @@ _RUN_STATE_KEYS = {
     "live_main_advanced",
 }
 
+_CANONICAL_SEMANTIC_SHA256 = (
+    "0cab6a71d283be162a9a43eff2e3b3f33a5cccf7aba2611bce4ba5da48eb4646"
+)
+
 
 def _stable_digest(value: Any) -> str:
     raw = json.dumps(
@@ -271,6 +275,13 @@ def validate_legacy_exact_parity_baseline(
     }
     for key, expected in expected_run_state.items():
         _require_equal(run_state.get(key), expected, f"run_state.{key}")
+
+    semantic_sha256 = _stable_digest(report)
+    if semantic_sha256 != _CANONICAL_SEMANTIC_SHA256:
+        raise CrossVersionJavacLegacyBaselineDeltaError(
+            "legacy baseline complete semantic content does not match "
+            "canonical authority"
+        )
 
     summary = {
         "old_total_errors": 350,
