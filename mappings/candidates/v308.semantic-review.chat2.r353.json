@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_9C0972F81DFD627DC287",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_EE5B014E6CFE1786864D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000284",
+      "owner_logical_id": "CLIENT_CLASS_000284",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/w",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RuneScapeFontRegistry",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_bundled_font_resources",
+          "detail": "Static initialization loads runescape.ttf, runescape_small.ttf and runescape_bold.ttf through Class.getResourceAsStream, creates/derives 16pt AWT fonts, registers them with GraphicsEnvironment and stores normalized StyleContext fonts."
+        },
+        {
+          "family": "exact_registry_surface",
+          "detail": "The class owns five static Font instances and exposes them through five zero-argument static getters; the remaining two entries are 16pt Dialog plain/bold fallbacks."
+        },
+        {
+          "family": "exact_failure_contract",
+          "detail": "FontFormatException is converted to RuntimeException('Font loaded, but format incorrect.') and IOException to RuntimeException('Font file not found.'), proving this class owns bundled-font initialization rather than arbitrary typography styling."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the launcher/UI bundled RuneScape font registry."
+    }
+  ],
+  "unresolved": []
+}
