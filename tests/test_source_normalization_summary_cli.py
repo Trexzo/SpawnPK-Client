@@ -157,6 +157,14 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
                 "replacement_count": 2,
             },
             {
+                "kind": "invokedynamic_helper_return_cast",
+                "source_path": "rs/Client.java",
+                "method_name": "a",
+                "method_descriptor": "(Ljava/lang/Object;)Ljava/lang/String;",
+                "cast_type": "java.lang.String",
+                "replacement_count": 17,
+            },
+            {
                 "kind": "shadowed_same_package_static_method_owner_qualification",
                 "source_path": "rs/l/h.java",
                 "method_name": "a",
@@ -182,6 +190,8 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
             "primitive_shadowed_instance_receiver_reference_count": 6,
             "shadowed_imported_static_method_method_count": 1,
             "shadowed_imported_static_method_reference_count": 2,
+            "invokedynamic_helper_return_cast_method_count": 1,
+            "invokedynamic_helper_return_cast_reference_count": 17,
             "shadowed_same_package_static_method_method_count": 1,
             "shadowed_same_package_static_method_reference_count": 21,
             "scoped_same_package_static_field_method_count": 1,
@@ -193,6 +203,10 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
         self.assertIn("PRIMITIVE_SCOPE_SELF_SHADOW_REFERENCES=27", text)
         self.assertIn("PRIMITIVE_INSTANCE_RECEIVER_REFERENCES=6", text)
         self.assertIn("IMPORTED_STATIC_METHOD_SHADOW_REFERENCES=2", text)
+        self.assertIn(
+            "INVOKEDYNAMIC_HELPER_RETURN_CAST_REFERENCES=17",
+            text,
+        )
         self.assertIn(
             "SAME_PACKAGE_STATIC_METHOD_SHADOW_REFERENCES=21",
             text,
@@ -211,6 +225,11 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
         )
         self.assertIn(
             "a(I)V | references=2 | simple=b | owner=rs/k/c/b",
+            text,
+        )
+        self.assertIn(
+            "a(Ljava/lang/Object;)Ljava/lang/String; | "
+            "references=17 | cast=java.lang.String",
             text,
         )
         self.assertIn(
@@ -370,6 +389,10 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
         )
         self.assertIn(
             "PRIMITIVE_SCOPE_SELF_SHADOW_METHODS=",
+            text,
+        )
+        self.assertIn(
+            "INVOKEDYNAMIC_HELPER_RETURN_CAST_REFERENCES=",
             text,
         )
         self.assertIn(
