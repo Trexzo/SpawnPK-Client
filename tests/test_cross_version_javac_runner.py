@@ -21,14 +21,29 @@ class CrossVersionJavacRunnerTests(unittest.TestCase):
             text,
         )
         self.assertIn(
+            "spk_recovery.javac_build_binding_cli",
+            text,
+        )
+        self.assertIn(
             "SpawnPK-Historical-v307-Backtest"
             "\\recovery-release\\release"
             "\\javac-diagnostic-private.json",
             text,
         )
         self.assertIn(
+            "SpawnPK-Historical-v307-Backtest"
+            "\\recovery-release\\release"
+            "\\rebuild\\clean-rebuild.json",
+            text,
+        )
+        self.assertIn(
             "SpawnPK-SourceM1-Exact"
             "\\release\\javac-diagnostic-private.json",
+            text,
+        )
+        self.assertIn(
+            "SpawnPK-SourceM1-Exact"
+            "\\release\\rebuild\\clean-rebuild.json",
             text,
         )
         self.assertIn("git -C $Repo fetch origin main", text)
@@ -46,9 +61,34 @@ class CrossVersionJavacRunnerTests(unittest.TestCase):
             text,
         )
         self.assertIn("COMPARATOR_COMMIT=", text)
-        self.assertNotIn("AUTHORITY_COMMIT=", text)
 
-    def test_runner_surfaces_overlap_metrics(self):
+    def test_runner_pins_build_and_binary_authority(self):
+        repo = Path(__file__).resolve().parents[1]
+        text = (
+            repo
+            / "scripts"
+            / "Invoke-CrossVersionJavacFrontier.ps1"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn(
+            "6232bae206846a4ba8d09766a2dee886"
+            "b69016066a3f50f83b201bf705f93662",
+            text,
+        )
+        self.assertIn(
+            "854f26ff9f134b0317572e7ac1688e6f"
+            "40a231d5a4c66f8db5d655b7f45ce7c6",
+            text,
+        )
+        self.assertIn('--expected-build-id"', text)
+        self.assertIn('"v307"', text)
+        self.assertIn('"v308"', text)
+        self.assertIn(
+            "build binding does not match comparator input authority",
+            text,
+        )
+
+    def test_runner_surfaces_overlap_and_build_authority(self):
         repo = Path(__file__).resolve().parents[1]
         text = (
             repo
@@ -58,6 +98,16 @@ class CrossVersionJavacRunnerTests(unittest.TestCase):
 
         for marker in (
             "REPORT_ID=",
+            "V307_BINDING_ID=",
+            "V308_BINDING_ID=",
+            "V307_SOURCE_AUTHORITY=",
+            "V308_SOURCE_AUTHORITY=",
+            "V307_REBUILD_ID=",
+            "V308_REBUILD_ID=",
+            "V307_WORKSPACE_ID=",
+            "V308_WORKSPACE_ID=",
+            "V307_SOURCE_TREE_SHA256=",
+            "V308_SOURCE_TREE_SHA256=",
             "V307_DIAGNOSTIC_REPORT_ID=",
             "V308_DIAGNOSTIC_REPORT_ID=",
             "V307_DIAGNOSTIC_INPUT_SHA256=",
