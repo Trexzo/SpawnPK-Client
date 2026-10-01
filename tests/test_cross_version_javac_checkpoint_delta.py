@@ -280,6 +280,75 @@ class CrossVersionJavacCheckpointDeltaTests(unittest.TestCase):
                 bad,
             )
 
+    def test_rejects_recomputed_false_shared_percentage(self):
+        bad = copy.deepcopy(self.current)
+        bad["comparison"]["summary"]["shared_percent_of_old"] = 99.0
+        material = {
+            "tooling_commit": bad["tooling_commit"],
+            "binary_backtest_id": bad["binary_backtest_id"],
+            "old": bad["old"],
+            "new": bad["new"],
+            "comparison": bad["comparison"],
+        }
+        bad["checkpoint_id"] = (
+            "XJAVACCHECKPOINT_" + _stable_digest(material)[:20].upper()
+        )
+        with self.assertRaisesRegex(
+            CrossVersionJavacCheckpointDeltaError,
+            "shared_percent_of_old is inconsistent",
+        ):
+            build_cross_version_javac_checkpoint_delta(
+                self.baseline,
+                bad,
+            )
+
+    def test_rejects_recomputed_false_exact_flag(self):
+        bad = copy.deepcopy(self.current)
+        bad["comparison"]["summary"]["exact_frontier_equal"] = False
+        material = {
+            "tooling_commit": bad["tooling_commit"],
+            "binary_backtest_id": bad["binary_backtest_id"],
+            "old": bad["old"],
+            "new": bad["new"],
+            "comparison": bad["comparison"],
+        }
+        bad["checkpoint_id"] = (
+            "XJAVACCHECKPOINT_" + _stable_digest(material)[:20].upper()
+        )
+        with self.assertRaisesRegex(
+            CrossVersionJavacCheckpointDeltaError,
+            "exact_frontier_equal is inconsistent",
+        ):
+            build_cross_version_javac_checkpoint_delta(
+                self.baseline,
+                bad,
+            )
+
+    def test_rejects_recomputed_category_decomposition_drift(self):
+        bad = copy.deepcopy(self.current)
+        bad["comparison"]["summary"]["shared_categories"][
+            "cannot_find_symbol"
+        ] -= 1
+        bad["comparison"]["summary"]["shared_categories"]["other"] = 1
+        material = {
+            "tooling_commit": bad["tooling_commit"],
+            "binary_backtest_id": bad["binary_backtest_id"],
+            "old": bad["old"],
+            "new": bad["new"],
+            "comparison": bad["comparison"],
+        }
+        bad["checkpoint_id"] = (
+            "XJAVACCHECKPOINT_" + _stable_digest(material)[:20].upper()
+        )
+        with self.assertRaisesRegex(
+            CrossVersionJavacCheckpointDeltaError,
+            "category decomposition is inconsistent",
+        ):
+            build_cross_version_javac_checkpoint_delta(
+                self.baseline,
+                bad,
+            )
+
     def test_reports_equality_loss_without_family_claims(self):
         changed = copy.deepcopy(self.current)
         summary = changed["comparison"]["summary"]
