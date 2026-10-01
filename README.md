@@ -392,3 +392,4 @@ Useful starting points:
 - `docs/RELEASE_VERIFICATION.md`
 - `docs/CROSS_VERSION_BACKTEST.md`
 - `docs/CROSS_VERSION_SOURCE_DELTA.md`
+- `docs/CROSS_VERSION_JAVAC_FRONTIER.md`
