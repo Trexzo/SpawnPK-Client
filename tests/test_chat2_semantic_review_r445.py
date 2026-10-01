@@ -6,7 +6,6 @@ from spk_recovery.semantic_review import resolve_semantic_candidates
 SHA="854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 ROOT=Path(__file__).resolve().parents[1]
 CLASS_COORDS=[
-    ("CLIENT_CLASS_000594","rs/n/c/aS"),
     ("CLIENT_CLASS_000596","rs/n/c/aU"),
     ("CLIENT_CLASS_000598","rs/n/c/aW"),
 ]
@@ -27,15 +26,14 @@ class Chat2SemanticReviewR445Tests(unittest.TestCase):
     def test_r445_resolves_deterministically(self):
         actual=resolve_semantic_candidates(_class_lineage(),_member_lineage(),_load("mappings/candidates/v308.semantic.chat2.r445.json"))
         expected=_load("mappings/candidates/v308.semantic-review.chat2.r445.json")
-        self.assertEqual(actual["proposal_count"],3)
+        self.assertEqual(actual["proposal_count"],2)
         self.assertEqual(actual["unresolved"],[])
-        self.assertEqual(actual["review_id"],"SEMREVIEW_B075370A772D4CA71B4E")
+        self.assertEqual(actual["review_id"],"SEMREVIEW_45AF2113C6C4B028B8E1")
         self.assertEqual(actual,expected)
 
     def test_r445_expected_stable_ids(self):
         review=_load("mappings/candidates/v308.semantic-review.chat2.r445.json")
         self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{
-            "TaskScrollInterface":"CLIENT_CLASS_000594",
             "TeleportSelectionInterface":"CLIENT_CLASS_000596",
             "WorldTournamentLeaderboardsInterface":"CLIENT_CLASS_000598",
         })

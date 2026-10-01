@@ -4,43 +4,9 @@
   "canonical": false,
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-  "proposal_count": 3,
-  "review_id": "SEMREVIEW_B075370A772D4CA71B4E",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_45AF2113C6C4B028B8E1",
   "proposals": [
-    {
-      "proposal_id": "SEMPROP_8AC614FC63B57FC9FE0E",
-      "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000594",
-      "owner_logical_id": "CLIENT_CLASS_000594",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {
-        "owner": "rs/n/c/aS",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "TaskScrollInterface",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_builder_contract",
-          "detail": "The class directly extends R436 CustomInterfaceBuilder and is constructed from the live custom-interface registry."
-        },
-        {
-          "family": "exact_screen_literals",
-          "detail": "The builder creates exact task-screen text including '@or1@Task Scroll Title', '@or1@Task Information', '@or1@Potential Rewards', '@or1@Completion Progress', 'Collect reward' and 'Track progress'."
-        },
-        {
-          "family": "exact_task_resources",
-          "detail": "The screen uses exact 'tasks/SPRITE' and 'tasks/SPRITE 2' resources and includes a progress meter with default text '0% (0/100)'."
-        },
-        {
-          "family": "exact_progress_semantics",
-          "detail": "The literal tooltip states that the meter indicates objective progress and that completing it yields a casket, fixing the screen as the Task Scroll presentation surface."
-        }
-      ],
-      "note": "Exact-v308 literal-backed custom-interface identity; no server task/reward authority is inferred."
-    },
     {
       "proposal_id": "SEMPROP_C30283FA5C69A4C56A06",
       "target_kind": "class",

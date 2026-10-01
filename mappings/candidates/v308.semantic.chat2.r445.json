@@ -14,41 +14,6 @@
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "target": {
         "kind": "class",
-        "owner": "rs/n/c/aS",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "TaskScrollInterface",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_builder_contract",
-          "detail": "The class directly extends R436 CustomInterfaceBuilder and is constructed from the live custom-interface registry."
-        },
-        {
-          "family": "exact_screen_literals",
-          "detail": "The builder creates exact task-screen text including '@or1@Task Scroll Title', '@or1@Task Information', '@or1@Potential Rewards', '@or1@Completion Progress', 'Collect reward' and 'Track progress'."
-        },
-        {
-          "family": "exact_task_resources",
-          "detail": "The screen uses exact 'tasks/SPRITE' and 'tasks/SPRITE 2' resources and includes a progress meter with default text '0% (0/100)'."
-        },
-        {
-          "family": "exact_progress_semantics",
-          "detail": "The literal tooltip states that the meter indicates objective progress and that completing it yields a casket, fixing the screen as the Task Scroll presentation surface."
-        }
-      ],
-      "note": "Exact-v308 literal-backed custom-interface identity; no server task/reward authority is inferred."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
         "owner": "rs/n/c/aU",
         "name": null,
         "descriptor": null

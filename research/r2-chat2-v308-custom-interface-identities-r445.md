@@ -4,30 +4,18 @@ Exact client authority:
 
 `854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`
 
-## Result
+## Corrected result
 
-- `rs/n/c/aS` -> `CLIENT_CLASS_000594` -> `TaskScrollInterface`
 - `rs/n/c/aU` -> `CLIENT_CLASS_000596` -> `TeleportSelectionInterface`
 - `rs/n/c/aW` -> `CLIENT_CLASS_000598` -> `WorldTournamentLeaderboardsInterface`
-- review: `SEMREVIEW_B075370A772D4CA71B4E`
+- review: `SEMREVIEW_45AF2113C6C4B028B8E1`
 
-All three classes directly extend R436 `CustomInterfaceBuilder` and are live registry entries.
+The original R445 also repeated:
 
-## TaskScrollInterface
+- `rs/n/c/aS` -> `CLIENT_CLASS_000594` -> `TaskScrollInterface`
 
-Exact literals/resources include:
-
-- `@or1@Task Scroll Title`
-- `@or1@Task Information`
-- `@or1@Potential Rewards`
-- `@or1@Completion Progress`
-- `tasks/SPRITE`
-- `tasks/SPRITE 2`
-- `Collect reward`
-- `Track progress`
-- `0% (0/100)`
-
-The progress tooltip explicitly explains objective completion and casket reward presentation.
+That exact owner, stable ID, semantic name and proposal ID were already owned by R5.
+The duplicate row is therefore removed from R445 rather than renamed or re-proposed.
 
 ## TeleportSelectionInterface
 
@@ -57,7 +45,7 @@ The builder owns separate large list surfaces for player and clan rankings.
 
 ## Boundary
 
-These are client presentation identities only. No task completion rules, teleport eligibility,
-tournament ranking computation or server reward authority is inferred.
+R5 remains the sole Chat 2 semantic owner of `TaskScrollInterface`.
 
-R445 remains non-canonical Chat 2 research only.
+R445 retains only the two genuinely new custom-interface identities and remains
+non-canonical Chat 2 research.
