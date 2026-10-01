@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_C070282670DDF0B00312",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_9C5825CB697C8B46E0D3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000106",
+      "owner_logical_id": "CLIENT_CLASS_000106",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner": "rs/cache/osrs/util/OsrsMapDependencyScannerTest", "name": null, "descriptor": null},
+      "proposed_name": "OsrsMapDependencyScannerTest",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_surviving_identity","detail":"The exact-v308 class-file and recovered-source filename preserve the full unobfuscated public type name OsrsMapDependencyScannerTest."},
+        {"family":"exact_regression_harness","detail":"Its standalone main constructs temporary scanner/cache fixtures and verifies extended object-ID smart decoding, truncated spawns, trailing landscape bytes, out-of-range planes, packed frame enumeration, OSRS filtering/counts, missing definitions/models/sequences/frames/keyframes, morph provenance and deduplication."},
+        {"family":"exact_success_contract","detail":"The harness terminates with the exact literal 'OSRS map dependency regression tests passed' after all assertions succeed."},
+        {"family":"exact_family_sequence","detail":"R199/R101 fix OsrsMapDependencyScanner and nested scanner helpers at CLIENT_CLASS_000102..000105, while R100 fixes following top-level rs/cache/osrs/util/a,b at 000107..000108; the intervening test class is CLIENT_CLASS_000106."}
+      ],
+      "note":"Exact surviving v308 source/class identity for the scanner's bundled standalone regression test harness."
+    }
+  ],
+  "unresolved": []
+}
