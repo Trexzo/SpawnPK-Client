@@ -14,37 +14,6 @@
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "target": {
         "kind": "class",
-        "owner": "rs/n/c/aC",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "ClientOptionsInterface",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_builder_contract",
-          "detail": "The class directly extends R436 CustomInterfaceBuilder and is constructed by the live custom-interface registry."
-        },
-        {
-          "family": "exact_options_surface",
-          "detail": "Exact labels include Resizable mode, Oldschool 07 graphics/ticks, Extended zoom & distance, Fog distance, Particle/glow effects, Player lighting, Shift dropping, Split private chat, combat overlay, desktop notifications and other client presentation/settings toggles."
-        },
-        {
-          "family": "exact_action_controls",
-          "detail": "The screen owns exact controls such as 'Open attack options', 'Open house options' and 'Open key binding selection', fixing it as the broad client options/settings interface rather than one narrow toggle panel."
-        }
-      ],
-      "note": "Exact-v308 literal-backed client interface identity; server-side rules and eligibility are not inferred."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
         "owner": "rs/n/c/aD",
         "name": null,
         "descriptor": null
@@ -187,41 +156,6 @@
         {
           "family": "exact_raid_resource",
           "detail": "The screen uses exact 'raids/sprite 5' presentation assets and invitation-list surfaces."
-        }
-      ],
-      "note": "Exact-v308 literal-backed client interface identity; server-side rules and eligibility are not inferred."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/n/c/aL",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "RaidPartySetupInterface",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_builder_contract",
-          "detail": "The class directly extends R436 CustomInterfaceBuilder and is live in the custom-interface registry."
-        },
-        {
-          "family": "exact_title_literal",
-          "detail": "The screen contains exact title 'Raiding Party Set-up'."
-        },
-        {
-          "family": "exact_party_controls",
-          "detail": "Exact controls include Invite member, Remove member, Re-invite last players, Start raid, Leave/disband party and Refresh."
-        },
-        {
-          "family": "exact_raid_configuration",
-          "detail": "The builder presents Chambers of Xeric / Theatre of Blood selection, Normal through Grandmaster difficulty tiers, requirements, party members and possible drops/rewards."
         }
       ],
       "note": "Exact-v308 literal-backed client interface identity; server-side rules and eligibility are not inferred."

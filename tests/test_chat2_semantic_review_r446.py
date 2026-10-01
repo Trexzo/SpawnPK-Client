@@ -7,7 +7,7 @@ SHA="854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 ROOT=Path(__file__).resolve().parents[1]
 CLASS_COORDS=[
     ("CLIENT_CLASS_000599","rs/n/c/aX"),
-    ("CLIENT_CLASS_000602","rs/n/c/ba"),
+    ("CLIENT_CLASS_000639","rs/n/c/ba"),
 ]
 
 def _class_lineage():
@@ -28,14 +28,14 @@ class Chat2SemanticReviewR446Tests(unittest.TestCase):
         expected=_load("mappings/candidates/v308.semantic-review.chat2.r446.json")
         self.assertEqual(actual["proposal_count"],2)
         self.assertEqual(actual["unresolved"],[])
-        self.assertEqual(actual["review_id"],"SEMREVIEW_1139C23556E156132738")
+        self.assertEqual(actual["review_id"],"SEMREVIEW_2D532CDC053C5858C574")
         self.assertEqual(actual,expected)
 
     def test_r446_expected_stable_ids(self):
         review=_load("mappings/candidates/v308.semantic-review.chat2.r446.json")
         self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{
             "WorldTournamentInterface":"CLIENT_CLASS_000599",
-            "SpawnPKKnowledgebaseInterface":"CLIENT_CLASS_000602",
+            "SpawnPKKnowledgebaseInterface":"CLIENT_CLASS_000639",
         })
 
     def test_r446_names_owners_and_ids_do_not_overlap_prior_reviews(self):

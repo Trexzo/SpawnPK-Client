@@ -7,8 +7,8 @@ Exact client authority:
 ## Result
 
 - `rs/n/c/aX` -> `CLIENT_CLASS_000599` -> `WorldTournamentInterface`
-- `rs/n/c/ba` -> `CLIENT_CLASS_000602` -> `SpawnPKKnowledgebaseInterface`
-- review: `SEMREVIEW_1139C23556E156132738`
+- `rs/n/c/ba` -> `CLIENT_CLASS_000639` -> `SpawnPKKnowledgebaseInterface`
+- review: `SEMREVIEW_2D532CDC053C5858C574`
 
 ## WorldTournamentInterface
 

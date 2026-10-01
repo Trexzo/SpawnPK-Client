@@ -5,7 +5,13 @@ from spk_recovery.semantic_review import resolve_semantic_candidates
 
 SHA="854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 ROOT=Path(__file__).resolve().parents[1]
-CLASS_COORDS=[["CLIENT_CLASS_000578","rs/n/c/aC"],["CLIENT_CLASS_000579","rs/n/c/aD"],["CLIENT_CLASS_000580","rs/n/c/aE"],["CLIENT_CLASS_000584","rs/n/c/aI"],["CLIENT_CLASS_000585","rs/n/c/aJ"],["CLIENT_CLASS_000586","rs/n/c/aK"],["CLIENT_CLASS_000587","rs/n/c/aL"]]
+CLASS_COORDS=[
+    ("CLIENT_CLASS_000579","rs/n/c/aD"),
+    ("CLIENT_CLASS_000580","rs/n/c/aE"),
+    ("CLIENT_CLASS_000584","rs/n/c/aI"),
+    ("CLIENT_CLASS_000585","rs/n/c/aJ"),
+    ("CLIENT_CLASS_000586","rs/n/c/aK"),
+]
 
 def _class_lineage():
     classes=[]
@@ -23,14 +29,20 @@ class Chat2SemanticReviewR448Tests(unittest.TestCase):
     def test_r448_resolves_deterministically(self):
         actual=resolve_semantic_candidates(_class_lineage(),_member_lineage(),_load("mappings/candidates/v308.semantic.chat2.r448.json"))
         expected=_load("mappings/candidates/v308.semantic-review.chat2.r448.json")
-        self.assertEqual(actual["proposal_count"],7)
+        self.assertEqual(actual["proposal_count"],5)
         self.assertEqual(actual["unresolved"],[])
-        self.assertEqual(actual["review_id"],"SEMREVIEW_26542EDED094F8FEB88B")
+        self.assertEqual(actual["review_id"],"SEMREVIEW_CC6443C92708750E78F1")
         self.assertEqual(actual,expected)
 
     def test_r448_expected_stable_ids(self):
         review=_load("mappings/candidates/v308.semantic-review.chat2.r448.json")
-        self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"ClientOptionsInterface":"CLIENT_CLASS_000578","BloodFountainPerkTreeInterface":"CLIENT_CLASS_000579","LegendaryPetFusingInterface":"CLIENT_CLASS_000580","DonorPanelInterface":"CLIENT_CLASS_000584","QuickPrayerSelectionInterface":"CLIENT_CLASS_000585","RaidPartyInvitationsInterface":"CLIENT_CLASS_000586","RaidPartySetupInterface":"CLIENT_CLASS_000587"})
+        self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{
+            "BloodFountainPerkTreeInterface":"CLIENT_CLASS_000579",
+            "LegendaryPetFusingInterface":"CLIENT_CLASS_000580",
+            "DonorPanelInterface":"CLIENT_CLASS_000584",
+            "QuickPrayerSelectionInterface":"CLIENT_CLASS_000585",
+            "RaidPartyInvitationsInterface":"CLIENT_CLASS_000586",
+        })
 
     def test_r448_names_owners_and_ids_do_not_overlap_prior_reviews(self):
         current=_load("mappings/candidates/v308.semantic-review.chat2.r448.json")
