@@ -140,16 +140,61 @@ function Ensure-JavacBuildBinding {
     Require-File $BindingReport
 }
 
+function Assert-FrozenToolingRepo {
+    param(
+        [Parameter(Mandatory = $true)][string]$FrozenRepo,
+        [Parameter(Mandatory = $true)][string]$ExpectedCommit
+    )
+
+    & git -C $FrozenRepo fetch origin main
+    if ($LASTEXITCODE -ne 0) {
+        throw "Frozen tooling fetch failed."
+    }
+
+    $FrozenHead = @(& git -C $FrozenRepo rev-parse HEAD)[0].Trim()
+    $FrozenRemote = @(& git -C $FrozenRepo rev-parse origin/main)[0].Trim()
+    if (
+        $FrozenHead -ne $ExpectedCommit -or
+        $FrozenRemote -ne $ExpectedCommit
+    ) {
+        throw (
+            "Frozen tooling authority drifted: expected=" +
+            $ExpectedCommit +
+            " head=" +
+            $FrozenHead +
+            " origin/main=" +
+            $FrozenRemote
+        )
+    }
+}
+
+function Remove-FrozenToolingSnapshot {
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path)) {
+        return
+    }
+
+    try {
+        Remove-Item -LiteralPath $Path -Recurse -Force
+        Write-Host "FROZEN_TOOLING_CLEANED=$Path"
+    }
+    catch {
+        Write-Host (
+            "FROZEN_TOOLING_CLEANUP_FAILED=" +
+            $Path +
+            " :: " +
+            $_.Exception.Message
+        ) -ForegroundColor Yellow
+    }
+}
+
 if (-not (Test-Path -LiteralPath $Repo -PathType Container)) {
     throw "Repo not found: $Repo"
 }
 if (-not (Test-Path -LiteralPath $AuthorityRoot -PathType Container)) {
     throw "Archived authority root not found: $AuthorityRoot"
 }
-
-$HistoricalScript = Join-Path $Repo "scripts\Invoke-HistoricalV307FullBacktest.ps1"
-$V308Script = Join-Path $Repo "scripts\Invoke-SourceM1ExactLocalAcceptance.ps1"
-$CompareScript = Join-Path $Repo "scripts\Invoke-CrossVersionJavacFrontier.ps1"
 
 $V308Index = Join-Path $AuthorityRoot "authority\v308-index.json"
 $ClassLineage = Join-Path $AuthorityRoot "authority\class-lineage.accepted.json"
@@ -158,9 +203,6 @@ $MemberSafetyAcceptance = Join-Path $AuthorityRoot "authority\member-safety.acce
 $DecompilerJar = Join-Path $AuthorityRoot "tools\procyon-decompiler-0.6.0.jar"
 
 foreach ($Path in @(
-    $HistoricalScript,
-    $V308Script,
-    $CompareScript,
     $V307ClientJar,
     $V308ClientJar,
     $V308Index,
@@ -195,11 +237,63 @@ if ($Head -notmatch "^[0-9a-f]{40}$") {
     throw "Current authority commit is not lowercase 40-hex: $Head"
 }
 
+$FreezeRoot = Join-Path (
+    [System.IO.Path]::GetTempPath()
+) (
+    "SpawnPK-EquivalentTooling-" +
+    $Head.Substring(0, 12) +
+    "-" +
+    [guid]::NewGuid().ToString("N")
+)
+$FrozenOrigin = Join-Path $FreezeRoot "origin.git"
+$FrozenRepo = Join-Path $FreezeRoot "repo"
+
+New-Item -ItemType Directory -Path $FreezeRoot | Out-Null
+
+& git clone --bare --no-hardlinks $Repo $FrozenOrigin
+if ($LASTEXITCODE -ne 0) {
+    throw "Could not create frozen bare tooling origin."
+}
+
+& git -C $FrozenOrigin update-ref refs/heads/main $Head
+if ($LASTEXITCODE -ne 0) {
+    throw "Could not pin frozen tooling main ref."
+}
+& git -C $FrozenOrigin symbolic-ref HEAD refs/heads/main
+if ($LASTEXITCODE -ne 0) {
+    throw "Could not pin frozen tooling HEAD."
+}
+
+& git clone --no-hardlinks --single-branch --branch main $FrozenOrigin $FrozenRepo
+if ($LASTEXITCODE -ne 0) {
+    throw "Could not create frozen tooling working clone."
+}
+
+Assert-FrozenToolingRepo -FrozenRepo $FrozenRepo -ExpectedCommit $Head
+
+$HistoricalScript = Join-Path $FrozenRepo "scripts\Invoke-HistoricalV307FullBacktest.ps1"
+$V308Script = Join-Path $FrozenRepo "scripts\Invoke-SourceM1ExactLocalAcceptance.ps1"
+$CompareScript = Join-Path $FrozenRepo "scripts\Invoke-CrossVersionJavacFrontier.ps1"
+
+foreach ($Path in @(
+    $HistoricalScript,
+    $V308Script,
+    $CompareScript
+)) {
+    Require-File $Path
+}
+
+Write-Host "FROZEN_TOOLING_COMMIT=$Head" -ForegroundColor Green
+Write-Host "FROZEN_TOOLING_REPO=$FrozenRepo"
+Write-Host (
+    "NOTE: unexpected failure preserves the frozen snapshot for diagnosis."
+) -ForegroundColor Yellow
+
 Backup-NonEmptyDirectory -Path $V307Out
 Backup-NonEmptyDirectory -Path $V308Out
 Backup-NonEmptyDirectory -Path $CompareOut
 
-$env:PYTHONPATH = Join-Path $Repo "src"
+$env:PYTHONPATH = Join-Path $FrozenRepo "src"
 $env:PYTHONDONTWRITEBYTECODE = "1"
 
 Write-Host ""
@@ -218,7 +312,7 @@ $HistoricalArgs = @(
     "-File",
     $HistoricalScript,
     "-Repo",
-    $Repo,
+    $FrozenRepo,
     "-V307ClientJar",
     $V307ClientJar,
     "-V308ClientJar",
@@ -233,18 +327,7 @@ $HistoricalArgs = @(
 
 $V307Exit = Invoke-ChildAllowBlocked -Label "RUN EXACT v307 HISTORICAL BACKTEST" -Arguments $HistoricalArgs
 
-& git -C $Repo fetch origin main
-if ($LASTEXITCODE -ne 0) {
-    throw "git fetch origin main failed after v307 run"
-}
-$AfterV307Head = @(& git -C $Repo rev-parse HEAD)[0].Trim()
-$AfterV307Remote = @(& git -C $Repo rev-parse origin/main)[0].Trim()
-if ($AfterV307Head -ne $Head -or $AfterV307Remote -ne $Head) {
-    throw (
-        "Recovery tooling authority changed after v307 run: " +
-        "captured=$Head head=$AfterV307Head origin/main=$AfterV307Remote"
-    )
-}
+Assert-FrozenToolingRepo -FrozenRepo $FrozenRepo -ExpectedCommit $Head
 
 $V308Args = @(
     "-NoProfile",
@@ -253,7 +336,7 @@ $V308Args = @(
     "-File",
     $V308Script,
     "-Repo",
-    $Repo,
+    $FrozenRepo,
     "-ClientJar",
     $V308ClientJar,
     "-SourceIndex",
@@ -274,18 +357,7 @@ $V308Args = @(
 
 $V308Exit = Invoke-ChildAllowBlocked -Label "RUN EXACT v308 SOURCE M1 ACCEPTANCE" -Arguments $V308Args
 
-& git -C $Repo fetch origin main
-if ($LASTEXITCODE -ne 0) {
-    throw "git fetch origin main failed after v308 run"
-}
-$AfterV308Head = @(& git -C $Repo rev-parse HEAD)[0].Trim()
-$AfterV308Remote = @(& git -C $Repo rev-parse origin/main)[0].Trim()
-if ($AfterV308Head -ne $Head -or $AfterV308Remote -ne $Head) {
-    throw (
-        "Recovery tooling authority changed after v308 run: " +
-        "captured=$Head head=$AfterV308Head origin/main=$AfterV308Remote"
-    )
-}
+Assert-FrozenToolingRepo -FrozenRepo $FrozenRepo -ExpectedCommit $Head
 
 $V307Diagnostic = Join-Path $V307Out "recovery-release\release\javac-diagnostic-private.json"
 $V307CleanRebuild = Join-Path $V307Out "recovery-release\release\rebuild\clean-rebuild.json"
@@ -339,7 +411,7 @@ $CompareArgs = @(
     "-File",
     $CompareScript,
     "-Repo",
-    $Repo,
+    $FrozenRepo,
     "-V307Diagnostic",
     $V307Diagnostic,
     "-V307CleanRebuild",
@@ -398,6 +470,24 @@ Write-Host "V308_ONLY_ERRORS=$($CompareSummary.new_only_errors)"
 Write-Host "EXACT_FRONTIER_EQUAL=$($CompareSummary.exact_frontier_equal)"
 Write-Host "REPORT_ID=$($CompareSummary.report_id)"
 Write-Host "REPORT=$CompareReport"
+
+& git -C $Repo fetch origin main
+if ($LASTEXITCODE -eq 0) {
+    $LiveMainAfter = @(& git -C $Repo rev-parse origin/main)[0].Trim()
+    if ($LiveMainAfter -ne $Head) {
+        Write-Host "LIVE_MAIN_ADVANCED=true" -ForegroundColor Yellow
+        Write-Host "CAPTURED_TOOLING_COMMIT=$Head"
+        Write-Host "LATEST_ORIGIN_MAIN=$LiveMainAfter"
+    }
+    else {
+        Write-Host "LIVE_MAIN_ADVANCED=false"
+    }
+}
+else {
+    Write-Host "LIVE_MAIN_REFRESH_FAILED=true" -ForegroundColor Yellow
+}
+
+Remove-FrozenToolingSnapshot -Path $FreezeRoot
 
 if ($V307Exit -eq 0 -and $V308Exit -eq 0) {
     Write-Host "EQUIVALENT_TOOLING_RECOVERY_RELEASES_READY=true" -ForegroundColor Green
