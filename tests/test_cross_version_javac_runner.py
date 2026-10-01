@@ -72,6 +72,24 @@ class CrossVersionJavacRunnerTests(unittest.TestCase):
             text,
         )
         self.assertIn("COMPARATOR_COMMIT=", text)
+        self.assertIn(
+            "spk_recovery.cross_version_javac_checkpoint_cli",
+            text,
+        )
+        self.assertIn(
+            'v307-v308-javac-checkpoint.json',
+            text,
+        )
+        self.assertIn(
+            "XVERBIN_E56BD2FB8CCC172D6184",
+            text,
+        )
+        self.assertIn(
+            "Refusing unexpected identifier-bearing checkpoint.",
+            text,
+        )
+        self.assertIn("CHECKPOINT_ID=", text)
+        self.assertIn("CHECKPOINT=", text)
 
     def test_runner_pins_build_and_binary_authority(self):
         repo = Path(__file__).resolve().parents[1]
