@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [{
+    "schema_version": 1,
+    "kind": "semantic_name_candidate",
+    "canonical": false,
+    "status": "CANDIDATE",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target": {"kind": "class", "owner": "rs/n/a/a/d", "name": null, "descriptor": null},
+    "proposed_name": "DropDownOption",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"exact_literal_identity","detail":"The exact-v308 class constant pool and toString bootstrap preserve the source-style literal 'DropDownOption(text=..., tooltip=...)'."},
+      {"family":"exact_value_shape","detail":"The class stores exactly two Strings, exposes value-style equals/hashCode/toString plus direct getters/setters, and its constructor accepts exactly text and tooltip."},
+      {"family":"exact_dropdown_owner","detail":"The live dropdown widget rs/n/a/a/a owns List<rs/n/a/a/d>, creates each option from a supplied display String plus tooltip 'Select', selects by index, and publishes the selected option text into the widget."},
+      {"family":"exact_stable_id","detail":"Sorted exact-v308 rs/** class order places rs/n/a/a/d at zero-based index 529, fixing the canonical stable identity as CLIENT_CLASS_000530."}
+    ],
+    "note":"Exact-v308 source-style identity recovered from the surviving DropDownOption(text=..., tooltip=...) literal and live dropdown-widget ownership."
+  }],
+  "conflicts": []
+}
