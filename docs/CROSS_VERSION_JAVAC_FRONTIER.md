@@ -145,3 +145,93 @@ measurement. This checkpoint proves cross-version compiler parity at that
 tooling authority; it does not satisfy the final release-ready cross-version
 gate.
 
+## Deterministic public-safe checkpoint export
+
+A successful `Invoke-CrossVersionJavacFrontier.ps1` run now also invokes
+`spk-cross-version-javac-checkpoint` and writes:
+
+`v307-v308-javac-checkpoint.json`
+
+The checkpoint builder does **not** consume either private diagnostic report.
+It accepts only:
+
+- the already-redacted `XJAVACFRONTIER_*` comparison report;
+- the independently regenerated redacted old/new `JAVACBIND_*` reports;
+- the optional `XVERBIN_*` authority for the compared build pair.
+
+Before emitting a checkpoint it independently rederives both `JAVACBIND_*`
+identities and the `XJAVACFRONTIER_*` identity from their public authority
+fields, requires both bindings to use the same recovery-tooling commit, and
+requires each binding's diagnostic report ID, raw-input SHA-256 and frontier
+ID to match the side of the comparator it claims to bind.
+
+The exporter also refuses any comparator family containing `source_path`,
+`message`, `symbol`, or `location`, even if the input incorrectly claims
+`identifiers_included=false`.
+
+The emitted `XJAVACCHECKPOINT_*` artifact contains only build/source authority
+hashes and IDs, compiler aggregate state, and the redacted comparator summary.
+It does not declare either recovery release ready. Its purpose is to eliminate
+manual transcription when promoting an exact-local measurement into a reviewed
+public checkpoint.
+
+## Checkpoint-to-checkpoint progress delta
+
+After two public-safe `cross_version_javac_checkpoint` artifacts exist,
+compare them without reopening private javac diagnostics:
+
+```powershell
+spk-cross-version-javac-checkpoint-delta `
+  .\baseline-checkpoint.json `
+  .\current-checkpoint.json `
+  --out .\checkpoint-delta.json
+```
+
+The delta tool independently rederives both `XJAVACCHECKPOINT_*`
+identities and refuses malformed or recomputed-invalid public material. It also
+requires the exact old/new build IDs, source-authority SHA-256 pair, and
+optional `XVERBIN_*` authority to remain unchanged.
+
+The report records:
+
+- baseline/current tooling commits;
+- signed old/new total-error deltas;
+- signed affected-file and shared/side-only deltas;
+- signed deltas for every public javac category;
+- whether each build frontier changed;
+- whether each recovered source-tree hash changed;
+- whether exact cross-version frontier equality was preserved, gained, or
+  lost.
+
+This is intentionally aggregate-only. The hardened checkpoint does not carry a
+stable cross-run diagnostic-family identity, so the delta report does **not**
+claim which exact diagnostic families disappeared or appeared.
+
+## Legacy 350/350 baseline bridge
+
+The canonical 350/350 measurement predates automatic
+`XJAVACCHECKPOINT_*` export, so it cannot honestly be treated as a historical
+checkpoint artifact.
+
+Use the dedicated legacy-baseline bridge instead:
+
+```powershell
+spk-cross-version-javac-legacy-baseline-delta `
+  .\fixtures\v307-v308-source-m1-exact-javac-parity-07ed6f9.json `
+  .\v307-v308-javac-checkpoint.json `
+  --out .\legacy-350-to-current-delta.json
+```
+
+The bridge validates the exact canonical legacy fixture authority and one
+modern verified `cross_version_javac_checkpoint`, requires the exact
+v307/v308 source-authority SHA pair plus `XVERBIN_*` authority to remain
+unchanged, and emits deterministic `XJAVACLEGACYDELTA_*` authority.
+
+The output records `baseline_fixture_id` and `current_checkpoint_id`.
+It intentionally does **not** invent a `baseline_checkpoint_id` for the
+historical run.
+
+Like the checkpoint-to-checkpoint delta, this bridge is aggregate-only. It
+reports signed error/file/category deltas plus frontier/source-tree/equality
+transitions, but does not claim stable per-diagnostic-family transitions.
+

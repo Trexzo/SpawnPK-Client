@@ -1,0 +1,216 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/cross-version-javac-checkpoint-delta.schema.json",
+  "title": "SpawnPK cross-version javac checkpoint delta",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "delta_id",
+    "baseline_checkpoint_id",
+    "current_checkpoint_id",
+    "old_build_id",
+    "new_build_id",
+    "old_source_authority_sha256",
+    "new_source_authority_sha256",
+    "binary_backtest_id",
+    "baseline_tooling_commit",
+    "current_tooling_commit",
+    "scalar_delta",
+    "category_delta",
+    "exact_frontier_equality_transition",
+    "old_frontier_changed",
+    "new_frontier_changed",
+    "old_source_tree_changed",
+    "new_source_tree_changed",
+    "identifiers_included",
+    "note"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "cross_version_javac_checkpoint_delta"
+    },
+    "delta_id": {
+      "type": "string",
+      "pattern": "^XJAVACCHECKDELTA_[0-9A-F]{20}$"
+    },
+    "baseline_checkpoint_id": {
+      "type": "string",
+      "pattern": "^XJAVACCHECKPOINT_[0-9A-F]{20}$"
+    },
+    "current_checkpoint_id": {
+      "type": "string",
+      "pattern": "^XJAVACCHECKPOINT_[0-9A-F]{20}$"
+    },
+    "old_build_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]{1,64}$"
+    },
+    "new_build_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]{1,64}$"
+    },
+    "old_source_authority_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "new_source_authority_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "binary_backtest_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^XVERBIN_[0-9A-F]{20}$"
+    },
+    "baseline_tooling_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "current_tooling_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "scalar_delta": {
+      "$ref": "#/$defs/scalarDelta"
+    },
+    "category_delta": {
+      "$ref": "#/$defs/categoryDelta"
+    },
+    "exact_frontier_equality_transition": {
+      "enum": [
+        "preserved_true",
+        "preserved_false",
+        "gained",
+        "lost"
+      ]
+    },
+    "old_frontier_changed": {
+      "type": "boolean"
+    },
+    "new_frontier_changed": {
+      "type": "boolean"
+    },
+    "old_source_tree_changed": {
+      "type": "boolean"
+    },
+    "new_source_tree_changed": {
+      "type": "boolean"
+    },
+    "identifiers_included": {
+      "const": false
+    },
+    "note": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "scalarDelta": {
+      "type": "object",
+      "required": [
+        "old_total_errors",
+        "new_total_errors",
+        "shared_errors",
+        "old_only_errors",
+        "new_only_errors",
+        "shared_percent_of_old",
+        "shared_percent_of_new",
+        "old_affected_files",
+        "new_affected_files",
+        "shared_affected_files"
+      ],
+      "properties": {
+        "old_total_errors": {
+          "type": "integer"
+        },
+        "new_total_errors": {
+          "type": "integer"
+        },
+        "shared_errors": {
+          "type": "integer"
+        },
+        "old_only_errors": {
+          "type": "integer"
+        },
+        "new_only_errors": {
+          "type": "integer"
+        },
+        "shared_percent_of_old": {
+          "type": "number"
+        },
+        "shared_percent_of_new": {
+          "type": "number"
+        },
+        "old_affected_files": {
+          "type": "integer"
+        },
+        "new_affected_files": {
+          "type": "integer"
+        },
+        "shared_affected_files": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false
+    },
+    "categoryDelta": {
+      "type": "object",
+      "required": [
+        "old_categories",
+        "new_categories",
+        "shared_categories",
+        "old_only_categories",
+        "new_only_categories"
+      ],
+      "properties": {
+        "old_categories": {
+          "$ref": "#/$defs/signedCategoryCounts"
+        },
+        "new_categories": {
+          "$ref": "#/$defs/signedCategoryCounts"
+        },
+        "shared_categories": {
+          "$ref": "#/$defs/signedCategoryCounts"
+        },
+        "old_only_categories": {
+          "$ref": "#/$defs/signedCategoryCounts"
+        },
+        "new_only_categories": {
+          "$ref": "#/$defs/signedCategoryCounts"
+        }
+      },
+      "additionalProperties": false
+    },
+    "signedCategoryCounts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "propertyNames": {
+        "enum": [
+          "cannot_find_symbol",
+          "package_does_not_exist",
+          "incompatible_types",
+          "cannot_be_converted",
+          "ambiguous_reference",
+          "private_access",
+          "protected_access",
+          "cannot_apply_arguments",
+          "cannot_be_dereferenced",
+          "override_mismatch",
+          "name_clash",
+          "bad_operand_type",
+          "non_static_from_static_context",
+          "already_assigned",
+          "other"
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}

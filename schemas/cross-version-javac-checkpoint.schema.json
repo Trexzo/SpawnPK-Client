@@ -1,0 +1,252 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/cross-version-javac-checkpoint.schema.json",
+  "title": "SpawnPK cross-version javac checkpoint",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "checkpoint_id",
+    "tooling_commit",
+    "binary_backtest_id",
+    "old",
+    "new",
+    "comparison",
+    "identifiers_included",
+    "note"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "kind": {
+      "const": "cross_version_javac_checkpoint"
+    },
+    "checkpoint_id": {
+      "type": "string",
+      "pattern": "^XJAVACCHECKPOINT_[0-9A-F]{20}$"
+    },
+    "tooling_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "binary_backtest_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^XVERBIN_[0-9A-F]{20}$"
+    },
+    "old": {
+      "$ref": "#/$defs/build"
+    },
+    "new": {
+      "$ref": "#/$defs/build"
+    },
+    "comparison": {
+      "type": "object",
+      "required": [
+        "report_id",
+        "summary"
+      ],
+      "properties": {
+        "report_id": {
+          "type": "string",
+          "pattern": "^XJAVACFRONTIER_[0-9A-F]{20}$"
+        },
+        "summary": {
+          "$ref": "#/$defs/summary"
+        }
+      },
+      "additionalProperties": false
+    },
+    "identifiers_included": {
+      "const": false
+    },
+    "note": {
+      "type": "string"
+    }
+  },
+  "$defs": {
+    "build": {
+      "type": "object",
+      "required": [
+        "build_id",
+        "source_authority_sha256",
+        "binding_id",
+        "diagnostic_report_id",
+        "diagnostic_input_sha256",
+        "frontier_id",
+        "rebuild_id",
+        "workspace_id",
+        "source_tree_sha256",
+        "clean_rebuild_status",
+        "clean_project_build",
+        "project_binary_fallback_count"
+      ],
+      "properties": {
+        "build_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9._-]{1,64}$"
+        },
+        "source_authority_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "binding_id": {
+          "type": "string",
+          "pattern": "^JAVACBIND_[0-9A-F]{20}$"
+        },
+        "diagnostic_report_id": {
+          "type": "string",
+          "pattern": "^JAVACDIAG_[0-9A-F]{20}$"
+        },
+        "diagnostic_input_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "frontier_id": {
+          "type": "string",
+          "pattern": "^JAVACFRONTIER_[0-9A-F]{20}$"
+        },
+        "rebuild_id": {
+          "type": "string",
+          "pattern": "^CLEANBUILD_[0-9A-F]{20}$"
+        },
+        "workspace_id": {
+          "type": "string",
+          "pattern": "^SRCWS_[0-9A-F]{20}$"
+        },
+        "source_tree_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "clean_rebuild_status": {
+          "enum": [
+            "complete",
+            "compile_failed",
+            "class_set_mismatch"
+          ]
+        },
+        "clean_project_build": {
+          "type": "boolean"
+        },
+        "project_binary_fallback_count": {
+          "const": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "old_total_errors",
+        "new_total_errors",
+        "shared_errors",
+        "old_only_errors",
+        "new_only_errors",
+        "shared_percent_of_old",
+        "shared_percent_of_new",
+        "old_affected_files",
+        "new_affected_files",
+        "shared_affected_files",
+        "old_categories",
+        "new_categories",
+        "shared_categories",
+        "old_only_categories",
+        "new_only_categories",
+        "exact_frontier_equal"
+      ],
+      "properties": {
+        "old_total_errors": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "new_total_errors": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "shared_errors": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "old_only_errors": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "new_only_errors": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "shared_percent_of_old": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "shared_percent_of_new": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "old_affected_files": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "new_affected_files": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "shared_affected_files": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "old_categories": {
+          "$ref": "#/$defs/categoryCounts"
+        },
+        "new_categories": {
+          "$ref": "#/$defs/categoryCounts"
+        },
+        "shared_categories": {
+          "$ref": "#/$defs/categoryCounts"
+        },
+        "old_only_categories": {
+          "$ref": "#/$defs/categoryCounts"
+        },
+        "new_only_categories": {
+          "$ref": "#/$defs/categoryCounts"
+        },
+        "exact_frontier_equal": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "categoryCounts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "propertyNames": {
+        "enum": [
+          "cannot_find_symbol",
+          "package_does_not_exist",
+          "incompatible_types",
+          "cannot_be_converted",
+          "ambiguous_reference",
+          "private_access",
+          "protected_access",
+          "cannot_apply_arguments",
+          "cannot_be_dereferenced",
+          "override_mismatch",
+          "name_clash",
+          "bad_operand_type",
+          "non_static_from_static_context",
+          "already_assigned",
+          "other"
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}
