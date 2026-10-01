@@ -4,7 +4,7 @@ import unittest
 from spk_recovery.semantic_review import resolve_semantic_candidates
 SHA="854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 ROOT=Path(__file__).resolve().parents[1]
-CLASS_COORDS=[["CLIENT_CLASS_000007","rs/A/d"],["CLIENT_CLASS_000014","rs/A/k"]]
+CLASS_COORDS=[["CLIENT_CLASS_000014","rs/A/k"]]
 def _class_lineage():
     classes=[]
     for logical_id, internal_name in CLASS_COORDS:
@@ -15,9 +15,9 @@ def _load(p): return json.loads((ROOT/p).read_text(encoding="utf-8"))
 class Chat2SemanticReviewR469Tests(unittest.TestCase):
     def test_r469_resolves_deterministically(self):
         actual=resolve_semantic_candidates(_class_lineage(),_member_lineage(),_load("mappings/candidates/v308.semantic.chat2.r469.json")); expected=_load("mappings/candidates/v308.semantic-review.chat2.r469.json")
-        self.assertEqual(actual["proposal_count"],2); self.assertEqual(actual["unresolved"],[]); self.assertEqual(actual["review_id"],"SEMREVIEW_292A36DD3CBF1DACBFD9"); self.assertEqual(actual,expected)
+        self.assertEqual(actual["proposal_count"],1); self.assertEqual(actual["unresolved"],[]); self.assertEqual(actual["review_id"],"SEMREVIEW_0EC372F479267AA6F843"); self.assertEqual(actual,expected)
     def test_r469_expected_stable_ids(self):
-        review=_load("mappings/candidates/v308.semantic-review.chat2.r469.json"); self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"AsyncBufferedImage":"CLIENT_CLASS_000007","JagexPrintableCharMatcher":"CLIENT_CLASS_000014"})
+        review=_load("mappings/candidates/v308.semantic-review.chat2.r469.json"); self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"JagexPrintableCharMatcher":"CLIENT_CLASS_000014"})
     def test_r469_names_owners_and_ids_do_not_overlap_prior_reviews(self):
         current=_load("mappings/candidates/v308.semantic-review.chat2.r469.json"); names={r["proposed_name"] for r in current["proposals"]}; owners={r["source_coordinate"]["owner"] for r in current["proposals"]}; stable_ids={r["stable_id"] for r in current["proposals"]}
         pn=set(); po=set(); ps=set()

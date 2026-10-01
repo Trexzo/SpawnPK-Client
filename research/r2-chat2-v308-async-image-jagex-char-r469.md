@@ -1,43 +1,33 @@
-# Chat 2 — exact-v308 asynchronous image/text character utilities R469
+# Chat 2 — exact-v308 Jagex printable character matcher R469
 
 Exact client authority:
 
 `854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`
 
-## Result
+## Corrected result
 
-- `rs/A/d` -> `CLIENT_CLASS_000007` -> `AsyncBufferedImage`
+R469 retains exactly one genuinely new semantic proposal:
+
 - `rs/A/k` -> `CLIENT_CLASS_000014` -> `JagexPrintableCharMatcher`
-- review: `SEMREVIEW_292A36DD3CBF1DACBFD9`
+- proposal: `SEMPROP_3AB6BDA5EEA000DFBA1B`
+- review: `SEMREVIEW_0EC372F479267AA6F843`
 
-## AsyncBufferedImage
+The original R469 batch also attempted:
 
-Exact v308 extends `BufferedImage` and owns:
+- `rs/A/d` -> `AsyncBufferedImage`
 
-- a completion flag;
-- a list of Runnable callbacks;
-- a changed/completion method that drains callbacks;
-- immediate asynchronous callback dispatch after completion;
-- ImageIcon binding helpers for JButton and JLabel;
-- Swing repaint scheduling when image contents become available.
-
-R468-adjacent `rs/A/a` creates and asynchronously fills this type from cached image
-sources.
-
-This matches RuneLite `net.runelite.client.util.AsyncBufferedImage`.
+That tuple was already owned by R20 with the exact same proposal ID
+`SEMPROP_0A95AE215FCE838836DC`, so it has been removed from R469.
 
 ## JagexPrintableCharMatcher
 
-Exact v308 extends Guava `CharMatcher`.
+Exact v308 extends Guava `CharMatcher` and accepts:
 
-It accepts:
-
-- ASCII printable 32..126;
+- ASCII printable characters 32..126;
 - codepoint 128;
 - codepoints 160..255.
 
-That is the exact character-range contract of RuneLite
-`JagexPrintableCharMatcher`.
+The contract matches historical RuneLite `JagexPrintableCharMatcher`.
 
 ## Boundary
 

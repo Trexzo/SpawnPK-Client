@@ -1,4 +1,4 @@
-# Chat 2 — exact-v308 ColorUtil R465
+# Chat 2 — R465 duplicate ColorUtil audit
 
 Exact client authority:
 
@@ -6,42 +6,17 @@ Exact client authority:
 
 ## Result
 
-- `rs/A/g` -> `CLIENT_CLASS_000010` -> `ColorUtil`
-- proposal: `SEMPROP_0BF0157A3E49F911221D`
-- review: `SEMREVIEW_839EB5D8B12E9743378B`
+R465 retains **no semantic proposal**.
 
-## Exact v308 surface
+The attempted R465 proposal exactly duplicated R20:
 
-The utility owns:
+- `rs/A/g`
+- `CLIENT_CLASS_000010`
+- `ColorUtil`
+- `SEMPROP_0BF0157A3E49F911221D`
 
-- RuneScape color-tag generation and closing tags;
-- text wrapping in a color tag;
-- RGB and ARGB hex formatting/parsing;
-- color interpolation;
-- alpha replacement;
-- hue/HSB transformations;
-- RGB-range clamping.
+R20 already owns this exact class/name/ID tuple.
 
-Surviving literals include:
+Later source-identity work may strengthen provenance, but it does not create a second semantic review.
 
-- `<col=`
-- `>`
-- `</col>`
-- `%06x`
-- `%08x`
-
-and explicit RGB/ARGB hexadecimal validation patterns.
-
-## Upstream identity
-
-RuneLite `net.runelite.client.util.ColorUtil` carries the same shared color-helper role and
-matching markup/constants/conversion surface.
-
-The exact-v308 class is also consumed broadly across UI/plugin/rendering code, including
-trading presentation, ground-marker/UI code and rich-text paths, which confirms it is not
-feature-local.
-
-## Boundary
-
-R465 is non-canonical semantic research only. No member proposals or source rewrite are
-performed.
+R465 is correction/corroboration only.

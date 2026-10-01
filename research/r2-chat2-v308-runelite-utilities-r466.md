@@ -1,4 +1,4 @@
-# Chat 2 — exact-v308 RuneLite utility identities R466
+# Chat 2 — R466 duplicate utility audit
 
 Exact client authority:
 
@@ -6,52 +6,14 @@ Exact client authority:
 
 ## Result
 
-- `rs/A/q` -> `CLIENT_CLASS_000020` -> `ReflectUtil`
-- `rs/A/s` -> `CLIENT_CLASS_000024` -> `Text`
-- `rs/A/t` -> `CLIENT_CLASS_000025` -> `WildcardMatcher`
-- review: `SEMREVIEW_CB92D15B462A836B81C7`
+R466 retains **no semantic proposals**.
 
-## ReflectUtil
+All three attempted proposals exactly duplicate R20:
 
-Exact v308 preserves the RuneLite reflection helper surface:
+- `rs/A/t` / `CLIENT_CLASS_000025` / `WildcardMatcher` / `SEMPROP_86ECF61A8AF03C5408D9`
+- `rs/A/q` / `CLIENT_CLASS_000020` / `ReflectUtil` / `SEMPROP_9ABE3CA0A231D1B99718`
+- `rs/A/s` / `CLIENT_CLASS_000024` / `Text` / `SEMPROP_FF3823C530748875A3EC`
 
-- MethodHandles lookup/private lookup support;
-- lookup-helper installation;
-- declared constructor/field/method access;
-- class-resource byte loading;
-- reflective construction/accessibility helpers.
+R20 already owns the exact tuples.
 
-It also preserves the exact failure literal:
-
-`unable to install lookup helper`
-
-This matches RuneLite `net.runelite.client.util.ReflectUtil`.
-
-## Text
-
-Exact v308 owns the broad shared text utility surface:
-
-- RuneScape markup stripping/normalization;
-- `<lt>`, `<gt>`, `<br>`, `<img...` handling;
-- whitespace/name normalization;
-- collection/CSV helpers;
-- enum/display-name formatting;
-- Jaro-Winkler fuzzy comparison.
-
-The class preserves RuneLite's exact `<[^>]*>` tag pattern and the same
-`JaroWinklerDistance` utility dependency.
-
-This matches RuneLite `net.runelite.client.util.Text`.
-
-## WildcardMatcher
-
-Exact v308 converts case-insensitive star-wildcard patterns into quoted regular expressions
-and replaces wildcards with `.*` before matching.
-
-This matches RuneLite `net.runelite.client.util.WildcardMatcher`.
-
-## Boundary
-
-All three names are source-backed identities, not descriptive inventions.
-
-R466 remains non-canonical semantic research only.
+R466 is correction/corroboration only.

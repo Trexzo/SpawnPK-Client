@@ -1,4 +1,4 @@
-# Chat 2 — exact-v308 RuneLite image/navigation/runnable utilities R467
+# Chat 2 — R467 duplicate utility audit
 
 Exact client authority:
 
@@ -6,47 +6,14 @@ Exact client authority:
 
 ## Result
 
-- `rs/A/j` -> `CLIENT_CLASS_000013` -> `ImageUtil`
-- `rs/A/l` -> `CLIENT_CLASS_000015` -> `LinkBrowser`
-- `rs/A/r` -> `CLIENT_CLASS_000023` -> `RunnableExceptionLogger`
-- review: `SEMREVIEW_4B167B8F1C77FEBDE073`
+R467 retains **no semantic proposals**.
 
-All three identities are corroborated directly against RuneLite source.
+All three attempted proposals exactly duplicate R20:
 
-## ImageUtil
+- `rs/A/j` / `CLIENT_CLASS_000013` / `ImageUtil` / `SEMPROP_924C4ADFE74AFC7251D1`
+- `rs/A/r` / `CLIENT_CLASS_000023` / `RunnableExceptionLogger` / `SEMPROP_E8CDEF42CAF0A253F63A`
+- `rs/A/l` / `CLIENT_CLASS_000015` / `LinkBrowser` / `SEMPROP_EA7A92A559E35600AFD3`
 
-Exact v308 preserves the broad image helper surface: classpath image loading through
-ImageIO, Image->BufferedImage/ARGB conversion, resizing, aspect-preserving scaling,
-horizontal/vertical flipping and other shared BufferedImage transforms.
+R20 already owns the exact tuples.
 
-It also preserves the exact load-failure log text:
-
-`Failed to load image from class: {}, path: {}`
-
-This matches RuneLite `net.runelite.client.util.ImageUtil`.
-
-## LinkBrowser
-
-Exact v308 has the same URL/folder navigation flow as RuneLite LinkBrowser:
-
-- Linux xdg-open attempt;
-- Desktop browse/open fallback;
-- warning/debug logging;
-- Swing fallback dialog;
-- copy URL/folder to clipboard when navigation fails.
-
-The class literally logs `LinkBrowser.browse()` and `LinkBrowser.open()`.
-
-## RunnableExceptionLogger
-
-Exact v308 wraps one Runnable, invokes it, catches Throwable, logs:
-
-`Uncaught exception in runnable {}`
-
-then rethrows the failure. It also exposes the same static wrap factory.
-
-This matches RuneLite `net.runelite.client.util.RunnableExceptionLogger`.
-
-## Boundary
-
-R467 is non-canonical semantic research only.
+R467 is correction/corroboration only.
