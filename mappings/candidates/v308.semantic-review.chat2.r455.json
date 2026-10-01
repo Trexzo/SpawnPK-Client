@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_2413D60CA974589B3ADD",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_D984E35E66D6C3F02C1F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000614",
+      "owner_logical_id": "CLIENT_CLASS_000614",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner":"rs/n/c/am","name":null,"descriptor":null},
+      "proposed_name": "SeasonalEventWelcomeInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_builder_contract","detail":"The class directly extends R436 CustomInterfaceBuilder and exact-v308 reverse references show only itself plus the central custom-interface registry."},
+        {"family":"exact_welcome_literal","detail":"The screen contains exact banner '<img=209> Welcome back to SpawnPK! Limited Time Event <img=209>' and exact personalized placeholder 'Welcome back, Username!'."},
+        {"family":"exact_event_identity","detail":"Exact title/date text includes 'Solar Event: Summer 2026', 'Event expires on: @yel@' and 'May 15th, 2026'."},
+        {"family":"exact_login_reward_surface","detail":"The same screen contains 'Your next daily reward: @yel@24h 0m 0s' and text stating that one of the displayed rewards is received for logging in daily."},
+        {"family":"exact_event_controls","detail":"Exact controls/literals include 'Play now', 'Select', 'Check out this year's latest holiday event!' and misc/login resource assets."}
+      ],
+      "note": "Exact-v308 seasonal-event welcome/login presentation identity. Event scheduling, reward eligibility and reward grant authority are not inferred."
+    }
+  ],
+  "unresolved": []
+}
