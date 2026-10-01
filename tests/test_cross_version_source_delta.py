@@ -9,6 +9,9 @@ from spk_recovery.cross_version_source_delta import (
     CrossVersionSourceDeltaError,
     build_cross_version_source_delta,
 )
+from spk_recovery.cross_version_source_delta_cli import (
+    _load as _source_delta_load,
+)
 from spk_recovery.source_digest import source_tree_digest
 
 
@@ -596,6 +599,20 @@ class CrossVersionSourceDeltaTests(unittest.TestCase):
                     old,
                     new,
                 )
+
+
+    def test_cli_loader_rejects_nested_duplicate_json_keys(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "duplicate.json"
+            path.write_text(
+                '{"release":{"build_id":"v307","build_id":"v308"}}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                CrossVersionSourceDeltaError,
+                "duplicate JSON key: 'build_id'",
+            ):
+                _source_delta_load(path)
 
 
 if __name__ == "__main__":
