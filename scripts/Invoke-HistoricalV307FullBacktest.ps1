@@ -67,7 +67,14 @@ if ($Head -ne $RemoteMain) {
 if (Test-Path -LiteralPath $OutDir) {
     $Existing = @(Get-ChildItem -LiteralPath $OutDir -Force)
     if ($Existing.Count -ne 0) {
-        throw "Output directory must be empty: $OutDir"
+        $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+        $BackupOut = $OutDir + ".bak-" + $Stamp
+        if (Test-Path -LiteralPath $BackupOut) {
+            throw "Backtest output backup already exists: $BackupOut"
+        }
+        Move-Item -LiteralPath $OutDir -Destination $BackupOut
+        Write-Host "PREVIOUS_OUTPUT_BACKED_UP=$BackupOut" -ForegroundColor Yellow
+        New-Item -ItemType Directory -Path $OutDir | Out-Null
     }
 } else {
     New-Item -ItemType Directory -Path $OutDir | Out-Null
