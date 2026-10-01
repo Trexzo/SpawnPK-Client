@@ -376,7 +376,7 @@ class CrossVersionJavacCheckpointTests(unittest.TestCase):
 
     def test_rejects_tampered_redacted_comparison_identity(self):
         bad = json.loads(json.dumps(self.comparison))
-        bad["summary"]["shared_errors"] = 0
+        bad["summary"]["exact_frontier_equal"] = False
         with self.assertRaisesRegex(
             CrossVersionJavacCheckpointError,
             "report ID does not match redacted authority",
