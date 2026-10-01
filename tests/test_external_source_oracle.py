@@ -234,6 +234,20 @@ class ExternalSourceOracleTests(unittest.TestCase):
 
             with self.assertRaisesRegex(
                 ExternalSourceOracleError,
+                "external revision drift",
+            ):
+                build_external_source_oracle(
+                    external_repo=external_repo,
+                    external_classes=external_classes,
+                    external_revision="b" * 40,
+                    exact_v308_jar=jar,
+                    expected_v308_sha256=sha256_file(
+                        jar
+                    ),
+                )
+
+            with self.assertRaisesRegex(
+                ExternalSourceOracleError,
                 "SHA-256 mismatch",
             ):
                 build_external_source_oracle(
