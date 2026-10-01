@@ -11,15 +11,13 @@ from spk_recovery.cross_version_javac_frontier import (
 
 def report(frontier: str, rows: list[dict]):
     input_sha256 = hashlib.sha256(frontier.encode("utf-8")).hexdigest()
+    report_digest = hashlib.sha256(
+        (frontier + "-report").encode("utf-8")
+    ).hexdigest()[:20].upper()
     return {
         "schema_version": 1,
         "kind": "javac_diagnostic_classification_report",
-        "report_id": (
-            "JAVACDIAG_"
-            + hashlib.sha256((frontier + "-report").encode("utf-8"))
-            .hexdigest()[:20]
-            .upper()
-        ),
+        "report_id": "JAVACDIAG_" + report_digest,
         "frontier_id": frontier,
         "input_sha256": input_sha256,
         "identifiers_included": True,
