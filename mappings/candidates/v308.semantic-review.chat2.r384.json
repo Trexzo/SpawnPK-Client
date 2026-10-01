@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_7CD1A67D202DACB89B3E",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_CB28D68887091E0D6D07",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000358",
+      "owner_logical_id": "CLIENT_CLASS_000358",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/l/I",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpriteResourceRegistry",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_registered_sprite_storage",
+          "detail": "The class owns one static List<Sprite>. Its path-taking factory constructs a new R55 Sprite, stores the supplied resource path on that Sprite and appends the same object to the registry before returning it."
+        },
+        {
+          "family": "exact_materialization_pass",
+          "detail": "The no-arg static reload walks every registered Sprite, loads its path-backed AWT image, recalculates width/height/offset state, allocates the exact pixel array and fills it through PixelGrabber, including the Sprite color-key cleanup path."
+        },
+        {
+          "family": "exact_startup_lifecycle",
+          "detail": "Client invokes the registry materialization method once during its shared asset startup sequence after static sprite-holder classes have registered resources."
+        },
+        {
+          "family": "exact_named_resource_consumers",
+          "detail": "R308 CombatHudSpriteAssets registers exact paths including misc/singlesplus, misc/singlesplushot, popups/hp 0..3, hitmarks/old/poise and popups/scope through this registry, fixing the role to path-backed Sprite resource registration/materialization."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the global path-backed Sprite registration and startup materialization registry. No original stripped identifier is claimed."
+    }
+  ],
+  "unresolved": []
+}

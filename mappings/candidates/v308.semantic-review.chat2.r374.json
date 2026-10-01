@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_4606D0C64492811B1F89",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_8815ED7E28F14D3E24D9",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000188",
+      "owner_logical_id": "CLIENT_CLASS_000188",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/E",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherClientPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_launcher_ownership",
+          "detail": "rs/gui/Launcher constructs exactly one rs/gui/E, stores it as the dedicated client-surface field and sizes it from the launcher client dimension."
+        },
+        {
+          "family": "exact_client_host",
+          "detail": "Launcher initializes/starts the live rs/Client and then adds that Client component directly to rs/gui/E at BorderLayout.CENTER."
+        },
+        {
+          "family": "exact_layout_role",
+          "detail": "The panel is then mounted into the launcher frame/container beside the launcher side panel; rs/gui/E itself owns only the client-hosting BorderLayout, black background and viewport sizing."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the launcher panel whose sole role is hosting the live game Client component."
+    }
+  ],
+  "unresolved": []
+}

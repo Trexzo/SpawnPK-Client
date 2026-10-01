@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/G",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorKeyTransparencyFilter",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_rgb_filter_contract",
+          "detail": "The class extends RGBImageFilter and stores one constructor-supplied Color plus that color's opaque RGB value."
+        },
+        {
+          "family": "exact_color_key_behavior",
+          "detail": "filterRGB compares each pixel to the chosen opaque RGB key; exact matches return the same 24-bit RGB with the alpha byte removed, while non-matching pixels are returned unchanged."
+        },
+        {
+          "family": "exact_sprite_factory_ownership",
+          "detail": "R55 Sprite constructs this filter exclusively in its static Image+Color transform helper, wraps it in FilteredImageSource and returns the Toolkit-created filtered Image."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for Sprite's one-color transparency-key RGBImageFilter."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/l/H",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpriteRecolorFilter",
+      "confidence": 0.998,
+      "evidence": [
+        {
+          "family": "exact_rgb_filter_contract",
+          "detail": "The class extends RGBImageFilter and stores a reference BufferedImage plus constructor-supplied source and target Colors."
+        },
+        {
+          "family": "exact_tolerance_recolor",
+          "detail": "For each coordinate it reads the reference-image pixel, compares all three channels against the source Color through Sprite's tolerance helper, and when matched shifts the channels by the source-to-target color delta while preserving alpha and clamping channels to 0..255."
+        },
+        {
+          "family": "exact_sprite_factory_ownership",
+          "detail": "R55 Sprite constructs this filter exclusively in its static BufferedImage+sourceColor+targetColor transform helper, wraps it in FilteredImageSource and returns the filtered Image."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for Sprite's tolerance-based source-to-target recolor RGBImageFilter."
+    }
+  ],
+  "conflicts": []
+}
