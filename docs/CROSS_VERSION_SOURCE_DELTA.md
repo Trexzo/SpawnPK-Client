@@ -55,6 +55,8 @@ spk-cross-version-source-delta `
   .\v308\class-remap-plan.json `
   .\v307\src `
   .\v308\src `
+  --old-collision-plan .\v307\namespace-collision-plan-private.json `
+  --new-collision-plan .\v308\namespace-collision-plan-private.json `
   --out .\v307-to-v308\source-delta.json
 ```
 
