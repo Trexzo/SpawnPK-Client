@@ -131,9 +131,13 @@ def _validate_build(
             f"{label} clean_rebuild_status is invalid"
         )
     fallback_count = value.get("project_binary_fallback_count")
-    if fallback_count != 0:
+    if (
+        isinstance(fallback_count, bool)
+        or not isinstance(fallback_count, int)
+        or fallback_count != 0
+    ):
         raise CrossVersionJavacCheckpointDeltaError(
-            f"{label} project binary fallback must be zero"
+            f"{label} project binary fallback must be integer zero"
         )
     clean_project_build = value.get("clean_project_build")
     if not isinstance(clean_project_build, bool):
