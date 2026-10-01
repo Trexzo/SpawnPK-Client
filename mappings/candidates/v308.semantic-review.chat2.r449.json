@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_5FCA05F69BFA66975AB7",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_81E3DF92C3BD4D22BD59",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000582",
+      "owner_logical_id": "CLIENT_CLASS_000582",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aG",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CursesInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_builder_contract",
+          "detail": "The class directly extends R436 CustomInterfaceBuilder and is live in the custom-interface registry."
+        },
+        {
+          "family": "exact_curse_resource",
+          "detail": "The builder uses exact 'prayer/curses/ICON' resources."
+        },
+        {
+          "family": "exact_curse_catalogue",
+          "detail": "Exact labels and descriptions include Sap Warrior/Ranger/Mage/Spirit, Berserker, Deflect Magic/Missiles/Melee/Summoning, Leech prayers, Wrath, Soul Split and Turmoil variants."
+        }
+      ],
+      "note": "Exact-v308 client interface identity; server-side construction/prayer rules are not inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_B8CFFB1BAF3B0A9B3D00",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000583",
+      "owner_logical_id": "CLIENT_CLASS_000583",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aH",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PrayerInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_builder_contract",
+          "detail": "The class directly extends R436 CustomInterfaceBuilder and is live in the custom-interface registry."
+        },
+        {
+          "family": "exact_prayer_resources",
+          "detail": "The builder uses exact 'prayer/PRAYER', 'prayer/sprite 1' and 'prayer/sprite 2' resources."
+        },
+        {
+          "family": "exact_prayer_catalogue",
+          "detail": "Exact labels/descriptions include Thick Skin through Smite plus Preserve, Chivalry, Piety, Rigour and Augury, including stat-adjustment presentation controls."
+        }
+      ],
+      "note": "Exact-v308 client interface identity; server-side construction/prayer rules are not inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_FB344E9EA11410ABA4F0",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000581",
+      "owner_logical_id": "CLIENT_CLASS_000581",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aF",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConstructionPlankInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_builder_contract",
+          "detail": "The class directly extends R436 CustomInterfaceBuilder and is live in the custom-interface registry."
+        },
+        {
+          "family": "exact_construction_resources",
+          "detail": "The builder uses exact 'construction/sprite' resources and construction-themed widget layout."
+        },
+        {
+          "family": "exact_plank_options",
+          "detail": "Exact text includes Wood/Oak/Teak/Mahogony prices and 'Make-all' controls for each material, fixing it as the construction plank-making surface."
+        }
+      ],
+      "note": "Exact-v308 client interface identity; server-side construction/prayer rules are not inferred."
+    }
+  ],
+  "unresolved": []
+}

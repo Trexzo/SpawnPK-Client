@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aF",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConstructionPlankInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_builder_contract",
+          "detail": "The class directly extends R436 CustomInterfaceBuilder and is live in the custom-interface registry."
+        },
+        {
+          "family": "exact_construction_resources",
+          "detail": "The builder uses exact 'construction/sprite' resources and construction-themed widget layout."
+        },
+        {
+          "family": "exact_plank_options",
+          "detail": "Exact text includes Wood/Oak/Teak/Mahogony prices and 'Make-all' controls for each material, fixing it as the construction plank-making surface."
+        }
+      ],
+      "note": "Exact-v308 client interface identity; server-side construction/prayer rules are not inferred."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aG",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CursesInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_builder_contract",
+          "detail": "The class directly extends R436 CustomInterfaceBuilder and is live in the custom-interface registry."
+        },
+        {
+          "family": "exact_curse_resource",
+          "detail": "The builder uses exact 'prayer/curses/ICON' resources."
+        },
+        {
+          "family": "exact_curse_catalogue",
+          "detail": "Exact labels and descriptions include Sap Warrior/Ranger/Mage/Spirit, Berserker, Deflect Magic/Missiles/Melee/Summoning, Leech prayers, Wrath, Soul Split and Turmoil variants."
+        }
+      ],
+      "note": "Exact-v308 client interface identity; server-side construction/prayer rules are not inferred."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/aH",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PrayerInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_builder_contract",
+          "detail": "The class directly extends R436 CustomInterfaceBuilder and is live in the custom-interface registry."
+        },
+        {
+          "family": "exact_prayer_resources",
+          "detail": "The builder uses exact 'prayer/PRAYER', 'prayer/sprite 1' and 'prayer/sprite 2' resources."
+        },
+        {
+          "family": "exact_prayer_catalogue",
+          "detail": "Exact labels/descriptions include Thick Skin through Smite plus Preserve, Chivalry, Piety, Rigour and Augury, including stat-adjustment presentation controls."
+        }
+      ],
+      "note": "Exact-v308 client interface identity; server-side construction/prayer rules are not inferred."
+    }
+  ],
+  "conflicts": []
+}
