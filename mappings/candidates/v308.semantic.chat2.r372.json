@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [{
+    "schema_version": 1,
+    "kind": "semantic_name_candidate",
+    "canonical": false,
+    "status": "CANDIDATE",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target": {"kind": "class", "owner": "rs/l/u", "name": null, "descriptor": null},
+    "proposed_name": "TextParticleThrottleCache",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"exact_single_owner","detail":"The only exact-v308 external owner of rs/l/u is R362 TextParticleMarkup rs/l/t, which constructs one access-ordered instance during static initialization."},
+      {"family":"exact_bounded_cache","detail":"rs/l/u extends LinkedHashMap<Long,Long> and removes the eldest entry only when size exceeds 512, making it a fixed-capacity access-ordered cache."},
+      {"family":"exact_throttle_key","detail":"TextParticleMarkup builds the cache key from text.hashCode(), x and y using repeated *31 composition, and stores the current monotonic millisecond timestamp as the value."},
+      {"family":"exact_throttle_window","detail":"Before generating text-particle output, TextParticleMarkup returns the empty result when the same key was cached less than 50 ms ago; otherwise it updates the timestamp and continues generation."}
+    ],
+    "note":"Descriptive exact-v308 name for TextParticleMarkup's sole 512-entry, 50 ms regeneration throttle cache. The class is generic internally, but its only live owner fixes the semantic role."
+  }],
+  "conflicts": []
+}
