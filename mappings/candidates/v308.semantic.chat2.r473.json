@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [{
+    "schema_version": 1,
+    "kind": "semantic_name_candidate",
+    "canonical": false,
+    "status": "CANDIDATE",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target": {"kind": "class", "owner": "rs/b/a", "name": null, "descriptor": null},
+    "proposed_name": "MouseDetection",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"exact_sampling_worker","detail":"Exact v308 rs/b/a implements Runnable, owns two 500-entry int arrays plus a synchronized lock/count, and while enabled samples Client.hP/hQ into those arrays every 50 ms."},
+      {"family":"exact_client_mouse_state","detail":"The worker stores the current static Client mouse coordinates directly and increments the sample count only while the 500-entry buffer has capacity; it has no unrelated protocol/gameplay state."},
+      {"family":"exact_historical_source_identity","detail":"Multiple public 317/refactored client lineages expose class MouseDetection implementing Runnable with the same Client reference, sync object, coordsX/coordsY arrays of length 500, running flag/count and 50 ms sampling loop."},
+      {"family":"exact_scope_boundary","detail":"This class is distinct from R282 ClientInputEventQueue: MouseDetection periodically samples cursor position for the legacy mouse-movement reporting path, while R282 buffers discrete press/release/motion/reset input records."}
+    ],
+    "note": "Source-correlated exact-v308 recovery of the classic 317 MouseDetection worker. Public historical clients are corroborating lineage evidence; exact v308 behavior independently matches the role."
+  }],
+  "conflicts": []
+}
