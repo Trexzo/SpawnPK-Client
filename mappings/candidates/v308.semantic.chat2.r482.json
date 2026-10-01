@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "class", "owner": "rs/s/f/a", "name": null, "descriptor": null},
+      "proposed_name": "ColorTileMarker",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_literal_identity","detail":"The exact-v308 constant pool and toString recipe preserve 'ColorTileMarker(worldPoint=..., color=..., label=...)'."},
+        {"family":"exact_value_shape","detail":"The final class stores exactly WorldPoint, nullable Color and nullable String label, with value-style constructor/getters/equals/hashCode/toString."},
+        {"family":"exact_overlay_consumer","detail":"R188 GroundMarkerOverlay iterates the Ground Marker plugin's live ColorTileMarker collection, filters by WorldPoint plane and renders its color/label."},
+        {"family":"exact_persistence_conversion","detail":"Ground Marker plugin converts persisted rs/s/f/f records to this class by reconstructing WorldPoint from region coordinates and copying color/label; it also expands one live marker across WorldPoint instance variants."},
+        {"family":"exact_stable_id","detail":"Sorted exact-v308 rs/** order places rs/s/f/a at zero-based index 906, fixing CLIENT_CLASS_000907."}
+      ],
+      "note":"Exact-v308 source-style identity from the surviving ColorTileMarker toString literal plus R188 live overlay consumption."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "class", "owner": "rs/s/f/f", "name": null, "descriptor": null},
+      "proposed_name": "GroundMarkerPoint",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_literal_identity","detail":"The exact-v308 constant pool and toString recipe preserve 'GroundMarkerPoint(regionId=..., regionX=..., regionY=..., z=..., color=..., label=...)'."},
+        {"family":"exact_persisted_shape","detail":"The class stores exactly regionId, regionX, regionY, z, nullable Color and nullable label and exposes immutable-style value semantics."},
+        {"family":"exact_config_persistence","detail":"Ground Marker plugin serializes Collection<rs/s/f/f> as JSON under config group 'groundMarker' with keys 'region_<id>' and reloads the same typed collection through a Gson TypeToken."},
+        {"family":"exact_live_conversion","detail":"The plugin converts each GroundMarkerPoint back to WorldPoint(regionId, regionX, regionY, z) and then constructs the live ColorTileMarker carrying the same color and label."},
+        {"family":"exact_stable_id","detail":"Sorted exact-v308 rs/** order places rs/s/f/f at zero-based index 911, fixing CLIENT_CLASS_000912."}
+      ],
+      "note":"Exact-v308 source-style identity for the persisted Ground Marker point record."
+    }
+  ],
+  "conflicts": []
+}
