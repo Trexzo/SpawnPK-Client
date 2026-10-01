@@ -14,6 +14,9 @@ from spk_recovery.cross_version_javac_checkpoint_delta import (
     write_cross_version_javac_checkpoint_delta,
 )
 from spk_recovery.cross_version_javac_checkpoint_delta_cli import _load
+from spk_recovery.cross_version_javac_checkpoint_delta_verify_cli import (
+    _load as _verify_load,
+)
 
 
 def _summary(
@@ -486,6 +489,19 @@ class CrossVersionJavacCheckpointDeltaTests(unittest.TestCase):
                 self.current,
                 bad,
             )
+
+    def test_verify_cli_loader_rejects_duplicate_json_keys(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "duplicate-verify.json"
+            path.write_text(
+                '{"delta_id":"A","delta_id":"B"}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                CrossVersionJavacCheckpointDeltaError,
+                "duplicate JSON key: 'delta_id'",
+            ):
+                _verify_load(path)
 
     def test_rejects_swapped_build_sides(self):
         swapped = copy.deepcopy(self.current)
