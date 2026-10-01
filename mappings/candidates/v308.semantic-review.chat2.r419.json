@@ -1,0 +1,18 @@
+{
+  "schema_version":1,"kind":"semantic_review_set","canonical":false,
+  "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","proposal_count":1,
+  "review_id":"SEMREVIEW_9D0438B218AE4011D119",
+  "proposals":[{
+    "proposal_id":"SEMPROP_E39EC688F0077EE46607","target_kind":"class","stable_id":"CLIENT_CLASS_000512","owner_logical_id":"CLIENT_CLASS_000512",
+    "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6","source_coordinate":{"owner":"rs/l/u","name":null,"descriptor":null},
+    "proposed_name":"TextParticleSelectionTimestampCache","confidence":0.999,
+    "evidence":[
+      {"family":"exact_parent_ownership","detail":"R362 TextParticleMarkup is the only exact-v308 class that constructs or references rs/l/u."},
+      {"family":"exact_cache_shape","detail":"rs/l/u extends LinkedHashMap<Long,Long>, is constructed access-ordered with initial capacity 64/load factor 0.75, and evicts the eldest entry only when size exceeds 512."},
+      {"family":"exact_timestamp_semantics","detail":"TextParticleMarkup computes a composite long key from the source String hash plus markup span indexes, stores System.nanoTime()/1_000_000 as the value, and if the stored timestamp is less than 50 ms old returns the previous selected variant array instead of re-randomizing."},
+      {"family":"exact_effect_boundary","detail":"The cache participates only in TextParticleMarkup's up-to-three unique palette/image variant selection path; particle spawning, motion and lifetime remain owned by TextParticleMarkup itself."}
+    ],
+    "note":"Descriptive exact-v308 name for the bounded timestamp cache that stabilizes TextParticleMarkup variant selection across a 50 ms window."
+  }],
+  "unresolved":[]
+}

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_C2302F80E8DD5C8ABACF",
+  "proposals": [{
+    "proposal_id": "SEMPROP_1AF99B2D7EA2D5DAA8CE",
+    "target_kind": "class",
+    "stable_id": "CLIENT_CLASS_000188",
+    "owner_logical_id": "CLIENT_CLASS_000188",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate": {"owner":"rs/gui/E","name":null,"descriptor":null},
+    "proposed_name": "GameClientHostPanel",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"exact_panel_contract","detail":"Exact v308 rs/gui/E directly extends JPanel, installs BorderLayout, uses Launcher.j as size/minimum/preferred size and has a black background; it owns no unrelated controls or state."},
+      {"family":"exact_launcher_ownership","detail":"Launcher constructs exactly one rs/gui/E during UI startup, sizes it to the game client dimensions and retains it as launcher field n."},
+      {"family":"exact_client_embedding","detail":"After Client.init() and Client.start(), Launcher adds the live Client component to rs/gui/E at BorderLayout.CENTER, making this panel the concrete Swing host for the game client surface."},
+      {"family":"exact_window_composition","detail":"Launcher then adds rs/gui/E into the main launcher content panel before packing/showing the frame; no other exact-v308 class owns or constructs this panel."}
+    ],
+    "note":"Descriptive exact-v308 name for the dedicated Swing panel that hosts the live Client component inside Launcher. No original stripped identifier is claimed."
+  }],
+  "unresolved": []
+}
