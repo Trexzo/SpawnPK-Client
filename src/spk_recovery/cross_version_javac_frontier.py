@@ -27,6 +27,70 @@ def _stable_digest(value: Any) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
+def _public_rows(report: dict[str, Any]) -> list[dict[str, Any]]:
+    diagnostics = report.get("diagnostics")
+    if not isinstance(diagnostics, list):
+        raise CrossVersionJavacFrontierError(
+            "javac diagnostic report lacks diagnostic rows"
+        )
+
+    rows: list[dict[str, Any]] = []
+    public_keys = (
+        "category",
+        "symbol_kind",
+        "symbol_shape",
+        "location_kind",
+        "shape_cluster_id",
+        "cluster_id",
+        "symbol_id",
+        "location_id",
+        "file_id",
+        "line",
+    )
+    for row in diagnostics:
+        if not isinstance(row, dict):
+            raise CrossVersionJavacFrontierError(
+                "javac diagnostic row is not an object"
+            )
+        try:
+            rows.append({key: row[key] for key in public_keys})
+        except KeyError as exc:
+            raise CrossVersionJavacFrontierError(
+                "javac diagnostic row lacks public authority fields"
+            ) from exc
+    return rows
+
+
+def _validate_diagnostic_authority(
+    report: dict[str, Any],
+    label: str,
+) -> None:
+    rows = _public_rows(report)
+    expected_frontier = (
+        "JAVACFRONTIER_"
+        + _stable_digest({"rows": rows})[:20].upper()
+    )
+    if report.get("frontier_id") != expected_frontier:
+        raise CrossVersionJavacFrontierError(
+            f"{label}: javac frontier ID does not match diagnostic rows"
+        )
+
+    input_sha256 = report["input_sha256"]
+    expected_report = (
+        "JAVACDIAG_"
+        + _stable_digest(
+            {
+                "input_sha256": input_sha256,
+                "rows": rows,
+            }
+        )[:20].upper()
+    )
+    if report.get("report_id") != expected_report:
+        raise CrossVersionJavacFrontierError(
+            f"{label}: javac diagnostic report ID does not match authority"
+        )
+
+
 def _validate_report(report: dict[str, Any], label: str) -> None:
     if (
         report.get("schema_version") != 1
@@ -68,6 +132,7 @@ def _validate_report(report: dict[str, Any], label: str) -> None:
         raise CrossVersionJavacFrontierError(
             f"{label}: diagnostics must be an array"
         )
+    _validate_diagnostic_authority(report, label)
 
 
 def _relative_source_path(value: str) -> str:
