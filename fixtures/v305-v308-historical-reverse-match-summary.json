@@ -1,0 +1,12 @@
+{
+  "old_class_count": 1129,
+  "new_class_count": 1099,
+  "matched": 1074,
+  "exact_sha256": 513,
+  "structural_unique": 533,
+  "package_anchor": 23,
+  "weighted_mutual_best": 5,
+  "ambiguous": 10,
+  "unmatched_old": 55,
+  "unmatched_new": 25
+}
