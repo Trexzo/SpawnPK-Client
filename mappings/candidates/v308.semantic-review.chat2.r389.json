@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_7366B9C7005BFA7E1925",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_4FABA8886AE5C9FE4776",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000155",
+      "owner_logical_id": "CLIENT_CLASS_000155",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigProfile",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_self_identifying_to_string",
+          "detail": "The exact-v308 constant pool preserves the literal template ConfigProfile(id=…, name=…, sync=…, active=…, rev=…) used by toString()."
+        },
+        {
+          "family": "exact_profile_state",
+          "detail": "The class stores a long id, String name, sync boolean, active boolean and long revision; its methods expose/mutate exactly those profile fields."
+        },
+        {
+          "family": "exact_profile_name_marker",
+          "detail": "Its boolean helper returns whether the profile name begins with '$', proving the String is profile identity/name metadata rather than generic text."
+        }
+      ],
+      "note": "Name is directly preserved by the exact-v308 self-identifying toString template."
+    },
+    {
+      "proposal_id": "SEMPROP_D1C0766D80261F04FF26",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000157",
+      "owner_logical_id": "CLIENT_CLASS_000157",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigSectionDescriptor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_self_identifying_to_string",
+          "detail": "The exact-v308 constant pool preserves the literal template ConfigSectionDescriptor(key=…, section=…) used by toString()."
+        },
+        {
+          "family": "exact_descriptor_fields",
+          "detail": "The class stores exactly one String key and one ConfigSection annotation; ConfigObject methods expose the key plus section description/position."
+        },
+        {
+          "family": "exact_framework_relationship",
+          "detail": "R16 ConfigDescriptor and ConfigManager use this type as the section descriptor alongside ConfigItemDescriptor."
+        }
+      ],
+      "note": "Name is directly preserved by the exact-v308 self-identifying toString template."
+    },
+    {
+      "proposal_id": "SEMPROP_F2719179CBE576893619",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000152",
+      "owner_logical_id": "CLIENT_CLASS_000152",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigItemDescriptor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_self_identifying_to_string",
+          "detail": "The exact-v308 constant pool preserves the literal template ConfigItemDescriptor(item=…, type=…, range=…, alpha=…, units=…) used by toString()."
+        },
+        {
+          "family": "exact_descriptor_fields",
+          "detail": "The class stores exactly ConfigItem metadata, java.lang.reflect.Type, Range, Alpha and Units; its ConfigObject methods delegate name/description/position to the ConfigItem annotation."
+        },
+        {
+          "family": "exact_framework_relationship",
+          "detail": "R16 ConfigDescriptor and ConfigManager construct/consume this type as the per-config-method descriptor in the live configuration framework."
+        }
+      ],
+      "note": "Name is directly preserved by the exact-v308 self-identifying toString template."
+    }
+  ],
+  "unresolved": []
+}
