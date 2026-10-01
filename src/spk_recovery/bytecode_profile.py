@@ -117,6 +117,28 @@ def _member_ref(
     return owner, _utf8(cp, nt[1]), _utf8(cp, nt[2])
 
 
+def _invokedynamic_ref(
+    cp: list[Any],
+    index: int,
+) -> tuple[int, str, str]:
+    value = cp[index]
+    if not value or value[0] != 18:
+        raise BytecodeProfileError(
+            f"constant pool #{index} is not InvokeDynamic"
+        )
+    bootstrap_method_attr_index = int(value[1])
+    nt = cp[value[2]]
+    if not nt or nt[0] != 12:
+        raise BytecodeProfileError(
+            f"constant pool #{value[2]} is not NameAndType"
+        )
+    return (
+        bootstrap_method_attr_index,
+        _utf8(cp, nt[1]),
+        _utf8(cp, nt[2]),
+    )
+
+
 def _skip_attributes(
     r: _Reader,
     cp: list[Any],
@@ -240,6 +262,29 @@ def _method_invocations(
                 {
                     "operation": _INVOKE_OPS[opcode],
                     "owner": owner,
+                    "name": name,
+                    "descriptor": descriptor,
+                    "offset": offset,
+                }
+            )
+        elif opcode == 0xBA:
+            if offset + 5 > len(code):
+                raise BytecodeProfileError(
+                    "truncated invokedynamic instruction"
+                )
+            cp_index = struct.unpack_from(
+                ">H",
+                code,
+                offset + 1,
+            )[0]
+            bootstrap_index, name, descriptor = _invokedynamic_ref(
+                cp,
+                cp_index,
+            )
+            result.append(
+                {
+                    "operation": "invokedynamic",
+                    "bootstrap_method_attr_index": bootstrap_index,
                     "name": name,
                     "descriptor": descriptor,
                     "offset": offset,
