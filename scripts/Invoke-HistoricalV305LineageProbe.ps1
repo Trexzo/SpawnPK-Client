@@ -63,6 +63,7 @@ $V308Index = Join-Path $AuthorityRoot "authority\v308-index.json"
 $ClassLineage = Join-Path $AuthorityRoot "authority\class-lineage.accepted.json"
 $MemberLineage = Join-Path $AuthorityRoot "authority\member-lineage.accepted.json"
 $MatchExpectations = Join-Path $Repo "fixtures\v305-v308-historical-reverse-match-summary.json"
+$CrossVersionExpectations = Join-Path $Repo "fixtures\v305-v308-cross-version-expectations.json"
 
 foreach ($Path in @(
     $V305ClientJar,
