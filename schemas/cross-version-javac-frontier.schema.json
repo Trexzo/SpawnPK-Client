@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Trexzo/SpawnPK-Client/schemas/cross-version-javac-frontier.schema.json",
+  "title": "SpawnPK cross-version javac frontier comparison",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "report_id",
+    "old_frontier_id",
+    "new_frontier_id",
+    "summary",
+    "families",
+    "identifiers_included",
+    "note"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "cross_version_javac_frontier"},
+    "report_id": {
+      "type": "string",
+      "pattern": "^XJAVACFRONTIER_[0-9A-F]{20}$"
+    },
+    "old_frontier_id": {
+      "type": "string",
+      "pattern": "^JAVACFRONTIER_[0-9A-Z_]+$"
+    },
+    "new_frontier_id": {
+      "type": "string",
+      "pattern": "^JAVACFRONTIER_[0-9A-Z_]+$"
+    },
+    "summary": {"type": "object"},
+    "families": {
+      "type": "array",
+      "items": {"type": "object"}
+    },
+    "identifiers_included": {"type": "boolean"},
+    "note": {"type": "string"}
+  },
+  "additionalProperties": false
+}
