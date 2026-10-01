@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "kind": "historical_source_m1_frontier_proof",
+  "fixture_id": "SPK_V307_SOURCE_M1_FRONTIER_20261001",
+  "authority_commit": "ce3d43e34f53a3991f30f5911bbd0235f73fe6f9",
+  "truth_boundary": {
+    "proves": [
+      "exact v307 can traverse the modern historical authority, lineage, member-safety, readable-build, collision-remap and recovered-source pipeline",
+      "fresh Procyon recovery produces 1048 Java files from exact v307 under the modern Source-M1 path",
+      "the historical pipeline fails closed at clean rebuild rather than claiming release readiness"
+    ],
+    "does_not_prove": [
+      "historical v307 is release-ready",
+      "the v307 and v308 javac frontiers are identical",
+      "the final strict recovered-source v307-to-v308 cross-version PASS",
+      "that inferred or generated identifiers are original developer names"
+    ]
+  },
+  "inputs": {
+    "build_id": "v307",
+    "client_sha256": "6232bae206846a4ba8d09766a2dee886b69016066a3f50f83b201bf705f93662",
+    "procyon_sha256": "821da96012fc69244fa1ea298c90455ee4e021434bc796d3b9546ab24601b779",
+    "binary_backtest_id": "XVERBIN_E56BD2FB8CCC172D6184"
+  },
+  "lineage_backfill": {
+    "backfill_id": "HISTLINEAGE_A55A707BEA95A1919B64",
+    "workspace_id": "MIGWORK_08580C977B38F6B4B819",
+    "ready_for_authority": true,
+    "focused_analysis_items": 0,
+    "trusted_classes": 1129,
+    "applied_members": 13686,
+    "field_proof_applied": 47,
+    "historical_field_carry_applied": 78
+  },
+  "member_safety": {
+    "v307_report_id": "MEMRISKREVIEW_88389F233F18A2340F03",
+    "v308_report_id": "MEMRISKREVIEW_E4E67B1125E7AFA4F3B7",
+    "carry_forward_id": "MEMRISKCF_1E86D5E0E799CF66C2F8",
+    "reviewed_member_count": 10,
+    "transferred_member_count": 10,
+    "blocked_member_count": 0,
+    "risk_low": 2,
+    "risk_medium": 1,
+    "risk_high": 7,
+    "risk_critical": 0
+  },
+  "readable_source": {
+    "readable_manifest_id": "READABLE_1BD3E4CFF5718CD33F56",
+    "semantic_namespace_id": "SEMNS_B944544B3E2C3F712036",
+    "readable_jar_sha256": "95a3f3826e603074269c43de5bfad912980a5ead3056aa2770e29c65ec4c005a",
+    "collision_plan_id": "JNSPLAN_F505814A7D01F64F6E6E",
+    "collision_transform_id": "JNSREWRITE_70DE31B18FA74BCE1D07",
+    "collision_edges_before": 4398,
+    "collision_edges_after": 0,
+    "recovered_workspace_id": "SRCWS_2A63369B09D84786E13B",
+    "java_file_count": 1048,
+    "source_tree_sha256": "3d630d3cc6b194959da2e9d907e5680ff282c1bf7edffc7774e4a1e72023d449"
+  },
+  "clean_rebuild_frontier": {
+    "release_run_id": "RELEASE_RUN_81B66BEF29BB3589D150",
+    "status": "blocked",
+    "ready_for_release": false,
+    "terminal_stage": "clean_rebuild",
+    "javac_frontier_id": "JAVACFRONTIER_79F76A743656F3D6EB8F",
+    "total_errors": 405,
+    "affected_files": 75,
+    "cannot_find_symbol": 178,
+    "categories": {
+      "cannot_find_symbol": 178,
+      "incompatible_types": 62,
+      "other": 49,
+      "cannot_be_dereferenced": 45,
+      "non_static_from_static_context": 39,
+      "cannot_apply_arguments": 11,
+      "package_does_not_exist": 9,
+      "private_access": 9,
+      "bad_operand_type": 2,
+      "protected_access": 1
+    },
+    "wrapper_exit": 3,
+    "safety_authority_pass": true,
+    "recovery_release_pass": false
+  },
+  "notes": [
+    "This fixture records hashes, IDs and aggregate compiler counts only; private client binaries, recovered Java source and identifier-bearing javac diagnostics are not committed.",
+    "The v307 source workspace was independently regenerated from exact v307 bytes. It was not produced by editing the v308 recovered source tree.",
+    "Issue #283 remains open until both historical and current recovery releases are independently release-ready and the strict cross-version source acceptance can run."
+  ]
+}
