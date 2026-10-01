@@ -131,6 +131,14 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
         report = _report()
         report["actions"] += [
             {
+                "kind": "shadowed_nested_static_field_owner_type_context",
+                "source_path": "rs/a/a/a.java",
+                "method_name": "d",
+                "method_descriptor": "(I)V",
+                "nested_owners": ["rs/a/a/a$b"],
+                "replacement_count": 17,
+            },
+            {
                 "kind": "primitive_scope_shadowed_self_static_field_owner_qualification",
                 "source_path": "rs/k/i.java",
                 "method_name": "a",
@@ -184,6 +192,8 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
             },
         ]
         report["summary"].update({
+            "shadowed_nested_static_field_method_count": 1,
+            "shadowed_nested_static_field_reference_count": 17,
             "primitive_scope_shadowed_self_static_field_method_count": 1,
             "primitive_scope_shadowed_self_static_field_reference_count": 27,
             "primitive_shadowed_instance_receiver_method_count": 1,
@@ -200,6 +210,11 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
 
         text = "\n".join(summarize(report, top=10))
 
+        self.assertIn("NESTED_STATIC_FIELD_SHADOW_REFERENCES=17", text)
+        self.assertIn(
+            "d(I)V | references=17 | owners=rs/a/a/a$b",
+            text,
+        )
         self.assertIn("PRIMITIVE_SCOPE_SELF_SHADOW_REFERENCES=27", text)
         self.assertIn("PRIMITIVE_INSTANCE_RECEIVER_REFERENCES=6", text)
         self.assertIn("IMPORTED_STATIC_METHOD_SHADOW_REFERENCES=2", text)
@@ -393,6 +408,10 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
         )
         self.assertIn(
             "INVOKEDYNAMIC_HELPER_RETURN_CAST_REFERENCES=",
+            text,
+        )
+        self.assertIn(
+            "NESTED_STATIC_FIELD_SHADOW_REFERENCES=",
             text,
         )
         self.assertIn(
