@@ -5,75 +5,71 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 2,
-  "review_id": "SEMREVIEW_9A97D3BC816564588632",
+  "review_id": "SEMREVIEW_69107BB46A119175BB1D",
   "proposals": [
     {
-      "proposal_id": "SEMPROP_4C318C18C0197A7E6B83",
+      "proposal_id": "SEMPROP_911B1756D051692069FA",
       "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000501",
-      "owner_logical_id": "CLIENT_CLASS_000501",
+      "stable_id": "CLIENT_CLASS_000198",
+      "owner_logical_id": "CLIENT_CLASS_000198",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "source_coordinate": {
-        "owner": "rs/l/l",
+        "owner": "rs/gui/N",
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "FlashingTextEffect",
+      "proposed_name": "TrayIconFrameRestoreListener",
       "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_markup_tokens",
-          "detail": "Exact v308 recognizes @fla@, @fla2@, <fla>, <fla2>, parameterized <fla=...>/<fla2=...>, and the corresponding closing tags."
+          "family": "exact_parent_helper",
+          "detail": "rs/gui/M attaches this MouseAdapter to TrayIcon instances created by its system-tray helper, passing the associated Frame into the listener constructor."
         },
         {
-          "family": "exact_flash_timing",
-          "detail": "The effect stores injected timestamps and alternates the selected color/state on 200 ms intervals. Normal fla lifetime is 600 ms and fla2 lifetime is 1200 ms."
+          "family": "exact_restore_behavior",
+          "detail": "mouseClicked makes the Frame visible and sets its state to NORMAL; on one platform mode it also performs the exact focus/workaround sequence before restoring."
         },
         {
-          "family": "exact_secondary_motion",
-          "detail": "The fla2 path additionally derives a sinusoidal offset whose amplitude decays across the 1200 ms lifetime, proving the class owns the complete flashing/animated text effect rather than only tag parsing."
-        },
-        {
-          "family": "exact_renderer_integration",
-          "detail": "R55 RSFont invokes this class during live text layout/rendering and queries its active lifecycle state to continue redraws while the effect is running."
+          "family": "exact_scope_boundary",
+          "detail": "The listener stores only the target Frame and contains no unrelated mouse callbacks or application-domain state."
         }
       ],
-      "note": "Descriptive exact-v308 name for the live fla/fla2 flashing text animation used by RSFont."
+      "note": "Descriptive exact-v308 name for the generic tray-icon listener that restores a supplied Frame."
     },
     {
-      "proposal_id": "SEMPROP_5DB53882E872168FACE3",
+      "proposal_id": "SEMPROP_F4A74380936FF4F3E195",
       "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000350",
-      "owner_logical_id": "CLIENT_CLASS_000350",
+      "stable_id": "CLIENT_CLASS_000197",
+      "owner_logical_id": "CLIENT_CLASS_000197",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "source_coordinate": {
-        "owner": "rs/l/A",
+        "owner": "rs/gui/M",
         "name": null,
         "descriptor": null
       },
-      "proposed_name": "TypewriterTextEffect",
+      "proposed_name": "SwingDesktopUiSupport",
       "confidence": 0.999,
       "evidence": [
         {
-          "family": "exact_markup_tokens",
-          "detail": "Exact v308 recognizes @type@, <type>, <type=...> and </type> markup in this class and strips/normalizes those tags for rendering."
+          "family": "exact_ui_defaults",
+          "detail": "The class configures Swing tooltip policy and UIManager defaults for tabbed panes, buttons, panels and text selections, and sets popup/background system properties."
         },
         {
-          "family": "exact_timing_contract",
-          "detail": "Parameterized <type=N> clamps N to 10..2000 milliseconds; the class injects a current-time timestamp into rewritten markup and computes reveal progress from elapsed time divided by that per-character interval."
+          "family": "exact_laf_font_button_helpers",
+          "detail": "It installs LookAndFeel with fallback logging, propagates a FontUIResource across UI defaults, normalizes AbstractButton chrome, and creates icon-backed buttons with callbacks/tooltips."
         },
         {
-          "family": "exact_renderer_integration",
-          "detail": "R55 RSFont calls this class while measuring and rendering text; Client and text-markup routing also retain the same instance/state, proving this is a live text-rendering effect rather than a parser utility with no consumer."
+          "family": "exact_system_tray_helper",
+          "detail": "It creates/adds TrayIcon instances, enables auto-size, logs AWT failures and attaches rs/gui/N to restore the supplied Frame."
         },
         {
-          "family": "exact_lifecycle_state",
-          "detail": "The instance records the effect end time and active flag, and exposes whether a typewriter effect remains active so redraws can continue until all visible characters have been revealed."
+          "family": "exact_shared_utility_boundary",
+          "detail": "All methods are static desktop/Swing presentation helpers; the class owns no gameplay or protocol state."
         }
       ],
-      "note": "Descriptive exact-v308 name for the timed <type> text reveal effect used by the font renderer."
+      "note": "Descriptive exact-v308 name for the shared Swing/desktop presentation utility surface."
     }
   ],
   "unresolved": []
