@@ -77,6 +77,14 @@ class CrossVersionJavacRunnerTests(unittest.TestCase):
             text,
         )
         self.assertIn(
+            "spk_recovery.cross_version_javac_checkpoint_verify_cli",
+            text,
+        )
+        self.assertIn(
+            "Cross-version javac checkpoint verification failed",
+            text,
+        )
+        self.assertIn(
             'v307-v308-javac-checkpoint.json',
             text,
         )
