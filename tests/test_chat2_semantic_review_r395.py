@@ -9,7 +9,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def _class_lineage():
     return {"schema_version":1,"namespace":"spawnpk-client","id_format":"CLIENT_CLASS_%06d","baseline_build_id":"v308",
       "builds":[{"build_id":"v308","build_number":308,"sha256":SHA,"source_name":"client(6).jar","authority":"EXACT_CURRENT_CLIENT"}],
-      "classes":[{"logical_id":"CLIENT_CLASS_000301","semantic_name":None,"semantic_status":"UNKNOWN","semantic_confidence":0.0,
+      "classes":[{"logical_id":"CLIENT_CLASS_000300","semantic_name":None,"semantic_status":"UNKNOWN","semantic_confidence":0.0,
         "lineage":[{"build_id":"v308","internal_name":"rs/j","entry_path":"rs/j.class","entry_sha256":"b"*64,"structural_sha256":"c"*64,"relation":"BASELINE","confidence":1.0,"provenance":[{"authority":"EXACT_CURRENT_CLIENT","source":"chat2-r395-fixture"}]}],
         "semantic_provenance":[]}],"unresolved":[]}
 
@@ -24,12 +24,12 @@ class Chat2SemanticReviewR395Tests(unittest.TestCase):
         expected=_load("mappings/candidates/v308.semantic-review.chat2.r395.json")
         self.assertEqual(actual["proposal_count"],1)
         self.assertEqual(actual["unresolved"],[])
-        self.assertEqual(actual["review_id"],"SEMREVIEW_361039659C28F96CBC21")
+        self.assertEqual(actual["review_id"],"SEMREVIEW_06419D231F26FB1BFFBD")
         self.assertEqual(actual,expected)
 
     def test_r395_expected_stable_id(self):
         review=_load("mappings/candidates/v308.semantic-review.chat2.r395.json")
-        self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"DepthFogRenderer":"CLIENT_CLASS_000301"})
+        self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"DepthFogRenderer":"CLIENT_CLASS_000300"})
 
     def test_r395_name_owner_and_id_do_not_overlap_prior_reviews(self):
         current=_load("mappings/candidates/v308.semantic-review.chat2.r395.json")

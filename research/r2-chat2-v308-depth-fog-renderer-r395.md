@@ -6,12 +6,12 @@ Exact client authority:
 
 ## Result
 
-- `rs/j` -> `CLIENT_CLASS_000301` -> `DepthFogRenderer`
-- proposal: `SEMPROP_4BDA35BA566C5E7EA40D`
-- review: `SEMREVIEW_361039659C28F96CBC21`
+- `rs/j` -> `CLIENT_CLASS_000300` -> `DepthFogRenderer`
+- proposal: `SEMPROP_DECCA8C0AC1E423BCE5A`
+- review: `SEMREVIEW_06419D231F26FB1BFFBD`
 
 The stable ID is independently present in the recovered-source workspace as
-`rs/j/Recovered_CLIENT_CLASS_000301.java`; it is not inferred from neighboring class order.
+`rs/j/Recovered_CLIENT_CLASS_000300.java`; it is not inferred from neighboring class order.
 
 ## Exact algorithm
 
