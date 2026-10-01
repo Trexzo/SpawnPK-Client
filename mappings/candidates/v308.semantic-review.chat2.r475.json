@@ -1,0 +1,522 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 17,
+  "review_id": "SEMREVIEW_6B9659FB6E943020492F",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_04569850BD8D22D82E69",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000155",
+      "owner_logical_id": "CLIENT_CLASS_000155",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/m",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigSectionDescriptor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "Final ConfigObject implementation wrapping a section key plus ConfigSection annotation; preserved toString begins 'ConfigSectionDescriptor(key=' and upstream class has the same shape."
+        },
+        {
+          "family": "exact_package_join",
+          "detail": "The class participates in the same live rs/e configuration framework centered on rs/e/i, with type-level joins matching RuneLite's config package rather than an unrelated similarly-shaped utility."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "Public RuneLite lineage preserves the ConfigSectionDescriptor identity with the same structural/annotation/value-object role represented by exact v308."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of the embedded RuneLite configuration framework; public source identity is corroboration and exact v308 structure remains primary."
+    },
+    {
+      "proposal_id": "SEMPROP_1305A816754624A7F071",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000143",
+      "owner_logical_id": "CLIENT_CLASS_000143",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Alpha",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "Runtime METHOD annotation with no members; exact upstream RuneLite Alpha annotation has the same contract."
+        },
+        {
+          "family": "exact_package_join",
+          "detail": "The class participates in the same live rs/e configuration framework centered on rs/e/i, with type-level joins matching RuneLite's config package rather than an unrelated similarly-shaped utility."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "Public RuneLite lineage preserves the Alpha identity with the same structural/annotation/value-object role represented by exact v308."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of the embedded RuneLite configuration framework; public source identity is corroboration and exact v308 structure remains primary."
+    },
+    {
+      "proposal_id": "SEMPROP_3054A349D99B7B1FA9F1",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000156",
+      "owner_logical_id": "CLIENT_CLASS_000156",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/n",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FlashNotification",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "Enum constants and labels are exactly DISABLED, FLASH_TWO_SECONDS, FLASH_UNTIL_CANCELLED, SOLID_TWO_SECONDS and SOLID_UNTIL_CANCELLED with matching display strings; exact upstream RuneLite enum is FlashNotification."
+        },
+        {
+          "family": "exact_package_join",
+          "detail": "The class participates in the same live rs/e configuration framework centered on rs/e/i, with type-level joins matching RuneLite's config package rather than an unrelated similarly-shaped utility."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "Public RuneLite lineage preserves the FlashNotification identity with the same structural/annotation/value-object role represented by exact v308."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of the embedded RuneLite configuration framework; public source identity is corroboration and exact v308 structure remains primary."
+    },
+    {
+      "proposal_id": "SEMPROP_779020773AEB7A56FFC7",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000152",
+      "owner_logical_id": "CLIENT_CLASS_000152",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/j",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigObject",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "Common descriptor interface exposing key/name/description/position operations and implemented by ConfigItemDescriptor and ConfigSectionDescriptor; exact upstream RuneLite ConfigObject matches."
+        },
+        {
+          "family": "exact_package_join",
+          "detail": "The class participates in the same live rs/e configuration framework centered on rs/e/i, with type-level joins matching RuneLite's config package rather than an unrelated similarly-shaped utility."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "Public RuneLite lineage preserves the ConfigObject identity with the same structural/annotation/value-object role represented by exact v308."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of the embedded RuneLite configuration framework; public source identity is corroboration and exact v308 structure remains primary."
+    },
+    {
+      "proposal_id": "SEMPROP_86B0770695D3B072B5B7",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000148",
+      "owner_logical_id": "CLIENT_CLASS_000148",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigInvocationHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "InvocationHandler owned by ConfigManager; resolves ConfigItem/ConfigGroup annotations, caches methods and backs dynamic Config proxies. Exact diagnostics name missing @ConfigItem/@ConfigGroup roles."
+        },
+        {
+          "family": "exact_package_join",
+          "detail": "The class participates in the same live rs/e configuration framework centered on rs/e/i, with type-level joins matching RuneLite's config package rather than an unrelated similarly-shaped utility."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "Public RuneLite lineage preserves the ConfigInvocationHandler identity with the same structural/annotation/value-object role represented by exact v308."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of the embedded RuneLite configuration framework; public source identity is corroboration and exact v308 structure remains primary."
+    },
+    {
+      "proposal_id": "SEMPROP_8B94DD941D1CDF7A4C0F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000146",
+      "owner_logical_id": "CLIENT_CLASS_000146",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigDescriptor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "Immutable descriptor containing ConfigGroup plus collections of ConfigSectionDescriptor and ConfigItemDescriptor; exact upstream ConfigDescriptor has the same constructor shape."
+        },
+        {
+          "family": "exact_package_join",
+          "detail": "The class participates in the same live rs/e configuration framework centered on rs/e/i, with type-level joins matching RuneLite's config package rather than an unrelated similarly-shaped utility."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "Public RuneLite lineage preserves the ConfigDescriptor identity with the same structural/annotation/value-object role represented by exact v308."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of the embedded RuneLite configuration framework; public source identity is corroboration and exact v308 structure remains primary."
+    },
+    {
+      "proposal_id": "SEMPROP_9D08E2CAC22170A5E87D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000158",
+      "owner_logical_id": "CLIENT_CLASS_000158",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RequestFocusType",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "Enum constants are exactly OFF, REQUEST and FORCE; historical RuneLite/OpenOSRS RequestFocusType versions preserve this exact pre-TASKBAR three-value shape."
+        },
+        {
+          "family": "exact_package_join",
+          "detail": "The class participates in the same live rs/e configuration framework centered on rs/e/i, with type-level joins matching RuneLite's config package rather than an unrelated similarly-shaped utility."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "Public RuneLite lineage preserves the RequestFocusType identity with the same structural/annotation/value-object role represented by exact v308."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of the embedded RuneLite configuration framework; public source identity is corroboration and exact v308 structure remains primary."
+    },
+    {
+      "proposal_id": "SEMPROP_A1F577764AC2E4AD9D47",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000154",
+      "owner_logical_id": "CLIENT_CLASS_000154",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigSection",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "Runtime FIELD annotation exposing section name/description/position/closed-style metadata; exact upstream RuneLite ConfigSection matches."
+        },
+        {
+          "family": "exact_package_join",
+          "detail": "The class participates in the same live rs/e configuration framework centered on rs/e/i, with type-level joins matching RuneLite's config package rather than an unrelated similarly-shaped utility."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "Public RuneLite lineage preserves the ConfigSection identity with the same structural/annotation/value-object role represented by exact v308."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of the embedded RuneLite configuration framework; public source identity is corroboration and exact v308 structure remains primary."
+    },
+    {
+      "proposal_id": "SEMPROP_AA59F8F14A78B7C41169",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000153",
+      "owner_logical_id": "CLIENT_CLASS_000153",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/k",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigProfile",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "Profile value object with id/name/sync/active/revision-style state; preserved toString begins 'ConfigProfile(id=' and ConfigManager owns active profile instances."
+        },
+        {
+          "family": "exact_package_join",
+          "detail": "The class participates in the same live rs/e configuration framework centered on rs/e/i, with type-level joins matching RuneLite's config package rather than an unrelated similarly-shaped utility."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "Public RuneLite lineage preserves the ConfigProfile identity with the same structural/annotation/value-object role represented by exact v308."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of the embedded RuneLite configuration framework; public source identity is corroboration and exact v308 structure remains primary."
+    },
+    {
+      "proposal_id": "SEMPROP_BA42A58AD3718D76825D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000144",
+      "owner_logical_id": "CLIENT_CLASS_000144",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Config",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "Empty marker interface used as the upper bound of ConfigManager dynamic proxies; exact upstream RuneLite Config is the same marker contract."
+        },
+        {
+          "family": "exact_package_join",
+          "detail": "The class participates in the same live rs/e configuration framework centered on rs/e/i, with type-level joins matching RuneLite's config package rather than an unrelated similarly-shaped utility."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "Public RuneLite lineage preserves the Config identity with the same structural/annotation/value-object role represented by exact v308."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of the embedded RuneLite configuration framework; public source identity is corroboration and exact v308 structure remains primary."
+    },
+    {
+      "proposal_id": "SEMPROP_BFCED40156B40C339C80",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000157",
+      "owner_logical_id": "CLIENT_CLASS_000157",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Range",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "Runtime METHOD annotation with integer minimum default 0 and maximum default Integer.MAX_VALUE; exact upstream RuneLite Range matches."
+        },
+        {
+          "family": "exact_package_join",
+          "detail": "The class participates in the same live rs/e configuration framework centered on rs/e/i, with type-level joins matching RuneLite's config package rather than an unrelated similarly-shaped utility."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "Public RuneLite lineage preserves the Range identity with the same structural/annotation/value-object role represented by exact v308."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of the embedded RuneLite configuration framework; public source identity is corroboration and exact v308 structure remains primary."
+    },
+    {
+      "proposal_id": "SEMPROP_C8DEED932C8558FE9A39",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000150",
+      "owner_logical_id": "CLIENT_CLASS_000150",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigItemDescriptor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "Final ConfigObject implementation wrapping ConfigItem annotation, Type, Range, Alpha and Units metadata; preserved toString begins 'ConfigItemDescriptor(item='."
+        },
+        {
+          "family": "exact_package_join",
+          "detail": "The class participates in the same live rs/e configuration framework centered on rs/e/i, with type-level joins matching RuneLite's config package rather than an unrelated similarly-shaped utility."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "Public RuneLite lineage preserves the ConfigItemDescriptor identity with the same structural/annotation/value-object role represented by exact v308."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of the embedded RuneLite configuration framework; public source identity is corroboration and exact v308 structure remains primary."
+    },
+    {
+      "proposal_id": "SEMPROP_CFDCB7DC2C19843BD9ED",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000151",
+      "owner_logical_id": "CLIENT_CLASS_000151",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "Central configuration service owning Gson/EventBus/ConfigData/ConfigInvocationHandler, dynamic Config proxy creation, get/set/unset/default handling, profile load/save and ConfigDescriptor construction."
+        },
+        {
+          "family": "exact_package_join",
+          "detail": "The class participates in the same live rs/e configuration framework centered on rs/e/i, with type-level joins matching RuneLite's config package rather than an unrelated similarly-shaped utility."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "Public RuneLite lineage preserves the ConfigManager identity with the same structural/annotation/value-object role represented by exact v308."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of the embedded RuneLite configuration framework; public source identity is corroboration and exact v308 structure remains primary."
+    },
+    {
+      "proposal_id": "SEMPROP_D4B9FE3CD7BCF55FCE48",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000159",
+      "owner_logical_id": "CLIENT_CLASS_000159",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Units",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "Runtime METHOD annotation with unit String plus exact constants ms, ' mins', %, px, s and ' ticks'; exact upstream RuneLite Units preserves the same constants."
+        },
+        {
+          "family": "exact_package_join",
+          "detail": "The class participates in the same live rs/e configuration framework centered on rs/e/i, with type-level joins matching RuneLite's config package rather than an unrelated similarly-shaped utility."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "Public RuneLite lineage preserves the Units identity with the same structural/annotation/value-object role represented by exact v308."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of the embedded RuneLite configuration framework; public source identity is corroboration and exact v308 structure remains primary."
+    },
+    {
+      "proposal_id": "SEMPROP_D7E488C31FABA52EF544",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000149",
+      "owner_logical_id": "CLIENT_CLASS_000149",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigItem",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "Runtime METHOD annotation exposing position/key/name/description plus hidden/warning/secret/section-style members; exact upstream RuneLite ConfigItem contract matches."
+        },
+        {
+          "family": "exact_package_join",
+          "detail": "The class participates in the same live rs/e configuration framework centered on rs/e/i, with type-level joins matching RuneLite's config package rather than an unrelated similarly-shaped utility."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "Public RuneLite lineage preserves the ConfigItem identity with the same structural/annotation/value-object role represented by exact v308."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of the embedded RuneLite configuration framework; public source identity is corroboration and exact v308 structure remains primary."
+    },
+    {
+      "proposal_id": "SEMPROP_E01E5FB4A48007C4AAAB",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000147",
+      "owner_logical_id": "CLIENT_CLASS_000147",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigGroup",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "Runtime TYPE annotation exposing exactly one String group value; exact upstream RuneLite ConfigGroup matches."
+        },
+        {
+          "family": "exact_package_join",
+          "detail": "The class participates in the same live rs/e configuration framework centered on rs/e/i, with type-level joins matching RuneLite's config package rather than an unrelated similarly-shaped utility."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "Public RuneLite lineage preserves the ConfigGroup identity with the same structural/annotation/value-object role represented by exact v308."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of the embedded RuneLite configuration framework; public source identity is corroboration and exact v308 structure remains primary."
+    },
+    {
+      "proposal_id": "SEMPROP_E8E680FEC93343F24FFC",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000145",
+      "owner_logical_id": "CLIENT_CLASS_000145",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/e/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigData",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_config_contract",
+          "detail": "File-backed concurrent String configuration store with config-path ownership, load/save/patch behavior and config-file diagnostics; upstream RuneLite preserves class ConfigData with the same role."
+        },
+        {
+          "family": "exact_package_join",
+          "detail": "The class participates in the same live rs/e configuration framework centered on rs/e/i, with type-level joins matching RuneLite's config package rather than an unrelated similarly-shaped utility."
+        },
+        {
+          "family": "historical_source_identity",
+          "detail": "Public RuneLite lineage preserves the ConfigData identity with the same structural/annotation/value-object role represented by exact v308."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of the embedded RuneLite configuration framework; public source identity is corroboration and exact v308 structure remains primary."
+    }
+  ],
+  "unresolved": []
+}
