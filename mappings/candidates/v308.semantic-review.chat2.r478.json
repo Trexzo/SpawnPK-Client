@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_F576CC664CCED0EE27F9",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_2272C5C5C41DFCB72C3D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000818",
+      "owner_logical_id": "CLIENT_CLASS_000818",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner": "rs/runelite/a/j", "name": null, "descriptor": null},
+      "proposed_name": "RectangleUnion",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_outer_algorithm","detail":"Exact v308 rs/runelite/a/j exposes the static rectangle/polygon union algorithm that consumes its nested scan-line helper records and returns Shapes<SimplePolygon>; no unrelated behavior exists."},
+        {"family":"nested_identity_join","detail":"R221 already source-matched the four private nested classes of this exact owner as RectangleUnion.ChangingState, RectangleUnion.Chunk, RectangleUnion.Segment and RectangleUnion.Segments."},
+        {"family":"upstream_source_match","detail":"Historical RuneLite RectangleUnion has the same outer static union algorithm plus the same four nested helper classes and logging shape, making the outer source identity exact at the class level."},
+        {"family":"stable_sequence","detail":"R220/R221 place rs/runelite/a/i at CLIENT_CLASS_000817 and rs/runelite/a/j$a at 000819, fixing outer rs/runelite/a/j as CLIENT_CLASS_000818."}
+      ],
+      "note":"Source-correlated exact-v308 recovery of the outer RuneLite RectangleUnion type whose nested helpers were already recovered in R221."
+    }
+  ],
+  "unresolved": []
+}
