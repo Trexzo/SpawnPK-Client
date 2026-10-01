@@ -2446,7 +2446,7 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
-    def test_invokedynamic_helper_return_cast_uses_exact_return_descriptor(
+    def test_invokedynamic_helper_return_cast_uses_generated_signature(
         self,
     ):
         with tempfile.TemporaryDirectory() as td:
@@ -2454,15 +2454,6 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
             jar = _compile_java_fixture(
                 root,
                 {
-                    "p/ProcyonInvokeDynamicHelper_1.java": (
-                        "package p;\n"
-                        "public class ProcyonInvokeDynamicHelper_1 {\n"
-                        "    public static Handler handle() { return new Handler(); }\n"
-                        "    public static class Handler {\n"
-                        "        public Object invokeExact(Object value) { return value; }\n"
-                        "    }\n"
-                        "}\n"
-                    ),
                     "p/Client.java": (
                         "package p;\n"
                         "public class Client {\n"
@@ -2479,7 +2470,16 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 "package p;\n"
                 "public class Client {\n"
                 "    public static String concat(String p0) {\n"
-                "        return ProcyonInvokeDynamicHelper_1.handle().invokeExact(p0);\n"
+                "        return ProcyonInvokeDynamicHelper_1.invoke(p0);\n"
+                "    }\n"
+                "    private static final class ProcyonInvokeDynamicHelper_1 {\n"
+                "        private static Handler handle() { return new Handler(); }\n"
+                "        private static String invoke(String p0) {\n"
+                "            return ProcyonInvokeDynamicHelper_1.handle().invokeExact(p0);\n"
+                "        }\n"
+                "        private static final class Handler {\n"
+                "            Object invokeExact(Object value) { return value; }\n"
+                "        }\n"
                 "    }\n"
                 "}\n",
                 encoding="utf-8",
@@ -2521,8 +2521,16 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 action["method_descriptor"],
                 "(Ljava/lang/String;)Ljava/lang/String;",
             )
+            self.assertEqual(
+                action["helper_name"],
+                "ProcyonInvokeDynamicHelper_1",
+            )
             self.assertEqual(action["cast_type"], "java.lang.String")
             self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                action["matching_invokedynamic_callsite_count"],
+                1,
+            )
             self.assertEqual(
                 len(action["invokedynamic_callsites"]),
                 1,
@@ -2557,21 +2565,12 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 after.stdout + after.stderr,
             )
 
-    def test_invokedynamic_helper_return_count_mismatch_fails_closed(self):
+    def test_invokedynamic_helper_descriptor_multiplicity_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             jar = _compile_java_fixture(
                 root,
                 {
-                    "p/ProcyonInvokeDynamicHelper_1.java": (
-                        "package p;\n"
-                        "public class ProcyonInvokeDynamicHelper_1 {\n"
-                        "    public static Handler handle() { return new Handler(); }\n"
-                        "    public static class Handler {\n"
-                        "        public Object invokeExact(Object value) { return value; }\n"
-                        "    }\n"
-                        "}\n"
-                    ),
                     "p/Client.java": (
                         "package p;\n"
                         "public class Client {\n"
@@ -2588,10 +2587,25 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 "package p;\n"
                 "public class Client {\n"
                 "    public static String concat(String p0) {\n"
-                "        if (p0 == null) {\n"
+                "        return ProcyonInvokeDynamicHelper_1.invoke(p0);\n"
+                "    }\n"
+                "    private static final class ProcyonInvokeDynamicHelper_1 {\n"
+                "        private static Handler handle() { return new Handler(); }\n"
+                "        private static String invoke(String p0) {\n"
                 "            return ProcyonInvokeDynamicHelper_1.handle().invokeExact(p0);\n"
                 "        }\n"
-                "        return ProcyonInvokeDynamicHelper_1.handle().invokeExact(p0);\n"
+                "        private static final class Handler {\n"
+                "            Object invokeExact(Object value) { return value; }\n"
+                "        }\n"
+                "    }\n"
+                "    private static final class ProcyonInvokeDynamicHelper_2 {\n"
+                "        private static Handler handle() { return new Handler(); }\n"
+                "        private static String invoke(String p0) {\n"
+                "            return ProcyonInvokeDynamicHelper_2.handle().invokeExact(p0);\n"
+                "        }\n"
+                "        private static final class Handler {\n"
+                "            Object invokeExact(Object value) { return value; }\n"
+                "        }\n"
                 "    }\n"
                 "}\n"
             )

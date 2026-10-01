@@ -2847,15 +2847,23 @@ def _normalize_invokedynamic_helper_return_casts(
     path: Path,
     readable_zip: zipfile.ZipFile,
 ) -> list[dict[str, Any]]:
-    """Cast generated Procyon invokeExact returns to exact JVM return type.
+    """Cast generated Procyon helper returns from exact indy signatures.
 
-    Procyon can lower an invokedynamic expression through a generated
-    ProcyonInvokeDynamicHelper_N.handle().invokeExact(...) expression whose
-    Java surface type is Object. A cast is inserted only for a direct return
-    expression when one exact readable method matches and every exact
-    invokedynamic callsite in that method has the same non-Object reference
-    return descriptor as the enclosing JVM method.
+    Procyon 0.6.0's InvokeDynamicRewriter creates each generated helper
+    invoke method directly from DynamicCallSite.getMethodType().  The helper
+    method itself therefore has no corresponding method in the original
+    classfile.  Correlate its source signature against exact invokedynamic
+    descriptors in the enclosing readable class instead of trying to match
+    the generated method name to an original JVM method.
+
+    The rule remains fail-closed: only generated
+    ProcyonInvokeDynamicHelper_N classes are considered, each helper must
+    contain exactly one direct handle().invokeExact(...) return, its source
+    parameter and return shapes must identify one exact invokedynamic
+    descriptor, and the number of helpers using any descriptor must not
+    exceed the exact bytecode callsite multiplicity for that descriptor.
     """
+
     rel = path.relative_to(source_root).as_posix()
     class_entry = Path(rel).with_suffix(".class").as_posix()
     try:
@@ -2870,56 +2878,123 @@ def _normalize_invokedynamic_helper_return_casts(
     current_owner = str(profile.get("internal_name", ""))
     if current_owner != class_entry[:-6]:
         return []
+    current_package = current_owner.rpartition("/")[0]
+
+    exact_dynamic_calls: list[dict[str, Any]] = []
+    exact_descriptor_counts: dict[str, int] = {}
+    for method in profile.get("methods", []):
+        for invocation in method.get("method_invocations", []):
+            if invocation.get("operation") != "invokedynamic":
+                continue
+            descriptor = str(invocation.get("descriptor", ""))
+            if (
+                _descriptor_parameter_shapes(descriptor) is None
+                or _descriptor_return_descriptor(descriptor) is None
+            ):
+                continue
+            exact_descriptor_counts[descriptor] = (
+                exact_descriptor_counts.get(descriptor, 0) + 1
+            )
+            exact_dynamic_calls.append(
+                {
+                    "enclosing_method_name": str(method.get("name", "")),
+                    "enclosing_method_descriptor": str(
+                        method.get("descriptor", "")
+                    ),
+                    "name": str(invocation.get("name", "")),
+                    "descriptor": descriptor,
+                    "bootstrap_method_attr_index": int(
+                        invocation.get("bootstrap_method_attr_index", -1)
+                    ),
+                    "offset": int(invocation.get("offset", -1)),
+                }
+            )
+    if not exact_dynamic_calls:
+        return []
 
     text = path.read_text(encoding="utf-8")
-    helper_return = re.compile(
-        r"(?m)^(?P<indent>[ \t]*)return[ \t]+"
-        r"(?P<expr>"
-        r"ProcyonInvokeDynamicHelper_[0-9]+"
-        r"\.handle\(\)\.invokeExact\([^;\n]*\)"
-        r")\s*;"
+    whole_code = _java_code_mask(text)
+    helper_class_re = re.compile(
+        r"(?m)^(?P<indent>[ \t]*)"
+        r"(?:(?:public|private|protected|static|final)\s+)*"
+        r"class\s+"
+        r"(?P<name>ProcyonInvokeDynamicHelper_[0-9]+)"
+        r"\s*\{"
     )
 
-    edits: list[tuple[int, int, str]] = []
-    actions: list[dict[str, Any]] = []
+    pending: list[dict[str, Any]] = []
+    observed_descriptor_counts: dict[str, int] = {}
 
-    for method_match in _METHOD_DECL_RE.finditer(text):
-        brace_start = text.find(
-            "{", method_match.start(), method_match.end()
+    for helper_match in helper_class_re.finditer(whole_code):
+        helper_name = helper_match.group("name")
+        brace_start = whole_code.find(
+            "{", helper_match.start(), helper_match.end()
         )
         if brace_start < 0:
-            continue
-        body_end = _matching_brace_end(text, brace_start)
-        method_text = text[method_match.start():body_end]
-        method_code = _java_code_mask(method_text)
-        return_matches = list(helper_return.finditer(method_code))
-        if not return_matches:
-            continue
+            return []
+        try:
+            helper_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            return []
 
-        source_arity = _source_parameter_count(
-            method_match.group("params")
+        helper_code = whole_code[brace_start:helper_end]
+        invoke_methods: list[re.Match[str]] = []
+        for method_match in _METHOD_DECL_RE.finditer(
+            whole_code,
+            brace_start + 1,
+            helper_end,
+        ):
+            if method_match.group("name") != "invoke":
+                continue
+            relative_start = method_match.start() - brace_start
+            if _brace_depth_before(helper_code, relative_start) != 1:
+                continue
+            invoke_methods.append(method_match)
+        if len(invoke_methods) != 1:
+            return []
+
+        method_match = invoke_methods[0]
+        method_brace = whole_code.find(
+            "{", method_match.start(), method_match.end()
         )
-        candidates: list[tuple[dict[str, Any], list[dict[str, Any]], str]] = []
+        if method_brace < 0:
+            return []
+        try:
+            method_end = _matching_brace_end(whole_code, method_brace)
+        except SourceNormalizationError:
+            return []
+        if method_end > helper_end:
+            return []
 
-        for method in profile.get("methods", []):
-            if method.get("name") != method_match.group("name"):
-                continue
-            descriptor = str(method.get("descriptor", ""))
-            if _descriptor_parameter_count(descriptor) != source_arity:
-                continue
-            parameter_match = _source_parameters_match_descriptor(
-                method_match.group("params"),
-                descriptor,
-                current_package=current_owner.rpartition("/")[0],
-            )
-            if parameter_match is False:
+        method_code = whole_code[method_match.start():method_end]
+        helper_return = re.compile(
+            r"(?m)^(?P<indent>[ \t]*)return[ \t]+"
+            r"(?P<expr>"
+            + re.escape(helper_name)
+            + r"\.handle\(\)\.invokeExact\([^;\n]*\)"
+            r")\s*;"
+        )
+        return_matches = list(helper_return.finditer(method_code))
+        if len(return_matches) != 1:
+            return []
+
+        candidate_descriptors: set[str] = set()
+        for descriptor in exact_descriptor_counts:
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
                 continue
 
             return_descriptor = _descriptor_return_descriptor(descriptor)
-            cast_type = (
-                _java_cast_type_from_reference_descriptor(
-                    return_descriptor or ""
-                )
+            if return_descriptor is None:
+                continue
+            cast_type = _java_cast_type_from_reference_descriptor(
+                return_descriptor
             )
             if (
                 cast_type is None
@@ -2927,80 +3002,103 @@ def _normalize_invokedynamic_helper_return_casts(
             ):
                 continue
 
-            dynamic_calls = [
-                invocation
-                for invocation in method.get("method_invocations", [])
-                if invocation.get("operation") == "invokedynamic"
-            ]
-            if len(dynamic_calls) != len(return_matches):
-                continue
-
-            dynamic_returns = [
-                _descriptor_return_descriptor(
-                    str(invocation.get("descriptor", ""))
+            return_probe = (
+                method_match.group("return").strip()
+                + " recoveredInvokeDynamicReturn"
+            )
+            if (
+                _source_parameters_match_descriptor(
+                    return_probe,
+                    "(" + return_descriptor + ")V",
+                    current_package=current_package,
                 )
-                for invocation in dynamic_calls
-            ]
-            if any(
-                dynamic_return != return_descriptor
-                for dynamic_return in dynamic_returns
+                is not True
             ):
                 continue
+            candidate_descriptors.add(descriptor)
 
-            candidates.append((method, dynamic_calls, cast_type))
+        if len(candidate_descriptors) != 1:
+            return []
 
-        if len(candidates) != 1:
-            continue
+        descriptor = next(iter(candidate_descriptors))
+        return_descriptor = _descriptor_return_descriptor(descriptor)
+        cast_type = _java_cast_type_from_reference_descriptor(
+            return_descriptor or ""
+        )
+        if cast_type is None:
+            return []
 
-        exact_method, dynamic_calls, cast_type = candidates[0]
-        for return_match in return_matches:
-            expression_start = (
-                method_match.start() + return_match.start("expr")
+        observed_descriptor_counts[descriptor] = (
+            observed_descriptor_counts.get(descriptor, 0) + 1
+        )
+        return_match = return_matches[0]
+        expression_start = (
+            method_match.start() + return_match.start("expr")
+        )
+        expression_end = (
+            method_match.start() + return_match.end("expr")
+        )
+        pending.append(
+            {
+                "helper_name": helper_name,
+                "descriptor": descriptor,
+                "cast_type": cast_type,
+                "expression_start": expression_start,
+                "expression_end": expression_end,
+            }
+        )
+
+    if not pending:
+        return []
+
+    for descriptor, observed in observed_descriptor_counts.items():
+        if observed > exact_descriptor_counts.get(descriptor, 0):
+            return []
+
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+    for item in pending:
+        descriptor = str(item["descriptor"])
+        expression_start = int(item["expression_start"])
+        expression_end = int(item["expression_end"])
+        expression = text[expression_start:expression_end]
+        edits.append(
+            (
+                expression_start,
+                expression_end,
+                "(" + str(item["cast_type"]) + ")" + expression,
             )
-            expression_end = (
-                method_match.start() + return_match.end("expr")
-            )
-            expression = text[expression_start:expression_end]
-            edits.append(
-                (
-                    expression_start,
-                    expression_end,
-                    "(" + cast_type + ")" + expression,
-                )
-            )
+        )
 
+        matching_calls = [
+            call
+            for call in exact_dynamic_calls
+            if call["descriptor"] == descriptor
+        ]
         actions.append(
             {
                 "kind": "invokedynamic_helper_return_cast",
                 "source_path": rel,
-                "method_name": method_match.group("name"),
-                "method_descriptor": exact_method["descriptor"],
-                "cast_type": cast_type,
-                "invokedynamic_callsites": [
-                    {
-                        "name": str(call.get("name", "")),
-                        "descriptor": str(call.get("descriptor", "")),
-                        "bootstrap_method_attr_index": int(
-                            call.get("bootstrap_method_attr_index", -1)
-                        ),
-                    }
-                    for call in dynamic_calls
-                ],
-                "replacement_count": len(return_matches),
+                "helper_name": item["helper_name"],
+                "method_name": "invoke",
+                "method_descriptor": descriptor,
+                "cast_type": item["cast_type"],
+                "matching_invokedynamic_callsite_count": len(
+                    matching_calls
+                ),
+                "invokedynamic_callsites": matching_calls,
+                "replacement_count": 1,
                 "provenance": {
                     "kind": "source_safety",
                     "reason": (
-                        "procyon_invokedynamic_helper_object_return"
+                        "procyon_generated_invokedynamic_helper_signature"
                     ),
                     "strategy": (
-                        "exact_method_and_invokedynamic_return_descriptor_cast"
+                        "generated_helper_signature_to_exact_invokedynamic_descriptor"
                     ),
                 },
             }
         )
-
-    if not edits:
-        return []
 
     edits.sort(key=lambda row: row[0])
     for left, right in zip(edits, edits[1:]):
@@ -3012,7 +3110,6 @@ def _normalize_invokedynamic_helper_return_casts(
         text = text[:start] + replacement + text[end:]
     path.write_text(text, encoding="utf-8")
     return actions
-
 
 def _normalize_imported_parameter_types_shadowed_by_same_package(
     *,
