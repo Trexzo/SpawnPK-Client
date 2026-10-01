@@ -169,8 +169,13 @@ def _validate_fixture_binding(
             "fixture changed-entry paths do not match exact archive delta"
         )
 
-    if len(expected_changed) == 1:
-        path = expected_changed[0]
+    changed_classes = [
+        path
+        for path in expected_changed
+        if path.startswith("rs/") and path.endswith(".class")
+    ]
+    if len(changed_classes) == 1:
+        path = changed_classes[0]
         old_entry = v307_index.get("entries", {}).get(path, {})
         new_entry = v308_index.get("entries", {}).get(path, {})
         if (
@@ -187,6 +192,11 @@ def _validate_fixture_binding(
             raise HistoricalLineageBackfillError(
                 "fixture changed-class new SHA does not match exact v308 entry"
             )
+    elif len(changed_classes) > 1:
+        raise HistoricalLineageBackfillError(
+            "historical field carry supports at most one fixture-pinned "
+            "changed project class"
+        )
 
     return expected_changed
 
