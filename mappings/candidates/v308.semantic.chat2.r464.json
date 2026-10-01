@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [{
+    "schema_version": 1,
+    "kind": "semantic_name_candidate",
+    "canonical": false,
+    "status": "CANDIDATE",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target": {"kind": "class", "owner": "rs/A/p", "name": null, "descriptor": null},
+    "proposed_name": "QuantityFormatter",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"exact_format_parse_surface","detail":"Exact v308 rs/A/p formats long/int/double quantities, emits abbreviated K/M/B/T stack strings, parses abbreviated quantity strings back to long values, and formats plain comma-delimited numbers with English locale NumberFormat."},
+      {"family":"exact_validation_literals","detail":"The class owns the exact regex ^-?[0-9,.]+([a-zA-Z]?)$ and the surviving ParseException messages '<value> does not resemble a properly formatted stack.' and 'Invalid Suffix: <suffix>'."},
+      {"family":"upstream_runelite_source_identity","detail":"RuneLite net.runelite.client.util.QuantityFormatter contains the same quantityToStackSize, quantityToRSDecimalStack, parseQuantity, formatNumber and suffix-validation surface with the same validation literals and decimal formats; SpawnPK extends the suffix array with T."},
+      {"family":"exact_live_consumers","detail":"Exact v308 rs/s/t/d and rs/s/t/m call this utility to render trading/price/received quantities, per-item values and multiplied stack totals, confirming the quantity-formatting role in live UI."}
+    ],
+    "note": "Historical RuneLite source identity plus exact-v308 bytecode fixes QuantityFormatter. SpawnPK's copy adds a T suffix but retains the same utility contract."
+  }],
+  "conflicts": []
+}
