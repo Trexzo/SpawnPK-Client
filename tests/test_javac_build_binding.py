@@ -13,6 +13,7 @@ from spk_recovery.javac_diagnostics import (
 
 
 AUTHORITY = "a" * 64
+TOOLING = "1" * 40
 
 
 def private_diagnostic():
@@ -60,8 +61,10 @@ class JavacBuildBindingTests(unittest.TestCase):
             clean_rebuild(diagnostic),
             expected_build_id="v307",
             expected_authority_sha256=AUTHORITY,
+            tooling_commit=TOOLING,
         )
 
+        self.assertEqual(value["tooling_commit"], TOOLING)
         self.assertEqual(value["build_id"], "v307")
         self.assertEqual(
             value["diagnostic_report_id"],
@@ -89,6 +92,7 @@ class JavacBuildBindingTests(unittest.TestCase):
                 rebuild,
                 expected_build_id="v308",
                 expected_authority_sha256=AUTHORITY,
+                tooling_commit=TOOLING,
             )
 
         with self.assertRaisesRegex(
@@ -100,6 +104,7 @@ class JavacBuildBindingTests(unittest.TestCase):
                 rebuild,
                 expected_build_id="v307",
                 expected_authority_sha256="c" * 64,
+                tooling_commit=TOOLING,
             )
 
     def test_rejects_diagnostic_authority_drift(self):
@@ -118,6 +123,7 @@ class JavacBuildBindingTests(unittest.TestCase):
                 rebuild,
                 expected_build_id="v307",
                 expected_authority_sha256=AUTHORITY,
+                tooling_commit=TOOLING,
             )
 
     def test_rejects_summary_drift(self):
@@ -136,6 +142,7 @@ class JavacBuildBindingTests(unittest.TestCase):
                 rebuild,
                 expected_build_id="v307",
                 expected_authority_sha256=AUTHORITY,
+                tooling_commit=TOOLING,
             )
 
     def test_rejects_project_binary_fallback(self):
@@ -152,6 +159,7 @@ class JavacBuildBindingTests(unittest.TestCase):
                 rebuild,
                 expected_build_id="v307",
                 expected_authority_sha256=AUTHORITY,
+                tooling_commit=TOOLING,
             )
 
 
@@ -169,6 +177,7 @@ class JavacBuildBindingTests(unittest.TestCase):
                 rebuild,
                 expected_build_id="v307",
                 expected_authority_sha256=AUTHORITY,
+                tooling_commit=TOOLING,
             )
 
         diagnostic = private_diagnostic()
@@ -184,7 +193,41 @@ class JavacBuildBindingTests(unittest.TestCase):
                 rebuild,
                 expected_build_id="v307",
                 expected_authority_sha256=AUTHORITY,
+                tooling_commit=TOOLING,
             )
+
+    def test_rejects_invalid_tooling_commit(self):
+        diagnostic = private_diagnostic()
+        with self.assertRaisesRegex(
+            JavacBuildBindingError,
+            "tooling commit must be lowercase 40-hex",
+        ):
+            build_javac_build_binding(
+                diagnostic,
+                clean_rebuild(diagnostic),
+                expected_build_id="v307",
+                expected_authority_sha256=AUTHORITY,
+                tooling_commit="not-a-commit",
+            )
+
+    def test_binding_identity_changes_with_tooling_commit(self):
+        diagnostic = private_diagnostic()
+        rebuild = clean_rebuild(diagnostic)
+        first = build_javac_build_binding(
+            diagnostic,
+            rebuild,
+            expected_build_id="v307",
+            expected_authority_sha256=AUTHORITY,
+            tooling_commit="1" * 40,
+        )
+        second = build_javac_build_binding(
+            diagnostic,
+            rebuild,
+            expected_build_id="v307",
+            expected_authority_sha256=AUTHORITY,
+            tooling_commit="2" * 40,
+        )
+        self.assertNotEqual(first["binding_id"], second["binding_id"])
 
     def test_binding_identity_changes_with_workspace(self):
         diagnostic = private_diagnostic()
@@ -197,12 +240,14 @@ class JavacBuildBindingTests(unittest.TestCase):
             first_rebuild,
             expected_build_id="v307",
             expected_authority_sha256=AUTHORITY,
+            tooling_commit=TOOLING,
         )
         second = build_javac_build_binding(
             diagnostic,
             second_rebuild,
             expected_build_id="v307",
             expected_authority_sha256=AUTHORITY,
+            tooling_commit=TOOLING,
         )
         self.assertNotEqual(first["binding_id"], second["binding_id"])
 

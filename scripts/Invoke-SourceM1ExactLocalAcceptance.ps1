@@ -423,6 +423,7 @@ $RecoveredManifest = Join-Path $CollisionWorkspace "recovered-source-manifest.js
 $RecoveredSourceRoot = Join-Path $CollisionWorkspace "src"
 $NormalizationReport = Join-Path $CollisionWorkspace "source-normalization.json"
 $PrivateDiagnostic = Join-Path $ReleaseDir "javac-diagnostic-private.json"
+$JavacBuildBinding = Join-Path $ReleaseDir "javac-build-binding.json"
 Require-File $RecoveredManifest
 Require-File $NormalizationReport
 if (-not (Test-Path -LiteralPath $RecoveredSourceRoot -PathType Container)) {
@@ -558,6 +559,30 @@ Write-Host ""
 Write-Host "=== CURRENT-MAIN RECOVERED RELEASE ===" -ForegroundColor Cyan
 & py @ReleaseArgs
 $ReleaseExit = $LASTEXITCODE
+
+$CleanPath = Join-Path $ReleaseDir "rebuild\clean-rebuild.json"
+if (
+    $ReleaseExit -ne 0 -and
+    (Test-Path -LiteralPath $PrivateDiagnostic -PathType Leaf) -and
+    (Test-Path -LiteralPath $CleanPath -PathType Leaf)
+) {
+    Invoke-PyChecked "BIND JAVAC DIAGNOSTIC TO TOOLING AUTHORITY" @(
+        "-3.13",
+        "-m",
+        "spk_recovery.javac_build_binding_cli",
+        $PrivateDiagnostic,
+        $CleanPath,
+        "--expected-build-id",
+        "v308",
+        "--expected-authority-sha256",
+        $ExpectedV308,
+        "--tooling-commit",
+        $Head,
+        "--out",
+        $JavacBuildBinding
+    )
+}
+
 if ($ReleaseExit -ne 0) {
     $RunPath = Join-Path $ReleaseDir "release-run.json"
     if (Test-Path -LiteralPath $RunPath -PathType Leaf) {
@@ -573,7 +598,6 @@ if ($ReleaseExit -ne 0) {
         Write-Host "terminal_stage=$($Run.terminal_stage)"
         Write-Host "status=$($Run.status)"
         Write-Host "run_id=$($Run.run_id)"
-        $CleanPath = Join-Path $ReleaseDir "rebuild\clean-rebuild.json"
         if (Test-Path -LiteralPath $CleanPath -PathType Leaf) {
             $CleanDoc = Get-JsonProjection `
                 -Path $CleanPath `
@@ -605,6 +629,9 @@ if ($ReleaseExit -ne 0) {
     }
     if (Test-Path -LiteralPath $PrivateDiagnostic -PathType Leaf) {
         Write-Host "private_javac_diagnostic=$PrivateDiagnostic"
+        if (Test-Path -LiteralPath $JavacBuildBinding -PathType Leaf) {
+            Write-Host "javac_build_binding=$JavacBuildBinding"
+        }
         Write-Host ""
         & py -3.13 -m spk_recovery.javac_frontier_summary_cli `
             $PrivateDiagnostic `

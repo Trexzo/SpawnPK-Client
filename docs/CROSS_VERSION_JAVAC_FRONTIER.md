@@ -38,6 +38,7 @@ is refused without exposing its raw identifiers.
 binds one private diagnostic report to the exact
 `clean_project_rebuild_report` that produced it and fails closed unless:
 
+- the binding carries the exact lowercase 40-hex recovery-tooling commit;
 - the clean rebuild has the expected build ID;
 - its source-authority SHA-256 matches the expected exact client;
 - its public diagnostic report ID, frontier ID, raw-input SHA-256 and complete
@@ -45,8 +46,8 @@ binds one private diagnostic report to the exact
 - the recovered workspace and source-tree authority are present;
 - project-binary fallback is exactly zero.
 
-The emitted `JAVACBIND_*` report contains only build/source authority IDs,
-hashes and aggregate state. It never emits source paths, symbols, locations or
+The emitted `JAVACBIND_*` report contains the recovery-tooling commit plus
+build/source authority IDs, hashes and aggregate state. It never emits source paths, symbols, locations or
 raw diagnostic messages.
 
 ## Boundary
@@ -68,24 +69,37 @@ spk-cross-version-javac-frontier `
 ## One-command historical/current comparison
 
 After both private Source-M1 runs have produced their identifier-bearing javac
-diagnostics and companion clean-rebuild reports:
+diagnostics, companion clean-rebuild reports, and runner-emitted
+`javac-build-binding.json` files:
 
 ```powershell
 & .\scripts\Invoke-CrossVersionJavacFrontier.ps1
 ```
 
-The wrapper requires a clean checkout at exact `origin/main`. Before
-comparison it independently creates:
+The wrapper requires a clean checkout at exact `origin/main`. Each Source-M1
+runner emits its own `javac-build-binding.json` at the moment the clean
+rebuild frontier is measured. That binding records the exact-main recovery
+tooling commit used for that run.
 
-- `v307-javac-build-binding.json`, pinned to exact v307
+The comparator first requires the v307 and v308 bindings to carry the **same
+recovery-tooling commit**. It then independently regenerates both bindings
+from the private diagnostics + clean-rebuild reports and requires the
+regenerated `JAVACBIND_*` identities to equal the recorded bindings.
+
+The two build authorities remain pinned to:
+
+- exact v307
   `6232bae206846a4ba8d09766a2dee886b69016066a3f50f83b201bf705f93662`;
-- `v308-javac-build-binding.json`, pinned to exact v308
+- exact v308
   `854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`.
 
-Only after both bindings pass does it produce the redacted cross-version
-frontier report. It then rechecks that each binding's diagnostic report ID,
-raw-input SHA-256 and frontier ID are exactly the comparator inputs.
+Only after the same-tooling gate and both binding verifications pass does the
+wrapper produce the redacted cross-version frontier report. It then rechecks
+that each verified binding's diagnostic report ID, raw-input SHA-256 and
+frontier ID are exactly the comparator inputs.
 
-This means the wrapper's `v307` and `v308` labels are authority-backed
-rather than inferred from filenames or directory names. The comparison still
-does not claim either source tree is release-ready.
+This prevents a newer Source-M1 tooling improvement from being misreported as
+a v307/v308 client-version delta. The wrapper's `v307` and `v308` labels
+are therefore build-authority-backed **and** same-tooling-bound rather than
+inferred from filenames or directory names. The comparison still does not
+claim either source tree is release-ready.

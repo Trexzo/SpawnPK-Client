@@ -36,6 +36,13 @@ class SourceM1AcceptanceWrapperObservabilityTests(unittest.TestCase):
             text,
         )
 
+        self.assertIn(
+            "spk_recovery.javac_build_binding_cli",
+            text,
+        )
+        self.assertIn('"--tooling-commit"', text)
+        self.assertIn("javac_build_binding=", text)
+
         for marker in (
             "SOURCE_NORMALIZATION_ID=",
             "SOURCE_NORMALIZATION_ACTIONS=",
