@@ -1,0 +1,28 @@
+{
+  "schema_version":1,
+  "kind":"semantic_review_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count":1,
+  "review_id":"SEMREVIEW_361039659C28F96CBC21",
+  "proposals":[{
+    "proposal_id":"SEMPROP_4BDA35BA566C5E7EA40D",
+    "target_kind":"class",
+    "stable_id":"CLIENT_CLASS_000301",
+    "owner_logical_id":"CLIENT_CLASS_000301",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate":{"owner":"rs/j","name":null,"descriptor":null},
+    "proposed_name":"DepthFogRenderer",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_depth_buffer_pass","detail":"The render method walks the complete DrawingArea software surface using the float depth buffer and destination pixel buffer in lockstep."},
+      {"family":"exact_fog_range_blend","detail":"Pixels beyond the configured far threshold are replaced with the configured fog color; pixels inside the start/end depth range are alpha-blended toward that fog color using distance-derived intensity."},
+      {"family":"exact_state_contract","detail":"The class owns only fog color/intensity state plus one float range offset and exposes setters for both before rendering; it owns no scene geometry, texture or unrelated gameplay state."},
+      {"family":"historical_role_corroboration","detail":"Public RSPS client lineage contains the same depth-buffer algorithm under renderFog-style rasterizer code, independently corroborating a depth-fog rendering role."}
+    ],
+    "note":"Descriptive exact-v308 name for the software depth-buffer fog pass. The original stripped identifier is not claimed."
+  }],
+  "unresolved":[]
+}
