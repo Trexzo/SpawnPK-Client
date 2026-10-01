@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_0859CB2145E0C39C454C",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_E1F6628A229E75B9D26C",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000600",
+      "owner_logical_id": "CLIENT_CLASS_000600",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aY",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CombatStylesInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_builder_contract",
+          "detail": "The class directly extends R436 CustomInterfaceBuilder and is constructed by the live custom-interface registry."
+        },
+        {
+          "family": "exact_multi_weapon_surface",
+          "detail": "The builder configures multiple weapon-style interface roots and associated style buttons rather than one single weapon instance."
+        },
+        {
+          "family": "exact_style_literals",
+          "detail": "Exact attack-style labels include Chop, Hack, Smash, Block, Stab, Lunge, Slash, Pound, Pummel, Spike, Swipe and related style families."
+        },
+        {
+          "family": "exact_xp_mode_literals",
+          "detail": "Exact hover/description text includes Accurate/Attack XP, Aggressive/Strength XP, Controlled/Shared XP and Defensive/Defence XP across stab/slash/crush styles, fixing the class as the combat-style interface catalogue."
+        }
+      ],
+      "note": "Exact-v308 client combat-style presentation builder; no combat formula or server attack semantics are inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_FE23FD8A18327420C8F5",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000592",
+      "owner_logical_id": "CLIENT_CLASS_000592",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aQ",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SkillsInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_builder_contract",
+          "detail": "The class directly extends R436 CustomInterfaceBuilder and is constructed by the live custom-interface registry."
+        },
+        {
+          "family": "exact_root_and_resources",
+          "detail": "The builder patches/builds the classic skills surface rooted at widget 3917 and uses exact 'skills/SKILL' sprite resources."
+        },
+        {
+          "family": "exact_skill_literals",
+          "detail": "It owns exact skill labels for Attack, Hitpoints, Mining, Strength, Agility, Smithing, Defence, Herblore, Fishing, Range, Thieving, Cooking, Prayer, Crafting, Firemaking, Magic, Fletching, Woodcutting, Runecrafting, Slayer, Farming, Construction, Hunter and Summoning."
+        },
+        {
+          "family": "exact_total_level_presentation",
+          "detail": "It creates exact 'Total Level: 0' presentation and the per-skill level/hover surfaces, fixing the role as the client skills interface."
+        }
+      ],
+      "note": "Exact-v308 client skills presentation identity; no XP formula or server skill authority is inferred."
+    }
+  ],
+  "unresolved": []
+}
