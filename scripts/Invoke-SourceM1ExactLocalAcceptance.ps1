@@ -442,6 +442,8 @@ $Recovered = Get-JsonProjection `
         java_file_count = "/java_file_count"
         normalization_id = "/normalization_id"
         normalization_action_count = "/normalization_summary/action_count"
+        invokedynamic_helper_return_cast_method_count = "/normalization_summary/invokedynamic_helper_return_cast_method_count"
+        invokedynamic_helper_return_cast_reference_count = "/normalization_summary/invokedynamic_helper_return_cast_reference_count"
         same_package_shadow_method_count = "/normalization_summary/shadowed_same_package_static_field_method_count"
         same_package_shadow_reference_count = "/normalization_summary/shadowed_same_package_static_field_reference_count"
         primitive_scope_self_shadow_method_count = "/normalization_summary/primitive_scope_shadowed_self_static_field_method_count"
@@ -450,6 +452,10 @@ $Recovered = Get-JsonProjection `
         primitive_instance_receiver_reference_count = "/normalization_summary/primitive_shadowed_instance_receiver_reference_count"
         imported_static_method_shadow_method_count = "/normalization_summary/shadowed_imported_static_method_method_count"
         imported_static_method_shadow_reference_count = "/normalization_summary/shadowed_imported_static_method_reference_count"
+        same_package_static_method_shadow_method_count = "/normalization_summary/shadowed_same_package_static_method_method_count"
+        same_package_static_method_shadow_reference_count = "/normalization_summary/shadowed_same_package_static_method_reference_count"
+        scoped_same_package_static_field_method_count = "/normalization_summary/scoped_same_package_static_field_method_count"
+        scoped_same_package_static_field_reference_count = "/normalization_summary/scoped_same_package_static_field_reference_count"
     }
 if ([string]$Recovered.build_id -ne "v308") {
     throw "Recovered workspace is not v308."
@@ -493,6 +499,8 @@ Write-Host "RECOVERED_WORKSPACE_ID=$($Recovered.workspace_id)" -ForegroundColor 
 Write-Host "RECOVERED_JAVA_FILES=$($Recovered.java_file_count)" -ForegroundColor Green
 Write-Host "SOURCE_NORMALIZATION_ID=$($Recovered.normalization_id)" -ForegroundColor Green
 Write-Host "SOURCE_NORMALIZATION_ACTIONS=$($Recovered.normalization_action_count)"
+Write-Host "INVOKEDYNAMIC_HELPER_RETURN_CAST_METHODS=$($Recovered.invokedynamic_helper_return_cast_method_count)"
+Write-Host "INVOKEDYNAMIC_HELPER_RETURN_CAST_REFERENCES=$($Recovered.invokedynamic_helper_return_cast_reference_count)"
 Write-Host "SAME_PACKAGE_SHADOW_METHODS=$($Recovered.same_package_shadow_method_count)"
 Write-Host "SAME_PACKAGE_SHADOW_REFERENCES=$($Recovered.same_package_shadow_reference_count)"
 Write-Host "PRIMITIVE_SCOPE_SELF_SHADOW_METHODS=$($Recovered.primitive_scope_self_shadow_method_count)"
@@ -501,6 +509,10 @@ Write-Host "PRIMITIVE_INSTANCE_RECEIVER_METHODS=$($Recovered.primitive_instance_
 Write-Host "PRIMITIVE_INSTANCE_RECEIVER_REFERENCES=$($Recovered.primitive_instance_receiver_reference_count)"
 Write-Host "IMPORTED_STATIC_METHOD_SHADOW_METHODS=$($Recovered.imported_static_method_shadow_method_count)"
 Write-Host "IMPORTED_STATIC_METHOD_SHADOW_REFERENCES=$($Recovered.imported_static_method_shadow_reference_count)"
+Write-Host "SAME_PACKAGE_STATIC_METHOD_SHADOW_METHODS=$($Recovered.same_package_static_method_shadow_method_count)"
+Write-Host "SAME_PACKAGE_STATIC_METHOD_SHADOW_REFERENCES=$($Recovered.same_package_static_method_shadow_reference_count)"
+Write-Host "SCOPED_SAME_PACKAGE_STATIC_FIELD_METHODS=$($Recovered.scoped_same_package_static_field_method_count)"
+Write-Host "SCOPED_SAME_PACKAGE_STATIC_FIELD_REFERENCES=$($Recovered.scoped_same_package_static_field_reference_count)"
 
 $NormalizationSummaryArgs = @(
     "-3.13",

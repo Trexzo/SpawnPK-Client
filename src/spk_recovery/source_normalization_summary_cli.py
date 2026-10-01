@@ -201,6 +201,23 @@ def summarize(
 
     family_specs = [
         {
+            "kind": "invokedynamic_helper_return_cast",
+            "label": "INVOKEDYNAMIC HELPER RETURN CAST",
+            "method_key": (
+                "invokedynamic_helper_return_cast_method_count"
+            ),
+            "reference_key": (
+                "invokedynamic_helper_return_cast_reference_count"
+            ),
+            "method_marker": "INVOKEDYNAMIC_HELPER_RETURN_CAST_METHODS",
+            "reference_marker": (
+                "INVOKEDYNAMIC_HELPER_RETURN_CAST_REFERENCES"
+            ),
+            "detail": lambda action: (
+                "cast=" + str(action.get("cast_type") or "<missing>")
+            ),
+        },
+        {
             "kind": (
                 "primitive_scope_shadowed_self_static_field_owner_qualification"
             ),
@@ -253,6 +270,46 @@ def summarize(
                 + str(action.get("simple_owner") or "<missing>")
                 + " | owner="
                 + str(action.get("imported_owner") or "<missing>")
+            ),
+        },
+        {
+            "kind": (
+                "shadowed_same_package_static_method_owner_qualification"
+            ),
+            "label": "SAME-PACKAGE STATIC METHOD SHADOW",
+            "method_key": (
+                "shadowed_same_package_static_method_method_count"
+            ),
+            "reference_key": (
+                "shadowed_same_package_static_method_reference_count"
+            ),
+            "method_marker": "SAME_PACKAGE_STATIC_METHOD_SHADOW_METHODS",
+            "reference_marker": "SAME_PACKAGE_STATIC_METHOD_SHADOW_REFERENCES",
+            "detail": lambda action: (
+                "simple="
+                + str(action.get("simple_owner") or "<missing>")
+                + " | owner="
+                + str(action.get("same_package_owner") or "<missing>")
+            ),
+        },
+        {
+            "kind": (
+                "scoped_same_package_static_field_owner_qualification"
+            ),
+            "label": "SCOPED SAME-PACKAGE STATIC FIELD",
+            "method_key": (
+                "scoped_same_package_static_field_method_count"
+            ),
+            "reference_key": (
+                "scoped_same_package_static_field_reference_count"
+            ),
+            "method_marker": "SCOPED_SAME_PACKAGE_STATIC_FIELD_METHODS",
+            "reference_marker": "SCOPED_SAME_PACKAGE_STATIC_FIELD_REFERENCES",
+            "detail": lambda action: (
+                "simple="
+                + str(action.get("simple_owner") or "<missing>")
+                + " | owner="
+                + str(action.get("same_package_owner") or "<missing>")
             ),
         },
     ]

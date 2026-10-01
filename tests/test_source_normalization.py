@@ -2446,6 +2446,181 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+    def test_invokedynamic_helper_return_cast_uses_generated_signature(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Client.java": (
+                        "package p;\n"
+                        "public class Client {\n"
+                        "    public static String concat(String p0) {\n"
+                        "        return \"value=\" + p0;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "Client.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "public class Client {\n"
+                "    public static String concat(String p0) {\n"
+                "        return ProcyonInvokeDynamicHelper_1.invoke(p0);\n"
+                "    }\n"
+                "    private static final class ProcyonInvokeDynamicHelper_1 {\n"
+                "        private static Handler handle() { return new Handler(); }\n"
+                "        private static String invoke(String p0) {\n"
+                "            return ProcyonInvokeDynamicHelper_1.handle().invokeExact(p0);\n"
+                "        }\n"
+                "        private static final class Handler {\n"
+                "            Object invokeExact(Object value) { return value; }\n"
+                "        }\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-invokedynamic-cast"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn(
+                "Object cannot be converted to String",
+                before.stderr,
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "return (java.lang.String)"
+                "ProcyonInvokeDynamicHelper_1.handle().invokeExact(p0);",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"] == "invokedynamic_helper_return_cast"
+            )
+            self.assertEqual(
+                action["method_descriptor"],
+                "(Ljava/lang/String;)Ljava/lang/String;",
+            )
+            self.assertEqual(
+                action["helper_name"],
+                "ProcyonInvokeDynamicHelper_1",
+            )
+            self.assertEqual(action["cast_type"], "java.lang.String")
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                action["matching_invokedynamic_callsite_count"],
+                1,
+            )
+            self.assertEqual(
+                len(action["invokedynamic_callsites"]),
+                1,
+            )
+            self.assertEqual(
+                action["invokedynamic_callsites"][0]["descriptor"],
+                "(Ljava/lang/String;)Ljava/lang/String;",
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_helper_return_cast_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-invokedynamic-cast"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_invokedynamic_helper_descriptor_multiplicity_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Client.java": (
+                        "package p;\n"
+                        "public class Client {\n"
+                        "    public static String concat(String p0) {\n"
+                        "        return \"value=\" + p0;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "Client.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "public class Client {\n"
+                "    public static String concat(String p0) {\n"
+                "        return ProcyonInvokeDynamicHelper_1.invoke(p0);\n"
+                "    }\n"
+                "    private static final class ProcyonInvokeDynamicHelper_1 {\n"
+                "        private static Handler handle() { return new Handler(); }\n"
+                "        private static String invoke(String p0) {\n"
+                "            return ProcyonInvokeDynamicHelper_1.handle().invokeExact(p0);\n"
+                "        }\n"
+                "        private static final class Handler {\n"
+                "            Object invokeExact(Object value) { return value; }\n"
+                "        }\n"
+                "    }\n"
+                "    private static final class ProcyonInvokeDynamicHelper_2 {\n"
+                "        private static Handler handle() { return new Handler(); }\n"
+                "        private static String invoke(String p0) {\n"
+                "            return ProcyonInvokeDynamicHelper_2.handle().invokeExact(p0);\n"
+                "        }\n"
+                "        private static final class Handler {\n"
+                "            Object invokeExact(Object value) { return value; }\n"
+                "        }\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_helper_return_cast_reference_count"
+                ],
+                0,
+            )
+
     def test_qualifies_imported_parameter_shadowed_by_same_package_type(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -2583,6 +2758,374 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
             self.assertEqual(
                 report["summary"][
                     "imported_parameter_shadow_reference_count"
+                ],
+                0,
+            )
+
+    def test_same_package_static_method_owner_shadowed_by_reference_parameter(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/s.java": (
+                        "package p;\n"
+                        "public class s {\n"
+                        "    public static int a() { return 1; }\n"
+                        "    public static int a(String s, int i) { return i; }\n"
+                        "    public static int a(String s, int i, int n) { return i + n; }\n"
+                        "    public static int b() { return 2; }\n"
+                        "    public static int b(String s, int i, int n) { return i - n; }\n"
+                        "    public static void c() {}\n"
+                        "}\n"
+                    ),
+                    "p/h.java": (
+                        "package p;\n"
+                        "public class h {\n"
+                        "    public int m(String s, int i, int n) {\n"
+                        "        int x = p.s.a(s, i);\n"
+                        "        x += p.s.a(s, i, n);\n"
+                        "        x += p.s.b(s, i, n);\n"
+                        "        x += p.s.b() + p.s.a();\n"
+                        "        p.s.c();\n"
+                        "        return x;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "h.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "public class h {\n"
+                "    public int m(String s, int i, int n) {\n"
+                "        int x = s.a(s, i);\n"
+                "        x += s.a(s, i, n);\n"
+                "        x += s.b(s, i, n);\n"
+                "        x += s.b() + s.a();\n"
+                "        s.c();\n"
+                "        return x;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-same-package-call-ref"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("cannot find symbol", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn("int x = p.s.a(s, i);", normalized)
+            self.assertIn("x += p.s.a(s, i, n);", normalized)
+            self.assertIn("x += p.s.b(s, i, n);", normalized)
+            self.assertIn("x += p.s.b() + p.s.a();", normalized)
+            self.assertIn("p.s.c();", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "shadowed_same_package_static_method_owner_qualification"
+            )
+            self.assertEqual(action["same_package_owner"], "p/s")
+            self.assertTrue(action["reference_parameter_shadow"])
+            self.assertEqual(action["replacement_count"], 6)
+            self.assertEqual(
+                action["call_counts"],
+                {"a": 3, "b": 2, "c": 1},
+            )
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_same_package_static_method_reference_count"
+                ],
+                6,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-same-package-call-ref"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_same_package_static_method_owner_shadowed_by_primitive_parameter(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/n.java": (
+                        "package p;\n"
+                        "public class n {\n"
+                        "    public static int a(int x) { return x + 1; }\n"
+                        "}\n"
+                    ),
+                    "p/h.java": (
+                        "package p;\n"
+                        "public class h {\n"
+                        "    public int m(int n) { return p.n.a(n); }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "h.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "public class h {\n"
+                "    public int m(int n) { return n.a(n); }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn("return p.n.a(n);", normalized)
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "shadowed_same_package_static_method_owner_qualification"
+            )
+            self.assertTrue(action["primitive_parameter_shadow"])
+            self.assertEqual(action["replacement_count"], 1)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-same-package-call-primitive"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_same_package_static_method_owner_count_mismatch_fails_closed(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/s.java": (
+                        "package p;\n"
+                        "public class s {\n"
+                        "    public static int a(String s) { return 1; }\n"
+                        "}\n"
+                    ),
+                    "p/h.java": (
+                        "package p;\n"
+                        "public class h {\n"
+                        "    public int m(String s) { return p.s.a(s); }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "h.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "public class h {\n"
+                "    public int m(String s) {\n"
+                "        return s.a(s) + s.a(s);\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_same_package_static_method_reference_count"
+                ],
+                0,
+            )
+
+    def test_scoped_same_package_static_fields_shadowed_by_reference_parameter(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/b.java": (
+                        "package p;\n"
+                        "public class b {\n"
+                        "    public static int j = 7;\n"
+                        "    public static int f = 9;\n"
+                        "}\n"
+                    ),
+                    "p/Ref.java": (
+                        "package p;\n"
+                        "public class Ref {}\n"
+                    ),
+                    "p/a.java": (
+                        "package p;\n"
+                        "public class a {\n"
+                        "    public int m(Ref b) {\n"
+                        "        return p.b.j + p.b.f;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "a.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "public class a {\n"
+                "    public int m(Ref b) {\n"
+                "        return b.j + b.f;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-scoped-same-package-field"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("cannot find symbol", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn("((p.b)null).j", normalized)
+            self.assertIn("((p.b)null).f", normalized)
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "scoped_same_package_static_field_owner_qualification"
+            )
+            self.assertEqual(action["same_package_owner"], "p/b")
+            self.assertTrue(action["reference_parameter_shadow"])
+            self.assertEqual(action["replacement_count"], 2)
+            self.assertEqual(
+                action["field_access_counts"],
+                {"f": 1, "j": 1},
+            )
+            self.assertEqual(
+                report["summary"][
+                    "scoped_same_package_static_field_reference_count"
+                ],
+                2,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-scoped-same-package-field"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_scoped_same_package_static_field_count_mismatch_fails_closed(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/b.java": (
+                        "package p;\n"
+                        "public class b { public static int j = 7; }\n"
+                    ),
+                    "p/Ref.java": (
+                        "package p;\n"
+                        "public class Ref {}\n"
+                    ),
+                    "p/a.java": (
+                        "package p;\n"
+                        "public class a {\n"
+                        "    public int m(Ref b) { return p.b.j; }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "a.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "public class a {\n"
+                "    public int m(Ref b) { return b.j + b.j; }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "scoped_same_package_static_field_reference_count"
                 ],
                 0,
             )

@@ -67,7 +67,14 @@ if ($Head -ne $RemoteMain) {
 if (Test-Path -LiteralPath $OutDir) {
     $Existing = @(Get-ChildItem -LiteralPath $OutDir -Force)
     if ($Existing.Count -ne 0) {
-        throw "Output directory must be empty: $OutDir"
+        $Stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+        $BackupOut = $OutDir + ".bak-" + $Stamp
+        if (Test-Path -LiteralPath $BackupOut) {
+            throw "Backtest output backup already exists: $BackupOut"
+        }
+        Move-Item -LiteralPath $OutDir -Destination $BackupOut
+        Write-Host "PREVIOUS_OUTPUT_BACKED_UP=$BackupOut" -ForegroundColor Yellow
+        New-Item -ItemType Directory -Path $OutDir | Out-Null
     }
 } else {
     New-Item -ItemType Directory -Path $OutDir | Out-Null
@@ -120,8 +127,15 @@ if ($PrepExit -ne 0) {
 
 $V307Index = Join-Path $SafetyOut "v307\index.json"
 $V307Acceptance = Join-Path $SafetyOut "carry-forward\member-safety.accepted.v307.json"
+$V307ClassLineage = Join-Path $SafetyOut "lineage-backfill\class-lineage.json"
+$V307MemberLineage = Join-Path $SafetyOut "lineage-backfill\member-lineage.json"
 Require-File $V307Index
 Require-File $V307Acceptance
+Require-File $V307ClassLineage
+Require-File $V307MemberLineage
+
+$ClassLineage = $V307ClassLineage
+$MemberLineage = $V307MemberLineage
 
 $ReleaseArgs = @(
     "-NoProfile",

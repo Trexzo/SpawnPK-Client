@@ -123,3 +123,13 @@ The runner deliberately stops after verified historical recovery release. It doe
 Stage 1 must completely prepare and validate the exact v307 member-safety authority. Stage 2 then runs the modern historical recovery-release chain. Exit `3` from the release stage is preserved as `HISTORICAL_V307_BACKTEST_BLOCKED_AT_SHARED_SOURCE_FRONTIER`; this means the historical authority preparation passed but the shared Source-M1 clean-compile frontier is still blocking release readiness.
 
 A final PASS requires the generated historical recovery manifest to report `build_id=v307` and `ready_for_release=true`. The wrapper does not invoke the v308-only Source Milestone or publication bundle path.
+
+## Historical v307 lineage backfill
+
+The archived canonical class/member lineage is v308-only. `spk_recovery.historical_lineage_backfill_cli` derives a temporary v307-capable lineage by running the existing R3 migration in reverse (`v308 -> v307`) against the exact historical JAR. The archived lineage files are never mutated.
+
+The backfill uses ordinary trusted class transfer (`exact_sha256` / `structural_unique`) and builds exact member-identity candidates from the reverse class matches. The generic JAR-bound field-position proof remains unchanged and may close changed-class fields when its declaring-class own-access requirements are met. For the pinned historical v307/v308 fixture only, any residual same-symbol fields in the single fixture-proven changed project class may be carried after re-verifying the exact archive delta, old/new changed-class SHA-256 values, structural fingerprint, and complete field/method declarations. It returns usable lineage only when the ordinary authority-candidate gate reaches `ready_for_authority=true`; otherwise the migration workspace and blockers remain diagnostic evidence.
+
+`Prepare-HistoricalV307MemberSafety.ps1` now runs this backfill before the v307 coverage gate and switches all subsequent coverage, semantic-namespace and member-safety work to the derived lineage. `Invoke-HistoricalV307FullBacktest.ps1` likewise feeds those derived lineage files into the historical recovery-release stage.
+
+A regression mirrors the known binary shape: one same-path class changes only a `sipush`-style static build value while an unchanged class reads the affected field twice. The changed class must remain structurally unique and the unchanged class exact. Because generic field proof intentionally ignores cross-owner readers, the residual field is closed only through the fixture-bound historical carry after all exact changed-class gates pass; the generic R3 threshold is not weakened.

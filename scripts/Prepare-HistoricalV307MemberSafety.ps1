@@ -164,10 +164,12 @@ if (Test-Path -LiteralPath $OutDir) {
 $V307Dir = Join-Path $OutDir "v307"
 $V308Dir = Join-Path $OutDir "v308"
 $CarryDir = Join-Path $OutDir "carry-forward"
+$LineageBackfillDir = Join-Path $OutDir "lineage-backfill"
 
 New-Item -ItemType Directory -Path $V307Dir | Out-Null
 New-Item -ItemType Directory -Path $V308Dir | Out-Null
 New-Item -ItemType Directory -Path $CarryDir | Out-Null
+New-Item -ItemType Directory -Path $LineageBackfillDir | Out-Null
 
 $V307Index = Join-Path $V307Dir "index.json"
 $V307Coverage = Join-Path $V307Dir "coverage.json"
@@ -180,6 +182,9 @@ $V307SafetyReport = Join-Path $V307Dir "member-safety-report.json"
 $V308SafetyReport = Join-Path $V308Dir "member-safety-report.json"
 $CarryReport = Join-Path $CarryDir "member-safety-carryforward.json"
 $V307Acceptance = Join-Path $CarryDir "member-safety.accepted.v307.json"
+$DerivedClassLineage = Join-Path $LineageBackfillDir "class-lineage.json"
+$DerivedMemberLineage = Join-Path $LineageBackfillDir "member-lineage.json"
+$LineageBackfillReport = Join-Path $LineageBackfillDir "historical-lineage-backfill.json"
 
 Write-Host ""
 Write-Host "=== HISTORICAL v307 MEMBER-SAFETY PREPARATION ===" -ForegroundColor Cyan
@@ -187,6 +192,27 @@ Write-Host "AUTHORITY_COMMIT=$Head" -ForegroundColor Green
 Write-Host "FIXTURE_ID=$($FixtureDoc.fixture_id)" -ForegroundColor Green
 Write-Host "V307_SHA256=$ActualV307" -ForegroundColor Green
 Write-Host "V308_SHA256=$ActualV308" -ForegroundColor Green
+
+Invoke-PyChecked "BACKFILL EXACT v307 CANONICAL LINEAGE" @(
+    "-3.13",
+    "-m",
+    "spk_recovery.historical_lineage_backfill_cli",
+    $V308ClientJar,
+    $V307ClientJar,
+    $V308SourceIndex,
+    $ClassLineage,
+    $MemberLineage,
+    $Fixture,
+    "--out-dir",
+    $LineageBackfillDir
+)
+
+Require-File $DerivedClassLineage
+Require-File $DerivedMemberLineage
+Require-File $LineageBackfillReport
+
+$ClassLineage = $DerivedClassLineage
+$MemberLineage = $DerivedMemberLineage
 
 Invoke-PyChecked "INDEX EXACT v307" @(
     "-3.13",
@@ -341,6 +367,9 @@ Write-Host "TRANSFERRED_MEMBERS=$($CarryDoc.transferred_member_count)" -Foregrou
 Write-Host ""
 Write-Host "V307_INDEX=$V307Index"
 Write-Host "V307_MEMBER_SAFETY_ACCEPTANCE=$V307Acceptance"
+Write-Host "V307_CLASS_LINEAGE=$ClassLineage"
+Write-Host "V307_MEMBER_LINEAGE=$MemberLineage"
+Write-Host "V307_LINEAGE_BACKFILL_REPORT=$LineageBackfillReport"
 Write-Host "V307_COVERAGE=$V307Coverage"
 Write-Host "V308_COVERAGE=$V308Coverage"
 Write-Host "CARRY_FORWARD_REPORT=$CarryReport"
