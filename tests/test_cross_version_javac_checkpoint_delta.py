@@ -563,5 +563,49 @@ class CrossVersionJavacCheckpointDeltaTests(unittest.TestCase):
             )
 
 
+    def test_rejects_boolean_project_binary_fallback(self):
+        bad = copy.deepcopy(self.current)
+        bad["old"]["project_binary_fallback_count"] = False
+
+        binding_material = {
+            "tooling_commit": bad["tooling_commit"],
+            "build_id": bad["old"]["build_id"],
+            "source_authority_sha256": bad["old"]["source_authority_sha256"],
+            "rebuild_id": bad["old"]["rebuild_id"],
+            "workspace_id": bad["old"]["workspace_id"],
+            "source_tree_sha256": bad["old"]["source_tree_sha256"],
+            "diagnostic_report_id": bad["old"]["diagnostic_report_id"],
+            "diagnostic_input_sha256": bad["old"]["diagnostic_input_sha256"],
+            "frontier_id": bad["old"]["frontier_id"],
+            "project_binary_fallback_count": False,
+            "clean_rebuild_status": bad["old"]["clean_rebuild_status"],
+            "clean_project_build": bad["old"]["clean_project_build"],
+        }
+        bad["old"]["binding_id"] = (
+            "JAVACBIND_" + _stable_digest(binding_material)[:20].upper()
+        )
+
+        checkpoint_material = {
+            "tooling_commit": bad["tooling_commit"],
+            "binary_backtest_id": bad["binary_backtest_id"],
+            "old": bad["old"],
+            "new": bad["new"],
+            "comparison": bad["comparison"],
+        }
+        bad["checkpoint_id"] = (
+            "XJAVACCHECKPOINT_"
+            + _stable_digest(checkpoint_material)[:20].upper()
+        )
+
+        with self.assertRaisesRegex(
+            CrossVersionJavacCheckpointDeltaError,
+            "project binary fallback must be integer zero",
+        ):
+            build_cross_version_javac_checkpoint_delta(
+                self.baseline,
+                bad,
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
