@@ -708,6 +708,32 @@ def build_cross_version_javac_checkpoint(
     }
 
 
+def verify_cross_version_javac_checkpoint(
+    comparison_report: dict[str, Any],
+    old_binding_report: dict[str, Any],
+    new_binding_report: dict[str, Any],
+    checkpoint_report: dict[str, Any],
+    *,
+    binary_backtest_id: str | None = None,
+) -> dict[str, Any]:
+    if not isinstance(checkpoint_report, dict):
+        raise CrossVersionJavacCheckpointError(
+            "javac checkpoint must be an object"
+        )
+
+    expected = build_cross_version_javac_checkpoint(
+        comparison_report,
+        old_binding_report,
+        new_binding_report,
+        binary_backtest_id=binary_backtest_id,
+    )
+    if checkpoint_report != expected:
+        raise CrossVersionJavacCheckpointError(
+            "javac checkpoint does not match deterministic recomputation"
+        )
+    return expected
+
+
 def write_cross_version_javac_checkpoint(
     report: dict[str, Any],
     path: Path,
