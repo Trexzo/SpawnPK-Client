@@ -61,5 +61,50 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         )
 
 
+    def test_external_oracle_frontier_is_opt_in_and_precedes_blocked_exit(self):
+        repo = Path(__file__).resolve().parents[1]
+        script = (
+            repo / "scripts" / "Invoke-SourceM1ExactLocalAcceptance.ps1"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn(
+            "[string]$ExternalOracleReport",
+            script,
+        )
+        self.assertIn(
+            '$BootstrapClassRemapPlan = Join-Path $BootstrapReadableDir "class-remap-plan.json"',
+            script,
+        )
+        condition = script.index(
+            'if (-not [string]::IsNullOrWhiteSpace($ExternalOracleReport))'
+        )
+        diagnostic = script.index(
+            '$PrivateDiagnostic = Join-Path $ReleaseDir "javac-diagnostic-private.json"'
+        )
+        invoke = script.index(
+            'Invoke-PyChecked "INTERSECT EXTERNAL ORACLE WITH JAVAC FRONTIER"'
+        )
+        blocked_exit = script.index(
+            "    exit 3\n}",
+            invoke,
+        )
+        self.assertLess(diagnostic, condition)
+        self.assertLess(condition, invoke)
+        self.assertLess(invoke, blocked_exit)
+        self.assertIn(
+            '"spk_recovery.external_oracle_frontier_cli"',
+            script,
+        )
+        self.assertIn(
+            '"--collision-plan"',
+            script,
+        )
+        self.assertIn(
+            '$BootstrapClassRemapPlan',
+            script,
+        )
+
+
+
 if __name__ == "__main__":
     unittest.main()
