@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_1139C23556E156132738",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_31A8B1D21159AB04DA41",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000602",
+      "owner_logical_id": "CLIENT_CLASS_000602",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/ba",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpawnPKKnowledgebaseInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_builder_contract",
+          "detail": "The class directly extends R436 CustomInterfaceBuilder and is constructed by the live custom-interface registry."
+        },
+        {
+          "family": "exact_title_literal",
+          "detail": "The screen contains the exact title 'Official SpawnPK Knowledgebase' plus exact 'Category List' and 'Selected Article Title Text' placeholders."
+        },
+        {
+          "family": "exact_navigation_and_state",
+          "detail": "The class owns 'Go back', 'Select option', WIKI_SELECTED_ state, category/description population helpers and overflow guards, fixing it as the Knowledgebase browser rather than a generic article panel."
+        },
+        {
+          "family": "exact_resource_family",
+          "detail": "The builder uses exact 'wiki/sprite 0' presentation assets and article/category list surfaces."
+        }
+      ],
+      "note": "Exact-v308 literal-backed knowledgebase interface identity."
+    },
+    {
+      "proposal_id": "SEMPROP_73F28BE72A9967178F86",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000599",
+      "owner_logical_id": "CLIENT_CLASS_000599",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aX",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WorldTournamentInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_builder_contract",
+          "detail": "The class directly extends R436 CustomInterfaceBuilder and is constructed by the live custom-interface registry."
+        },
+        {
+          "family": "exact_title_literal",
+          "detail": "The screen contains exact title '<img=128> SpawnPK World Tournaments <img=128>' and default next-tournament text 'Next world tournament: @yel@Dharok PK Tournament'."
+        },
+        {
+          "family": "exact_tournament_controls",
+          "detail": "Exact controls include 'Enter Tournament <img=51>', 'Spectate Tournament', 'View tournament shop', previous tournament winners and tournament point shop."
+        },
+        {
+          "family": "exact_reward_presentation",
+          "detail": "The interface contains the exact tournament-prize area and historical-winner presentation, establishing the main World Tournament screen rather than the separate R445 leaderboard screen."
+        }
+      ],
+      "note": "Exact-v308 main World Tournament screen; separate from R445 WorldTournamentLeaderboardsInterface."
+    }
+  ],
+  "unresolved": []
+}
