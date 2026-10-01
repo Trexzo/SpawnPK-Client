@@ -70,7 +70,8 @@ foreach ($Path in @(
     $V308Index,
     $ClassLineage,
     $MemberLineage,
-    $MatchExpectations
+    $MatchExpectations,
+    $CrossVersionExpectations
 )) {
     Require-File $Path
 }
@@ -136,7 +137,72 @@ Write-Host "AUTHORITY_COMMIT=$Head"
 Write-Host "V305_SHA256=$V305Sha"
 Write-Host "V308_SHA256=$V308Sha"
 Write-Host "MATCH_EXPECTATIONS=$MatchExpectations"
+Write-Host "CROSS_VERSION_EXPECTATIONS=$CrossVersionExpectations"
 Write-Host "OUTPUT_ROOT=$OutDir"
+
+$BinaryDelta = Join-Path $OutDir "v305-v308-binary-delta.json"
+
+Write-Host ""
+Write-Host "=== VERIFY EXACT v305 -> v308 BINARY AUTHORITY ===" -ForegroundColor Cyan
+& py -3.13 -m spk_recovery.cross_version_binary_delta_cli `
+    $V305ClientJar `
+    $V308ClientJar `
+    --old-build-id v305 `
+    --new-build-id v308 `
+    --out $BinaryDelta
+if ($LASTEXITCODE -ne 0) {
+    throw "Exact v305 -> v308 binary delta failed with exit=$LASTEXITCODE"
+}
+Require-File $BinaryDelta
+
+$Binary = Get-Projection -Path $BinaryDelta -Fields @{
+    report_id = "/report_id"
+    old_build_id = "/old_build_id"
+    new_build_id = "/new_build_id"
+    old_sha256 = "/old_sha256"
+    new_sha256 = "/new_sha256"
+    old_entry_count = "/summary/old_entry_count"
+    new_entry_count = "/summary/new_entry_count"
+    old_only_entries = "/summary/old_only_entries"
+    new_only_entries = "/summary/new_only_entries"
+    changed_entries = "/summary/changed_entries"
+    changed_class_entries = "/summary/changed_class_entries"
+}
+$BinaryExpected = Get-Projection -Path $CrossVersionExpectations -Fields @{
+    report_id = "/binary_report_id"
+    old_entry_count = "/binary_summary/old_entry_count"
+    new_entry_count = "/binary_summary/new_entry_count"
+    old_only_entries = "/binary_summary/old_only_entries"
+    new_only_entries = "/binary_summary/new_only_entries"
+    changed_entries = "/binary_summary/changed_entries"
+    changed_class_entries = "/binary_summary/changed_class_entries"
+}
+
+if ([string]$Binary.report_id -ne [string]$BinaryExpected.report_id) {
+    throw "Binary authority report ID drifted: $($Binary.report_id)"
+}
+if ([string]$Binary.old_build_id -ne "v305" -or [string]$Binary.new_build_id -ne "v308") {
+    throw "Binary authority build pair drifted."
+}
+if ([string]$Binary.old_sha256 -ne $ExpectedV305 -or [string]$Binary.new_sha256 -ne $ExpectedV308) {
+    throw "Binary authority SHA pair drifted."
+}
+foreach ($Name in @(
+    "old_entry_count",
+    "new_entry_count",
+    "old_only_entries",
+    "new_only_entries",
+    "changed_entries",
+    "changed_class_entries"
+)) {
+    if ([int64]$Binary.$Name -ne [int64]$BinaryExpected.$Name) {
+        throw "Binary authority summary drifted at $Name."
+    }
+}
+
+Write-Host "BINARY_REPORT_ID=$($Binary.report_id)" -ForegroundColor Green
+Write-Host "BINARY_CHANGED_ENTRIES=$($Binary.changed_entries)"
+Write-Host "BINARY_CHANGED_CLASS_ENTRIES=$($Binary.changed_class_entries)"
 
 $Arguments = @(
     "-3.13",
@@ -217,6 +283,7 @@ if ($ProbeExit -eq 3) {
     }
     Write-Host "HISTORICAL_V305_LINEAGE_PASS" -ForegroundColor Green
 }
+Write-Host "BINARY_REPORT_ID=$($Binary.report_id)"
 Write-Host "BACKFILL_ID=$($Summary.backfill_id)"
 Write-Host "AUTHORITY_REPORT_ID=$($Summary.authority_report_id)"
 Write-Host "MATCHED_CLASSES=$($Summary.matched)"
