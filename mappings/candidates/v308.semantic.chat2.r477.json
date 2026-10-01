@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "class", "owner": "rs/secure/HardwareValidator", "name": null, "descriptor": null},
+      "proposed_name": "HardwareValidator",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_surviving_identity","detail":"The exact-v308 class-file and recovered-source filename both preserve the unobfuscated public type name rs/secure/HardwareValidator / HardwareValidator.java."},
+        {"family":"exact_os_classifier_behavior","detail":"Static initialization reads System.getProperty(\"os.name\").toLowerCase(); the four predicates test Windows (win), macOS (mac), Unix/Linux (nix/nux/aix), and Solaris (sunos)."},
+        {"family":"exact_demo_contract","detail":"main(String[]) invokes the four predicates and prints exact surviving diagnostics 'This is Windows', 'This is Mac', 'This is Unix or Linux', 'This is Solaris', or 'Your OS is not support!!'."},
+        {"family":"exact_family_position","detail":"The stable-ID sequence places this class immediately before R174's rs/secure/a,b,c providers at CLIENT_CLASS_000978..000980, fixing HardwareValidator as CLIENT_CLASS_000977."}
+      ],
+      "note":"Exact surviving source/class identity. The historical name is retained even though exact-v308 behavior is an OS/platform classifier rather than hardware validation in the ordinary sense."
+    }
+  ],
+  "conflicts": []
+}
