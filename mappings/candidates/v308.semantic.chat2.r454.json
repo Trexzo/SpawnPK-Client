@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind":"class","owner":"rs/n/c/ao","name":null,"descriptor":null},
+      "proposed_name": "LotteryInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_builder_contract","detail":"The class directly extends R436 CustomInterfaceBuilder and is constructed only by the live custom-interface registry."},
+        {"family":"exact_lottery_literals","detail":"Exact surviving text includes 'Enter lottery', 'Lottery title', participant-count text and 'The winning pot is currently..'."},
+        {"family":"exact_raffle_history","detail":"The same screen contains exact section title 'Latest Raffle Winners', fixing the lottery/raffle result history as part of one interface."},
+        {"family":"exact_countdown_surface","detail":"Exact presentation includes 'Time until the winner is announced..' and a formatted hours/minutes/seconds countdown."},
+        {"family":"exact_entry_control","detail":"The builder creates a dedicated entry control with exact text 'Buy-entry'/'Enter lottery' and fountain button/icon resources."}
+      ],
+      "note": "Exact-v308 literal-backed lottery/raffle presentation identity; entry pricing, winner selection and reward authority remain server-owned."
+    }
+  ],
+  "conflicts": []
+}
