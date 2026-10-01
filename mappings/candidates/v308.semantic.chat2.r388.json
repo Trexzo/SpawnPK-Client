@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [{
+    "schema_version": 1,
+    "kind": "semantic_name_candidate",
+    "canonical": false,
+    "status": "CANDIDATE",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target": {"kind":"class","owner":"rs/e/c","name":null,"descriptor":null},
+    "proposed_name": "ConfigStore",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"exact_config_manager_ownership","detail":"R16 ConfigManager is the only exact-v308 application owner of rs/e/c; its reviewed evidence already identifies a ConfigStore backing the configuration lifecycle."},
+      {"family":"exact_properties_load","detail":"The constructor accepts one File, loads UTF-8 java.util.Properties when present, and copies every key/value into a ConcurrentHashMap used for live configuration reads."},
+      {"family":"exact_dirty_delta_tracking","detail":"Synchronized put/remove/bulk-update operations modify the live map while separately recording changed keys in a dirty Map; c() atomically swaps out and returns that pending delta map."},
+      {"family":"exact_durable_write","detail":"The persistence path merges dirty changes with on-disk properties, writes UTF-8 properties through a locked temporary file, flushes and FileChannel.force(true), then replaces the target with ATOMIC_MOVE plus a REPLACE_EXISTING fallback when atomic move is unsupported."},
+      {"family":"exact_framework_scope","detail":"The class contains no proxy/descriptor/UI behavior; it is the persistence storage layer beneath ConfigManager and the R16 configuration framework."}
+    ],
+    "note":"ConfigStore closes the class identity already structurally referenced by R16 ConfigManager evidence; exact v308 proves the file-backed live-map/delta persistence role."
+  }],
+  "conflicts": []
+}
