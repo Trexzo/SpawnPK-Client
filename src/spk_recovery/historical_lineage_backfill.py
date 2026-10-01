@@ -218,7 +218,7 @@ def _historical_same_symbol_field_carry(
     """
     out = copy.deepcopy(member_lineage)
     proofs: list[dict[str, Any]] = []
-    resolved_keys: set[tuple[str, str, str, str, str]] = set()
+    resolved_keys: set[tuple[str, str, str, str, str, str]] = set()
 
     for path in changed_paths:
         old_cls = v308_index.get("classes", {}).get(path)
@@ -370,6 +370,7 @@ def _historical_same_symbol_field_carry(
                     coord[1],
                     internal,
                     coord[0],
+                    coord[1],
                 )
             )
             proofs.append(
@@ -403,6 +404,7 @@ def _historical_same_symbol_field_carry(
             str(old.get("descriptor")),
             new_owner,
             str(new.get("name")),
+            str(new.get("descriptor")),
         )
         return key not in resolved_keys
 
