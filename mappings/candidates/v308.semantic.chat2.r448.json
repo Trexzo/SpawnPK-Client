@@ -14,37 +14,6 @@
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "target": {
         "kind": "class",
-        "owner": "rs/n/c/aD",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "BloodFountainPerkTreeInterface",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_builder_contract",
-          "detail": "The class directly extends R436 CustomInterfaceBuilder and is live in the custom-interface registry."
-        },
-        {
-          "family": "exact_title_literal",
-          "detail": "The exact title is '<img=186> Blood Fountain Perk Tree <img=186>'."
-        },
-        {
-          "family": "exact_perk_catalogue",
-          "detail": "The builder contains the full perk-tree labels including Blood vengeance, Archaeologist, Blood alchemy, Vampiric damage/accuracy/defence, Treasure hunter, War diamonds and many others, plus Purchase/Close controls."
-        }
-      ],
-      "note": "Exact-v308 literal-backed client interface identity; server-side rules and eligibility are not inferred."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
         "owner": "rs/n/c/aE",
         "name": null,
         "descriptor": null
@@ -63,37 +32,6 @@
         {
           "family": "exact_fusing_controls",
           "detail": "Exact controls/literals include 'Fuse', 'Fuse pets', 'Close Window' and the pet ETA presentation."
-        }
-      ],
-      "note": "Exact-v308 literal-backed client interface identity; server-side rules and eligibility are not inferred."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target": {
-        "kind": "class",
-        "owner": "rs/n/c/aI",
-        "name": null,
-        "descriptor": null
-      },
-      "proposed_name": "DonorPanelInterface",
-      "confidence": 0.999,
-      "evidence": [
-        {
-          "family": "exact_builder_contract",
-          "detail": "The class directly extends R436 CustomInterfaceBuilder and is live in the custom-interface registry."
-        },
-        {
-          "family": "exact_panel_literals",
-          "detail": "Exact headings include '@or1@Main Donor Panel', '@or1@Donor options and features' and '@or1@Promotional rewards'."
-        },
-        {
-          "family": "exact_donor_actions",
-          "detail": "The screen exposes exact donor-zone teleports, donor perks/benefits, donor shop access, donation rewards and promotion-progress presentation."
         }
       ],
       "note": "Exact-v308 literal-backed client interface identity; server-side rules and eligibility are not inferred."

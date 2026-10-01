@@ -1,31 +1,21 @@
-# Chat 2 — exact-v308 World Tournament and Knowledgebase interfaces R446
+# Chat 2 — exact-v308 Knowledgebase interface R446
 
 Exact client authority:
 
 `854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`
 
-## Result
+## Corrected result
 
-- `rs/n/c/aX` -> `CLIENT_CLASS_000599` -> `WorldTournamentInterface`
+R446 retains one genuinely new proposal:
+
 - `rs/n/c/ba` -> `CLIENT_CLASS_000639` -> `SpawnPKKnowledgebaseInterface`
-- review: `SEMREVIEW_2D532CDC053C5858C574`
+- review: `SEMREVIEW_E63B36BCCBEE09154332`
 
-## WorldTournamentInterface
+The stable ID is derived from canonical R1 `seed_lineage()` ordering over the complete exact-v308
+`rs/**` namespace.
 
-This is the main World Tournament screen and is distinct from R445's separate leaderboard screen.
-
-Exact literals/resources include:
-
-- `<img=128> SpawnPK World Tournaments <img=128>`
-- `Next world tournament: @yel@Dharok PK Tournament`
-- `This tournament's prize will be..`
-- `@yel@Previous Tournament Winners`
-- `@yel@Tournament point shop`
-- `Enter Tournament <img=51>`
-- `Spectate Tournament`
-- `View tournament shop`
-- `tournament/sprite`
-- `tournament/sprite 0`
+The earlier R446 `rs/n/c/aX -> WorldTournamentInterface` attempt was removed after full R2
+reconciliation: R2 already owns that exact class as `WorldTournamentInterface`.
 
 ## SpawnPKKnowledgebaseInterface
 
@@ -43,7 +33,7 @@ The class also owns category/article population helpers and explicit category/de
 
 ## Boundary
 
-Both names identify client presentation surfaces only. Tournament scheduling/rewards and
-knowledgebase content authority remain outside this semantic recovery.
+R446 identifies the client knowledgebase presentation only. Content authority remains outside
+this semantic recovery.
 
 R446 remains non-canonical Chat 2 research only.
