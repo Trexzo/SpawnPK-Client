@@ -144,6 +144,7 @@ Both recovery releases were still blocked at clean rebuild during the 350/350
 measurement. This checkpoint proves cross-version compiler parity at that
 tooling authority; it does not satisfy the final release-ready cross-version
 gate.
+
 ## Deterministic public-safe checkpoint export
 
 A successful `Invoke-CrossVersionJavacFrontier.ps1` run now also invokes
