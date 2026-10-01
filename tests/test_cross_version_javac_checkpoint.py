@@ -9,6 +9,7 @@ import unittest
 from spk_recovery.cross_version_javac_checkpoint import (
     CrossVersionJavacCheckpointError,
     build_cross_version_javac_checkpoint,
+    verify_cross_version_javac_checkpoint,
     write_cross_version_javac_checkpoint,
 )
 
@@ -244,6 +245,64 @@ class CrossVersionJavacCheckpointTests(unittest.TestCase):
             self.assertEqual(
                 json.loads(out.read_text(encoding="utf-8")),
                 report,
+            )
+
+    def test_verifier_accepts_exact_emitted_checkpoint(self):
+        report = build_cross_version_javac_checkpoint(
+            self.comparison,
+            self.old,
+            self.new,
+            binary_backtest_id="XVERBIN_" + "F" * 20,
+        )
+        verified = verify_cross_version_javac_checkpoint(
+            self.comparison,
+            self.old,
+            self.new,
+            report,
+            binary_backtest_id="XVERBIN_" + "F" * 20,
+        )
+        self.assertEqual(verified, report)
+
+    def test_verifier_rejects_mutated_emitted_checkpoint(self):
+        report = build_cross_version_javac_checkpoint(
+            self.comparison,
+            self.old,
+            self.new,
+            binary_backtest_id="XVERBIN_" + "F" * 20,
+        )
+        mutations = (
+            ("checkpoint_id", "XJAVACCHECKPOINT_" + "0" * 20),
+            ("identifiers_included", True),
+            ("note", "mutated"),
+        )
+        for key, value in mutations:
+            with self.subTest(key=key):
+                bad = json.loads(json.dumps(report))
+                bad[key] = value
+                with self.assertRaisesRegex(
+                    CrossVersionJavacCheckpointError,
+                    "does not match deterministic recomputation",
+                ):
+                    verify_cross_version_javac_checkpoint(
+                        self.comparison,
+                        self.old,
+                        self.new,
+                        bad,
+                        binary_backtest_id="XVERBIN_" + "F" * 20,
+                    )
+
+        bad = json.loads(json.dumps(report))
+        bad["comparison"]["summary"]["old_total_errors"] = 2
+        with self.assertRaisesRegex(
+            CrossVersionJavacCheckpointError,
+            "does not match deterministic recomputation",
+        ):
+            verify_cross_version_javac_checkpoint(
+                self.comparison,
+                self.old,
+                self.new,
+                bad,
+                binary_backtest_id="XVERBIN_" + "F" * 20,
             )
 
     def test_rejects_tampered_binding_identity(self):
