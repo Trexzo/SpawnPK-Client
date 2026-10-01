@@ -3709,6 +3709,584 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
     return actions
 
 
+def _normalize_same_package_static_method_owners_shadowed_by_values(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Qualify same-package static-call owners hidden by source values.
+
+    This handles the method-call counterpart to the existing same-package
+    static-field owner repair. A simple owner token is rewritten only when:
+    the exact same-package class exists, that class declares the referenced
+    visible static method name, source scope proves a same-name value shadow,
+    and one exact current method contains the complete matching invokestatic
+    owner/name multiset.
+    """
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError:
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    if not current_package:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    owner_token = re.compile(
+        r"(?<![A-Za-z0-9_$.])"
+        r"(?P<owner>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\.(?P<method>[A-Za-z_$][A-Za-z0-9_$]*)\s*\("
+    )
+    candidate_simples = sorted(
+        {
+            match.group("owner")
+            for match in owner_token.finditer(whole_code)
+        }
+    )
+    if not candidate_simples:
+        return []
+
+    siblings: dict[str, tuple[str, set[str]]] = {}
+    for simple in candidate_simples:
+        sibling_owner = current_package + "/" + simple
+        if sibling_owner == current_owner:
+            continue
+        try:
+            sibling = parse_class(
+                readable_zip.read(sibling_owner + ".class")
+            )
+        except (KeyError, ClassFormatError):
+            continue
+        if sibling.name != sibling_owner:
+            continue
+
+        static_names = {
+            str(method.get("name", ""))
+            for method in sibling.methods
+            if (
+                int(method.get("access", 0)) & 0x0008
+                and _is_java_identifier(str(method.get("name", "")))
+                and _field_visible_from(
+                    declaring_owner=sibling_owner,
+                    current_owner=current_owner,
+                    access=int(method.get("access", 0)),
+                )
+            )
+        }
+        if static_names:
+            siblings[simple] = (sibling_owner, static_names)
+    if not siblings:
+        return []
+
+    hierarchy = _read_readable_hierarchy(
+        readable_zip=readable_zip,
+        internal_name=current_owner,
+    )
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(text):
+        brace_start = text.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        body_end = _matching_brace_end(text, brace_start)
+        method_text = text[method_match.start():body_end]
+        method_code = _java_code_mask(method_text)
+
+        for simple, (sibling_owner, static_names) in sorted(
+            siblings.items()
+        ):
+            reference_parameter, reference_local_spans = (
+                _same_name_value_shadow_spans(
+                    method_match=method_match,
+                    method_code=method_code,
+                    simple_name=simple,
+                )
+            )
+            primitive_parameter, primitive_local_spans = (
+                _primitive_same_name_value_shadow_spans(
+                    method_match=method_match,
+                    method_code=method_code,
+                    simple_name=simple,
+                )
+            )
+
+            hierarchy_shadow_owner: str | None = None
+            for owner, parsed in hierarchy:
+                declarations = [
+                    field
+                    for field in parsed.fields
+                    if (
+                        str(field.get("name", "")) == simple
+                        and _field_visible_from(
+                            declaring_owner=owner,
+                            current_owner=current_owner,
+                            access=int(field.get("access", 0)),
+                        )
+                    )
+                ]
+                if not declarations:
+                    continue
+                if len(declarations) == 1:
+                    hierarchy_shadow_owner = owner
+                break
+
+            whole_method_shadow = bool(
+                hierarchy_shadow_owner
+                or reference_parameter
+                or primitive_parameter
+            )
+            local_shadow_spans = sorted(
+                set(reference_local_spans + primitive_local_spans)
+            )
+            if not whole_method_shadow and not local_shadow_spans:
+                continue
+
+            affected_counts: dict[str, int] = {}
+            total_counts: dict[str, int] = {}
+            affected_hits: list[re.Match[str]] = []
+            qualified_owner = sibling_owner.replace("/", ".")
+
+            for static_name in sorted(static_names):
+                simple_call = re.compile(
+                    r"(?<![A-Za-z0-9_$.])"
+                    + re.escape(simple)
+                    + r"\."
+                    + re.escape(static_name)
+                    + r"\s*\("
+                )
+                simple_hits = list(simple_call.finditer(method_code))
+                qualified_call = re.compile(
+                    r"(?<![A-Za-z0-9_$.])"
+                    + re.escape(qualified_owner)
+                    + r"\."
+                    + re.escape(static_name)
+                    + r"\s*\("
+                )
+                qualified_hits = list(
+                    qualified_call.finditer(method_code)
+                )
+
+                selected = [
+                    hit
+                    for hit in simple_hits
+                    if (
+                        whole_method_shadow
+                        or any(
+                            start <= hit.start() < end
+                            for start, end in local_shadow_spans
+                        )
+                    )
+                ]
+                if not selected:
+                    continue
+
+                affected_counts[static_name] = len(selected)
+                total_counts[static_name] = (
+                    len(simple_hits) + len(qualified_hits)
+                )
+                affected_hits.extend(selected)
+
+            if not affected_counts:
+                continue
+
+            source_arity = _source_parameter_count(
+                method_match.group("params")
+            )
+            candidates: list[dict[str, Any]] = []
+            for method in profile.get("methods", []):
+                if method.get("name") != method_match.group("name"):
+                    continue
+                descriptor = str(method.get("descriptor", ""))
+                if _descriptor_parameter_count(descriptor) != source_arity:
+                    continue
+                parameter_match = _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                if parameter_match is False:
+                    continue
+
+                invocation_counts: dict[str, int] = {}
+                for invocation in method.get("method_invocations", []):
+                    if invocation.get("operation") != "invokestatic":
+                        continue
+                    if str(invocation.get("owner", "")) != sibling_owner:
+                        continue
+                    name = str(invocation.get("name", ""))
+                    if name not in total_counts:
+                        continue
+                    invocation_counts[name] = (
+                        invocation_counts.get(name, 0) + 1
+                    )
+
+                if all(
+                    invocation_counts.get(name, 0) == count
+                    for name, count in total_counts.items()
+                ):
+                    candidates.append(method)
+
+            if len(candidates) != 1:
+                continue
+
+            exact_method = candidates[0]
+            for hit in affected_hits:
+                edits.append(
+                    (
+                        method_match.start() + hit.start(),
+                        method_match.start() + hit.start() + len(simple),
+                        qualified_owner,
+                    )
+                )
+            actions.append(
+                {
+                    "kind": (
+                        "shadowed_same_package_static_method_owner_qualification"
+                    ),
+                    "source_path": rel,
+                    "method_name": method_match.group("name"),
+                    "method_descriptor": exact_method["descriptor"],
+                    "simple_owner": simple,
+                    "same_package_owner": sibling_owner,
+                    "hierarchy_shadow_owner": hierarchy_shadow_owner,
+                    "reference_parameter_shadow": reference_parameter,
+                    "primitive_parameter_shadow": primitive_parameter,
+                    "local_shadow_scope_count": len(local_shadow_spans),
+                    "call_counts": dict(sorted(affected_counts.items())),
+                    "total_call_counts": dict(sorted(total_counts.items())),
+                    "replacement_count": len(affected_hits),
+                    "provenance": {
+                        "kind": "source_safety",
+                        "reason": (
+                            "procyon_same_package_static_method_owner_hidden_by_value"
+                        ),
+                        "strategy": (
+                            "exact_invokestatic_owner_name_multiset_qualification"
+                        ),
+                    },
+                }
+            )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping same-package static-call owner edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
+def _normalize_same_package_static_field_owners_shadowed_by_scoped_values(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Qualify same-package static fields hidden by parameter/local values.
+
+    This rule intentionally excludes hierarchy-field-only shadows, which are
+    owned by the older same-package static-field normalizer. It targets
+    reference or primitive parameters/locals and requires the complete exact
+    getstatic/putstatic owner/name multiset to agree with source before any
+    edit is made.
+    """
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError:
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    if not current_package:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    field_token = re.compile(
+        r"(?<![A-Za-z0-9_$.])"
+        r"(?P<owner>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\.(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\b(?!\s*\()"
+    )
+    candidate_simples = sorted(
+        {
+            match.group("owner")
+            for match in field_token.finditer(whole_code)
+        }
+    )
+    if not candidate_simples:
+        return []
+
+    hierarchy = _read_readable_hierarchy(
+        readable_zip=readable_zip,
+        internal_name=current_owner,
+    )
+    hierarchy_value_names = {
+        str(field.get("name", ""))
+        for owner, parsed in hierarchy
+        for field in parsed.fields
+        if (
+            _is_java_identifier(str(field.get("name", "")))
+            and _field_visible_from(
+                declaring_owner=owner,
+                current_owner=current_owner,
+                access=int(field.get("access", 0)),
+            )
+        )
+    }
+
+    siblings: dict[str, tuple[str, set[str]]] = {}
+    for simple in candidate_simples:
+        if simple in hierarchy_value_names:
+            # Leave hierarchy-shadow cases to the established normalizer and
+            # avoid overlapping edits between the two exact rules.
+            continue
+        sibling_owner = current_package + "/" + simple
+        if sibling_owner == current_owner:
+            continue
+        try:
+            sibling = parse_class(
+                readable_zip.read(sibling_owner + ".class")
+            )
+        except (KeyError, ClassFormatError):
+            continue
+        if sibling.name != sibling_owner:
+            continue
+
+        static_names = {
+            str(field.get("name", ""))
+            for field in sibling.fields
+            if (
+                int(field.get("access", 0)) & 0x0008
+                and _is_java_identifier(str(field.get("name", "")))
+                and _field_visible_from(
+                    declaring_owner=sibling_owner,
+                    current_owner=current_owner,
+                    access=int(field.get("access", 0)),
+                )
+            )
+        }
+        if static_names:
+            siblings[simple] = (sibling_owner, static_names)
+    if not siblings:
+        return []
+
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(text):
+        brace_start = text.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        body_end = _matching_brace_end(text, brace_start)
+        method_text = text[method_match.start():body_end]
+        method_code = _java_code_mask(method_text)
+
+        for simple, (sibling_owner, static_names) in sorted(
+            siblings.items()
+        ):
+            reference_parameter, reference_local_spans = (
+                _same_name_value_shadow_spans(
+                    method_match=method_match,
+                    method_code=method_code,
+                    simple_name=simple,
+                )
+            )
+            primitive_parameter, primitive_local_spans = (
+                _primitive_same_name_value_shadow_spans(
+                    method_match=method_match,
+                    method_code=method_code,
+                    simple_name=simple,
+                )
+            )
+            whole_method_shadow = bool(
+                reference_parameter or primitive_parameter
+            )
+            local_shadow_spans = sorted(
+                set(reference_local_spans + primitive_local_spans)
+            )
+            if not whole_method_shadow and not local_shadow_spans:
+                continue
+
+            affected_counts: dict[str, int] = {}
+            total_counts: dict[str, int] = {}
+            affected_hits: list[re.Match[str]] = []
+            qualified_owner = sibling_owner.replace("/", ".")
+
+            for static_name in sorted(static_names):
+                simple_field = re.compile(
+                    r"(?<![A-Za-z0-9_$.])"
+                    + re.escape(simple)
+                    + r"\."
+                    + re.escape(static_name)
+                    + r"\b(?!\s*\()"
+                )
+                simple_hits = list(simple_field.finditer(method_code))
+                qualified_field = re.compile(
+                    r"(?<![A-Za-z0-9_$.])"
+                    + re.escape(qualified_owner)
+                    + r"\."
+                    + re.escape(static_name)
+                    + r"\b(?!\s*\()"
+                )
+                qualified_hits = list(
+                    qualified_field.finditer(method_code)
+                )
+
+                selected = [
+                    hit
+                    for hit in simple_hits
+                    if (
+                        whole_method_shadow
+                        or any(
+                            start <= hit.start() < end
+                            for start, end in local_shadow_spans
+                        )
+                    )
+                ]
+                if not selected:
+                    continue
+
+                affected_counts[static_name] = len(selected)
+                total_counts[static_name] = (
+                    len(simple_hits) + len(qualified_hits)
+                )
+                affected_hits.extend(selected)
+
+            if not affected_counts:
+                continue
+
+            source_arity = _source_parameter_count(
+                method_match.group("params")
+            )
+            candidates: list[dict[str, Any]] = []
+            for method in profile.get("methods", []):
+                if method.get("name") != method_match.group("name"):
+                    continue
+                descriptor = str(method.get("descriptor", ""))
+                if _descriptor_parameter_count(descriptor) != source_arity:
+                    continue
+                parameter_match = _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                if parameter_match is False:
+                    continue
+
+                byte_counts: dict[str, int] = {}
+                for access in method.get("field_accesses", []):
+                    if access.get("operation") not in {
+                        "getstatic", "putstatic"
+                    }:
+                        continue
+                    if str(access.get("owner", "")) != sibling_owner:
+                        continue
+                    name = str(access.get("name", ""))
+                    if name not in total_counts:
+                        continue
+                    byte_counts[name] = byte_counts.get(name, 0) + 1
+
+                if all(
+                    byte_counts.get(name, 0) == count
+                    for name, count in total_counts.items()
+                ):
+                    candidates.append(method)
+
+            if len(candidates) != 1:
+                continue
+
+            exact_method = candidates[0]
+            for hit in affected_hits:
+                field_name = hit.group(0).split(".", 1)[1]
+                replacement = (
+                    "((" + qualified_owner + ")null)." + field_name
+                )
+                edits.append(
+                    (
+                        method_match.start() + hit.start(),
+                        method_match.start() + hit.end(),
+                        replacement,
+                    )
+                )
+            actions.append(
+                {
+                    "kind": (
+                        "scoped_same_package_static_field_owner_qualification"
+                    ),
+                    "source_path": rel,
+                    "method_name": method_match.group("name"),
+                    "method_descriptor": exact_method["descriptor"],
+                    "simple_owner": simple,
+                    "same_package_owner": sibling_owner,
+                    "reference_parameter_shadow": reference_parameter,
+                    "primitive_parameter_shadow": primitive_parameter,
+                    "local_shadow_scope_count": len(local_shadow_spans),
+                    "field_access_counts": dict(
+                        sorted(affected_counts.items())
+                    ),
+                    "total_field_access_counts": dict(
+                        sorted(total_counts.items())
+                    ),
+                    "replacement_count": len(affected_hits),
+                    "provenance": {
+                        "kind": "source_safety",
+                        "reason": (
+                            "procyon_same_package_static_field_owner_hidden_by_scoped_value"
+                        ),
+                        "strategy": (
+                            "exact_static_field_owner_name_multiset_qualification"
+                        ),
+                    },
+                }
+            )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping scoped same-package static-field edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_same_package_static_field_owners_shadowed_by_values(
     *,
     source_root: Path,
@@ -4076,6 +4654,20 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_same_package_static_method_owners_shadowed_by_values(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
+                    _normalize_same_package_static_field_owners_shadowed_by_scoped_values(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_same_package_static_field_owners_shadowed_by_values(
                         source_root=source_root,
                         path=path,
@@ -4229,6 +4821,28 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "shadowed_imported_static_method_owner_qualification"
+        ),
+        "shadowed_same_package_static_method_method_count": sum(
+            action["kind"]
+            == "shadowed_same_package_static_method_owner_qualification"
+            for action in actions
+        ),
+        "shadowed_same_package_static_method_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "shadowed_same_package_static_method_owner_qualification"
+        ),
+        "scoped_same_package_static_field_method_count": sum(
+            action["kind"]
+            == "scoped_same_package_static_field_owner_qualification"
+            for action in actions
+        ),
+        "scoped_same_package_static_field_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "scoped_same_package_static_field_owner_qualification"
         ),
         "shadowed_same_package_static_field_method_count": sum(
             action["kind"]
