@@ -12,9 +12,23 @@ from .cross_version_javac_checkpoint_delta import (
 )
 
 
+def _exact_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in out:
+            raise CrossVersionJavacCheckpointDeltaError(
+                f"duplicate JSON key: {key!r}"
+            )
+        out[key] = value
+    return out
+
+
 def _load(path: Path) -> dict[str, Any]:
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
+        value = json.loads(
+            path.read_text(encoding="utf-8"),
+            object_pairs_hook=_exact_object,
+        )
     except (OSError, json.JSONDecodeError) as exc:
         raise CrossVersionJavacCheckpointDeltaError(
             f"failed to read JSON {path}: {exc}"
