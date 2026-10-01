@@ -24,7 +24,7 @@ class CrossVersionJavacFrontierTests(unittest.TestCase):
             "JAVACFRONTIER_OLD",
             [
                 {
-                    "source_path": r"C:\\old\\src\\rs\\A.java",
+                    "source_path": r"C:\old\src\rs\A.java",
                     "category": "cannot_find_symbol",
                     "message": "cannot find symbol",
                     "symbol_kind": "variable",
@@ -34,7 +34,7 @@ class CrossVersionJavacFrontierTests(unittest.TestCase):
                     "symbol_shape": "variable",
                 },
                 {
-                    "source_path": r"C:\\old\\src\\rs\\A.java",
+                    "source_path": r"C:\old\src\rs\A.java",
                     "category": "cannot_find_symbol",
                     "message": "cannot find symbol",
                     "symbol_kind": "variable",
@@ -44,7 +44,7 @@ class CrossVersionJavacFrontierTests(unittest.TestCase):
                     "symbol_shape": "variable",
                 },
                 {
-                    "source_path": r"C:\\old\\src\\rs\\B.java",
+                    "source_path": r"C:\old\src\rs\B.java",
                     "category": "incompatible_types",
                     "message": (
                         "incompatible types: Object cannot be converted "
