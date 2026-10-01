@@ -547,20 +547,18 @@ def _validate_comparison(
             + (": " + " ".join(detail) if detail else "")
         )
 
-    summary = _validate_public_summary(summary)
-
     families = comparison.get("families")
     if not isinstance(families, list):
         raise CrossVersionJavacCheckpointError(
             "comparison families must be an array"
         )
-    derived_summary = _validate_public_families(families)
-    if summary != derived_summary:
-        raise CrossVersionJavacCheckpointError(
-            "comparison summary does not match public family aggregates"
-        )
 
-    material = {
+    # Preserve the established fail-fast identity contract: first bind the
+    # exact raw redacted material to its deterministic report ID. Only a
+    # report whose identity is internally current proceeds to semantic and
+    # public-safety validation below. Recomputed malicious reports therefore
+    # still reach, and must pass, the stricter aggregate validators.
+    raw_material = {
         "old_diagnostic_report_id": old_diagnostic_report_id,
         "new_diagnostic_report_id": new_diagnostic_report_id,
         "old_diagnostic_input_sha256": old_diagnostic_input_sha256,
@@ -571,11 +569,18 @@ def _validate_comparison(
         "families": families,
     }
     expected_report_id = (
-        "XJAVACFRONTIER_" + _stable_digest(material)[:20].upper()
+        "XJAVACFRONTIER_" + _stable_digest(raw_material)[:20].upper()
     )
     if report_id != expected_report_id:
         raise CrossVersionJavacCheckpointError(
             "comparison report ID does not match redacted authority"
+        )
+
+    summary = _validate_public_summary(summary)
+    derived_summary = _validate_public_families(families)
+    if summary != derived_summary:
+        raise CrossVersionJavacCheckpointError(
+            "comparison summary does not match public family aggregates"
         )
 
     return {
