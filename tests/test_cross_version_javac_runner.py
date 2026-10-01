@@ -95,6 +95,14 @@ class CrossVersionJavacRunnerTests(unittest.TestCase):
             text,
         )
         self.assertIn(
+            "spk_recovery.cross_version_javac_legacy_baseline_delta_verify_cli",
+            text,
+        )
+        self.assertIn(
+            "Legacy 350 baseline delta verification failed",
+            text,
+        )
+        self.assertIn(
             "v307-v308-source-m1-exact-javac-parity-07ed6f9.json",
             text,
         )

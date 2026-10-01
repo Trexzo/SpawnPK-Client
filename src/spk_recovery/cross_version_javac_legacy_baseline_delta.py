@@ -459,6 +459,27 @@ def build_cross_version_javac_legacy_baseline_delta(
     }
 
 
+def verify_cross_version_javac_legacy_baseline_delta(
+    baseline_report: dict[str, Any],
+    current_checkpoint_report: dict[str, Any],
+    delta_report: dict[str, Any],
+) -> dict[str, Any]:
+    if not isinstance(delta_report, dict):
+        raise CrossVersionJavacLegacyBaselineDeltaError(
+            "legacy baseline delta must be an object"
+        )
+
+    expected = build_cross_version_javac_legacy_baseline_delta(
+        baseline_report,
+        current_checkpoint_report,
+    )
+    if delta_report != expected:
+        raise CrossVersionJavacLegacyBaselineDeltaError(
+            "legacy baseline delta does not match deterministic recomputation"
+        )
+    return expected
+
+
 def write_cross_version_javac_legacy_baseline_delta(
     report: dict[str, Any],
     out_path: Path,
