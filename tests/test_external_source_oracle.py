@@ -14,6 +14,36 @@ from spk_recovery.external_source_oracle import (
 from spk_recovery.indexer import sha256_file
 
 
+
+def _run_git(repo: Path, *args: str) -> str:
+    result = subprocess.run(
+        ["git", "-C", str(repo), *args],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise AssertionError(result.stdout + result.stderr)
+    return result.stdout.strip()
+
+
+def _init_git_repo(repo: Path) -> str:
+    repo.mkdir(parents=True, exist_ok=True)
+    result = subprocess.run(
+        ["git", "init", str(repo)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise AssertionError(result.stdout + result.stderr)
+    _run_git(repo, "config", "user.email", "oracle@example.invalid")
+    _run_git(repo, "config", "user.name", "Oracle Test")
+    (repo / "REVISION.txt").write_text("fixture\n", encoding="utf-8")
+    _run_git(repo, "add", "REVISION.txt")
+    _run_git(repo, "commit", "-m", "fixture")
+    return _run_git(repo, "rev-parse", "HEAD")
+
 def _compile(
     *,
     source_root: Path,
@@ -94,9 +124,11 @@ class ExternalSourceOracleTests(unittest.TestCase):
     def test_structural_match_stays_research_only(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
-            external_classes = root / "external"
+            external_repo = root / "external-repo"
+            external_revision = _init_git_repo(external_repo)
+            external_classes = external_repo / "build" / "classes"
             exact_classes = root / "exact"
-            external_classes.mkdir()
+            external_classes.mkdir(parents=True)
             exact_classes.mkdir()
 
             body = (
@@ -123,8 +155,9 @@ class ExternalSourceOracleTests(unittest.TestCase):
             exact_sha = sha256_file(jar)
 
             report = build_external_source_oracle(
+                external_repo=external_repo,
                 external_classes=external_classes,
-                external_revision="a" * 40,
+                external_revision=external_revision,
                 exact_v308_jar=jar,
                 expected_v308_sha256=exact_sha,
             )
@@ -162,9 +195,11 @@ class ExternalSourceOracleTests(unittest.TestCase):
     def test_rejects_revision_and_v308_drift(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
-            external_classes = root / "external"
+            external_repo = root / "external-repo"
+            external_revision = _init_git_repo(external_repo)
+            external_classes = external_repo / "build" / "classes"
             exact_classes = root / "exact"
-            external_classes.mkdir()
+            external_classes.mkdir(parents=True)
             exact_classes.mkdir()
             _compile(
                 source_root=root / "external-src",
@@ -188,6 +223,7 @@ class ExternalSourceOracleTests(unittest.TestCase):
                 "40-hex commit",
             ):
                 build_external_source_oracle(
+                    external_repo=external_repo,
                     external_classes=external_classes,
                     external_revision="main",
                     exact_v308_jar=jar,
@@ -201,8 +237,9 @@ class ExternalSourceOracleTests(unittest.TestCase):
                 "SHA-256 mismatch",
             ):
                 build_external_source_oracle(
+                    external_repo=external_repo,
                     external_classes=external_classes,
-                    external_revision="b" * 40,
+                    external_revision=external_revision,
                     exact_v308_jar=jar,
                     expected_v308_sha256="0" * 64,
                 )
