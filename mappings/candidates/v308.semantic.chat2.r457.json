@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/as",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpawnPKMarketplaceInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_title_literal",
+          "detail": "The builder contains exact title '<img=152> @or1@SpawnPK Marketplace <img=152>'."
+        },
+        {
+          "family": "exact_market_controls",
+          "detail": "Exact controls include Search item, Search user, Sell item, View listings, View recent sales, View your history and Your sales."
+        },
+        {
+          "family": "exact_search_surface",
+          "detail": "The same screen exposes exact Search by item/Search by player modes and Most recent/History navigation."
+        },
+        {
+          "family": "exact_builder_contract",
+          "detail": "The class extends R436 CustomInterfaceBuilder and is constructed only by the live custom-interface registry."
+        }
+      ],
+      "note": "Exact-v308 SpawnPK Marketplace main-screen identity; marketplace economy/server transaction authority is not inferred."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/at",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MarketplaceSearchResultsInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_title_literal",
+          "detail": "The builder contains exact title '@or1@SpawnPK Marketplace Search Results <img=39>'."
+        },
+        {
+          "family": "exact_results_controls",
+          "detail": "Exact controls include Previous page, Next page, Last page, Refresh, Go back, Select option and Select this market listing."
+        },
+        {
+          "family": "exact_result_columns",
+          "detail": "The interface presents exact Name/Quantity and Seller columns plus 'Total offers: 0' and ascending/descending sorting."
+        },
+        {
+          "family": "exact_live_use",
+          "detail": "Exact-v308 reverse references include Client and the central custom-interface registry."
+        }
+      ],
+      "note": "Exact-v308 Marketplace search-results presentation identity."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/c/au",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MarketplaceListingInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_title_literal",
+          "detail": "The builder contains exact title '@or1@SpawnPK Marketplace Listing <img=84>'."
+        },
+        {
+          "family": "exact_listing_controls",
+          "detail": "Exact controls include Set price, Set quantity, Select a currency.., Submit, Item history, View item history and Go back."
+        },
+        {
+          "family": "exact_currency_surface",
+          "detail": "The interface contains exact currency options including Coins and 100M bags."
+        },
+        {
+          "family": "exact_live_use",
+          "detail": "Exact-v308 reverse references include Client and the central custom-interface registry."
+        }
+      ],
+      "note": "Exact-v308 Marketplace listing creation/detail presentation identity; server listing validation and settlement remain outside this layer."
+    }
+  ],
+  "conflicts": []
+}
