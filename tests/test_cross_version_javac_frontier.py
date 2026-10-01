@@ -315,7 +315,33 @@ class CrossVersionJavacFrontierTests(unittest.TestCase):
 
         changed = dict(old)
         changed["input_sha256"] = "f" * 64
-        changed["report_id"] = "JAVACDIAG_" + "F" * 20
+        public_rows = [
+            {
+                key: row[key]
+                for key in (
+                    "category",
+                    "symbol_kind",
+                    "symbol_shape",
+                    "location_kind",
+                    "shape_cluster_id",
+                    "cluster_id",
+                    "symbol_id",
+                    "location_id",
+                    "file_id",
+                    "line",
+                )
+            }
+            for row in changed["diagnostics"]
+        ]
+        changed["report_id"] = (
+            "JAVACDIAG_"
+            + _digest(
+                {
+                    "input_sha256": changed["input_sha256"],
+                    "rows": public_rows,
+                }
+            )[:20].upper()
+        )
         second = compare_javac_frontiers(changed, new)
         self.assertNotEqual(first["report_id"], second["report_id"])
 
