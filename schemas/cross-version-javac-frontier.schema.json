@@ -7,6 +7,10 @@
     "schema_version",
     "kind",
     "report_id",
+    "old_diagnostic_report_id",
+    "new_diagnostic_report_id",
+    "old_diagnostic_input_sha256",
+    "new_diagnostic_input_sha256",
     "old_frontier_id",
     "new_frontier_id",
     "summary",
@@ -21,13 +25,29 @@
       "type": "string",
       "pattern": "^XJAVACFRONTIER_[0-9A-F]{20}$"
     },
+    "old_diagnostic_report_id": {
+      "type": "string",
+      "pattern": "^JAVACDIAG_[0-9A-F]{20}$"
+    },
+    "new_diagnostic_report_id": {
+      "type": "string",
+      "pattern": "^JAVACDIAG_[0-9A-F]{20}$"
+    },
+    "old_diagnostic_input_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "new_diagnostic_input_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
     "old_frontier_id": {
       "type": "string",
-      "pattern": "^JAVACFRONTIER_[0-9A-Z_]+$"
+      "pattern": "^JAVACFRONTIER_[0-9A-F]{20}$"
     },
     "new_frontier_id": {
       "type": "string",
-      "pattern": "^JAVACFRONTIER_[0-9A-Z_]+$"
+      "pattern": "^JAVACFRONTIER_[0-9A-F]{20}$"
     },
     "summary": {"type": "object"},
     "families": {
