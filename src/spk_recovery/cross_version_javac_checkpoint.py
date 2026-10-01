@@ -19,6 +19,25 @@ _FRONTIER_ID_RE = re.compile(r"^JAVACFRONTIER_[0-9A-F]{20}$")
 _REBUILD_ID_RE = re.compile(r"^CLEANBUILD_[0-9A-F]{20}$")
 _COMPARISON_ID_RE = re.compile(r"^XJAVACFRONTIER_[0-9A-F]{20}$")
 _BINARY_BACKTEST_ID_RE = re.compile(r"^XVERBIN_[0-9A-F]{20}$")
+_WORKSPACE_ID_RE = re.compile(r"^SRCWS_[0-9A-F]{20}$")
+_PUBLIC_BUILD_ID_RE = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
+_PUBLIC_JAVAC_CATEGORIES = {
+    "cannot_find_symbol",
+    "package_does_not_exist",
+    "incompatible_types",
+    "cannot_be_converted",
+    "ambiguous_reference",
+    "private_access",
+    "protected_access",
+    "cannot_apply_arguments",
+    "cannot_be_dereferenced",
+    "override_mismatch",
+    "name_clash",
+    "bad_operand_type",
+    "non_static_from_static_context",
+    "already_assigned",
+    "other",
+}
 _PUBLIC_FAMILY_KEYS = {
     "family_id",
     "file_id",
@@ -79,6 +98,128 @@ def _require_string(
     return value
 
 
+def _require_nonnegative_int(value: Any, *, label: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise CrossVersionJavacCheckpointError(
+            f"{label} must be a non-negative integer"
+        )
+    return value
+
+
+def _require_percent(value: Any, *, label: str) -> int | float:
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, (int, float))
+        or value < 0
+        or value > 100
+    ):
+        raise CrossVersionJavacCheckpointError(
+            f"{label} must be a number between 0 and 100"
+        )
+    return value
+
+
+def _validate_category_counts(
+    value: Any,
+    *,
+    label: str,
+) -> dict[str, int]:
+    if not isinstance(value, dict):
+        raise CrossVersionJavacCheckpointError(
+            f"{label} must be an object"
+        )
+    out: dict[str, int] = {}
+    for category, count in value.items():
+        if category not in _PUBLIC_JAVAC_CATEGORIES:
+            raise CrossVersionJavacCheckpointError(
+                f"{label}: category key is not public-safe: {category!r}"
+            )
+        out[category] = _require_nonnegative_int(
+            count,
+            label=f"{label}.{category}",
+        )
+    return dict(sorted(out.items()))
+
+
+def _validate_public_summary(summary: dict[str, Any]) -> dict[str, Any]:
+    count_fields = (
+        "old_total_errors",
+        "new_total_errors",
+        "shared_errors",
+        "old_only_errors",
+        "new_only_errors",
+        "old_affected_files",
+        "new_affected_files",
+        "shared_affected_files",
+    )
+    category_fields = (
+        "old_categories",
+        "new_categories",
+        "shared_categories",
+        "old_only_categories",
+        "new_only_categories",
+    )
+
+    out: dict[str, Any] = {}
+    for key in count_fields:
+        out[key] = _require_nonnegative_int(
+            summary.get(key),
+            label=f"comparison summary {key}",
+        )
+    out["shared_percent_of_old"] = _require_percent(
+        summary.get("shared_percent_of_old"),
+        label="comparison summary shared_percent_of_old",
+    )
+    out["shared_percent_of_new"] = _require_percent(
+        summary.get("shared_percent_of_new"),
+        label="comparison summary shared_percent_of_new",
+    )
+    for key in category_fields:
+        out[key] = _validate_category_counts(
+            summary.get(key),
+            label=f"comparison summary {key}",
+        )
+
+    exact_frontier_equal = summary.get("exact_frontier_equal")
+    if not isinstance(exact_frontier_equal, bool):
+        raise CrossVersionJavacCheckpointError(
+            "comparison summary exact_frontier_equal must be boolean"
+        )
+    out["exact_frontier_equal"] = exact_frontier_equal
+
+    if out["shared_errors"] + out["old_only_errors"] != out["old_total_errors"]:
+        raise CrossVersionJavacCheckpointError(
+            "comparison summary old error counts are inconsistent"
+        )
+    if out["shared_errors"] + out["new_only_errors"] != out["new_total_errors"]:
+        raise CrossVersionJavacCheckpointError(
+            "comparison summary new error counts are inconsistent"
+        )
+    if out["shared_affected_files"] > out["old_affected_files"]:
+        raise CrossVersionJavacCheckpointError(
+            "comparison summary shared affected files exceed old affected files"
+        )
+    if out["shared_affected_files"] > out["new_affected_files"]:
+        raise CrossVersionJavacCheckpointError(
+            "comparison summary shared affected files exceed new affected files"
+        )
+
+    category_total_pairs = (
+        ("old_categories", "old_total_errors"),
+        ("new_categories", "new_total_errors"),
+        ("shared_categories", "shared_errors"),
+        ("old_only_categories", "old_only_errors"),
+        ("new_only_categories", "new_only_errors"),
+    )
+    for category_key, total_key in category_total_pairs:
+        if sum(out[category_key].values()) != out[total_key]:
+            raise CrossVersionJavacCheckpointError(
+                f"comparison summary {category_key} does not sum to {total_key}"
+            )
+
+    return out
+
+
 def _validate_binding(
     binding: dict[str, Any],
     *,
@@ -109,6 +250,7 @@ def _validate_binding(
     build_id = _require_string(
         binding.get("build_id"),
         label=f"{label}: build_id",
+        pattern=_PUBLIC_BUILD_ID_RE,
     )
     source_authority_sha256 = _require_string(
         binding.get("source_authority_sha256"),
@@ -123,6 +265,7 @@ def _validate_binding(
     workspace_id = _require_string(
         binding.get("workspace_id"),
         label=f"{label}: workspace_id",
+        pattern=_WORKSPACE_ID_RE,
     )
     source_tree_sha256 = _require_string(
         binding.get("source_tree_sha256"),
@@ -267,6 +410,8 @@ def _validate_comparison(
             "comparison summary does not match the public field contract"
             + (": " + " ".join(detail) if detail else "")
         )
+
+    summary = _validate_public_summary(summary)
 
     families = comparison.get("families")
     if not isinstance(families, list):
