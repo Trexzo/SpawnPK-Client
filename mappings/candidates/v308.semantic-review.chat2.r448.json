@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 7,
+  "review_id": "SEMREVIEW_26542EDED094F8FEB88B",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_006DAFA033359204B91A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000579",
+      "owner_logical_id": "CLIENT_CLASS_000579",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aD",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "BloodFountainPerkTreeInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_builder_contract",
+          "detail": "The class directly extends R436 CustomInterfaceBuilder and is live in the custom-interface registry."
+        },
+        {
+          "family": "exact_title_literal",
+          "detail": "The exact title is '<img=186> Blood Fountain Perk Tree <img=186>'."
+        },
+        {
+          "family": "exact_perk_catalogue",
+          "detail": "The builder contains the full perk-tree labels including Blood vengeance, Archaeologist, Blood alchemy, Vampiric damage/accuracy/defence, Treasure hunter, War diamonds and many others, plus Purchase/Close controls."
+        }
+      ],
+      "note": "Exact-v308 literal-backed client interface identity; server-side rules and eligibility are not inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_0367BF5E94900C505C1E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000585",
+      "owner_logical_id": "CLIENT_CLASS_000585",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aJ",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "QuickPrayerSelectionInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_builder_contract",
+          "detail": "The class directly extends R436 CustomInterfaceBuilder and is live in the custom-interface registry."
+        },
+        {
+          "family": "exact_selection_literals",
+          "detail": "Exact text includes 'Select your quick prayers:', 'Select your quick curses:', 'Select' and 'Confirm Selection'."
+        },
+        {
+          "family": "exact_resource_family",
+          "detail": "The builder uses exact '/prayer/quick/SPRITE' resources for the selection surface."
+        }
+      ],
+      "note": "Exact-v308 literal-backed client interface identity; server-side rules and eligibility are not inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_149BA3043732F26230E9",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000584",
+      "owner_logical_id": "CLIENT_CLASS_000584",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aI",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DonorPanelInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_builder_contract",
+          "detail": "The class directly extends R436 CustomInterfaceBuilder and is live in the custom-interface registry."
+        },
+        {
+          "family": "exact_panel_literals",
+          "detail": "Exact headings include '@or1@Main Donor Panel', '@or1@Donor options and features' and '@or1@Promotional rewards'."
+        },
+        {
+          "family": "exact_donor_actions",
+          "detail": "The screen exposes exact donor-zone teleports, donor perks/benefits, donor shop access, donation rewards and promotion-progress presentation."
+        }
+      ],
+      "note": "Exact-v308 literal-backed client interface identity; server-side rules and eligibility are not inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_25FF05F38321048A878B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000578",
+      "owner_logical_id": "CLIENT_CLASS_000578",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aC",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientOptionsInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_builder_contract",
+          "detail": "The class directly extends R436 CustomInterfaceBuilder and is constructed by the live custom-interface registry."
+        },
+        {
+          "family": "exact_options_surface",
+          "detail": "Exact labels include Resizable mode, Oldschool 07 graphics/ticks, Extended zoom & distance, Fog distance, Particle/glow effects, Player lighting, Shift dropping, Split private chat, combat overlay, desktop notifications and other client presentation/settings toggles."
+        },
+        {
+          "family": "exact_action_controls",
+          "detail": "The screen owns exact controls such as 'Open attack options', 'Open house options' and 'Open key binding selection', fixing it as the broad client options/settings interface rather than one narrow toggle panel."
+        }
+      ],
+      "note": "Exact-v308 literal-backed client interface identity; server-side rules and eligibility are not inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_AA1D7A0F1954FCAE0209",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000586",
+      "owner_logical_id": "CLIENT_CLASS_000586",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aK",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaidPartyInvitationsInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_builder_contract",
+          "detail": "The class directly extends R436 CustomInterfaceBuilder and is live in the custom-interface registry."
+        },
+        {
+          "family": "exact_invitation_literals",
+          "detail": "Exact screen text includes 'Party invitations', 'Raiding party invitations' and 'Selected invitation'."
+        },
+        {
+          "family": "exact_raid_resource",
+          "detail": "The screen uses exact 'raids/sprite 5' presentation assets and invitation-list surfaces."
+        }
+      ],
+      "note": "Exact-v308 literal-backed client interface identity; server-side rules and eligibility are not inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_E4387C5319408C5177F3",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000587",
+      "owner_logical_id": "CLIENT_CLASS_000587",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aL",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RaidPartySetupInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_builder_contract",
+          "detail": "The class directly extends R436 CustomInterfaceBuilder and is live in the custom-interface registry."
+        },
+        {
+          "family": "exact_title_literal",
+          "detail": "The screen contains exact title 'Raiding Party Set-up'."
+        },
+        {
+          "family": "exact_party_controls",
+          "detail": "Exact controls include Invite member, Remove member, Re-invite last players, Start raid, Leave/disband party and Refresh."
+        },
+        {
+          "family": "exact_raid_configuration",
+          "detail": "The builder presents Chambers of Xeric / Theatre of Blood selection, Normal through Grandmaster difficulty tiers, requirements, party members and possible drops/rewards."
+        }
+      ],
+      "note": "Exact-v308 literal-backed client interface identity; server-side rules and eligibility are not inferred."
+    },
+    {
+      "proposal_id": "SEMPROP_ECDED0F32B38D11D0D28",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000580",
+      "owner_logical_id": "CLIENT_CLASS_000580",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c/aE",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LegendaryPetFusingInterface",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_builder_contract",
+          "detail": "The class directly extends R436 CustomInterfaceBuilder and is live in the custom-interface registry."
+        },
+        {
+          "family": "exact_title_literal",
+          "detail": "The screen contains exact title '@or1@Legendary Pet Fusing' and banner '@gre@Limited time pet fusion!'."
+        },
+        {
+          "family": "exact_fusing_controls",
+          "detail": "Exact controls/literals include 'Fuse', 'Fuse pets', 'Close Window' and the pet ETA presentation."
+        }
+      ],
+      "note": "Exact-v308 literal-backed client interface identity; server-side rules and eligibility are not inferred."
+    }
+  ],
+  "unresolved": []
+}
