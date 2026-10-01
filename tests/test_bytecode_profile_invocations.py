@@ -42,6 +42,9 @@ class BytecodeMethodInvocationProfileTests(unittest.TestCase):
                 "    public static int runInterface(I i) {\n"
                 "        return i.f(3);\n"
                 "    }\n"
+                "    public static String concat(String value) {\n"
+                "        return \"value=\" + value;\n"
+                "    }\n"
                 "}\n",
                 encoding="utf-8",
             )
@@ -115,6 +118,32 @@ class BytecodeMethodInvocationProfileTests(unittest.TestCase):
             self.assertIn(
                 ("invokeinterface", "p/I", "f", "(I)I"),
                 interface_observed,
+            )
+
+            dynamic_method = next(
+                row
+                for row in profile["methods"]
+                if row["name"] == "concat"
+                and row["descriptor"]
+                == "(Ljava/lang/String;)Ljava/lang/String;"
+            )
+            dynamic = [
+                row
+                for row in dynamic_method["method_invocations"]
+                if row["operation"] == "invokedynamic"
+            ]
+            self.assertEqual(len(dynamic), 1)
+            self.assertEqual(
+                dynamic[0]["descriptor"],
+                "(Ljava/lang/String;)Ljava/lang/String;",
+            )
+            self.assertIsInstance(
+                dynamic[0]["bootstrap_method_attr_index"],
+                int,
+            )
+            self.assertGreaterEqual(
+                dynamic[0]["bootstrap_method_attr_index"],
+                0,
             )
 
 
