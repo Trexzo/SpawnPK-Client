@@ -131,6 +131,15 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
         report = _report()
         report["actions"] += [
             {
+                "kind": "undeclared_linkedhashmap_cast_placeholder_wildcard",
+                "source_path": "rs/gui/b/d.java",
+                "method_name": "a",
+                "method_descriptor": "(Ljava/lang/String;)V",
+                "placeholder_counts": {"K": 12, "V": 4},
+                "member_counts": {"get": 12, "keySet": 4},
+                "replacement_count": 16,
+            },
+            {
                 "kind": "shadowed_nested_static_field_owner_type_context",
                 "source_path": "rs/a/a/a.java",
                 "method_name": "d",
@@ -192,6 +201,8 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
             },
         ]
         report["summary"].update({
+            "undeclared_linkedhashmap_cast_placeholder_method_count": 1,
+            "undeclared_linkedhashmap_cast_placeholder_reference_count": 16,
             "shadowed_nested_static_field_method_count": 1,
             "shadowed_nested_static_field_reference_count": 17,
             "primitive_scope_shadowed_self_static_field_method_count": 1,
@@ -210,6 +221,12 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
 
         text = "\n".join(summarize(report, top=10))
 
+        self.assertIn("LINKEDHASHMAP_PLACEHOLDER_REFERENCES=16", text)
+        self.assertIn(
+            "a(Ljava/lang/String;)V | references=16 | "
+            "placeholders=K:12,V:4 | members=get:12,keySet:4",
+            text,
+        )
         self.assertIn("NESTED_STATIC_FIELD_SHADOW_REFERENCES=17", text)
         self.assertIn(
             "d(I)V | references=17 | owners=rs/a/a/a$b",
@@ -412,6 +429,10 @@ class SourceNormalizationSummaryTests(unittest.TestCase):
         )
         self.assertIn(
             "NESTED_STATIC_FIELD_SHADOW_REFERENCES=",
+            text,
+        )
+        self.assertIn(
+            "LINKEDHASHMAP_PLACEHOLDER_REFERENCES=",
             text,
         )
         self.assertIn(
