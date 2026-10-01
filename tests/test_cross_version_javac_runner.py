@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
+import subprocess
 import unittest
 
 
@@ -65,6 +67,43 @@ class CrossVersionJavacRunnerTests(unittest.TestCase):
             "EXACT_FRONTIER_EQUAL=",
         ):
             self.assertIn(marker, text)
+
+    def test_windows_powershell_parser_accepts_runner(self):
+        if os.name != "nt":
+            self.skipTest("Windows PowerShell parser check")
+
+        repo = Path(__file__).resolve().parents[1]
+        script = (
+            repo
+            / "scripts"
+            / "Invoke-CrossVersionJavacFrontier.ps1"
+        )
+        escaped = str(script).replace("'", "''")
+        command = (
+            "$tokens=$null; $errors=$null; "
+            "[System.Management.Automation.Language.Parser]::ParseFile("
+            f"'{escaped}', [ref]$tokens, [ref]$errors) | Out-Null; "
+            "if ($errors.Count -ne 0) { "
+            "$errors | ForEach-Object { Write-Error $_.Message }; exit 1 }"
+        )
+        completed = subprocess.run(
+            [
+                "powershell.exe",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                command,
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(
+            completed.returncode,
+            0,
+            msg=completed.stdout + completed.stderr,
+        )
 
 
 if __name__ == "__main__":
