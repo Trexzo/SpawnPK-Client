@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "kind": "current_source_m1_frontier_proof",
+  "fixture_id": "SPK_V308_SOURCE_M1_FRONTIER_FE2E4_20261001",
+  "authority_commit": "fe2e4fa5b27f2e8d76ef8fb13227e96acc71dca1",
+  "measurement_status": "latest_recorded_v308_frontier",
+  "truth_boundary": {
+    "proves": [
+      "exact v308 Source-M1 acceptance reached the recorded clean-rebuild frontier at this newer recovery-tooling authority",
+      "the measured public compiler frontier is JAVACFRONTIER_60BD54443AE90AAF4191",
+      "project binary fallback remained zero at this measured frontier",
+      "the 405-to-388 reduction is exactly 17 incompatible-types diagnostics with affected-file and cannot-find-symbol counts unchanged"
+    ],
+    "does_not_prove": [
+      "v308 is release-ready",
+      "the 388 frontier is directly comparable to historical v307 as a client-version delta because the two runs used different recovery-tooling commits",
+      "the 17-error reduction is caused by the v307-to-v308 client binary change",
+      "the private v307 and v308 javac diagnostics have been compared under this newer tooling authority",
+      "the final strict recovered-source v307-to-v308 cross-version PASS"
+    ]
+  },
+  "inputs": {
+    "build_id": "v308",
+    "client_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
+  },
+  "source_pipeline": {
+    "recovered_workspace_id": "SRCWS_C872B2C0FD43C055908C",
+    "normalization_id": "SRCNORM_53619B3A4D8EE2BB8528",
+    "clean_rebuild_id": "CLEANBUILD_4E70DB6DB4B3B2B20B74"
+  },
+  "clean_rebuild_frontier": {
+    "javac_frontier_id": "JAVACFRONTIER_60BD54443AE90AAF4191",
+    "total_errors": 388,
+    "affected_files": 75,
+    "cannot_find_symbol": 178,
+    "project_binary_fallback_count": 0,
+    "categories": {
+      "cannot_find_symbol": 178,
+      "incompatible_types": 45,
+      "other": 49,
+      "cannot_be_dereferenced": 45,
+      "non_static_from_static_context": 39,
+      "cannot_apply_arguments": 11,
+      "package_does_not_exist": 9,
+      "private_access": 9,
+      "bad_operand_type": 2,
+      "protected_access": 1
+    }
+  },
+  "delta_from_same_tooling_anchor": {
+    "anchor_fixture": "fixtures/v308-source-m1-frontier-proof.json",
+    "anchor_authority_commit": "ce3d43e34f53a3991f30f5911bbd0235f73fe6f9",
+    "anchor_frontier_id": "JAVACFRONTIER_79F76A743656F3D6EB8F",
+    "total_errors": -17,
+    "affected_files": 0,
+    "cannot_find_symbol": 0,
+    "category_delta": {
+      "incompatible_types": -17
+    },
+    "all_other_categories_unchanged": true
+  },
+  "notes": [
+    "This fixture records only public aggregate Source-M1 frontier authority from exact-local acceptance; no recovered source or identifier-bearing javac diagnostics are committed.",
+    "The historical v307 run must be rerun under equivalent newer tooling before the 388 frontier can be interpreted as a cross-version client delta rather than recovery-tooling skew."
+  ]
+}
