@@ -27,14 +27,14 @@ def _source_unit_from_path(value: str) -> str | None:
         return None
 
     marker = "/src/"
-    if marker in path:
+    if path.startswith("rs/"):
+        relative = path
+    elif "/rs/" in path:
+        relative = "rs/" + path.rsplit("/rs/", 1)[1]
+    elif marker in path:
         relative = path.rsplit(marker, 1)[1]
     elif path.startswith("src/"):
         relative = path[4:]
-    elif "/rs/" in path:
-        relative = "rs/" + path.rsplit("/rs/", 1)[1]
-    elif path.startswith("rs/"):
-        relative = path
     else:
         return None
 
