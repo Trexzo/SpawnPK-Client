@@ -23,6 +23,9 @@ _CANONICAL = {
     "new_authority_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
     "binary_backtest_id": "XVERBIN_E56BD2FB8CCC172D6184",
     "tooling_commit": "07ed6f961fd9ab67439b1d9428446f914bafeabf",
+    "historical_public_anchor_fixture": (
+        "fixtures/v307-v308-source-m1-public-frontier-parity.json"
+    ),
     "old_binding_id": "JAVACBIND_21E319970E16BE91799B",
     "new_binding_id": "JAVACBIND_C534A43BDA991CC6703C",
     "old_diagnostic_report_id": "JAVACDIAG_788CFA0C3838C4FF6B2D",
@@ -37,6 +40,64 @@ _CANONICAL = {
     "new_source_tree_sha256": "8bbee4b6b8f8d1d12a943c2210690122331fc803f7a1b0f65ac050b464181fbf",
     "report_id": "XJAVACFRONTIER_3029D957ED98E41FC96D",
     "frontier_id": "JAVACFRONTIER_D028FE33F2F3EC395B94",
+}
+
+_TOP_KEYS = {
+    "schema_version",
+    "kind",
+    "fixture_id",
+    "measurement_status",
+    "old_build_id",
+    "new_build_id",
+    "old_authority_sha256",
+    "new_authority_sha256",
+    "binary_backtest_id",
+    "tooling_commit",
+    "historical_public_anchor_fixture",
+    "bindings",
+    "comparison",
+    "run_state",
+    "truth_boundary",
+    "notes",
+}
+_BINDING_KEYS = {
+    "old_binding_id",
+    "new_binding_id",
+    "old_diagnostic_report_id",
+    "new_diagnostic_report_id",
+    "old_diagnostic_input_sha256",
+    "new_diagnostic_input_sha256",
+    "old_rebuild_id",
+    "new_rebuild_id",
+    "old_workspace_id",
+    "new_workspace_id",
+    "old_source_tree_sha256",
+    "new_source_tree_sha256",
+}
+_COMPARISON_KEYS = {
+    "report_id",
+    "old_frontier_id",
+    "new_frontier_id",
+    "exact_frontier_equal",
+    "old_total_errors",
+    "new_total_errors",
+    "shared_errors",
+    "old_only_errors",
+    "new_only_errors",
+    "shared_percent_of_old",
+    "shared_percent_of_new",
+    "old_affected_files",
+    "new_affected_files",
+    "shared_affected_files",
+    "categories",
+}
+_RUN_STATE_KEYS = {
+    "old_release_ready",
+    "new_release_ready",
+    "equivalent_tooling_recovery_releases_ready",
+    "wrapper_exit",
+    "frozen_tooling_cleanup_pass",
+    "live_main_advanced",
 }
 
 
@@ -55,6 +116,29 @@ def _require_equal(actual: Any, expected: Any, label: str) -> None:
         raise CrossVersionJavacLegacyBaselineDeltaError(
             f"legacy baseline {label} does not match canonical authority"
         )
+
+
+def _require_exact_keys(
+    value: dict[str, Any],
+    expected: set[str],
+    label: str,
+) -> None:
+    actual = set(value)
+    if actual == expected:
+        return
+
+    unexpected = sorted(actual - expected)
+    missing = sorted(expected - actual)
+    detail: list[str] = []
+    if unexpected:
+        detail.append("unexpected=" + ",".join(unexpected))
+    if missing:
+        detail.append("missing=" + ",".join(missing))
+    suffix = ": " + " ".join(detail) if detail else ""
+    raise CrossVersionJavacLegacyBaselineDeltaError(
+        f"legacy baseline {label} does not match canonical field contract"
+        + suffix
+    )
 
 
 def validate_legacy_exact_parity_baseline(
@@ -79,6 +163,17 @@ def validate_legacy_exact_parity_baseline(
             "legacy baseline measurement_status is not canonical"
         )
 
+    _require_exact_keys(report, _TOP_KEYS, "top-level")
+
+    if not isinstance(report.get("truth_boundary"), dict):
+        raise CrossVersionJavacLegacyBaselineDeltaError(
+            "legacy baseline truth_boundary must be an object"
+        )
+    if not isinstance(report.get("notes"), list):
+        raise CrossVersionJavacLegacyBaselineDeltaError(
+            "legacy baseline notes must be an array"
+        )
+
     for key in (
         "fixture_id",
         "old_build_id",
@@ -87,6 +182,7 @@ def validate_legacy_exact_parity_baseline(
         "new_authority_sha256",
         "binary_backtest_id",
         "tooling_commit",
+        "historical_public_anchor_fixture",
     ):
         _require_equal(report.get(key), _CANONICAL[key], key)
 
@@ -105,6 +201,10 @@ def validate_legacy_exact_parity_baseline(
         raise CrossVersionJavacLegacyBaselineDeltaError(
             "legacy baseline run_state must be an object"
         )
+
+    _require_exact_keys(bindings, _BINDING_KEYS, "bindings")
+    _require_exact_keys(comparison, _COMPARISON_KEYS, "comparison")
+    _require_exact_keys(run_state, _RUN_STATE_KEYS, "run_state")
 
     for key in (
         "old_binding_id",
