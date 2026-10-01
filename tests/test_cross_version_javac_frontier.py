@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import unittest
 
 from spk_recovery.cross_version_javac_frontier import (
@@ -9,22 +10,125 @@ from spk_recovery.cross_version_javac_frontier import (
 )
 
 
+def _digest(value: object) -> str:
+    raw = json.dumps(
+        value,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()
+
+
 def report(frontier: str, rows: list[dict]):
+    file_ids: dict[str, str] = {}
+    symbol_ids: dict[tuple[object, object], str] = {}
+    location_ids: dict[tuple[object, object], str] = {}
+    enriched: list[dict] = []
+    public_rows: list[dict] = []
+
+    for index, original in enumerate(rows, start=1):
+        row = dict(original)
+        path = str(row.get("source_path", ""))
+        if path not in file_ids:
+            file_ids[path] = f"JFILE_{len(file_ids) + 1:06d}"
+
+        symbol_kind = row.get("symbol_kind")
+        symbol = row.get("symbol")
+        symbol_key = (symbol_kind, symbol)
+        if symbol_kind is not None and symbol_key not in symbol_ids:
+            symbol_ids[symbol_key] = f"JSYM_{len(symbol_ids) + 1:06d}"
+
+        location_kind = row.get("location_kind")
+        location = row.get("location")
+        location_key = (location_kind, location)
+        if (
+            location_kind is not None
+            and location_key not in location_ids
+        ):
+            location_ids[location_key] = (
+                f"JLOC_{len(location_ids) + 1:06d}"
+            )
+
+        row.setdefault("symbol_kind", None)
+        row.setdefault("symbol", None)
+        row.setdefault("location_kind", None)
+        row.setdefault("location", None)
+        row.setdefault("symbol_shape", "none")
+        row["shape_cluster_id"] = (
+            "JDS_" + _digest(
+                {
+                    "category": row["category"],
+                    "symbol_kind": row["symbol_kind"] or "none",
+                    "symbol_shape": row["symbol_shape"],
+                    "location_kind": row["location_kind"] or "none",
+                }
+            )[:16].upper()
+        )
+        row["symbol_id"] = (
+            symbol_ids[symbol_key]
+            if row["symbol_kind"] is not None
+            else None
+        )
+        row["location_id"] = (
+            location_ids[location_key]
+            if row["location_kind"] is not None
+            else None
+        )
+        row["cluster_id"] = (
+            "JDC_" + _digest(
+                {
+                    "category": row["category"],
+                    "symbol_kind": row["symbol_kind"] or "none",
+                    "symbol_shape": row["symbol_shape"],
+                    "location_kind": row["location_kind"] or "none",
+                    "symbol_id": row["symbol_id"] or "none",
+                    "location_id": row["location_id"] or "none",
+                }
+            )[:16].upper()
+        )
+        row["file_id"] = file_ids[path]
+        row["line"] = int(row.get("line", index))
+        enriched.append(row)
+        public_rows.append(
+            {
+                key: row[key]
+                for key in (
+                    "category",
+                    "symbol_kind",
+                    "symbol_shape",
+                    "location_kind",
+                    "shape_cluster_id",
+                    "cluster_id",
+                    "symbol_id",
+                    "location_id",
+                    "file_id",
+                    "line",
+                )
+            }
+        )
+
     input_sha256 = hashlib.sha256(frontier.encode("utf-8")).hexdigest()
-    report_digest = hashlib.sha256(
-        (frontier + "-report").encode("utf-8")
-    ).hexdigest()[:20].upper()
-    frontier_digest = hashlib.sha256(
-        (frontier + "-frontier").encode("utf-8")
-    ).hexdigest()[:20].upper()
+    frontier_id = (
+        "JAVACFRONTIER_"
+        + _digest({"rows": public_rows})[:20].upper()
+    )
+    report_id = (
+        "JAVACDIAG_"
+        + _digest(
+            {
+                "input_sha256": input_sha256,
+                "rows": public_rows,
+            }
+        )[:20].upper()
+    )
     return {
         "schema_version": 1,
         "kind": "javac_diagnostic_classification_report",
-        "report_id": "JAVACDIAG_" + report_digest,
-        "frontier_id": "JAVACFRONTIER_" + frontier_digest,
+        "report_id": report_id,
+        "frontier_id": frontier_id,
         "input_sha256": input_sha256,
         "identifiers_included": True,
-        "diagnostics": rows,
+        "diagnostics": enriched,
     }
 
 
