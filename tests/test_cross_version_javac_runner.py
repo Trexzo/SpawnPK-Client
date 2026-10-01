@@ -45,6 +45,8 @@ class CrossVersionJavacRunnerTests(unittest.TestCase):
             "CROSS-VERSION JAVAC FRONTIER COMPARISON - PASS",
             text,
         )
+        self.assertIn("COMPARATOR_COMMIT=", text)
+        self.assertNotIn("AUTHORITY_COMMIT=", text)
 
     def test_runner_surfaces_overlap_metrics(self):
         repo = Path(__file__).resolve().parents[1]
