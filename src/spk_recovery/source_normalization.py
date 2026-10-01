@@ -2475,7 +2475,10 @@ def _resolve_shadowed_simple_nested_static_field(
     The candidate must be a nested class owned by the exact current class.
     Its target field must be declared static, and a visible hierarchy value
     with the same nested simple name must prove the Java name-resolution
-    shadow that makes the Procyon expression illegal.
+    shadow that makes the Procyon expression illegal. Java enclosing and
+    nested classes are nestmates for source-level private access, so a
+    private static member of current_owner$Inner is valid from current_owner
+    and must not be rejected by the generic inter-class visibility helper.
     """
     if not _is_java_identifier(owner):
         return None
@@ -2501,11 +2504,6 @@ def _resolve_shadowed_simple_nested_static_field(
         if (
             str(field.get("name", "")) == field_name
             and int(field.get("access", 0)) & 0x0008
-            and _field_visible_from(
-                declaring_owner=candidate,
-                current_owner=current_owner,
-                access=int(field.get("access", 0)),
-            )
         )
     ]
     if len(declarations) != 1:
