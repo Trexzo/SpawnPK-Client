@@ -1,0 +1,28 @@
+{
+  "schema_version":1,
+  "kind":"semantic_review_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count":1,
+  "review_id":"SEMREVIEW_0AC29F47A48C06DC0CE8",
+  "proposals":[{
+    "proposal_id":"SEMPROP_F71948D3BE4EF0F787A3",
+    "target_kind":"class",
+    "stable_id":"CLIENT_CLASS_000297",
+    "owner_logical_id":"CLIENT_CLASS_000297",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate":{"owner":"rs/i/b","name":null,"descriptor":null},
+    "proposed_name":"GameframeControlRenderer",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_gameframe_asset_ownership","detail":"The constructor owns the gameframe control sprite inventory: HP/prayer/run/spec fills and icons, orb backgrounds/drain masks, adventure/promo/event orbs, hit/exp/heal/refill/boss/bank toggles, side arrows, plus gameframe chatbutton/hoverchat assets."},
+      {"family":"exact_hud_render_consumer","detail":"Client owns one rs/i/b instance and invokes its render/update methods from the live gameframe/HUD path; R304 GameHudRenderer also queries its active/layout state to shift multiple HUD elements."},
+      {"family":"exact_control_interaction","detail":"Client menu-action routing calls rs/i/b.a(int) with exact R164 ChatMessageClassifier channel constants for chat-control selections, while other methods expose control visibility/toggle state and draw interactive gameframe controls."},
+      {"family":"exact_cross_overlay_use","detail":"Independent consumers include HalloweenEventChestOverlay, ExperienceDropManager, HitDropManager and text-overlay/UI code, all consulting the gameframe-control layout/state rather than treating the class as a passive sprite bundle."}
+    ],
+    "note":"Descriptive exact-v308 name for the live custom gameframe control renderer/controller. It intentionally covers both orb/status controls and chat/control-strip interaction."
+  }],
+  "unresolved":[]
+}
