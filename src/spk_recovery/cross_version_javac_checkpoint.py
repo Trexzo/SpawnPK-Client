@@ -141,6 +141,142 @@ def _validate_category_counts(
     return dict(sorted(out.items()))
 
 
+def _percentage(part: int, whole: int) -> float:
+    if whole == 0:
+        return 100.0 if part == 0 else 0.0
+    return round((part * 100.0) / whole, 4)
+
+
+def _validate_public_families(
+    families: list[Any],
+) -> dict[str, Any]:
+    old_total = 0
+    new_total = 0
+    shared_total = 0
+    old_only_total = 0
+    new_only_total = 0
+    old_categories: dict[str, int] = {}
+    new_categories: dict[str, int] = {}
+    shared_categories: dict[str, int] = {}
+    old_only_categories: dict[str, int] = {}
+    new_only_categories: dict[str, int] = {}
+    old_files: set[str] = set()
+    new_files: set[str] = set()
+    shared_files: set[str] = set()
+    exact_frontier_equal = True
+
+    for index, family in enumerate(families):
+        if not isinstance(family, dict):
+            raise CrossVersionJavacCheckpointError(
+                f"comparison family {index} must be an object"
+            )
+        family_keys = set(family)
+        if family_keys != _PUBLIC_FAMILY_KEYS:
+            unexpected = sorted(family_keys - _PUBLIC_FAMILY_KEYS)
+            missing = sorted(_PUBLIC_FAMILY_KEYS - family_keys)
+            detail = []
+            if unexpected:
+                detail.append("unexpected=" + ",".join(unexpected))
+            if missing:
+                detail.append("missing=" + ",".join(missing))
+            raise CrossVersionJavacCheckpointError(
+                f"comparison family {index} does not match the public "
+                "field contract"
+                + (": " + " ".join(detail) if detail else "")
+            )
+
+        family_id = _require_string(
+            family.get("family_id"),
+            label=f"comparison family {index} family_id",
+            pattern=re.compile(r"^XJERR_[0-9]{6}$"),
+        )
+        file_id = _require_string(
+            family.get("file_id"),
+            label=f"comparison family {index} file_id",
+            pattern=re.compile(r"^XJFILE_[0-9]{6}$"),
+        )
+        category = family.get("category")
+        if category not in _PUBLIC_JAVAC_CATEGORIES:
+            raise CrossVersionJavacCheckpointError(
+                f"comparison family {index} category is not public-safe"
+            )
+        del family_id
+
+        counts = {}
+        for key in (
+            "old_count",
+            "new_count",
+            "shared_count",
+            "old_only_count",
+            "new_only_count",
+        ):
+            counts[key] = _require_nonnegative_int(
+                family.get(key),
+                label=f"comparison family {index} {key}",
+            )
+
+        if counts["shared_count"] + counts["old_only_count"] != counts["old_count"]:
+            raise CrossVersionJavacCheckpointError(
+                f"comparison family {index} old counts are inconsistent"
+            )
+        if counts["shared_count"] + counts["new_only_count"] != counts["new_count"]:
+            raise CrossVersionJavacCheckpointError(
+                f"comparison family {index} new counts are inconsistent"
+            )
+        if counts["shared_count"] != min(
+            counts["old_count"],
+            counts["new_count"],
+        ):
+            raise CrossVersionJavacCheckpointError(
+                f"comparison family {index} shared count is inconsistent"
+            )
+
+        old_total += counts["old_count"]
+        new_total += counts["new_count"]
+        shared_total += counts["shared_count"]
+        old_only_total += counts["old_only_count"]
+        new_only_total += counts["new_only_count"]
+
+        if counts["old_count"]:
+            old_files.add(file_id)
+        if counts["new_count"]:
+            new_files.add(file_id)
+        if counts["shared_count"]:
+            shared_files.add(file_id)
+        if counts["old_count"] != counts["new_count"]:
+            exact_frontier_equal = False
+
+        for key, target in (
+            ("old_count", old_categories),
+            ("new_count", new_categories),
+            ("shared_count", shared_categories),
+            ("old_only_count", old_only_categories),
+            ("new_only_count", new_only_categories),
+        ):
+            count = counts[key]
+            if count:
+                target[category] = target.get(category, 0) + count
+
+    return {
+        "old_total_errors": old_total,
+        "new_total_errors": new_total,
+        "shared_errors": shared_total,
+        "old_only_errors": old_only_total,
+        "new_only_errors": new_only_total,
+        "shared_percent_of_old": _percentage(shared_total, old_total),
+        "shared_percent_of_new": _percentage(shared_total, new_total),
+        "old_affected_files": len(old_files),
+        "new_affected_files": len(new_files),
+        "shared_affected_files": len(shared_files),
+        "old_categories": dict(sorted(old_categories.items())),
+        "new_categories": dict(sorted(new_categories.items())),
+        "shared_categories": dict(sorted(shared_categories.items())),
+        "old_only_categories": dict(sorted(old_only_categories.items())),
+        "new_only_categories": dict(sorted(new_only_categories.items())),
+        "exact_frontier_equal": exact_frontier_equal,
+    }
+
+
 def _validate_public_summary(summary: dict[str, Any]) -> dict[str, Any]:
     count_fields = (
         "old_total_errors",
@@ -411,34 +547,18 @@ def _validate_comparison(
             + (": " + " ".join(detail) if detail else "")
         )
 
-    summary = _validate_public_summary(summary)
-
     families = comparison.get("families")
     if not isinstance(families, list):
         raise CrossVersionJavacCheckpointError(
             "comparison families must be an array"
         )
-    for index, family in enumerate(families):
-        if not isinstance(family, dict):
-            raise CrossVersionJavacCheckpointError(
-                f"comparison family {index} must be an object"
-            )
-        family_keys = set(family)
-        if family_keys != _PUBLIC_FAMILY_KEYS:
-            unexpected = sorted(family_keys - _PUBLIC_FAMILY_KEYS)
-            missing = sorted(_PUBLIC_FAMILY_KEYS - family_keys)
-            detail = []
-            if unexpected:
-                detail.append("unexpected=" + ",".join(unexpected))
-            if missing:
-                detail.append("missing=" + ",".join(missing))
-            raise CrossVersionJavacCheckpointError(
-                f"comparison family {index} does not match the public "
-                "field contract"
-                + (": " + " ".join(detail) if detail else "")
-            )
 
-    material = {
+    # Preserve the established fail-fast identity contract: first bind the
+    # exact raw redacted material to its deterministic report ID. Only a
+    # report whose identity is internally current proceeds to semantic and
+    # public-safety validation below. Recomputed malicious reports therefore
+    # still reach, and must pass, the stricter aggregate validators.
+    raw_material = {
         "old_diagnostic_report_id": old_diagnostic_report_id,
         "new_diagnostic_report_id": new_diagnostic_report_id,
         "old_diagnostic_input_sha256": old_diagnostic_input_sha256,
@@ -449,11 +569,18 @@ def _validate_comparison(
         "families": families,
     }
     expected_report_id = (
-        "XJAVACFRONTIER_" + _stable_digest(material)[:20].upper()
+        "XJAVACFRONTIER_" + _stable_digest(raw_material)[:20].upper()
     )
     if report_id != expected_report_id:
         raise CrossVersionJavacCheckpointError(
             "comparison report ID does not match redacted authority"
+        )
+
+    summary = _validate_public_summary(summary)
+    derived_summary = _validate_public_families(families)
+    if summary != derived_summary:
+        raise CrossVersionJavacCheckpointError(
+            "comparison summary does not match public family aggregates"
         )
 
     return {
