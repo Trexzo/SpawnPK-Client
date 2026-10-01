@@ -174,3 +174,36 @@ hashes and IDs, compiler aggregate state, and the redacted comparator summary.
 It does not declare either recovery release ready. Its purpose is to eliminate
 manual transcription when promoting an exact-local measurement into a reviewed
 public checkpoint.
+
+## Checkpoint-to-checkpoint progress delta
+
+After two public-safe `cross_version_javac_checkpoint` artifacts exist,
+compare them without reopening private javac diagnostics:
+
+```powershell
+spk-cross-version-javac-checkpoint-delta `
+  .\baseline-checkpoint.json `
+  .\current-checkpoint.json `
+  --out .\checkpoint-delta.json
+```
+
+The delta tool independently rederives both `XJAVACCHECKPOINT_*`
+identities and refuses malformed or recomputed-invalid public material. It also
+requires the exact old/new build IDs, source-authority SHA-256 pair, and
+optional `XVERBIN_*` authority to remain unchanged.
+
+The report records:
+
+- baseline/current tooling commits;
+- signed old/new total-error deltas;
+- signed affected-file and shared/side-only deltas;
+- signed deltas for every public javac category;
+- whether each build frontier changed;
+- whether each recovered source-tree hash changed;
+- whether exact cross-version frontier equality was preserved, gained, or
+  lost.
+
+This is intentionally aggregate-only. The hardened checkpoint does not carry a
+stable cross-run diagnostic-family identity, so the delta report does **not**
+claim which exact diagnostic families disappeared or appeared.
+
