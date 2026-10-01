@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_2CEDCB4AF982E7296103",
+  "proposals": [{
+    "proposal_id": "SEMPROP_8F8E78193D1FA2791867",
+    "target_kind": "class",
+    "stable_id": "CLIENT_CLASS_000076",
+    "owner_logical_id": "CLIENT_CLASS_000076",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate": {"owner":"rs/a/m","name":null,"descriptor":null},
+    "proposed_name": "DynamicObject",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"exact_renderable_contract","detail":"rs/a/m extends R30 Renderable and its c() method resolves an ObjectDefinition, advances an optional Sequence frame from Client.ff timing, and returns the definition-built Model for the stored object type/orientation/tile-height state."},
+      {"family":"exact_object_manager_construction","detail":"R53 ObjectManager constructs rs/a/m whenever a placed object definition has an animation id or morph/child-definition table; otherwise it builds the static Model directly. This is the exact static-vs-dynamic scene-object split."},
+      {"family":"exact_runtime_animation_replacement","detail":"Client runtime object-animation handling wraps existing wall, wall-decoration, game-object and floor-decoration scene entries in new rs/a/m instances, preserving object id/type/orientation while supplying the requested animation id."},
+      {"family":"exact_sequence_continuity","detail":"The constructor optionally accepts a prior Renderable; when that prior object is another rs/a/m using the same Sequence and restart mode allows continuity, it copies the prior animation frame/tick state instead of restarting."}
+    ],
+    "note":"DynamicObject is the conservative exact-v308 name for the Renderable scene object that resolves object-definition morphs and/or advances object animation sequences at render time."
+  }],
+  "unresolved": []
+}
