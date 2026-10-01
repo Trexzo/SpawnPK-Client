@@ -40,6 +40,11 @@ def main() -> int:
         "--expected-authority-sha256",
         required=True,
     )
+    parser.add_argument(
+        "--tooling-commit",
+        required=True,
+        help="Exact SpawnPK-Client recovery-tooling commit.",
+    )
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
 
@@ -51,6 +56,7 @@ def main() -> int:
             expected_authority_sha256=(
                 args.expected_authority_sha256
             ),
+            tooling_commit=args.tooling_commit,
         )
         write_javac_build_binding(report, args.out)
     except JavacBuildBindingError as exc:
@@ -60,6 +66,7 @@ def main() -> int:
         json.dumps(
             {
                 "binding_id": report["binding_id"],
+                "tooling_commit": report["tooling_commit"],
                 "build_id": report["build_id"],
                 "source_authority_sha256": (
                     report["source_authority_sha256"]

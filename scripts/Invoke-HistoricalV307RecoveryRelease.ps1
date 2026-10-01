@@ -364,6 +364,7 @@ if ([string]$RecoveredDoc.collision_plan_id -ne [string]$CollisionPlanDoc.plan_i
 }
 
 $PrivateDiagnostic = Join-Path $ReleaseDir "javac-diagnostic-private.json"
+$JavacBuildBinding = Join-Path $ReleaseDir "javac-build-binding.json"
 $ReleaseArgs = @(
     "-3.13",
     "-m",
@@ -399,6 +400,29 @@ Write-Host "=== HISTORICAL RECOVERY RELEASE ===" -ForegroundColor Cyan
 & py @ReleaseArgs
 $ReleaseExit = $LASTEXITCODE
 
+$CleanPath = Join-Path $ReleaseDir "rebuild\clean-rebuild.json"
+if (
+    $ReleaseExit -ne 0 -and
+    (Test-Path -LiteralPath $PrivateDiagnostic -PathType Leaf) -and
+    (Test-Path -LiteralPath $CleanPath -PathType Leaf)
+) {
+    Invoke-PyChecked "BIND JAVAC DIAGNOSTIC TO TOOLING AUTHORITY" @(
+        "-3.13",
+        "-m",
+        "spk_recovery.javac_build_binding_cli",
+        $PrivateDiagnostic,
+        $CleanPath,
+        "--expected-build-id",
+        "v307",
+        "--expected-authority-sha256",
+        $ExpectedClient,
+        "--tooling-commit",
+        $Head,
+        "--out",
+        $JavacBuildBinding
+    )
+}
+
 if ($ReleaseExit -ne 0) {
     $RunPath = Join-Path $ReleaseDir "release-run.json"
     if (Test-Path -LiteralPath $RunPath -PathType Leaf) {
@@ -413,6 +437,10 @@ if ($ReleaseExit -ne 0) {
         Write-Host "terminal_stage=$($RunDoc.terminal_stage)"
         Write-Host "status=$($RunDoc.status)"
         Write-Host "ready_for_release=$($RunDoc.ready_for_release)"
+    }
+
+    if (Test-Path -LiteralPath $JavacBuildBinding -PathType Leaf) {
+        Write-Host "javac_build_binding=$JavacBuildBinding"
     }
 
     if (Test-Path -LiteralPath $PrivateDiagnostic -PathType Leaf) {

@@ -17,6 +17,7 @@ class JavacBuildBindingError(ValueError):
 
 
 _HEX64_RE = re.compile(r"^[0-9a-f]{64}$")
+_COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 _REBUILD_ID_RE = re.compile(r"^CLEANBUILD_[0-9A-F]{20}$")
 
 
@@ -36,6 +37,7 @@ def build_javac_build_binding(
     *,
     expected_build_id: str,
     expected_authority_sha256: str,
+    tooling_commit: str,
 ) -> dict[str, Any]:
     try:
         _validate_report(diagnostic_report, "diagnostic")
@@ -63,6 +65,13 @@ def build_javac_build_binding(
             "expected authority SHA-256 must be lowercase 64-hex"
         )
     expected_sha = expected_authority_sha256
+    if (
+        not isinstance(tooling_commit, str)
+        or _COMMIT_RE.fullmatch(tooling_commit) is None
+    ):
+        raise JavacBuildBindingError(
+            "tooling commit must be lowercase 40-hex"
+        )
 
     build_id = clean_rebuild_report.get("build_id")
     if build_id != expected_build_id:
@@ -169,6 +178,7 @@ def build_javac_build_binding(
         )
 
     material = {
+        "tooling_commit": tooling_commit,
         "build_id": build_id,
         "source_authority_sha256": authority_sha,
         "rebuild_id": rebuild_id,
@@ -191,8 +201,9 @@ def build_javac_build_binding(
         "identifiers_included": False,
         "note": (
             "Binds one private javac diagnostic authority to the exact "
-            "clean-rebuild build/source authority that produced it. "
-            "No raw source paths, symbols, locations or messages are emitted."
+            "clean-rebuild build/source authority and recovery-tooling "
+            "commit that produced it. No raw source paths, symbols, "
+            "locations or messages are emitted."
         ),
     }
 

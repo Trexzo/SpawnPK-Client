@@ -46,6 +46,17 @@ class CrossVersionJavacRunnerTests(unittest.TestCase):
             "\\release\\rebuild\\clean-rebuild.json",
             text,
         )
+        self.assertIn(
+            "SpawnPK-Historical-v307-Backtest"
+            "\\recovery-release\\release"
+            "\\javac-build-binding.json",
+            text,
+        )
+        self.assertIn(
+            "SpawnPK-SourceM1-Exact"
+            "\\release\\javac-build-binding.json",
+            text,
+        )
         self.assertIn("git -C $Repo fetch origin main", text)
         self.assertIn(
             "Local HEAD is not exact origin/main",
@@ -83,6 +94,15 @@ class CrossVersionJavacRunnerTests(unittest.TestCase):
         self.assertIn('--expected-build-id"', text)
         self.assertIn('"v307"', text)
         self.assertIn('"v308"', text)
+        self.assertIn('"--tooling-commit"', text)
+        self.assertIn(
+            "Recovery tooling commit mismatch",
+            text,
+        )
+        self.assertIn(
+            "recorded javac build binding failed verification",
+            text,
+        )
         self.assertIn(
             "build binding does not match comparator input authority",
             text,
@@ -98,6 +118,7 @@ class CrossVersionJavacRunnerTests(unittest.TestCase):
 
         for marker in (
             "REPORT_ID=",
+            "INPUT_TOOLING_COMMIT=",
             "V307_BINDING_ID=",
             "V308_BINDING_ID=",
             "V307_SOURCE_AUTHORITY=",
