@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 6,
+  "review_id": "SEMREVIEW_25C30BA83850CAF48CA4",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_996D4761C72616F1AA5D",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000196",
+      "owner_logical_id": "CLIENT_CLASS_000196",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/M",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "UiUtils",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/gui/M as rs.gui.UiUtils."
+        },
+        {
+          "family": "exact_v308_gui_contract",
+          "detail": "Exact v308 confirms static Swing/UI helper surface for look-and-feel/font/button/tray-icon/popup-menu operations."
+        },
+        {
+          "family": "exact_gui_family_join",
+          "detail": "The owner participates in the live Swing client-frame/tray/config presentation layer and is referenced by launcher/UI or R411/R412 configuration code."
+        }
+      ],
+      "note": "Source-proven GUI root identity with exact-v308 type/behavior corroboration."
+    },
+    {
+      "proposal_id": "SEMPROP_A3348392EF2CC67497EE",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000280",
+      "owner_logical_id": "CLIENT_CLASS_000280",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/u",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientFrame",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/gui/u as rs.gui.ClientFrame."
+        },
+        {
+          "family": "exact_v308_gui_contract",
+          "detail": "Exact v308 confirms JFrame subclass owning resize/contain mode state, screen bounds/maximize handling and client-frame geometry policy."
+        },
+        {
+          "family": "exact_gui_family_join",
+          "detail": "The owner participates in the live Swing client-frame/tray/config presentation layer and is referenced by launcher/UI or R411/R412 configuration code."
+        }
+      ],
+      "note": "Source-proven GUI root identity with exact-v308 type/behavior corroboration."
+    },
+    {
+      "proposal_id": "SEMPROP_A4FA171A7808A9911B59",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000282",
+      "owner_logical_id": "CLIENT_CLASS_000282",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/v",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ResizeType",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/gui/v as rs.gui.ResizeType."
+        },
+        {
+          "family": "exact_v308_gui_contract",
+          "detail": "Exact v308 confirms two-value enum with display string used by ClientFrame/RuneLiteConfig resize policy."
+        },
+        {
+          "family": "exact_gui_family_join",
+          "detail": "The owner participates in the live Swing client-frame/tray/config presentation layer and is referenced by launcher/UI or R411/R412 configuration code."
+        }
+      ],
+      "note": "Source-proven GUI root identity with exact-v308 type/behavior corroboration."
+    },
+    {
+      "proposal_id": "SEMPROP_C19996F8D9573DB2A68B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000197",
+      "owner_logical_id": "CLIENT_CLASS_000197",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/N",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TrayMouseListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/gui/N as rs.gui.TrayMouseListener."
+        },
+        {
+          "family": "exact_v308_gui_contract",
+          "detail": "Exact v308 confirms MouseAdapter capturing one Frame and handling tray-icon mouse clicks for that frame."
+        },
+        {
+          "family": "exact_gui_family_join",
+          "detail": "The owner participates in the live Swing client-frame/tray/config presentation layer and is referenced by launcher/UI or R411/R412 configuration code."
+        }
+      ],
+      "note": "Source-proven GUI root identity with exact-v308 type/behavior corroboration."
+    },
+    {
+      "proposal_id": "SEMPROP_D02C05FCEB25A7B6F8F0",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000281",
+      "owner_logical_id": "CLIENT_CLASS_000281",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/u$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ContainMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/gui/u$a as rs.gui.ContainMode."
+        },
+        {
+          "family": "exact_v308_gui_contract",
+          "detail": "Exact v308 confirms three-value enum owned by ClientFrame and used to control containment/bounds behavior."
+        },
+        {
+          "family": "exact_gui_family_join",
+          "detail": "The owner participates in the live Swing client-frame/tray/config presentation layer and is referenced by launcher/UI or R411/R412 configuration code."
+        }
+      ],
+      "note": "Source-proven GUI root identity with exact-v308 type/behavior corroboration."
+    },
+    {
+      "proposal_id": "SEMPROP_F5D36B783BBB8497C29F",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000263",
+      "owner_logical_id": "CLIENT_CLASS_000263",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorScheme",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/gui/d as rs.gui.ColorScheme."
+        },
+        {
+          "family": "exact_v308_gui_contract",
+          "detail": "Exact v308 confirms static palette holder containing the shared GUI Color constants."
+        },
+        {
+          "family": "exact_gui_family_join",
+          "detail": "The owner participates in the live Swing client-frame/tray/config presentation layer and is referenced by launcher/UI or R411/R412 configuration code."
+        }
+      ],
+      "note": "Source-proven GUI root identity with exact-v308 type/behavior corroboration."
+    }
+  ],
+  "unresolved": []
+}
