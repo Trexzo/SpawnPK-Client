@@ -4936,12 +4936,20 @@ def _normalize_erased_iterator_assignment_casts(
             for assignment in assignments:
                 source_type = assignment.group("type")
                 source_simple = source_type.rsplit(".", 1)[-1]
-                hits = [
-                    (index, target)
-                    for index, target in enumerate(remaining)
-                    if target.rsplit("/", 1)[-1].rsplit("$", 1)[-1]
-                    == source_simple
-                ]
+                if "." in source_type:
+                    expected_target = source_type.replace(".", "/")
+                    hits = [
+                        (index, target)
+                        for index, target in enumerate(remaining)
+                        if target == expected_target
+                    ]
+                else:
+                    hits = [
+                        (index, target)
+                        for index, target in enumerate(remaining)
+                        if target.rsplit("/", 1)[-1].rsplit("$", 1)[-1]
+                        == source_simple
+                    ]
                 if len(hits) != 1:
                     exact_ok = False
                     break
