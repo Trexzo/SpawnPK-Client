@@ -3866,11 +3866,41 @@ def _normalize_invokedynamic_lambda_outer_capture_collisions(
                 bootstrap_method = bootstrap.get(
                     "bootstrap_method", {}
                 )
+                bootstrap_name = str(
+                    bootstrap_method.get("name", "")
+                )
+                bootstrap_descriptor = str(
+                    bootstrap_method.get("descriptor", "")
+                )
+                expected_bootstrap_descriptors = {
+                    "metafactory": (
+                        "(Ljava/lang/invoke/MethodHandles$Lookup;"
+                        "Ljava/lang/String;"
+                        "Ljava/lang/invoke/MethodType;"
+                        "Ljava/lang/invoke/MethodType;"
+                        "Ljava/lang/invoke/MethodHandle;"
+                        "Ljava/lang/invoke/MethodType;)"
+                        "Ljava/lang/invoke/CallSite;"
+                    ),
+                    "altMetafactory": (
+                        "(Ljava/lang/invoke/MethodHandles$Lookup;"
+                        "Ljava/lang/String;"
+                        "Ljava/lang/invoke/MethodType;"
+                        "[Ljava/lang/Object;)"
+                        "Ljava/lang/invoke/CallSite;"
+                    ),
+                }
                 if not (
                     bootstrap_method.get("owner")
                     == "java/lang/invoke/LambdaMetafactory"
-                    and bootstrap_method.get("name")
-                    in {"metafactory", "altMetafactory"}
+                    and bootstrap_name in expected_bootstrap_descriptors
+                    and bootstrap_descriptor
+                    == expected_bootstrap_descriptors[bootstrap_name]
+                    and bootstrap_method.get("target_kind") == "method"
+                    and int(
+                        bootstrap_method.get("reference_kind", -1)
+                    )
+                    == 6
                 ):
                     continue
 
