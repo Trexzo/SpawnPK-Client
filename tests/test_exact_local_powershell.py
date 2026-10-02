@@ -132,6 +132,10 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 "/normalization_summary/invokedynamic_image_loader_local_action_count",
             "invokedynamic_image_loader_local_reference_count":
                 "/normalization_summary/invokedynamic_image_loader_local_reference_count",
+            "imported_outer_nested_static_field_action_count":
+                "/normalization_summary/shadowed_imported_outer_nested_static_field_action_count",
+            "imported_outer_nested_static_field_reference_count":
+                "/normalization_summary/shadowed_imported_outer_nested_static_field_reference_count",
         }
         for name, pointer in expected.items():
             self.assertIn(
@@ -164,6 +168,12 @@ class ExactLocalPowerShellTests(unittest.TestCase):
             '$($Recovered.invokedynamic_image_loader_local_reference_count)',
             script,
         )
+        self.assertIn(
+            'IMPORTED_OUTER_NESTED_STATIC_FIELD_REFERENCES='
+            '$($Recovered.imported_outer_nested_static_field_reference_count)',
+            script,
+        )
+
 
 
     def test_private_frontier_focus_file_count_is_configurable(self):

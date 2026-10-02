@@ -6839,6 +6839,450 @@ def _normalize_imported_parameter_types_shadowed_by_same_package(
     return actions
 
 
+def _normalize_imported_outer_nested_static_fields_shadowed_by_values(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Qualify imported Outer.Nested.FIELD when Outer is value-shadowed.
+
+    This is distinct from the nested-name shadow rule: here the nested class
+    name is valid, but the explicitly imported outer simple name is hidden by
+    a field, parameter, or local in the current source scope.  Rewrite only
+    exact nested static fields whose getstatic/putstatic owner/name multiset
+    matches one uniquely correlated readable JVM method.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+
+    imports: dict[str, str] = {}
+    duplicates: set[str] = set()
+    for import_match in _SINGLE_TYPE_IMPORT_RE.finditer(text):
+        dotted = import_match.group("name")
+        simple = dotted.rsplit(".", 1)[-1]
+        internal = dotted.replace(".", "/")
+        previous = imports.get(simple)
+        if previous is not None and previous != internal:
+            duplicates.add(simple)
+        else:
+            imports[simple] = internal
+    for simple in duplicates:
+        imports.pop(simple, None)
+    if not imports:
+        return []
+
+    entries = {
+        info.filename
+        for info in readable_zip.infolist()
+        if not info.is_dir() and info.filename.endswith(".class")
+    }
+    hierarchy = _read_readable_hierarchy(
+        readable_zip=readable_zip,
+        internal_name=current_owner,
+    )
+    nested_cache: dict[str, Any] = {}
+
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(text):
+        brace_start = text.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(text, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_text = text[method_match.start():body_end]
+        method_code = _java_code_mask(method_text)
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+
+        occurrences: list[dict[str, Any]] = []
+        total_source_counts: dict[tuple[str, str], int] = {}
+
+        for simple, imported_owner in sorted(imports.items()):
+            reference_parameter, reference_local_spans = (
+                _same_name_value_shadow_spans(
+                    method_match=method_match,
+                    method_code=method_code,
+                    simple_name=simple,
+                )
+            )
+            primitive_parameter, primitive_local_spans = (
+                _primitive_same_name_value_shadow_spans(
+                    method_match=method_match,
+                    method_code=method_code,
+                    simple_name=simple,
+                )
+            )
+
+            hierarchy_shadow_owner: str | None = None
+            for owner, parsed in hierarchy:
+                declarations = [
+                    field
+                    for field in parsed.fields
+                    if (
+                        str(field.get("name", "")) == simple
+                        and _field_visible_from(
+                            declaring_owner=owner,
+                            current_owner=current_owner,
+                            access=int(field.get("access", 0)),
+                        )
+                    )
+                ]
+                if not declarations:
+                    continue
+                if len(declarations) == 1:
+                    hierarchy_shadow_owner = owner
+                break
+
+            whole_method_shadow = bool(
+                hierarchy_shadow_owner
+                or reference_parameter
+                or primitive_parameter
+            )
+            local_shadow_spans = sorted(
+                set(reference_local_spans + primitive_local_spans)
+            )
+            if not whole_method_shadow and not local_shadow_spans:
+                continue
+
+            token_re = re.compile(
+                r"(?<![A-Za-z0-9_$.])"
+                + re.escape(simple)
+                + r"\.(?P<nested>[A-Za-z_$][A-Za-z0-9_$]*)"
+                r"\.(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+                r"(?!\s*\()"
+            )
+            qualified_outer = imported_owner.replace("/", ".")
+            qualified_re = re.compile(
+                r"(?<![A-Za-z0-9_$.])"
+                + re.escape(qualified_outer)
+                + r"\.(?P<nested>[A-Za-z_$][A-Za-z0-9_$]*)"
+                r"\.(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+                r"(?!\s*\()"
+            )
+
+            candidate_tokens = list(token_re.finditer(method_code))
+            candidate_tokens.extend(
+                qualified_re.finditer(method_code)
+            )
+            for token in candidate_tokens:
+                nested_simple = token.group("nested")
+                field_name = token.group("field")
+                nested_owner = imported_owner + "$" + nested_simple
+                if nested_owner + ".class" not in entries:
+                    continue
+                parsed = nested_cache.get(nested_owner)
+                if parsed is None:
+                    try:
+                        parsed = parse_class(
+                            readable_zip.read(nested_owner + ".class")
+                        )
+                    except (KeyError, ClassFormatError):
+                        continue
+                    nested_cache[nested_owner] = parsed
+                if parsed.name != nested_owner:
+                    continue
+                declarations = [
+                    field
+                    for field in parsed.fields
+                    if (
+                        str(field.get("name", "")) == field_name
+                        and int(field.get("access", 0)) & 0x0008
+                        and _field_visible_from(
+                            declaring_owner=nested_owner,
+                            current_owner=current_owner,
+                            access=int(field.get("access", 0)),
+                        )
+                    )
+                ]
+                if len(declarations) != 1:
+                    continue
+                key = (nested_owner, field_name)
+                total_source_counts[key] = (
+                    total_source_counts.get(key, 0) + 1
+                )
+
+            for token in token_re.finditer(method_code):
+                if not (
+                    whole_method_shadow
+                    or any(
+                        start <= token.start() < end
+                        for start, end in local_shadow_spans
+                    )
+                ):
+                    continue
+
+                nested_simple = token.group("nested")
+                field_name = token.group("field")
+                nested_owner = (
+                    imported_owner + "$" + nested_simple
+                )
+                if nested_owner + ".class" not in entries:
+                    continue
+
+                parsed = nested_cache.get(nested_owner)
+                if parsed is None:
+                    try:
+                        parsed = parse_class(
+                            readable_zip.read(
+                                nested_owner + ".class"
+                            )
+                        )
+                    except (KeyError, ClassFormatError):
+                        continue
+                    nested_cache[nested_owner] = parsed
+                if parsed.name != nested_owner:
+                    continue
+
+                declarations = [
+                    field
+                    for field in parsed.fields
+                    if (
+                        str(field.get("name", "")) == field_name
+                        and int(field.get("access", 0)) & 0x0008
+                        and _field_visible_from(
+                            declaring_owner=nested_owner,
+                            current_owner=current_owner,
+                            access=int(field.get("access", 0)),
+                        )
+                    )
+                ]
+                if len(declarations) != 1:
+                    continue
+
+                java_nested_owner = (
+                    imported_owner.replace("/", ".")
+                    + "."
+                    + nested_simple
+                )
+                occurrences.append(
+                    {
+                        "start": (
+                            method_match.start()
+                            + token.start()
+                        ),
+                        "end": (
+                            method_match.start()
+                            + token.end()
+                        ),
+                        "outer_simple": simple,
+                        "imported_owner": imported_owner,
+                        "nested_owner": nested_owner,
+                        "field_name": field_name,
+                        "replacement": (
+                            "(("
+                            + java_nested_owner
+                            + ")null)."
+                            + field_name
+                        ),
+                        "hierarchy_shadow_owner": (
+                            hierarchy_shadow_owner
+                        ),
+                        "reference_parameter_shadow": (
+                            reference_parameter
+                        ),
+                        "primitive_parameter_shadow": (
+                            primitive_parameter
+                        ),
+                        "reference_local_shadow_scope_count": (
+                            len(reference_local_spans)
+                        ),
+                        "primitive_local_shadow_scope_count": (
+                            len(primitive_local_spans)
+                        ),
+                    }
+                )
+
+        if not occurrences:
+            continue
+
+        selected_counts: dict[tuple[str, str], int] = {}
+        for occurrence in occurrences:
+            key = (
+                str(occurrence["nested_owner"]),
+                str(occurrence["field_name"]),
+            )
+            selected_counts[key] = selected_counts.get(key, 0) + 1
+
+        if not all(
+            total_source_counts.get(key, 0) >= count
+            for key, count in selected_counts.items()
+        ):
+            continue
+
+        counts = {
+            key: count
+            for key, count in total_source_counts.items()
+            if key in selected_counts
+        }
+
+        candidates: list[dict[str, Any]] = []
+        for exact_method in profile.get("methods", []):
+            if (
+                exact_method.get("name")
+                != method_match.group("name")
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+            descriptor = str(
+                exact_method.get("descriptor", "")
+            )
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+
+            byte_counts: dict[tuple[str, str], int] = {}
+            for access in exact_method.get(
+                "field_accesses", []
+            ):
+                if access.get("operation") not in {
+                    "getstatic", "putstatic"
+                }:
+                    continue
+                key = (
+                    str(access.get("owner", "")),
+                    str(access.get("name", "")),
+                )
+                if key in counts:
+                    byte_counts[key] = (
+                        byte_counts.get(key, 0) + 1
+                    )
+
+            if byte_counts == counts:
+                candidates.append(exact_method)
+
+        if len(candidates) != 1:
+            continue
+
+        exact_method = candidates[0]
+        for occurrence in occurrences:
+            edits.append(
+                (
+                    int(occurrence["start"]),
+                    int(occurrence["end"]),
+                    str(occurrence["replacement"]),
+                )
+            )
+
+        actions.append(
+            {
+                "kind": (
+                    "shadowed_imported_outer_nested_static_field_owner_type_context"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": exact_method["descriptor"],
+                "imported_owners": sorted(
+                    {
+                        str(row["imported_owner"])
+                        for row in occurrences
+                    }
+                ),
+                "nested_owners": sorted(
+                    {
+                        str(row["nested_owner"])
+                        for row in occurrences
+                    }
+                ),
+                "field_access_counts": {
+                    owner + "." + field: count
+                    for (owner, field), count
+                    in sorted(counts.items())
+                },
+                "hierarchy_shadow_owners": sorted(
+                    {
+                        str(row["hierarchy_shadow_owner"])
+                        for row in occurrences
+                        if row["hierarchy_shadow_owner"]
+                    }
+                ),
+                "reference_parameter_shadow": any(
+                    bool(row["reference_parameter_shadow"])
+                    for row in occurrences
+                ),
+                "primitive_parameter_shadow": any(
+                    bool(row["primitive_parameter_shadow"])
+                    for row in occurrences
+                ),
+                "reference_local_shadow_scope_count": max(
+                    int(
+                        row[
+                            "reference_local_shadow_scope_count"
+                        ]
+                    )
+                    for row in occurrences
+                ),
+                "primitive_local_shadow_scope_count": max(
+                    int(
+                        row[
+                            "primitive_local_shadow_scope_count"
+                        ]
+                    )
+                    for row in occurrences
+                ),
+                "replacement_count": len(occurrences),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_imported_outer_type_hidden_before_nested_static_field"
+                    ),
+                    "strategy": (
+                        "explicit_import_shadow_scope_plus_exact_nested_getstatic_multiset"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping imported-outer nested-field edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_imported_static_field_owners_shadowed_by_values(
     *,
     source_root: Path,
@@ -9452,6 +9896,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_imported_outer_nested_static_fields_shadowed_by_values(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_imported_static_field_owners_shadowed_by_values(
                         source_root=source_root,
                         path=path,
@@ -9739,6 +10190,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "imported_parameter_type_shadowed_by_same_package"
+        ),
+        "shadowed_imported_outer_nested_static_field_action_count": sum(
+            action["kind"]
+            == "shadowed_imported_outer_nested_static_field_owner_type_context"
+            for action in actions
+        ),
+        "shadowed_imported_outer_nested_static_field_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "shadowed_imported_outer_nested_static_field_owner_type_context"
         ),
         "shadowed_imported_static_field_action_count": sum(
             action["kind"]

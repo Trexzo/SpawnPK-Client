@@ -2340,6 +2340,264 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+    def test_imported_outer_nested_static_field_shadow_uses_exact_owner(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/r.java": (
+                        "package dep;\n"
+                        "public class r {\n"
+                        "    public static class a {\n"
+                        "        public static final a d = new a();\n"
+                        "    }\n"
+                        "    public static void use(a mode, byte[] x, byte[] y) {}\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "import dep.r;\n"
+                        "public class Current {\n"
+                        "    public int r;\n"
+                        "    public void load(byte[] x, byte[] y) {\n"
+                        "        dep.r.use(dep.r.a.d, x, y);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package use;\n"
+                "import dep.r;\n"
+                "public class Current {\n"
+                "    public int r;\n"
+                "    public void load(byte[] x, byte[] y) {\n"
+                "        r.use(r.a.d, x, y);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-imported-outer-nested-field"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "dep.r.use(((dep.r.a)null).d, x, y);",
+                normalized,
+            )
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "shadowed_imported_outer_nested_static_field_owner_type_context"
+            )
+            self.assertEqual(action["imported_owners"], ["dep/r"])
+            self.assertEqual(action["nested_owners"], ["dep/r$a"])
+            self.assertEqual(
+                action["field_access_counts"],
+                {"dep/r$a.d": 1},
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_imported_outer_nested_static_field_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-imported-outer-nested-field"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_imported_outer_nested_static_field_shadow_is_scope_bounded(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/r.java": (
+                        "package dep;\n"
+                        "public class r {\n"
+                        "    public static class a {\n"
+                        "        public static int d = 7;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "import dep.r;\n"
+                        "public class Current {\n"
+                        "    public static int load(boolean flag) {\n"
+                        "        if (flag) {\n"
+                        "            byte[] r = null;\n"
+                        "            return dep.r.a.d;\n"
+                        "        }\n"
+                        "        return dep.r.a.d;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package use;\n"
+                "import dep.r;\n"
+                "public class Current {\n"
+                "    public static int load(boolean flag) {\n"
+                "        if (flag) {\n"
+                "            byte[] r = null;\n"
+                "            return r.a.d;\n"
+                "        }\n"
+                "        return dep.r.a.d;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-imported-outer-nested-scope"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "return ((dep.r.a)null).d;",
+                normalized,
+            )
+            self.assertIn(
+                "return dep.r.a.d;",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "shadowed_imported_outer_nested_static_field_owner_type_context"
+            )
+            self.assertEqual(
+                action["reference_local_shadow_scope_count"],
+                1,
+            )
+            self.assertEqual(action["replacement_count"], 1)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-imported-outer-nested-scope"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_imported_outer_nested_static_field_shadow_fails_on_count_drift(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/r.java": (
+                        "package dep;\n"
+                        "public class r {\n"
+                        "    public static class a {\n"
+                        "        public static final int d = 7;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "import dep.r;\n"
+                        "public class Current {\n"
+                        "    public int r;\n"
+                        "    public int load() { return dep.r.a.d; }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package use;\n"
+                "import dep.r;\n"
+                "public class Current {\n"
+                "    public int r;\n"
+                "    public int load() { return r.a.d + r.a.d; }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_imported_outer_nested_static_field_reference_count"
+                ],
+                0,
+            )
+
     def test_imported_static_field_shadow_in_static_method_forces_type_context(
         self,
     ):
