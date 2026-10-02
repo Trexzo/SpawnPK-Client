@@ -3148,6 +3148,62 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 after.stdout + after.stderr,
             )
 
+    def test_erased_generic_constructor_argument_cast_requires_field_owner(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Cache.java": (
+                        "package p;\n"
+                        "public class Cache<K, V> {\n"
+                        "    public V e(K key) { return null; }\n"
+                        "}\n"
+                    ),
+                    "p/Key.java": (
+                        "package p;\n"
+                        "public class Key { public Key(int value) {} }\n"
+                    ),
+                    "p/Buffer.java": (
+                        "package p;\n"
+                        "public class Buffer {}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "public class A {\n"
+                        "    private final Cache<Key, Buffer> cache = new Cache<>();\n"
+                        "    public Buffer get(int value) {\n"
+                        "        return cache.e(new Key(value));\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "public class A {\n"
+                "    private final OtherCache<Key, Buffer> cache = null;\n"
+                "    public Buffer get(int value) {\n"
+                "        return (Buffer)this.cache.e((Object)new Key(value));\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "erased_generic_constructor_argument_cast_action_count"
+                ],
+                0,
+            )
+
     def test_erased_generic_constructor_argument_cast_fails_on_return_drift(
         self,
     ):
