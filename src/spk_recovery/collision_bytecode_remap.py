@@ -36,6 +36,17 @@ def _stable_digest(value: Any) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
+def _private_mapping_sha256(mapping: dict[str, str]) -> str:
+    material = [
+        {
+            "old_internal_name": old,
+            "new_internal_name": mapping[old],
+        }
+        for old in sorted(mapping)
+    ]
+    return _stable_digest(material)
+
+
 def _u2(data: bytes, offset: int) -> int:
     if offset + 2 > len(data):
         raise CollisionBytecodeRemapError(
@@ -500,6 +511,13 @@ def transform_collision_jar(
         class_names,
         plan,
     )
+    explicit_mapping = {
+        str(row["old_internal_name"]): str(row["new_internal_name"])
+        for row in plan.get("remaps", [])
+    }
+    private_mapping_sha256 = _private_mapping_sha256(
+        explicit_mapping
+    )
 
     pre = analyze_namespace_collisions(input_jar)
     if pre["report_id"] != plan.get("collision_report_id"):
@@ -616,6 +634,7 @@ def transform_collision_jar(
     output_sha = _sha256_file(output_jar)
     public_material = {
         "plan_id": plan["plan_id"],
+        "private_mapping_sha256": private_mapping_sha256,
         "input_jar_sha256": input_sha,
         "output_jar_sha256": output_sha,
         "explicit_remap_count": len(plan.get("remaps", [])),
@@ -635,6 +654,7 @@ def transform_collision_jar(
         ),
         "plan_id": plan["plan_id"],
         "collision_report_id": plan["collision_report_id"],
+        "private_mapping_sha256": private_mapping_sha256,
         "input_jar_sha256": input_sha,
         "output_jar_sha256": output_sha,
         "summary": {
