@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/w/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AudioEnvelope",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_envelope_state",
+          "detail": "The class decodes envelope form/start/end plus breakpoint duration/amplitude arrays from Stream, resets interpolation counters, and produces a stepped/interpolated integer value for each synthesis sample."
+        },
+        {
+          "family": "exact_audio_consumers",
+          "detail": "Exact-v308 consumers are the audio filter/instrument synthesis classes only; rs/w/d owns multiple instances for pitch, volume and modulation/envelope stages."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The class has no playback device, MIDI, file or packet behavior; its entire contract is reusable audio-envelope decoding and sample-step interpolation."
+        }
+      ],
+      "note": "Descriptive exact-v308 audio role; no verbatim original stripped identifier is claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/w/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AudioFilter",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_filter_math",
+          "detail": "The class decodes paired filter-stage coefficients and gain/interpolation parameters, computes coefficient tables using pow/sine math and a 11025-Hz frequency basis, and exposes per-channel coefficient counts."
+        },
+        {
+          "family": "exact_instrument_join",
+          "detail": "rs/w/d owns exactly one rs/w/b plus a dedicated rs/w/a control envelope and applies the generated filter coefficients across synthesized sample buffers."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "No MIDI/device/file behavior exists; the class is the coefficient-producing audio filter used by the synthesized instrument path."
+        }
+      ],
+      "note": "Descriptive exact-v308 audio role; no verbatim original stripped identifier is claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/w/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MidiPlayer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_midi_devices",
+          "detail": "The class owns javax.sound.midi Sequence, Sequencer and Synthesizer state, opens/loads sequences, starts/stops playback and accesses MIDI channels."
+        },
+        {
+          "family": "exact_volume_control",
+          "detail": "Volume changes are applied through MIDI channel controller 7 when synthesizer channels are available and through MASTER_GAIN-compatible mixer controls as a fallback."
+        },
+        {
+          "family": "exact_live_consumers",
+          "detail": "Exact-v308 references include Client and the signlink/runtime helper rs/v/a, establishing live client music playback rather than a dormant utility."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "This class is separate from the rs/w/a,b,d,e PCM synthesis stack and specifically owns Java MIDI sequencing/playback."
+        }
+      ],
+      "note": "Descriptive exact-v308 audio role; no verbatim original stripped identifier is claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/w/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SoundInstrument",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_synthesis_graph",
+          "detail": "The class owns multiple AudioEnvelope instances for pitch/volume and modulation stages, oscillator/delay parameter arrays, one AudioFilter and its control envelope."
+        },
+        {
+          "family": "exact_pcm_generation",
+          "detail": "Its synthesis method produces an int[] sample buffer by stepping envelopes, combining oscillators, applying delay/echo-like state and then applying the decoded AudioFilter coefficients."
+        },
+        {
+          "family": "exact_decode_contract",
+          "detail": "Its Stream decoder reconstructs one complete synthesized tone/instrument definition including optional modulation/envelope sections and filter state."
+        },
+        {
+          "family": "exact_container_ownership",
+          "detail": "rs/w/e owns up to ten rs/w/d instances and mixes their generated samples into one sound effect buffer."
+        }
+      ],
+      "note": "Descriptive exact-v308 audio role; no verbatim original stripped identifier is claimed."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/w/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SoundEffect",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_effect_container",
+          "detail": "The class decodes and owns an array of up to ten SoundInstrument records plus effect start/end timing fields."
+        },
+        {
+          "family": "exact_mix_output",
+          "detail": "It requests PCM samples from each instrument, mixes them into a shared byte/sample buffer, and exposes the result through a Stream suitable for the client audio path."
+        },
+        {
+          "family": "exact_static_loading",
+          "detail": "The class maintains the decoded sound-effect registry/static sample workspace and loads effect definitions from the exact-v308 Stream format."
+        },
+        {
+          "family": "exact_live_consumer",
+          "detail": "Client references this effect container directly, establishing it as the live synthesized sound-effect asset path."
+        }
+      ],
+      "note": "Descriptive exact-v308 audio role; no verbatim original stripped identifier is claimed."
+    }
+  ],
+  "conflicts": []
+}
