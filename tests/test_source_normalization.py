@@ -6293,6 +6293,119 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
             )
 
 
+
+class ErasedMapNumberAssignmentTests(unittest.TestCase):
+    def _fixture(self, root: Path, *, exact_drift: bool = False) -> Path:
+        terminal = "byteValue" if exact_drift else "intValue"
+        return _compile_java_fixture(
+            root,
+            {
+                "p/A.java": (
+                    "package p;\n"
+                    "import java.util.Map;\n"
+                    "public class A {\n"
+                    "    public static int parse("
+                    "Map<String, Object> map, String s) {\n"
+                    "        Object value = map.get(s);\n"
+                    "        if (!(value instanceof Number)) {\n"
+                    "            throw new IllegalArgumentException();\n"
+                    "        }\n"
+                    f"        return ((Number)value).{terminal}();\n"
+                    "    }\n"
+                    "}\n"
+                )
+            },
+        )
+
+    def test_erased_map_number_assignment_restores_object_local(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    public static int parse("
+                "Map<String, Object> map, String s) {\n"
+                "        final Number value = map.get(s);\n"
+                "        if (!(value instanceof Number)) {\n"
+                "            throw new IllegalArgumentException();\n"
+                "        }\n"
+                "        return ((Number)value).intValue();\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                ["javac", "-d", str(root / "before"), str(source)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn("final Object value = map.get(s);", normalized)
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_map_number_assignment_reconstruction"
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(action["exact_object_local_slots"], [2])
+            self.assertEqual(
+                report["summary"][
+                    "erased_map_number_assignment_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                ["javac", "-d", str(root / "after"), str(source)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stderr)
+
+    def test_erased_map_number_assignment_fails_closed_on_exact_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, exact_drift=True)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    public static int parse("
+                "Map<String, Object> map, String s) {\n"
+                "        final Number value = map.get(s);\n"
+                "        if (!(value instanceof Number)) {\n"
+                "            throw new IllegalArgumentException();\n"
+                "        }\n"
+                "        return ((Number)value).intValue();\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "erased_map_number_assignment_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
 

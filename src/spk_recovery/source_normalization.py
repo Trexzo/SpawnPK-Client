@@ -3824,6 +3824,249 @@ def _normalize_erased_generic_constructor_argument_casts(
     return actions
 
 
+
+def _normalize_erased_map_number_assignments(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore Object locals for erased Map<String,Object>.get flows.
+
+    Procyon can incorrectly collapse an exact JVM Object local plus a later
+    instanceof/checkcast Number sequence into an illegal source declaration
+    such as Number value = map.get(key). Rewrite only the declaration type
+    back to Object when the source parameter is explicitly Map<String,Object>
+    and one exact readable JVM method proves the complete get -> astore ->
+    instanceof Number -> checkcast Number -> intValue flow.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    map_param_re = re.compile(
+        r"(?:java\.util\.)?Map\s*<\s*String\s*,\s*Object\s*>\s+"
+        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+    )
+    string_param_re = re.compile(
+        r"(?:java\.lang\.)?String\s+"
+        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        params = method_match.group("params")
+        map_params = {
+            match.group("name") for match in map_param_re.finditer(params)
+        }
+        string_params = {
+            match.group("name") for match in string_param_re.finditer(params)
+        }
+        if not map_params or not string_params:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        assignment_re = re.compile(
+            r"\b(?:(?:final)\s+)?(?P<type>Number)\s+"
+            r"(?P<value>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*"
+            r"(?P<map>[A-Za-z_$][A-Za-z0-9_$]*)\s*\.\s*get\s*\(\s*"
+            r"(?P<key>[A-Za-z_$][A-Za-z0-9_$]*)\s*\)\s*;"
+        )
+        assignments = [
+            match
+            for match in assignment_re.finditer(method_code)
+            if match.group("map") in map_params
+            and match.group("key") in string_params
+        ]
+        if not assignments:
+            continue
+
+        proven_assignments: list[re.Match[str]] = []
+        for assignment in assignments:
+            value_name = assignment.group("value")
+            after = method_code[assignment.end():]
+            if not re.search(
+                r"\b" + re.escape(value_name)
+                + r"\s+instanceof\s+Number\b",
+                after,
+            ):
+                continue
+            if not re.search(
+                r"\(\s*Number\s*\)\s*"
+                + re.escape(value_name)
+                + r"\b",
+                after,
+            ):
+                continue
+            proven_assignments.append(assignment)
+        if not proven_assignments:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        candidates: list[dict[str, Any]] = []
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    params,
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+            if _descriptor_return_descriptor(descriptor) != "I":
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            flows: list[int] = []
+            for index, item in enumerate(instructions[:-1]):
+                if not (
+                    item.get("mnemonic") in {"invokeinterface", "invokevirtual"}
+                    and item.get("owner") == "java/util/Map"
+                    and item.get("name") == "get"
+                    and item.get("descriptor")
+                    == "(Ljava/lang/Object;)Ljava/lang/Object;"
+                ):
+                    continue
+                store = instructions[index + 1]
+                if store.get("mnemonic") != "astore":
+                    continue
+                local_index = int(store.get("local_index", -1))
+                if local_index < 0:
+                    continue
+
+                instanceof_seen = False
+                checkcast_intvalue_seen = False
+                for tail_index in range(index + 2, len(instructions)):
+                    if (
+                        tail_index + 1 < len(instructions)
+                        and instructions[tail_index].get("mnemonic") == "aload"
+                        and int(
+                            instructions[tail_index].get("local_index", -1)
+                        ) == local_index
+                        and instructions[tail_index + 1].get("mnemonic")
+                        == "instanceof"
+                        and instructions[tail_index + 1].get("type")
+                        == "java/lang/Number"
+                    ):
+                        instanceof_seen = True
+                    if (
+                        tail_index + 2 < len(instructions)
+                        and instructions[tail_index].get("mnemonic") == "aload"
+                        and int(
+                            instructions[tail_index].get("local_index", -1)
+                        ) == local_index
+                        and instructions[tail_index + 1].get("mnemonic")
+                        == "checkcast"
+                        and instructions[tail_index + 1].get("type")
+                        == "java/lang/Number"
+                        and instructions[tail_index + 2].get("mnemonic")
+                        in {"invokevirtual", "invokeinterface"}
+                        and instructions[tail_index + 2].get("owner")
+                        == "java/lang/Number"
+                        and instructions[tail_index + 2].get("name")
+                        == "intValue"
+                        and instructions[tail_index + 2].get("descriptor")
+                        == "()I"
+                    ):
+                        checkcast_intvalue_seen = True
+                if instanceof_seen and checkcast_intvalue_seen:
+                    flows.append(local_index)
+
+            if len(flows) == len(proven_assignments):
+                candidates.append(
+                    {
+                        "method": exact_method,
+                        "local_slots": flows,
+                    }
+                )
+
+        if len(candidates) != 1:
+            continue
+
+        exact_method = candidates[0]["method"]
+        for assignment in proven_assignments:
+            edits.append(
+                (
+                    method_start + assignment.start("type"),
+                    method_start + assignment.end("type"),
+                    "Object",
+                )
+            )
+
+        actions.append(
+            {
+                "kind": "erased_map_number_assignment_reconstruction",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": exact_method["descriptor"],
+                "map_parameters": sorted(map_params),
+                "string_parameters": sorted(string_params),
+                "exact_object_local_slots": candidates[0]["local_slots"],
+                "replacement_count": len(proven_assignments),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": "procyon_erased_map_get_number_local",
+                    "strategy": (
+                        "source_map_string_object_plus_exact_object_number_flow"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping erased Map Number-local edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _source_simple_type_name(owner: str) -> str:
     return owner.rsplit("/", 1)[-1].rsplit("$", 1)[-1]
 
@@ -8597,6 +8840,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_erased_map_number_assignments(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_invokedynamic_image_loader_locals(
                         source_root=source_root,
                         path=path,
@@ -8836,6 +9086,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "erased_generic_constructor_argument_cast_removal"
+        ),
+        "erased_map_number_assignment_action_count": sum(
+            action["kind"]
+            == "erased_map_number_assignment_reconstruction"
+            for action in actions
+        ),
+        "erased_map_number_assignment_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "erased_map_number_assignment_reconstruction"
         ),
         "invokedynamic_image_loader_local_action_count": sum(
             action["kind"]
