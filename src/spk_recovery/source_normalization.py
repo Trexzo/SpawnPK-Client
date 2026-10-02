@@ -4602,6 +4602,211 @@ def _normalize_erased_map_number_assignments(
     return actions
 
 
+def _normalize_erased_set_int_enhanced_for(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore erased Integer element typing for raw-Set enhanced-for loops.
+
+    Procyon can emit a raw Set local while retaining an enhanced-for loop whose
+    element variable is primitive int. Java source then rejects Object -> int,
+    even though exact JVM bytecode performs Iterator.next(), checkcast Integer,
+    and Integer.intValue(). Wrap only the iterable expression in an explicit
+    java.util.Set<Integer> cast when one exact readable method proves the full
+    erased element flow and the source iterable is a raw Set local.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    raw_set_decl_re = re.compile(
+        r"(?m)(?:^|[;{}]\s*)"
+        r"(?:(?:final)\s+)?"
+        r"(?:(?:java\.util\.)?Set)\s+"
+        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*"
+        r"(?:=|;)"
+    )
+    enhanced_for_re = re.compile(
+        r"for\s*\(\s*int\s+"
+        r"(?P<element>[A-Za-z_$][A-Za-z0-9_$]*)\s*:\s*"
+        r"(?P<iterable>[A-Za-z_$][A-Za-z0-9_$]*)\s*\)"
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        raw_sets = {
+            match.group("name")
+            for match in raw_set_decl_re.finditer(method_code)
+        }
+        if not raw_sets:
+            continue
+
+        loops = [
+            match
+            for match in enhanced_for_re.finditer(method_code)
+            if match.group("iterable") in raw_sets
+        ]
+        if not loops:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        candidates: list[dict[str, Any]] = []
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            set_iterator_calls = sum(
+                1
+                for item in instructions
+                if (
+                    item.get("mnemonic")
+                    in {"invokeinterface", "invokevirtual"}
+                    and item.get("owner") == "java/util/Set"
+                    and item.get("name") == "iterator"
+                    and item.get("descriptor")
+                    == "()Ljava/util/Iterator;"
+                )
+            )
+            exact_flows = 0
+            for index in range(len(instructions) - 2):
+                first = instructions[index]
+                second = instructions[index + 1]
+                third = instructions[index + 2]
+                if not (
+                    first.get("mnemonic") in {
+                        "invokeinterface", "invokevirtual"
+                    }
+                    and first.get("owner") == "java/util/Iterator"
+                    and first.get("name") == "next"
+                    and first.get("descriptor") == "()Ljava/lang/Object;"
+                    and second.get("mnemonic") == "checkcast"
+                    and second.get("type") == "java/lang/Integer"
+                    and third.get("mnemonic") in {
+                        "invokevirtual", "invokeinterface"
+                    }
+                    and third.get("owner") == "java/lang/Integer"
+                    and third.get("name") == "intValue"
+                    and third.get("descriptor") == "()I"
+                ):
+                    continue
+                exact_flows += 1
+
+            if (
+                set_iterator_calls == len(loops)
+                and exact_flows == len(loops)
+            ):
+                candidates.append(
+                    {
+                        "method": exact_method,
+                        "flow_count": exact_flows,
+                        "set_iterator_call_count": set_iterator_calls,
+                    }
+                )
+
+        if len(candidates) != 1:
+            continue
+
+        exact_method = candidates[0]["method"]
+        for loop in loops:
+            iterable = loop.group("iterable")
+            edits.append(
+                (
+                    method_start + loop.start("iterable"),
+                    method_start + loop.end("iterable"),
+                    "((java.util.Set<Integer>)" + iterable + ")",
+                )
+            )
+
+        actions.append(
+            {
+                "kind": "erased_set_int_enhanced_for_reconstruction",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": exact_method["descriptor"],
+                "iterable_names": sorted(
+                    {loop.group("iterable") for loop in loops}
+                ),
+                "exact_set_iterator_call_count": candidates[0][
+                    "set_iterator_call_count"
+                ],
+                "exact_integer_unbox_flow_count": candidates[0][
+                    "flow_count"
+                ],
+                "replacement_count": len(loops),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": "procyon_erased_raw_set_int_enhanced_for",
+                    "strategy": (
+                        "raw_set_source_plus_exact_iterator_integer_unbox_flow"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping erased Set<int> enhanced-for edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _source_simple_type_name(owner: str) -> str:
     return owner.rsplit("/", 1)[-1].rsplit("$", 1)[-1]
 
@@ -9833,6 +10038,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_erased_set_int_enhanced_for(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_invokedynamic_image_loader_locals(
                         source_root=source_root,
                         path=path,
@@ -10101,6 +10313,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "erased_map_number_assignment_reconstruction"
+        ),
+        "erased_set_int_enhanced_for_action_count": sum(
+            action["kind"]
+            == "erased_set_int_enhanced_for_reconstruction"
+            for action in actions
+        ),
+        "erased_set_int_enhanced_for_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "erased_set_int_enhanced_for_reconstruction"
         ),
         "invokedynamic_image_loader_local_action_count": sum(
             action["kind"]
