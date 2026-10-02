@@ -4716,6 +4716,18 @@ def _normalize_erased_set_int_enhanced_for(
                     == "()Ljava/util/Iterator;"
                 )
             )
+            iterator_next_calls = sum(
+                1
+                for item in instructions
+                if (
+                    item.get("mnemonic")
+                    in {"invokeinterface", "invokevirtual"}
+                    and item.get("owner") == "java/util/Iterator"
+                    and item.get("name") == "next"
+                    and item.get("descriptor")
+                    == "()Ljava/lang/Object;"
+                )
+            )
             exact_flows = 0
             for index in range(len(instructions) - 2):
                 first = instructions[index]
@@ -4742,6 +4754,7 @@ def _normalize_erased_set_int_enhanced_for(
 
             if (
                 set_iterator_calls == len(loops)
+                and iterator_next_calls == len(loops)
                 and exact_flows == len(loops)
             ):
                 candidates.append(
@@ -4749,6 +4762,7 @@ def _normalize_erased_set_int_enhanced_for(
                         "method": exact_method,
                         "flow_count": exact_flows,
                         "set_iterator_call_count": set_iterator_calls,
+                        "iterator_next_call_count": iterator_next_calls,
                     }
                 )
 
@@ -4780,6 +4794,9 @@ def _normalize_erased_set_int_enhanced_for(
                 ],
                 "exact_integer_unbox_flow_count": candidates[0][
                     "flow_count"
+                ],
+                "exact_iterator_next_call_count": candidates[0][
+                    "iterator_next_call_count"
                 ],
                 "replacement_count": len(loops),
                 "provenance": {
