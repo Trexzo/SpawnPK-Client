@@ -3041,6 +3041,221 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
             )
 
 
+    def test_map_scan_lambda_capture_aliases_use_exact_indy_shape(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Quad.java": (
+                        "package p;\n"
+                        "@FunctionalInterface\n"
+                        "interface Quad { void accept(int a, int b, int c, int d); }\n"
+                    ),
+                    "p/Item.java": (
+                        "package p;\n"
+                        "class Item {\n"
+                        "    int id;\n"
+                        "    String name;\n"
+                        "    String description;\n"
+                        "}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.ArrayList;\n"
+                        "import java.util.Collections;\n"
+                        "import java.util.HashSet;\n"
+                        "import java.util.List;\n"
+                        "import java.util.Map;\n"
+                        "import java.util.Set;\n"
+                        "public class A {\n"
+                        "    private final Set<String> g = new HashSet<>();\n"
+                        "    private final Set<Integer> h = new HashSet<>();\n"
+                        "    private final List<String> i = new ArrayList<>();\n"
+                        "    private static int number(Map<String, Object> map, String key) { return 1; }\n"
+                        "    private static void consume(byte[] data, Quad consumer) {}\n"
+                        "    private List<Item> items(int object) { return Collections.emptyList(); }\n"
+                        "    public void scan(Map<Integer, Map<String, Object>> configs) {\n"
+                        "        for (Map.Entry<Integer, Map<String, Object>> entry : configs.entrySet()) {\n"
+                        "            Map<String, Object> row = entry.getValue();\n"
+                        "            int region = -1;\n"
+                        "            region = number(row, \"id\");\n"
+                        "            int land = number(row, \"land\");\n"
+                        "            byte[] data = new byte[0];\n"
+                        "            int regionCapture = region;\n"
+                        "            Set<String> seen = new HashSet<>();\n"
+                        "            consume(data, (object, packed, type, rotation) -> {\n"
+                        "                for (Item item : items(object)) {\n"
+                        "                    g.add(item.name);\n"
+                        "                    h.add(regionCapture);\n"
+                        "                    String s = \"object=\" + object + item.id + item.name + item.description;\n"
+                        "                    if (seen.add(s)) {\n"
+                        "                        i.add(\"region=\" + regionCapture"
+                        " + \" yaml=\" + entry.getKey()"
+                        " + \" land=\" + land"
+                        " + \" group=\" + row.getOrDefault(\"group\", \"\")"
+                        " + \" \" + s"
+                        " + \" example=\" + ((regionCapture >> 8) * 64 + (packed >> 6 & 63))"
+                        " + \",\" + ((regionCapture & 255) * 64 + (packed & 63))"
+                        " + \",\" + (packed >> 12)"
+                        " + \" type=\" + type + \" rotation=\" + rotation);\n"
+                        "                    }\n"
+                        "                }\n"
+                        "            });\n"
+                        "        }\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.ArrayList;\n"
+                "import java.util.Collections;\n"
+                "import java.util.HashSet;\n"
+                "import java.util.List;\n"
+                "import java.util.Map;\n"
+                "import java.util.Set;\n"
+                "public class A {\n"
+                "    private final Set<String> g = new HashSet<>();\n"
+                "    private final Set<Integer> h = new HashSet<>();\n"
+                "    private final List<String> i = new ArrayList<>();\n"
+                "    private static int number(Map<String, Object> map, String key) { return 1; }\n"
+                "    private static void consume(byte[] data, Quad consumer) {}\n"
+                "    private List<Item> items(int object) { return Collections.emptyList(); }\n"
+                "    public void scan(Map<Integer, Map<String, Object>> configs) {\n"
+                "        for (Map.Entry<Integer, Map<String, Object>> entry : configs.entrySet()) {\n"
+                "            Map<String, Object> row = entry.getValue();\n"
+                "            int region = -1;\n"
+                "            region = number(row, \"id\");\n"
+                "            int land = number(row, \"land\");\n"
+                "            byte[] data = new byte[0];\n"
+                "            Set<String> seen = new HashSet<>();\n"
+                "            consume(data, (object, packed, type, rotation) -> {\n"
+                "                for (Item item : items(object)) {\n"
+                "                    g.add(item.name);\n"
+                "                    h.add(i);\n"
+                "                    String s = \"object=\" + object + item.id + item.name + item.description;\n"
+                "                    if (set.add(s)) {\n"
+                "                        this.i.add(\"region=\" + i"
+                " + \" yaml=\" + String.valueOf(entry2.getKey())"
+                " + \" land=\" + n5"
+                " + \" group=\" + String.valueOf(map3.getOrDefault(\"group\", \"\"))"
+                " + \" \" + s"
+                " + \" example=\" + ((i >> 8) * 64 + (packed >> 6 & 63))"
+                " + \",\" + ((i & 255) * 64 + (packed & 63))"
+                " + \",\" + (packed >> 12)"
+                " + \" type=\" + type + \" rotation=\" + rotation);\n"
+                "                    }\n"
+                "                }\n"
+                "            });\n"
+                "        }\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac", "-cp", str(jar),
+                    "-d", str(root / "before-map-scan-captures"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn("final int i = region;", normalized)
+            self.assertIn("if (seen.add(s))", normalized)
+            self.assertIn(
+                "String.valueOf(entry.getKey())",
+                normalized,
+            )
+            self.assertIn(
+                "String.valueOf(row.getOrDefault(\"group\", \"\"))",
+                normalized,
+            )
+            self.assertIn(' + " land=" + land', normalized)
+            self.assertNotIn("entry2", normalized)
+            self.assertNotIn("map3", normalized)
+            self.assertNotIn("n5", normalized)
+            self.assertEqual(
+                report["summary"][
+                    "map_scan_lambda_capture_alias_action_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac", "-cp", str(jar),
+                    "-d", str(root / "after-map-scan-captures"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode, 0, after.stdout + after.stderr
+            )
+
+    def test_map_scan_lambda_capture_aliases_fail_on_capture_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Quad.java": (
+                        "package p;\n"
+                        "@FunctionalInterface interface Quad { void accept(int a,int b,int c,int d); }\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Map;\n"
+                        "public class A {\n"
+                        "    static void consume(byte[] data, Quad q) {}\n"
+                        "    public void scan(Map<Integer, Map<String,Object>> configs) {\n"
+                        "        int region = 1;\n"
+                        "        byte[] data = new byte[0];\n"
+                        "        consume(data, (a,b,c,d) -> System.out.println(region + a + b + c + d));\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    static void consume(byte[] data, Quad q) {}\n"
+                "    public void scan(Map<Integer, Map<String,Object>> configs) {\n"
+                "        int region = -1;\n"
+                "        region = 1;\n"
+                "        int land = 2;\n"
+                "        java.util.Set<String> seen = new java.util.HashSet<>();\n"
+                "        consume(new byte[0], (a,b,c,d) -> { System.out.println(region + a + b + c + d); });\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "map_scan_lambda_capture_alias_action_count"
+                ],
+                0,
+            )
+
     def test_iterator_next_assignment_cast_uses_exact_checkcast(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
