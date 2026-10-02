@@ -3221,6 +3221,160 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+
+    def test_intpredicate_parameter_capture_alias_uses_exact_parameter_slot(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Arrays;\n"
+                        "public class A {\n"
+                        "    public boolean contains(int target) {\n"
+                        "        return Arrays.stream(new int[] {1, 2, 3})\n"
+                        "            .anyMatch(value -> value == target);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.Arrays;\n"
+                "public class A {\n"
+                "    public boolean contains(int target) {\n"
+                "        return Arrays.stream(new int[] {1, 2, 3})\n"
+                "            .anyMatch(value -> value == n5);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-intpredicate-param"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("cannot find symbol", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                ".anyMatch(value -> value == target);",
+                normalized,
+            )
+            self.assertNotIn("n5", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "intpredicate_parameter_capture_alias"
+            )
+            self.assertEqual(action["captured_parameter_name"], "target")
+            self.assertEqual(action["undeclared_capture_alias"], "n5")
+            self.assertEqual(action["lambda_parameter_name"], "value")
+            self.assertEqual(action["capture_slot"], 1)
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                report["summary"][
+                    "intpredicate_parameter_capture_alias_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "intpredicate_parameter_capture_alias_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-intpredicate-param"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_intpredicate_parameter_capture_alias_rejects_local_capture(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Arrays;\n"
+                        "public class A {\n"
+                        "    public boolean contains(int packed) {\n"
+                        "        int local = packed >>> 16;\n"
+                        "        return Arrays.stream(new int[] {1, 2, 3})\n"
+                        "            .anyMatch(value -> value == local);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.util.Arrays;\n"
+                "public class A {\n"
+                "    public boolean contains(int packed) {\n"
+                "        int local = packed >>> 16;\n"
+                "        return Arrays.stream(new int[] {1, 2, 3})\n"
+                "            .anyMatch(value -> value == n8);\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "intpredicate_parameter_capture_alias_action_count"
+                ],
+                0,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "intpredicate_parameter_capture_alias_reference_count"
+                ],
+                0,
+            )
+
     def test_invokedynamic_parameter_capture_alias_uses_exact_callsite(
         self,
     ):
