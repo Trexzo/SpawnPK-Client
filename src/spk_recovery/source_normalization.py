@@ -6794,6 +6794,343 @@ def _normalize_undeclared_linkedhashmap_cast_placeholders(
 
 
 
+def _normalize_linkedhashmap_field_cast_placeholders(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Repair undeclared key placeholders on exact map-subclass fields.
+
+    Procyon can emit
+    ((LinkedHashMap<K, Value>)this.field).get(key)
+    even when K is not a declared source type variable.  Reconstruct only
+    that impossible key placeholder from the exact direct LinkedHashMap
+    subclass Signature when it proves a java.lang.String key, and require
+    matching erased get/keySet/put/clear calls in the enclosing exact method.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        parsed = parse_class(class_bytes)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, ClassFormatError, BytecodeProfileError):
+        return []
+
+    current_owner = class_entry[:-6]
+    if parsed.name != current_owner:
+        return []
+    if str(profile.get("internal_name", "")) != current_owner:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    simple_name = current_owner.rsplit("/", 1)[-1]
+    declared_type_parameters = _source_class_type_parameters(
+        whole_code,
+        simple_name=simple_name,
+    )
+    imported = bool(
+        re.search(
+            r"(?m)^\s*import\s+java\.util\.LinkedHashMap\s*;",
+            whole_code,
+        )
+    )
+    if not imported:
+        return []
+
+    exact_fields: dict[str, str] = {}
+    for field in profile.get("fields", []):
+        descriptor = str(field.get("descriptor", ""))
+        if (
+            descriptor.startswith("L")
+            and descriptor.endswith(";")
+        ):
+            exact_fields[str(field.get("name", ""))] = descriptor[1:-1]
+
+    map_fields: dict[str, dict[str, str]] = {}
+    for field_name, target_owner in exact_fields.items():
+        try:
+            target_bytes = readable_zip.read(target_owner + ".class")
+            target_parsed = parse_class(target_bytes)
+            target_utf8 = set(
+                profile_class_utf8_constants(target_bytes)
+            )
+        except (KeyError, ClassFormatError, BytecodeProfileError):
+            continue
+        if not (
+            target_parsed.name == target_owner
+            and target_parsed.super_name == "java/util/LinkedHashMap"
+        ):
+            continue
+        signatures = [
+            value
+            for value in target_utf8
+            if value.startswith(
+                "Ljava/util/LinkedHashMap<Ljava/lang/String;"
+            )
+            and value.endswith(">;")
+        ]
+        if len(signatures) != 1:
+            continue
+        map_fields[field_name] = {
+            "owner": target_owner,
+            "key_source_type": "String",
+            "signature": signatures[0],
+        }
+    if not map_fields:
+        return []
+
+    current_package = current_owner.rpartition("/")[0]
+    cast_start = re.compile(
+        r"\(\(\s*(?P<owner>(?:java\.util\.)?LinkedHashMap)\s*<"
+    )
+
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(text):
+        brace_start = text.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(text, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_text = text[method_match.start():body_end]
+        method_code = _java_code_mask(method_text)
+        occurrences: list[dict[str, Any]] = []
+
+        for cast in cast_start.finditer(method_code):
+            angle_start = cast.end() - 1
+            angle_end = _matching_generic_angle_end(
+                method_code,
+                angle_start,
+            )
+            if angle_end is None:
+                continue
+
+            args_start = angle_start + 1
+            args_text = method_text[args_start:angle_end]
+            spans = _top_level_generic_argument_spans(args_text)
+            if spans is None or len(spans) != 2:
+                continue
+
+            key_start, key_end = spans[0]
+            key_arg = args_text[key_start:key_end]
+            placeholder = key_arg.strip()
+            if not re.fullmatch(r"[A-Z]", placeholder):
+                continue
+            if placeholder in declared_type_parameters:
+                continue
+
+            tail = method_code[angle_end + 1:]
+            use_match = re.match(
+                r"\s*\)\s*this\s*\.\s*"
+                r"(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)"
+                r"\s*\)\s*\.\s*"
+                r"(?P<member>get|keySet|put|clear)\s*\(",
+                tail,
+            )
+            if use_match is None:
+                continue
+
+            field_name = use_match.group("field")
+            field_proof = map_fields.get(field_name)
+            if field_proof is None:
+                continue
+            target_owner = field_proof["owner"]
+            member = use_match.group("member")
+
+            leading = len(key_arg) - len(key_arg.lstrip())
+            trailing = len(key_arg.rstrip())
+            token_start = (
+                method_match.start()
+                + args_start
+                + key_start
+                + leading
+            )
+            token_end = (
+                method_match.start()
+                + args_start
+                + key_start
+                + trailing
+            )
+            occurrences.append(
+                {
+                    "start": token_start,
+                    "end": token_end,
+                    "placeholder": placeholder,
+                    "field_name": field_name,
+                    "field_owner": target_owner,
+                    "field_signature": field_proof["signature"],
+                    "key_source_type": field_proof["key_source_type"],
+                    "member": member,
+                }
+            )
+
+        if not occurrences:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        source_arity = _source_parameter_count(
+            method_match.group("params")
+        )
+        candidates: list[dict[str, Any]] = []
+        for method in profile.get("methods", []):
+            if method.get("name") != method_match.group("name"):
+                continue
+            if (
+                bool(int(method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+            descriptor = str(method.get("descriptor", ""))
+            if _descriptor_parameter_count(descriptor) != source_arity:
+                continue
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is False
+            ):
+                continue
+
+            required_by_owner_member: dict[tuple[str, str], int] = {}
+            for occurrence in occurrences:
+                key = (
+                    str(occurrence["field_owner"]),
+                    str(occurrence["member"]),
+                )
+                required_by_owner_member[key] = (
+                    required_by_owner_member.get(key, 0) + 1
+                )
+            expected_descriptors = {
+                "get": "(Ljava/lang/Object;)Ljava/lang/Object;",
+                "keySet": "()Ljava/util/Set;",
+                "put": (
+                    "(Ljava/lang/Object;Ljava/lang/Object;)"
+                    "Ljava/lang/Object;"
+                ),
+                "clear": "()V",
+            }
+            enough = True
+            for (owner, member), required in (
+                required_by_owner_member.items()
+            ):
+                observed = sum(
+                    invocation.get("operation") == "invokevirtual"
+                    and invocation.get("name") == member
+                    and invocation.get("descriptor")
+                    == expected_descriptors[member]
+                    and invocation.get("owner")
+                    in {owner, "java/util/LinkedHashMap"}
+                    for invocation in method.get(
+                        "method_invocations", []
+                    )
+                )
+                if observed < required:
+                    enough = False
+                    break
+            if enough:
+                candidates.append(method)
+
+        if len(candidates) != 1:
+            continue
+
+        exact_method = candidates[0]
+        for occurrence in occurrences:
+            edits.append(
+                (
+                    int(occurrence["start"]),
+                    int(occurrence["end"]),
+                    str(occurrence["key_source_type"]),
+                )
+            )
+
+        placeholder_counts: dict[str, int] = {}
+        field_counts: dict[str, int] = {}
+        member_counts: dict[str, int] = {}
+        for occurrence in occurrences:
+            placeholder = str(occurrence["placeholder"])
+            field_name = str(occurrence["field_name"])
+            placeholder_counts[placeholder] = (
+                placeholder_counts.get(placeholder, 0) + 1
+            )
+            field_counts[field_name] = (
+                field_counts.get(field_name, 0) + 1
+            )
+            member = str(occurrence["member"])
+            member_counts[member] = (
+                member_counts.get(member, 0) + 1
+            )
+
+        actions.append(
+            {
+                "kind": (
+                    "linkedhashmap_field_key_reconstruction"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": exact_method["descriptor"],
+                "placeholder_counts": dict(
+                    sorted(placeholder_counts.items())
+                ),
+                "field_counts": dict(sorted(field_counts.items())),
+                "member_counts": dict(sorted(member_counts.items())),
+                "field_owners": sorted(
+                    {
+                        str(row["field_owner"])
+                        for row in occurrences
+                    }
+                ),
+                "field_signatures": sorted(
+                    {
+                        str(row["field_signature"])
+                        for row in occurrences
+                    }
+                ),
+                "replacement_count": len(occurrences),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_undeclared_linkedhashmap_field_generic_placeholder"
+                    ),
+                    "strategy": (
+                        "exact_map_field_signature_key_type_reconstruction"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping map-field placeholder edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
+
 def _normalize_linkedhashmap_self_get_result_casts(
     *,
     source_root: Path,
@@ -7173,6 +7510,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_linkedhashmap_field_cast_placeholders(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_linkedhashmap_self_get_result_casts(
                         source_root=source_root,
                         path=path,
@@ -7388,6 +7732,17 @@ def normalize_procyon_source(
             int(action.get("replacement_count", 0))
             for action in actions
             if action["kind"] == "invokedynamic_helper_return_cast"
+        ),
+        "linkedhashmap_field_key_reconstruction_method_count": sum(
+            action["kind"]
+            == "linkedhashmap_field_key_reconstruction"
+            for action in actions
+        ),
+        "linkedhashmap_field_key_reconstruction_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "linkedhashmap_field_key_reconstruction"
         ),
         "undeclared_linkedhashmap_cast_placeholder_method_count": sum(
             action["kind"]
