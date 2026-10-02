@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_B0264B4CDA2A2D771917",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_00AAC11563E5C6B94658",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000875",
+      "owner_logical_id": "CLIENT_CLASS_000875",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/b/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginListItem",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_list_item_shape",
+          "detail": "Exact v308 rs/s/b/o extends JPanel and implements R238 SearchablePlugin; it owns one PluginConfigurationDescriptor, keyword list, enable/pin toggle controls and config/open controls."
+        },
+        {
+          "family": "exact_search_contract",
+          "detail": "Its SearchablePlugin methods expose the descriptor name, keywords and pinned state consumed directly by R238 PluginSearch."
+        },
+        {
+          "family": "upstream_source_match",
+          "detail": "RuneLite PluginListItem extends JPanel implements SearchablePlugin and owns the same plugin descriptor, pin/toggle/config UI behavior and searchable name/keyword/pinned contract."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of RuneLite PluginListItem."
+    },
+    {
+      "proposal_id": "SEMPROP_3021131F16EC58D7737C",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000861",
+      "owner_logical_id": "CLIENT_CLASS_000861",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_panel_shape",
+          "detail": "Exact v308 rs/s/b/a extends R148 PluginPanel and owns ConfigManager, PluginManager, PluginListPanel, fixed-width config content, enum renderers, color/hotkey controls and the currently selected PluginConfigurationDescriptor."
+        },
+        {
+          "family": "exact_config_rendering",
+          "detail": "The class materializes ConfigDescriptor/ConfigItemDescriptor/ConfigSectionDescriptor metadata into Swing controls for booleans, integer ranges, text, colors, enums, hotkeys and list values, persisting edits through ConfigManager."
+        },
+        {
+          "family": "upstream_source_match",
+          "detail": "RuneLite ConfigPanel extends PluginPanel and has the same plugin/config dependencies, descriptor-driven control creation, section expansion, reset behavior and config value widgets represented by exact v308."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of RuneLite ConfigPanel."
+    },
+    {
+      "proposal_id": "SEMPROP_82D81DDDB3ED0151F97E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000877",
+      "owner_logical_id": "CLIENT_CLASS_000877",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/b/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginListPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_panel_shape",
+          "detail": "Exact v308 rs/s/b/q extends R148 PluginPanel, preserves the exact config key 'pinnedPlugins', owns PluginManager/ConfigManager, a Provider<ConfigPanel>, PluginConfigurationDescriptor list and PluginListItem list."
+        },
+        {
+          "family": "exact_search_and_pin_lifecycle",
+          "detail": "The panel filters through R238 PluginSearch, persists pinned plugin names, rebuilds plugin list items, opens ConfigPanel for a selected descriptor and refreshes on PluginChanged events."
+        },
+        {
+          "family": "upstream_source_match",
+          "detail": "RuneLite PluginListPanel extends PluginPanel and preserves the same PINNED_PLUGINS_CONFIG_KEY='pinnedPlugins', PluginManager, Provider<ConfigPanel>, searchable list/pin persistence and PluginListItem construction flow."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of RuneLite PluginListPanel."
+    }
+  ],
+  "unresolved": []
+}
