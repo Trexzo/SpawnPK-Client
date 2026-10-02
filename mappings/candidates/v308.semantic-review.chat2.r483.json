@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_09194F2FA33A34EFF111",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_2ABE082266CA0FC1631B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000910",
+      "owner_logical_id": "CLIENT_CLASS_000910",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner":"rs/s/f/d","name":null,"descriptor":null},
+      "proposed_name": "GroundMarkerPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_plugin_behavior","detail":"Exact v308 rs/s/f/d owns the live CopyOnWriteArrayList<ColorTileMarker>, config persistence under group 'groundMarker', mark/unmark menu injection, color reset/pick actions and conversion between R482 GroundMarkerPoint and ColorTileMarker."},
+        {"family":"exact_persistence_shape","detail":"The plugin serializes region_<id> collections of GroundMarkerPoint through Gson/config storage, reloads them with its nested TypeToken helper, and reconstructs WorldPoint-backed live markers."},
+        {"family":"exact_menu_literals","detail":"Surviving exact-v308 menu text includes 'Mark', '<img=25> Unmark', 'Reset color', 'Pick color' and generated color choices, matching the RuneLite Ground Marker plugin interaction flow."},
+        {"family":"upstream_source_match","detail":"Historical RuneLite GroundMarkerPlugin has the same groundMarker config group, tile-marking menu lifecycle, persisted region markers and ColorTileMarker/GroundMarkerPoint conversion structure."},
+        {"family":"exact_stable_id","detail":"R188 fixes rs/s/f/c as CLIENT_CLASS_000909 and R482 fixes rs/s/f/f as 000912; contiguous exact-v308 class order fixes rs/s/f/d as CLIENT_CLASS_000910."}
+      ],
+      "note":"Source-correlated exact-v308 recovery of the live RuneLite GroundMarkerPlugin controller."
+    },
+    {
+      "proposal_id": "SEMPROP_8E7E61F95975D70AFF58",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000908",
+      "owner_logical_id": "CLIENT_CLASS_000908",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner":"rs/s/f/b","name":null,"descriptor":null},
+      "proposed_name": "GroundMarkerConfig",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_config_literals","detail":"Exact v308 rs/s/f/b is a config interface whose surviving constants are exactly 'groundMarker' and 'showImportExport'; its default methods expose marker color, import/export toggle, label toggle, border width and fill opacity values consumed by R188 GroundMarkerOverlay."},
+        {"family":"exact_overlay_plugin_join","detail":"R188 GroundMarkerOverlay injects rs/s/f/b and reads its marker color/border/fill/label settings while rs/s/f/d injects the same interface as the Ground Marker plugin controller."},
+        {"family":"upstream_source_match","detail":"Historical RuneLite GroundMarkerConfig preserves the same config group 'groundMarker', key 'showImportExport', default marker color and overlay presentation settings, fixing the original source identity."},
+        {"family":"exact_stable_id","detail":"R482 fixes rs/s/f/a at CLIENT_CLASS_000907 and R188 fixes rs/s/f/c at 000909; contiguous exact-v308 class order therefore fixes rs/s/f/b as CLIENT_CLASS_000908."}
+      ],
+      "note":"Source-correlated exact-v308 recovery of RuneLite GroundMarkerConfig."
+    }
+  ],
+  "unresolved": []
+}
