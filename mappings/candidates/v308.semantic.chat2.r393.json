@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [{
+    "schema_version": 1,
+    "kind": "semantic_name_candidate",
+    "canonical": false,
+    "status": "CANDIDATE",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target": {"kind":"class","owner":"rs/n/a/b","name":null,"descriptor":null},
+    "proposed_name": "OverlayComponent",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"recovered_source_map","detail":"Recovered source map identifies rs/n/a/b as rs.interfaces.components.OverlayComponent."},
+      {"family":"exact_v308_component_role","detail":"Recovered source map identifies rs/n/a/b as rs.interfaces.components.OverlayComponent; exact v308 extends SpriteComponent and specializes fixed overlay/background surface construction."},
+      {"family":"exact_interface_family_join","detail":"The class is part of the live rs.interfaces component layer under the reviewed Widget/WidgetManager family and interoperates with the dropdown/layout framework where applicable."}
+    ],
+    "note":"Source-proven interface component identity with exact-v308 behavioral corroboration."
+  }],
+  "conflicts": []
+}
