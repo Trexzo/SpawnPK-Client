@@ -4824,6 +4824,224 @@ def _normalize_erased_set_int_enhanced_for(
     return actions
 
 
+def _normalize_erased_iterator_assignment_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore exact checkcasts lost from raw Iterator.next assignments.
+
+    Procyon can emit a raw Iterator local and then assign next() directly to a
+    concrete reference variable, which is illegal Java because next() erases
+    to Object. Restore only the cast already proven by exact JVM bytecode.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    raw_iterator_decl_re = re.compile(
+        r"(?m)(?:^|[;{}]\s*)"
+        r"(?:(?:final)\s+)?"
+        r"(?:(?:java\.util\.)?Iterator)\s+"
+        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*"
+        r"(?:=|;)"
+    )
+    assignment_re = re.compile(
+        r"(?P<prefix>\b(?:(?:final)\s+)?)"
+        r"(?P<type>[A-Za-z_$][A-Za-z0-9_$.]*)\s+"
+        r"(?P<var>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*"
+        r"(?P<iterator>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\.\s*next\s*\(\s*\)"
+        r"(?P<suffix>\s*;)"
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        raw_iterators = {
+            match.group("name")
+            for match in raw_iterator_decl_re.finditer(method_code)
+        }
+        if not raw_iterators:
+            continue
+
+        assignments = [
+            match
+            for match in assignment_re.finditer(method_code)
+            if match.group("iterator") in raw_iterators
+        ]
+        if not assignments:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        candidates: list[dict[str, Any]] = []
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            exact_types: list[str] = []
+            for index in range(len(instructions) - 1):
+                first = instructions[index]
+                second = instructions[index + 1]
+                if not (
+                    first.get("mnemonic") in {
+                        "invokeinterface", "invokevirtual"
+                    }
+                    and first.get("owner") == "java/util/Iterator"
+                    and first.get("name") == "next"
+                    and first.get("descriptor") == "()Ljava/lang/Object;"
+                    and second.get("mnemonic") == "checkcast"
+                ):
+                    continue
+                target = str(second.get("type", ""))
+                if target:
+                    exact_types.append(target)
+
+            if len(exact_types) != len(assignments):
+                continue
+
+            remaining = list(exact_types)
+            matched: list[tuple[re.Match[str], str]] = []
+            exact_ok = True
+            for assignment in assignments:
+                source_type = assignment.group("type")
+                source_simple = source_type.rsplit(".", 1)[-1]
+                if "." in source_type:
+                    expected_target = source_type.replace(".", "/")
+                    hits = [
+                        (index, target)
+                        for index, target in enumerate(remaining)
+                        if target == expected_target
+                    ]
+                else:
+                    hits = [
+                        (index, target)
+                        for index, target in enumerate(remaining)
+                        if target.rsplit("/", 1)[-1].rsplit("$", 1)[-1]
+                        == source_simple
+                    ]
+                if len(hits) != 1:
+                    exact_ok = False
+                    break
+                index, target = hits[0]
+                remaining.pop(index)
+                matched.append((assignment, target))
+
+            if exact_ok and len(matched) == len(assignments):
+                candidates.append(
+                    {
+                        "method": exact_method,
+                        "matched": matched,
+                    }
+                )
+
+        if len(candidates) != 1:
+            continue
+
+        exact_method = candidates[0]["method"]
+        restored_types: list[str] = []
+        for assignment, target in candidates[0]["matched"]:
+            iterator = assignment.group("iterator")
+            replacement = (
+                "(" + assignment.group("type") + ")"
+                + iterator + ".next()"
+            )
+            rhs_start = assignment.start("iterator")
+            rhs_end = assignment.end("suffix") - len(
+                assignment.group("suffix")
+            )
+            edits.append(
+                (
+                    method_start + rhs_start,
+                    method_start + rhs_end,
+                    replacement,
+                )
+            )
+            restored_types.append(target)
+
+        actions.append(
+            {
+                "kind": "erased_iterator_assignment_cast_reconstruction",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": exact_method["descriptor"],
+                "iterator_names": sorted(
+                    {match.group("iterator") for match in assignments}
+                ),
+                "exact_checkcast_types": sorted(restored_types),
+                "replacement_count": len(assignments),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": "procyon_erased_iterator_next_assignment_cast",
+                    "strategy": (
+                        "raw_iterator_source_plus_exact_next_checkcast_flow"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping erased Iterator.next cast edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _source_simple_type_name(owner: str) -> str:
     return owner.rsplit("/", 1)[-1].rsplit("$", 1)[-1]
 
@@ -10062,6 +10280,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_erased_iterator_assignment_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_invokedynamic_image_loader_locals(
                         source_root=source_root,
                         path=path,
@@ -10341,6 +10566,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "erased_set_int_enhanced_for_reconstruction"
+        ),
+        "erased_iterator_assignment_cast_action_count": sum(
+            action["kind"]
+            == "erased_iterator_assignment_cast_reconstruction"
+            for action in actions
+        ),
+        "erased_iterator_assignment_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "erased_iterator_assignment_cast_reconstruction"
         ),
         "invokedynamic_image_loader_local_action_count": sum(
             action["kind"]
