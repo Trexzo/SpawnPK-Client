@@ -6,6 +6,8 @@ import tempfile
 import unittest
 
 from spk_recovery.bytecode_profile import (
+    BytecodeProfileError,
+    _bootstrap_methods_profile,
     profile_class_field_accesses,
     profile_class_utf8_constants,
 )
@@ -191,6 +193,44 @@ class BytecodeMethodInvocationProfileTests(unittest.TestCase):
                 "(Ljava/lang/String;)Ljava/lang/String;",
             )
 
+
+    def test_bootstrap_profile_rejects_out_of_range_constant_pool_indices(self):
+        method_handle_cp = [
+            None,
+            (15, 6, 99),
+        ]
+        payload = bytes.fromhex("000100010000")
+        with self.assertRaises(BytecodeProfileError):
+            _bootstrap_methods_profile(payload, method_handle_cp)
+
+        argument_cp = [
+            None,
+            (15, 6, 2),
+            (10, 3, 4),
+            (7, 5),
+            (12, 6, 7),
+            (1, "p/A"),
+            (1, "impl"),
+            (1, "()V"),
+        ]
+        payload = bytes.fromhex("0001000100010063")
+        with self.assertRaises(BytecodeProfileError):
+            _bootstrap_methods_profile(payload, argument_cp)
+
+    def test_bootstrap_profile_rejects_invalid_method_handle_kind(self):
+        cp = [
+            None,
+            (15, 0, 2),
+            (10, 3, 4),
+            (7, 5),
+            (12, 6, 7),
+            (1, "p/A"),
+            (1, "impl"),
+            (1, "()V"),
+        ]
+        payload = bytes.fromhex("000100010000")
+        with self.assertRaises(BytecodeProfileError):
+            _bootstrap_methods_profile(payload, cp)
 
     def test_profiles_lambda_bootstrap_implementation_target(self):
         with tempfile.TemporaryDirectory() as td:
