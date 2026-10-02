@@ -3058,12 +3058,12 @@ def _normalize_two_string_swing_capture_aliases(
         )
         if show_index is None or selection_index is None:
             continue
-        if show_index < 2 or selection_index < 1:
+        if show_index < 3 or selection_index < 1:
             continue
         if not (
-            instructions[show_index - 2].get("mnemonic") == "aload"
+            instructions[show_index - 3].get("mnemonic") == "aload"
             and int(
-                instructions[show_index - 2].get("local_index", -1)
+                instructions[show_index - 3].get("local_index", -1)
             )
             == 0
             and instructions[selection_index - 1].get("mnemonic")
