@@ -6144,6 +6144,7 @@ def _normalize_imported_outer_nested_static_fields_shadowed_by_values(
         )
 
         occurrences: list[dict[str, Any]] = []
+        total_source_counts: dict[tuple[str, str], int] = {}
 
         for simple, imported_owner in sorted(imports.items()):
             reference_parameter, reference_local_spans = (
@@ -6199,6 +6200,56 @@ def _normalize_imported_outer_nested_static_fields_shadowed_by_values(
                 r"\.(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\b"
                 r"(?!\s*\()"
             )
+            qualified_outer = imported_owner.replace("/", ".")
+            qualified_re = re.compile(
+                r"(?<![A-Za-z0-9_$.])"
+                + re.escape(qualified_outer)
+                + r"\.(?P<nested>[A-Za-z_$][A-Za-z0-9_$]*)"
+                r"\.(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+                r"(?!\s*\()"
+            )
+
+            candidate_tokens = list(token_re.finditer(method_code))
+            candidate_tokens.extend(
+                qualified_re.finditer(method_code)
+            )
+            for token in candidate_tokens:
+                nested_simple = token.group("nested")
+                field_name = token.group("field")
+                nested_owner = imported_owner + "$" + nested_simple
+                if nested_owner + ".class" not in entries:
+                    continue
+                parsed = nested_cache.get(nested_owner)
+                if parsed is None:
+                    try:
+                        parsed = parse_class(
+                            readable_zip.read(nested_owner + ".class")
+                        )
+                    except (KeyError, ClassFormatError):
+                        continue
+                    nested_cache[nested_owner] = parsed
+                if parsed.name != nested_owner:
+                    continue
+                declarations = [
+                    field
+                    for field in parsed.fields
+                    if (
+                        str(field.get("name", "")) == field_name
+                        and int(field.get("access", 0)) & 0x0008
+                        and _field_visible_from(
+                            declaring_owner=nested_owner,
+                            current_owner=current_owner,
+                            access=int(field.get("access", 0)),
+                        )
+                    )
+                ]
+                if len(declarations) != 1:
+                    continue
+                key = (nested_owner, field_name)
+                total_source_counts[key] = (
+                    total_source_counts.get(key, 0) + 1
+                )
+
             for token in token_re.finditer(method_code):
                 if not (
                     whole_method_shadow
@@ -6293,13 +6344,25 @@ def _normalize_imported_outer_nested_static_fields_shadowed_by_values(
         if not occurrences:
             continue
 
-        counts: dict[tuple[str, str], int] = {}
+        selected_counts: dict[tuple[str, str], int] = {}
         for occurrence in occurrences:
             key = (
                 str(occurrence["nested_owner"]),
                 str(occurrence["field_name"]),
             )
-            counts[key] = counts.get(key, 0) + 1
+            selected_counts[key] = selected_counts.get(key, 0) + 1
+
+        if not all(
+            total_source_counts.get(key, 0) >= count
+            for key, count in selected_counts.items()
+        ):
+            continue
+
+        counts = {
+            key: count
+            for key, count in total_source_counts.items()
+            if key in selected_counts
+        }
 
         candidates: list[dict[str, Any]] = []
         for exact_method in profile.get("methods", []):
