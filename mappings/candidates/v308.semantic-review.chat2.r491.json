@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_F792ED24D9210E740108",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_DB8BBBDA1CEE66988C15",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000881",
+      "owner_logical_id": "CLIENT_CLASS_000881",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/b/u",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginToggleButton",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_toggle_shape",
+          "detail": "Exact-v308 rs/s/b/u extends JToggleButton, owns exactly ON/OFF ImageIcon state plus one conflict String, and configures a fixed 25px-width undecorated switch button."
+        },
+        {
+          "family": "exact_conflict_tooltip",
+          "detail": "Its List<String> setter formats '<br>Plugin conflicts: ...' with comma/and joining, and tooltip text switches between 'Disable plugin' and '<html>Enable plugin' plus that conflict string."
+        },
+        {
+          "family": "upstream_source_match",
+          "detail": "RuneLite PluginToggleButton is method-for-method equivalent: switcher_on.png source icon, flipped/grayscaled OFF icon, conflictString state, updateTooltip(), and setConflicts(List<String>) formatting."
+        },
+        {
+          "family": "exact_family_join",
+          "detail": "R488 ConfigPanel and PluginListItem use this class as the enable/disable toggle for plugin configuration rows."
+        }
+      ],
+      "note": "Exact RuneLite source-name recovery for PluginToggleButton."
+    }
+  ],
+  "unresolved": []
+}
