@@ -4771,7 +4771,7 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
             report = normalize_procyon_source(root / "src", jar)
             normalized = source.read_text(encoding="utf-8")
             self.assertIn(
-                "((LinkedHashMap<?, Value>)this.folders).get(key)",
+                "((LinkedHashMap<String, Value>)this.folders).get(key)",
                 normalized,
             )
 
@@ -4789,6 +4789,14 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
             self.assertEqual(action["placeholder_counts"], {"K": 1})
             self.assertEqual(action["field_counts"], {"folders": 1})
             self.assertEqual(action["field_owners"], ["p/FolderMap"])
+            self.assertEqual(
+                action["field_signatures"],
+                [
+                    "Ljava/util/LinkedHashMap<"
+                    "Ljava/lang/String;Lp/Value;>;"
+                ],
+            )
+            self.assertEqual(action["member_counts"], {"get": 1})
             self.assertEqual(action["replacement_count"], 1)
             self.assertEqual(
                 report["summary"][
