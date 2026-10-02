@@ -4269,6 +4269,213 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
             )
 
 
+    def _typed_collection_tolist_fixture(
+        self,
+        root: Path,
+        *,
+        extra_collect: bool = False,
+    ) -> Path:
+        extra = (
+            "        java.util.List<String> ignored = "
+            "java.util.Arrays.asList(\"x\").stream()"
+            ".collect(Collectors.toList());\n"
+            if extra_collect
+            else ""
+        )
+        return _compile_java_fixture(
+            root,
+            {
+                "p/M.java": (
+                    "package p;\n"
+                    "import java.lang.reflect.Field;\n"
+                    "public class M {\n"
+                    "    public M(Field field) {}\n"
+                    "}\n"
+                ),
+                "p/H.java": (
+                    "package p;\n"
+                    "import java.lang.reflect.Method;\n"
+                    "public class H {\n"
+                    "    public H(Method method) {}\n"
+                    "}\n"
+                ),
+                "p/Sink.java": (
+                    "package p;\n"
+                    "import java.util.Collection;\n"
+                    "public class Sink {\n"
+                    "    public Sink(Collection<M> ms, Collection<H> hs) {}\n"
+                    "}\n"
+                ),
+                "p/A.java": (
+                    "package p;\n"
+                    "import java.util.Arrays;\n"
+                    "import java.util.stream.Collectors;\n"
+                    "public class A {\n"
+                    "    public Sink scan(Class<?> clazz) {\n"
+                    + extra
+                    + "        return new Sink(\n"
+                    "            Arrays.stream(clazz.getDeclaredFields())\n"
+                    "                .map(field -> new M(field))\n"
+                    "                .collect(Collectors.toList()),\n"
+                    "            Arrays.stream(clazz.getMethods())\n"
+                    "                .map(method -> new H(method))\n"
+                    "                .collect(Collectors.toList()));\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def _write_typed_collection_tolist_malformed(
+        self,
+        root: Path,
+        *,
+        first_outer_type: str = "M",
+    ) -> Path:
+        source = root / "src" / "p" / "A.java"
+        source.parent.mkdir(parents=True)
+        source.write_text(
+            "package p;\n"
+            "import java.util.Arrays;\n"
+            "import java.util.Collection;\n"
+            "import java.util.List;\n"
+            "import java.util.stream.Collector;\n"
+            "import java.util.stream.Collectors;\n"
+            "public class A {\n"
+            "    public Sink scan(Class<?> clazz) {\n"
+            "        return new Sink(\n"
+            "            (Collection<" + first_outer_type + ">)"
+            "Arrays.stream(clazz.getDeclaredFields())\n"
+            "                .map(field -> new M(field))\n"
+            "                .collect((Collector<? super Object, ?, "
+            "List<? super Object>>)Collectors.toList()),\n"
+            "            (Collection<H>)"
+            "Arrays.stream(clazz.getMethods())\n"
+            "                .map(method -> new H(method))\n"
+            "                .collect((Collector<? super Object, ?, "
+            "List<? super Object>>)Collectors.toList()));\n"
+            "    }\n"
+            "}\n",
+            encoding="utf-8",
+        )
+        return source
+
+    def test_typed_collection_tolist_super_object_cast_uses_exact_sink(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._typed_collection_tolist_fixture(root)
+            source = self._write_typed_collection_tolist_malformed(root)
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-typed-collector"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertNotIn(
+                "Collector<? super Object, ?, List<? super Object>>",
+                normalized,
+            )
+            self.assertIn("(Collection<M>)Arrays.stream", normalized)
+            self.assertIn("(Collection<H>)Arrays.stream", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "typed_collection_tolist_super_object_cast_removal"
+            )
+            self.assertEqual(
+                action["element_owners"],
+                ["p/M", "p/H"],
+            )
+            self.assertEqual(action["replacement_count"], 2)
+            self.assertEqual(action["exact_list_checkcast_count"], 2)
+            self.assertEqual(
+                [
+                    row["result_owner"]
+                    for row in action["function_proofs"]
+                ],
+                ["p/M", "p/H"],
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-typed-collector"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_typed_collection_tolist_super_object_cast_rejects_source_owner_drift(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._typed_collection_tolist_fixture(root)
+            source = self._write_typed_collection_tolist_malformed(
+                root,
+                first_outer_type="H",
+            )
+            original = source.read_text(encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "typed_collection_tolist_super_object_cast_action_count"
+                ],
+                0,
+            )
+
+    def test_typed_collection_tolist_super_object_cast_rejects_extra_collect(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._typed_collection_tolist_fixture(
+                root,
+                extra_collect=True,
+            )
+            source = self._write_typed_collection_tolist_malformed(root)
+            original = source.read_text(encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "typed_collection_tolist_super_object_cast_action_count"
+                ],
+                0,
+            )
+
+
     def test_erased_generic_constructor_argument_cast_uses_exact_call(
         self,
     ):
