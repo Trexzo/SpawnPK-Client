@@ -87,15 +87,14 @@ def build_nonproject_dependency_capsule(
     with zipfile.ZipFile(
         out_jar,
         "w",
-        compression=zipfile.ZIP_DEFLATED,
-        compresslevel=9,
+        compression=zipfile.ZIP_STORED,
     ) as target:
         for name, data in sorted(selected):
             info = zipfile.ZipInfo(
                 filename=name,
                 date_time=(1980, 1, 1, 0, 0, 0),
             )
-            info.compress_type = zipfile.ZIP_DEFLATED
+            info.compress_type = zipfile.ZIP_STORED
             info.create_system = 0
             info.external_attr = 0
             target.writestr(info, data)
