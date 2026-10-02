@@ -208,6 +208,152 @@ def _invokedynamic_ref(
     )
 
 
+
+def _bootstrap_cp_entry(
+    cp: list[Any],
+    index: int,
+    *,
+    role: str,
+) -> Any:
+    if not (0 < index < len(cp)):
+        raise BytecodeProfileError(
+            f"{role} constant-pool index out of range: {index}"
+        )
+    value = cp[index]
+    if value is None:
+        raise BytecodeProfileError(
+            f"{role} constant-pool entry #{index} is unusable"
+        )
+    return value
+
+
+def _method_handle_profile(
+    cp: list[Any],
+    index: int,
+) -> dict[str, Any]:
+    value = _bootstrap_cp_entry(
+        cp,
+        index,
+        role="MethodHandle",
+    )
+    if value[0] != 15:
+        raise BytecodeProfileError(
+            f"constant pool #{index} is not MethodHandle"
+        )
+    reference_kind = int(value[1])
+    if not (1 <= reference_kind <= 9):
+        raise BytecodeProfileError(
+            f"invalid MethodHandle reference kind: {reference_kind}"
+        )
+    reference_index = int(value[2])
+    target = _bootstrap_cp_entry(
+        cp,
+        reference_index,
+        role="MethodHandle target",
+    )
+    if target[0] not in (9, 10, 11):
+        raise BytecodeProfileError(
+            "MethodHandle target is not a member reference"
+        )
+    owner, name, descriptor = _member_ref(
+        cp,
+        reference_index,
+    )
+    target_kind = {
+        9: "field",
+        10: "method",
+        11: "interface_method",
+    }[target[0]]
+    return {
+        "reference_kind": reference_kind,
+        "reference_index": reference_index,
+        "target_kind": target_kind,
+        "owner": owner,
+        "name": name,
+        "descriptor": descriptor,
+    }
+
+
+def _bootstrap_argument_profile(
+    cp: list[Any],
+    index: int,
+) -> dict[str, Any]:
+    value = _bootstrap_cp_entry(
+        cp,
+        index,
+        role="bootstrap argument",
+    )
+    tag = int(value[0])
+    if tag == 15:
+        return {
+            "constant_pool_index": index,
+            "kind": "method_handle",
+            "method_handle": _method_handle_profile(cp, index),
+        }
+    if tag == 16:
+        return {
+            "constant_pool_index": index,
+            "kind": "method_type",
+            "descriptor": _utf8(cp, int(value[1])),
+        }
+    if tag == 7:
+        return {
+            "constant_pool_index": index,
+            "kind": "class",
+            "name": _class_name(cp, index),
+        }
+    if tag == 8:
+        return {
+            "constant_pool_index": index,
+            "kind": "string",
+            "value": _utf8(cp, int(value[1])),
+        }
+    if tag in (3, 4):
+        return {
+            "constant_pool_index": index,
+            "kind": "constant",
+            "tag": tag,
+            "value": _constant_probe_value(cp, index),
+        }
+    return {
+        "constant_pool_index": index,
+        "kind": "constant_pool_entry",
+        "tag": tag,
+    }
+
+
+def _bootstrap_methods_profile(
+    payload: bytes,
+    cp: list[Any],
+) -> list[dict[str, Any]]:
+    r = _Reader(payload)
+    methods: list[dict[str, Any]] = []
+    for index in range(r.u2()):
+        method_ref = r.u2()
+        argument_indices = [
+            r.u2() for _ in range(r.u2())
+        ]
+        methods.append(
+            {
+                "index": index,
+                "bootstrap_method_ref": method_ref,
+                "bootstrap_method": _method_handle_profile(
+                    cp,
+                    method_ref,
+                ),
+                "arguments": [
+                    _bootstrap_argument_profile(cp, arg)
+                    for arg in argument_indices
+                ],
+            }
+        )
+    if r.offset != len(payload):
+        raise BytecodeProfileError(
+            "trailing bytes in BootstrapMethods attribute"
+        )
+    return methods
+
+
 def _skip_attributes(
     r: _Reader,
     cp: list[Any],
@@ -669,10 +815,34 @@ def profile_class_field_accesses(
             }
         )
 
+    bootstrap_methods: list[dict[str, Any]] = []
+    bootstrap_seen = False
+    for _ in range(r.u2()):
+        attr_name = _utf8(cp, r.u2())
+        attr_length = r.u4()
+        payload = r.take(attr_length)
+        if attr_name != "BootstrapMethods":
+            continue
+        if bootstrap_seen:
+            raise BytecodeProfileError(
+                "duplicate BootstrapMethods attribute"
+            )
+        bootstrap_seen = True
+        bootstrap_methods = _bootstrap_methods_profile(
+            payload,
+            cp,
+        )
+
+    if r.offset != len(data):
+        raise BytecodeProfileError(
+            "trailing bytes after class attributes"
+        )
+
     return {
         "internal_name": internal_name,
         "fields": fields,
         "methods": methods,
+        "bootstrap_methods": bootstrap_methods,
     }
 
 

@@ -6,6 +6,8 @@ import tempfile
 import unittest
 
 from spk_recovery.bytecode_profile import (
+    BytecodeProfileError,
+    _bootstrap_methods_profile,
     profile_class_field_accesses,
     profile_class_utf8_constants,
 )
@@ -191,6 +193,143 @@ class BytecodeMethodInvocationProfileTests(unittest.TestCase):
                 "(Ljava/lang/String;)Ljava/lang/String;",
             )
 
+
+    def test_bootstrap_profile_rejects_out_of_range_constant_pool_indices(self):
+        method_handle_cp = [
+            None,
+            (15, 6, 99),
+        ]
+        payload = bytes.fromhex("000100010000")
+        with self.assertRaises(BytecodeProfileError):
+            _bootstrap_methods_profile(payload, method_handle_cp)
+
+        argument_cp = [
+            None,
+            (15, 6, 2),
+            (10, 3, 4),
+            (7, 5),
+            (12, 6, 7),
+            (1, "p/A"),
+            (1, "impl"),
+            (1, "()V"),
+        ]
+        payload = bytes.fromhex("0001000100010063")
+        with self.assertRaises(BytecodeProfileError):
+            _bootstrap_methods_profile(payload, argument_cp)
+
+    def test_bootstrap_profile_rejects_invalid_method_handle_kind(self):
+        cp = [
+            None,
+            (15, 0, 2),
+            (10, 3, 4),
+            (7, 5),
+            (12, 6, 7),
+            (1, "p/A"),
+            (1, "impl"),
+            (1, "()V"),
+        ]
+        payload = bytes.fromhex("000100010000")
+        with self.assertRaises(BytecodeProfileError):
+            _bootstrap_methods_profile(payload, cp)
+
+    def test_profiles_lambda_bootstrap_implementation_target(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "src" / "p"
+            classes = root / "classes"
+            source.mkdir(parents=True)
+            classes.mkdir(parents=True)
+
+            (source / "A.java").write_text(
+                "package p;\n"
+                "import java.util.function.Predicate;\n"
+                "public class A {\n"
+                "    public static Predicate<String> make(String prefix) {\n"
+                "        return value -> value.startsWith(prefix);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            compiled = subprocess.run(
+                [
+                    "javac",
+                    "-d",
+                    str(classes),
+                    str(source / "A.java"),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                compiled.returncode,
+                0,
+                compiled.stdout + compiled.stderr,
+            )
+
+            profile = profile_class_field_accesses(
+                (classes / "p" / "A.class").read_bytes()
+            )
+            method = next(
+                row
+                for row in profile["methods"]
+                if row["name"] == "make"
+                and row["descriptor"]
+                == "(Ljava/lang/String;)Ljava/util/function/Predicate;"
+            )
+            dynamic = [
+                row
+                for row in method["method_invocations"]
+                if row["operation"] == "invokedynamic"
+            ]
+            self.assertEqual(len(dynamic), 1)
+
+            bootstrap_index = dynamic[0][
+                "bootstrap_method_attr_index"
+            ]
+            bootstrap = profile["bootstrap_methods"][
+                bootstrap_index
+            ]
+            self.assertEqual(bootstrap["index"], bootstrap_index)
+            self.assertEqual(
+                bootstrap["bootstrap_method"]["owner"],
+                "java/lang/invoke/LambdaMetafactory",
+            )
+            self.assertEqual(
+                bootstrap["bootstrap_method"]["name"],
+                "metafactory",
+            )
+
+            method_handles = [
+                row["method_handle"]
+                for row in bootstrap["arguments"]
+                if row["kind"] == "method_handle"
+            ]
+            implementation = next(
+                row
+                for row in method_handles
+                if row["owner"] == "p/A"
+            )
+            self.assertEqual(
+                implementation["descriptor"],
+                "(Ljava/lang/String;Ljava/lang/String;)Z",
+            )
+            self.assertEqual(
+                implementation["target_kind"],
+                "method",
+            )
+            self.assertEqual(
+                implementation["reference_kind"],
+                6,
+            )
+
+            method_types = [
+                row["descriptor"]
+                for row in bootstrap["arguments"]
+                if row["kind"] == "method_type"
+            ]
+            self.assertIn("(Ljava/lang/Object;)Z", method_types)
+            self.assertIn("(Ljava/lang/String;)Z", method_types)
 
     def test_profiles_exact_utf8_constants(self):
         with tempfile.TemporaryDirectory() as td:
