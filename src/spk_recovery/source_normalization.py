@@ -4304,10 +4304,16 @@ def _normalize_impossible_collectors_tolist_casts(
             r"(?P<call>(?:java\.util\.stream\.)?Collectors\s*\.\s*toList\s*\(\s*\))"
         )
         matches = list(cast_re.finditer(method_code))
-        matches = [
-            match for match in matches
-            if match.group("element").rsplit(".", 1)[-1] == element_simple
-        ]
+        filtered_matches = []
+        for match in matches:
+            source_element = match.group("element")
+            if "." in source_element:
+                if source_element.replace(".", "/") != proof["element_owner"]:
+                    continue
+            elif source_element != element_simple:
+                continue
+            filtered_matches.append(match)
+        matches = filtered_matches
         if len(matches) != 1:
             continue
         match = matches[0]
