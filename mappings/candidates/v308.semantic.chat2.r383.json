@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/L",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherSidePanelTabChangeListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_parent_ownership",
+          "detail": "The class is constructed only by the already-reviewed R145 rs/gui/J ClientSidebarPanel and installed on its JTabbedPane via addChangeListener."
+        },
+        {
+          "family": "exact_change_contract",
+          "detail": "stateChanged casts the event source to JTabbedPane, reads its selected index, then calls the active Launcher refresh/update method; no unrelated state or behavior exists."
+        },
+        {
+          "family": "exact_listener_scope",
+          "detail": "The class stores only the synthetic ClientSidebarPanel owner and implements ChangeListener, fixing it as the tab-selection change listener for that side-panel surface."
+        }
+      ],
+      "note": "Generated-listener name follows exact JTabbedPane attachment and launcher refresh behavior. R145's existing ClientSidebarPanel name is retained for the parent."
+    }
+  ],
+  "conflicts": []
+}
