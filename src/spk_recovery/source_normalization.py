@@ -5751,6 +5751,249 @@ def _normalize_undeclared_linkedhashmap_cast_placeholders(
     return actions
 
 
+
+def _normalize_linkedhashmap_self_get_result_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Move impossible generic self-casts onto get() results.
+
+    Procyon can render an inherited LinkedHashMap get as
+    ((LinkedHashMap<?, List<T>>)this).get(key).  A direct subclass whose
+    actual generic value type differs cannot legally be cast to that
+    parameterization, even though the JVM operation is only an erased
+    get(Object) followed by a List checkcast.
+
+    For direct java/util/LinkedHashMap subclasses, rewrite only List-valued
+    get() forms to ((List<T>)this.get(key)).  This preserves the erased JVM
+    behavior while removing the source-illegal receiver parameterization.
+    Every edited source method must still correlate to one exact readable
+    JVM method and contain enough exact get(Object) invocations.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        parsed = parse_class(class_bytes)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, ClassFormatError, BytecodeProfileError):
+        return []
+
+    current_owner = class_entry[:-6]
+    if parsed.name != current_owner:
+        return []
+    if str(profile.get("internal_name", "")) != current_owner:
+        return []
+    if parsed.super_name != "java/util/LinkedHashMap":
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    linkedhashmap_imported = bool(
+        re.search(
+            r"(?m)^\s*import\s+java\.util\.LinkedHashMap\s*;",
+            whole_code,
+        )
+    )
+    list_imported = bool(
+        re.search(
+            r"(?m)^\s*import\s+java\.util\.List\s*;",
+            whole_code,
+        )
+    )
+    current_package = current_owner.rpartition("/")[0]
+    cast_start = re.compile(
+        r"\(\(\s*(?P<owner>(?:java\.util\.)?LinkedHashMap)\s*<"
+    )
+
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(text):
+        brace_start = text.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        body_end = _matching_brace_end(text, brace_start)
+        method_text = text[method_match.start():body_end]
+        method_code = _java_code_mask(method_text)
+
+        occurrences: list[dict[str, Any]] = []
+        for cast in cast_start.finditer(method_code):
+            owner = cast.group("owner")
+            if owner == "LinkedHashMap" and not linkedhashmap_imported:
+                continue
+
+            angle_start = cast.end() - 1
+            angle_end = _matching_generic_angle_end(
+                method_code,
+                angle_start,
+            )
+            if angle_end is None:
+                continue
+
+            args_start = angle_start + 1
+            args_text = method_text[args_start:angle_end]
+            spans = _top_level_generic_argument_spans(args_text)
+            if spans is None or len(spans) != 2:
+                continue
+
+            value_start, value_end = spans[1]
+            result_type = args_text[value_start:value_end].strip()
+            list_match = re.fullmatch(
+                r"(?P<owner>(?:java\.util\.)?List)\s*<(?P<arg>.+)>",
+                result_type,
+            )
+            if list_match is None:
+                continue
+            if (
+                list_match.group("owner") == "List"
+                and not list_imported
+            ):
+                continue
+
+            tail = method_code[angle_end + 1:]
+            call_match = re.match(
+                r"\s*\)\s*this\s*\)\s*\.\s*get\s*"
+                r"\(\s*(?P<key>[A-Za-z_$][A-Za-z0-9_$]*"
+                r"(?:\.[A-Za-z_$][A-Za-z0-9_$]*)*)\s*\)",
+                tail,
+            )
+            if call_match is None:
+                continue
+
+            expression_end = (
+                method_match.start()
+                + angle_end
+                + 1
+                + call_match.end()
+            )
+            expression_start = method_match.start() + cast.start()
+            key = call_match.group("key")
+            replacement = (
+                "(("
+                + result_type
+                + ")this.get("
+                + key
+                + "))"
+            )
+            occurrences.append(
+                {
+                    "start": expression_start,
+                    "end": expression_end,
+                    "result_type": result_type,
+                    "key": key,
+                }
+            )
+
+        if not occurrences:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        source_arity = _source_parameter_count(
+            method_match.group("params")
+        )
+        candidates: list[dict[str, Any]] = []
+        for method in profile.get("methods", []):
+            if method.get("name") != method_match.group("name"):
+                continue
+            method_static = bool(
+                int(method.get("access", 0)) & 0x0008
+            )
+            if method_static != source_static:
+                continue
+            descriptor = str(method.get("descriptor", ""))
+            if _descriptor_parameter_count(descriptor) != source_arity:
+                continue
+            parameter_match = _source_parameters_match_descriptor(
+                method_match.group("params"),
+                descriptor,
+                current_package=current_package,
+            )
+            if parameter_match is False:
+                continue
+            get_count = sum(
+                invocation.get("operation") == "invokevirtual"
+                and invocation.get("name") == "get"
+                and invocation.get("descriptor")
+                == "(Ljava/lang/Object;)Ljava/lang/Object;"
+                and invocation.get("owner")
+                in {current_owner, "java/util/LinkedHashMap"}
+                for invocation in method.get("method_invocations", [])
+            )
+            if get_count < len(occurrences):
+                continue
+            candidates.append(method)
+
+        if len(candidates) != 1:
+            continue
+
+        exact_method = candidates[0]
+        for occurrence in occurrences:
+            edits.append(
+                (
+                    int(occurrence["start"]),
+                    int(occurrence["end"]),
+                    str(occurrence["replacement"])
+                    if "replacement" in occurrence
+                    else (
+                        "(("
+                        + str(occurrence["result_type"])
+                        + ")this.get("
+                        + str(occurrence["key"])
+                        + "))"
+                    ),
+                )
+            )
+
+        actions.append(
+            {
+                "kind": "linkedhashmap_self_get_result_cast",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": exact_method["descriptor"],
+                "result_types": sorted(
+                    {
+                        str(row["result_type"])
+                        for row in occurrences
+                    }
+                ),
+                "replacement_count": len(occurrences),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_impossible_linkedhashmap_self_parameterization"
+                    ),
+                    "strategy": (
+                        "move_redundant_receiver_generic_cast_to_get_result"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping LinkedHashMap result-cast edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
 def normalize_procyon_source(
     source_root: Path,
     readable_jar: Path,
@@ -5854,6 +6097,13 @@ def normalize_procyon_source(
                 )
                 actions.extend(
                     _normalize_undeclared_linkedhashmap_cast_placeholders(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
+                    _normalize_linkedhashmap_self_get_result_casts(
                         source_root=source_root,
                         path=path,
                         readable_zip=z,
@@ -6043,6 +6293,15 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "undeclared_linkedhashmap_cast_placeholder_wildcard"
+        ),
+        "linkedhashmap_self_get_result_cast_method_count": sum(
+            action["kind"] == "linkedhashmap_self_get_result_cast"
+            for action in actions
+        ),
+        "linkedhashmap_self_get_result_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"] == "linkedhashmap_self_get_result_cast"
         ),
         "imported_parameter_shadow_method_count": sum(
             action["kind"]
