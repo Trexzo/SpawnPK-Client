@@ -140,6 +140,10 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 "/normalization_summary/object_backed_map_get_narrow_local_action_count",
             "object_backed_map_get_narrow_local_reference_count":
                 "/normalization_summary/object_backed_map_get_narrow_local_reference_count",
+            "map_scan_lambda_capture_alias_action_count":
+                "/normalization_summary/map_scan_lambda_capture_alias_action_count",
+            "map_scan_lambda_capture_alias_reference_count":
+                "/normalization_summary/map_scan_lambda_capture_alias_reference_count",
         }
         for name, pointer in expected.items():
             self.assertIn(
@@ -180,6 +184,11 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         self.assertIn(
             'OBJECT_BACKED_MAP_GET_NARROW_LOCAL_REFERENCES='
             '$($Recovered.object_backed_map_get_narrow_local_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'MAP_SCAN_LAMBDA_CAPTURE_ALIAS_REFERENCES='
+            '$($Recovered.map_scan_lambda_capture_alias_reference_count)',
             script,
         )
 
