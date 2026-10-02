@@ -2492,6 +2492,21 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-imported-outer-nested-scope"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
             report = normalize_procyon_source(root / "src", jar)
             normalized = source.read_text(encoding="utf-8")
             self.assertIn(
@@ -2513,6 +2528,25 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 1,
             )
             self.assertEqual(action["replacement_count"], 1)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-imported-outer-nested-scope"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
 
     def test_imported_outer_nested_static_field_shadow_fails_on_count_drift(
         self,
