@@ -6215,7 +6215,8 @@ class ErasedMapNumberAssignmentTests(unittest.TestCase):
 class ErasedSetIntEnhancedForTests(unittest.TestCase):
     def _fixture(self, root: Path, *, exact_drift: bool = False) -> Path:
         value_type = "Long" if exact_drift else "Integer"
-        primitive = "longValue" if exact_drift else "intValue"
+        loop_type = "long" if exact_drift else "int"
+        add_expr = "(int)value" if exact_drift else "value"
         return _compile_java_fixture(
             root,
             {
@@ -6228,8 +6229,8 @@ class ErasedSetIntEnhancedForTests(unittest.TestCase):
                     f"        Set<{value_type}> set = new LinkedHashSet<>();\n"
                     f"        set.add({value_type}.valueOf(7));\n"
                     "        int total = 0;\n"
-                    f"        for ({value_type} value : set) {{\n"
-                    f"            total += value.{primitive}();\n"
+                    f"        for ({loop_type} value : set) {{\n"
+                    f"            total += {add_expr};\n"
                     "        }\n"
                     "        return total;\n"
                     "    }\n"
