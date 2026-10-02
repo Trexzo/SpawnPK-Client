@@ -6068,7 +6068,7 @@ def _normalize_undeclared_linkedhashmap_cast_placeholders(
                 (
                     int(occurrence["start"]),
                     int(occurrence["end"]),
-                    str(occurrence["key_source_type"]),
+                    "?",
                 )
             )
 
@@ -6084,12 +6084,6 @@ def _normalize_undeclared_linkedhashmap_cast_placeholders(
                     sorted(placeholder_counts.items())
                 ),
                 "member_counts": dict(sorted(member_counts.items())),
-                "field_signatures": sorted(
-                    {
-                        str(row["field_signature"])
-                        for row in occurrences
-                    }
-                ),
                 "replacement_count": len(occurrences),
                 "provenance": {
                     "kind": "source_safety",
@@ -6130,11 +6124,10 @@ def _normalize_linkedhashmap_field_cast_placeholders(
 
     Procyon can emit
     ((LinkedHashMap<K, Value>)this.field).get(key)
-    even when K is not a declared source type variable.  The key generic
-    argument is erased for get(Object), so replace only that impossible
-    placeholder with '?' when exact bytecode proves field is a direct
-    LinkedHashMap subclass and the enclosing exact method performs enough
-    erased get(Object) calls on that field type.
+    even when K is not a declared source type variable.  Reconstruct only
+    that impossible key placeholder from the exact direct LinkedHashMap
+    subclass Signature when it proves a java.lang.String key, and require
+    matching erased get/keySet/put calls in the enclosing exact method.
     """
 
     rel = path.relative_to(source_root).as_posix()
@@ -6382,7 +6375,7 @@ def _normalize_linkedhashmap_field_cast_placeholders(
                 (
                     int(occurrence["start"]),
                     int(occurrence["end"]),
-                    "?",
+                    str(occurrence["key_source_type"]),
                 )
             )
 
@@ -6419,6 +6412,12 @@ def _normalize_linkedhashmap_field_cast_placeholders(
                 "field_owners": sorted(
                     {
                         str(row["field_owner"])
+                        for row in occurrences
+                    }
+                ),
+                "field_signatures": sorted(
+                    {
+                        str(row["field_signature"])
                         for row in occurrences
                     }
                 ),
