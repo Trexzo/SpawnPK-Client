@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_872105942E3DB0A8F3A2",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_53E00F3D9638E3BC0840",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000185",
+      "owner_logical_id": "CLIENT_CLASS_000185",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/B",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LauncherSidePanelRepaintTimerAction",
+      "confidence": 0.997,
+      "evidence": [
+        {
+          "family": "exact_timer_contract",
+          "detail": "The class implements ActionListener and its actionPerformed source is cast to javax.swing.Timer, which it always stops before clearing Launcher.r."
+        },
+        {
+          "family": "exact_side_panel_refresh",
+          "detail": "When the live ClientSidebarPanel exists and its loadout JComboBox popup is not visible, the listener repaints the sidebar panel before stopping the timer."
+        },
+        {
+          "family": "exact_launcher_scope",
+          "detail": "The class stores only its synthetic Launcher owner and touches only launcher/sidebar repaint state plus the one-shot Timer lifecycle."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the one-shot launcher timer action that repaints the side panel and clears the pending-refresh flag."
+    }
+  ],
+  "unresolved": []
+}
