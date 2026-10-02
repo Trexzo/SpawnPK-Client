@@ -7212,6 +7212,63 @@ class ErasedIteratorAssignmentCastTests(unittest.TestCase):
                 )
             )
 
+
+    def test_erased_iterator_assignment_fq_type_requires_exact_owner(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Value.java": (
+                        "package p;\n"
+                        "public class Value {}\n"
+                    ),
+                    "q/Value.java": (
+                        "package q;\n"
+                        "public class Value {}\n"
+                    ),
+                    "p/Current.java": (
+                        "package p;\n"
+                        "import java.util.ArrayList;\n"
+                        "import java.util.Iterator;\n"
+                        "import java.util.List;\n"
+                        "public class Current {\n"
+                        "    public static q.Value first() {\n"
+                        "        List<q.Value> values = new ArrayList<>();\n"
+                        "        values.add(new q.Value());\n"
+                        "        Iterator<q.Value> iterator = values.iterator();\n"
+                        "        q.Value value = iterator.next();\n"
+                        "        return value;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.Iterator;\n"
+                "public class Current {\n"
+                "    public static q.Value first() {\n"
+                "        Iterator iterator = null;\n"
+                "        final p.Value value = iterator.next();\n"
+                "        return null;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "erased_iterator_assignment_cast_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
     def test_erased_iterator_assignment_fails_closed_on_checkcast_drift(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
