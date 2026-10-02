@@ -4741,6 +4741,9 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                         "    public void putValue(String key, Value value) {\n"
                         "        folders.put(key, value);\n"
                         "    }\n"
+                        "    public void clearValues() {\n"
+                        "        folders.clear();\n"
+                        "    }\n"
                         "}\n"
                     ),
                 },
@@ -4761,6 +4764,9 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 "    }\n"
                 "    public void putValue(String key, Value value) {\n"
                 "        ((LinkedHashMap<K, Value>)this.folders).put(key, value);\n"
+                "    }\n"
+                "    public void clearValues() {\n"
+                "        ((LinkedHashMap<K, Value>)this.folders).clear();\n"
                 "    }\n"
                 "}\n",
                 encoding="utf-8",
@@ -4796,13 +4802,17 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 "((LinkedHashMap<String, Value>)this.folders).put(key, value)",
                 normalized,
             )
+            self.assertIn(
+                "((LinkedHashMap<String, Value>)this.folders).clear()",
+                normalized,
+            )
 
             actions = [
                 row
                 for row in report["actions"]
                 if row["kind"] == "linkedhashmap_field_key_reconstruction"
             ]
-            self.assertEqual(len(actions), 3)
+            self.assertEqual(len(actions), 4)
             by_name = {row["method_name"]: row for row in actions}
             self.assertEqual(
                 by_name["byKey"]["method_descriptor"],
@@ -4811,6 +4821,10 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
             self.assertEqual(by_name["byKey"]["member_counts"], {"get": 1})
             self.assertEqual(by_name["keys"]["member_counts"], {"keySet": 1})
             self.assertEqual(by_name["putValue"]["member_counts"], {"put": 1})
+            self.assertEqual(
+                by_name["clearValues"]["member_counts"],
+                {"clear": 1},
+            )
             for action in actions:
                 self.assertEqual(action["placeholder_counts"], {"K": 1})
                 self.assertEqual(action["field_counts"], {"folders": 1})
@@ -4827,7 +4841,7 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 report["summary"][
                     "linkedhashmap_field_key_reconstruction_reference_count"
                 ],
-                3,
+                4,
             )
 
             after = subprocess.run(
