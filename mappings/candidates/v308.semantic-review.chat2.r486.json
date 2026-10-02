@@ -1,0 +1,28 @@
+{
+  "schema_version":1,
+  "kind":"semantic_review_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count":1,
+  "review_id":"SEMREVIEW_B4C4D0B7920596C76F2E",
+  "proposals":[{
+    "proposal_id":"SEMPROP_4A6A68B5C0A632FC57E5",
+    "target_kind":"class",
+    "stable_id":"CLIENT_CLASS_000874",
+    "owner_logical_id":"CLIENT_CLASS_000874",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate":{"owner":"rs/s/b/n","name":null,"descriptor":null},
+    "proposed_name":"PluginConfigurationDescriptor",
+    "confidence":0.999,
+    "evidence":[
+      {"family":"exact_literal_identity","detail":"Exact-v308 constant-pool/toString data preserves 'PluginConfigurationDescriptor(name=..., description=..., tags=..., plugin=..., config=..., configDescriptor=..., conflicts=...)'."},
+      {"family":"exact_value_shape","detail":"The final class stores exactly name, description, tags, plugin, Config instance, ConfigDescriptor and conflicts, exposes value-style equality/hash semantics and plugin-config helper behavior."},
+      {"family":"upstream_source_match","detail":"Historical RuneLite PluginConfigurationDescriptor has the same name/description/tags/plugin/config/configDescriptor/conflicts value shape and plugin configuration role."},
+      {"family":"exact_stable_id","detail":"Sorted exact-v308 rs/** class order places rs/s/b/n at zero-based index 873, fixing CLIENT_CLASS_000874."}
+    ],
+    "note":"Source-correlated exact-v308 recovery of RuneLite PluginConfigurationDescriptor."
+  }],
+  "unresolved":[]
+}
