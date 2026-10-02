@@ -3222,6 +3222,470 @@ def _normalize_invokedynamic_parameter_capture_aliases(
     return actions
 
 
+def _match_dimension_capture_instruction_shape(
+    *,
+    instructions: list[dict[str, Any]],
+    current_owner: str,
+) -> dict[str, int] | None:
+    """Match the exact bounded-Dimension lambda-capture bytecode family."""
+
+    if len(instructions) != 31:
+        return None
+
+    def row(
+        index: int,
+        mnemonic: str,
+        *,
+        local_index: int | None = None,
+        int_constant: int | None = None,
+        owner: str | None = None,
+        name: str | None = None,
+        descriptor: str | None = None,
+        type_name: str | None = None,
+    ) -> bool:
+        item = instructions[index]
+        if item.get("mnemonic") != mnemonic:
+            return False
+        if (
+            local_index is not None
+            and int(item.get("local_index", -1)) != local_index
+        ):
+            return False
+        if (
+            int_constant is not None
+            and int(item.get("int_constant", -999999)) != int_constant
+        ):
+            return False
+        if owner is not None and item.get("owner") != owner:
+            return False
+        if name is not None and item.get("name") != name:
+            return False
+        if (
+            descriptor is not None
+            and item.get("descriptor") != descriptor
+        ):
+            return False
+        if type_name is not None and item.get("type") != type_name:
+            return False
+        return True
+
+    fixed_checks = (
+        row(0, "iload", local_index=1),
+        row(1, "sipush", int_constant=7680),
+        row(
+            2,
+            "invokestatic",
+            owner="java/lang/Math",
+            name="min",
+            descriptor="(II)I",
+        ),
+        row(3, "iload", local_index=3),
+        row(
+            4,
+            "invokestatic",
+            owner="java/lang/Math",
+            name="max",
+            descriptor="(II)I",
+        ),
+        row(6, "iload", local_index=2),
+        row(7, "sipush", int_constant=2160),
+        row(
+            8,
+            "invokestatic",
+            owner="java/lang/Math",
+            name="min",
+            descriptor="(II)I",
+        ),
+        row(9, "iload", local_index=4),
+        row(
+            10,
+            "invokestatic",
+            owner="java/lang/Math",
+            name="max",
+            descriptor="(II)I",
+        ),
+        row(12, "new", type_name="java/awt/Dimension"),
+        row(13, "dup"),
+        row(
+            16,
+            "invokespecial",
+            owner="java/awt/Dimension",
+            name="<init>",
+            descriptor="(II)V",
+        ),
+        row(18, "new", type_name="java/awt/Dimension"),
+        row(19, "dup"),
+        row(20, "iload", local_index=3),
+        row(21, "iload", local_index=4),
+        row(
+            22,
+            "invokespecial",
+            owner="java/awt/Dimension",
+            name="<init>",
+            descriptor="(II)V",
+        ),
+        row(24, "aload", local_index=0),
+        row(
+            28,
+            "invokedynamic",
+            descriptor=(
+                "(L"
+                + current_owner
+                + ";Ljava/awt/Dimension;"
+                + "Ljava/awt/Dimension;)Ljava/lang/Runnable;"
+            ),
+        ),
+        row(
+            29,
+            "invokestatic",
+            owner="javax/swing/SwingUtilities",
+            name="invokeLater",
+            descriptor="(Ljava/lang/Runnable;)V",
+        ),
+        row(30, "return"),
+    )
+    if not all(fixed_checks):
+        return None
+
+    first_int_slot = int(
+        instructions[5].get("local_index", -1)
+    )
+    second_int_slot = int(
+        instructions[11].get("local_index", -1)
+    )
+    first_dimension_slot = int(
+        instructions[17].get("local_index", -1)
+    )
+    second_dimension_slot = int(
+        instructions[23].get("local_index", -1)
+    )
+    if min(
+        first_int_slot,
+        second_int_slot,
+        first_dimension_slot,
+        second_dimension_slot,
+    ) <= 4:
+        return None
+    if len(
+        {
+            first_int_slot,
+            second_int_slot,
+            first_dimension_slot,
+            second_dimension_slot,
+        }
+    ) != 4:
+        return None
+
+    if not (
+        row(5, "istore", local_index=first_int_slot)
+        and row(11, "istore", local_index=second_int_slot)
+        and row(14, "iload", local_index=first_int_slot)
+        and row(15, "iload", local_index=second_int_slot)
+        and row(17, "astore", local_index=first_dimension_slot)
+        and row(23, "astore", local_index=second_dimension_slot)
+        and row(25, "aload", local_index=first_dimension_slot)
+        and row(26, "aload", local_index=second_dimension_slot)
+    ):
+        return None
+
+    return {
+        "first_int_slot": first_int_slot,
+        "second_int_slot": second_int_slot,
+        "first_dimension_slot": first_dimension_slot,
+        "second_dimension_slot": second_dimension_slot,
+    }
+
+
+def _normalize_dimension_capture_locals(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Repair Procyon Dimension locals from exact slot/capture evidence."""
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError:
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    if "import java.awt.Dimension;" not in text:
+        return []
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    malformed_pair_re = re.compile(
+        r"(?m)^(?P<indent>[ \t]*)"
+        r"(?:final\s+)?Object\s+"
+        r"(?P<first>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*=\s*new\s+Dimension\s*\([^;\n]*\)\s*;\s*\n"
+        r"(?P=indent)(?:final\s+)?Object\s+"
+        r"(?P<second>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*=\s*new\s+Dimension\s*\([^;\n]*\)\s*;"
+    )
+    setter_use_re = re.compile(
+        r"\.(?P<method>"
+        r"setSize|setPreferredSize|setMinimumSize"
+        r")\s*\(\s*"
+        r"(?P<arg>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\)"
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        source_params = method_match.group("params")
+        parameter_names = _source_parameter_names(source_params)
+        parameter_shapes = _source_parameter_shapes(source_params)
+        if (
+            parameter_names is None
+            or parameter_shapes is None
+            or len(parameter_names) != 4
+            or parameter_shapes
+            != [
+                (0, "primitive", "I"),
+                (0, "primitive", "I"),
+                (0, "primitive", "I"),
+                (0, "primitive", "I"),
+            ]
+        ):
+            continue
+
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        if source_static:
+            continue
+
+        exact_candidates: list[dict[str, Any]] = []
+        for method in profile.get("methods", []):
+            if method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(method.get("descriptor", ""))
+            if descriptor != "(IIII)V":
+                continue
+            if (
+                _source_parameters_match_descriptor(
+                    source_params,
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            exact_candidates.append(method)
+        if len(exact_candidates) != 1:
+            continue
+
+        exact_method = exact_candidates[0]
+        slot_shape = _match_dimension_capture_instruction_shape(
+            instructions=list(
+                exact_method.get("instructions", [])
+            ),
+            current_owner=current_owner,
+        )
+        if slot_shape is None:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        pair_matches = list(
+            malformed_pair_re.finditer(method_code)
+        )
+        if len(pair_matches) != 1:
+            continue
+        pair_match = pair_matches[0]
+        first_declared = pair_match.group("first")
+        second_declared = pair_match.group("second")
+        if first_declared == second_declared:
+            continue
+
+        if (
+            len(
+                re.findall(
+                    r"(?<![A-Za-z0-9_$])"
+                    + re.escape(first_declared)
+                    + r"(?![A-Za-z0-9_$])",
+                    method_code,
+                )
+            )
+            != 1
+            or len(
+                re.findall(
+                    r"(?<![A-Za-z0-9_$])"
+                    + re.escape(second_declared)
+                    + r"(?![A-Za-z0-9_$])",
+                    method_code,
+                )
+            )
+            != 1
+        ):
+            continue
+
+        suffix = method_code[pair_match.end():]
+        uses = list(setter_use_re.finditer(suffix))
+        preferred_aliases = {
+            match.group("arg")
+            for match in uses
+            if match.group("method")
+            in {"setSize", "setPreferredSize"}
+        }
+        minimum_aliases = {
+            match.group("arg")
+            for match in uses
+            if match.group("method") == "setMinimumSize"
+        }
+        if (
+            len(preferred_aliases) != 1
+            or len(minimum_aliases) != 1
+        ):
+            continue
+        first_alias = next(iter(preferred_aliases))
+        second_alias = next(iter(minimum_aliases))
+        if first_alias == second_alias:
+            continue
+
+        declared_dimension_re = re.compile(
+            r"\b(?:final\s+)?"
+            r"(?:java\.awt\.)?Dimension\s+"
+            r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+        )
+        already_declared = {
+            match.group("name")
+            for match in declared_dimension_re.finditer(method_code)
+        }
+        if (
+            first_alias in already_declared
+            or second_alias in already_declared
+        ):
+            continue
+
+        allowed_use_counts = {
+            first_alias: 0,
+            second_alias: 0,
+        }
+        for use in uses:
+            argument = use.group("arg")
+            if argument in allowed_use_counts:
+                allowed_use_counts[argument] += 1
+        if min(allowed_use_counts.values()) < 1:
+            continue
+
+        for alias, allowed_count in allowed_use_counts.items():
+            total_count = len(
+                re.findall(
+                    r"(?<![A-Za-z0-9_$])"
+                    + re.escape(alias)
+                    + r"(?![A-Za-z0-9_$])",
+                    suffix,
+                )
+            )
+            if total_count != allowed_count:
+                break
+        else:
+            p1, p2, p3, p4 = parameter_names
+            indent = pair_match.group("indent")
+            replacement = (
+                indent
+                + "final Dimension "
+                + first_alias
+                + " = new Dimension("
+                + "Math.max(Math.min("
+                + p1
+                + ", 7680), "
+                + p3
+                + "), "
+                + "Math.max(Math.min("
+                + p2
+                + ", 2160), "
+                + p4
+                + "));\n"
+                + indent
+                + "final Dimension "
+                + second_alias
+                + " = new Dimension("
+                + p3
+                + ", "
+                + p4
+                + ");"
+            )
+            absolute_start = (
+                method_start + pair_match.start()
+            )
+            absolute_end = method_start + pair_match.end()
+            edits.append(
+                (
+                    absolute_start,
+                    absolute_end,
+                    replacement,
+                )
+            )
+            actions.append(
+                {
+                    "kind": "dimension_capture_local_reconstruction",
+                    "source_path": rel,
+                    "method_name": method_match.group("name"),
+                    "method_descriptor": "(IIII)V",
+                    "parameter_names": parameter_names,
+                    "first_dimension_name": first_alias,
+                    "second_dimension_name": second_alias,
+                    "replaced_declaration_names": [
+                        first_declared,
+                        second_declared,
+                    ],
+                    "slot_evidence": slot_shape,
+                    "replacement_count": 2,
+                    "provenance": {
+                        "kind": "source_safety",
+                        "reason": (
+                            "procyon_dimension_capture_local_corruption"
+                        ),
+                        "strategy": (
+                            "exact_instruction_slots_to_source_parameter_order"
+                        ),
+                    },
+                }
+            )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping Dimension capture edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_hidden_layout_constructor_arguments(
     *,
     source_root: Path,
@@ -5839,6 +6303,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_dimension_capture_locals(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_hidden_layout_constructor_arguments(
                         source_root=source_root,
                         path=path,
@@ -6014,6 +6485,15 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "invokedynamic_parameter_capture_alias"
+        ),
+        "dimension_capture_local_action_count": sum(
+            action["kind"] == "dimension_capture_local_reconstruction"
+            for action in actions
+        ),
+        "dimension_capture_local_declaration_replacement_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"] == "dimension_capture_local_reconstruction"
         ),
         "hidden_layout_constructor_argument_action_count": sum(
             action["kind"] == "hidden_layout_constructor_arguments"
