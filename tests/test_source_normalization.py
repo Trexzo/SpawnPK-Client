@@ -2595,6 +2595,233 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+    def test_hidden_layout_constructor_arguments_use_exact_descriptor(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Client.java": (
+                        "package p;\n"
+                        "import java.awt.LayoutManager;\n"
+                        "import javax.swing.JComponent;\n"
+                        "public class Client {\n"
+                        "    public void wrap(JComponent component) {\n"
+                        "        LayoutManager saved = component.getLayout();\n"
+                        "        component.setLayout(new Wrapper(this, saved, component));\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "p/Wrapper.java": (
+                        "package p;\n"
+                        "import java.awt.Component;\n"
+                        "import java.awt.Container;\n"
+                        "import java.awt.Dimension;\n"
+                        "import java.awt.LayoutManager;\n"
+                        "import javax.swing.JComponent;\n"
+                        "public class Wrapper implements LayoutManager {\n"
+                        "    Wrapper(Client owner, LayoutManager saved, JComponent component) {}\n"
+                        "    public void addLayoutComponent(String name, Component comp) {}\n"
+                        "    public void removeLayoutComponent(Component comp) {}\n"
+                        "    public Dimension preferredLayoutSize(Container parent) { return new Dimension(); }\n"
+                        "    public Dimension minimumLayoutSize(Container parent) { return new Dimension(); }\n"
+                        "    public void layoutContainer(Container parent) {}\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source_root = root / "src"
+            client = source_root / "p" / "Client.java"
+            wrapper = source_root / "p" / "Wrapper.java"
+            client.parent.mkdir(parents=True)
+            client.write_text(
+                "package p;\n"
+                "import java.awt.LayoutManager;\n"
+                "import javax.swing.JComponent;\n"
+                "public class Client {\n"
+                "    public void wrap(JComponent component) {\n"
+                "        final LayoutManager saved = component.getLayout();\n"
+                "        component.setLayout(new Wrapper());\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            wrapper.write_text(
+                "package p;\n"
+                "import java.awt.Component;\n"
+                "import java.awt.Container;\n"
+                "import java.awt.Dimension;\n"
+                "import java.awt.LayoutManager;\n"
+                "import javax.swing.JComponent;\n"
+                "public class Wrapper implements LayoutManager {\n"
+                "    Wrapper(Client owner, LayoutManager saved, JComponent component) {}\n"
+                "    public void addLayoutComponent(String name, Component comp) {}\n"
+                "    public void removeLayoutComponent(Component comp) {}\n"
+                "    public Dimension preferredLayoutSize(Container parent) { return new Dimension(); }\n"
+                "    public Dimension minimumLayoutSize(Container parent) { return new Dimension(); }\n"
+                "    public void layoutContainer(Container parent) {}\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-hidden-layout-ctor"),
+                    str(client),
+                    str(wrapper),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn(
+                "constructor Wrapper",
+                before.stderr,
+            )
+
+            report = normalize_procyon_source(source_root, jar)
+            normalized = client.read_text(encoding="utf-8")
+            self.assertIn(
+                "component.setLayout(new Wrapper(this, saved, component));",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "hidden_layout_constructor_arguments"
+            )
+            self.assertEqual(action["method_name"], "wrap")
+            self.assertEqual(
+                action["method_descriptor"],
+                "(Ljavax/swing/JComponent;)V",
+            )
+            self.assertEqual(action["target_owner"], "p/Wrapper")
+            self.assertEqual(
+                action["constructor_descriptor"],
+                "(Lp/Client;Ljava/awt/LayoutManager;Ljavax/swing/JComponent;)V",
+            )
+            self.assertEqual(action["component_name"], "component")
+            self.assertEqual(action["layout_name"], "saved")
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                report["summary"][
+                    "hidden_layout_constructor_argument_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-hidden-layout-ctor"),
+                    str(client),
+                    str(wrapper),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_hidden_layout_constructor_arguments_fail_without_exact_shape(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Client.java": (
+                        "package p;\n"
+                        "import java.awt.LayoutManager;\n"
+                        "import javax.swing.JComponent;\n"
+                        "public class Client {\n"
+                        "    public void wrap(JComponent component) {\n"
+                        "        LayoutManager saved = component.getLayout();\n"
+                        "        component.setLayout(new Wrapper(saved, component));\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "p/Wrapper.java": (
+                        "package p;\n"
+                        "import java.awt.Component;\n"
+                        "import java.awt.Container;\n"
+                        "import java.awt.Dimension;\n"
+                        "import java.awt.LayoutManager;\n"
+                        "import javax.swing.JComponent;\n"
+                        "public class Wrapper implements LayoutManager {\n"
+                        "    Wrapper(LayoutManager saved, JComponent component) {}\n"
+                        "    public void addLayoutComponent(String name, Component comp) {}\n"
+                        "    public void removeLayoutComponent(Component comp) {}\n"
+                        "    public Dimension preferredLayoutSize(Container parent) { return new Dimension(); }\n"
+                        "    public Dimension minimumLayoutSize(Container parent) { return new Dimension(); }\n"
+                        "    public void layoutContainer(Container parent) {}\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source_root = root / "src"
+            client = source_root / "p" / "Client.java"
+            wrapper = source_root / "p" / "Wrapper.java"
+            client.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.awt.LayoutManager;\n"
+                "import javax.swing.JComponent;\n"
+                "public class Client {\n"
+                "    public void wrap(JComponent component) {\n"
+                "        final LayoutManager saved = component.getLayout();\n"
+                "        component.setLayout(new Wrapper());\n"
+                "    }\n"
+                "}\n"
+            )
+            client.write_text(original, encoding="utf-8")
+            wrapper.write_text(
+                "package p;\n"
+                "import java.awt.Component;\n"
+                "import java.awt.Container;\n"
+                "import java.awt.Dimension;\n"
+                "import java.awt.LayoutManager;\n"
+                "import javax.swing.JComponent;\n"
+                "public class Wrapper implements LayoutManager {\n"
+                "    Wrapper(LayoutManager saved, JComponent component) {}\n"
+                "    public void addLayoutComponent(String name, Component comp) {}\n"
+                "    public void removeLayoutComponent(Component comp) {}\n"
+                "    public Dimension preferredLayoutSize(Container parent) { return new Dimension(); }\n"
+                "    public Dimension minimumLayoutSize(Container parent) { return new Dimension(); }\n"
+                "    public void layoutContainer(Container parent) {}\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(source_root, jar)
+
+            self.assertEqual(
+                client.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "hidden_layout_constructor_argument_reference_count"
+                ],
+                0,
+            )
+
     def test_invokedynamic_helper_return_cast_uses_generated_signature(
         self,
     ):
