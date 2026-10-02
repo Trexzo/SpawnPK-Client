@@ -2446,6 +2446,155 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+    def test_invokedynamic_parameter_capture_alias_uses_exact_callsite(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Event.java": (
+                        "package p;\n"
+                        "public interface Event { void touch(); }\n"
+                    ),
+                    "p/Client.java": (
+                        "package p;\n"
+                        "public class Client {\n"
+                        "    public void onAdded(Event event) {\n"
+                        "        Runnable r = () -> event.touch();\n"
+                        "        r.run();\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "Client.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "public class Client {\n"
+                "    public void onAdded(Event event) {\n"
+                "        Runnable r = () -> event2.touch();\n"
+                "        r.run();\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-indy-capture-alias"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("cannot find symbol", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "Runnable r = () -> event.touch();",
+                normalized,
+            )
+            self.assertNotIn("event2", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "invokedynamic_parameter_capture_alias"
+            )
+            self.assertEqual(action["method_name"], "onAdded")
+            self.assertEqual(
+                action["method_descriptor"],
+                "(Lp/Event;)V",
+            )
+            self.assertEqual(action["parameter_name"], "event")
+            self.assertEqual(action["alias_name"], "event2")
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                len(action["invokedynamic_callsites"]),
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_parameter_capture_alias_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-indy-capture-alias"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_invokedynamic_parameter_alias_requires_capture_proof(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Event.java": (
+                        "package p;\n"
+                        "public interface Event { void touch(); }\n"
+                    ),
+                    "p/Client.java": (
+                        "package p;\n"
+                        "public class Client {\n"
+                        "    public void onAdded(Event event) {\n"
+                        "        System.out.println(\"no lambda\");\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "Client.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "public class Client {\n"
+                "    public void onAdded(Event event) {\n"
+                "        event2.touch();\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_parameter_capture_alias_reference_count"
+                ],
+                0,
+            )
+
     def test_invokedynamic_helper_return_cast_uses_generated_signature(
         self,
     ):
