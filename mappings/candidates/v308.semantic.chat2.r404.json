@@ -1,0 +1,280 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Loadout",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/gui/b/a as rs.gui.loadouts.Loadout."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact model stores name/color/tag/spellbook, equipment-slot map, inventory loadout items, stats and related loadout metadata."
+        }
+      ],
+      "note": "Source-identified Loadouts GUI class with exact-v308 structural/behavioral corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/a$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Spellbook",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/gui/b/a$a as rs.gui.loadouts.Loadout$Spellbook."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact enum owned by Loadout stores spellbook display/name metadata plus an integer id and supports lookup by id."
+        }
+      ],
+      "note": "Source-identified Loadouts GUI class with exact-v308 structural/behavioral corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/b/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutSerializer",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/gui/b/b/c as rs.gui.loadouts.io.LoadoutSerializer."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact utility serializes Loadout to DataOutputStream and deserializes a LoadoutList from DataInputStream."
+        }
+      ],
+      "note": "Source-identified Loadouts GUI class with exact-v308 structural/behavioral corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/b/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutStore",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/gui/b/b/d as rs.gui.loadouts.io.LoadoutStore."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact store owns loadout panel context, path/name constants and save/list/load/delete-style persistence methods for named loadout collections."
+        }
+      ],
+      "note": "Source-identified Loadouts GUI class with exact-v308 structural/behavioral corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/b/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutVersion",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/gui/b/b/e as rs.gui.loadouts.io.LoadoutVersion."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact version helper stores a source string plus integer version state and exposes version-update/check behavior."
+        }
+      ],
+      "note": "Source-identified Loadouts GUI class with exact-v308 structural/behavioral corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutList",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/gui/b/c as rs.gui.loadouts.LoadoutList."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact class extends ArrayList<Loadout> and owns one list name."
+        }
+      ],
+      "note": "Source-identified Loadouts GUI class with exact-v308 structural/behavioral corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/c/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DefaultLoadout",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/gui/b/c/a as rs.gui.loadouts.equipment.DefaultLoadout."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact helper owns default equipment/stat constants and can populate/save a named default LoadoutList through LoadoutStore."
+        }
+      ],
+      "note": "Source-identified Loadouts GUI class with exact-v308 structural/behavioral corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/c/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EquipmentPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/gui/b/c/b as rs.gui.loadouts.equipment.EquipmentPanel."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact equipment UI owns a Loadout plus per-slot image controls and renders EquipmentSlot state into a panel."
+        }
+      ],
+      "note": "Source-identified Loadouts GUI class with exact-v308 structural/behavioral corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/c/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EquipmentSlot",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/gui/b/c/c as rs.gui.loadouts.equipment.EquipmentSlot."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact enum contains eleven equipment slots, each with image/position/id metadata and lookup by id."
+        }
+      ],
+      "note": "Source-identified Loadouts GUI class with exact-v308 structural/behavioral corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/gui/b/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutsPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/gui/b/h as rs.gui.loadouts.LoadoutsPanel."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact UI panel extends the shared side-panel base and owns LoadoutFolders, LoadoutStore, EquipmentPanel, list selector, popup menu, stat editor and loadout actions."
+        }
+      ],
+      "note": "Source-identified Loadouts GUI class with exact-v308 structural/behavioral corroboration."
+    }
+  ],
+  "conflicts": []
+}
