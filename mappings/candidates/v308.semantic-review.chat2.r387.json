@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_C1C60124DBF5FEC9093E",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_A3339653626A02032038",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000544",
+      "owner_logical_id": "CLIENT_CLASS_000544",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Widget",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/n/c as rs.interfaces.widgets.Widget."
+        },
+        {
+          "family": "exact_abstract_widget_base",
+          "detail": "Exact v308 rs/n/c is abstract, extends R56 RSInterface, owns the shared font/resource array plus a build-state flag, and defines the abstract no-arg build operation inherited by the custom interface widget-builder family."
+        },
+        {
+          "family": "exact_subclass_family",
+          "detail": "Dozens of exact-v308 rs/n/c/* interface classes extend this base, including already-reviewed concrete interfaces such as EquipmentInterface, ConstructionRoomSelectionInterface and many custom SpawnPK panels."
+        },
+        {
+          "family": "exact_client_consumption",
+          "detail": "Client directly references the rs/n/c base in addition to the large concrete subclass family, proving it is live widget/interface infrastructure rather than an isolated source-map artifact."
+        }
+      ],
+      "note": "Source-proven custom Widget base layered over the legacy R56 RSInterface definition object."
+    },
+    {
+      "proposal_id": "SEMPROP_F1FDCD3DA68A029E7088",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000680",
+      "owner_logical_id": "CLIENT_CLASS_000680",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WidgetManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/n/d as rs.interfaces.WidgetManager."
+        },
+        {
+          "family": "exact_widget_registry",
+          "detail": "Exact v308 owns the static List<rs.n.c> custom-widget registry and shared font/resource array; initialization clears the list, resets related dropdown/task state and constructs/registers the concrete rs/n/c widget family."
+        },
+        {
+          "family": "exact_registration_lifecycle",
+          "detail": "The manager's initialization method instantiates a long sequence of concrete Widget subclasses and routes each through one shared registration method, fixing it as the central custom widget/interface manager."
+        },
+        {
+          "family": "exact_live_consumers",
+          "detail": "Client plus gameframe/interface code reference this manager directly, and concrete widget classes call back into it for shared registration/state."
+        }
+      ],
+      "note": "Source-proven manager for the custom rs/n/c Widget family; distinct from R284 InterfaceLayoutManager."
+    }
+  ],
+  "unresolved": []
+}
