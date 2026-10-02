@@ -120,6 +120,14 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 "/normalization_summary/hidden_layout_constructor_argument_action_count",
             "hidden_layout_constructor_argument_reference_count":
                 "/normalization_summary/hidden_layout_constructor_argument_reference_count",
+            "erased_generic_constructor_argument_cast_action_count":
+                "/normalization_summary/erased_generic_constructor_argument_cast_action_count",
+            "erased_generic_constructor_argument_cast_reference_count":
+                "/normalization_summary/erased_generic_constructor_argument_cast_reference_count",
+            "invokedynamic_image_loader_local_action_count":
+                "/normalization_summary/invokedynamic_image_loader_local_action_count",
+            "invokedynamic_image_loader_local_reference_count":
+                "/normalization_summary/invokedynamic_image_loader_local_reference_count",
         }
         for name, pointer in expected.items():
             self.assertIn(
@@ -135,6 +143,16 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         self.assertIn(
             'HIDDEN_LAYOUT_CONSTRUCTOR_ARGUMENT_REFERENCES='
             '$($Recovered.hidden_layout_constructor_argument_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'ERASED_GENERIC_CONSTRUCTOR_ARGUMENT_CAST_REFERENCES='
+            '$($Recovered.erased_generic_constructor_argument_cast_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'INVOKEDYNAMIC_IMAGE_LOADER_LOCAL_REFERENCES='
+            '$($Recovered.invokedynamic_image_loader_local_reference_count)',
             script,
         )
 
