@@ -3757,6 +3757,18 @@ def _normalize_collectors_to_list_generic_casts(
             if len(element_source_names) != 1:
                 continue
             element_source = next(iter(element_source_names))
+            source_return_match = re.fullmatch(
+                r"(?:java\.util\.)?List\s*<\s*"
+                r"(?P<element>[A-Za-z_$][A-Za-z0-9_$.]*)"
+                r"\s*>",
+                method_match.group("return").strip(),
+            )
+            if (
+                source_return_match is None
+                or source_return_match.group("element")
+                != element_source
+            ):
+                continue
             if (
                 _source_parameters_match_descriptor(
                     element_source + " recoveredCollectorElement",
