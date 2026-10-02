@@ -6127,7 +6127,7 @@ def _normalize_linkedhashmap_field_cast_placeholders(
     even when K is not a declared source type variable.  Reconstruct only
     that impossible key placeholder from the exact direct LinkedHashMap
     subclass Signature when it proves a java.lang.String key, and require
-    matching erased get/keySet/put calls in the enclosing exact method.
+    matching erased get/keySet/put/clear calls in the enclosing exact method.
     """
 
     rel = path.relative_to(source_root).as_posix()
@@ -6254,7 +6254,7 @@ def _normalize_linkedhashmap_field_cast_placeholders(
                 r"\s*\)\s*this\s*\.\s*"
                 r"(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)"
                 r"\s*\)\s*\.\s*"
-                r"(?P<member>get|keySet|put)\s*\(",
+                r"(?P<member>get|keySet|put|clear)\s*\(",
                 tail,
             )
             if use_match is None:
@@ -6344,6 +6344,7 @@ def _normalize_linkedhashmap_field_cast_placeholders(
                     "(Ljava/lang/Object;Ljava/lang/Object;)"
                     "Ljava/lang/Object;"
                 ),
+                "clear": "()V",
             }
             enough = True
             for (owner, member), required in (
