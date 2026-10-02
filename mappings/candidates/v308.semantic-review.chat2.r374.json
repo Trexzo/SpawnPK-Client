@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_94BCDB088234E4D64609",
+  "proposals": [{
+    "proposal_id": "SEMPROP_D39614C3019A5EE4DCED",
+    "target_kind": "class",
+    "stable_id": "CLIENT_CLASS_000771",
+    "owner_logical_id": "CLIENT_CLASS_000771",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate": {"owner": "rs/r", "name": null, "descriptor": null},
+    "proposed_name": "RewardContainerTooltipHandler",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"exact_reward_container_dispatch","detail":"Exact v308 rs/r contains no fields and one public static boolean helper. It branches on reward-container item names including Donator mystery box, Blood key, Grand blood key, Bond casket/key, Mystery crate/chest, event caskets/packages/crackers, pet boxes/chests and related reward containers."},
+      {"family":"exact_tooltip_payload_construction","detail":"Each recognized branch augments the displayed text with exact reward/rarity guidance and materializes an int[] of preview item IDs before dispatching the result through Client.a(int,int,String,int[])."},
+      {"family":"reviewed_tooltip_subsystem_join","detail":"R207 proves Client.a(int,int,String,int[]) constructs TooltipContent (rs/l/f/a/j/a) and submits it to TooltipOverlay (rs/l/f/a/j/b); R213 proves the owning OverlayManager. rs/r therefore feeds reward-container-specific content into the canonical tooltip overlay subsystem."},
+      {"family":"exact_handler_contract","detail":"The helper positions the tooltip from the live Client mouse coordinates with the exact interface offset adjustment, returns true after submitting a recognized reward-container tooltip, and returns false when no supported container name matched."}
+    ],
+    "note":"RewardContainerTooltipHandler is a descriptive exact-behavior name for the static utility that recognizes reward containers and submits reward-preview TooltipContent. It does not claim recovery of an original developer identifier."
+  }],
+  "unresolved": []
+}
