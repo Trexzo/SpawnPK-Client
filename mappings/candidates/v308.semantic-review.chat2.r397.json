@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_7DCE9807CE1EFAE62993",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_42E8D473DA885CE4C625",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000158",
+      "owner_logical_id": "CLIENT_CLASS_000158",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {"owner":"rs/e/n","name":null,"descriptor":null},
+      "proposed_name": "FlashNotification",
+      "confidence": 0.999,
+      "evidence": [
+        {"family":"exact_enum_surface","detail":"Exact v308 enum constants are DISABLED, FLASH_TWO_SECONDS, SOLID_TWO_SECONDS, FLASH_UNTIL_CANCELLED and SOLID_UNTIL_CANCELLED with display labels Off, Flash for 2 seconds, Solid for 2 seconds, Flash until cancelled and Solid until cancelled."},
+        {"family":"exact_notifier_consumer","detail":"R14 Notifier consumes this enum from the notification configuration and implements the corresponding two-second versus until-cancelled and flash versus solid in-client notification-frame behavior."},
+        {"family":"exact_config_binding","detail":"The notifications config surface exposes key flashNotification / title Flash / description Flashes the game frame as a notification with return type rs/e/n."},
+        {"family":"upstream_runelite_source_identity","detail":"RuneLite uses the source enum name FlashNotification for this same notification setting and the same five-mode constant surface."}
+      ],
+      "note":"Source-proven notification flash enum. Existing R14 Notifier and R244 NotificationSound ownership remains unchanged."
+    }
+  ],
+  "unresolved": []
+}
