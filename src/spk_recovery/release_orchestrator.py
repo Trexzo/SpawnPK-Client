@@ -396,6 +396,7 @@ def build_existing_authority_release_from_workspace(
         "collision_transform_id",
         "collision_plan_id",
         "collision_report_id",
+        "collision_mapping_sha256",
         "base_readable_jar_sha256",
     )
     missing = [

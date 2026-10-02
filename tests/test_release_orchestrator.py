@@ -118,6 +118,7 @@ class ExistingAuthorityReleaseWorkspaceTests(unittest.TestCase):
             "collision_transform_id": "COLLTRANS_TEST",
             "collision_plan_id": "COLLPLAN_TEST",
             "collision_report_id": "COLLREPORT_TEST",
+            "collision_mapping_sha256": "d" * 64,
         }
 
     def test_incomplete_collision_derivation_is_refused(self):
@@ -130,7 +131,7 @@ class ExistingAuthorityReleaseWorkspaceTests(unittest.TestCase):
             plan.write_text("{}\n", encoding="utf-8")
 
             manifest = self._derived_manifest()
-            del manifest["collision_plan_id"]
+            del manifest["collision_mapping_sha256"]
 
             with self.assertRaisesRegex(
                 ExistingAuthorityReleaseError,
