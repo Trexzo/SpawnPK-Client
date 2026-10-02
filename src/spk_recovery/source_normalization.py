@@ -3063,14 +3063,24 @@ def _normalize_two_string_swing_capture_aliases(
         )
         if show_index is None or selection_index is None:
             continue
-        if show_index < 3 or selection_index < 1:
+        if show_index < 4 or selection_index < 1:
             continue
         if not (
-            instructions[show_index - 3].get("mnemonic") == "aload"
+            instructions[show_index - 4].get("mnemonic")
+            == "aconst_null"
+            and instructions[show_index - 3].get("mnemonic") == "aload"
             and int(
                 instructions[show_index - 3].get("local_index", -1)
             )
             == 0
+            and instructions[show_index - 2].get("mnemonic")
+            in {"ldc", "ldc_w"}
+            and instructions[show_index - 2].get("constant")
+            == "Message"
+            and int(
+                instructions[show_index - 1].get("int_constant", -1)
+            )
+            == 2
             and instructions[selection_index - 1].get("mnemonic")
             == "aload"
             and int(
@@ -3091,9 +3101,9 @@ def _normalize_two_string_swing_capture_aliases(
     actions: list[dict[str, Any]] = []
 
     message_re = re.compile(
-        r"JOptionPane\.showConfirmDialog\s*\(\s*null\s*,\s*"
-        r"(?P<alias>[A-Za-z_$][A-Za-z0-9_$]*)\s*,\s*"
-        r"\"Message\"\s*,\s*2\s*\)"
+        r"JOptionPane\\.showConfirmDialog\\s*\\(\\s*null\\s*,\\s*"
+        r"(?P<alias>[A-Za-z_$][A-Za-z0-9_$]*)\\s*,"
+        r"[ \\t]+,\\s*2\\s*\\)"
     )
     data_re = re.compile(
         r"new\s+StringSelection\s*\(\s*"
