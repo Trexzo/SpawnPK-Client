@@ -3596,6 +3596,621 @@ def _normalize_invokedynamic_parameter_capture_aliases(
 
 
 
+
+def _exact_iterator_checkcast_sequences(
+    method: dict[str, Any],
+) -> list[dict[str, Any]]:
+    instructions = list(method.get("instructions", []))
+    out: list[dict[str, Any]] = []
+    for index in range(len(instructions) - 1):
+        first = instructions[index]
+        second = instructions[index + 1]
+        if not (
+            first.get("mnemonic") == "invokeinterface"
+            and first.get("owner") == "java/util/Iterator"
+            and first.get("name") == "next"
+            and first.get("descriptor") == "()Ljava/lang/Object;"
+            and second.get("mnemonic") == "checkcast"
+        ):
+            continue
+        out.append(
+            {
+                "instruction_index": index,
+                "offset": int(first.get("offset", -1)),
+                "target_owner": str(second.get("type", "")),
+            }
+        )
+    return out
+
+
+def _normalize_iterator_next_assignment_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore source casts erased from Iterator.next() assignments.
+
+    javac emits Iterator.next():Object followed by checkcast when a generic
+    iterator element is assigned to a concrete reference type. Procyon can
+    retain the concrete local declaration while dropping the cast. Restore
+    only when a unique exact method proves the matching checkcast target.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    assignment_re = re.compile(
+        r"(?m)^(?P<indent>[ \t]*)(?:final\s+)?"
+        r"(?P<type>[A-Za-z_$][A-Za-z0-9_$.]*)\s+"
+        r"(?P<var>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*"
+        r"(?P<rhs>(?P<iterator>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\.\s*next\s*\(\s*\))\s*;"
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        occurrences = [
+            match
+            for match in assignment_re.finditer(method_code)
+            if match.group("type") != "Object"
+        ]
+        if not occurrences:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        candidates: list[dict[str, Any]] = []
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+            sequences = _exact_iterator_checkcast_sequences(exact_method)
+            enough = True
+            for occurrence in occurrences:
+                source_simple = occurrence.group("type").rsplit(".", 1)[-1]
+                count = sum(
+                    _source_simple_type_name(row["target_owner"])
+                    == source_simple
+                    for row in sequences
+                )
+                if count < sum(
+                    other.group("type").rsplit(".", 1)[-1]
+                    == source_simple
+                    for other in occurrences
+                ):
+                    enough = False
+                    break
+            if enough:
+                candidates.append(
+                    {
+                        "method": exact_method,
+                        "sequences": sequences,
+                    }
+                )
+        if len(candidates) != 1:
+            continue
+
+        proof = candidates[0]
+        for occurrence in occurrences:
+            source_type = occurrence.group("type")
+            source_simple = source_type.rsplit(".", 1)[-1]
+            target_rows = [
+                row
+                for row in proof["sequences"]
+                if _source_simple_type_name(row["target_owner"])
+                == source_simple
+            ]
+            if not target_rows:
+                continue
+            rhs = occurrence.group("rhs")
+            edits.append(
+                (
+                    method_start + occurrence.start("rhs"),
+                    method_start + occurrence.end("rhs"),
+                    "(" + source_type + ")" + rhs,
+                )
+            )
+            actions.append(
+                {
+                    "kind": "iterator_next_assignment_cast",
+                    "source_path": rel,
+                    "method_name": method_match.group("name"),
+                    "method_descriptor": proof["method"]["descriptor"],
+                    "local_name": occurrence.group("var"),
+                    "source_type": source_type,
+                    "target_owners": sorted(
+                        {str(row["target_owner"]) for row in target_rows}
+                    ),
+                    "replacement_count": 1,
+                    "provenance": {
+                        "kind": "source_safety",
+                        "reason": (
+                            "procyon_iterator_next_checkcast_erasure"
+                        ),
+                        "strategy": (
+                            "exact_iterator_next_followed_by_matching_checkcast"
+                        ),
+                    },
+                }
+            )
+
+    if not edits:
+        return []
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping iterator-next cast edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
+def _exact_integer_enhanced_for_sequences(
+    method: dict[str, Any],
+) -> list[dict[str, Any]]:
+    instructions = list(method.get("instructions", []))
+    out: list[dict[str, Any]] = []
+    for index in range(len(instructions) - 3):
+        a, b, c, d = instructions[index:index + 4]
+        if not (
+            a.get("mnemonic") == "invokeinterface"
+            and a.get("owner") == "java/util/Iterator"
+            and a.get("name") == "next"
+            and a.get("descriptor") == "()Ljava/lang/Object;"
+            and b.get("mnemonic") == "checkcast"
+            and b.get("type") == "java/lang/Integer"
+            and c.get("mnemonic") == "invokevirtual"
+            and c.get("owner") == "java/lang/Integer"
+            and c.get("name") == "intValue"
+            and c.get("descriptor") == "()I"
+            and d.get("mnemonic") == "istore"
+        ):
+            continue
+        out.append(
+            {
+                "offset": int(a.get("offset", -1)),
+                "local_index": int(d.get("local_index", -1)),
+            }
+        )
+    return out
+
+
+def _normalize_primitive_enhanced_for_iterable_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore the generic view required by primitive enhanced-for loops."""
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        profile = profile_class_field_accesses(
+            readable_zip.read(class_entry)
+        )
+    except (KeyError, BytecodeProfileError):
+        return []
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+    loop_re = re.compile(
+        r"\bfor\s*\(\s*(?:final\s+)?int\s+"
+        r"(?P<var>[A-Za-z_$][A-Za-z0-9_$]*)\s*:\s*"
+        r"(?P<collection>[A-Za-z_$][A-Za-z0-9_$]*)\s*\)"
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        loops = list(loop_re.finditer(method_code))
+        if not loops:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        candidates: list[dict[str, Any]] = []
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+            sequences = _exact_integer_enhanced_for_sequences(exact_method)
+            if len(sequences) < len(loops):
+                continue
+            candidates.append(
+                {
+                    "method": exact_method,
+                    "sequences": sequences,
+                }
+            )
+        if len(candidates) != 1:
+            continue
+
+        proof = candidates[0]
+        for loop in loops:
+            collection = loop.group("collection")
+            edits.append(
+                (
+                    method_start + loop.start("collection"),
+                    method_start + loop.end("collection"),
+                    "(Iterable<Integer>)" + collection,
+                )
+            )
+            actions.append(
+                {
+                    "kind": "primitive_enhanced_for_iterable_cast",
+                    "source_path": rel,
+                    "method_name": method_match.group("name"),
+                    "method_descriptor": proof["method"]["descriptor"],
+                    "loop_variable": loop.group("var"),
+                    "collection_name": collection,
+                    "exact_sequence_count": len(proof["sequences"]),
+                    "replacement_count": 1,
+                    "provenance": {
+                        "kind": "source_safety",
+                        "reason": (
+                            "procyon_raw_iterable_primitive_enhanced_for"
+                        ),
+                        "strategy": (
+                            "exact_iterator_integer_checkcast_and_unbox"
+                        ),
+                    },
+                }
+            )
+
+    if not edits:
+        return []
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping enhanced-for iterable edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
+def _exact_map_get_narrowing_sequences(
+    method: dict[str, Any],
+) -> list[dict[str, Any]]:
+    instructions = list(method.get("instructions", []))
+    out: list[dict[str, Any]] = []
+    for index, item in enumerate(instructions):
+        if not (
+            item.get("mnemonic") == "invokeinterface"
+            and item.get("owner") == "java/util/Map"
+            and item.get("name") == "get"
+            and item.get("descriptor")
+            == "(Ljava/lang/Object;)Ljava/lang/Object;"
+        ):
+            continue
+        if index + 1 >= len(instructions):
+            continue
+        store = instructions[index + 1]
+        if store.get("mnemonic") != "astore":
+            continue
+        slot = int(store.get("local_index", -1))
+        targets: dict[str, list[dict[str, Any]]] = {}
+        for probe in range(index + 2, len(instructions)):
+            row = instructions[probe]
+            if not (
+                row.get("mnemonic") == "aload"
+                and int(row.get("local_index", -2)) == slot
+                and probe + 1 < len(instructions)
+            ):
+                continue
+            next_row = instructions[probe + 1]
+            if next_row.get("mnemonic") == "instanceof":
+                target = str(next_row.get("type", ""))
+                targets.setdefault(target, [])
+        for target in list(targets):
+            for probe in range(index + 2, len(instructions) - 2):
+                a, b, invoke = instructions[probe:probe + 3]
+                if not (
+                    a.get("mnemonic") == "aload"
+                    and int(a.get("local_index", -2)) == slot
+                    and b.get("mnemonic") == "checkcast"
+                    and b.get("type") == target
+                    and invoke.get("mnemonic")
+                    in {
+                        "invokevirtual",
+                        "invokeinterface",
+                        "invokespecial",
+                    }
+                    and invoke.get("owner") == target
+                ):
+                    continue
+                targets[target].append(
+                    {
+                        "member_name": str(invoke.get("name", "")),
+                        "member_descriptor": str(
+                            invoke.get("descriptor", "")
+                        ),
+                    }
+                )
+        for target, invocations in targets.items():
+            if not invocations:
+                continue
+            out.append(
+                {
+                    "offset": int(item.get("offset", -1)),
+                    "local_index": slot,
+                    "target_owner": target,
+                    "invocations": invocations,
+                }
+            )
+    return out
+
+
+def _normalize_object_backed_map_get_narrow_locals(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore Object locals when narrowing occurs only after Map.get()."""
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        profile = profile_class_field_accesses(
+            readable_zip.read(class_entry)
+        )
+    except (KeyError, BytecodeProfileError):
+        return []
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+    declaration_re = re.compile(
+        r"(?m)^(?P<indent>[ \t]*)(?:final\s+)?"
+        r"(?P<type>[A-Za-z_$][A-Za-z0-9_$.]*)\s+"
+        r"(?P<var>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*"
+        r"(?P<map>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\.\s*get\s*\([^;\n]*\)\s*;"
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        declarations = [
+            match
+            for match in declaration_re.finditer(method_code)
+            if match.group("type") != "Object"
+        ]
+        if not declarations:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        candidates: list[dict[str, Any]] = []
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+            sequences = _exact_map_get_narrowing_sequences(exact_method)
+            matched = []
+            for declaration in declarations:
+                simple = declaration.group("type").rsplit(".", 1)[-1]
+                rows = [
+                    row
+                    for row in sequences
+                    if _source_simple_type_name(row["target_owner"])
+                    == simple
+                ]
+                if len(rows) != 1:
+                    break
+                matched.append((declaration, rows[0]))
+            else:
+                candidates.append(
+                    {
+                        "method": exact_method,
+                        "matched": matched,
+                    }
+                )
+        if len(candidates) != 1:
+            continue
+
+        proof = candidates[0]
+        for declaration, row in proof["matched"]:
+            source_type = declaration.group("type")
+            local_name = declaration.group("var")
+            instanceof_re = re.compile(
+                r"(?<![A-Za-z0-9_$])"
+                + re.escape(local_name)
+                + r"\s+instanceof\s+"
+                + re.escape(source_type)
+                + r"\b"
+            )
+            if not instanceof_re.search(method_code):
+                continue
+
+            member_names = {
+                str(call["member_name"])
+                for call in row["invocations"]
+                if call.get("member_name")
+            }
+            if len(member_names) != 1:
+                continue
+            member_name = next(iter(member_names))
+            direct_member_re = re.compile(
+                r"(?<![A-Za-z0-9_$])(?P<receiver>"
+                + re.escape(local_name)
+                + r")(?=\s*\.\s*"
+                + re.escape(member_name)
+                + r"\s*\()"
+            )
+            direct_uses = list(direct_member_re.finditer(method_code))
+            if len(direct_uses) > 1:
+                continue
+
+            type_start = method_start + declaration.start("type")
+            type_end = method_start + declaration.end("type")
+            edits.append((type_start, type_end, "Object"))
+            replacement_count = 1
+            if len(direct_uses) == 1:
+                use = direct_uses[0]
+                edits.append(
+                    (
+                        method_start + use.start("receiver"),
+                        method_start + use.end("receiver"),
+                        "((" + source_type + ")" + local_name + ")",
+                    )
+                )
+                replacement_count += 1
+
+            actions.append(
+                {
+                    "kind": "object_backed_map_get_narrow_local",
+                    "source_path": rel,
+                    "method_name": method_match.group("name"),
+                    "method_descriptor": proof["method"]["descriptor"],
+                    "local_name": local_name,
+                    "narrow_type": source_type,
+                    "target_owner": row["target_owner"],
+                    "member_name": member_name,
+                    "replacement_count": replacement_count,
+                    "provenance": {
+                        "kind": "source_safety",
+                        "reason": (
+                            "procyon_map_get_preemptive_narrowing"
+                        ),
+                        "strategy": (
+                            "exact_map_get_object_store_instanceof_checkcast"
+                        ),
+                    },
+                }
+            )
+
+    if not edits:
+        return []
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping Map.get narrowing edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_erased_generic_constructor_argument_casts(
     *,
     source_root: Path,
@@ -8587,6 +9202,27 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_iterator_next_assignment_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
+                    _normalize_primitive_enhanced_for_iterable_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
+                    _normalize_object_backed_map_get_narrow_locals(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_erased_generic_constructor_argument_casts(
                         source_root=source_root,
                         path=path,
@@ -8822,6 +9458,33 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "invokedynamic_parameter_capture_alias"
+        ),
+        "iterator_next_assignment_cast_action_count": sum(
+            action["kind"] == "iterator_next_assignment_cast"
+            for action in actions
+        ),
+        "iterator_next_assignment_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"] == "iterator_next_assignment_cast"
+        ),
+        "primitive_enhanced_for_iterable_cast_action_count": sum(
+            action["kind"] == "primitive_enhanced_for_iterable_cast"
+            for action in actions
+        ),
+        "primitive_enhanced_for_iterable_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"] == "primitive_enhanced_for_iterable_cast"
+        ),
+        "object_backed_map_get_narrow_local_action_count": sum(
+            action["kind"] == "object_backed_map_get_narrow_local"
+            for action in actions
+        ),
+        "object_backed_map_get_narrow_local_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"] == "object_backed_map_get_narrow_local"
         ),
         "erased_generic_constructor_argument_cast_action_count": sum(
             action["kind"]
