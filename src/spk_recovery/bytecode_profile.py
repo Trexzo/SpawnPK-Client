@@ -527,6 +527,25 @@ def _normalized_class_reference(name: str) -> str | None:
     return None
 
 
+def profile_class_utf8_constants(
+    data: bytes,
+) -> list[str]:
+    """Return the exact distinct CONSTANT_Utf8 payloads in a class file."""
+    r = _Reader(data)
+    if r.u4() != 0xCAFEBABE:
+        raise BytecodeProfileError("not a JVM class")
+    r.u2()
+    r.u2()
+    cp = _constant_pool(r)
+    return sorted(
+        {
+            str(value[1])
+            for value in cp
+            if value is not None and value[0] == 1
+        }
+    )
+
+
 def profile_class_constant_pool_references(
     data: bytes,
 ) -> dict[str, Any]:
