@@ -1,0 +1,320 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientFileDownloader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/cache/a/a as rs.cache.download.ClientFileDownloader."
+        },
+        {
+          "family": "exact_v308_role",
+          "detail": "Recovered source map identifies rs/cache/a/a as rs.cache.download.ClientFileDownloader; exact v308 extends FileDownloader, adds Client + display label state, computes percent/speed and reports download progress through Client."
+        },
+        {
+          "family": "exact_family_join",
+          "detail": "The class sits in the live updater/download family anchored by R23 AssetVersion and R405 BrowserHyperlinkListener; exact references join the downloader, updater base/manager, concrete asset updaters and client/launcher UI."
+        }
+      ],
+      "note": "Source-proven cache updater/download class with exact-v308 behavioral corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "FileDownloader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/cache/a/b as rs.cache.download.FileDownloader."
+        },
+        {
+          "family": "exact_v308_role",
+          "detail": "Recovered source map identifies rs/cache/a/b as rs.cache.download.FileDownloader; exact v308 owns URL/File state, streams HTTP content into the target file, tracks bytes/content length and calls an abstract progress hook."
+        },
+        {
+          "family": "exact_family_join",
+          "detail": "The class sits in the live updater/download family anchored by R23 AssetVersion and R405 BrowserHyperlinkListener; exact references join the downloader, updater base/manager, concrete asset updaters and client/launcher UI."
+        }
+      ],
+      "note": "Source-proven cache updater/download class with exact-v308 behavioral corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ProgressListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/cache/b/a as rs.cache.updater.ProgressListener."
+        },
+        {
+          "family": "exact_v308_role",
+          "detail": "Recovered source map identifies rs/cache/b/a as rs.cache.updater.ProgressListener; exact v308 is a one-method interface void a(int) used as updater progress callback infrastructure."
+        },
+        {
+          "family": "exact_family_join",
+          "detail": "The class sits in the live updater/download family anchored by R23 AssetVersion and R405 BrowserHyperlinkListener; exact references join the downloader, updater base/manager, concrete asset updaters and client/launcher UI."
+        }
+      ],
+      "note": "Source-proven cache updater/download class with exact-v308 behavioral corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AssetUpdateError",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/cache/b/b as rs.cache.updater.AssetUpdateError."
+        },
+        {
+          "family": "exact_v308_role",
+          "detail": "Recovered source map identifies rs/cache/b/b as rs.cache.updater.AssetUpdateError; exact v308 is the updater error enum consumed by AssetUpdater/manager failure paths."
+        },
+        {
+          "family": "exact_family_join",
+          "detail": "The class sits in the live updater/download family anchored by R23 AssetVersion and R405 BrowserHyperlinkListener; exact references join the downloader, updater base/manager, concrete asset updaters and client/launcher UI."
+        }
+      ],
+      "note": "Source-proven cache updater/download class with exact-v308 behavioral corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AssetUpdaterManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/cache/b/c as rs.cache.updater.AssetUpdaterManager."
+        },
+        {
+          "family": "exact_v308_role",
+          "detail": "Recovered source map identifies rs/cache/b/c as rs.cache.updater.AssetUpdaterManager; exact v308 owns the updater list, Client/Launcher integration and iteration/orchestration of concrete asset updater instances."
+        },
+        {
+          "family": "exact_family_join",
+          "detail": "The class sits in the live updater/download family anchored by R23 AssetVersion and R405 BrowserHyperlinkListener; exact references join the downloader, updater base/manager, concrete asset updaters and client/launcher UI."
+        }
+      ],
+      "note": "Source-proven cache updater/download class with exact-v308 behavioral corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "AssetUpdater",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/cache/b/d as rs.cache.updater.AssetUpdater."
+        },
+        {
+          "family": "exact_v308_role",
+          "detail": "Recovered source map identifies rs/cache/b/d as rs.cache.updater.AssetUpdater; exact v308 is the shared updater base with Client ownership, archive extraction/helpers, error reporting and abstract update/version hooks."
+        },
+        {
+          "family": "exact_family_join",
+          "detail": "The class sits in the live updater/download family anchored by R23 AssetVersion and R405 BrowserHyperlinkListener; exact references join the downloader, updater base/manager, concrete asset updaters and client/launcher UI."
+        }
+      ],
+      "note": "Source-proven cache updater/download class with exact-v308 behavioral corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CacheUpdater",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/cache/b/a/a as rs.cache.updater.assets.CacheUpdater."
+        },
+        {
+          "family": "exact_v308_role",
+          "detail": "Recovered source map identifies rs/cache/b/a/a as rs.cache.updater.assets.CacheUpdater; exact v308 extends AssetUpdater and performs the cache archive/version download-install workflow."
+        },
+        {
+          "family": "exact_family_join",
+          "detail": "The class sits in the live updater/download family anchored by R23 AssetVersion and R405 BrowserHyperlinkListener; exact references join the downloader, updater base/manager, concrete asset updaters and client/launcher UI."
+        }
+      ],
+      "note": "Source-proven cache updater/download class with exact-v308 behavioral corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientUpdater",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/cache/b/a/b as rs.cache.updater.assets.ClientUpdater."
+        },
+        {
+          "family": "exact_v308_role",
+          "detail": "Recovered source map identifies rs/cache/b/a/b as rs.cache.updater.assets.ClientUpdater; exact v308 extends AssetUpdater and owns the client artifact/version update path."
+        },
+        {
+          "family": "exact_family_join",
+          "detail": "The class sits in the live updater/download family anchored by R23 AssetVersion and R405 BrowserHyperlinkListener; exact references join the downloader, updater base/manager, concrete asset updaters and client/launcher UI."
+        }
+      ],
+      "note": "Source-proven cache updater/download class with exact-v308 behavioral corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/a/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigUpdater",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/cache/b/a/c as rs.cache.updater.assets.ConfigUpdater."
+        },
+        {
+          "family": "exact_v308_role",
+          "detail": "Recovered source map identifies rs/cache/b/a/c as rs.cache.updater.assets.ConfigUpdater; exact v308 uses config_version, 'Configs' and 'Downloading game configs..' literals and installs the configuration archive."
+        },
+        {
+          "family": "exact_family_join",
+          "detail": "The class sits in the live updater/download family anchored by R23 AssetVersion and R405 BrowserHyperlinkListener; exact references join the downloader, updater base/manager, concrete asset updaters and client/launcher UI."
+        }
+      ],
+      "note": "Source-proven cache updater/download class with exact-v308 behavioral corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/a/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "SpriteUpdater",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/cache/b/a/d as rs.cache.updater.assets.SpriteUpdater."
+        },
+        {
+          "family": "exact_v308_role",
+          "detail": "Recovered source map identifies rs/cache/b/a/d as rs.cache.updater.assets.SpriteUpdater; exact v308 uses sprite_version, 'Sprites' and 'Downloading sprites..' literals and installs the sprite archive."
+        },
+        {
+          "family": "exact_family_join",
+          "detail": "The class sits in the live updater/download family anchored by R23 AssetVersion and R405 BrowserHyperlinkListener; exact references join the downloader, updater base/manager, concrete asset updaters and client/launcher UI."
+        }
+      ],
+      "note": "Source-proven cache updater/download class with exact-v308 behavioral corroboration."
+    }
+  ],
+  "conflicts": []
+}
