@@ -3868,6 +3868,57 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 after.stdout + after.stderr,
             )
 
+    def test_impossible_collectors_tolist_cast_rejects_qualified_element_owner_drift(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Arrays;\n"
+                        "import java.util.List;\n"
+                        "import java.util.stream.Collectors;\n"
+                        "public class A {\n"
+                        "    public static List<String> values(String prefix) {\n"
+                        "        return Arrays.asList(\"a\", \"ab\").stream()\n"
+                        "            .filter(value -> value.startsWith(prefix))\n"
+                        "            .collect(Collectors.toList());\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.util.Arrays;\n"
+                "import java.util.List;\n"
+                "import java.util.stream.Collector;\n"
+                "import java.util.stream.Collectors;\n"
+                "public class A {\n"
+                "    public static List<String> values(String prefix) {\n"
+                "        return Arrays.asList(\"a\", \"ab\").stream()\n"
+                "            .filter(value -> value.startsWith(prefix))\n"
+                "            .collect((Collector<? super Object, ?, List<other.String>>)Collectors.toList());\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "impossible_collectors_tolist_cast_action_count"
+                ],
+                0,
+            )
+
     def test_impossible_collectors_tolist_cast_fails_on_generic_return_drift(
         self,
     ):
