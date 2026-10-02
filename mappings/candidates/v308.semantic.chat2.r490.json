@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b/w",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TopLevelConfigPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_panel_shape",
+          "detail": "Exact-v308 rs/s/b/w extends R148 PluginPanel and owns a MaterialTabGroup-like rs/ui/components/b/e, CardLayout, content JPanel, EventBus, R488 PluginListPanel and nested panel/tab state."
+        },
+        {
+          "family": "exact_routing_behavior",
+          "detail": "The class creates material tabs backed by PluginPanel providers, switches the CardLayout by key, opens a plugin configuration by name, reacts to plugin selection and forwards J_/K_ lifecycle hooks to the active child panel."
+        },
+        {
+          "family": "exact_config_plugin_join",
+          "detail": "R489 ConfigPlugin injects Provider<rs/s/b/w>, stores the resolved panel and uses it as the navigation panel for the Configuration toolbar button."
+        },
+        {
+          "family": "upstream_source_match",
+          "detail": "RuneLite TopLevelConfigPanel extends PluginPanel and has the same MaterialTabGroup + CardLayout composition, plugin-list/configuration routing and ConfigPlugin ownership."
+        }
+      ],
+      "note": "Source-correlated exact-v308 recovery of RuneLite TopLevelConfigPanel."
+    }
+  ],
+  "conflicts": []
+}
