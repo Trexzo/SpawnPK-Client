@@ -2714,6 +2714,133 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 after.stdout + after.stderr,
             )
 
+    def test_invokedynamic_parameter_capture_alias_supports_bare_arguments(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Client.java": (
+                        "package p;\n"
+                        "public class Client {\n"
+                        "    private static void use(String value) {}\n"
+                        "    public static void open(String url) {\n"
+                        "        Runnable r = () -> use(url);\n"
+                        "        r.run();\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "Client.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "public class Client {\n"
+                "    private static void use(String value) {}\n"
+                "    public static void open(String url) {\n"
+                "        Runnable r = () -> use(url2);\n"
+                "        r.run();\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-bare-indy-alias"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("cannot find symbol", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn("Runnable r = () -> use(url);", normalized)
+            self.assertNotIn("url2", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "invokedynamic_parameter_capture_alias"
+            )
+            self.assertEqual(action["parameter_name"], "url")
+            self.assertEqual(action["alias_name"], "url2")
+            self.assertEqual(action["replacement_count"], 1)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-bare-indy-alias"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_bare_invokedynamic_alias_is_not_rewritten_when_declared(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Client.java": (
+                        "package p;\n"
+                        "public class Client {\n"
+                        "    private static void use(String value) {}\n"
+                        "    public static void open(String url) {\n"
+                        "        Runnable r = () -> use(url);\n"
+                        "        r.run();\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "Client.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "public class Client {\n"
+                "    private static void use(String value) {}\n"
+                "    public static void open(String url) {\n"
+                "        String url2 = url;\n"
+                "        Runnable r = () -> use(url2);\n"
+                "        r.run();\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_parameter_capture_alias_reference_count"
+                ],
+                0,
+            )
+
     def test_invokedynamic_parameter_alias_requires_capture_proof(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
