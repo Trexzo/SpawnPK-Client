@@ -4259,24 +4259,15 @@ def _normalize_invokedynamic_image_loader_locals(
             if int(exact_method.get("access", 0)) & 0x0008:
                 continue
             descriptor = str(exact_method.get("descriptor", ""))
-            parameter_match = _source_parameters_match_descriptor(
-                source_params,
-                descriptor,
-                current_package=current_package,
-            )
-            if parameter_match is not True:
-                explicit_string_int = (
-                    len(parameter_shapes) == 2
-                    and parameter_shapes[0][0] == 0
-                    and parameter_shapes[0][1]
-                    in {"simple_ref", "qualified_ref"}
-                    and parameter_shapes[0][2].rsplit(".", 1)[-1]
-                    == "String"
-                    and parameter_shapes[1] == (0, "primitive", "I")
-                    and descriptor.startswith("(Ljava/lang/String;I)")
+            if (
+                _source_parameters_match_descriptor(
+                    source_params,
+                    descriptor,
+                    current_package=current_package,
                 )
-                if not explicit_string_int:
-                    continue
+                is not True
+            ):
+                continue
             return_descriptor = _descriptor_return_descriptor(descriptor)
             if not (
                 return_descriptor is not None
