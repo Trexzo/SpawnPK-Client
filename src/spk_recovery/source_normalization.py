@@ -7,7 +7,12 @@ import re
 from typing import Any
 import zipfile
 
-from .bytecode_profile import BytecodeProfileError, profile_class_field_accesses
+from .bytecode_profile import (
+    BytecodeProfileError,
+    profile_class_constant_pool_references,
+    profile_class_field_accesses,
+    profile_class_utf8_constants,
+)
 from .classfile import ClassFormatError, parse_class
 from .decompiler import sha256_file
 from .source_digest import source_tree_digest
@@ -3262,6 +3267,88 @@ def _normalize_two_string_swing_capture_aliases(
     return actions
 
 
+def _normalize_compile_time_lombok_nonnull(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Erase Lombok NonNull syntax when exact bytecode proves metadata-only use."""
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+
+    try:
+        utf8 = set(profile_class_utf8_constants(class_bytes))
+        references = profile_class_constant_pool_references(class_bytes)
+    except BytecodeProfileError:
+        return []
+
+    if "Llombok/NonNull;" not in utf8:
+        return []
+    if not (
+        {
+            "RuntimeInvisibleAnnotations",
+            "RuntimeInvisibleParameterAnnotations",
+            "RuntimeInvisibleTypeAnnotations",
+        }
+        & utf8
+    ):
+        return []
+    if "lombok/NonNull" in set(
+        references.get("class_references", [])
+    ):
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    import_re = re.compile(
+        r"(?m)^import\s+lombok\.NonNull\s*;[ \t]*\n"
+    )
+    import_match = import_re.search(text)
+    if import_match is None:
+        return []
+
+    code = _java_code_mask(text)
+    annotation_re = re.compile(
+        r"(?<![A-Za-z0-9_$.])@NonNull\b"
+    )
+    annotation_matches = list(annotation_re.finditer(code))
+    if not annotation_matches:
+        return []
+
+    for match in reversed(annotation_matches):
+        text = text[:match.start()] + text[match.end():]
+
+    import_match = import_re.search(text)
+    if import_match is None:
+        return []
+    text = (
+        text[:import_match.start()]
+        + text[import_match.end():]
+    )
+    path.write_text(text, encoding="utf-8")
+
+    return [
+        {
+            "kind": "compile_time_lombok_nonnull_erasure",
+            "source_path": rel,
+            "annotation_name": "lombok.NonNull",
+            "replacement_count": len(annotation_matches),
+            "removed_import_count": 1,
+            "provenance": {
+                "kind": "source_safety",
+                "reason": "compile_time_only_lombok_nonnull_dependency",
+                "strategy": (
+                    "exact_runtime_invisible_metadata_without_class_reference"
+                ),
+            },
+        }
+    ]
+
+
 def _normalize_invokedynamic_parameter_capture_aliases(
     *,
     source_root: Path,
@@ -6350,6 +6437,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_compile_time_lombok_nonnull(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_two_string_swing_capture_aliases(
                         source_root=source_root,
                         path=path,
@@ -6535,6 +6629,15 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "shadowed_nested_static_field_owner_type_context"
+        ),
+        "compile_time_lombok_nonnull_action_count": sum(
+            action["kind"] == "compile_time_lombok_nonnull_erasure"
+            for action in actions
+        ),
+        "compile_time_lombok_nonnull_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"] == "compile_time_lombok_nonnull_erasure"
         ),
         "two_string_swing_capture_alias_action_count": sum(
             action["kind"] == "two_string_swing_capture_alias"
