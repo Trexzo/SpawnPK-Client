@@ -9,6 +9,7 @@ from spk_recovery.release_orchestrator import (
     build_existing_authority_release_from_workspace,
 )
 from spk_recovery.release_orchestrator_cli import (
+    _load as release_cli_load,
     main as release_cli_main,
 )
 
@@ -110,6 +111,19 @@ def _release(ready=True):
 
 
 class ExistingAuthorityReleaseWorkspaceTests(unittest.TestCase):
+    def test_release_cli_loader_rejects_duplicate_json_keys(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "duplicate.json"
+            path.write_text(
+                '{"outer":{"x":1,"x":2}}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                ExistingAuthorityReleaseError,
+                "duplicate JSON key: 'x'",
+            ):
+                release_cli_load(path)
+
     def _derived_manifest(self):
         return {
             **_recovered(),
