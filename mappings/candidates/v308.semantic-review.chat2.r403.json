@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 5,
+  "review_id": "SEMREVIEW_D3BE7752E2F6CDEDE22F",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_61B0677B7D6257E26CA6",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000198",
+      "owner_logical_id": "CLIENT_CLASS_000198",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/N",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TrayMouseListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/gui/N as rs.gui.TrayMouseListener."
+        },
+        {
+          "family": "exact_mouse_contract",
+          "detail": "Exact v308 class extends MouseAdapter, captures one Frame, and mouseClicked restores/shows the frame and resets its minimized state; it contains no unrelated UI behavior."
+        }
+      ],
+      "note": "Source-identified GUI class with exact-v308 structural/behavioral corroboration."
+    },
+    {
+      "proposal_id": "SEMPROP_83E6F791B2E088A2ABFF",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000281",
+      "owner_logical_id": "CLIENT_CLASS_000281",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/u",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientFrame",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/gui/u as rs.gui.ClientFrame."
+        },
+        {
+          "family": "exact_frame_contract",
+          "detail": "Exact v308 class directly extends javax.swing.JFrame and owns window bounds, monitor selection, scale/insets handling, maximized bounds and resize/contain policy state."
+        },
+        {
+          "family": "exact_policy_types",
+          "detail": "The frame owns rs/gui/v ResizeType and rs/gui/u$a ContainMode fields, tying the three source-mapped GUI identities into one window-sizing subsystem."
+        }
+      ],
+      "note": "Source-identified GUI class with exact-v308 structural/behavioral corroboration."
+    },
+    {
+      "proposal_id": "SEMPROP_9EBDB638635AA7720322",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000283",
+      "owner_logical_id": "CLIENT_CLASS_000283",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/v",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ResizeType",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/gui/v as rs.gui.ResizeType."
+        },
+        {
+          "family": "exact_enum_surface",
+          "detail": "Exact v308 enum constants are KEEP_WINDOW_SIZE and KEEP_GAME_SIZE with display labels 'Keep window size' and 'Keep game size'; ClientFrame stores this type as its resize policy."
+        }
+      ],
+      "note": "Source-identified GUI class with exact-v308 structural/behavioral corroboration."
+    },
+    {
+      "proposal_id": "SEMPROP_C1F67B21E3369921B1BD",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000282",
+      "owner_logical_id": "CLIENT_CLASS_000282",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/u$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ContainMode",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/gui/u$a as rs.gui.ContainMode."
+        },
+        {
+          "family": "exact_enum_surface",
+          "detail": "Exact v308 enum constants are ALWAYS, RESIZING and NEVER and the enum is owned directly by ClientFrame."
+        }
+      ],
+      "note": "Source-identified GUI class with exact-v308 structural/behavioral corroboration."
+    },
+    {
+      "proposal_id": "SEMPROP_D87B232CABEE33A7A804",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000264",
+      "owner_logical_id": "CLIENT_CLASS_000264",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/gui/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ColorScheme",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/gui/d as rs.gui.ColorScheme."
+        },
+        {
+          "family": "exact_color_palette",
+          "detail": "Exact v308 class is a static palette of fifteen java.awt.Color constants and no unrelated state or behavior."
+        }
+      ],
+      "note": "Source-identified GUI class with exact-v308 structural/behavioral corroboration."
+    }
+  ],
+  "unresolved": []
+}
