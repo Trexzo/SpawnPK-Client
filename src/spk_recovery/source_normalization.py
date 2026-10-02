@@ -6399,7 +6399,7 @@ def _normalize_linkedhashmap_field_cast_placeholders(
         actions.append(
             {
                 "kind": (
-                    "undeclared_linkedhashmap_field_cast_placeholder_wildcard"
+                    "linkedhashmap_field_key_reconstruction"
                 ),
                 "source_path": rel,
                 "method_name": method_match.group("name"),
@@ -7019,16 +7019,16 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"] == "invokedynamic_helper_return_cast"
         ),
-        "undeclared_linkedhashmap_field_cast_placeholder_method_count": sum(
+        "linkedhashmap_field_key_reconstruction_method_count": sum(
             action["kind"]
-            == "undeclared_linkedhashmap_field_cast_placeholder_wildcard"
+            == "linkedhashmap_field_key_reconstruction"
             for action in actions
         ),
-        "undeclared_linkedhashmap_field_cast_placeholder_reference_count": sum(
+        "linkedhashmap_field_key_reconstruction_reference_count": sum(
             int(action.get("replacement_count", 0))
             for action in actions
             if action["kind"]
-            == "undeclared_linkedhashmap_field_cast_placeholder_wildcard"
+            == "linkedhashmap_field_key_reconstruction"
         ),
         "undeclared_linkedhashmap_cast_placeholder_method_count": sum(
             action["kind"]
