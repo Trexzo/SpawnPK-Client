@@ -139,5 +139,26 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         )
 
 
+    def test_private_frontier_focus_file_count_is_configurable(self):
+        repo = Path(__file__).resolve().parents[1]
+        script = (
+            repo / "scripts" / "Invoke-SourceM1ExactLocalAcceptance.ps1"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn(
+            "[ValidateRange(1, 20)]\\n    [int]$FocusFiles = 8",
+            script,
+        )
+        self.assertIn(
+            "--focus-files $FocusFiles",
+            script,
+        )
+        self.assertNotIn(
+            "--focus-files 3",
+            script,
+        )
+
+
+
 if __name__ == "__main__":
     unittest.main()
