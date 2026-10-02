@@ -1,22 +1,24 @@
-# Chat 2 — Material Tabs R492
+# Chat 2 — R492 duplicate Material Tabs audit
 
 Exact client authority:
 
 `854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`
 
-## Result
+R492 retains **no semantic proposal**.
 
-- `rs/ui/components/b/a` -> `CLIENT_CLASS_001060` -> `MaterialTab`
-- `rs/ui/components/b/e` -> `CLIENT_CLASS_001064` -> `MaterialTabGroup`
-- review: `SEMREVIEW_5789FBA171B6FB2F21B5`
+The exact-v308/source audit independently recovered:
 
-Exact v308 matches RuneLite's Material Tabs UI pair directly. MaterialTab is the JLabel-backed
-tab carrying one content component and optional BooleanSupplier selection gate. MaterialTabGroup
-owns the display panel and List<MaterialTab>, adds/selects tabs and swaps selected content.
+- `rs/ui/components/b/a` -> `MaterialTab`
+- `rs/ui/components/b/e` -> `MaterialTabGroup`
 
-R490 TopLevelConfigPanel consumes this exact pair.
+However, R230 already owns both exact classes with the same proposal identities and the same
+review ID:
 
-The sibling classes `rs/ui/components/b/b`, `c` and `d` are listener/helper
-implementations and remain unnamed.
+- `MaterialTab`: `SEMPROP_6D79F389F40FB65CC55F`
+- `MaterialTabGroup`: `SEMPROP_E484B991F3F329953FBC`
+- R230 review: `SEMREVIEW_5789FBA171B6FB2F21B5`
 
-R492 remains non-canonical semantic research only.
+The R492 candidate/review/test artifacts are therefore removed. The later source
+corroboration is retained only as this audit note.
+
+R492 is a correction-only batch.
