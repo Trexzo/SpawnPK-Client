@@ -4,7 +4,7 @@ import unittest
 from spk_recovery.semantic_review import resolve_semantic_candidates
 SHA="854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 ROOT=Path(__file__).resolve().parents[1]
-CLASS_COORDS=[["CLIENT_CLASS_000853","rs/s/a"],["CLIENT_CLASS_000859","rs/s/b"],["CLIENT_CLASS_000885","rs/s/c"],["CLIENT_CLASS_000895","rs/s/d"],["CLIENT_CLASS_000898","rs/s/e"],["CLIENT_CLASS_000905","rs/s/f"],["CLIENT_CLASS_000912","rs/s/g"],["CLIENT_CLASS_000915","rs/s/h"]]
+CLASS_COORDS=[["CLIENT_CLASS_000854","rs/s/a"],["CLIENT_CLASS_000860","rs/s/b"],["CLIENT_CLASS_000886","rs/s/c"],["CLIENT_CLASS_000896","rs/s/d"],["CLIENT_CLASS_000899","rs/s/e"],["CLIENT_CLASS_000906","rs/s/f"],["CLIENT_CLASS_000913","rs/s/g"],["CLIENT_CLASS_000916","rs/s/h"]]
 def _class_lineage():
     classes=[]
     for logical_id, internal_name in CLASS_COORDS:
@@ -15,9 +15,9 @@ def _load(p): return json.loads((ROOT/p).read_text(encoding="utf-8"))
 class Chat2SemanticReviewR411Tests(unittest.TestCase):
     def test_r411_resolves_deterministically(self):
         actual=resolve_semantic_candidates(_class_lineage(),_member_lineage(),_load("mappings/candidates/v308.semantic.chat2.r411.json")); expected=_load("mappings/candidates/v308.semantic-review.chat2.r411.json")
-        self.assertEqual(actual["proposal_count"],8); self.assertEqual(actual["unresolved"],[]); self.assertEqual(actual["review_id"],"SEMREVIEW_DAD50216A5C66F3A1F2B"); self.assertEqual(actual,expected)
+        self.assertEqual(actual["proposal_count"],8); self.assertEqual(actual["unresolved"],[]); self.assertEqual(actual["review_id"],"SEMREVIEW_D0692B7D51969058FE0C"); self.assertEqual(actual,expected)
     def test_r411_expected_stable_ids(self):
-        review=_load("mappings/candidates/v308.semantic-review.chat2.r411.json"); self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"Plugin":"CLIENT_CLASS_000853","PluginClassLoader":"CLIENT_CLASS_000859","PluginDependencies":"CLIENT_CLASS_000885","PluginDependency":"CLIENT_CLASS_000895","PluginDescriptor":"CLIENT_CLASS_000898","PluginInstantiationException":"CLIENT_CLASS_000905","PluginManager":"CLIENT_CLASS_000912","RuneLiteConfig":"CLIENT_CLASS_000915"})
+        review=_load("mappings/candidates/v308.semantic-review.chat2.r411.json"); self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"Plugin":"CLIENT_CLASS_000854","PluginClassLoader":"CLIENT_CLASS_000860","PluginDependencies":"CLIENT_CLASS_000886","PluginDependency":"CLIENT_CLASS_000896","PluginDescriptor":"CLIENT_CLASS_000899","PluginInstantiationException":"CLIENT_CLASS_000906","PluginManager":"CLIENT_CLASS_000913","RuneLiteConfig":"CLIENT_CLASS_000916"})
     def test_r411_names_owners_and_ids_do_not_overlap_prior_reviews(self):
         current=_load("mappings/candidates/v308.semantic-review.chat2.r411.json"); names={r["proposed_name"] for r in current["proposals"]}; owners={r["source_coordinate"]["owner"] for r in current["proposals"]}; stable_ids={r["stable_id"] for r in current["proposals"]}
         pn=set(); po=set(); ps=set()

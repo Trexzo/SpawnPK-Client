@@ -14,7 +14,7 @@ Exact client authority:
 - `rs/s/f` / 000905 -> `PluginInstantiationException`
 - `rs/s/g` / 000912 -> `PluginManager`
 - `rs/s/h` / 000915 -> `RuneLiteConfig`
-- review: `SEMREVIEW_DAD50216A5C66F3A1F2B`
+- review: `SEMREVIEW_D0692B7D51969058FE0C`
 
 The recovered source map supplies all eight exact source identities. Exact v308 independently
 corroborates the Guice Plugin base, URLClassLoader-backed plugin classloader, dependency and
