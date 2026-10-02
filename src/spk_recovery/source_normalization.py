@@ -3638,7 +3638,7 @@ def _normalize_erased_generic_constructor_argument_casts(
         r"(?P<raw>[A-Za-z_$][A-Za-z0-9_$.]*)\s*<\s*"
         r"(?P<key>[A-Za-z_$][A-Za-z0-9_$]*)\s*,\s*"
         r"(?P<value>[A-Za-z_$][A-Za-z0-9_$]*)\s*>\s+"
-        r"(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\s*;"
+        r"(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\s*(?:=[^;\n]+)?;"
     )
     generic_fields: dict[str, tuple[str, str]] = {}
     for match in field_re.finditer(whole_code):
