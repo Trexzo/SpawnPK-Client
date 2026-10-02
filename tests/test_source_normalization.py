@@ -4264,6 +4264,124 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
             )
             self.assertEqual(after.returncode, 0, after.stdout + after.stderr)
 
+    def test_linkedhashmap_self_result_cast_moves_off_receiver(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Item.java": (
+                        "package p;\n"
+                        "public class Item {}\n"
+                    ),
+                    "p/ItemList.java": (
+                        "package p;\n"
+                        "import java.util.ArrayList;\n"
+                        "public class ItemList extends ArrayList<Item> {}\n"
+                    ),
+                    "p/Store.java": (
+                        "package p;\n"
+                        "import java.util.List;\n"
+                        "public class Store {\n"
+                        "    public void save(String key, List<Item> items) {}\n"
+                        "}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.LinkedHashMap;\n"
+                        "import java.util.List;\n"
+                        "public class A extends LinkedHashMap<String, ItemList> {\n"
+                        "    private final Store store = new Store();\n"
+                        "    public void save(String key) {\n"
+                        "        store.save(key, (List<Item>)this.get(key));\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.LinkedHashMap;\n"
+                "import java.util.List;\n"
+                "public class A extends LinkedHashMap<String, ItemList> {\n"
+                "    private final Store store = new Store();\n"
+                "    public void save(String key) {\n"
+                "        store.save(key, "
+                "((LinkedHashMap<K, List<Item>>)this).get(key));\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-linkedhashmap-result-cast"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "store.save(key, ((List<Item>)this.get(key)));",
+                normalized,
+            )
+            self.assertNotIn(
+                "LinkedHashMap<?, List<Item>",
+                normalized,
+            )
+            actions = [
+                row
+                for row in report["actions"]
+                if row["kind"] == "linkedhashmap_self_get_result_cast"
+            ]
+            self.assertEqual(len(actions), 1)
+            self.assertEqual(actions[0]["method_name"], "save")
+            self.assertEqual(
+                actions[0]["method_descriptor"],
+                "(Ljava/lang/String;)V",
+            )
+            self.assertEqual(
+                actions[0]["result_types"],
+                ["List<Item>"],
+            )
+            self.assertEqual(actions[0]["replacement_count"], 1)
+            self.assertEqual(
+                report["summary"][
+                    "linkedhashmap_self_get_result_cast_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-linkedhashmap-result-cast"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stdout + after.stderr)
+
     def test_linkedhashmap_placeholder_rule_preserves_declared_type_parameters(
         self,
     ):
