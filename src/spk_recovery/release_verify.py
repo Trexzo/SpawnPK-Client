@@ -17,6 +17,17 @@ class RecoveryReleaseVerificationError(ValueError):
     pass
 
 
+def _exact_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in out:
+            raise RecoveryReleaseVerificationError(
+                f"duplicate JSON key: {key!r}"
+            )
+        out[key] = value
+    return out
+
+
 def _sha256_file(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as stream:
@@ -117,7 +128,10 @@ def _load_json_authority(
             f"{label} does not exist: {resolved}"
         )
     try:
-        data = json.loads(resolved.read_text(encoding="utf-8"))
+        data = json.loads(
+            resolved.read_text(encoding="utf-8"),
+            object_pairs_hook=_exact_object,
+        )
     except (OSError, json.JSONDecodeError) as exc:
         raise RecoveryReleaseVerificationError(
             f"{label} is not valid JSON"
@@ -415,7 +429,8 @@ def verify_recovery_release(
                 )
             try:
                 private_plan = json.loads(
-                    plan_path.read_text(encoding="utf-8")
+                    plan_path.read_text(encoding="utf-8"),
+                    object_pairs_hook=_exact_object,
                 )
             except (
                 OSError,
