@@ -7029,6 +7029,63 @@ class ErasedSetIntEnhancedForTests(unittest.TestCase):
             )
             self.assertEqual(after.returncode, 0, after.stderr)
 
+
+    def test_erased_set_int_enhanced_for_fails_closed_on_unrelated_iterator(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.ArrayList;\n"
+                        "import java.util.Iterator;\n"
+                        "import java.util.LinkedHashSet;\n"
+                        "import java.util.List;\n"
+                        "import java.util.Set;\n"
+                        "public class A {\n"
+                        "    public static int sum() {\n"
+                        "        Set<Integer> set = new LinkedHashSet<>();\n"
+                        "        set.add(Integer.valueOf(7));\n"
+                        "        int total = 0;\n"
+                        "        for (int value : set) { total += value; }\n"
+                        "        List<String> extra = new ArrayList<>();\n"
+                        "        extra.add(\"x\");\n"
+                        "        Iterator<String> it = extra.iterator();\n"
+                        "        String ignored = it.next();\n"
+                        "        return total + ignored.length() - 1;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.LinkedHashSet;\n"
+                "import java.util.Set;\n"
+                "public class A {\n"
+                "    public static int sum() {\n"
+                "        Set set = new LinkedHashSet();\n"
+                "        int total = 0;\n"
+                "        for (int value : set) { total += value; }\n"
+                "        return total;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "erased_set_int_enhanced_for_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
     def test_erased_set_int_enhanced_for_fails_closed_on_exact_drift(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
