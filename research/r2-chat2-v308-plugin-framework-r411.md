@@ -1,27 +1,26 @@
-# Chat 2 — source-proven plugin framework R411
+# Chat 2 — R411 duplicate plugin-framework audit
 
 Exact client authority:
 
 `854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`
 
-## Result
+R411 retains **no semantic proposal**.
 
-- `rs/s/a` / 000853 -> `Plugin`
-- `rs/s/b` / 000859 -> `PluginClassLoader`
-- `rs/s/c` / 000885 -> `PluginDependencies`
-- `rs/s/d` / 000895 -> `PluginDependency`
-- `rs/s/e` / 000898 -> `PluginDescriptor`
-- `rs/s/f` / 000905 -> `PluginInstantiationException`
-- `rs/s/g` / 000912 -> `PluginManager`
-- `rs/s/h` / 000915 -> `RuneLiteConfig`
-- review: `SEMREVIEW_D0692B7D51969058FE0C`
+The recovered source map correctly identifies the exact-v308 plugin framework, but every
+attempted owner was already reviewed earlier:
 
-The recovered source map supplies all eight exact source identities. Exact v308 independently
-corroborates the Guice Plugin base, URLClassLoader-backed plugin classloader, dependency and
-descriptor annotations, dedicated instantiation exception, live manager orchestration and
-root RuneLite configuration interface.
+- `rs/s/g` / `CLIENT_CLASS_000913` / `PluginManager` — already R11.
+- `rs/s/a` / `CLIENT_CLASS_000854` / `Plugin` — already R17.
+- `rs/s/b` / `CLIENT_CLASS_000860` / `PluginClassLoader` — already R17.
+- `rs/s/c` / `CLIENT_CLASS_000886` / `PluginDependencies` — already R17.
+- `rs/s/d` / `CLIENT_CLASS_000896` / `PluginDependency` — already R17.
+- `rs/s/e` / `CLIENT_CLASS_000899` / `PluginDescriptor` — already R17.
+- `rs/s/f` / `CLIENT_CLASS_000906` / `PluginInstantiationException` — already R17.
+- `rs/s/h` / `CLIENT_CLASS_000916` / `RuneLiteConfig` — already R17.
 
-The manager's live dependencies include EventBus, scheduler and ConfigManager, tying this
-family directly to R321 ClientApplicationBootstrap.
+The later source-map and exact-v308 bytecode evidence remains useful corroboration for those
+earlier reviews, but it does not justify duplicate ownership.
 
-R411 remains non-canonical semantic research only.
+R411 candidate JSON, semantic-review JSON and deterministic test are removed.
+
+R411 is a zero-retained duplicate audit. No acceptance or source rewrite is performed.
