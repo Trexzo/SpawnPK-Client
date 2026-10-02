@@ -354,6 +354,29 @@ def _bootstrap_methods_profile(
     return methods
 
 
+def _signature_attribute_value(
+    payload: bytes,
+    cp: list[Any],
+    *,
+    role: str,
+) -> str:
+    if len(payload) != 2:
+        raise BytecodeProfileError(
+            f"{role} Signature attribute must contain exactly one u2 index"
+        )
+    index = (payload[0] << 8) | payload[1]
+    if not (0 < index < len(cp)):
+        raise BytecodeProfileError(
+            f"{role} Signature constant-pool index out of range: {index}"
+        )
+    value = cp[index]
+    if not value or value[0] != 1:
+        raise BytecodeProfileError(
+            f"{role} Signature constant-pool entry #{index} is not Utf8"
+        )
+    return str(value[1])
+
+
 def _skip_attributes(
     r: _Reader,
     cp: list[Any],
@@ -788,10 +811,24 @@ def profile_class_field_accesses(
         invocations: list[dict[str, Any]] = []
         instructions: list[dict[str, Any]] = []
         code_length = None
+        signature: str | None = None
+        signature_seen = False
         for _ in range(r.u2()):
             attr_name = _utf8(cp, r.u2())
             attr_length = r.u4()
             payload = r.take(attr_length)
+            if attr_name == "Signature":
+                if signature_seen:
+                    raise BytecodeProfileError(
+                        f"duplicate method Signature attribute: {name}{descriptor}"
+                    )
+                signature_seen = True
+                signature = _signature_attribute_value(
+                    payload,
+                    cp,
+                    role=f"method {name}{descriptor}",
+                )
+                continue
             if attr_name != "Code":
                 continue
             cr = _Reader(payload)
@@ -809,6 +846,7 @@ def profile_class_field_accesses(
                 "descriptor": descriptor,
                 "access": access,
                 "code_length": code_length,
+                "signature": signature,
                 "field_accesses": accesses,
                 "method_invocations": invocations,
                 "instructions": instructions,
