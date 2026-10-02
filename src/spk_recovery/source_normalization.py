@@ -3979,7 +3979,7 @@ def _match_string_image_loader_outer(
         and row(3, "istore", local_index=4)
         and row(4, "iload", local_index=2)
         and row(5, "iconst_m1")
-        and instructions[6].get("mnemonic") == "if_icmpne"
+        and instructions[6].get("opcode") == "0xa0"
         and row(7, "new", type_name=probe_owner)
         and row(8, "dup")
         and row(9, "aload", local_index=1)
@@ -4077,7 +4077,7 @@ def _match_two_capture_image_helper(
     if not (
         instructions[0].get("mnemonic") == "aload"
         and int(instructions[0].get("local_index", -1)) == 0
-        and instructions[1].get("mnemonic") == "ifnull"
+        and instructions[1].get("opcode") == "0xc6"
         and instructions[2].get("mnemonic") == "aload"
         and int(instructions[2].get("local_index", -1)) == 0
         and instructions[4].get("owner") == "java/awt/Image"
@@ -4409,16 +4409,17 @@ def _normalize_invokedynamic_image_loader_locals(
         graphics_decl_re = re.compile(
             r"(?m)^(?P<indent>[ \t]*)"
             r"(?P<buffer_alias>[A-Za-z_$][A-Za-z0-9_$]*)"
-            r"\.createGraphics\s*\(\s*\)\s*;\s*\n"
+            r"\.createGraphics\s*\(\s*\)\s*;[ \t]*\r?\n"
             r"(?P=indent)final\s+Graphics2D\s+"
-            r"(?P<graphics>[A-Za-z_$][A-Za-z0-9_$]*)\s*;"
+            r"(?P<graphics>[A-Za-z_$][A-Za-z0-9_$]*)[ \t]*;"
         )
         graphics_matches = list(
             graphics_decl_re.finditer(lambda_text)
         )
         image_decl_re = re.compile(
             r"(?m)^(?P<indent>[ \t]*)final\s+Image\s+"
-            r"(?P<image>[A-Za-z_$][A-Za-z0-9_$]*)\s*;\s*\n?"
+            r"(?P<image>[A-Za-z_$][A-Za-z0-9_$]*)[ \t]*;"
+            r"[ \t]*(?:\r?\n)?"
         )
         image_matches = list(image_decl_re.finditer(lambda_text))
         if len(graphics_matches) != 1 or len(image_matches) != 1:
@@ -4637,7 +4638,7 @@ def _normalize_invokedynamic_image_loader_locals(
                 + re.escape(image_method)
                 + r"\(\s*"
                 + re.escape(parameter_names[0])
-                + r"\s*\)\s*;\s*$"
+                + r"\s*\)[ \t]*;[ \t]*$"
             )
             image_calls = list(image_call_re.finditer(prefix))
             if len(image_calls) != 1:
