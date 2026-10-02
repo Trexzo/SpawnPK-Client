@@ -3626,8 +3626,8 @@ def _normalize_erased_generic_constructor_argument_casts(
     if current_owner != class_entry[:-6]:
         return []
     current_package = current_owner.rpartition("/")[0]
-    exact_field_names = {
-        str(field.get("name", ""))
+    exact_fields = {
+        str(field.get("name", "")): str(field.get("descriptor", ""))
         for field in profile.get("fields", [])
     }
 
@@ -3640,14 +3640,24 @@ def _normalize_erased_generic_constructor_argument_casts(
         r"(?P<value>[A-Za-z_$][A-Za-z0-9_$]*)\s*>\s+"
         r"(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\s*(?:=[^;\n]+)?;"
     )
-    generic_fields: dict[str, tuple[str, str]] = {}
+    generic_fields: dict[str, tuple[str, str, str]] = {}
     for match in field_re.finditer(whole_code):
         field_name = match.group("field")
-        if field_name not in exact_field_names:
+        field_descriptor = exact_fields.get(field_name)
+        if not (
+            field_descriptor is not None
+            and field_descriptor.startswith("L")
+            and field_descriptor.endswith(";")
+        ):
+            continue
+        field_owner = field_descriptor[1:-1]
+        raw_source_type = match.group("raw").rsplit(".", 1)[-1]
+        if _source_simple_type_name(field_owner) != raw_source_type:
             continue
         generic_fields[field_name] = (
             match.group("key"),
             match.group("value"),
+            field_owner,
         )
     if not generic_fields:
         return []
@@ -3783,6 +3793,9 @@ def _normalize_erased_generic_constructor_argument_casts(
                     "value_source_type": generic_fields[
                         call.group("field")
                     ][1],
+                    "field_owner": generic_fields[
+                        call.group("field")
+                    ][2],
                     "replacement_count": 1,
                     "provenance": {
                         "kind": "source_safety",
@@ -4408,6 +4421,16 @@ def _normalize_invokedynamic_image_loader_locals(
         image_name = image_match.group("image")
         if buffer_alias == buffer_name:
             continue
+        buffer_alias_count = len(
+            re.findall(
+                r"(?<![A-Za-z0-9_$])"
+                + re.escape(buffer_alias)
+                + r"(?![A-Za-z0-9_$])",
+                lambda_text,
+            )
+        )
+        if buffer_alias_count != 2:
+            continue
 
         finalizer_name = str(
             proof["helper_shape"].get("finalizer_name", "")
@@ -4518,6 +4541,19 @@ def _normalize_invokedynamic_image_loader_locals(
                 loader_match.group("a3"),
             ]
             if len(set(aliases)) != 3:
+                continue
+            if any(
+                len(
+                    re.findall(
+                        r"(?<![A-Za-z0-9_$])"
+                        + re.escape(alias)
+                        + r"(?![A-Za-z0-9_$])",
+                        lambda_text,
+                    )
+                )
+                != 1
+                for alias in aliases
+            ):
                 continue
             declared_alias_re = re.compile(
                 r"\b(?:final\s+)?[A-Za-z_$][A-Za-z0-9_$.<>\[\]?]*\s+"
