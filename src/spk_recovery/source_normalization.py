@@ -1084,6 +1084,25 @@ def _descriptor_parameter_shapes(
     return out
 
 
+def _descriptor_parameter_local_slots(
+    descriptor: str,
+    *,
+    is_static: bool,
+) -> list[int] | None:
+    shapes = _descriptor_parameter_shapes(descriptor)
+    if shapes is None:
+        return None
+    slot = 0 if is_static else 1
+    slots: list[int] = []
+    for arrays, kind, name in shapes:
+        slots.append(slot)
+        width = 1
+        if arrays == 0 and kind == "primitive" and name in {"J", "D"}:
+            width = 2
+        slot += width
+    return slots
+
+
 def _source_parameters_match_descriptor(
     params: str,
     descriptor: str,
@@ -3594,6 +3613,522 @@ def _normalize_invokedynamic_parameter_capture_aliases(
     path.write_text(text, encoding="utf-8")
     return actions
 
+
+
+def _normalize_invokedynamic_lambda_outer_capture_collisions(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Repair lambda-parameter collisions with exact captured outer params.
+
+    Procyon can reuse an outer method parameter as the source lambda
+    parameter while inventing a separate undeclared name for the captured
+    value.  Repair both names atomically only when the exact invokedynamic
+    bootstrap resolves to a same-class static helper whose instruction order
+    proves lambda-argument receiver -> captured-argument boolean invocation.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    bootstrap_methods = list(
+        profile.get("bootstrap_methods", [])
+    )
+    if not bootstrap_methods:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(
+                whole_code,
+                brace_start,
+            )
+        except SourceNormalizationError:
+            continue
+
+        source_params = method_match.group("params")
+        parameter_names = _source_parameter_names(source_params)
+        parameter_shapes = _source_parameter_shapes(source_params)
+        if (
+            parameter_names is None
+            or parameter_shapes is None
+            or not parameter_names
+            or len(parameter_names) != len(parameter_shapes)
+        ):
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        exact_candidates: list[dict[str, Any]] = []
+        for exact_method in profile.get("methods", []):
+            if (
+                exact_method.get("name")
+                != method_match.group("name")
+            ):
+                continue
+            descriptor = str(
+                exact_method.get("descriptor", "")
+            )
+            if (
+                _source_parameters_match_descriptor(
+                    source_params,
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+            exact_candidates.append(exact_method)
+        if len(exact_candidates) != 1:
+            continue
+        exact_method = exact_candidates[0]
+        exact_shapes = _descriptor_parameter_shapes(
+            str(exact_method.get("descriptor", ""))
+        )
+        if (
+            exact_shapes is None
+            or len(exact_shapes) != len(parameter_names)
+        ):
+            continue
+        exact_parameter_slots = _descriptor_parameter_local_slots(
+            str(exact_method.get("descriptor", "")),
+            is_static=source_static,
+        )
+        if (
+            exact_parameter_slots is None
+            or len(exact_parameter_slots) != len(parameter_names)
+        ):
+            continue
+        exact_instructions = list(
+            exact_method.get("instructions", [])
+        )
+        instruction_index_by_offset = {
+            int(instruction.get("offset", -1)): index
+            for index, instruction in enumerate(exact_instructions)
+            if int(instruction.get("offset", -1)) >= 0
+        }
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        method_text = text[method_start:body_end]
+        method_edits: list[tuple[int, int, str]] = []
+        method_actions: list[dict[str, Any]] = []
+
+        for param_index, outer_name in enumerate(
+            parameter_names
+        ):
+            outer_shape = exact_shapes[param_index]
+            if not (
+                outer_shape[0] == 0
+                and outer_shape[1] == "ref"
+            ):
+                continue
+            outer_owner = outer_shape[2]
+            outer_slot = exact_parameter_slots[param_index]
+
+            lambda_re = re.compile(
+                r"(?P<lambda_paren>\(\s*)?"
+                r"(?P<lambda>"
+                + re.escape(outer_name)
+                + r")"
+                r"(?(lambda_paren)\s*\))"
+                r"\s*->\s*"
+                r"(?P<receiver>"
+                + re.escape(outer_name)
+                + r")\s*\.\s*"
+                r"(?P<member>[A-Za-z_$][A-Za-z0-9_$]*)"
+                r"\s*\(\s*"
+                r"(?P<alias>[A-Za-z_$][A-Za-z0-9_$]*)"
+                r"\s*\)"
+            )
+            lambda_matches = list(
+                lambda_re.finditer(method_code)
+            )
+            if len(lambda_matches) != 1:
+                continue
+            source_match = lambda_matches[0]
+            alias_name = source_match.group("alias")
+            member_name = source_match.group("member")
+            if alias_name == outer_name:
+                continue
+
+            alias_hits = list(
+                re.finditer(
+                    r"(?<![A-Za-z0-9_$])"
+                    + re.escape(alias_name)
+                    + r"(?![A-Za-z0-9_$])",
+                    method_code,
+                )
+            )
+            if len(alias_hits) != 1:
+                continue
+            if not (
+                alias_hits[0].start()
+                == source_match.start("alias")
+            ):
+                continue
+            declaration_re = re.compile(
+                r"\b(?:final\s+)?"
+                r"[A-Za-z_$][A-Za-z0-9_$.<>\[\]?]*\s+"
+                + re.escape(alias_name)
+                + r"\b"
+            )
+            if declaration_re.search(method_code):
+                continue
+
+            matching_indy = []
+            for invocation in exact_method.get(
+                "method_invocations", []
+            ):
+                if invocation.get("operation") != "invokedynamic":
+                    continue
+                indy_descriptor = str(
+                    invocation.get("descriptor", "")
+                )
+                indy_shapes = _descriptor_parameter_shapes(
+                    indy_descriptor
+                )
+                return_descriptor = _descriptor_return_descriptor(
+                    indy_descriptor
+                )
+                if not (
+                    indy_shapes is not None
+                    and len(indy_shapes) == 1
+                    and indy_shapes[0] == outer_shape
+                    and return_descriptor is not None
+                    and return_descriptor.startswith("L")
+                    and return_descriptor.endswith(";")
+                ):
+                    continue
+                invocation_offset = int(
+                    invocation.get("offset", -1)
+                )
+                instruction_index = instruction_index_by_offset.get(
+                    invocation_offset
+                )
+                if (
+                    instruction_index is None
+                    or instruction_index <= 0
+                ):
+                    continue
+                capture_load = exact_instructions[
+                    instruction_index - 1
+                ]
+                if not (
+                    capture_load.get("mnemonic") == "aload"
+                    and int(
+                        capture_load.get("local_index", -1)
+                    )
+                    == outer_slot
+                ):
+                    continue
+                bootstrap_index = int(
+                    invocation.get(
+                        "bootstrap_method_attr_index",
+                        -1,
+                    )
+                )
+                if not (
+                    0 <= bootstrap_index < len(bootstrap_methods)
+                ):
+                    continue
+                bootstrap = bootstrap_methods[bootstrap_index]
+                bootstrap_method = bootstrap.get(
+                    "bootstrap_method", {}
+                )
+                bootstrap_name = str(
+                    bootstrap_method.get("name", "")
+                )
+                bootstrap_descriptor = str(
+                    bootstrap_method.get("descriptor", "")
+                )
+                expected_bootstrap_descriptors = {
+                    "metafactory": (
+                        "(Ljava/lang/invoke/MethodHandles$Lookup;"
+                        "Ljava/lang/String;"
+                        "Ljava/lang/invoke/MethodType;"
+                        "Ljava/lang/invoke/MethodType;"
+                        "Ljava/lang/invoke/MethodHandle;"
+                        "Ljava/lang/invoke/MethodType;)"
+                        "Ljava/lang/invoke/CallSite;"
+                    ),
+                    "altMetafactory": (
+                        "(Ljava/lang/invoke/MethodHandles$Lookup;"
+                        "Ljava/lang/String;"
+                        "Ljava/lang/invoke/MethodType;"
+                        "[Ljava/lang/Object;)"
+                        "Ljava/lang/invoke/CallSite;"
+                    ),
+                }
+                if not (
+                    bootstrap_method.get("owner")
+                    == "java/lang/invoke/LambdaMetafactory"
+                    and bootstrap_name in expected_bootstrap_descriptors
+                    and bootstrap_descriptor
+                    == expected_bootstrap_descriptors[bootstrap_name]
+                    and bootstrap_method.get("target_kind") == "method"
+                    and int(
+                        bootstrap_method.get("reference_kind", -1)
+                    )
+                    == 6
+                ):
+                    continue
+
+                implementation_handles = [
+                    arg.get("method_handle", {})
+                    for arg in bootstrap.get("arguments", [])
+                    if arg.get("kind") == "method_handle"
+                    and arg.get("method_handle", {}).get("owner")
+                    == current_owner
+                ]
+                if len(implementation_handles) != 1:
+                    continue
+                implementation = implementation_handles[0]
+                helper_descriptor = str(
+                    implementation.get("descriptor", "")
+                )
+                helper_shapes = _descriptor_parameter_shapes(
+                    helper_descriptor
+                )
+                if not (
+                    implementation.get("target_kind")
+                    == "method"
+                    and int(
+                        implementation.get(
+                            "reference_kind", -1
+                        )
+                    )
+                    == 6
+                    and helper_shapes is not None
+                    and helper_shapes
+                    == [outer_shape, outer_shape]
+                    and _descriptor_return_descriptor(
+                        helper_descriptor
+                    )
+                    == "Z"
+                ):
+                    continue
+
+                instantiated_types = {
+                    str(arg.get("descriptor", ""))
+                    for arg in bootstrap.get(
+                        "arguments", []
+                    )
+                    if arg.get("kind") == "method_type"
+                }
+                instantiated_descriptor = (
+                    "(L" + outer_owner + ";)Z"
+                )
+                if instantiated_descriptor not in instantiated_types:
+                    continue
+
+                helpers = [
+                    helper
+                    for helper in profile.get("methods", [])
+                    if (
+                        helper.get("name")
+                        == implementation.get("name")
+                        and helper.get("descriptor")
+                        == helper_descriptor
+                        and int(helper.get("access", 0)) & 0x0008
+                    )
+                ]
+                if len(helpers) != 1:
+                    continue
+                helper = helpers[0]
+                instructions = list(
+                    helper.get("instructions", [])
+                )
+                if len(instructions) != 4:
+                    continue
+                if not (
+                    instructions[0].get("mnemonic") == "aload"
+                    and int(
+                        instructions[0].get(
+                            "local_index", -1
+                        )
+                    )
+                    == 1
+                    and instructions[1].get("mnemonic") == "aload"
+                    and int(
+                        instructions[1].get(
+                            "local_index", -1
+                        )
+                    )
+                    == 0
+                    and instructions[2].get("mnemonic")
+                    in {"invokevirtual", "invokeinterface"}
+                    and instructions[2].get("owner")
+                    == outer_owner
+                    and instructions[2].get("name")
+                    == member_name
+                    and instructions[2].get("descriptor")
+                    == "(L" + outer_owner + ";)Z"
+                    and instructions[3].get("mnemonic")
+                    == "ireturn"
+                ):
+                    continue
+
+                matching_indy.append(
+                    {
+                        "descriptor": indy_descriptor,
+                        "offset": int(
+                            invocation.get("offset", -1)
+                        ),
+                        "bootstrap_method_attr_index": (
+                            bootstrap_index
+                        ),
+                        "helper_name": str(
+                            implementation.get("name", "")
+                        ),
+                        "helper_descriptor": helper_descriptor,
+                    }
+                )
+
+            if len(matching_indy) != 1:
+                continue
+
+            seed = (
+                rel
+                + "\0"
+                + str(exact_method.get("descriptor", ""))
+                + "\0"
+                + outer_name
+                + "\0"
+                + method_text[
+                    source_match.start():source_match.end()
+                ]
+            )
+            fallback_name = (
+                "recoveredLambdaArg_"
+                + hashlib.sha256(
+                    seed.encode("utf-8")
+                ).hexdigest()[:12]
+            )
+            if re.search(
+                r"(?<![A-Za-z0-9_$])"
+                + re.escape(fallback_name)
+                + r"(?![A-Za-z0-9_$])",
+                method_code,
+            ):
+                continue
+
+            method_edits.append(
+                (
+                    method_start
+                    + source_match.start("lambda"),
+                    method_start
+                    + source_match.end("lambda"),
+                    fallback_name,
+                )
+            )
+            method_edits.append(
+                (
+                    method_start
+                    + source_match.start("receiver"),
+                    method_start
+                    + source_match.end("receiver"),
+                    fallback_name,
+                )
+            )
+            method_edits.append(
+                (
+                    method_start
+                    + source_match.start("alias"),
+                    method_start
+                    + source_match.end("alias"),
+                    outer_name,
+                )
+            )
+            method_actions.append(
+                {
+                    "kind": (
+                        "invokedynamic_lambda_outer_capture_collision"
+                    ),
+                    "source_path": rel,
+                    "method_name": method_match.group("name"),
+                    "method_descriptor": exact_method.get(
+                        "descriptor"
+                    ),
+                    "outer_parameter_name": outer_name,
+                    "outer_parameter_slot": outer_slot,
+                    "undeclared_capture_alias": alias_name,
+                    "source_lambda_parameter_name": outer_name,
+                    "replacement_lambda_parameter_name": (
+                        fallback_name
+                    ),
+                    "member_name": member_name,
+                    "invokedynamic": matching_indy[0],
+                    "replacement_count": 3,
+                    "provenance": {
+                        "kind": "source_safety",
+                        "reason": (
+                            "procyon_lambda_parameter_collides_with_captured_outer_parameter"
+                        ),
+                        "strategy": (
+                            "exact_bootstrap_helper_receiver_capture_order"
+                        ),
+                    },
+                }
+            )
+
+        if not method_edits:
+            continue
+        method_edits.sort(key=lambda row: row[0])
+        if any(
+            left[1] > right[0]
+            for left, right in zip(
+                method_edits,
+                method_edits[1:],
+            )
+        ):
+            continue
+        edits.extend(method_edits)
+        actions.extend(method_actions)
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping lambda capture-collision edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
 
 
 def _normalize_erased_generic_constructor_argument_casts(
@@ -8833,6 +9368,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_invokedynamic_lambda_outer_capture_collisions(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_erased_generic_constructor_argument_casts(
                         source_root=source_root,
                         path=path,
@@ -9064,6 +9606,17 @@ def normalize_procyon_source(
             int(action.get("replacement_count", 0))
             for action in actions
             if action["kind"] == "two_string_swing_capture_alias"
+        ),
+        "invokedynamic_lambda_outer_capture_collision_action_count": sum(
+            action["kind"]
+            == "invokedynamic_lambda_outer_capture_collision"
+            for action in actions
+        ),
+        "invokedynamic_lambda_outer_capture_collision_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "invokedynamic_lambda_outer_capture_collision"
         ),
         "invokedynamic_parameter_capture_alias_method_count": sum(
             action["kind"]
