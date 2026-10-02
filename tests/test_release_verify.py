@@ -375,6 +375,7 @@ class ReleaseVerificationTests(unittest.TestCase):
                 "collision_report_id": "JNSCOLLISION_TEST",
                 "readable_jar_sha256": "b" * 64,
                 "identifiers_included": True,
+                "remaps": [],
             }
             plan_path.write_text(
                 json.dumps(plan, sort_keys=True) + "\n",
@@ -389,6 +390,7 @@ class ReleaseVerificationTests(unittest.TestCase):
                 "collision_report_id": "JNSCOLLISION_TEST",
                 "collision_transform_id": "COLLTRANS_TEST",
                 "base_readable_jar_sha256": "b" * 64,
+                "collision_mapping_sha256": _private_mapping_sha256(plan),
             }
             clean = {
                 "readable_jar_sha256": "b" * 64,
