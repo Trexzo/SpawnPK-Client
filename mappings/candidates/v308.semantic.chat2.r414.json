@@ -1,0 +1,630 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CombatInfoPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map supplies the exact source identity CombatInfoPlugin for rs/s/a/b."
+        },
+        {
+          "family": "exact_plugin_inheritance",
+          "detail": "Exact v308 declares rs/s/a/b as a concrete class extending R411 Plugin (rs.s.a), placing it directly in the live plugin lifecycle."
+        },
+        {
+          "family": "exact_framework_join",
+          "detail": "The class is discoverable/managed by R411 PluginManager and participates in the Guice/EventBus/config framework; configured plugins also pair with R413 Config contracts where the source map exposes one."
+        }
+      ],
+      "note": "Source-proven concrete plugin identity with exact-v308 Plugin inheritance corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/b/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map supplies the exact source identity ConfigPlugin for rs/s/b/g."
+        },
+        {
+          "family": "exact_plugin_inheritance",
+          "detail": "Exact v308 declares rs/s/b/g as a concrete class extending R411 Plugin (rs.s.a), placing it directly in the live plugin lifecycle."
+        },
+        {
+          "family": "exact_framework_join",
+          "detail": "The class is discoverable/managed by R411 PluginManager and participates in the Guice/EventBus/config framework; configured plugins also pair with R413 Config contracts where the source map exposes one."
+        }
+      ],
+      "note": "Source-proven concrete plugin identity with exact-v308 Plugin inheritance corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/c/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "DevToolsPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map supplies the exact source identity DevToolsPlugin for rs/s/c/c."
+        },
+        {
+          "family": "exact_plugin_inheritance",
+          "detail": "Exact v308 declares rs/s/c/c as a concrete class extending R411 Plugin (rs.s.a), placing it directly in the live plugin lifecycle."
+        },
+        {
+          "family": "exact_framework_join",
+          "detail": "The class is discoverable/managed by R411 PluginManager and participates in the Guice/EventBus/config framework; configured plugins also pair with R413 Config contracts where the source map exposes one."
+        }
+      ],
+      "note": "Source-proven concrete plugin identity with exact-v308 Plugin inheritance corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/d/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "EntityHiderPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map supplies the exact source identity EntityHiderPlugin for rs/s/d/b."
+        },
+        {
+          "family": "exact_plugin_inheritance",
+          "detail": "Exact v308 declares rs/s/d/b as a concrete class extending R411 Plugin (rs.s.a), placing it directly in the live plugin lifecycle."
+        },
+        {
+          "family": "exact_framework_join",
+          "detail": "The class is discoverable/managed by R411 PluginManager and participates in the Guice/EventBus/config framework; configured plugins also pair with R413 Config contracts where the source map exposes one."
+        }
+      ],
+      "note": "Source-proven concrete plugin identity with exact-v308 Plugin inheritance corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/e/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GpuPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map supplies the exact source identity GpuPlugin for rs/s/e/c."
+        },
+        {
+          "family": "exact_plugin_inheritance",
+          "detail": "Exact v308 declares rs/s/e/c as a concrete class extending R411 Plugin (rs.s.a), placing it directly in the live plugin lifecycle."
+        },
+        {
+          "family": "exact_framework_join",
+          "detail": "The class is discoverable/managed by R411 PluginManager and participates in the Guice/EventBus/config framework; configured plugins also pair with R413 Config contracts where the source map exposes one."
+        }
+      ],
+      "note": "Source-proven concrete plugin identity with exact-v308 Plugin inheritance corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/f/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "GroundMarkersPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map supplies the exact source identity GroundMarkersPlugin for rs/s/f/d."
+        },
+        {
+          "family": "exact_plugin_inheritance",
+          "detail": "Exact v308 declares rs/s/f/d as a concrete class extending R411 Plugin (rs.s.a), placing it directly in the live plugin lifecycle."
+        },
+        {
+          "family": "exact_framework_join",
+          "detail": "The class is discoverable/managed by R411 PluginManager and participates in the Guice/EventBus/config framework; configured plugins also pair with R413 Config contracts where the source map exposes one."
+        }
+      ],
+      "note": "Source-proven concrete plugin identity with exact-v308 Plugin inheritance corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/g/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ItemIdSearchPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map supplies the exact source identity ItemIdSearchPlugin for rs/s/g/b."
+        },
+        {
+          "family": "exact_plugin_inheritance",
+          "detail": "Exact v308 declares rs/s/g/b as a concrete class extending R411 Plugin (rs.s.a), placing it directly in the live plugin lifecycle."
+        },
+        {
+          "family": "exact_framework_join",
+          "detail": "The class is discoverable/managed by R411 PluginManager and participates in the Guice/EventBus/config framework; configured plugins also pair with R413 Config contracts where the source map exposes one."
+        }
+      ],
+      "note": "Source-proven concrete plugin identity with exact-v308 Plugin inheritance corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/h/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InfoBoxPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map supplies the exact source identity InfoBoxPlugin for rs/s/h/a."
+        },
+        {
+          "family": "exact_plugin_inheritance",
+          "detail": "Exact v308 declares rs/s/h/a as a concrete class extending R411 Plugin (rs.s.a), placing it directly in the live plugin lifecycle."
+        },
+        {
+          "family": "exact_framework_join",
+          "detail": "The class is discoverable/managed by R411 PluginManager and participates in the Guice/EventBus/config framework; configured plugins also pair with R413 Config contracts where the source map exposes one."
+        }
+      ],
+      "note": "Source-proven concrete plugin identity with exact-v308 Plugin inheritance corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/i/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InteractHighlightPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map supplies the exact source identity InteractHighlightPlugin for rs/s/i/c."
+        },
+        {
+          "family": "exact_plugin_inheritance",
+          "detail": "Exact v308 declares rs/s/i/c as a concrete class extending R411 Plugin (rs.s.a), placing it directly in the live plugin lifecycle."
+        },
+        {
+          "family": "exact_framework_join",
+          "detail": "The class is discoverable/managed by R411 PluginManager and participates in the Guice/EventBus/config framework; configured plugins also pair with R413 Config contracts where the source map exposes one."
+        }
+      ],
+      "note": "Source-proven concrete plugin identity with exact-v308 Plugin inheritance corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/j/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "KeyRemappingPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map supplies the exact source identity KeyRemappingPlugin for rs/s/j/c."
+        },
+        {
+          "family": "exact_plugin_inheritance",
+          "detail": "Exact v308 declares rs/s/j/c as a concrete class extending R411 Plugin (rs.s.a), placing it directly in the live plugin lifecycle."
+        },
+        {
+          "family": "exact_framework_join",
+          "detail": "The class is discoverable/managed by R411 PluginManager and participates in the Guice/EventBus/config framework; configured plugins also pair with R413 Config contracts where the source map exposes one."
+        }
+      ],
+      "note": "Source-proven concrete plugin identity with exact-v308 Plugin inheritance corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/k/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LoadoutsPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map supplies the exact source identity LoadoutsPlugin for rs/s/k/a."
+        },
+        {
+          "family": "exact_plugin_inheritance",
+          "detail": "Exact v308 declares rs/s/k/a as a concrete class extending R411 Plugin (rs.s.a), placing it directly in the live plugin lifecycle."
+        },
+        {
+          "family": "exact_framework_join",
+          "detail": "The class is discoverable/managed by R411 PluginManager and participates in the Guice/EventBus/config framework; configured plugins also pair with R413 Config contracts where the source map exposes one."
+        }
+      ],
+      "note": "Source-proven concrete plugin identity with exact-v308 Plugin inheritance corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/l/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "MenuEntrySwapperPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map supplies the exact source identity MenuEntrySwapperPlugin for rs/s/l/c."
+        },
+        {
+          "family": "exact_plugin_inheritance",
+          "detail": "Exact v308 declares rs/s/l/c as a concrete class extending R411 Plugin (rs.s.a), placing it directly in the live plugin lifecycle."
+        },
+        {
+          "family": "exact_framework_join",
+          "detail": "The class is discoverable/managed by R411 PluginManager and participates in the Guice/EventBus/config framework; configured plugins also pair with R413 Config contracts where the source map exposes one."
+        }
+      ],
+      "note": "Source-proven concrete plugin identity with exact-v308 Plugin inheritance corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/m/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NotesPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map supplies the exact source identity NotesPlugin for rs/s/m/f."
+        },
+        {
+          "family": "exact_plugin_inheritance",
+          "detail": "Exact v308 declares rs/s/m/f as a concrete class extending R411 Plugin (rs.s.a), placing it directly in the live plugin lifecycle."
+        },
+        {
+          "family": "exact_framework_join",
+          "detail": "The class is discoverable/managed by R411 PluginManager and participates in the Guice/EventBus/config framework; configured plugins also pair with R413 Config contracts where the source map exposes one."
+        }
+      ],
+      "note": "Source-proven concrete plugin identity with exact-v308 Plugin inheritance corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/n/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NotificationsPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map supplies the exact source identity NotificationsPlugin for rs/s/n/b."
+        },
+        {
+          "family": "exact_plugin_inheritance",
+          "detail": "Exact v308 declares rs/s/n/b as a concrete class extending R411 Plugin (rs.s.a), placing it directly in the live plugin lifecycle."
+        },
+        {
+          "family": "exact_framework_join",
+          "detail": "The class is discoverable/managed by R411 PluginManager and participates in the Guice/EventBus/config framework; configured plugins also pair with R413 Config contracts where the source map exposes one."
+        }
+      ],
+      "note": "Source-proven concrete plugin identity with exact-v308 Plugin inheritance corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/o/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "NpcIndicatorsPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map supplies the exact source identity NpcIndicatorsPlugin for rs/s/o/e."
+        },
+        {
+          "family": "exact_plugin_inheritance",
+          "detail": "Exact v308 declares rs/s/o/e as a concrete class extending R411 Plugin (rs.s.a), placing it directly in the live plugin lifecycle."
+        },
+        {
+          "family": "exact_framework_join",
+          "detail": "The class is discoverable/managed by R411 PluginManager and participates in the Guice/EventBus/config framework; configured plugins also pair with R413 Config contracts where the source map exposes one."
+        }
+      ],
+      "note": "Source-proven concrete plugin identity with exact-v308 Plugin inheritance corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/p/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PlayerOutlinePlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map supplies the exact source identity PlayerOutlinePlugin for rs/s/p/d."
+        },
+        {
+          "family": "exact_plugin_inheritance",
+          "detail": "Exact v308 declares rs/s/p/d as a concrete class extending R411 Plugin (rs.s.a), placing it directly in the live plugin lifecycle."
+        },
+        {
+          "family": "exact_framework_join",
+          "detail": "The class is discoverable/managed by R411 PluginManager and participates in the Guice/EventBus/config framework; configured plugins also pair with R413 Config contracts where the source map exposes one."
+        }
+      ],
+      "note": "Source-proven concrete plugin identity with exact-v308 Plugin inheritance corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/q/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PvpTrackerPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map supplies the exact source identity PvpTrackerPlugin for rs/s/q/d."
+        },
+        {
+          "family": "exact_plugin_inheritance",
+          "detail": "Exact v308 declares rs/s/q/d as a concrete class extending R411 Plugin (rs.s.a), placing it directly in the live plugin lifecycle."
+        },
+        {
+          "family": "exact_framework_join",
+          "detail": "The class is discoverable/managed by R411 PluginManager and participates in the Guice/EventBus/config framework; configured plugins also pair with R413 Config contracts where the source map exposes one."
+        }
+      ],
+      "note": "Source-proven concrete plugin identity with exact-v308 Plugin inheritance corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/r/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TileIndicatorsPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map supplies the exact source identity TileIndicatorsPlugin for rs/s/r/c."
+        },
+        {
+          "family": "exact_plugin_inheritance",
+          "detail": "Exact v308 declares rs/s/r/c as a concrete class extending R411 Plugin (rs.s.a), placing it directly in the live plugin lifecycle."
+        },
+        {
+          "family": "exact_framework_join",
+          "detail": "The class is discoverable/managed by R411 PluginManager and participates in the Guice/EventBus/config framework; configured plugins also pair with R413 Config contracts where the source map exposes one."
+        }
+      ],
+      "note": "Source-proven concrete plugin identity with exact-v308 Plugin inheritance corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/s/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "HoverDescriptionsPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map supplies the exact source identity HoverDescriptionsPlugin for rs/s/s/b."
+        },
+        {
+          "family": "exact_plugin_inheritance",
+          "detail": "Exact v308 declares rs/s/s/b as a concrete class extending R411 Plugin (rs.s.a), placing it directly in the live plugin lifecycle."
+        },
+        {
+          "family": "exact_framework_join",
+          "detail": "The class is discoverable/managed by R411 PluginManager and participates in the Guice/EventBus/config framework; configured plugins also pair with R413 Config contracts where the source map exposes one."
+        }
+      ],
+      "note": "Source-proven concrete plugin identity with exact-v308 Plugin inheritance corroboration."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/s/t/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TradingPostPlugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map supplies the exact source identity TradingPostPlugin for rs/s/t/i."
+        },
+        {
+          "family": "exact_plugin_inheritance",
+          "detail": "Exact v308 declares rs/s/t/i as a concrete class extending R411 Plugin (rs.s.a), placing it directly in the live plugin lifecycle."
+        },
+        {
+          "family": "exact_framework_join",
+          "detail": "The class is discoverable/managed by R411 PluginManager and participates in the Guice/EventBus/config framework; configured plugins also pair with R413 Config contracts where the source map exposes one."
+        }
+      ],
+      "note": "Source-proven concrete plugin identity with exact-v308 Plugin inheritance corroboration."
+    }
+  ],
+  "conflicts": []
+}
