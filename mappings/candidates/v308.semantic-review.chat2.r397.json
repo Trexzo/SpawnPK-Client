@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_00EEFBBD4E1AB5EB0209",
+  "proposals": [{
+    "proposal_id": "SEMPROP_1894787328BCCD20FD30",
+    "target_kind": "class",
+    "stable_id": "CLIENT_CLASS_000536",
+    "owner_logical_id": "CLIENT_CLASS_000536",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate": {"owner":"rs/n/a/f","name":null,"descriptor":null},
+    "proposed_name": "TextComponent",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"recovered_source_map","detail":"Recovered source map identifies rs/n/a/f as rs.interfaces.components.TextComponent."},
+      {"family":"exact_v308_component_role","detail":"Recovered source map identifies rs/n/a/f as rs.interfaces.components.TextComponent; exact v308 builds text widgets, owns font/color/alignment/hover-text presentation state and exposes fluent text-style configuration."},
+      {"family":"exact_interface_family_join","detail":"The class is part of the live rs.interfaces component layer under the reviewed Widget/WidgetManager family and interoperates with the component/layout framework where applicable."}
+    ],
+    "note":"Source-proven interface component identity with exact-v308 behavioral corroboration."
+  }],
+  "unresolved": []
+}
