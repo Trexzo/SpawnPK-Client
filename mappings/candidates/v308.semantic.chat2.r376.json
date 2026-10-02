@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind":"class","owner":"rs/g/a","name":null,"descriptor":null},
+      "proposed_name":"ClientBounds","confidence":0.999,
+      "evidence":[
+        {"family":"exact_container_dimensions","detail":"rs/C.aZ() reads the active AWT Container width/height, subtracts frame insets when present, clamps non-negative values and returns a new rs/g/a(width,height)."},
+        {"family":"exact_bounds_state","detail":"The class stores x/y origin plus width/height dimensions and exposes setters for origin and size; client consumers read its dimensions for layout sizing."}
+      ],
+      "note":"Descriptive exact-v308 client timing/geometry role; no verbatim original identifier is claimed."
+    },
+    {
+      "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE","source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/g/b","name":null,"descriptor":null},"proposed_name":"GameClock","confidence":0.999,
+      "evidence":[
+        {"family":"exact_abstract_clock_contract","detail":"The abstract class exposes reset() plus one cycle-wait method taking target cycle duration/minimum sleep and returning the number of client cycles to process."},
+        {"family":"exact_game_loop_ownership","detail":"rs/C stores one static rs/g/b clock and invokes its cycle-wait method from the main applet/game loop."},
+        {"family":"exact_factory_join","detail":"rs/C.be() constructs NanoGameClock first and falls back to MillisGameClock on Throwable, proving both concrete subclasses implement this exact loop-clock contract."}
+      ],
+      "note":"Descriptive exact-v308 client timing/geometry role; no verbatim original identifier is claimed."
+    },
+    {
+      "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE","source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/g/c","name":null,"descriptor":null},"proposed_name":"MillisGameClock","confidence":0.999,
+      "evidence":[
+        {"family":"exact_millisecond_timing","detail":"The clock uses a ten-entry millisecond timestamp history, System.currentTimeMillis()-based monotonic correction, adaptive cycle ratio and Thread.sleep timing."},
+        {"family":"exact_clock_subclass","detail":"It extends GameClock and is returned by rs/C.be() only as the fallback when NanoGameClock construction fails."},
+        {"family":"exact_cycle_contract","detail":"Its wait method clamps pacing parameters, sleeps as needed and returns how many game cycles should be processed for the accumulated timing state."}
+      ],
+      "note":"Descriptive exact-v308 client timing/geometry role; no verbatim original identifier is claimed."
+    },
+    {
+      "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE","source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/g/d","name":null,"descriptor":null},"proposed_name":"NanoGameClock","confidence":0.999,
+      "evidence":[
+        {"family":"exact_nanosecond_timing","detail":"The clock bases pacing on System.nanoTime(), computes target nanosecond deadlines, sleeps the remaining millisecond interval and advances the deadline by the requested cycle duration."},
+        {"family":"exact_clock_subclass","detail":"It extends GameClock and is the preferred implementation returned directly by rs/C.be()."},
+        {"family":"exact_live_client_join","detail":"The wait loop additionally observes active Client state while pacing, confirming this is the live high-resolution game-loop clock rather than a generic timer."}
+      ],
+      "note":"Descriptive exact-v308 client timing/geometry role; no verbatim original identifier is claimed."
+    }
+  ],
+  "conflicts":[]
+}
