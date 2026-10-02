@@ -2,11 +2,16 @@ from __future__ import annotations
 
 import hashlib
 import json
+from pathlib import Path
+import tempfile
 import unittest
 
 from spk_recovery.cross_version_javac_frontier import (
     CrossVersionJavacFrontierError,
     compare_javac_frontiers,
+)
+from spk_recovery.cross_version_javac_frontier_cli import (
+    _load as _frontier_load,
 )
 from spk_recovery.javac_diagnostics import classify_javac_diagnostics
 
@@ -429,6 +434,20 @@ class CrossVersionJavacFrontierTests(unittest.TestCase):
             "frontier ID does not match diagnostic rows",
         ):
             compare_javac_frontiers(old, new)
+
+
+    def test_cli_loader_rejects_nested_duplicate_json_keys(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "duplicate.json"
+            path.write_text(
+                '{"diagnostics":[{"line":1,"line":2}]}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                CrossVersionJavacFrontierError,
+                "duplicate JSON key: 'line'",
+            ):
+                _frontier_load(path)
 
 
 if __name__ == "__main__":

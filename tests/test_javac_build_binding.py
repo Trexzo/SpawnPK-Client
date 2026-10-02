@@ -1,11 +1,16 @@
 from __future__ import annotations
 
 import copy
+from pathlib import Path
+import tempfile
 import unittest
 
 from spk_recovery.javac_build_binding import (
     JavacBuildBindingError,
     build_javac_build_binding,
+)
+from spk_recovery.javac_build_binding_cli import (
+    _load as _binding_load,
 )
 from spk_recovery.javac_diagnostics import (
     classify_javac_diagnostics,
@@ -250,6 +255,20 @@ class JavacBuildBindingTests(unittest.TestCase):
             tooling_commit=TOOLING,
         )
         self.assertNotEqual(first["binding_id"], second["binding_id"])
+
+
+    def test_cli_loader_rejects_duplicate_json_keys(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "duplicate.json"
+            path.write_text(
+                '{"schema_version":1,"schema_version":1}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                JavacBuildBindingError,
+                "duplicate JSON key: 'schema_version'",
+            ):
+                _binding_load(path)
 
 
 if __name__ == "__main__":

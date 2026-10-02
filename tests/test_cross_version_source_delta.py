@@ -9,6 +9,9 @@ from spk_recovery.cross_version_source_delta import (
     CrossVersionSourceDeltaError,
     build_cross_version_source_delta,
 )
+from spk_recovery.cross_version_source_delta_cli import (
+    _load as _source_delta_load,
+)
 from spk_recovery.source_digest import source_tree_digest
 
 
@@ -184,6 +187,20 @@ def _plan(build, sha):
     }
 
 
+def _collision_mapping_sha256(plan):
+    material = [
+        {
+            "old_internal_name": row["old_internal_name"],
+            "new_internal_name": row["new_internal_name"],
+        }
+        for row in sorted(
+            plan.get("remaps", []),
+            key=lambda row: row["old_internal_name"],
+        )
+    ]
+    return _digest(material)
+
+
 def _collision(plan_id, *, readable=READABLE, remaps=None):
     return {
         "schema_version": 1,
@@ -235,6 +252,9 @@ def _authority_bundle(
                 "collision_report_id": collision_plan[
                     "collision_report_id"
                 ],
+                "collision_mapping_sha256": (
+                    _collision_mapping_sha256(collision_plan)
+                ),
                 "base_readable_jar_sha256": READABLE,
             }
         )
@@ -486,6 +506,53 @@ class CrossVersionSourceDeltaTests(unittest.TestCase):
                 collision["plan_id"],
             )
 
+    def test_collision_private_mapping_drift_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            old, new = self._roots(Path(tmp))
+            (new / "rs" / "C.java").unlink()
+            (new / "rs" / "Recovered_Blocker.java").write_text(
+                "package rs; class C { static final int BUILD = 308; }\n",
+                encoding="utf-8",
+            )
+            collision = _collision(
+                "JNSPLAN_" + "A" * 20,
+                remaps=[
+                    {
+                        "old_internal_name": "rs/C",
+                        "new_internal_name": "rs/Recovered_Blocker",
+                    }
+                ],
+            )
+            old_release, old_rec, old_plan = _authority_bundle(
+                "v307", OLD_SHA, old, "RECOVERY_OLD"
+            )
+            new_release, new_rec, new_plan = _authority_bundle(
+                "v308",
+                NEW_SHA,
+                new,
+                "RECOVERY_NEW",
+                collision_plan=collision,
+            )
+            wrong = copy.deepcopy(collision)
+            wrong["remaps"][0]["old_internal_name"] = "rs/A"
+
+            with self.assertRaisesRegex(
+                CrossVersionSourceDeltaError,
+                "private collision mapping",
+            ):
+                build_cross_version_source_delta(
+                    old_release,
+                    new_release,
+                    old_rec,
+                    new_rec,
+                    _lineage(),
+                    old_plan,
+                    new_plan,
+                    old,
+                    new,
+                    new_collision_plan=wrong,
+                )
+
     def test_collision_plan_id_drift_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             old, new = self._roots(Path(tmp))
@@ -596,6 +663,20 @@ class CrossVersionSourceDeltaTests(unittest.TestCase):
                     old,
                     new,
                 )
+
+
+    def test_cli_loader_rejects_nested_duplicate_json_keys(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "duplicate.json"
+            path.write_text(
+                '{"release":{"build_id":"v307","build_id":"v308"}}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                CrossVersionSourceDeltaError,
+                "duplicate JSON key: 'build_id'",
+            ):
+                _source_delta_load(path)
 
 
 if __name__ == "__main__":

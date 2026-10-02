@@ -175,6 +175,10 @@ class CollisionBytecodeRemapTests(unittest.TestCase):
                 report["summary"]["rewritten_class_count"],
                 0,
             )
+            self.assertEqual(
+                len(report["private_mapping_sha256"]),
+                64,
+            )
             self.assertTrue(output_jar.is_file())
 
             after = self._javac_probe(

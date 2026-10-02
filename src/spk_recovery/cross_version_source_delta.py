@@ -165,9 +165,9 @@ def _collision_targets(
     *,
     readable_jar_sha256: str,
     label: str,
-) -> dict[str, str]:
+) -> tuple[dict[str, str], str | None]:
     if plan is None:
-        return {}
+        return {}, None
     _require_doc(
         plan,
         kind="class_package_namespace_collision_plan",
@@ -217,7 +217,17 @@ def _collision_targets(
             )
         out[old] = new
         targets.add(new)
-    return out
+
+    mapping_material = [
+        {
+            "old_internal_name": old,
+            "new_internal_name": out[old],
+        }
+        for old in sorted(out)
+    ]
+    return out, hashlib.sha256(
+        _stable_json(mapping_material)
+    ).hexdigest()
 
 
 def _index_source_units(
@@ -337,7 +347,7 @@ def _index_source_units(
         recovered_manifest.get("base_readable_jar_sha256")
         or readable_sha
     ).lower()
-    collision_remaps = _collision_targets(
+    collision_remaps, collision_mapping_sha256 = _collision_targets(
         collision_plan,
         readable_jar_sha256=collision_base_readable_sha,
         label=f"{label}_collision_plan",
@@ -345,10 +355,17 @@ def _index_source_units(
     expected_collision_plan_id = recovered_manifest.get(
         "collision_plan_id"
     )
+    expected_collision_mapping_sha256 = str(
+        recovered_manifest.get("collision_mapping_sha256") or ""
+    ).lower()
     if expected_collision_plan_id is None:
         if collision_plan is not None:
             raise CrossVersionSourceDeltaError(
                 f"{label}: collision plan supplied but recovered source is not collision-derived"
+            )
+        if expected_collision_mapping_sha256:
+            raise CrossVersionSourceDeltaError(
+                f"{label}: non-collision source unexpectedly carries collision mapping authority"
             )
     else:
         if collision_plan is None:
@@ -358,6 +375,14 @@ def _index_source_units(
         if collision_plan.get("plan_id") != expected_collision_plan_id:
             raise CrossVersionSourceDeltaError(
                 f"{label}: collision plan ID does not match recovered source authority"
+            )
+        if len(expected_collision_mapping_sha256) != 64:
+            raise CrossVersionSourceDeltaError(
+                f"{label}: collision-derived recovered source lacks exact private mapping authority"
+            )
+        if collision_mapping_sha256 != expected_collision_mapping_sha256:
+            raise CrossVersionSourceDeltaError(
+                f"{label}: private collision mapping does not match recovered source authority"
             )
 
     units: dict[str, dict[str, Any]] = {}
@@ -438,6 +463,7 @@ def _index_source_units(
             if collision_plan is not None
             else None
         ),
+        "collision_mapping_sha256": collision_mapping_sha256,
         "source_tree_sha256": actual_tree,
         "unit_count": len(units),
         "units": units,
@@ -543,6 +569,12 @@ def build_cross_version_source_delta(
         "new_source_tree_sha256": new["source_tree_sha256"],
         "old_collision_plan_id": old["collision_plan_id"],
         "new_collision_plan_id": new["collision_plan_id"],
+        "old_collision_mapping_sha256": old[
+            "collision_mapping_sha256"
+        ],
+        "new_collision_mapping_sha256": new[
+            "collision_mapping_sha256"
+        ],
         "summary": summary,
         "old_only": old_only,
         "new_only": new_only,

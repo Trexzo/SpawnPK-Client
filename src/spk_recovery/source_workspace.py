@@ -494,6 +494,11 @@ def build_source_workspace(
                     "collision_report_id"
                 )
             ),
+            "collision_mapping_sha256": (
+                collision_transform_report.get(
+                    "private_mapping_sha256"
+                )
+            ),
         }
         if not all(
             isinstance(value, str) and value

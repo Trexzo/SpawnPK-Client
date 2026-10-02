@@ -6,13 +6,17 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from spk_recovery.cross_version_javac_legacy_baseline_delta import (
     CrossVersionJavacLegacyBaselineDeltaError,
     build_cross_version_javac_legacy_baseline_delta,
     verify_cross_version_javac_legacy_baseline_delta,
 )
-from spk_recovery.cross_version_javac_legacy_baseline_delta_cli import _load
+from spk_recovery.cross_version_javac_legacy_baseline_delta_cli import (
+    _load,
+    main as legacy_delta_main,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -400,6 +404,82 @@ class CrossVersionJavacLegacyBaselineDeltaTests(unittest.TestCase):
                 "duplicate JSON key",
             ):
                 _load(path)
+
+
+    def test_cli_reloads_and_verifies_written_delta(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            baseline = root / "baseline.json"
+            current = root / "current.json"
+            out = root / "legacy-delta.json"
+            baseline.write_text(
+                json.dumps(self.baseline, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            current.write_text(
+                json.dumps(self.current, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+
+            with patch(
+                "sys.argv",
+                [
+                    "spk-cross-version-javac-legacy-baseline-delta",
+                    str(baseline),
+                    str(current),
+                    "--out",
+                    str(out),
+                ],
+            ):
+                self.assertEqual(legacy_delta_main(), 0)
+
+            emitted = _load(out)
+            expected = build_cross_version_javac_legacy_baseline_delta(
+                self.baseline,
+                self.current,
+            )
+            self.assertEqual(emitted, expected)
+
+    def test_cli_fails_closed_when_written_delta_is_corrupted(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            baseline = root / "baseline.json"
+            current = root / "current.json"
+            out = root / "legacy-delta.json"
+            baseline.write_text(
+                json.dumps(self.baseline, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            current.write_text(
+                json.dumps(self.current, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+
+            def corrupt_write(report, path):
+                bad = copy.deepcopy(report)
+                bad["delta_id"] = "XJAVACLEGACYDELTA_" + "0" * 20
+                path.write_text(
+                    json.dumps(bad, sort_keys=True) + "\n",
+                    encoding="utf-8",
+                )
+
+            with patch(
+                "spk_recovery.cross_version_javac_legacy_baseline_delta_cli."
+                "write_cross_version_javac_legacy_baseline_delta",
+                side_effect=corrupt_write,
+            ), patch(
+                "sys.argv",
+                [
+                    "spk-cross-version-javac-legacy-baseline-delta",
+                    str(baseline),
+                    str(current),
+                    "--out",
+                    str(out),
+                ],
+            ):
+                with self.assertRaises(SystemExit) as raised:
+                    legacy_delta_main()
+                self.assertEqual(raised.exception.code, 2)
 
 
 if __name__ == "__main__":
