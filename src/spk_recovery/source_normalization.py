@@ -3414,7 +3414,7 @@ def _normalize_invokedynamic_parameter_capture_aliases(
                 r"(?<![A-Za-z0-9_$])"
                 + re.escape(parameter_name)
                 + r"(?P<suffix>[0-9]+)"
-                r"(?=\s*\.)"
+                r"(?![A-Za-z0-9_$])"
             )
             alias_matches = list(alias_re.finditer(method_code))
             if not alias_matches:
