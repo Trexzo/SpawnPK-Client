@@ -357,9 +357,23 @@ def remap_class_bytes(
 
     return rebuilt, len(rewrites) + len(class_alias_sources)
 
+def _exact_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in out:
+            raise CollisionBytecodeRemapError(
+                f"duplicate JSON key: {key!r}"
+            )
+        out[key] = value
+    return out
+
+
 def _load_plan(path: Path) -> dict[str, Any]:
     try:
-        plan = json.loads(path.read_text(encoding="utf-8"))
+        plan = json.loads(
+            path.read_text(encoding="utf-8"),
+            object_pairs_hook=_exact_object,
+        )
     except (OSError, json.JSONDecodeError) as exc:
         raise CollisionBytecodeRemapError(
             f"invalid private namespace collision plan: {path}"
