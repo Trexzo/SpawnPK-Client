@@ -7,8 +7,10 @@ from unittest.mock import patch
 
 from spk_recovery.release_verify import (
     RecoveryReleaseVerificationError,
+    _load_json_authority,
     verify_recovery_release,
 )
+from spk_recovery.release_verify_cli import _load as _verify_cli_load
 
 
 def _release():
@@ -135,6 +137,35 @@ def _official_first_fixture(root: Path) -> dict:
 
 
 class ReleaseVerificationTests(unittest.TestCase):
+    def test_release_authority_loaders_reject_duplicate_json_keys(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            nested = root / "nested.json"
+            nested.write_text(
+                '{"kind":"recovery_release_manifest","n":{"x":1,"x":2}}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                RecoveryReleaseVerificationError,
+                "duplicate JSON key: 'x'",
+            ):
+                _load_json_authority(
+                    nested,
+                    label="release",
+                    kind="recovery_release_manifest",
+                )
+
+            top = root / "top.json"
+            top.write_text(
+                '{"kind":"a","kind":"b"}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                RecoveryReleaseVerificationError,
+                "duplicate JSON key: 'kind'",
+            ):
+                _verify_cli_load(top)
+
     def test_exact_manifest_reproduction_passes(self):
         release = _release()
         with patch(
