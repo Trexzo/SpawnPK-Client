@@ -1,0 +1,48 @@
+{
+  "schema_version":1,
+  "kind":"semantic_review_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count":2,
+  "review_id":"SEMREVIEW_90DC1B171C6BBBAA0F0D",
+  "proposals":[
+    {
+      "proposal_id":"SEMPROP_7D88C11918C1B83D590A",
+      "target_kind":"class",
+      "stable_id":"CLIENT_CLASS_001103",
+      "owner_logical_id":"CLIENT_CLASS_001103",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate":{"owner":"rs/ui/l$a","name":null,"descriptor":null},
+      "proposed_name":"NavigationButtonBuilder",
+      "confidence":0.999,
+      "evidence":[
+        {"family":"exact_literal_identity","detail":"Exact-v308 constant-pool/toString data preserves 'NavigationButton.NavigationButtonBuilder(icon=..., tab$value=..., tooltip$value=..., selected=..., onClick=..., onSelect=..., panel=..., priority=..., popup=...)'."},
+        {"family":"exact_builder_contract","detail":"The nested class exposes fluent setters for all NavigationButton construction fields, tracks whether defaulted tab/tooltip values were explicitly set, and build() constructs the outer rs/ui/l value directly."},
+        {"family":"exact_outer_join","detail":"The only produced type is rs/ui/l NavigationButton, and NavigationButton.builder() constructs this nested builder."},
+        {"family":"exact_stable_id","detail":"Sorted exact-v308 rs/** order places rs/ui/l$a at zero-based index 1102, fixing CLIENT_CLASS_001103."}
+      ],
+      "note":"Exact-v308 source-style identity for NavigationButton.NavigationButtonBuilder."
+    },
+    {
+      "proposal_id":"SEMPROP_B6CE6B18C0477EAC3D6E",
+      "target_kind":"class",
+      "stable_id":"CLIENT_CLASS_001102",
+      "owner_logical_id":"CLIENT_CLASS_001102",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate":{"owner":"rs/ui/l","name":null,"descriptor":null},
+      "proposed_name":"NavigationButton",
+      "confidence":0.999,
+      "evidence":[
+        {"family":"exact_literal_identity","detail":"Exact-v308 constant-pool/toString data preserves 'NavigationButton(icon=..., tab=..., tooltip=..., selected=..., onClick=..., onSelect=..., panel=..., priority=..., popup=...)'."},
+        {"family":"exact_value_shape","detail":"The class stores exactly icon image, selected/tab state, tooltip, callbacks, panel, priority and popup-action map, exposes mutators/accessors, and equality is keyed by tooltip exactly as the embedded source implementation expects."},
+        {"family":"exact_builder_join","detail":"Static builder() returns rs/ui/l$a, which carries the same construction fields/defaults and constructs rs/ui/l directly."},
+        {"family":"exact_stable_id","detail":"Sorted exact-v308 rs/** order places rs/ui/l at zero-based index 1101, fixing CLIENT_CLASS_001102."}
+      ],
+      "note":"Exact-v308 source-style NavigationButton identity."
+    }
+  ],
+  "unresolved":[]
+}
