@@ -102,7 +102,7 @@ def main() -> int:
             args.method,
             args.descriptor,
         )
-    except (BytecodeProfileError, OSError) as exc:
+    except (BytecodeProfileError, OSError, KeyError) as exc:
         raise SystemExit(str(exc)) from exc
 
     encoded = json.dumps(
