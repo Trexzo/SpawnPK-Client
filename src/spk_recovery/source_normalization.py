@@ -4452,7 +4452,7 @@ def _normalize_enum_valueof_object_class_casts(
         method_start = method_match.start()
         method_code = whole_code[method_start:body_end]
         source_calls = list(call_re.finditer(method_code))
-        if not source_calls:
+        if len(source_calls) != 1:
             continue
 
         source_static = bool(
