@@ -1,0 +1,351 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Alpha",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/e/a as rs.config.Alpha."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact v308 independently matches that source role: annotation marker consumed by ConfigItemDescriptor to enable alpha control for color config items."
+        },
+        {
+          "family": "upstream_runelite_identity",
+          "detail": "RuneLite's config package exposes the same source type Alpha with the matching annotation/interface/class/enum contract."
+        }
+      ],
+      "note": "Source-identified config-core class; exact-v308 behavior/signature independently corroborates the recovered source map."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Config",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/e/b as rs.config.Config."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact v308 independently matches that source role: shared zero-method config base implemented by plugin/config interfaces and used as ConfigManager's generic proxy bound."
+        },
+        {
+          "family": "upstream_runelite_identity",
+          "detail": "RuneLite's config package exposes the same source type Config with the matching annotation/interface/class/enum contract."
+        }
+      ],
+      "note": "Source-identified config-core class; exact-v308 behavior/signature independently corroborates the recovered source map."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigDescriptor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/e/d as rs.config.ConfigDescriptor."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact v308 independently matches that source role: container holding ConfigGroup plus collections of ConfigSectionDescriptor and ConfigItemDescriptor."
+        },
+        {
+          "family": "upstream_runelite_identity",
+          "detail": "RuneLite's config package exposes the same source type ConfigDescriptor with the matching annotation/interface/class/enum contract."
+        }
+      ],
+      "note": "Source-identified config-core class; exact-v308 behavior/signature independently corroborates the recovered source map."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigGroup",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/e/e as rs.config.ConfigGroup."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact v308 independently matches that source role: runtime annotation with one String value used to define the configuration group key."
+        },
+        {
+          "family": "upstream_runelite_identity",
+          "detail": "RuneLite's config package exposes the same source type ConfigGroup with the matching annotation/interface/class/enum contract."
+        }
+      ],
+      "note": "Source-identified config-core class; exact-v308 behavior/signature independently corroborates the recovered source map."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigInvocationHandler",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/e/f as rs.config.ConfigInvocationHandler."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact v308 independently matches that source role: InvocationHandler owned by ConfigManager; exact diagnostics mention configuration proxy classes/methods and it invokes default config methods."
+        },
+        {
+          "family": "upstream_runelite_identity",
+          "detail": "RuneLite's config package exposes the same source type ConfigInvocationHandler with the matching annotation/interface/class/enum contract."
+        }
+      ],
+      "note": "Source-identified config-core class; exact-v308 behavior/signature independently corroborates the recovered source map."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigItem",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/e/g as rs.config.ConfigItem."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact v308 independently matches that source role: runtime annotation exposing position, keyName, name, description, hidden, warning, secret and section."
+        },
+        {
+          "family": "upstream_runelite_identity",
+          "detail": "RuneLite's config package exposes the same source type ConfigItem with the matching annotation/interface/class/enum contract."
+        }
+      ],
+      "note": "Source-identified config-core class; exact-v308 behavior/signature independently corroborates the recovered source map."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/e/i as rs.config.ConfigManager."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact v308 independently matches that source role: live manager owning Gson/EventBus/ConfigStore/ConfigInvocationHandler and getConfig/getConfiguration/setConfiguration/unset/save/descriptor flows."
+        },
+        {
+          "family": "upstream_runelite_identity",
+          "detail": "RuneLite's config package exposes the same source type ConfigManager with the matching annotation/interface/class/enum contract."
+        }
+      ],
+      "note": "Source-identified config-core class; exact-v308 behavior/signature independently corroborates the recovered source map."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/l",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ConfigSection",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/e/l as rs.config.ConfigSection."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact v308 independently matches that source role: runtime annotation exposing section name, description, position and closedByDefault."
+        },
+        {
+          "family": "upstream_runelite_identity",
+          "detail": "RuneLite's config package exposes the same source type ConfigSection with the matching annotation/interface/class/enum contract."
+        }
+      ],
+      "note": "Source-identified config-core class; exact-v308 behavior/signature independently corroborates the recovered source map."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/o",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Range",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/e/o as rs.config.Range."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact v308 independently matches that source role: runtime ConfigItem metadata annotation exposing min and max integer bounds."
+        },
+        {
+          "family": "upstream_runelite_identity",
+          "detail": "RuneLite's config package exposes the same source type Range with the matching annotation/interface/class/enum contract."
+        }
+      ],
+      "note": "Source-identified config-core class; exact-v308 behavior/signature independently corroborates the recovered source map."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RequestFocusType",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/e/p as rs.config.RequestFocusType."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact v308 independently matches that source role: notification request-focus enum returned by NotificationsConfig and consumed by Notifier."
+        },
+        {
+          "family": "upstream_runelite_identity",
+          "detail": "RuneLite's config package exposes the same source type RequestFocusType with the matching annotation/interface/class/enum contract."
+        }
+      ],
+      "note": "Source-identified config-core class; exact-v308 behavior/signature independently corroborates the recovered source map."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/e/q",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Units",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered semantic source map identifies rs/e/q as rs.config.Units."
+        },
+        {
+          "family": "exact_v308_contract",
+          "detail": "Exact v308 independently matches that source role: runtime ConfigItem units annotation preserving MILLISECONDS, MINUTES, PERCENT, PIXELS, SECONDS and TICKS constants."
+        },
+        {
+          "family": "upstream_runelite_identity",
+          "detail": "RuneLite's config package exposes the same source type Units with the matching annotation/interface/class/enum contract."
+        }
+      ],
+      "note": "Source-identified config-core class; exact-v308 behavior/signature independently corroborates the recovered source map."
+    }
+  ],
+  "conflicts": []
+}
