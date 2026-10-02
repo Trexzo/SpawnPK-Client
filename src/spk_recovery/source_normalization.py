@@ -3229,7 +3229,7 @@ def _match_dimension_capture_instruction_shape(
 ) -> dict[str, int] | None:
     """Match the exact bounded-Dimension lambda-capture bytecode family."""
 
-    if len(instructions) != 31:
+    if len(instructions) != 30:
         return None
 
     def row(
@@ -3326,7 +3326,7 @@ def _match_dimension_capture_instruction_shape(
         ),
         row(24, "aload", local_index=0),
         row(
-            28,
+            27,
             "invokedynamic",
             descriptor=(
                 "(L"
@@ -3336,13 +3336,13 @@ def _match_dimension_capture_instruction_shape(
             ),
         ),
         row(
-            29,
+            28,
             "invokestatic",
             owner="javax/swing/SwingUtilities",
             name="invokeLater",
             descriptor="(Ljava/lang/Runnable;)V",
         ),
-        row(30, "return"),
+        row(29, "return"),
     )
     if not all(fixed_checks):
         return None
