@@ -12,6 +12,19 @@ from spk_recovery import release_workspace_orchestrator_cli
 
 
 class ReleaseWorkspaceOrchestratorCliTests(unittest.TestCase):
+    def test_loader_rejects_duplicate_json_keys(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "duplicate.json"
+            path.write_text(
+                '{"outer":{"x":1,"x":2}}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                Exception,
+                "duplicate JSON key: 'x'",
+            ):
+                release_workspace_orchestrator_cli._load(path)
+
     def test_cli_passes_existing_workspace_and_collision_plan(self):
         report = {
             "run_id": "RELEASE_RUN_TEST",
