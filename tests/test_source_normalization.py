@@ -2595,6 +2595,206 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+    def test_dimension_capture_locals_use_exact_slot_flow(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.awt.Dimension;\n"
+                        "import javax.swing.JPanel;\n"
+                        "import javax.swing.SwingUtilities;\n"
+                        "public class A {\n"
+                        "    private final JPanel panel = new JPanel();\n"
+                        "    public void resize(int width, int height, int minWidth, int minHeight) {\n"
+                        "        int boundedWidth = Math.max(Math.min(width, 7680), minWidth);\n"
+                        "        int boundedHeight = Math.max(Math.min(height, 2160), minHeight);\n"
+                        "        Dimension preferred = new Dimension(boundedWidth, boundedHeight);\n"
+                        "        Dimension minimum = new Dimension(minWidth, minHeight);\n"
+                        "        SwingUtilities.invokeLater(() -> {\n"
+                        "            panel.setSize(preferred);\n"
+                        "            panel.setPreferredSize(preferred);\n"
+                        "            panel.setMinimumSize(minimum);\n"
+                        "        });\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.awt.Dimension;\n"
+                "import javax.swing.JPanel;\n"
+                "import javax.swing.SwingUtilities;\n"
+                "public class A {\n"
+                "    private final JPanel panel = new JPanel();\n"
+                "    public void resize(int width, int height, int minWidth, int minHeight) {\n"
+                "        final Object o = new Dimension(Math.max(Math.min(missingWidth, 7680), n5), Math.max(Math.min(missingHeight, 2160), n6));\n"
+                "        final Object o2 = new Dimension(n5, n6);\n"
+                "        SwingUtilities.invokeLater(() -> {\n"
+                "            panel.setSize(dimension);\n"
+                "            panel.setPreferredSize(dimension);\n"
+                "            panel.setMinimumSize(dimension2);\n"
+                "        });\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-dimension-capture"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("cannot find symbol", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "final Dimension dimension = new Dimension("
+                "Math.max(Math.min(width, 7680), minWidth), "
+                "Math.max(Math.min(height, 2160), minHeight));",
+                normalized,
+            )
+            self.assertIn(
+                "final Dimension dimension2 = "
+                "new Dimension(minWidth, minHeight);",
+                normalized,
+            )
+            self.assertNotIn("final Object o =", normalized)
+            self.assertNotIn("final Object o2 =", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "dimension_capture_local_reconstruction"
+            )
+            self.assertEqual(action["method_name"], "resize")
+            self.assertEqual(action["method_descriptor"], "(IIII)V")
+            self.assertEqual(
+                action["parameter_names"],
+                ["width", "height", "minWidth", "minHeight"],
+            )
+            self.assertEqual(
+                action["slot_evidence"],
+                {
+                    "first_int_slot": 5,
+                    "second_int_slot": 6,
+                    "first_dimension_slot": 7,
+                    "second_dimension_slot": 8,
+                },
+            )
+            self.assertEqual(action["replacement_count"], 2)
+            self.assertEqual(
+                report["summary"][
+                    "dimension_capture_local_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "dimension_capture_local_declaration_replacement_count"
+                ],
+                2,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-dimension-capture"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_dimension_capture_locals_fail_closed_on_constant_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.awt.Dimension;\n"
+                        "import javax.swing.JPanel;\n"
+                        "import javax.swing.SwingUtilities;\n"
+                        "public class A {\n"
+                        "    private final JPanel panel = new JPanel();\n"
+                        "    public void resize(int width, int height, int minWidth, int minHeight) {\n"
+                        "        int boundedWidth = Math.max(Math.min(width, 7679), minWidth);\n"
+                        "        int boundedHeight = Math.max(Math.min(height, 2160), minHeight);\n"
+                        "        Dimension preferred = new Dimension(boundedWidth, boundedHeight);\n"
+                        "        Dimension minimum = new Dimension(minWidth, minHeight);\n"
+                        "        SwingUtilities.invokeLater(() -> {\n"
+                        "            panel.setSize(preferred);\n"
+                        "            panel.setPreferredSize(preferred);\n"
+                        "            panel.setMinimumSize(minimum);\n"
+                        "        });\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.awt.Dimension;\n"
+                "import javax.swing.JPanel;\n"
+                "import javax.swing.SwingUtilities;\n"
+                "public class A {\n"
+                "    private final JPanel panel = new JPanel();\n"
+                "    public void resize(int width, int height, int minWidth, int minHeight) {\n"
+                "        final Object o = new Dimension(Math.max(Math.min(missingWidth, 7680), n5), Math.max(Math.min(missingHeight, 2160), n6));\n"
+                "        final Object o2 = new Dimension(n5, n6);\n"
+                "        SwingUtilities.invokeLater(() -> {\n"
+                "            panel.setSize(dimension);\n"
+                "            panel.setPreferredSize(dimension);\n"
+                "            panel.setMinimumSize(dimension2);\n"
+                "        });\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "dimension_capture_local_action_count"
+                ],
+                0,
+            )
+
     def test_hidden_layout_constructor_arguments_use_exact_descriptor(
         self,
     ):
