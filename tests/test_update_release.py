@@ -5,7 +5,9 @@ import unittest
 from unittest.mock import patch
 
 from spk_recovery.update_release import migrate_update_to_release
+from spk_recovery.update_release import UpdateReleaseError
 from spk_recovery.update_release_cli import (
+    _load as update_release_cli_load,
     main as update_release_cli_main,
 )
 
@@ -16,6 +18,19 @@ def _write(path: Path, value: dict):
 
 
 class UpdateReleaseTests(unittest.TestCase):
+    def test_update_release_cli_loader_rejects_duplicate_json_keys(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "duplicate.json"
+            path.write_text(
+                '{"kind":"a","kind":"b"}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                UpdateReleaseError,
+                "duplicate JSON key: 'kind'",
+            ):
+                update_release_cli_load(path)
+
     def test_blocked_migration_never_promotes_authority(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
