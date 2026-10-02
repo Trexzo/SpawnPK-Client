@@ -30,6 +30,75 @@ _MEMBER_REF_KINDS = {
     11: "interface_method",
 }
 
+_LOCAL_INDEXED_OPS = {
+    0x15: "iload",
+    0x16: "lload",
+    0x17: "fload",
+    0x18: "dload",
+    0x19: "aload",
+    0x36: "istore",
+    0x37: "lstore",
+    0x38: "fstore",
+    0x39: "dstore",
+    0x3A: "astore",
+}
+
+_LOCAL_SHORT_OPS = {
+    **{0x1A + i: ("iload", i) for i in range(4)},
+    **{0x1E + i: ("lload", i) for i in range(4)},
+    **{0x22 + i: ("fload", i) for i in range(4)},
+    **{0x26 + i: ("dload", i) for i in range(4)},
+    **{0x2A + i: ("aload", i) for i in range(4)},
+    **{0x3B + i: ("istore", i) for i in range(4)},
+    **{0x3F + i: ("lstore", i) for i in range(4)},
+    **{0x43 + i: ("fstore", i) for i in range(4)},
+    **{0x47 + i: ("dstore", i) for i in range(4)},
+    **{0x4B + i: ("astore", i) for i in range(4)},
+}
+
+_SIMPLE_INSTRUCTION_NAMES = {
+    0x00: "nop",
+    0x01: "aconst_null",
+    0x02: "iconst_m1",
+    0x03: "iconst_0",
+    0x04: "iconst_1",
+    0x05: "iconst_2",
+    0x06: "iconst_3",
+    0x07: "iconst_4",
+    0x08: "iconst_5",
+    0x57: "pop",
+    0x58: "pop2",
+    0x59: "dup",
+    0x5A: "dup_x1",
+    0x5B: "dup_x2",
+    0x5C: "dup2",
+    0x60: "iadd",
+    0x64: "isub",
+    0x68: "imul",
+    0x6C: "idiv",
+    0x70: "irem",
+    0x74: "ineg",
+    0x78: "ishl",
+    0x7A: "ishr",
+    0x7C: "iushr",
+    0x7E: "iand",
+    0x80: "ior",
+    0x82: "ixor",
+    0x85: "i2l",
+    0x86: "i2f",
+    0x87: "i2d",
+    0xAC: "ireturn",
+    0xAD: "lreturn",
+    0xAE: "freturn",
+    0xAF: "dreturn",
+    0xB0: "areturn",
+    0xB1: "return",
+    0xBE: "arraylength",
+    0xBF: "athrow",
+    0xC2: "monitorenter",
+    0xC3: "monitorexit",
+}
+
 
 class _Reader:
     def __init__(self, data: bytes):
@@ -299,6 +368,155 @@ def _method_invocations(
     return result
 
 
+def _constant_probe_value(
+    cp: list[Any],
+    index: int,
+) -> Any:
+    value = cp[index]
+    if value is None:
+        return None
+    tag = value[0]
+    if tag == 3:
+        return struct.unpack(">i", value[1])[0]
+    if tag == 4:
+        return struct.unpack(">f", value[1])[0]
+    if tag == 8:
+        return _utf8(cp, value[1])
+    if tag == 7:
+        return _class_name(cp, index)
+    return None
+
+
+def _decoded_instructions(
+    code: bytes,
+    cp: list[Any],
+) -> list[dict[str, Any]]:
+    result: list[dict[str, Any]] = []
+    offset = 0
+    while offset < len(code):
+        opcode = code[offset]
+        row: dict[str, Any] = {
+            "offset": offset,
+            "opcode": f"0x{opcode:02x}",
+            "mnemonic": _SIMPLE_INSTRUCTION_NAMES.get(
+                opcode,
+                f"opcode_{opcode:02x}",
+            ),
+        }
+
+        if opcode in _LOCAL_INDEXED_OPS:
+            row["mnemonic"] = _LOCAL_INDEXED_OPS[opcode]
+            row["local_index"] = int(code[offset + 1])
+        elif opcode in _LOCAL_SHORT_OPS:
+            mnemonic, local_index = _LOCAL_SHORT_OPS[opcode]
+            row["mnemonic"] = mnemonic
+            row["local_index"] = local_index
+        elif 0x02 <= opcode <= 0x08:
+            row["int_constant"] = opcode - 0x03
+        elif opcode == 0x10:
+            row["mnemonic"] = "bipush"
+            row["int_constant"] = struct.unpack(
+                ">b", code[offset + 1:offset + 2]
+            )[0]
+        elif opcode == 0x11:
+            row["mnemonic"] = "sipush"
+            row["int_constant"] = struct.unpack_from(
+                ">h", code, offset + 1
+            )[0]
+        elif opcode in {0x12, 0x13, 0x14}:
+            row["mnemonic"] = {
+                0x12: "ldc",
+                0x13: "ldc_w",
+                0x14: "ldc2_w",
+            }[opcode]
+            cp_index = (
+                int(code[offset + 1])
+                if opcode == 0x12
+                else struct.unpack_from(">H", code, offset + 1)[0]
+            )
+            row["constant_pool_index"] = cp_index
+            constant = _constant_probe_value(cp, cp_index)
+            if constant is not None:
+                row["constant"] = constant
+        elif opcode == 0x84:
+            row["mnemonic"] = "iinc"
+            row["local_index"] = int(code[offset + 1])
+            row["increment"] = struct.unpack(
+                ">b", code[offset + 2:offset + 3]
+            )[0]
+        elif opcode == 0xC4:
+            nested = code[offset + 1]
+            row["mnemonic"] = "wide"
+            row["wide_opcode"] = f"0x{nested:02x}"
+            if nested in _LOCAL_INDEXED_OPS:
+                row["wide_mnemonic"] = _LOCAL_INDEXED_OPS[nested]
+                row["local_index"] = struct.unpack_from(
+                    ">H", code, offset + 2
+                )[0]
+            elif nested == 0x84:
+                row["wide_mnemonic"] = "iinc"
+                row["local_index"] = struct.unpack_from(
+                    ">H", code, offset + 2
+                )[0]
+                row["increment"] = struct.unpack_from(
+                    ">h", code, offset + 4
+                )[0]
+        elif opcode in _FIELD_OPS:
+            row["mnemonic"] = _FIELD_OPS[opcode]
+            cp_index = struct.unpack_from(">H", code, offset + 1)[0]
+            owner, name, descriptor = _member_ref(cp, cp_index)
+            row.update(
+                {
+                    "owner": owner,
+                    "name": name,
+                    "descriptor": descriptor,
+                }
+            )
+        elif opcode in _INVOKE_OPS:
+            row["mnemonic"] = _INVOKE_OPS[opcode]
+            cp_index = struct.unpack_from(">H", code, offset + 1)[0]
+            owner, name, descriptor = _member_ref(cp, cp_index)
+            row.update(
+                {
+                    "owner": owner,
+                    "name": name,
+                    "descriptor": descriptor,
+                }
+            )
+        elif opcode == 0xBA:
+            row["mnemonic"] = "invokedynamic"
+            cp_index = struct.unpack_from(">H", code, offset + 1)[0]
+            bootstrap_index, name, descriptor = _invokedynamic_ref(
+                cp, cp_index
+            )
+            row.update(
+                {
+                    "bootstrap_method_attr_index": bootstrap_index,
+                    "name": name,
+                    "descriptor": descriptor,
+                }
+            )
+        elif opcode in {0xBB, 0xBD, 0xC0, 0xC1}:
+            row["mnemonic"] = {
+                0xBB: "new",
+                0xBD: "anewarray",
+                0xC0: "checkcast",
+                0xC1: "instanceof",
+            }[opcode]
+            cp_index = struct.unpack_from(">H", code, offset + 1)[0]
+            row["type"] = _class_name(cp, cp_index)
+
+        length = _instruction_length(code, offset)
+        if length <= 0 or offset + length > len(code):
+            raise BytecodeProfileError(
+                f"invalid instruction length at {offset}"
+            )
+        row["length"] = length
+        result.append(row)
+        offset += length
+    return result
+
+
 def _normalized_class_reference(name: str) -> str | None:
     if not name.startswith("["):
         return name
@@ -403,6 +621,7 @@ def profile_class_field_accesses(
         descriptor = _utf8(cp, r.u2())
         accesses: list[dict[str, str]] = []
         invocations: list[dict[str, Any]] = []
+        instructions: list[dict[str, Any]] = []
         code_length = None
         for _ in range(r.u2()):
             attr_name = _utf8(cp, r.u2())
@@ -417,6 +636,7 @@ def profile_class_field_accesses(
             code = cr.take(code_length)
             accesses = _field_accesses(code, cp)
             invocations = _method_invocations(code, cp)
+            instructions = _decoded_instructions(code, cp)
 
         methods.append(
             {
@@ -426,6 +646,7 @@ def profile_class_field_accesses(
                 "code_length": code_length,
                 "field_accesses": accesses,
                 "method_invocations": invocations,
+                "instructions": instructions,
             }
         )
 
