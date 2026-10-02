@@ -114,6 +114,10 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         expected = {
             "invokedynamic_parameter_capture_alias_method_count":
                 "/normalization_summary/invokedynamic_parameter_capture_alias_method_count",
+            "invokedynamic_lambda_outer_capture_collision_action_count":
+                "/normalization_summary/invokedynamic_lambda_outer_capture_collision_action_count",
+            "invokedynamic_lambda_outer_capture_collision_reference_count":
+                "/normalization_summary/invokedynamic_lambda_outer_capture_collision_reference_count",
             "invokedynamic_parameter_capture_alias_reference_count":
                 "/normalization_summary/invokedynamic_parameter_capture_alias_reference_count",
             "hidden_layout_constructor_argument_action_count":
@@ -135,6 +139,11 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 script,
             )
 
+        self.assertIn(
+            'INVOKEDYNAMIC_LAMBDA_OUTER_CAPTURE_COLLISION_REFERENCES='
+            '$($Recovered.invokedynamic_lambda_outer_capture_collision_reference_count)',
+            script,
+        )
         self.assertIn(
             'INVOKEDYNAMIC_PARAMETER_CAPTURE_ALIAS_REFERENCES='
             '$($Recovered.invokedynamic_parameter_capture_alias_reference_count)',
