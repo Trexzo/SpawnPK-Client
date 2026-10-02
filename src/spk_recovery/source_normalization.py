@@ -3725,7 +3725,7 @@ def _normalize_erased_generic_constructor_argument_casts(
             for call in calls:
                 field_name = call.group("field")
                 member = call.group("member")
-                key_type, value_type = generic_fields[field_name]
+                key_type, value_type, _field_owner = generic_fields[field_name]
                 field_seen = any(
                     item.get("mnemonic") == "getfield"
                     and item.get("owner") == current_owner
@@ -4259,15 +4259,24 @@ def _normalize_invokedynamic_image_loader_locals(
             if int(exact_method.get("access", 0)) & 0x0008:
                 continue
             descriptor = str(exact_method.get("descriptor", ""))
-            if (
-                _source_parameters_match_descriptor(
-                    source_params,
-                    descriptor,
-                    current_package=current_package,
+            parameter_match = _source_parameters_match_descriptor(
+                source_params,
+                descriptor,
+                current_package=current_package,
+            )
+            if parameter_match is not True:
+                explicit_string_int = (
+                    len(parameter_shapes) == 2
+                    and parameter_shapes[0][0] == 0
+                    and parameter_shapes[0][1]
+                    in {"simple_ref", "qualified_ref"}
+                    and parameter_shapes[0][2].rsplit(".", 1)[-1]
+                    == "String"
+                    and parameter_shapes[1] == (0, "primitive", "I")
+                    and descriptor.startswith("(Ljava/lang/String;I)")
                 )
-                is not True
-            ):
-                continue
+                if not explicit_string_int:
+                    continue
             return_descriptor = _descriptor_return_descriptor(descriptor)
             if not (
                 return_descriptor is not None
