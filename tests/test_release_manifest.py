@@ -201,6 +201,69 @@ def _official_transport() -> dict:
 
 
 class RecoveryReleaseManifestTests(unittest.TestCase):
+    def test_collision_stage_authority_must_match_recovered_source(self):
+        authority, readable, source, clean, roundtrip = _docs()
+        source.update(
+            {
+                "collision_transform_id": "JNSREWRITE_" + "1" * 20,
+                "collision_plan_id": "JNSPLAN_" + "2" * 20,
+                "collision_report_id": "JNSCOLLISION_" + "3" * 20,
+                "collision_mapping_sha256": "4" * 64,
+                "base_readable_jar_sha256": READABLE,
+            }
+        )
+        clean["compile_transport"] = {
+            "mode": "collision_derived_remap",
+            "collision_transform_id": source["collision_transform_id"],
+            "collision_plan_id": source["collision_plan_id"],
+            "collision_report_id": "JNSCOLLISION_" + "9" * 20,
+        }
+
+        with self.assertRaisesRegex(
+            RecoveryReleaseError,
+            "collision report ID",
+        ):
+            build_recovery_release_manifest(
+                authority,
+                _class_lineage(),
+                _member_lineage(),
+                readable,
+                source,
+                clean,
+                roundtrip,
+            )
+
+    def test_collision_stage_requires_mapping_commitment(self):
+        authority, readable, source, clean, roundtrip = _docs()
+        source.update(
+            {
+                "collision_transform_id": "JNSREWRITE_" + "1" * 20,
+                "collision_plan_id": "JNSPLAN_" + "2" * 20,
+                "collision_report_id": "JNSCOLLISION_" + "3" * 20,
+                "base_readable_jar_sha256": READABLE,
+            }
+        )
+        clean["compile_transport"] = {
+            "mode": "collision_derived_remap",
+            "collision_transform_id": source["collision_transform_id"],
+            "collision_plan_id": source["collision_plan_id"],
+            "collision_report_id": source["collision_report_id"],
+        }
+
+        with self.assertRaisesRegex(
+            RecoveryReleaseError,
+            "collision_mapping_sha256",
+        ):
+            build_recovery_release_manifest(
+                authority,
+                _class_lineage(),
+                _member_lineage(),
+                readable,
+                source,
+                clean,
+                roundtrip,
+            )
+
     def test_manifest_cli_loader_rejects_duplicate_json_keys(self):
         with tempfile.TemporaryDirectory() as td:
             path = Path(td) / "duplicate.json"
