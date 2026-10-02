@@ -105,5 +105,39 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         )
 
 
+    def test_new_source_normalization_counters_are_projected_and_printed(self):
+        repo = Path(__file__).resolve().parents[1]
+        script = (
+            repo / "scripts" / "Invoke-SourceM1ExactLocalAcceptance.ps1"
+        ).read_text(encoding="utf-8")
+
+        expected = {
+            "invokedynamic_parameter_capture_alias_method_count":
+                "/normalization_summary/invokedynamic_parameter_capture_alias_method_count",
+            "invokedynamic_parameter_capture_alias_reference_count":
+                "/normalization_summary/invokedynamic_parameter_capture_alias_reference_count",
+            "hidden_layout_constructor_argument_action_count":
+                "/normalization_summary/hidden_layout_constructor_argument_action_count",
+            "hidden_layout_constructor_argument_reference_count":
+                "/normalization_summary/hidden_layout_constructor_argument_reference_count",
+        }
+        for name, pointer in expected.items():
+            self.assertIn(
+                f'{name} = "{pointer}"',
+                script,
+            )
+
+        self.assertIn(
+            'INVOKEDYNAMIC_PARAMETER_CAPTURE_ALIAS_REFERENCES='
+            '$($Recovered.invokedynamic_parameter_capture_alias_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'HIDDEN_LAYOUT_CONSTRUCTOR_ARGUMENT_REFERENCES='
+            '$($Recovered.hidden_layout_constructor_argument_reference_count)',
+            script,
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
