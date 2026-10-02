@@ -1,4 +1,4 @@
-# Chat 2 — source-proven dropdown option R407
+# Chat 2 — R407 duplicate DropDownOption audit
 
 Exact client authority:
 
@@ -6,24 +6,34 @@ Exact client authority:
 
 ## Result
 
-- `rs/n/a/a/d` -> `CLIENT_CLASS_000530` -> `DropDownOption`
-- proposal: `SEMPROP_5E4E2C4B75F10C7A82A1`
-- review: `SEMREVIEW_CE3DF575CB2A068F50F8`
+R407 retains **no semantic proposal**.
 
-The recovered semantic source map identifies this exact class as
+The attempted source-proven proposal:
+
+- `rs/n/a/a/d`
+- `CLIENT_CLASS_000530`
+- `DropDownOption`
+
+duplicates the exact owner/name already retained by **R19**.
+
+## Additional corroboration retained
+
+The source map independently identifies the class as
 `rs.interfaces.components.dropdown.DropDownOption`.
 
-Exact v308 independently corroborates it:
+Exact v308 additionally proves:
 
-- two String fields only;
+- exactly two String fields;
 - constructor/getter/setter surface;
 - value-style equals/hashCode/toString;
 - R283 dropdown components store lists of this exact type;
-- exact interface code updates option text/description through the two String setters;
-- exact packet/state code constructs options from decoded String pairs, installs the list and
-  selects an option by the first String value.
+- interface code mutates the two strings for option display/extended description;
+- packet/state code constructs `DropDownOption(String,String)`, installs option lists and
+  selects an option through the first String value.
 
-R407 names only the class. The two individual String members remain outside Chat 2's current
-class-only proposal boundary.
+This strengthens R19 but does not justify a second semantic owner.
 
-R407 is non-canonical semantic research only.
+## Boundary
+
+Candidate/review/test artifacts for the attempted R407 proposal are removed. This file is a
+corroboration/duplicate audit only.
