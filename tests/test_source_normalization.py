@@ -2446,6 +2446,170 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+    def test_two_string_swing_capture_aliases_use_exact_slot_order(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Client.java": (
+                        "package p;\n"
+                        "import java.awt.Toolkit;\n"
+                        "import java.awt.datatransfer.StringSelection;\n"
+                        "import javax.swing.JOptionPane;\n"
+                        "import javax.swing.SwingUtilities;\n"
+                        "public class Client {\n"
+                        "    private static void show(String first, String second) {\n"
+                        "        SwingUtilities.invokeLater(() -> {\n"
+                        "            if (JOptionPane.showConfirmDialog(null, first, \"Message\", 2) == 0) {\n"
+                        "                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(second), null);\n"
+                        "            }\n"
+                        "        });\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "Client.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.awt.Toolkit;\n"
+                "import java.awt.datatransfer.StringSelection;\n"
+                "import javax.swing.JOptionPane;\n"
+                "import javax.swing.SwingUtilities;\n"
+                "public class Client {\n"
+                "    private static void show(String s, String s2) {\n"
+                "        SwingUtilities.invokeLater(() -> {\n"
+                "            if (JOptionPane.showConfirmDialog(null, message, \"Message\", 2) == 0) {\n"
+                "                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(data), null);\n"
+                "            }\n"
+                "        });\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-two-string-swing"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("cannot find symbol", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                'showConfirmDialog(null, s, "Message", 2)',
+                normalized,
+            )
+            self.assertIn("new StringSelection(s2)", normalized)
+            self.assertNotIn("message", normalized)
+            self.assertNotIn("data)", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"] == "two_string_swing_capture_alias"
+            )
+            self.assertEqual(action["message_parameter_name"], "s")
+            self.assertEqual(action["data_parameter_name"], "s2")
+            self.assertEqual(action["message_alias_name"], "message")
+            self.assertEqual(action["data_alias_name"], "data")
+            self.assertEqual(action["replacement_count"], 2)
+            self.assertEqual(
+                report["summary"][
+                    "two_string_swing_capture_alias_reference_count"
+                ],
+                2,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-two-string-swing"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_two_string_swing_capture_aliases_require_exact_slot_use(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Client.java": (
+                        "package p;\n"
+                        "import java.awt.Toolkit;\n"
+                        "import java.awt.datatransfer.StringSelection;\n"
+                        "import javax.swing.JOptionPane;\n"
+                        "import javax.swing.SwingUtilities;\n"
+                        "public class Client {\n"
+                        "    private static void show(String first, String second) {\n"
+                        "        SwingUtilities.invokeLater(() -> {\n"
+                        "            if (JOptionPane.showConfirmDialog(null, second, \"Message\", 2) == 0) {\n"
+                        "                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(first), null);\n"
+                        "            }\n"
+                        "        });\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "Client.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.awt.Toolkit;\n"
+                "import java.awt.datatransfer.StringSelection;\n"
+                "import javax.swing.JOptionPane;\n"
+                "import javax.swing.SwingUtilities;\n"
+                "public class Client {\n"
+                "    private static void show(String s, String s2) {\n"
+                "        SwingUtilities.invokeLater(() -> {\n"
+                "            if (JOptionPane.showConfirmDialog(null, message, \"Message\", 2) == 0) {\n"
+                "                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(data), null);\n"
+                "            }\n"
+                "        });\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "two_string_swing_capture_alias_reference_count"
+                ],
+                0,
+            )
+
     def test_invokedynamic_parameter_capture_alias_uses_exact_callsite(
         self,
     ):
