@@ -3262,6 +3262,10 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 "prefix",
             )
             self.assertEqual(
+                action["outer_parameter_slot"],
+                0,
+            )
+            self.assertEqual(
                 action["undeclared_capture_alias"],
                 "captured",
             )
@@ -3296,6 +3300,55 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 after.returncode,
                 0,
                 after.stdout + after.stderr,
+            )
+
+    def test_invokedynamic_lambda_outer_capture_collision_requires_exact_outer_slot(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Arrays;\n"
+                        "public class A {\n"
+                        "    public static long count(String wrong, String prefix) {\n"
+                        "        return Arrays.asList(\"a\", \"ab\").stream()\n"
+                        "            .filter(value -> value.startsWith(prefix))\n"
+                        "            .count();\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.Arrays;\n"
+                "public class A {\n"
+                "    public static long count(String wrong, String prefix) {\n"
+                "        return Arrays.asList(\"a\", \"ab\").stream()\n"
+                "            .filter(wrong -> wrong.startsWith(captured))\n"
+                "            .count();\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_lambda_outer_capture_collision_action_count"
+                ],
+                0,
             )
 
     def test_invokedynamic_lambda_outer_capture_collision_fails_on_helper_member_drift(
