@@ -6100,8 +6100,8 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
 
 
 class ErasedMapNumberAssignmentTests(unittest.TestCase):
-    def _fixture(self, root: Path, *, exact_number_local: bool = False) -> Path:
-        local_type = "Number" if exact_number_local else "Object"
+    def _fixture(self, root: Path, *, exact_drift: bool = False) -> Path:
+        terminal = "byteValue" if exact_drift else "intValue"
         return _compile_java_fixture(
             root,
             {
@@ -6111,11 +6111,11 @@ class ErasedMapNumberAssignmentTests(unittest.TestCase):
                     "public class A {\n"
                     "    public static int parse("
                     "Map<String, Object> map, String s) {\n"
-                    f"        {local_type} value = map.get(s);\n"
+                    "        Object value = map.get(s);\n"
                     "        if (!(value instanceof Number)) {\n"
                     "            throw new IllegalArgumentException();\n"
                     "        }\n"
-                    "        return ((Number)value).intValue();\n"
+                    f"        return ((Number)value).{terminal}();\n"
                     "    }\n"
                     "}\n"
                 )
@@ -6181,7 +6181,7 @@ class ErasedMapNumberAssignmentTests(unittest.TestCase):
     def test_erased_map_number_assignment_fails_closed_on_exact_drift(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
-            jar = self._fixture(root, exact_number_local=True)
+            jar = self._fixture(root, exact_drift=True)
             source = root / "src" / "p" / "A.java"
             source.parent.mkdir(parents=True)
             malformed = (
