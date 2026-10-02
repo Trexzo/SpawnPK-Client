@@ -3040,6 +3040,582 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+
+    def test_erased_generic_constructor_argument_cast_uses_exact_call(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Cache.java": (
+                        "package p;\n"
+                        "public class Cache<K, V> {\n"
+                        "    public V e(K key) { return null; }\n"
+                        "}\n"
+                    ),
+                    "p/Key.java": (
+                        "package p;\n"
+                        "public class Key {\n"
+                        "    public Key(int value) {}\n"
+                        "}\n"
+                    ),
+                    "p/Buffer.java": (
+                        "package p;\n"
+                        "public class Buffer {}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "public class A {\n"
+                        "    private final Cache<Key, Buffer> cache = new Cache<>();\n"
+                        "    public Buffer get(int value) {\n"
+                        "        return cache.e(new Key(value));\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "public class A {\n"
+                "    private final Cache<Key, Buffer> cache = new Cache<>();\n"
+                "    public Buffer get(int value) {\n"
+                "        return (Buffer)this.cache.e((Object)new Key(value));\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-erased-generic-cast"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "this.cache.e(new Key(value))",
+                normalized,
+            )
+            self.assertNotIn("(Object)new Key", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_generic_constructor_argument_cast_removal"
+            )
+            self.assertEqual(action["field_name"], "cache")
+            self.assertEqual(action["key_source_type"], "Key")
+            self.assertEqual(action["value_source_type"], "Buffer")
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                report["summary"][
+                    "erased_generic_constructor_argument_cast_action_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-erased-generic-cast"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_erased_generic_constructor_argument_cast_requires_field_owner(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Cache.java": (
+                        "package p;\n"
+                        "public class Cache<K, V> {\n"
+                        "    public V e(K key) { return null; }\n"
+                        "}\n"
+                    ),
+                    "p/Key.java": (
+                        "package p;\n"
+                        "public class Key { public Key(int value) {} }\n"
+                    ),
+                    "p/Buffer.java": (
+                        "package p;\n"
+                        "public class Buffer {}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "public class A {\n"
+                        "    private final Cache<Key, Buffer> cache = new Cache<>();\n"
+                        "    public Buffer get(int value) {\n"
+                        "        return cache.e(new Key(value));\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "public class A {\n"
+                "    private final OtherCache<Key, Buffer> cache = null;\n"
+                "    public Buffer get(int value) {\n"
+                "        return (Buffer)this.cache.e((Object)new Key(value));\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "erased_generic_constructor_argument_cast_action_count"
+                ],
+                0,
+            )
+
+    def test_erased_generic_constructor_argument_cast_fails_on_return_drift(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Cache.java": (
+                        "package p;\n"
+                        "public class Cache<K, V> {\n"
+                        "    public V e(K key) { return null; }\n"
+                        "}\n"
+                    ),
+                    "p/Key.java": (
+                        "package p;\n"
+                        "public class Key { public Key(int value) {} }\n"
+                    ),
+                    "p/Buffer.java": (
+                        "package p;\n"
+                        "public class Buffer {}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "public class A {\n"
+                        "    private final Cache<Key, Buffer> cache = new Cache<>();\n"
+                        "    public Object get(int value) {\n"
+                        "        return cache.e(new Key(value));\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "public class A {\n"
+                "    private final Cache<Key, Buffer> cache = new Cache<>();\n"
+                "    public Buffer get(int value) {\n"
+                "        return (Buffer)this.cache.e((Object)new Key(value));\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "erased_generic_constructor_argument_cast_action_count"
+                ],
+                0,
+            )
+
+    def test_invokedynamic_image_loader_locals_use_exact_slot_flows(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Task.java": (
+                        "package p;\n"
+                        "@FunctionalInterface\n"
+                        "public interface Task { boolean loop(); }\n"
+                    ),
+                    "p/Registry.java": (
+                        "package p;\n"
+                        "public class Registry {\n"
+                        "    public static void add(String key, Task task) {}\n"
+                        "}\n"
+                    ),
+                    "p/Client.java": (
+                        "package p;\n"
+                        "public class Client { public boolean enabled = true; }\n"
+                    ),
+                    "p/Gate.java": (
+                        "package p;\n"
+                        "public class Gate {\n"
+                        "    public static Gate launcher() { return new Gate(); }\n"
+                        "    public Client client() { return new Client(); }\n"
+                        "}\n"
+                    ),
+                    "p/Buffer.java": (
+                        "package p;\n"
+                        "import java.awt.image.BufferedImage;\n"
+                        "public class Buffer extends BufferedImage {\n"
+                        "    public Buffer(int width, int height, int type) {\n"
+                        "        super(width, height, BufferedImage.TYPE_INT_ARGB);\n"
+                        "    }\n"
+                        "    public void ready() {}\n"
+                        "}\n"
+                    ),
+                    "p/Sprite.java": (
+                        "package p;\n"
+                        "import java.awt.Color;\n"
+                        "import java.awt.Image;\n"
+                        "import java.awt.image.BufferedImage;\n"
+                        "public class Sprite {\n"
+                        "    public int width = 16;\n"
+                        "    public int height = 16;\n"
+                        "    public Sprite(String path) {}\n"
+                        "    public void init(String path) {}\n"
+                        "    public static Sprite load(int a, int b, int c, int d) {\n"
+                        "        return new Sprite(\"\");\n"
+                        "    }\n"
+                        "    public static Image load(String path) {\n"
+                        "        return new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);\n"
+                        "    }\n"
+                        "    public Image image(int width, int height) {\n"
+                        "        return new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);\n"
+                        "    }\n"
+                        "    public static Image tint(Image image, Color color) {\n"
+                        "        return image;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.awt.Color;\n"
+                        "import java.awt.Graphics2D;\n"
+                        "import java.awt.Image;\n"
+                        "public class A {\n"
+                        "    private Buffer b(int n, int n2, int n3) {\n"
+                        "        final Buffer d = new Buffer(36, 32, 2);\n"
+                        "        Registry.add(\"Ico_\" + n + \"_\" + n3, () -> {\n"
+                        "            if (!Gate.launcher().client().enabled) {\n"
+                        "                return true;\n"
+                        "            }\n"
+                        "            Sprite f = Sprite.load(n, n2, 0, n3);\n"
+                        "            if (f == null) return true;\n"
+                        "            Image image = f.image(32, 32);\n"
+                        "            image = Sprite.tint(image, new Color(0, 0, 0));\n"
+                        "            Graphics2D graphics2D = d.createGraphics();\n"
+                        "            graphics2D.drawImage(image, 0, 0, null);\n"
+                        "            graphics2D.dispose();\n"
+                        "            d.ready();\n"
+                        "            return false;\n"
+                        "        });\n"
+                        "        return d;\n"
+                        "    }\n"
+                        "    private Buffer b(String s, int n) {\n"
+                        "        int n2 = n;\n"
+                        "        int o = n;\n"
+                        "        if (n == -1) {\n"
+                        "            Sprite f = new Sprite(s);\n"
+                        "            f.init(s);\n"
+                        "            n2 = f.width;\n"
+                        "            o = f.height;\n"
+                        "        }\n"
+                        "        Image image = Sprite.load(s);\n"
+                        "        final Buffer d = new Buffer(n2, o, 2);\n"
+                        "        Registry.add(\"Ico_\" + s + \"_\" + n, () -> {\n"
+                        "            try {\n"
+                        "                if (image == null || image.getWidth(null) <= 0 || image.getHeight(null) <= 0) return true;\n"
+                        "                Graphics2D graphics2D = d.createGraphics();\n"
+                        "                graphics2D.drawImage(image, 0, 0, null);\n"
+                        "                graphics2D.dispose();\n"
+                        "                d.ready();\n"
+                        "                return false;\n"
+                        "            } catch (Exception ex) {\n"
+                        "                ex.printStackTrace();\n"
+                        "                return true;\n"
+                        "            }\n"
+                        "        });\n"
+                        "        return d;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.awt.Color;\n"
+                "import java.awt.Graphics2D;\n"
+                "import java.awt.Image;\n"
+                "public class A {\n"
+                "    private Buffer b(int n, int n2, int n3) {\n"
+                "        final Buffer d = new Buffer(36, 32, 2);\n"
+                "        Registry.add(\"Ico_\" + n + \"_\" + n3, () -> {\n"
+                "            if (!Gate.launcher().client().enabled) {\n"
+                "                return true;\n"
+                "            }\n"
+                "            else {\n"
+                "                Sprite.load(n4, n5, 0, n6);\n"
+                "                final Sprite f;\n"
+                "                if (f == null) return true;\n"
+                "                Sprite.tint(f.image(32, 32), new Color(0, 0, 0));\n"
+                "                d2.createGraphics();\n"
+                "                final Graphics2D graphics2D;\n"
+                "                final Image image;\n"
+                "                graphics2D.drawImage(image, 0, 0, null);\n"
+                "                graphics2D.dispose();\n"
+                "                d2.ready();\n"
+                "                return false;\n"
+                "            }\n"
+                "        });\n"
+                "        return d;\n"
+                "    }\n"
+                "    private Buffer b(String s, int n) {\n"
+                "        int n2 = n;\n"
+                "        int o = n;\n"
+                "        if (n == -1) {\n"
+                "            final Sprite f = new Sprite(s);\n"
+                "            f.init(s);\n"
+                "            n2 = f.width;\n"
+                "            o = f.height;\n"
+                "        }\n"
+                "        Sprite.load(s);\n"
+                "        final Buffer d = new Buffer(n2, o, 2);\n"
+                "        Registry.add(\"Ico_\" + s + \"_\" + n, () -> {\n"
+                "            try {\n"
+                "                if (image == null || image.getWidth(null) <= 0 || image.getHeight(null) <= 0) return true;\n"
+                "                d2.createGraphics();\n"
+                "                final Graphics2D graphics2D;\n"
+                "                final Image image;\n"
+                "                graphics2D.drawImage(image, 0, 0, null);\n"
+                "                graphics2D.dispose();\n"
+                "                d2.ready();\n"
+                "                return false;\n"
+                "            } catch (Exception ex) {\n"
+                "                ex.printStackTrace();\n"
+                "                return true;\n"
+                "            }\n"
+                "        });\n"
+                "        return d;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-image-loader"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "final Sprite f = Sprite.load(n, n2, 0, n3);",
+                normalized,
+            )
+            self.assertIn(
+                "final Image image = Sprite.tint("
+                "f.image(32, 32), new Color(0, 0, 0));",
+                normalized,
+            )
+            self.assertIn(
+                "final Image image = Sprite.load(s);",
+                normalized,
+            )
+            self.assertIn(
+                "final Graphics2D graphics2D = d.createGraphics();",
+                normalized,
+            )
+            self.assertNotIn("n4", normalized)
+            self.assertNotIn("n5", normalized)
+            self.assertNotIn("n6", normalized)
+            self.assertNotIn("d2.", normalized)
+            self.assertNotIn("final Image image;", normalized)
+
+            actions = [
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "invokedynamic_image_loader_local_reconstruction"
+            ]
+            self.assertEqual(
+                [row["variant"] for row in actions],
+                ["three_int", "string_int"],
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_image_loader_local_action_count"
+                ],
+                2,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_image_loader_local_reference_count"
+                ],
+                9,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-image-loader"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_invokedynamic_image_loader_locals_fail_closed_on_buffer_drift(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Task.java": (
+                        "package p;\n"
+                        "@FunctionalInterface public interface Task { boolean loop(); }\n"
+                    ),
+                    "p/Registry.java": (
+                        "package p;\n"
+                        "public class Registry { public static void add(String key, Task task) {} }\n"
+                    ),
+                    "p/Client.java": (
+                        "package p;\n"
+                        "public class Client { public boolean enabled = true; }\n"
+                    ),
+                    "p/Gate.java": (
+                        "package p;\n"
+                        "public class Gate {\n"
+                        " public static Gate launcher() { return new Gate(); }\n"
+                        " public Client client() { return new Client(); }\n"
+                        "}\n"
+                    ),
+                    "p/Buffer.java": (
+                        "package p;\n"
+                        "import java.awt.image.BufferedImage;\n"
+                        "public class Buffer extends BufferedImage {\n"
+                        " public Buffer(int a,int b,int c){super(a,b,BufferedImage.TYPE_INT_ARGB);}\n"
+                        " public void ready() {}\n"
+                        "}\n"
+                    ),
+                    "p/Sprite.java": (
+                        "package p;\n"
+                        "import java.awt.Color; import java.awt.Image;\n"
+                        "import java.awt.image.BufferedImage;\n"
+                        "public class Sprite {\n"
+                        " public static Sprite load(int a,int b,int c,int d){return new Sprite();}\n"
+                        " public Image image(int a,int b){return new BufferedImage(1,1,2);}\n"
+                        " public static Image tint(Image i,Color c){return i;}\n"
+                        "}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.awt.Color; import java.awt.Graphics2D; import java.awt.Image;\n"
+                        "public class A {\n"
+                        " private Buffer b(int n,int n2,int n3){\n"
+                        "  final Buffer d=new Buffer(35,32,2);\n"
+                        "  Registry.add(\"Ico_\"+n+\"_\"+n3,()->{\n"
+                        "   if(!Gate.launcher().client().enabled)return true;\n"
+                        "   Sprite f=Sprite.load(n,n2,0,n3); if(f==null)return true;\n"
+                        "   Image image=Sprite.tint(f.image(32,32),new Color(0,0,0));\n"
+                        "   Graphics2D g=d.createGraphics(); g.drawImage(image,0,0,null); g.dispose(); d.ready(); return false;\n"
+                        "  }); return d;\n"
+                        " }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.awt.Color; import java.awt.Graphics2D; import java.awt.Image;\n"
+                "public class A {\n"
+                " private Buffer b(int n,int n2,int n3){\n"
+                "  final Buffer d=new Buffer(36,32,2);\n"
+                "  Registry.add(\"Ico_\"+n+\"_\"+n3,()->{\n"
+                "   Sprite.load(n4,n5,0,n6);\n"
+                "   final Sprite f;\n"
+                "   if(f==null)return true;\n"
+                "   Sprite.tint(f.image(32,32),new Color(0,0,0));\n"
+                "   d2.createGraphics();\n"
+                "   final Graphics2D g;\n"
+                "   final Image image;\n"
+                "   g.drawImage(image,0,0,null); g.dispose(); d2.ready(); return false;\n"
+                "  }); return d;\n"
+                " }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_image_loader_local_action_count"
+                ],
+                0,
+            )
+
     def test_dimension_capture_locals_use_exact_slot_flow(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)

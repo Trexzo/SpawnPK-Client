@@ -3595,6 +3595,1118 @@ def _normalize_invokedynamic_parameter_capture_aliases(
     return actions
 
 
+
+def _normalize_erased_generic_constructor_argument_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Remove Procyon Object casts that break a proven generic key call.
+
+    The JVM call is erased to Object, but source-level generic typing can make
+    Procyon's explicit Object cast around new Key(...) illegal. Remove only
+    that cast when the source field proves concrete key/value types and one
+    exact readable method proves the same field access, constructor allocation,
+    erased Object-to-Object call, and reference return type.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError:
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    exact_fields = {
+        str(field.get("name", "")): str(field.get("descriptor", ""))
+        for field in profile.get("fields", [])
+    }
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    field_re = re.compile(
+        r"(?m)^[ \t]*(?:(?:public|private|protected|static|final)\s+)*"
+        r"(?P<raw>[A-Za-z_$][A-Za-z0-9_$.]*)\s*<\s*"
+        r"(?P<key>[A-Za-z_$][A-Za-z0-9_$]*)\s*,\s*"
+        r"(?P<value>[A-Za-z_$][A-Za-z0-9_$]*)\s*>\s+"
+        r"(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\s*(?:=[^;\n]+)?;"
+    )
+    generic_fields: dict[str, tuple[str, str, str]] = {}
+    for match in field_re.finditer(whole_code):
+        field_name = match.group("field")
+        field_descriptor = exact_fields.get(field_name)
+        if not (
+            field_descriptor is not None
+            and field_descriptor.startswith("L")
+            and field_descriptor.endswith(";")
+        ):
+            continue
+        field_owner = field_descriptor[1:-1]
+        raw_source_type = match.group("raw").rsplit(".", 1)[-1]
+        if _source_simple_type_name(field_owner) != raw_source_type:
+            continue
+        generic_fields[field_name] = (
+            match.group("key"),
+            match.group("value"),
+            field_owner,
+        )
+    if not generic_fields:
+        return []
+
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        call_re = re.compile(
+            r"this\.(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)"
+            r"\.(?P<member>[A-Za-z_$][A-Za-z0-9_$]*)\s*\(\s*"
+            r"(?P<cast>\(\s*Object\s*\)\s*)"
+            r"new\s+(?P<key>[A-Za-z_$][A-Za-z0-9_$]*)\s*\("
+        )
+        calls = [
+            match
+            for match in call_re.finditer(method_code)
+            if match.group("field") in generic_fields
+            and generic_fields[match.group("field")][0]
+            == match.group("key")
+        ]
+        if not calls:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        candidates: list[dict[str, Any]] = []
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            exact_ok = True
+            for call in calls:
+                field_name = call.group("field")
+                member = call.group("member")
+                key_type, value_type, _field_owner = generic_fields[field_name]
+                field_seen = any(
+                    item.get("mnemonic") == "getfield"
+                    and item.get("owner") == current_owner
+                    and item.get("name") == field_name
+                    for item in instructions
+                )
+                new_seen = any(
+                    item.get("mnemonic") == "new"
+                    and str(item.get("type", "")).rsplit("/", 1)[-1]
+                    .rsplit("$", 1)[-1] == key_type
+                    for item in instructions
+                )
+                erased_call_seen = any(
+                    invocation.get("name") == member
+                    and invocation.get("descriptor")
+                    == "(Ljava/lang/Object;)Ljava/lang/Object;"
+                    for invocation in exact_method.get(
+                        "method_invocations", []
+                    )
+                )
+                return_descriptor = _descriptor_return_descriptor(
+                    descriptor
+                )
+                return_simple = ""
+                if (
+                    return_descriptor is not None
+                    and return_descriptor.startswith("L")
+                    and return_descriptor.endswith(";")
+                ):
+                    return_simple = (
+                        return_descriptor[1:-1]
+                        .rsplit("/", 1)[-1]
+                        .rsplit("$", 1)[-1]
+                    )
+                if not (
+                    field_seen
+                    and new_seen
+                    and erased_call_seen
+                    and return_simple == value_type
+                ):
+                    exact_ok = False
+                    break
+            if exact_ok:
+                candidates.append(exact_method)
+
+        if len(candidates) != 1:
+            continue
+
+        exact_method = candidates[0]
+        for call in calls:
+            cast_start = method_start + call.start("cast")
+            cast_end = method_start + call.end("cast")
+            edits.append((cast_start, cast_end, ""))
+            actions.append(
+                {
+                    "kind": (
+                        "erased_generic_constructor_argument_cast_removal"
+                    ),
+                    "source_path": rel,
+                    "method_name": method_match.group("name"),
+                    "method_descriptor": exact_method["descriptor"],
+                    "field_name": call.group("field"),
+                    "member_name": call.group("member"),
+                    "key_source_type": call.group("key"),
+                    "value_source_type": generic_fields[
+                        call.group("field")
+                    ][1],
+                    "field_owner": generic_fields[
+                        call.group("field")
+                    ][2],
+                    "replacement_count": 1,
+                    "provenance": {
+                        "kind": "source_safety",
+                        "reason": (
+                            "procyon_erased_generic_constructor_argument_cast"
+                        ),
+                        "strategy": (
+                            "source_generic_field_plus_exact_erased_call"
+                        ),
+                    },
+                }
+            )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping erased generic argument-cast edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
+def _source_simple_type_name(owner: str) -> str:
+    return owner.rsplit("/", 1)[-1].rsplit("$", 1)[-1]
+
+
+def _match_three_int_image_loader_outer(
+    method: dict[str, Any],
+    *,
+    return_owner: str,
+) -> dict[str, Any] | None:
+    instructions = list(method.get("instructions", []))
+    if len(instructions) != 18:
+        return None
+
+    def row(
+        index: int,
+        mnemonic: str,
+        *,
+        local_index: int | None = None,
+        int_constant: int | None = None,
+        owner: str | None = None,
+        name: str | None = None,
+        descriptor: str | None = None,
+        type_name: str | None = None,
+    ) -> bool:
+        item = instructions[index]
+        if item.get("mnemonic") != mnemonic:
+            return False
+        if (
+            local_index is not None
+            and int(item.get("local_index", -1)) != local_index
+        ):
+            return False
+        if (
+            int_constant is not None
+            and int(item.get("int_constant", -999999)) != int_constant
+        ):
+            return False
+        if owner is not None and item.get("owner") != owner:
+            return False
+        if name is not None and item.get("name") != name:
+            return False
+        if (
+            descriptor is not None
+            and item.get("descriptor") != descriptor
+        ):
+            return False
+        if type_name is not None and item.get("type") != type_name:
+            return False
+        return True
+
+    capture_descriptor = "(IIIL" + return_owner + ";)"
+    indy_descriptor = str(instructions[14].get("descriptor", ""))
+    if not (
+        row(0, "new", type_name=return_owner)
+        and row(1, "dup")
+        and row(2, "bipush", int_constant=36)
+        and row(3, "bipush", int_constant=32)
+        and row(4, "iconst_2")
+        and row(
+            5,
+            "invokespecial",
+            owner=return_owner,
+            name="<init>",
+            descriptor="(III)V",
+        )
+        and row(6, "astore", local_index=4)
+        and row(7, "iload", local_index=1)
+        and row(8, "iload", local_index=3)
+        and instructions[9].get("mnemonic") == "invokedynamic"
+        and instructions[9].get("descriptor") == "(II)Ljava/lang/String;"
+        and row(10, "iload", local_index=1)
+        and row(11, "iload", local_index=2)
+        and row(12, "iload", local_index=3)
+        and row(13, "aload", local_index=4)
+        and instructions[14].get("mnemonic") == "invokedynamic"
+        and indy_descriptor.startswith(capture_descriptor)
+        and row(15, "invokestatic")
+        and row(16, "aload", local_index=4)
+        and row(17, "areturn")
+    ):
+        return None
+
+    functional_descriptor = indy_descriptor[len(capture_descriptor):]
+    if not (
+        functional_descriptor.startswith("L")
+        and functional_descriptor.endswith(";")
+    ):
+        return None
+    functional_owner = functional_descriptor[1:-1]
+    if instructions[15].get("descriptor") != (
+        "(Ljava/lang/String;L" + functional_owner + ";)V"
+    ):
+        return None
+
+    return {
+        "buffer_slot": 4,
+        "functional_owner": functional_owner,
+    }
+
+
+def _match_string_image_loader_outer(
+    method: dict[str, Any],
+    *,
+    return_owner: str,
+) -> dict[str, Any] | None:
+    instructions = list(method.get("instructions", []))
+    if len(instructions) != 40:
+        return None
+
+    def row(
+        index: int,
+        mnemonic: str,
+        *,
+        local_index: int | None = None,
+        owner: str | None = None,
+        name: str | None = None,
+        descriptor: str | None = None,
+        type_name: str | None = None,
+    ) -> bool:
+        item = instructions[index]
+        if item.get("mnemonic") != mnemonic:
+            return False
+        if (
+            local_index is not None
+            and int(item.get("local_index", -1)) != local_index
+        ):
+            return False
+        if owner is not None and item.get("owner") != owner:
+            return False
+        if name is not None and item.get("name") != name:
+            return False
+        if (
+            descriptor is not None
+            and item.get("descriptor") != descriptor
+        ):
+            return False
+        if type_name is not None and item.get("type") != type_name:
+            return False
+        return True
+
+    probe_owner = str(instructions[7].get("type", ""))
+    image_owner = str(instructions[22].get("owner", ""))
+    image_method = str(instructions[22].get("name", ""))
+    if not probe_owner or image_owner != probe_owner or not image_method:
+        return None
+
+    capture_prefix = "(Ljava/awt/Image;L" + return_owner + ";)"
+    indy_descriptor = str(instructions[36].get("descriptor", ""))
+    if not (
+        row(0, "iload", local_index=2)
+        and row(1, "istore", local_index=3)
+        and row(2, "iload", local_index=2)
+        and row(3, "istore", local_index=4)
+        and row(4, "iload", local_index=2)
+        and row(5, "iconst_m1")
+        and instructions[6].get("opcode") == "0xa0"
+        and row(7, "new", type_name=probe_owner)
+        and row(8, "dup")
+        and row(9, "aload", local_index=1)
+        and row(
+            10,
+            "invokespecial",
+            owner=probe_owner,
+            name="<init>",
+            descriptor="(Ljava/lang/String;)V",
+        )
+        and row(11, "astore", local_index=5)
+        and row(12, "aload", local_index=5)
+        and row(13, "aload", local_index=1)
+        and instructions[14].get("mnemonic") == "invokevirtual"
+        and instructions[14].get("owner") == probe_owner
+        and instructions[14].get("descriptor") == "(Ljava/lang/String;)V"
+        and row(15, "aload", local_index=5)
+        and instructions[16].get("mnemonic") == "getfield"
+        and instructions[16].get("owner") == probe_owner
+        and instructions[16].get("descriptor") == "I"
+        and row(17, "istore", local_index=3)
+        and row(18, "aload", local_index=5)
+        and instructions[19].get("mnemonic") == "getfield"
+        and instructions[19].get("owner") == probe_owner
+        and instructions[19].get("descriptor") == "I"
+        and row(20, "istore", local_index=4)
+        and row(21, "aload", local_index=1)
+        and row(
+            22,
+            "invokestatic",
+            owner=probe_owner,
+            name=image_method,
+            descriptor="(Ljava/lang/String;)Ljava/awt/Image;",
+        )
+        and row(23, "astore", local_index=5)
+        and row(24, "new", type_name=return_owner)
+        and row(25, "dup")
+        and row(26, "iload", local_index=3)
+        and row(27, "iload", local_index=4)
+        and row(28, "iconst_2")
+        and row(
+            29,
+            "invokespecial",
+            owner=return_owner,
+            name="<init>",
+            descriptor="(III)V",
+        )
+        and row(30, "astore", local_index=6)
+        and row(31, "aload", local_index=1)
+        and row(32, "iload", local_index=2)
+        and instructions[33].get("mnemonic") == "invokedynamic"
+        and instructions[33].get("descriptor")
+        == "(Ljava/lang/String;I)Ljava/lang/String;"
+        and row(34, "aload", local_index=5)
+        and row(35, "aload", local_index=6)
+        and instructions[36].get("mnemonic") == "invokedynamic"
+        and indy_descriptor.startswith(capture_prefix)
+        and row(37, "invokestatic")
+        and row(38, "aload", local_index=6)
+        and row(39, "areturn")
+    ):
+        return None
+
+    functional_descriptor = indy_descriptor[len(capture_prefix):]
+    if not (
+        functional_descriptor.startswith("L")
+        and functional_descriptor.endswith(";")
+    ):
+        return None
+    functional_owner = functional_descriptor[1:-1]
+    if instructions[37].get("descriptor") != (
+        "(Ljava/lang/String;L" + functional_owner + ";)V"
+    ):
+        return None
+
+    return {
+        "width_slot": 3,
+        "height_slot": 4,
+        "image_slot": 5,
+        "buffer_slot": 6,
+        "probe_owner": probe_owner,
+        "image_method": image_method,
+        "functional_owner": functional_owner,
+    }
+
+
+def _match_two_capture_image_helper(
+    method: dict[str, Any],
+    *,
+    buffer_owner: str,
+) -> dict[str, Any] | None:
+    instructions = list(method.get("instructions", []))
+    if len(instructions) != 33:
+        return None
+    if not (
+        instructions[0].get("mnemonic") == "aload"
+        and int(instructions[0].get("local_index", -1)) == 0
+        and instructions[1].get("opcode") == "0xc6"
+        and instructions[2].get("mnemonic") == "aload"
+        and int(instructions[2].get("local_index", -1)) == 0
+        and instructions[4].get("owner") == "java/awt/Image"
+        and instructions[4].get("name") == "getWidth"
+        and instructions[8].get("owner") == "java/awt/Image"
+        and instructions[8].get("name") == "getHeight"
+        and instructions[12].get("mnemonic") == "aload"
+        and int(instructions[12].get("local_index", -1)) == 1
+        and instructions[13].get("owner") == buffer_owner
+        and instructions[13].get("name") == "createGraphics"
+        and instructions[13].get("descriptor")
+        == "()Ljava/awt/Graphics2D;"
+        and instructions[14].get("mnemonic") == "astore"
+        and int(instructions[14].get("local_index", -1)) == 2
+        and instructions[20].get("owner") == "java/awt/Graphics2D"
+        and instructions[20].get("name") == "drawImage"
+        and instructions[23].get("owner") == "java/awt/Graphics2D"
+        and instructions[23].get("name") == "dispose"
+        and instructions[24].get("mnemonic") == "aload"
+        and int(instructions[24].get("local_index", -1)) == 1
+        and instructions[25].get("owner") == buffer_owner
+        and instructions[25].get("descriptor") == "()V"
+        and instructions[28].get("mnemonic") == "astore"
+        and int(instructions[28].get("local_index", -1)) == 2
+        and instructions[30].get("owner") == "java/lang/Exception"
+        and instructions[30].get("name") == "printStackTrace"
+    ):
+        return None
+    return {
+        "finalizer_name": str(instructions[25].get("name", "")),
+        "graphics_slot": 2,
+    }
+
+
+def _match_four_capture_image_helper(
+    method: dict[str, Any],
+    *,
+    buffer_owner: str,
+) -> dict[str, Any] | None:
+    instructions = list(method.get("instructions", []))
+    if len(instructions) != 46:
+        return None
+    loader_owner = str(instructions[10].get("owner", ""))
+    loader_name = str(instructions[10].get("name", ""))
+    sprite_owner = ""
+    loader_descriptor = str(instructions[10].get("descriptor", ""))
+    match = re.fullmatch(r"\(IIII\)L([^;]+);", loader_descriptor)
+    if match is not None:
+        sprite_owner = match.group(1)
+    if not loader_owner or not loader_name or not sprite_owner:
+        return None
+
+    image_method = str(instructions[19].get("name", ""))
+    transform_name = str(instructions[28].get("name", ""))
+    if not image_method or not transform_name:
+        return None
+
+    if not (
+        instructions[6].get("mnemonic") == "iload"
+        and int(instructions[6].get("local_index", -1)) == 0
+        and instructions[7].get("mnemonic") == "iload"
+        and int(instructions[7].get("local_index", -1)) == 1
+        and instructions[8].get("mnemonic") == "iconst_0"
+        and instructions[9].get("mnemonic") == "iload"
+        and int(instructions[9].get("local_index", -1)) == 2
+        and instructions[10].get("mnemonic") == "invokestatic"
+        and instructions[11].get("mnemonic") == "astore"
+        and int(instructions[11].get("local_index", -1)) == 4
+        and instructions[12].get("mnemonic") == "aload"
+        and int(instructions[12].get("local_index", -1)) == 4
+        and instructions[16].get("mnemonic") == "aload"
+        and int(instructions[16].get("local_index", -1)) == 4
+        and instructions[17].get("mnemonic") == "bipush"
+        and int(instructions[17].get("int_constant", -1)) == 32
+        and instructions[18].get("mnemonic") == "bipush"
+        and int(instructions[18].get("int_constant", -1)) == 32
+        and instructions[19].get("mnemonic") == "invokevirtual"
+        and instructions[19].get("owner") == sprite_owner
+        and instructions[19].get("descriptor") == "(II)Ljava/awt/Image;"
+        and instructions[20].get("mnemonic") == "astore"
+        and int(instructions[20].get("local_index", -1)) == 5
+        and instructions[21].get("mnemonic") == "aload"
+        and int(instructions[21].get("local_index", -1)) == 5
+        and instructions[22].get("mnemonic") == "new"
+        and instructions[22].get("type") == "java/awt/Color"
+        and instructions[27].get("owner") == "java/awt/Color"
+        and instructions[27].get("name") == "<init>"
+        and instructions[27].get("descriptor") == "(III)V"
+        and instructions[28].get("mnemonic") == "invokestatic"
+        and instructions[28].get("owner") == sprite_owner
+        and instructions[28].get("descriptor")
+        == "(Ljava/awt/Image;Ljava/awt/Color;)Ljava/awt/Image;"
+        and instructions[29].get("mnemonic") == "astore"
+        and int(instructions[29].get("local_index", -1)) == 5
+        and instructions[30].get("mnemonic") == "aload"
+        and int(instructions[30].get("local_index", -1)) == 3
+        and instructions[31].get("owner") == buffer_owner
+        and instructions[31].get("name") == "createGraphics"
+        and instructions[31].get("descriptor")
+        == "()Ljava/awt/Graphics2D;"
+        and instructions[32].get("mnemonic") == "astore"
+        and int(instructions[32].get("local_index", -1)) == 6
+        and instructions[38].get("owner") == "java/awt/Graphics2D"
+        and instructions[38].get("name") == "drawImage"
+        and instructions[41].get("owner") == "java/awt/Graphics2D"
+        and instructions[41].get("name") == "dispose"
+        and instructions[42].get("mnemonic") == "aload"
+        and int(instructions[42].get("local_index", -1)) == 3
+        and instructions[43].get("owner") == buffer_owner
+        and instructions[43].get("descriptor") == "()V"
+    ):
+        return None
+
+    return {
+        "loader_owner": loader_owner,
+        "loader_name": loader_name,
+        "sprite_owner": sprite_owner,
+        "image_method": image_method,
+        "transform_name": transform_name,
+        "finalizer_name": str(instructions[43].get("name", "")),
+        "sprite_slot": 4,
+        "image_slot": 5,
+        "graphics_slot": 6,
+    }
+
+
+def _normalize_invokedynamic_image_loader_locals(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore Procyon locals lost across image-loader lambda captures."""
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+        if re.search(
+            r"\bstatic\b",
+            whole_code[method_match.start():brace_start],
+        ):
+            continue
+
+        source_params = method_match.group("params")
+        parameter_names = _source_parameter_names(source_params)
+        parameter_shapes = _source_parameter_shapes(source_params)
+        if parameter_names is None or parameter_shapes is None:
+            continue
+
+        exact_candidates: list[dict[str, Any]] = []
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            if int(exact_method.get("access", 0)) & 0x0008:
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    source_params,
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            return_descriptor = _descriptor_return_descriptor(descriptor)
+            if not (
+                return_descriptor is not None
+                and return_descriptor.startswith("L")
+                and return_descriptor.endswith(";")
+            ):
+                continue
+            return_owner = return_descriptor[1:-1]
+            if (
+                _source_simple_type_name(return_owner)
+                != method_match.group("return").strip()
+            ):
+                continue
+
+            outer_shape = None
+            variant = ""
+            if parameter_shapes == [
+                (0, "primitive", "I"),
+                (0, "primitive", "I"),
+                (0, "primitive", "I"),
+            ]:
+                outer_shape = _match_three_int_image_loader_outer(
+                    exact_method,
+                    return_owner=return_owner,
+                )
+                variant = "three_int"
+            elif (
+                len(parameter_shapes) == 2
+                and parameter_shapes[0][0] == 0
+                and parameter_shapes[0][1]
+                in {"simple_ref", "qualified_ref"}
+                and parameter_shapes[0][2].rsplit(".", 1)[-1]
+                == "String"
+                and parameter_shapes[1] == (0, "primitive", "I")
+            ):
+                outer_shape = _match_string_image_loader_outer(
+                    exact_method,
+                    return_owner=return_owner,
+                )
+                variant = "string_int"
+            if outer_shape is None:
+                continue
+
+            helper_descriptor = (
+                "(IIIL" + return_owner + ";)Z"
+                if variant == "three_int"
+                else "(Ljava/awt/Image;L" + return_owner + ";)Z"
+            )
+            helper_matches = []
+            for helper in profile.get("methods", []):
+                if not (int(helper.get("access", 0)) & 0x0008):
+                    continue
+                if helper.get("descriptor") != helper_descriptor:
+                    continue
+                helper_shape = (
+                    _match_four_capture_image_helper(
+                        helper,
+                        buffer_owner=return_owner,
+                    )
+                    if variant == "three_int"
+                    else _match_two_capture_image_helper(
+                        helper,
+                        buffer_owner=return_owner,
+                    )
+                )
+                if helper_shape is not None:
+                    helper_matches.append((helper, helper_shape))
+            if len(helper_matches) != 1:
+                continue
+
+            exact_candidates.append(
+                {
+                    "method": exact_method,
+                    "return_owner": return_owner,
+                    "outer_shape": outer_shape,
+                    "variant": variant,
+                    "helper": helper_matches[0][0],
+                    "helper_shape": helper_matches[0][1],
+                }
+            )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        proof = exact_candidates[0]
+        return_simple = _source_simple_type_name(proof["return_owner"])
+        method_start = method_match.start()
+        method_text = text[method_start:body_end]
+        method_code = whole_code[method_start:body_end]
+
+        buffer_re = re.compile(
+            r"(?m)^(?P<indent>[ \t]*)final\s+"
+            + re.escape(return_simple)
+            + r"\s+(?P<buffer>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*new\s+"
+            + re.escape(return_simple)
+            + (
+                r"\s*\(\s*36\s*,\s*32\s*,\s*2\s*\)\s*;"
+                if proof["variant"] == "three_int"
+                else r"\s*\([^;\n]*,\s*[^;\n]*,\s*2\s*\)\s*;"
+            )
+        )
+        buffer_matches = list(buffer_re.finditer(method_code))
+        if len(buffer_matches) != 1:
+            continue
+        buffer_match = buffer_matches[0]
+        buffer_name = buffer_match.group("buffer")
+
+        lambda_matches = list(
+            re.finditer(r"\(\s*\)\s*->\s*\{", method_code)
+        )
+        if len(lambda_matches) != 1:
+            continue
+        lambda_match = lambda_matches[0]
+        lambda_brace = method_code.find(
+            "{", lambda_match.start(), lambda_match.end()
+        )
+        if lambda_brace < 0:
+            continue
+        try:
+            lambda_end = _matching_brace_end(
+                method_code,
+                lambda_brace,
+            )
+        except SourceNormalizationError:
+            continue
+        lambda_text = method_text[lambda_brace + 1:lambda_end - 1]
+        lambda_offset = method_start + lambda_brace + 1
+        method_edits: list[tuple[int, int, str]] = []
+
+        graphics_decl_re = re.compile(
+            r"(?m)^(?P<indent>[ \t]*)"
+            r"(?P<buffer_alias>[A-Za-z_$][A-Za-z0-9_$]*)"
+            r"\.createGraphics\s*\(\s*\)\s*;[ \t]*\r?\n"
+            r"(?P=indent)final\s+Graphics2D\s+"
+            r"(?P<graphics>[A-Za-z_$][A-Za-z0-9_$]*)[ \t]*;"
+        )
+        graphics_matches = list(
+            graphics_decl_re.finditer(lambda_text)
+        )
+        image_decl_re = re.compile(
+            r"(?m)^(?P<indent>[ \t]*)final\s+Image\s+"
+            r"(?P<image>[A-Za-z_$][A-Za-z0-9_$]*)[ \t]*;"
+            r"[ \t]*(?:\r?\n)?"
+        )
+        image_matches = list(image_decl_re.finditer(lambda_text))
+        if len(graphics_matches) != 1 or len(image_matches) != 1:
+            continue
+        graphics_match = graphics_matches[0]
+        image_match = image_matches[0]
+        buffer_alias = graphics_match.group("buffer_alias")
+        graphics_name = graphics_match.group("graphics")
+        image_name = image_match.group("image")
+        if buffer_alias == buffer_name:
+            continue
+        buffer_alias_count = len(
+            re.findall(
+                r"(?<![A-Za-z0-9_$])"
+                + re.escape(buffer_alias)
+                + r"(?![A-Za-z0-9_$])",
+                lambda_text,
+            )
+        )
+        if buffer_alias_count != 2:
+            continue
+
+        finalizer_name = str(
+            proof["helper_shape"].get("finalizer_name", "")
+        )
+        if not finalizer_name:
+            continue
+        finalizer_re = re.compile(
+            r"(?<![A-Za-z0-9_$])"
+            + re.escape(buffer_alias)
+            + r"(?=\s*\.\s*"
+            + re.escape(finalizer_name)
+            + r"\s*\(\s*\))"
+        )
+        finalizer_matches = list(
+            finalizer_re.finditer(lambda_text)
+        )
+        if len(finalizer_matches) != 1:
+            continue
+
+        method_edits.append(
+            (
+                lambda_offset + graphics_match.start(),
+                lambda_offset + graphics_match.end(),
+                graphics_match.group("indent")
+                + "final Graphics2D "
+                + graphics_name
+                + " = "
+                + buffer_name
+                + ".createGraphics();",
+            )
+        )
+        method_edits.append(
+            (
+                lambda_offset + image_match.start(),
+                lambda_offset + image_match.end(),
+                "",
+            )
+        )
+        finalizer_match = finalizer_matches[0]
+        method_edits.append(
+            (
+                lambda_offset + finalizer_match.start(),
+                lambda_offset + finalizer_match.end(),
+                buffer_name,
+            )
+        )
+
+        details = {
+            "buffer_name": buffer_name,
+            "buffer_alias_name": buffer_alias,
+            "graphics_name": graphics_name,
+            "image_name": image_name,
+        }
+
+        if proof["variant"] == "three_int":
+            if len(parameter_names) != 3:
+                continue
+            helper_shape = proof["helper_shape"]
+            loader_owner_simple = _source_simple_type_name(
+                str(helper_shape["loader_owner"])
+            )
+            loader_name = str(helper_shape["loader_name"])
+            sprite_simple = _source_simple_type_name(
+                str(helper_shape["sprite_owner"])
+            )
+            image_method = str(helper_shape["image_method"])
+            transform_name = str(helper_shape["transform_name"])
+
+            loader_re = re.compile(
+                r"(?m)^(?P<indent>[ \t]*)"
+                + re.escape(loader_owner_simple)
+                + r"\."
+                + re.escape(loader_name)
+                + r"\(\s*(?P<a1>[A-Za-z_$][A-Za-z0-9_$]*)\s*,\s*"
+                r"(?P<a2>[A-Za-z_$][A-Za-z0-9_$]*)\s*,\s*0\s*,\s*"
+                r"(?P<a3>[A-Za-z_$][A-Za-z0-9_$]*)\s*\)\s*;\s*\n"
+                r"(?P=indent)final\s+"
+                + re.escape(sprite_simple)
+                + r"\s+(?P<sprite>[A-Za-z_$][A-Za-z0-9_$]*)\s*;"
+            )
+            loader_matches = list(loader_re.finditer(lambda_text))
+            transform_re = re.compile(
+                r"(?m)^(?P<indent>[ \t]*)"
+                + re.escape(sprite_simple)
+                + r"\."
+                + re.escape(transform_name)
+                + r"\(\s*(?P<sprite>[A-Za-z_$][A-Za-z0-9_$]*)"
+                r"\."
+                + re.escape(image_method)
+                + r"\(\s*32\s*,\s*32\s*\)\s*,\s*"
+                r"new\s+Color\s*\(\s*0\s*,\s*0\s*,\s*0\s*\)"
+                r"\s*\)\s*;"
+            )
+            transform_matches = list(
+                transform_re.finditer(lambda_text)
+            )
+            if len(loader_matches) != 1 or len(transform_matches) != 1:
+                continue
+            loader_match = loader_matches[0]
+            transform_match = transform_matches[0]
+            sprite_name = loader_match.group("sprite")
+            if transform_match.group("sprite") != sprite_name:
+                continue
+
+            aliases = [
+                loader_match.group("a1"),
+                loader_match.group("a2"),
+                loader_match.group("a3"),
+            ]
+            if len(set(aliases)) != 3:
+                continue
+            if any(
+                len(
+                    re.findall(
+                        r"(?<![A-Za-z0-9_$])"
+                        + re.escape(alias)
+                        + r"(?![A-Za-z0-9_$])",
+                        lambda_text,
+                    )
+                )
+                != 1
+                for alias in aliases
+            ):
+                continue
+            declared_alias_re = re.compile(
+                r"\b(?:final\s+)?[A-Za-z_$][A-Za-z0-9_$.<>\[\]?]*\s+"
+                r"(?:" + "|".join(re.escape(x) for x in aliases) + r")\b"
+            )
+            if declared_alias_re.search(lambda_text):
+                continue
+
+            method_edits.append(
+                (
+                    lambda_offset + loader_match.start(),
+                    lambda_offset + loader_match.end(),
+                    loader_match.group("indent")
+                    + "final "
+                    + sprite_simple
+                    + " "
+                    + sprite_name
+                    + " = "
+                    + loader_owner_simple
+                    + "."
+                    + loader_name
+                    + "("
+                    + parameter_names[0]
+                    + ", "
+                    + parameter_names[1]
+                    + ", 0, "
+                    + parameter_names[2]
+                    + ");",
+                )
+            )
+
+            transform_expression = lambda_text[
+                transform_match.start():transform_match.end()
+            ].strip()
+            if transform_expression.endswith(";"):
+                transform_expression = transform_expression[:-1]
+            method_edits.append(
+                (
+                    lambda_offset + transform_match.start(),
+                    lambda_offset + transform_match.end(),
+                    transform_match.group("indent")
+                    + "final Image "
+                    + image_name
+                    + " = "
+                    + transform_expression
+                    + ";",
+                )
+            )
+            details.update(
+                {
+                    "capture_parameter_names": parameter_names,
+                    "discarded_capture_aliases": aliases,
+                    "sprite_name": sprite_name,
+                    "loader_owner": helper_shape["loader_owner"],
+                    "loader_method": loader_name,
+                    "transform_method": transform_name,
+                }
+            )
+        else:
+            if len(parameter_names) != 2:
+                continue
+            outer_shape = proof["outer_shape"]
+            image_owner_simple = _source_simple_type_name(
+                str(outer_shape["probe_owner"])
+            )
+            image_method = str(outer_shape["image_method"])
+            prefix = method_text[:buffer_match.start()]
+            image_call_re = re.compile(
+                r"(?m)^(?P<indent>[ \t]*)"
+                + re.escape(image_owner_simple)
+                + r"\."
+                + re.escape(image_method)
+                + r"\(\s*"
+                + re.escape(parameter_names[0])
+                + r"\s*\)[ \t]*;[ \t]*$"
+            )
+            image_calls = list(image_call_re.finditer(prefix))
+            if len(image_calls) != 1:
+                continue
+            image_call = image_calls[0]
+            image_expression = image_call.group(0).strip()
+            if image_expression.endswith(";"):
+                image_expression = image_expression[:-1]
+            method_edits.append(
+                (
+                    method_start + image_call.start(),
+                    method_start + image_call.end(),
+                    image_call.group("indent")
+                    + "final Image "
+                    + image_name
+                    + " = "
+                    + image_expression
+                    + ";",
+                )
+            )
+            details.update(
+                {
+                    "capture_parameter_names": parameter_names,
+                    "image_loader_owner": outer_shape["probe_owner"],
+                    "image_loader_method": image_method,
+                }
+            )
+
+        method_edits.sort(key=lambda row: row[0])
+        if any(
+            left[1] > right[0]
+            for left, right in zip(method_edits, method_edits[1:])
+        ):
+            continue
+
+        edits.extend(method_edits)
+        actions.append(
+            {
+                "kind": "invokedynamic_image_loader_local_reconstruction",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "helper_method_name": proof["helper"].get("name"),
+                "helper_method_descriptor": proof["helper"].get(
+                    "descriptor"
+                ),
+                "variant": proof["variant"],
+                "slot_evidence": proof["outer_shape"],
+                **details,
+                "replacement_count": len(method_edits),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_invokedynamic_image_loader_local_loss"
+                    ),
+                    "strategy": (
+                        "exact_outer_slots_plus_unique_static_helper_flow"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping image-loader local edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _match_dimension_capture_instruction_shape(
     *,
     instructions: list[dict[str, Any]],
@@ -7475,6 +8587,20 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_erased_generic_constructor_argument_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
+                    _normalize_invokedynamic_image_loader_locals(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_dimension_capture_locals(
                         source_root=source_root,
                         path=path,
@@ -7696,6 +8822,28 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "invokedynamic_parameter_capture_alias"
+        ),
+        "erased_generic_constructor_argument_cast_action_count": sum(
+            action["kind"]
+            == "erased_generic_constructor_argument_cast_removal"
+            for action in actions
+        ),
+        "erased_generic_constructor_argument_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "erased_generic_constructor_argument_cast_removal"
+        ),
+        "invokedynamic_image_loader_local_action_count": sum(
+            action["kind"]
+            == "invokedynamic_image_loader_local_reconstruction"
+            for action in actions
+        ),
+        "invokedynamic_image_loader_local_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "invokedynamic_image_loader_local_reconstruction"
         ),
         "dimension_capture_local_action_count": sum(
             action["kind"] == "dimension_capture_local_reconstruction"
