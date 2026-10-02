@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/cache/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ProgressListener",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/cache/b/a as rs.cache.updater.ProgressListener."
+        },
+        {
+          "family": "exact_v308_role",
+          "detail": "Recovered source map identifies rs/cache/b/a as rs.cache.updater.ProgressListener; exact v308 is a one-method interface void a(int) used as updater progress callback infrastructure."
+        },
+        {
+          "family": "exact_family_join",
+          "detail": "The class sits in the live updater/download family anchored by R23 AssetVersion and the already-owned updater classes; exact references join downloader/updater infrastructure and client/launcher UI."
+        }
+      ],
+      "note": "Source-proven cache updater progress callback with exact-v308 behavioral corroboration."
+    }
+  ],
+  "conflicts": []
+}
