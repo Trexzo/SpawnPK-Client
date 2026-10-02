@@ -4811,6 +4811,383 @@ def _normalize_impossible_collectors_tolist_casts(
     return actions
 
 
+def _signature_collection_parameter_owners(
+    signature: str,
+) -> list[str]:
+    owners = re.findall(
+        r"Ljava/util/Collection<L(?P<owner>[^;<>]+);>;",
+        signature,
+    )
+    if not owners:
+        return []
+    if any(
+        not owner
+        or not all(_is_java_identifier(part) for part in owner.split("/"))
+        for owner in owners
+    ):
+        return []
+    return owners
+
+
+def _normalize_typed_collection_tolist_super_object_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Remove two Procyon toList casts contradicted by typed Collection sinks.
+
+    This covers the separate failure shape where Procyon forces
+    Collectors.toList() through
+    Collector<? super Object, ?, List<? super Object>> while the surrounding
+    source casts the two pipeline results to Collection<A> / Collection<B>.
+    Exact JVM authority must independently prove both mapper result owners and
+    a unique constructor Signature whose two generic Collection parameters
+    require those same owners in the same order.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        profile = profile_class_field_accesses(
+            readable_zip.read(class_entry)
+        )
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    bootstrap_methods = list(profile.get("bootstrap_methods", []))
+    if not bootstrap_methods:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    collector_re = re.compile(
+        r"(?P<cast>\(\s*(?:java\.util\.stream\.)?Collector\s*<\s*"
+        r"\?\s+super\s+Object\s*,\s*\?\s*,\s*"
+        r"(?:java\.util\.)?List\s*<\s*\?\s+super\s+Object\s*>\s*>\s*\)\s*)"
+        r"(?P<call>(?:java\.util\.stream\.)?Collectors\s*\.\s*"
+        r"toList\s*\(\s*\))"
+    )
+    collection_cast_re = re.compile(
+        r"\(\s*(?:java\.util\.)?Collection\s*<\s*"
+        r"(?P<element>[A-Za-z_$][A-Za-z0-9_$.]*)\s*>\s*\)"
+    )
+
+    def source_type_matches_owner(source_type: str, owner: str) -> bool:
+        if "." in source_type:
+            return source_type.replace(".", "/") == owner
+        return (
+            source_type
+            == owner.rsplit("/", 1)[-1].rsplit("$", 1)[-1]
+        )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        collector_matches = list(collector_re.finditer(method_code))
+        if len(collector_matches) != 2:
+            continue
+
+        source_outer_elements: list[str] = []
+        outer_starts: list[int] = []
+        previous_collector_end = 0
+        source_shape_ok = True
+        for collector in collector_matches:
+            prefix_start = max(
+                previous_collector_end,
+                collector.start() - 5000,
+            )
+            prefix = method_code[prefix_start:collector.start()]
+            outer_casts = list(collection_cast_re.finditer(prefix))
+            if not outer_casts:
+                source_shape_ok = False
+                break
+            outer = outer_casts[-1]
+            between = prefix[outer.end():]
+            if (
+                ".stream" not in between
+                or ".map" not in between
+                or ".collect" not in between
+            ):
+                source_shape_ok = False
+                break
+            absolute_outer_start = prefix_start + outer.start()
+            if outer_starts and absolute_outer_start <= outer_starts[-1]:
+                source_shape_ok = False
+                break
+            outer_starts.append(absolute_outer_start)
+            source_outer_elements.append(outer.group("element"))
+            previous_collector_end = collector.end()
+        if not source_shape_ok:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        exact_candidates: list[dict[str, Any]] = []
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            invocations = list(exact_method.get("method_invocations", []))
+            to_list_calls = [
+                row
+                for row in invocations
+                if row.get("operation") == "invokestatic"
+                and row.get("owner") == "java/util/stream/Collectors"
+                and row.get("name") == "toList"
+                and row.get("descriptor")
+                == "()Ljava/util/stream/Collector;"
+            ]
+            collect_calls = [
+                row
+                for row in invocations
+                if row.get("operation")
+                in {"invokeinterface", "invokevirtual"}
+                and row.get("owner") == "java/util/stream/Stream"
+                and row.get("name") == "collect"
+                and row.get("descriptor")
+                == "(Ljava/util/stream/Collector;)Ljava/lang/Object;"
+            ]
+            if len(to_list_calls) != 2 or len(collect_calls) != 2:
+                continue
+
+            list_checkcasts = sum(
+                1
+                for instruction in exact_method.get("instructions", [])
+                if instruction.get("mnemonic") == "checkcast"
+                and instruction.get("type") == "java/util/List"
+            )
+            if list_checkcasts != 2:
+                continue
+
+            sink_candidates: list[dict[str, Any]] = []
+            for invocation in invocations:
+                if not (
+                    invocation.get("operation") == "invokespecial"
+                    and invocation.get("name") == "<init>"
+                ):
+                    continue
+                sink_owner = str(invocation.get("owner", ""))
+                sink_descriptor = str(invocation.get("descriptor", ""))
+                if not sink_owner or sink_owner == current_owner:
+                    continue
+                try:
+                    sink_profile = profile_class_field_accesses(
+                        readable_zip.read(sink_owner + ".class")
+                    )
+                except (KeyError, BytecodeProfileError):
+                    continue
+                sink_methods = [
+                    method
+                    for method in sink_profile.get("methods", [])
+                    if method.get("name") == "<init>"
+                    and method.get("descriptor") == sink_descriptor
+                ]
+                if len(sink_methods) != 1:
+                    continue
+                sink_signature = str(
+                    sink_methods[0].get("signature") or ""
+                )
+                sink_owners = _signature_collection_parameter_owners(
+                    sink_signature
+                )
+                if len(sink_owners) != 2:
+                    continue
+                sink_candidates.append(
+                    {
+                        "owner": sink_owner,
+                        "descriptor": sink_descriptor,
+                        "signature": sink_signature,
+                        "element_owners": sink_owners,
+                    }
+                )
+            if len(sink_candidates) != 1:
+                continue
+            sink = sink_candidates[0]
+            sink_owners = list(sink["element_owners"])
+
+            if any(
+                not source_type_matches_owner(source_type, owner)
+                for source_type, owner in zip(
+                    source_outer_elements,
+                    sink_owners,
+                )
+            ):
+                continue
+
+            function_result_owners: list[str] = []
+            function_proofs: list[dict[str, Any]] = []
+            for invocation in invocations:
+                if invocation.get("operation") != "invokedynamic":
+                    continue
+                indy_descriptor = str(invocation.get("descriptor", ""))
+                if not indy_descriptor.endswith(
+                    ")Ljava/util/function/Function;"
+                ):
+                    continue
+                bootstrap_index = int(
+                    invocation.get("bootstrap_method_attr_index", -1)
+                )
+                if not (0 <= bootstrap_index < len(bootstrap_methods)):
+                    continue
+                bootstrap = bootstrap_methods[bootstrap_index]
+                bm = bootstrap.get("bootstrap_method", {})
+                if not (
+                    bm.get("owner") == "java/lang/invoke/LambdaMetafactory"
+                    and bm.get("name") in {"metafactory", "altMetafactory"}
+                ):
+                    continue
+
+                result_matches: list[tuple[str, str]] = []
+                for argument in bootstrap.get("arguments", []):
+                    if argument.get("kind") != "method_type":
+                        continue
+                    method_type = str(argument.get("descriptor", ""))
+                    shapes = _descriptor_parameter_shapes(method_type)
+                    return_descriptor = _descriptor_return_descriptor(
+                        method_type
+                    )
+                    if (
+                        shapes is None
+                        or len(shapes) != 1
+                        or return_descriptor is None
+                        or not return_descriptor.startswith("L")
+                        or not return_descriptor.endswith(";")
+                    ):
+                        continue
+                    return_owner = return_descriptor[1:-1]
+                    if return_owner not in sink_owners:
+                        continue
+                    result_matches.append(
+                        (return_owner, method_type)
+                    )
+                unique_matches = {
+                    owner: method_type
+                    for owner, method_type in result_matches
+                }
+                if len(unique_matches) != 1:
+                    continue
+                return_owner, method_type = next(
+                    iter(unique_matches.items())
+                )
+                function_result_owners.append(return_owner)
+                function_proofs.append(
+                    {
+                        "offset": int(invocation.get("offset", -1)),
+                        "descriptor": indy_descriptor,
+                        "bootstrap_method_attr_index": bootstrap_index,
+                        "instantiated_method_type": method_type,
+                        "result_owner": return_owner,
+                    }
+                )
+
+            if function_result_owners != sink_owners:
+                continue
+
+            exact_candidates.append(
+                {
+                    "method": exact_method,
+                    "sink": sink,
+                    "function_proofs": function_proofs,
+                    "list_checkcast_count": list_checkcasts,
+                }
+            )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        proof = exact_candidates[0]
+        for collector in collector_matches:
+            edits.append(
+                (
+                    method_start + collector.start("cast"),
+                    method_start + collector.end("cast"),
+                    "",
+                )
+            )
+        actions.append(
+            {
+                "kind": (
+                    "typed_collection_tolist_super_object_cast_removal"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"].get("descriptor"),
+                "sink_constructor_owner": proof["sink"]["owner"],
+                "sink_constructor_descriptor": proof["sink"]["descriptor"],
+                "sink_constructor_signature": proof["sink"]["signature"],
+                "element_owners": list(
+                    proof["sink"]["element_owners"]
+                ),
+                "function_proofs": proof["function_proofs"],
+                "exact_list_checkcast_count": proof[
+                    "list_checkcast_count"
+                ],
+                "replacement_count": len(collector_matches),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_typed_collection_tolist_super_object_cast"
+                    ),
+                    "strategy": (
+                        "typed_collection_sink_signature_plus_function_bootstrap"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping typed Collection toList cast edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_erased_generic_constructor_argument_casts(
     *,
     source_root: Path,
@@ -11259,6 +11636,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_typed_collection_tolist_super_object_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_erased_generic_constructor_argument_casts(
                         source_root=source_root,
                         path=path,
@@ -11560,6 +11944,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "invokedynamic_captured_class_local_alias"
+        ),
+        "typed_collection_tolist_super_object_cast_action_count": sum(
+            action["kind"]
+            == "typed_collection_tolist_super_object_cast_removal"
+            for action in actions
+        ),
+        "typed_collection_tolist_super_object_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "typed_collection_tolist_super_object_cast_removal"
         ),
         "erased_generic_constructor_argument_cast_action_count": sum(
             action["kind"]
