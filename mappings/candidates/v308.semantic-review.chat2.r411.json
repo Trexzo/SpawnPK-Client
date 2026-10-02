@@ -1,0 +1,252 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 8,
+  "review_id": "SEMREVIEW_DAD50216A5C66F3A1F2B",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_23B72BCC86447181E792",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000898",
+      "owner_logical_id": "CLIENT_CLASS_000898",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/e",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginDescriptor",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/s/e as rs.plugins.PluginDescriptor."
+        },
+        {
+          "family": "exact_v308_plugin_contract",
+          "detail": "Recovered source map identifies rs/s/e as rs.plugins.PluginDescriptor; exact v308 is the plugin metadata annotation read directly by Plugin.e(), with name/description/tag string attributes and multiple boolean metadata flags."
+        },
+        {
+          "family": "exact_plugin_framework_join",
+          "detail": "The owner participates in the live Guice/EventBus/config plugin framework started by R321 ClientApplicationBootstrap and composed through the root application injector."
+        }
+      ],
+      "note": "Source-proven plugin framework identity with exact-v308 behavioral corroboration."
+    },
+    {
+      "proposal_id": "SEMPROP_44A75AD59474EF92CBB0",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000853",
+      "owner_logical_id": "CLIENT_CLASS_000853",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "Plugin",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/s/a as rs.plugins.Plugin."
+        },
+        {
+          "family": "exact_v308_plugin_contract",
+          "detail": "Recovered source map identifies rs/s/a as rs.plugins.Plugin; exact v308 is an abstract Guice Module with injected Injector state, no-op configure/startup/shutdown hooks and descriptor-name lookup through the PluginDescriptor annotation."
+        },
+        {
+          "family": "exact_plugin_framework_join",
+          "detail": "The owner participates in the live Guice/EventBus/config plugin framework started by R321 ClientApplicationBootstrap and composed through the root application injector."
+        }
+      ],
+      "note": "Source-proven plugin framework identity with exact-v308 behavioral corroboration."
+    },
+    {
+      "proposal_id": "SEMPROP_65AE8B52499823167410",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000905",
+      "owner_logical_id": "CLIENT_CLASS_000905",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginInstantiationException",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/s/f as rs.plugins.PluginInstantiationException."
+        },
+        {
+          "family": "exact_v308_plugin_contract",
+          "detail": "Recovered source map identifies rs/s/f as rs.plugins.PluginInstantiationException; exact v308 is the dedicated Exception type with String and Throwable constructors used by plugin creation/startup paths."
+        },
+        {
+          "family": "exact_plugin_framework_join",
+          "detail": "The owner participates in the live Guice/EventBus/config plugin framework started by R321 ClientApplicationBootstrap and composed through the root application injector."
+        }
+      ],
+      "note": "Source-proven plugin framework identity with exact-v308 behavioral corroboration."
+    },
+    {
+      "proposal_id": "SEMPROP_67E234EB816249517B7A",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000859",
+      "owner_logical_id": "CLIENT_CLASS_000859",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginClassLoader",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/s/b as rs.plugins.PluginClassLoader."
+        },
+        {
+          "family": "exact_v308_plugin_contract",
+          "detail": "Recovered source map identifies rs/s/b as rs.plugins.PluginClassLoader; exact v308 extends URLClassLoader for one plugin JAR and falls back to its supplied parent ClassLoader when URLClassLoader cannot resolve a class."
+        },
+        {
+          "family": "exact_plugin_framework_join",
+          "detail": "The owner participates in the live Guice/EventBus/config plugin framework started by R321 ClientApplicationBootstrap and composed through the root application injector."
+        }
+      ],
+      "note": "Source-proven plugin framework identity with exact-v308 behavioral corroboration."
+    },
+    {
+      "proposal_id": "SEMPROP_748575029DAA36A05B89",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000895",
+      "owner_logical_id": "CLIENT_CLASS_000895",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/d",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginDependency",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/s/d as rs.plugins.PluginDependency."
+        },
+        {
+          "family": "exact_v308_plugin_contract",
+          "detail": "Recovered source map identifies rs/s/d as rs.plugins.PluginDependency; exact v308 is an annotation whose sole value is Class<? extends Plugin>."
+        },
+        {
+          "family": "exact_plugin_framework_join",
+          "detail": "The owner participates in the live Guice/EventBus/config plugin framework started by R321 ClientApplicationBootstrap and composed through the root application injector."
+        }
+      ],
+      "note": "Source-proven plugin framework identity with exact-v308 behavioral corroboration."
+    },
+    {
+      "proposal_id": "SEMPROP_CF3DF72D0FEC2F44EB21",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000885",
+      "owner_logical_id": "CLIENT_CLASS_000885",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginDependencies",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/s/c as rs.plugins.PluginDependencies."
+        },
+        {
+          "family": "exact_v308_plugin_contract",
+          "detail": "Recovered source map identifies rs/s/c as rs.plugins.PluginDependencies; exact v308 is an annotation whose sole value is an array of PluginDependency annotations."
+        },
+        {
+          "family": "exact_plugin_framework_join",
+          "detail": "The owner participates in the live Guice/EventBus/config plugin framework started by R321 ClientApplicationBootstrap and composed through the root application injector."
+        }
+      ],
+      "note": "Source-proven plugin framework identity with exact-v308 behavioral corroboration."
+    },
+    {
+      "proposal_id": "SEMPROP_DAB3078D5CBB0C7FC885",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000912",
+      "owner_logical_id": "CLIENT_CLASS_000912",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/g",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "PluginManager",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/s/g as rs.plugins.PluginManager."
+        },
+        {
+          "family": "exact_v308_plugin_contract",
+          "detail": "Recovered source map identifies rs/s/g as rs.plugins.PluginManager; exact v308 owns loaded/started Plugin lists, EventBus, scheduler and ConfigManager, discovers plugin config bindings through child Injectors and drives plugin load/start/stop orchestration."
+        },
+        {
+          "family": "exact_plugin_framework_join",
+          "detail": "The owner participates in the live Guice/EventBus/config plugin framework started by R321 ClientApplicationBootstrap and composed through the root application injector."
+        }
+      ],
+      "note": "Source-proven plugin framework identity with exact-v308 behavioral corroboration."
+    },
+    {
+      "proposal_id": "SEMPROP_E41B5BB77110B0CA4AED",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000915",
+      "owner_logical_id": "CLIENT_CLASS_000915",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/s/h",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RuneLiteConfig",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/s/h as rs.plugins.RuneLiteConfig."
+        },
+        {
+          "family": "exact_v308_plugin_contract",
+          "detail": "Recovered source map identifies rs/s/h as rs.plugins.RuneLiteConfig; exact v308 extends the Config contract and defines the root client/UI/notification/overlay settings surface through many default configuration methods and GROUP constants."
+        },
+        {
+          "family": "exact_plugin_framework_join",
+          "detail": "The owner participates in the live Guice/EventBus/config plugin framework started by R321 ClientApplicationBootstrap and composed through the root application injector."
+        }
+      ],
+      "note": "Source-proven plugin framework identity with exact-v308 behavioral corroboration."
+    }
+  ],
+  "unresolved": []
+}
