@@ -209,19 +209,49 @@ def _invokedynamic_ref(
 
 
 
+def _bootstrap_cp_entry(
+    cp: list[Any],
+    index: int,
+    *,
+    role: str,
+) -> Any:
+    if not (0 < index < len(cp)):
+        raise BytecodeProfileError(
+            f"{role} constant-pool index out of range: {index}"
+        )
+    value = cp[index]
+    if value is None:
+        raise BytecodeProfileError(
+            f"{role} constant-pool entry #{index} is unusable"
+        )
+    return value
+
+
 def _method_handle_profile(
     cp: list[Any],
     index: int,
 ) -> dict[str, Any]:
-    value = cp[index]
-    if not value or value[0] != 15:
+    value = _bootstrap_cp_entry(
+        cp,
+        index,
+        role="MethodHandle",
+    )
+    if value[0] != 15:
         raise BytecodeProfileError(
             f"constant pool #{index} is not MethodHandle"
         )
     reference_kind = int(value[1])
+    if not (1 <= reference_kind <= 9):
+        raise BytecodeProfileError(
+            f"invalid MethodHandle reference kind: {reference_kind}"
+        )
     reference_index = int(value[2])
-    target = cp[reference_index]
-    if not target or target[0] not in (9, 10, 11):
+    target = _bootstrap_cp_entry(
+        cp,
+        reference_index,
+        role="MethodHandle target",
+    )
+    if target[0] not in (9, 10, 11):
         raise BytecodeProfileError(
             "MethodHandle target is not a member reference"
         )
@@ -248,11 +278,11 @@ def _bootstrap_argument_profile(
     cp: list[Any],
     index: int,
 ) -> dict[str, Any]:
-    value = cp[index]
-    if value is None:
-        raise BytecodeProfileError(
-            f"missing bootstrap argument constant #{index}"
-        )
+    value = _bootstrap_cp_entry(
+        cp,
+        index,
+        role="bootstrap argument",
+    )
     tag = int(value[0])
     if tag == 15:
         return {
