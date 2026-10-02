@@ -2987,6 +2987,281 @@ def _source_parameter_names(params: str) -> list[str] | None:
     return out
 
 
+def _normalize_two_string_swing_capture_aliases(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore two String lambda captures from exact slot-use evidence.
+
+    This family is intentionally narrow: the exact enclosing static method
+    must capture local slots 0 and 1, in that order, into one two-String
+    Runnable invoked through SwingUtilities.invokeLater.  A unique exact
+    synthetic two-String lambda helper must then use slot 0 as the message
+    passed to JOptionPane.showConfirmDialog and slot 1 as the StringSelection
+    constructor argument.  Only the corresponding undeclared source aliases
+    are rewritten to the enclosing source parameter names.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError:
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    synthetic_candidates: list[dict[str, Any]] = []
+    for exact_method in profile.get("methods", []):
+        if (
+            str(exact_method.get("descriptor", ""))
+            != "(Ljava/lang/String;Ljava/lang/String;)V"
+            or not (int(exact_method.get("access", 0)) & 0x1000)
+            or not (int(exact_method.get("access", 0)) & 0x0008)
+        ):
+            continue
+        instructions = list(exact_method.get("instructions", []))
+        show_index = next(
+            (
+                index
+                for index, row in enumerate(instructions)
+                if row.get("mnemonic") == "invokestatic"
+                and row.get("owner") == "javax/swing/JOptionPane"
+                and row.get("name") == "showConfirmDialog"
+                and row.get("descriptor")
+                == "(Ljava/awt/Component;Ljava/lang/Object;"
+                "Ljava/lang/String;I)I"
+            ),
+            None,
+        )
+        selection_index = next(
+            (
+                index
+                for index, row in enumerate(instructions)
+                if row.get("mnemonic") == "invokespecial"
+                and row.get("owner")
+                == "java/awt/datatransfer/StringSelection"
+                and row.get("name") == "<init>"
+                and row.get("descriptor")
+                == "(Ljava/lang/String;)V"
+            ),
+            None,
+        )
+        if show_index is None or selection_index is None:
+            continue
+        if show_index < 2 or selection_index < 1:
+            continue
+        if not (
+            instructions[show_index - 2].get("mnemonic") == "aload"
+            and int(
+                instructions[show_index - 2].get("local_index", -1)
+            )
+            == 0
+            and instructions[selection_index - 1].get("mnemonic")
+            == "aload"
+            and int(
+                instructions[selection_index - 1].get(
+                    "local_index", -1
+                )
+            )
+            == 1
+        ):
+            continue
+        synthetic_candidates.append(exact_method)
+    if len(synthetic_candidates) != 1:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    message_re = re.compile(
+        r"JOptionPane\.showConfirmDialog\s*\(\s*null\s*,\s*"
+        r"(?P<alias>[A-Za-z_$][A-Za-z0-9_$]*)\s*,\s*"
+        r"\"Message\"\s*,\s*2\s*\)"
+    )
+    data_re = re.compile(
+        r"new\s+StringSelection\s*\(\s*"
+        r"(?P<alias>[A-Za-z_$][A-Za-z0-9_$]*)\s*\)"
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        source_params = method_match.group("params")
+        parameter_names = _source_parameter_names(source_params)
+        if parameter_names is None or len(parameter_names) != 2:
+            continue
+        if (
+            _source_parameters_match_descriptor(
+                source_params,
+                "(Ljava/lang/String;Ljava/lang/String;)V",
+                current_package=current_package,
+            )
+            is not True
+        ):
+            continue
+
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+        if not re.search(
+            r"\bstatic\b",
+            whole_code[method_match.start():brace_start],
+        ):
+            continue
+
+        exact_candidates = [
+            method
+            for method in profile.get("methods", [])
+            if method.get("name") == method_match.group("name")
+            and method.get("descriptor")
+            == "(Ljava/lang/String;Ljava/lang/String;)V"
+            and bool(int(method.get("access", 0)) & 0x0008)
+            and not bool(int(method.get("access", 0)) & 0x1000)
+        ]
+        if len(exact_candidates) != 1:
+            continue
+        exact_method = exact_candidates[0]
+        instructions = list(exact_method.get("instructions", []))
+        if len(instructions) != 5:
+            continue
+        if not (
+            instructions[0].get("mnemonic") == "aload"
+            and int(instructions[0].get("local_index", -1)) == 0
+            and instructions[1].get("mnemonic") == "aload"
+            and int(instructions[1].get("local_index", -1)) == 1
+            and instructions[2].get("mnemonic") == "invokedynamic"
+            and instructions[2].get("descriptor")
+            == "(Ljava/lang/String;Ljava/lang/String;)"
+            "Ljava/lang/Runnable;"
+            and instructions[3].get("mnemonic") == "invokestatic"
+            and instructions[3].get("owner")
+            == "javax/swing/SwingUtilities"
+            and instructions[3].get("name") == "invokeLater"
+            and instructions[3].get("descriptor")
+            == "(Ljava/lang/Runnable;)V"
+            and instructions[4].get("mnemonic") == "return"
+        ):
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        message_matches = list(message_re.finditer(method_code))
+        data_matches = list(data_re.finditer(method_code))
+        if len(message_matches) != 1 or len(data_matches) != 1:
+            continue
+
+        message_alias = message_matches[0].group("alias")
+        data_alias = data_matches[0].group("alias")
+        if message_alias == data_alias:
+            continue
+        replacements = (
+            (message_matches[0], message_alias, parameter_names[0]),
+            (data_matches[0], data_alias, parameter_names[1]),
+        )
+
+        body_code = method_code[method_code.find("{") + 1:]
+        declaration_re_template = (
+            r"\b(?:final\s+)?"
+            r"[A-Za-z_$][A-Za-z0-9_$.<>\[\]?]*\s+{alias}\b"
+        )
+        refused = False
+        for _match, alias, parameter_name in replacements:
+            if alias == parameter_name:
+                refused = True
+                break
+            declaration_re = re.compile(
+                declaration_re_template.format(
+                    alias=re.escape(alias)
+                )
+            )
+            if declaration_re.search(body_code):
+                refused = True
+                break
+            if (
+                len(
+                    re.findall(
+                        r"(?<![A-Za-z0-9_$])"
+                        + re.escape(alias)
+                        + r"(?![A-Za-z0-9_$])",
+                        body_code,
+                    )
+                )
+                != 1
+            ):
+                refused = True
+                break
+        if refused:
+            continue
+
+        for source_match, alias, parameter_name in replacements:
+            alias_start = source_match.start("alias")
+            alias_end = source_match.end("alias")
+            edits.append(
+                (
+                    method_start + alias_start,
+                    method_start + alias_end,
+                    parameter_name,
+                )
+            )
+        actions.append(
+            {
+                "kind": "two_string_swing_capture_alias",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": (
+                    "(Ljava/lang/String;Ljava/lang/String;)V"
+                ),
+                "message_parameter_name": parameter_names[0],
+                "data_parameter_name": parameter_names[1],
+                "message_alias_name": message_alias,
+                "data_alias_name": data_alias,
+                "replacement_count": 2,
+                "synthetic_method_name": synthetic_candidates[0].get(
+                    "name"
+                ),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_two_string_swing_lambda_capture_alias"
+                    ),
+                    "strategy": (
+                        "exact_outer_capture_order_and_synthetic_slot_use"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping two-String Swing capture edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_invokedynamic_parameter_capture_aliases(
     *,
     source_root: Path,
@@ -6075,6 +6350,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_two_string_swing_capture_aliases(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_invokedynamic_parameter_capture_aliases(
                         source_root=source_root,
                         path=path,
@@ -6253,6 +6535,15 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "shadowed_nested_static_field_owner_type_context"
+        ),
+        "two_string_swing_capture_alias_action_count": sum(
+            action["kind"] == "two_string_swing_capture_alias"
+            for action in actions
+        ),
+        "two_string_swing_capture_alias_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"] == "two_string_swing_capture_alias"
         ),
         "invokedynamic_parameter_capture_alias_method_count": sum(
             action["kind"]
