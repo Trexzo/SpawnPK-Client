@@ -3596,6 +3596,422 @@ def _normalize_invokedynamic_parameter_capture_aliases(
 
 
 
+def _normalize_collectors_to_list_wildcard_sink_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Remove wildcard List<Object> collector casts with exact typed sinks.
+
+    Procyon can force a stream collect to List<Object> with an explicit
+    Collector<? super Object, ?, List<? super Object>> cast, then cast the
+    resulting value to Collection<E>. Java rejects that conversion even when
+    exact lambda bootstraps and the downstream constructor Signature prove E.
+    Remove only the inner Collector casts when all of those authorities agree.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    bootstrap_methods = list(profile.get("bootstrap_methods", []))
+    if not bootstrap_methods:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    outer_stream_re = re.compile(
+        r"\(\s*(?:java\.util\.)?Collection\s*<\s*"
+        r"(?P<element>[A-Za-z_$][A-Za-z0-9_$.]*)\s*>\s*\)\s*"
+        r"(?:(?:java\.util\.)?Arrays)\s*\.\s*stream\s*\(\s*"
+        r"(?P<receiver>[A-Za-z_$][A-Za-z0-9_$]*)\s*\.\s*"
+        r"(?P<member>getDeclaredFields|getMethods)\s*\(\s*\)\s*\)"
+    )
+    inner_cast_re = re.compile(
+        r"(?P<cast>"
+        r"\(\s*(?:java\.util\.stream\.)?Collector\s*<\s*"
+        r"\?\s+super\s+Object\s*,\s*"
+        r"\?\s*,\s*"
+        r"(?:java\.util\.)?List\s*<\s*"
+        r"\?\s+super\s+Object\s*>\s*>\s*\)\s*"
+        r")"
+        r"(?P<call>"
+        r"(?:java\.util\.stream\.)?Collectors"
+        r"\s*\.\s*toList\s*\(\s*\)"
+        r")"
+    )
+    any_to_list_re = re.compile(
+        r"(?<![A-Za-z0-9_$.])"
+        r"(?:java\.util\.stream\.)?Collectors"
+        r"\s*\.\s*toList\s*\(\s*\)"
+    )
+
+    expected_bootstrap_descriptors = {
+        "metafactory": (
+            "(Ljava/lang/invoke/MethodHandles$Lookup;"
+            "Ljava/lang/String;"
+            "Ljava/lang/invoke/MethodType;"
+            "Ljava/lang/invoke/MethodType;"
+            "Ljava/lang/invoke/MethodHandle;"
+            "Ljava/lang/invoke/MethodType;)"
+            "Ljava/lang/invoke/CallSite;"
+        ),
+        "altMetafactory": (
+            "(Ljava/lang/invoke/MethodHandles$Lookup;"
+            "Ljava/lang/String;"
+            "Ljava/lang/invoke/MethodType;"
+            "[Ljava/lang/Object;)"
+            "Ljava/lang/invoke/CallSite;"
+        ),
+    }
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        outer_streams = list(outer_stream_re.finditer(method_code))
+        inner_casts = list(inner_cast_re.finditer(method_code))
+        all_to_list = list(any_to_list_re.finditer(method_code))
+        if not (
+            len(outer_streams) == 2
+            and len(inner_casts) == 2
+            and len(all_to_list) == 2
+        ):
+            continue
+        if [
+            match.group("member") for match in outer_streams
+        ] != ["getDeclaredFields", "getMethods"]:
+            continue
+        if len({
+            match.group("receiver") for match in outer_streams
+        }) != 1:
+            continue
+        if not (
+            outer_streams[0].start()
+            < inner_casts[0].start()
+            < outer_streams[1].start()
+            < inner_casts[1].start()
+        ):
+            continue
+
+        element_sources = [
+            match.group("element") for match in outer_streams
+        ]
+        if len(set(element_sources)) != 2:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        exact_candidates: list[dict[str, Any]] = []
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            reflection_members = [
+                item.get("name")
+                for item in instructions
+                if item.get("mnemonic") == "invokevirtual"
+                and item.get("owner") == "java/lang/Class"
+                and item.get("name")
+                in {"getDeclaredFields", "getMethods"}
+            ]
+            if reflection_members.count("getDeclaredFields") != 1:
+                continue
+            if reflection_members.count("getMethods") != 1:
+                continue
+
+            collect_triplets: list[dict[str, int]] = []
+            for index in range(len(instructions) - 2):
+                first = instructions[index]
+                second = instructions[index + 1]
+                third = instructions[index + 2]
+                if not (
+                    first.get("mnemonic") == "invokestatic"
+                    and first.get("owner")
+                    == "java/util/stream/Collectors"
+                    and first.get("name") == "toList"
+                    and first.get("descriptor")
+                    == "()Ljava/util/stream/Collector;"
+                    and second.get("mnemonic") == "invokeinterface"
+                    and second.get("owner")
+                    == "java/util/stream/Stream"
+                    and second.get("name") == "collect"
+                    and second.get("descriptor")
+                    == "(Ljava/util/stream/Collector;)Ljava/lang/Object;"
+                    and third.get("mnemonic") == "checkcast"
+                    and third.get("type") == "java/util/List"
+                ):
+                    continue
+                collect_triplets.append(
+                    {
+                        "to_list_offset": int(first.get("offset", -1)),
+                        "collect_offset": int(second.get("offset", -1)),
+                        "checkcast_offset": int(third.get("offset", -1)),
+                        "instruction_index": index,
+                    }
+                )
+            if len(collect_triplets) != 2:
+                continue
+
+            sink_calls = []
+            for index, item in enumerate(instructions):
+                if not (
+                    item.get("mnemonic") == "invokespecial"
+                    and item.get("name") == "<init>"
+                    and item.get("descriptor", "").endswith(
+                        "Ljava/util/Collection;"
+                        "Ljava/util/Collection;)V"
+                    )
+                ):
+                    continue
+                sink_calls.append((index, item))
+            if len(sink_calls) != 1:
+                continue
+            sink_index, sink_call = sink_calls[0]
+            if max(
+                row["instruction_index"] for row in collect_triplets
+            ) >= sink_index:
+                continue
+
+            sink_owner = str(sink_call.get("owner", ""))
+            sink_descriptor = str(
+                sink_call.get("descriptor", "")
+            )
+            if not sink_owner or sink_owner == current_owner:
+                continue
+            try:
+                sink_bytes = readable_zip.read(sink_owner + ".class")
+                sink_profile = profile_class_field_accesses(sink_bytes)
+            except (KeyError, BytecodeProfileError):
+                continue
+            sink_constructors = [
+                row
+                for row in sink_profile.get("methods", [])
+                if row.get("name") == "<init>"
+                and row.get("descriptor") == sink_descriptor
+            ]
+            if len(sink_constructors) != 1:
+                continue
+            sink_signature = sink_constructors[0].get("signature")
+            signature_match = re.fullmatch(
+                r"\(L[^;]+;"
+                r"Ljava/util/Collection<L(?P<first>[^;]+);>;"
+                r"Ljava/util/Collection<L(?P<second>[^;]+);>;"
+                r"\)V",
+                str(sink_signature or ""),
+            )
+            if signature_match is None:
+                continue
+            element_owners = [
+                signature_match.group("first"),
+                signature_match.group("second"),
+            ]
+
+            source_owner_matches = []
+            for source_element, owner in zip(
+                element_sources,
+                element_owners,
+            ):
+                source_owner_matches.append(
+                    _source_parameters_match_descriptor(
+                        source_element + " recoveredCollectorElement",
+                        "(L" + owner + ";)V",
+                        current_package=current_package,
+                    )
+                    is True
+                )
+            if source_owner_matches != [True, True]:
+                continue
+
+            expected_function_types = [
+                "(Ljava/lang/reflect/Field;)L"
+                + element_owners[0]
+                + ";",
+                "(Ljava/lang/reflect/Method;)L"
+                + element_owners[1]
+                + ";",
+            ]
+            function_proofs: list[dict[str, Any]] = []
+            for expected_instantiated in expected_function_types:
+                matching = []
+                for invocation in exact_method.get(
+                    "method_invocations", []
+                ):
+                    if (
+                        invocation.get("operation") != "invokedynamic"
+                        or _descriptor_return_descriptor(
+                            str(invocation.get("descriptor", ""))
+                        )
+                        != "Ljava/util/function/Function;"
+                    ):
+                        continue
+                    bootstrap_index = int(
+                        invocation.get(
+                            "bootstrap_method_attr_index",
+                            -1,
+                        )
+                    )
+                    if not (
+                        0 <= bootstrap_index < len(bootstrap_methods)
+                    ):
+                        continue
+                    bootstrap = bootstrap_methods[bootstrap_index]
+                    handle = bootstrap.get("bootstrap_method", {})
+                    bootstrap_name = str(handle.get("name", ""))
+                    if not (
+                        handle.get("owner")
+                        == "java/lang/invoke/LambdaMetafactory"
+                        and bootstrap_name
+                        in expected_bootstrap_descriptors
+                        and handle.get("descriptor")
+                        == expected_bootstrap_descriptors[
+                            bootstrap_name
+                        ]
+                        and handle.get("target_kind") == "method"
+                        and int(handle.get("reference_kind", -1)) == 6
+                    ):
+                        continue
+                    method_types = [
+                        str(argument.get("descriptor", ""))
+                        for argument in bootstrap.get(
+                            "arguments", []
+                        )
+                        if argument.get("kind") == "method_type"
+                    ]
+                    if method_types.count(expected_instantiated) != 1:
+                        continue
+                    matching.append(
+                        {
+                            "offset": int(
+                                invocation.get("offset", -1)
+                            ),
+                            "descriptor": str(
+                                invocation.get("descriptor", "")
+                            ),
+                            "bootstrap_method_attr_index": (
+                                bootstrap_index
+                            ),
+                            "instantiated_method_type": (
+                                expected_instantiated
+                            ),
+                        }
+                    )
+                if len(matching) != 1:
+                    function_proofs = []
+                    break
+                function_proofs.append(matching[0])
+            if len(function_proofs) != 2:
+                continue
+
+            exact_candidates.append(
+                {
+                    "method": exact_method,
+                    "sink_owner": sink_owner,
+                    "sink_descriptor": sink_descriptor,
+                    "sink_signature": sink_signature,
+                    "element_owners": element_owners,
+                    "collect_triplets": collect_triplets,
+                    "functions": function_proofs,
+                }
+            )
+
+        if len(exact_candidates) != 1:
+            continue
+        proof = exact_candidates[0]
+
+        for source_match in inner_casts:
+            edits.append(
+                (
+                    method_start + source_match.start("cast"),
+                    method_start + source_match.end("cast"),
+                    "",
+                )
+            )
+        actions.append(
+            {
+                "kind": (
+                    "collectors_to_list_wildcard_sink_cast_removal"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "sink_owner": proof["sink_owner"],
+                "sink_descriptor": proof["sink_descriptor"],
+                "sink_signature": proof["sink_signature"],
+                "source_element_types": element_sources,
+                "exact_element_owners": proof["element_owners"],
+                "collector_pairs": proof["collect_triplets"],
+                "function_bootstraps": proof["functions"],
+                "replacement_count": len(inner_casts),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_collectors_to_list_wildcard_forces_object"
+                    ),
+                    "strategy": (
+                        "exact_constructor_signature_plus_function_element_types"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping wildcard collector-cast edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_erased_generic_constructor_argument_casts(
     *,
     source_root: Path,
@@ -8833,6 +9249,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_collectors_to_list_wildcard_sink_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_erased_generic_constructor_argument_casts(
                         source_root=source_root,
                         path=path,
@@ -9075,6 +9498,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "invokedynamic_parameter_capture_alias"
+        ),
+        "collectors_to_list_wildcard_sink_cast_action_count": sum(
+            action["kind"]
+            == "collectors_to_list_wildcard_sink_cast_removal"
+            for action in actions
+        ),
+        "collectors_to_list_wildcard_sink_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "collectors_to_list_wildcard_sink_cast_removal"
         ),
         "erased_generic_constructor_argument_cast_action_count": sum(
             action["kind"]
