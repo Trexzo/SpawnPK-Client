@@ -3615,6 +3615,447 @@ def _normalize_invokedynamic_parameter_capture_aliases(
 
 
 
+def _normalize_invokedynamic_captured_class_local_aliases(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore lost aliases for captured Class locals in Field mappers.
+
+    Procyon can preserve the source Class local used to open declared fields
+    while inventing an undeclared alias for that same captured value inside
+    a block lambda. Repair only the narrow reflection shape where source and
+    exact bytecode independently agree on one declared-field stream, one
+    captured Class slot, and one LambdaMetafactory helper whose Class/Field
+    parameter use proves Field.get(capturedClass), Class.getSimpleName(), and
+    Field.getName().
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    bootstrap_methods = list(profile.get("bootstrap_methods", []))
+    if not bootstrap_methods:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    stream_re = re.compile(
+        r"(?:(?:java\.util\.)?Arrays)\s*\.\s*stream\s*\(\s*"
+        r"(?P<capture>[A-Za-z_$][A-Za-z0-9_$]*)\s*\.\s*"
+        r"getDeclaredFields\s*\(\s*\)\s*\)"
+    )
+    block_map_re = re.compile(
+        r"\.\s*map\s*\(\s*"
+        r"(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\s*->\s*\{"
+    )
+
+    expected_bootstrap_descriptors = {
+        "metafactory": (
+            "(Ljava/lang/invoke/MethodHandles$Lookup;"
+            "Ljava/lang/String;"
+            "Ljava/lang/invoke/MethodType;"
+            "Ljava/lang/invoke/MethodType;"
+            "Ljava/lang/invoke/MethodHandle;"
+            "Ljava/lang/invoke/MethodType;)"
+            "Ljava/lang/invoke/CallSite;"
+        ),
+        "altMetafactory": (
+            "(Ljava/lang/invoke/MethodHandles$Lookup;"
+            "Ljava/lang/String;"
+            "Ljava/lang/invoke/MethodType;"
+            "[Ljava/lang/Object;)"
+            "Ljava/lang/invoke/CallSite;"
+        ),
+    }
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        stream_matches = list(stream_re.finditer(method_code))
+        block_maps = list(block_map_re.finditer(method_code))
+        if len(stream_matches) != 1 or len(block_maps) != 1:
+            continue
+
+        stream_match = stream_matches[0]
+        block_map = block_maps[0]
+        if block_map.start() <= stream_match.start():
+            continue
+
+        capture_name = stream_match.group("capture")
+        field_name = block_map.group("field")
+        field_get_re = re.compile(
+            r"(?<![A-Za-z0-9_$])"
+            + re.escape(field_name)
+            + r"\s*\.\s*get\s*\(\s*"
+            r"(?P<alias>[A-Za-z_$][A-Za-z0-9_$]*)\s*\)"
+        )
+        field_gets = list(field_get_re.finditer(method_code))
+        if len(field_gets) != 1:
+            continue
+        alias_name = field_gets[0].group("alias")
+        if alias_name == capture_name:
+            continue
+
+        simple_name_re = re.compile(
+            r"(?<![A-Za-z0-9_$])"
+            + re.escape(alias_name)
+            + r"\s*\.\s*getSimpleName\s*\(\s*\)"
+        )
+        simple_name_hits = list(simple_name_re.finditer(method_code))
+        field_name_re = re.compile(
+            r"(?<![A-Za-z0-9_$])"
+            + re.escape(field_name)
+            + r"\s*\.\s*getName\s*\(\s*\)"
+        )
+        field_name_hits = list(field_name_re.finditer(method_code))
+        if len(simple_name_hits) != 1 or len(field_name_hits) != 1:
+            continue
+
+        alias_hits = list(
+            re.finditer(
+                r"(?<![A-Za-z0-9_$])"
+                + re.escape(alias_name)
+                + r"(?![A-Za-z0-9_$])",
+                method_code,
+            )
+        )
+        if len(alias_hits) != 2:
+            continue
+        expected_alias_starts = {
+            field_gets[0].start("alias"),
+            simple_name_hits[0].start(),
+        }
+        if {hit.start() for hit in alias_hits} != expected_alias_starts:
+            continue
+
+        declaration_re = re.compile(
+            r"\b(?:final\s+)?"
+            r"[A-Za-z_$][A-Za-z0-9_$.<>\[\]?]*\s+"
+            + re.escape(alias_name)
+            + r"\b"
+        )
+        if declaration_re.search(method_code):
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        exact_candidates = [
+            exact_method
+            for exact_method in profile.get("methods", [])
+            if exact_method.get("name") == method_match.group("name")
+            and _source_parameters_match_descriptor(
+                method_match.group("params"),
+                str(exact_method.get("descriptor", "")),
+                current_package=current_package,
+            )
+            is True
+            and (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                == source_static
+            )
+        ]
+        if len(exact_candidates) != 1:
+            continue
+        exact_method = exact_candidates[0]
+        exact_instructions = list(exact_method.get("instructions", []))
+        instruction_index_by_offset = {
+            int(instruction.get("offset", -1)): index
+            for index, instruction in enumerate(exact_instructions)
+            if int(instruction.get("offset", -1)) >= 0
+        }
+
+        declared_field_sites: list[tuple[int, int]] = []
+        for index, instruction in enumerate(exact_instructions):
+            if not (
+                instruction.get("mnemonic") == "invokevirtual"
+                and instruction.get("owner") == "java/lang/Class"
+                and instruction.get("name") == "getDeclaredFields"
+                and instruction.get("descriptor")
+                == "()[Ljava/lang/reflect/Field;"
+                and index > 0
+            ):
+                continue
+            receiver = exact_instructions[index - 1]
+            if receiver.get("mnemonic") != "aload":
+                continue
+            local_index = int(receiver.get("local_index", -1))
+            if local_index < 0:
+                continue
+            declared_field_sites.append((index, local_index))
+        if len(declared_field_sites) != 1:
+            continue
+        declared_field_index, capture_slot = declared_field_sites[0]
+
+        matching_indy: list[dict[str, Any]] = []
+        for invocation in exact_method.get("method_invocations", []):
+            if not (
+                invocation.get("operation") == "invokedynamic"
+                and invocation.get("name") == "apply"
+                and invocation.get("descriptor")
+                == "(Ljava/lang/Class;)Ljava/util/function/Function;"
+            ):
+                continue
+            invocation_offset = int(invocation.get("offset", -1))
+            instruction_index = instruction_index_by_offset.get(
+                invocation_offset
+            )
+            if (
+                instruction_index is None
+                or instruction_index <= declared_field_index
+                or instruction_index <= 0
+            ):
+                continue
+            capture_load = exact_instructions[instruction_index - 1]
+            if not (
+                capture_load.get("mnemonic") == "aload"
+                and int(capture_load.get("local_index", -1))
+                == capture_slot
+            ):
+                continue
+
+            bootstrap_index = int(
+                invocation.get("bootstrap_method_attr_index", -1)
+            )
+            if not (0 <= bootstrap_index < len(bootstrap_methods)):
+                continue
+            bootstrap = bootstrap_methods[bootstrap_index]
+            bootstrap_method = bootstrap.get("bootstrap_method", {})
+            bootstrap_name = str(bootstrap_method.get("name", ""))
+            if not (
+                bootstrap_method.get("owner")
+                == "java/lang/invoke/LambdaMetafactory"
+                and bootstrap_name in expected_bootstrap_descriptors
+                and bootstrap_method.get("descriptor")
+                == expected_bootstrap_descriptors[bootstrap_name]
+                and bootstrap_method.get("target_kind") == "method"
+                and int(bootstrap_method.get("reference_kind", -1)) == 6
+            ):
+                continue
+
+            implementation_handles = [
+                argument.get("method_handle", {})
+                for argument in bootstrap.get("arguments", [])
+                if argument.get("kind") == "method_handle"
+                and argument.get("method_handle", {}).get("owner")
+                == current_owner
+            ]
+            if len(implementation_handles) != 1:
+                continue
+            implementation = implementation_handles[0]
+            helper_descriptor = str(
+                implementation.get("descriptor", "")
+            )
+            helper_shapes = _descriptor_parameter_shapes(
+                helper_descriptor
+            )
+            helper_return = _descriptor_return_descriptor(
+                helper_descriptor
+            )
+            if not (
+                implementation.get("target_kind") == "method"
+                and int(implementation.get("reference_kind", -1)) == 6
+                and helper_shapes
+                == [
+                    (0, "ref", "java/lang/Class"),
+                    (0, "ref", "java/lang/reflect/Field"),
+                ]
+                and helper_return is not None
+                and helper_return.startswith("L")
+                and helper_return.endswith(";")
+            ):
+                continue
+
+            expected_instantiated = (
+                "(Ljava/lang/reflect/Field;)"
+                + helper_return
+            )
+            instantiated_types = {
+                str(argument.get("descriptor", ""))
+                for argument in bootstrap.get("arguments", [])
+                if argument.get("kind") == "method_type"
+            }
+            if expected_instantiated not in instantiated_types:
+                continue
+
+            helpers = [
+                helper
+                for helper in profile.get("methods", [])
+                if helper.get("name") == implementation.get("name")
+                and helper.get("descriptor") == helper_descriptor
+                and int(helper.get("access", 0)) & 0x0008
+                and int(helper.get("access", 0)) & 0x1000
+            ]
+            if len(helpers) != 1:
+                continue
+            helper_instructions = list(
+                helpers[0].get("instructions", [])
+            )
+
+            field_get_sites = [
+                index
+                for index in range(2, len(helper_instructions))
+                if helper_instructions[index].get("mnemonic")
+                == "invokevirtual"
+                and helper_instructions[index].get("owner")
+                == "java/lang/reflect/Field"
+                and helper_instructions[index].get("name") == "get"
+                and helper_instructions[index].get("descriptor")
+                == "(Ljava/lang/Object;)Ljava/lang/Object;"
+                and helper_instructions[index - 2].get("mnemonic")
+                == "aload"
+                and int(
+                    helper_instructions[index - 2].get(
+                        "local_index", -1
+                    )
+                )
+                == 1
+                and helper_instructions[index - 1].get("mnemonic")
+                == "aload"
+                and int(
+                    helper_instructions[index - 1].get(
+                        "local_index", -1
+                    )
+                )
+                == 0
+            ]
+            class_name_sites = [
+                index
+                for index in range(1, len(helper_instructions))
+                if helper_instructions[index].get("mnemonic")
+                == "invokevirtual"
+                and helper_instructions[index].get("owner")
+                == "java/lang/Class"
+                and helper_instructions[index].get("name")
+                == "getSimpleName"
+                and helper_instructions[index].get("descriptor")
+                == "()Ljava/lang/String;"
+                and helper_instructions[index - 1].get("mnemonic")
+                == "aload"
+                and int(
+                    helper_instructions[index - 1].get(
+                        "local_index", -1
+                    )
+                )
+                == 0
+            ]
+            field_name_sites = [
+                index
+                for index in range(1, len(helper_instructions))
+                if helper_instructions[index].get("mnemonic")
+                == "invokevirtual"
+                and helper_instructions[index].get("owner")
+                == "java/lang/reflect/Field"
+                and helper_instructions[index].get("name") == "getName"
+                and helper_instructions[index].get("descriptor")
+                == "()Ljava/lang/String;"
+                and helper_instructions[index - 1].get("mnemonic")
+                == "aload"
+                and int(
+                    helper_instructions[index - 1].get(
+                        "local_index", -1
+                    )
+                )
+                == 1
+            ]
+            if not (
+                len(field_get_sites) == 1
+                and len(class_name_sites) == 1
+                and len(field_name_sites) == 1
+            ):
+                continue
+
+            matching_indy.append(
+                {
+                    "descriptor": str(
+                        invocation.get("descriptor", "")
+                    ),
+                    "offset": invocation_offset,
+                    "bootstrap_method_attr_index": bootstrap_index,
+                    "helper_name": str(
+                        implementation.get("name", "")
+                    ),
+                    "helper_descriptor": helper_descriptor,
+                    "capture_slot": capture_slot,
+                }
+            )
+
+        if len(matching_indy) != 1:
+            continue
+
+        for alias_hit in alias_hits:
+            edits.append(
+                (
+                    method_start + alias_hit.start(),
+                    method_start + alias_hit.end(),
+                    capture_name,
+                )
+            )
+        actions.append(
+            {
+                "kind": "invokedynamic_captured_class_local_alias",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": exact_method.get("descriptor"),
+                "capture_source_name": capture_name,
+                "undeclared_capture_alias": alias_name,
+                "field_lambda_parameter_name": field_name,
+                "invokedynamic": matching_indy[0],
+                "replacement_count": len(alias_hits),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_invokedynamic_captured_class_local_alias"
+                    ),
+                    "strategy": (
+                        "unique_declared_field_stream_plus_exact_class_capture_helper"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping captured-Class alias edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_invokedynamic_lambda_outer_capture_collisions(
     *,
     source_root: Path,
@@ -9812,6 +10253,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_invokedynamic_captured_class_local_aliases(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_invokedynamic_lambda_outer_capture_collisions(
                         source_root=source_root,
                         path=path,
@@ -10079,6 +10527,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "invokedynamic_parameter_capture_alias"
+        ),
+        "invokedynamic_captured_class_local_alias_action_count": sum(
+            action["kind"]
+            == "invokedynamic_captured_class_local_alias"
+            for action in actions
+        ),
+        "invokedynamic_captured_class_local_alias_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "invokedynamic_captured_class_local_alias"
         ),
         "erased_generic_constructor_argument_cast_action_count": sum(
             action["kind"]
