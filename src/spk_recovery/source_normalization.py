@@ -3829,7 +3829,7 @@ def _normalize_intpredicate_parameter_capture_aliases(
                     for argument in bootstrap.get("arguments", [])
                     if argument.get("kind") == "method_type"
                 ]
-                if instantiated_types.count("(I)Z") != 1:
+                if instantiated_types.count("(I)Z") != 2:
                     continue
 
                 helpers = [
