@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 3,
+  "review_id": "SEMREVIEW_E713246E9F7300D509F0",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_9185B149BF2F02446C94",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000543",
+      "owner_logical_id": "CLIENT_CLASS_000543",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/b/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TaskGroup",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/n/b/b as rs.interfaces.tasks.TaskGroup."
+        },
+        {
+          "family": "exact_v308_task_contract",
+          "detail": "Recovered source map identifies rs/n/b/b as rs.interfaces.tasks.TaskGroup; exact v308 is a generic int-keyed group of task lists that registers ScheduledTask subtypes, dispatches all tasks for one widget/interface id and can clear/expose the registry."
+        },
+        {
+          "family": "exact_task_family_join",
+          "detail": "The root/group/timed-task classes own the live task registries used by the already-reviewed R288 child task types and concrete interface refresh/hover/render jobs."
+        }
+      ],
+      "note": "Source-proven interface task/scheduler identity with exact-v308 behavioral corroboration."
+    },
+    {
+      "proposal_id": "SEMPROP_F8B6049D643F0E7EA44B",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000539",
+      "owner_logical_id": "CLIENT_CLASS_000539",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/b/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TimedTask",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/n/b/a/a as rs.interfaces.tasks.types.TimedTask."
+        },
+        {
+          "family": "exact_v308_task_contract",
+          "detail": "Recovered source map identifies rs/n/b/a/a as rs.interfaces.tasks.types.TimedTask; exact v308 is the direct ScheduledTask subtype whose constructor fixes the inherited interval and leaves the due-task hook abstract for concrete refresh jobs."
+        },
+        {
+          "family": "exact_task_family_join",
+          "detail": "The root/group/timed-task classes own the live task registries used by the already-reviewed R288 child task types and concrete interface refresh/hover/render jobs."
+        }
+      ],
+      "note": "Source-proven interface task/scheduler identity with exact-v308 behavioral corroboration."
+    },
+    {
+      "proposal_id": "SEMPROP_FAA7ED0A3E53169165BC",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000538",
+      "owner_logical_id": "CLIENT_CLASS_000538",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/n/b/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ScheduledTask",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/n/b/a as rs.interfaces.tasks.ScheduledTask."
+        },
+        {
+          "family": "exact_v308_task_contract",
+          "detail": "Recovered source map identifies rs/n/b/a as rs.interfaces.tasks.ScheduledTask; exact v308 owns interval/last-run timestamps, globally registers three TaskGroup families and gates execution by currentTimeMillis before calling the abstract task hook."
+        },
+        {
+          "family": "exact_task_family_join",
+          "detail": "The root/group/timed-task classes own the live task registries used by the already-reviewed R288 child task types and concrete interface refresh/hover/render jobs."
+        }
+      ],
+      "note": "Source-proven interface task/scheduler identity with exact-v308 behavioral corroboration."
+    }
+  ],
+  "unresolved": []
+}
