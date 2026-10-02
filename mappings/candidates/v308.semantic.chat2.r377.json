@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/runelite/a/f",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "LocalPoint",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_local_scale",
+          "detail": "The class stores two local coordinates constrained to 0 <= x,y < 13312, exactly the 104-tile scene span at 128 local units per tile."
+        },
+        {
+          "family": "exact_tile_center_factory",
+          "detail": "Factory a(tileX,tileY) converts tile coordinates to local-unit centers with (tile << 7) + 64."
+        },
+        {
+          "family": "exact_world_conversion",
+          "detail": "Factory b(worldX,worldY) first requires the world tile to be inside the client's current 104x104 scene, subtracts Client baseX/baseY and then converts the resulting scene tile to local units."
+        },
+        {
+          "family": "exact_world_point_join",
+          "detail": "Conversion from rs/runelite/a/p rejects mismatched plane and otherwise converts that WorldPoint x/y through the same current-scene path."
+        }
+      ],
+      "note": "Exact-v308 local scene-coordinate point; the role is proven by 128-unit scale and WorldPoint/base conversion."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/runelite/a/p",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "WorldPoint",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_self_description",
+          "detail": "The exact class-file concat constant is literally 'WorldPoint(x=..., y=..., plane=...)'."
+        },
+        {
+          "family": "exact_world_state",
+          "detail": "The class stores immutable x, y and plane, supports x/y/plane offsets, distance on matching plane and region/tile component extraction."
+        },
+        {
+          "family": "exact_local_conversion",
+          "detail": "Factories convert from LocalPoint by shifting local coordinates by 7 and adding Client world base coordinates, with the active Client plane."
+        },
+        {
+          "family": "exact_scene_membership",
+          "detail": "Its scene-membership helpers compare world x/y against the current 104x104 client base and its active-plane predicate checks Client plane equality."
+        }
+      ],
+      "note": "Exact-v308 world-coordinate point; the class literal itself preserves the WorldPoint noun."
+    }
+  ],
+  "conflicts": []
+}
