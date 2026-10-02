@@ -9,6 +9,7 @@ from spk_recovery.release_orchestrator import (
     build_existing_authority_release_from_workspace,
 )
 from spk_recovery.release_orchestrator_cli import (
+    _load as release_cli_load,
     main as release_cli_main,
 )
 
@@ -110,6 +111,19 @@ def _release(ready=True):
 
 
 class ExistingAuthorityReleaseWorkspaceTests(unittest.TestCase):
+    def test_release_cli_loader_rejects_duplicate_json_keys(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "duplicate.json"
+            path.write_text(
+                '{"outer":{"x":1,"x":2}}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                ExistingAuthorityReleaseError,
+                "duplicate JSON key: 'x'",
+            ):
+                release_cli_load(path)
+
     def _derived_manifest(self):
         return {
             **_recovered(),
@@ -118,6 +132,7 @@ class ExistingAuthorityReleaseWorkspaceTests(unittest.TestCase):
             "collision_transform_id": "COLLTRANS_TEST",
             "collision_plan_id": "COLLPLAN_TEST",
             "collision_report_id": "COLLREPORT_TEST",
+            "collision_mapping_sha256": "d" * 64,
         }
 
     def test_incomplete_collision_derivation_is_refused(self):
@@ -130,7 +145,7 @@ class ExistingAuthorityReleaseWorkspaceTests(unittest.TestCase):
             plan.write_text("{}\n", encoding="utf-8")
 
             manifest = self._derived_manifest()
-            del manifest["collision_plan_id"]
+            del manifest["collision_mapping_sha256"]
 
             with self.assertRaisesRegex(
                 ExistingAuthorityReleaseError,

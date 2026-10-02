@@ -2446,6 +2446,382 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+    def test_invokedynamic_parameter_capture_alias_uses_exact_callsite(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Event.java": (
+                        "package p;\n"
+                        "public interface Event { void touch(); }\n"
+                    ),
+                    "p/Client.java": (
+                        "package p;\n"
+                        "public class Client {\n"
+                        "    public void onAdded(Event event) {\n"
+                        "        Runnable r = () -> event.touch();\n"
+                        "        r.run();\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "Client.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "public class Client {\n"
+                "    public void onAdded(Event event) {\n"
+                "        Runnable r = () -> event2.touch();\n"
+                "        r.run();\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-indy-capture-alias"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("cannot find symbol", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "Runnable r = () -> event.touch();",
+                normalized,
+            )
+            self.assertNotIn("event2", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "invokedynamic_parameter_capture_alias"
+            )
+            self.assertEqual(action["method_name"], "onAdded")
+            self.assertEqual(
+                action["method_descriptor"],
+                "(Lp/Event;)V",
+            )
+            self.assertEqual(action["parameter_name"], "event")
+            self.assertEqual(action["alias_name"], "event2")
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                len(action["invokedynamic_callsites"]),
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_parameter_capture_alias_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-indy-capture-alias"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_invokedynamic_parameter_alias_requires_capture_proof(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Event.java": (
+                        "package p;\n"
+                        "public interface Event { void touch(); }\n"
+                    ),
+                    "p/Client.java": (
+                        "package p;\n"
+                        "public class Client {\n"
+                        "    public void onAdded(Event event) {\n"
+                        "        System.out.println(\"no lambda\");\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "Client.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "public class Client {\n"
+                "    public void onAdded(Event event) {\n"
+                "        event2.touch();\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_parameter_capture_alias_reference_count"
+                ],
+                0,
+            )
+
+    def test_hidden_layout_constructor_arguments_use_exact_descriptor(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Client.java": (
+                        "package p;\n"
+                        "import java.awt.LayoutManager;\n"
+                        "import javax.swing.JComponent;\n"
+                        "public class Client {\n"
+                        "    public void wrap(JComponent component) {\n"
+                        "        LayoutManager saved = component.getLayout();\n"
+                        "        component.setLayout(new Wrapper(this, saved, component));\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "p/Wrapper.java": (
+                        "package p;\n"
+                        "import java.awt.Component;\n"
+                        "import java.awt.Container;\n"
+                        "import java.awt.Dimension;\n"
+                        "import java.awt.LayoutManager;\n"
+                        "import javax.swing.JComponent;\n"
+                        "public class Wrapper implements LayoutManager {\n"
+                        "    Wrapper(Client owner, LayoutManager saved, JComponent component) {}\n"
+                        "    public void addLayoutComponent(String name, Component comp) {}\n"
+                        "    public void removeLayoutComponent(Component comp) {}\n"
+                        "    public Dimension preferredLayoutSize(Container parent) { return new Dimension(); }\n"
+                        "    public Dimension minimumLayoutSize(Container parent) { return new Dimension(); }\n"
+                        "    public void layoutContainer(Container parent) {}\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source_root = root / "src"
+            client = source_root / "p" / "Client.java"
+            wrapper = source_root / "p" / "Wrapper.java"
+            client.parent.mkdir(parents=True)
+            client.write_text(
+                "package p;\n"
+                "import java.awt.LayoutManager;\n"
+                "import javax.swing.JComponent;\n"
+                "public class Client {\n"
+                "    public void wrap(JComponent component) {\n"
+                "        final LayoutManager saved = component.getLayout();\n"
+                "        component.setLayout(new Wrapper());\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            wrapper.write_text(
+                "package p;\n"
+                "import java.awt.Component;\n"
+                "import java.awt.Container;\n"
+                "import java.awt.Dimension;\n"
+                "import java.awt.LayoutManager;\n"
+                "import javax.swing.JComponent;\n"
+                "public class Wrapper implements LayoutManager {\n"
+                "    Wrapper(Client owner, LayoutManager saved, JComponent component) {}\n"
+                "    public void addLayoutComponent(String name, Component comp) {}\n"
+                "    public void removeLayoutComponent(Component comp) {}\n"
+                "    public Dimension preferredLayoutSize(Container parent) { return new Dimension(); }\n"
+                "    public Dimension minimumLayoutSize(Container parent) { return new Dimension(); }\n"
+                "    public void layoutContainer(Container parent) {}\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-hidden-layout-ctor"),
+                    str(client),
+                    str(wrapper),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn(
+                "constructor Wrapper",
+                before.stderr,
+            )
+
+            report = normalize_procyon_source(source_root, jar)
+            normalized = client.read_text(encoding="utf-8")
+            self.assertIn(
+                "component.setLayout(new Wrapper(this, saved, component));",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "hidden_layout_constructor_arguments"
+            )
+            self.assertEqual(action["method_name"], "wrap")
+            self.assertEqual(
+                action["method_descriptor"],
+                "(Ljavax/swing/JComponent;)V",
+            )
+            self.assertEqual(action["target_owner"], "p/Wrapper")
+            self.assertEqual(
+                action["constructor_descriptor"],
+                "(Lp/Client;Ljava/awt/LayoutManager;Ljavax/swing/JComponent;)V",
+            )
+            self.assertEqual(action["component_name"], "component")
+            self.assertEqual(action["layout_name"], "saved")
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                report["summary"][
+                    "hidden_layout_constructor_argument_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-hidden-layout-ctor"),
+                    str(client),
+                    str(wrapper),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_hidden_layout_constructor_arguments_fail_without_exact_shape(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Client.java": (
+                        "package p;\n"
+                        "import java.awt.LayoutManager;\n"
+                        "import javax.swing.JComponent;\n"
+                        "public class Client {\n"
+                        "    public void wrap(JComponent component) {\n"
+                        "        LayoutManager saved = component.getLayout();\n"
+                        "        component.setLayout(new Wrapper(saved, component));\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "p/Wrapper.java": (
+                        "package p;\n"
+                        "import java.awt.Component;\n"
+                        "import java.awt.Container;\n"
+                        "import java.awt.Dimension;\n"
+                        "import java.awt.LayoutManager;\n"
+                        "import javax.swing.JComponent;\n"
+                        "public class Wrapper implements LayoutManager {\n"
+                        "    Wrapper(LayoutManager saved, JComponent component) {}\n"
+                        "    public void addLayoutComponent(String name, Component comp) {}\n"
+                        "    public void removeLayoutComponent(Component comp) {}\n"
+                        "    public Dimension preferredLayoutSize(Container parent) { return new Dimension(); }\n"
+                        "    public Dimension minimumLayoutSize(Container parent) { return new Dimension(); }\n"
+                        "    public void layoutContainer(Container parent) {}\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source_root = root / "src"
+            client = source_root / "p" / "Client.java"
+            wrapper = source_root / "p" / "Wrapper.java"
+            client.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.awt.LayoutManager;\n"
+                "import javax.swing.JComponent;\n"
+                "public class Client {\n"
+                "    public void wrap(JComponent component) {\n"
+                "        final LayoutManager saved = component.getLayout();\n"
+                "        component.setLayout(new Wrapper());\n"
+                "    }\n"
+                "}\n"
+            )
+            client.write_text(original, encoding="utf-8")
+            wrapper.write_text(
+                "package p;\n"
+                "import java.awt.Component;\n"
+                "import java.awt.Container;\n"
+                "import java.awt.Dimension;\n"
+                "import java.awt.LayoutManager;\n"
+                "import javax.swing.JComponent;\n"
+                "public class Wrapper implements LayoutManager {\n"
+                "    Wrapper(LayoutManager saved, JComponent component) {}\n"
+                "    public void addLayoutComponent(String name, Component comp) {}\n"
+                "    public void removeLayoutComponent(Component comp) {}\n"
+                "    public Dimension preferredLayoutSize(Container parent) { return new Dimension(); }\n"
+                "    public Dimension minimumLayoutSize(Container parent) { return new Dimension(); }\n"
+                "    public void layoutContainer(Container parent) {}\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(source_root, jar)
+
+            self.assertEqual(
+                client.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "hidden_layout_constructor_argument_reference_count"
+                ],
+                0,
+            )
+
     def test_invokedynamic_helper_return_cast_uses_generated_signature(
         self,
     ):
@@ -3880,6 +4256,124 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                     str(jar),
                     "-d",
                     str(root / "after-linkedhashmap-placeholder"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stdout + after.stderr)
+
+    def test_linkedhashmap_self_result_cast_moves_off_receiver(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Item.java": (
+                        "package p;\n"
+                        "public class Item {}\n"
+                    ),
+                    "p/ItemList.java": (
+                        "package p;\n"
+                        "import java.util.ArrayList;\n"
+                        "public class ItemList extends ArrayList<Item> {}\n"
+                    ),
+                    "p/Store.java": (
+                        "package p;\n"
+                        "import java.util.List;\n"
+                        "public class Store {\n"
+                        "    public void save(String key, List<Item> items) {}\n"
+                        "}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.LinkedHashMap;\n"
+                        "import java.util.List;\n"
+                        "public class A extends LinkedHashMap<String, ItemList> {\n"
+                        "    private final Store store = new Store();\n"
+                        "    public void save(String key) {\n"
+                        "        store.save(key, (List<Item>)this.get(key));\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.LinkedHashMap;\n"
+                "import java.util.List;\n"
+                "public class A extends LinkedHashMap<String, ItemList> {\n"
+                "    private final Store store = new Store();\n"
+                "    public void save(String key) {\n"
+                "        store.save(key, "
+                "((LinkedHashMap<K, List<Item>>)this).get(key));\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-linkedhashmap-result-cast"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "store.save(key, ((List<Item>)this.get(key)));",
+                normalized,
+            )
+            self.assertNotIn(
+                "LinkedHashMap<?, List<Item>",
+                normalized,
+            )
+            actions = [
+                row
+                for row in report["actions"]
+                if row["kind"] == "linkedhashmap_self_get_result_cast"
+            ]
+            self.assertEqual(len(actions), 1)
+            self.assertEqual(actions[0]["method_name"], "save")
+            self.assertEqual(
+                actions[0]["method_descriptor"],
+                "(Ljava/lang/String;)V",
+            )
+            self.assertEqual(
+                actions[0]["result_types"],
+                ["List<Item>"],
+            )
+            self.assertEqual(actions[0]["replacement_count"], 1)
+            self.assertEqual(
+                report["summary"][
+                    "linkedhashmap_self_get_result_cast_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-linkedhashmap-result-cast"),
                     str(source),
                 ],
                 stdout=subprocess.PIPE,

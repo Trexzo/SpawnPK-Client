@@ -17,6 +17,17 @@ class RecoveryReleaseVerificationError(ValueError):
     pass
 
 
+def _exact_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in out:
+            raise RecoveryReleaseVerificationError(
+                f"duplicate JSON key: {key!r}"
+            )
+        out[key] = value
+    return out
+
+
 def _sha256_file(path: Path) -> str:
     h = hashlib.sha256()
     with path.open("rb") as stream:
@@ -117,7 +128,10 @@ def _load_json_authority(
             f"{label} does not exist: {resolved}"
         )
     try:
-        data = json.loads(resolved.read_text(encoding="utf-8"))
+        data = json.loads(
+            resolved.read_text(encoding="utf-8"),
+            object_pairs_hook=_exact_object,
+        )
     except (OSError, json.JSONDecodeError) as exc:
         raise RecoveryReleaseVerificationError(
             f"{label} is not valid JSON"
@@ -127,6 +141,51 @@ def _load_json_authority(
             f"{label} has unexpected kind: {data.get('kind')!r}"
         )
     return data
+
+
+def _private_mapping_sha256(plan: dict[str, Any]) -> str:
+    rows = plan.get("remaps")
+    if not isinstance(rows, list):
+        raise RecoveryReleaseVerificationError(
+            "private collision plan remaps must be a list"
+        )
+    mapping: dict[str, str] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            raise RecoveryReleaseVerificationError(
+                "private collision plan remap row is malformed"
+            )
+        old = row.get("old_internal_name")
+        new = row.get("new_internal_name")
+        if (
+            not isinstance(old, str)
+            or not old
+            or not isinstance(new, str)
+            or not new
+        ):
+            raise RecoveryReleaseVerificationError(
+                "private collision plan remap lacks exact names"
+            )
+        prior = mapping.get(old)
+        if prior is not None and prior != new:
+            raise RecoveryReleaseVerificationError(
+                "private collision plan has conflicting remap authority"
+            )
+        mapping[old] = new
+    material = [
+        {
+            "old_internal_name": old,
+            "new_internal_name": mapping[old],
+        }
+        for old in sorted(mapping)
+    ]
+    raw = json.dumps(
+        material,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()
 
 
 def _sha_list(value: Any, *, label: str) -> list[str]:
@@ -415,7 +474,8 @@ def verify_recovery_release(
                 )
             try:
                 private_plan = json.loads(
-                    plan_path.read_text(encoding="utf-8")
+                    plan_path.read_text(encoding="utf-8"),
+                    object_pairs_hook=_exact_object,
                 )
             except (
                 OSError,
@@ -478,6 +538,17 @@ def verify_recovery_release(
                     )
                 ).lower(),
                 actual=_sha256_file(plan_path),
+            )
+            _check(
+                checks,
+                name="collision_private_mapping_sha256",
+                expected=str(
+                    recovered_source_manifest.get(
+                        "collision_mapping_sha256",
+                        "",
+                    )
+                ).lower(),
+                actual=_private_mapping_sha256(private_plan),
             )
 
     official_first_mode = (

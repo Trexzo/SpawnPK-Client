@@ -14,8 +14,27 @@ from .release_manifest import (
 )
 
 
+def _exact_object(pairs):
+    out = {}
+    for key, value in pairs:
+        if key in out:
+            raise RecoveryReleaseError(
+                f"duplicate JSON key: {key!r}"
+            )
+        out[key] = value
+    return out
+
+
 def _load(path: Path) -> dict:
-    return json.loads(path.read_text(encoding="utf-8"))
+    value = json.loads(
+        path.read_text(encoding="utf-8"),
+        object_pairs_hook=_exact_object,
+    )
+    if not isinstance(value, dict):
+        raise RecoveryReleaseError(
+            f"expected JSON object: {path}"
+        )
+    return value
 
 
 def main(argv: list[str] | None = None) -> int:

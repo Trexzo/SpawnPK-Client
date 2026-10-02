@@ -172,6 +172,9 @@ class CollisionDerivedCompileTests(unittest.TestCase):
             "collision_report_id": transform[
                 "collision_report_id"
             ],
+            "collision_mapping_sha256": transform[
+                "private_mapping_sha256"
+            ],
             "base_readable_jar_sha256": transform[
                 "input_jar_sha256"
             ],
@@ -296,6 +299,35 @@ class CollisionDerivedCompileTests(unittest.TestCase):
                 self.assertIn(new_name + ".class", names)
                 self.assertNotIn(old_name + ".class", names)
                 self.assertNotIn("rs/A.class", names)
+
+    def test_mapping_commitment_mismatch_is_refused(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                readable,
+                plan_path,
+                recovered,
+                manifest,
+                _old_name,
+                _new_name,
+                _transform,
+            ) = self._fixture(root)
+            manifest["collision_mapping_sha256"] = "0" * 64
+
+            with self.assertRaisesRegex(
+                CollisionDerivedCompileError,
+                "collision_mapping_sha256",
+            ):
+                compile_collision_derived_source(
+                    manifest,
+                    recovered,
+                    readable,
+                    plan_path,
+                    ["rs/"],
+                    root / "compile",
+                    javac_command="javac",
+                    release=9,
+                )
 
     def test_compile_failure_restores_canonical_diagnostic_path(self):
         with tempfile.TemporaryDirectory() as td:
