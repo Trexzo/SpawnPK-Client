@@ -198,7 +198,8 @@ class JavacFrontierSummaryTests(unittest.TestCase):
             text,
         )
         self.assertIn("--top 20", text)
-        self.assertIn("--focus-files 3", text)
+        self.assertIn("--focus-files $FocusFiles", text)
+        self.assertNotIn("--focus-files 3", text)
         self.assertIn("--source-lines", text)
         self.assertIn("private_javac_summary_failed=", text)
         self.assertIn("exit 3", text)
