@@ -1,0 +1,60 @@
+{
+  "schema_version":1,
+  "kind":"semantic_candidate_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[
+    {
+      "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/s/p/a","name":null,"descriptor":null},
+      "proposed_name":"PlayerOutlineConfig","confidence":0.999,
+      "evidence":[
+        {"family":"recovered_source_map","detail":"Recovered semantic source map identifies rs/s/p/a as rs.plugins.playeroutline.PlayerOutlineConfig."},
+        {"family":"exact_config_group","detail":"Exact v308 config group is 'playeroutline' with items playerOutlineColor, petOutline, borderWidth and outlineFeather."},
+        {"family":"exact_defaults","detail":"The exact interface defaults petOutline=true, borderWidth=4 and outlineFeather=4 and returns the configured outline color."},
+        {"family":"exact_plugin_pairing","detail":"rs/s/p/d injects/provides this config and reacts specifically to ConfigChanged key 'petOutline'."}
+      ],
+      "note":"Source-identified Player Outline configuration interface, independently corroborated by exact-v308 config annotations and plugin consumption."
+    },
+    {
+      "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/s/p/d","name":null,"descriptor":null},
+      "proposed_name":"PlayerOutlinePlugin","confidence":0.999,
+      "evidence":[
+        {"family":"recovered_source_map","detail":"Recovered semantic source map identifies rs/s/p/d as rs.plugins.playeroutline.PlayerOutlinePlugin."},
+        {"family":"exact_overlay_lifecycle","detail":"Startup registers the player-outline overlay and conditionally registers the pet-outline overlay from PlayerOutlineConfig.petOutline(); shutdown removes both."},
+        {"family":"exact_config_change","detail":"The ConfigChanged subscriber toggles the pet overlay when key 'petOutline' changes."},
+        {"family":"exact_config_pairing","detail":"The plugin provides PlayerOutlineConfig directly through ConfigManager."}
+      ],
+      "note":"Source-identified Player Outline plugin, with exact-v308 overlay lifecycle and config-change behavior."
+    },
+    {
+      "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/s/m/a","name":null,"descriptor":null},
+      "proposed_name":"NotesConfig","confidence":0.999,
+      "evidence":[
+        {"family":"recovered_source_map","detail":"Recovered semantic source map identifies rs/s/m/a as rs.plugins.notes.NotesConfig."},
+        {"family":"exact_config_contract","detail":"Exact v308 config exposes notesData() with empty-string default plus setNotesData(String), under the Notes feature config surface."},
+        {"family":"exact_plugin_pairing","detail":"rs/s/m/f injects/provides this config and passes it directly into the Notes panel during startup."}
+      ],
+      "note":"Source-identified Notes configuration interface."
+    },
+    {
+      "schema_version":1,"kind":"semantic_name_candidate","canonical":false,"status":"CANDIDATE",
+      "source_build":"v308","source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target":{"kind":"class","owner":"rs/s/m/f","name":null,"descriptor":null},
+      "proposed_name":"NotesPlugin","confidence":0.999,
+      "evidence":[
+        {"family":"recovered_source_map","detail":"Recovered semantic source map identifies rs/s/m/f as rs.plugins.notes.NotesPlugin."},
+        {"family":"exact_panel_lifecycle","detail":"Startup resolves the Notes panel, supplies NotesConfig, loads notes_icon.png, builds a navigation entry titled 'Notes', and adds it to the UI; shutdown removes it."},
+        {"family":"exact_config_pairing","detail":"The plugin provides NotesConfig from ConfigManager and injects the same config instance used to initialize the panel."}
+      ],
+      "note":"Source-identified Notes plugin, independently corroborated by exact-v308 panel/navigation lifecycle."
+    }
+  ],
+  "conflicts":[]
+}
