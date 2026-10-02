@@ -1,10 +1,13 @@
 import copy
+from pathlib import Path
+import tempfile
 import unittest
 
 from spk_recovery.release_manifest import (
     RecoveryReleaseError,
     build_recovery_release_manifest,
 )
+from spk_recovery.release_manifest_cli import _load as _manifest_cli_load
 
 
 AUTH = "a" * 64
@@ -198,6 +201,19 @@ def _official_transport() -> dict:
 
 
 class RecoveryReleaseManifestTests(unittest.TestCase):
+    def test_manifest_cli_loader_rejects_duplicate_json_keys(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "duplicate.json"
+            path.write_text(
+                '{"kind":"a","kind":"b"}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                RecoveryReleaseError,
+                "duplicate JSON key: 'kind'",
+            ):
+                _manifest_cli_load(path)
+
     def test_ready_manifest_is_deterministic(self):
         authority, readable, source, clean, roundtrip = _docs()
         args = (
