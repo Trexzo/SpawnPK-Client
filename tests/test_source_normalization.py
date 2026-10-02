@@ -5,8 +5,12 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 import zipfile
 
+from spk_recovery.bytecode_profile import (
+    profile_class_field_accesses as profile_class_field_accesses_exact,
+)
 from spk_recovery.source_normalization import (
     SourceNormalizationError,
     normalize_procyon_source,
@@ -3235,6 +3239,186 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+
+    def test_collectors_to_list_generic_cast_uses_exact_signature_and_predicate(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Arrays;\n"
+                        "import java.util.List;\n"
+                        "import java.util.stream.Collectors;\n"
+                        "public class A {\n"
+                        "    public static List<String> collect(String prefix) {\n"
+                        "        return Arrays.asList(\"a\", \"ab\").stream()\n"
+                        "            .filter(value -> value.startsWith(prefix))\n"
+                        "            .collect(Collectors.toList());\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.Arrays;\n"
+                "import java.util.List;\n"
+                "import java.util.stream.Collector;\n"
+                "import java.util.stream.Collectors;\n"
+                "public class A {\n"
+                "    public static List<String> collect(String prefix) {\n"
+                "        return Arrays.asList(\"a\", \"ab\").stream()\n"
+                "            .filter(value -> value.startsWith(prefix))\n"
+                "            .collect((Collector<? super Object, ?, List<String>>)Collectors.toList());\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-collector-cast"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertNotIn(
+                "(Collector<? super Object, ?, List<String>>)",
+                normalized,
+            )
+            self.assertIn(
+                ".collect(Collectors.toList())",
+                normalized,
+            )
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "collectors_to_list_generic_cast_removal"
+            )
+            self.assertEqual(
+                action["method_signature"],
+                "(Ljava/lang/String;)Ljava/util/List<Ljava/lang/String;>;",
+            )
+            self.assertEqual(
+                action["element_owner"],
+                "java/lang/String",
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                report["summary"][
+                    "collectors_to_list_generic_cast_action_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-collector-cast"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_collectors_to_list_generic_cast_rejects_signature_drift(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Arrays;\n"
+                        "import java.util.List;\n"
+                        "import java.util.stream.Collectors;\n"
+                        "public class A {\n"
+                        "    public static List<String> collect(String prefix) {\n"
+                        "        return Arrays.asList(\"a\", \"ab\").stream()\n"
+                        "            .filter(value -> value.startsWith(prefix))\n"
+                        "            .collect(Collectors.toList());\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.Arrays;\n"
+                "import java.util.List;\n"
+                "import java.util.stream.Collector;\n"
+                "import java.util.stream.Collectors;\n"
+                "public class A {\n"
+                "    public static List<String> collect(String prefix) {\n"
+                "        return Arrays.asList(\"a\", \"ab\").stream()\n"
+                "            .filter(value -> value.startsWith(prefix))\n"
+                "            .collect((Collector<? super Object, ?, List<String>>)Collectors.toList());\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            def drifted_profile(data: bytes):
+                profile = profile_class_field_accesses_exact(data)
+                changed = 0
+                for method in profile.get("methods", []):
+                    if method.get("name") == "collect":
+                        method["signature"] = (
+                            "(Ljava/lang/String;)"
+                            "Ljava/util/List<Ljava/lang/Integer;>;"
+                        )
+                        changed += 1
+                self.assertEqual(changed, 1)
+                return profile
+
+            with mock.patch(
+                "spk_recovery.source_normalization."
+                "profile_class_field_accesses",
+                side_effect=drifted_profile,
+            ):
+                report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "collectors_to_list_generic_cast_action_count"
+                ],
+                0,
+            )
 
     def test_erased_generic_constructor_argument_cast_uses_exact_call(
         self,
