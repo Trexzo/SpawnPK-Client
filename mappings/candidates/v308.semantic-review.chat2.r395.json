@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_875D730E132CC3F6BCC2",
+  "proposals": [{
+    "proposal_id": "SEMPROP_D55A81E7681A8F11131C",
+    "target_kind": "class",
+    "stable_id": "CLIENT_CLASS_000534",
+    "owner_logical_id": "CLIENT_CLASS_000534",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate": {"owner":"rs/n/a/d","name":null,"descriptor":null},
+    "proposed_name": "LayoutComponent",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"recovered_source_map","detail":"Recovered source map identifies rs/n/a/d as rs.interfaces.components.LayoutComponent."},
+      {"family":"exact_v308_component_role","detail":"Recovered source map identifies rs/n/a/d as rs.interfaces.components.LayoutComponent; exact v308 owns the reviewed layout-manager family and delegates child-entry creation/layout passes through it."},
+      {"family":"exact_interface_family_join","detail":"The class is part of the live rs.interfaces component layer under the reviewed Widget/WidgetManager family and interoperates directly with the layout framework."}
+    ],
+    "note":"Source-proven interface component identity with exact-v308 behavioral corroboration."
+  }],
+  "unresolved": []
+}
