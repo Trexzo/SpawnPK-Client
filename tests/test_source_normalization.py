@@ -2795,6 +2795,196 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+    def test_exact_parameter_receiver_alias_uses_slot1_receiver(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "rs/runelite/events/ClientShutdown.java": (
+                        "package rs.runelite.events;\n"
+                        "import java.time.Duration;\n"
+                        "public class ClientShutdown {\n"
+                        "    public void waitForAllConsumers(Duration duration) {}\n"
+                        "}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.time.Duration;\n"
+                        "import rs.runelite.events.ClientShutdown;\n"
+                        "public class A {\n"
+                        "    private void shutdown(ClientShutdown event) {\n"
+                        "        event.waitForAllConsumers(Duration.ofSeconds(10L));\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source_root = root / "src"
+            event_source = (
+                source_root
+                / "rs"
+                / "runelite"
+                / "events"
+                / "ClientShutdown.java"
+            )
+            source = source_root / "p" / "A.java"
+            event_source.parent.mkdir(parents=True)
+            source.parent.mkdir(parents=True)
+            event_source.write_text(
+                "package rs.runelite.events;\n"
+                "import java.time.Duration;\n"
+                "public class ClientShutdown {\n"
+                "    public void waitForAllConsumers(Duration duration) {}\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            source.write_text(
+                "package p;\n"
+                "import java.time.Duration;\n"
+                "import rs.runelite.events.ClientShutdown;\n"
+                "public class A {\n"
+                "    private void shutdown(ClientShutdown event) {\n"
+                "        clientShutdown.waitForAllConsumers(Duration.ofSeconds(10L));\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-parameter-receiver"),
+                    str(event_source),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("cannot find symbol", before.stderr)
+
+            report = normalize_procyon_source(source_root, jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "event.waitForAllConsumers(Duration.ofSeconds(10L));",
+                normalized,
+            )
+            self.assertNotIn("clientShutdown.", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"] == "exact_parameter_receiver_alias"
+            )
+            self.assertEqual(action["method_name"], "shutdown")
+            self.assertEqual(
+                action["method_descriptor"],
+                "(Lrs/runelite/events/ClientShutdown;)V",
+            )
+            self.assertEqual(action["parameter_name"], "event")
+            self.assertEqual(action["alias_name"], "clientShutdown")
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                report["summary"][
+                    "exact_parameter_receiver_alias_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-parameter-receiver"),
+                    str(event_source),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_exact_parameter_receiver_alias_requires_slot1_flow(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "rs/runelite/events/ClientShutdown.java": (
+                        "package rs.runelite.events;\n"
+                        "import java.time.Duration;\n"
+                        "public class ClientShutdown {\n"
+                        "    public void waitForAllConsumers(Duration duration) {}\n"
+                        "}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.time.Duration;\n"
+                        "import rs.runelite.events.ClientShutdown;\n"
+                        "public class A {\n"
+                        "    private void shutdown(ClientShutdown event) {\n"
+                        "        new ClientShutdown().waitForAllConsumers(Duration.ofSeconds(10L));\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source_root = root / "src"
+            event_source = (
+                source_root
+                / "rs"
+                / "runelite"
+                / "events"
+                / "ClientShutdown.java"
+            )
+            source = source_root / "p" / "A.java"
+            event_source.parent.mkdir(parents=True)
+            source.parent.mkdir(parents=True)
+            event_source.write_text(
+                "package rs.runelite.events;\n"
+                "import java.time.Duration;\n"
+                "public class ClientShutdown {\n"
+                "    public void waitForAllConsumers(Duration duration) {}\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            original = (
+                "package p;\n"
+                "import java.time.Duration;\n"
+                "import rs.runelite.events.ClientShutdown;\n"
+                "public class A {\n"
+                "    private void shutdown(ClientShutdown event) {\n"
+                "        clientShutdown.waitForAllConsumers(Duration.ofSeconds(10L));\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(source_root, jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "exact_parameter_receiver_alias_reference_count"
+                ],
+                0,
+            )
+
     def test_hidden_layout_constructor_arguments_use_exact_descriptor(
         self,
     ):
