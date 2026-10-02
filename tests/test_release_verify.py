@@ -7,8 +7,11 @@ from unittest.mock import patch
 
 from spk_recovery.release_verify import (
     RecoveryReleaseVerificationError,
+    _load_json_authority,
+    _private_mapping_sha256,
     verify_recovery_release,
 )
+from spk_recovery.release_verify_cli import _load as _verify_cli_load
 
 
 def _release():
@@ -135,6 +138,35 @@ def _official_first_fixture(root: Path) -> dict:
 
 
 class ReleaseVerificationTests(unittest.TestCase):
+    def test_release_authority_loaders_reject_duplicate_json_keys(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            nested = root / "nested.json"
+            nested.write_text(
+                '{"kind":"recovery_release_manifest","n":{"x":1,"x":2}}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                RecoveryReleaseVerificationError,
+                "duplicate JSON key: 'x'",
+            ):
+                _load_json_authority(
+                    nested,
+                    label="release",
+                    kind="recovery_release_manifest",
+                )
+
+            top = root / "top.json"
+            top.write_text(
+                '{"kind":"a","kind":"b"}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                RecoveryReleaseVerificationError,
+                "duplicate JSON key: 'kind'",
+            ):
+                _verify_cli_load(top)
+
     def test_exact_manifest_reproduction_passes(self):
         release = _release()
         with patch(
@@ -191,6 +223,7 @@ class ReleaseVerificationTests(unittest.TestCase):
                 "collision_report_id": "JNSCOLLISION_TEST",
                 "readable_jar_sha256": "b" * 64,
                 "identifiers_included": True,
+                "remaps": [],
             }
             plan_path.write_text(
                 json.dumps(plan, sort_keys=True) + "\n",
@@ -205,6 +238,7 @@ class ReleaseVerificationTests(unittest.TestCase):
                 "collision_report_id": "JNSCOLLISION_TEST",
                 "collision_transform_id": "COLLTRANS_TEST",
                 "base_readable_jar_sha256": "b" * 64,
+                "collision_mapping_sha256": _private_mapping_sha256(plan),
             }
             clean = {
                 "readable_jar_sha256": "b" * 64,
@@ -242,6 +276,92 @@ class ReleaseVerificationTests(unittest.TestCase):
                 "collision_private_plan_readable_sha256",
                 names,
             )
+            self.assertIn(
+                "collision_private_mapping_sha256",
+                names,
+            )
+
+    def test_collision_private_mapping_drift_is_rejected(self):
+        release = _release()
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            plan_path = root / "collision-plan.json"
+            plan = {
+                "schema_version": 1,
+                "kind": "class_package_namespace_collision_plan",
+                "plan_id": "JNSPLAN_TEST",
+                "collision_report_id": "JNSCOLLISION_TEST",
+                "readable_jar_sha256": "b" * 64,
+                "identifiers_included": True,
+                "remaps": [
+                    {
+                        "old_internal_name": "dep/A",
+                        "new_internal_name": "dep/Recovered_A",
+                    }
+                ],
+            }
+            accepted_mapping = _private_mapping_sha256(plan)
+            plan_path.write_text(
+                json.dumps(plan, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            plan_sha = hashlib.sha256(
+                plan_path.read_bytes()
+            ).hexdigest()
+
+            recovered = {
+                "collision_plan_id": "JNSPLAN_TEST",
+                "collision_report_id": "JNSCOLLISION_TEST",
+                "collision_transform_id": "COLLTRANS_TEST",
+                "base_readable_jar_sha256": "b" * 64,
+                "collision_mapping_sha256": accepted_mapping,
+            }
+            clean = {
+                "readable_jar_sha256": "b" * 64,
+                "compile_transport": {
+                    "mode": "collision_derived_remap",
+                    "collision_plan_id": "JNSPLAN_TEST",
+                    "collision_plan_sha256": plan_sha,
+                    "collision_report_id": "JNSCOLLISION_TEST",
+                    "collision_transform_id": "COLLTRANS_TEST",
+                },
+            }
+
+            plan["remaps"][0]["new_internal_name"] = "dep/Recovered_B"
+            plan_path.write_text(
+                json.dumps(plan, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            clean["compile_transport"]["collision_plan_sha256"] = (
+                hashlib.sha256(plan_path.read_bytes()).hexdigest()
+            )
+
+            with patch(
+                "spk_recovery.release_verify.build_recovery_release_manifest",
+                return_value=release.copy(),
+            ):
+                report = verify_recovery_release(
+                    release,
+                    {},
+                    {},
+                    {},
+                    {},
+                    recovered,
+                    clean,
+                    {},
+                    private_collision_plan_path=plan_path,
+                )
+
+            self.assertFalse(report["verified"])
+            failed = {
+                row["name"]
+                for row in report["checks"]
+                if row["required"] and not row["passed"]
+            }
+            self.assertEqual(
+                failed,
+                {"collision_private_mapping_sha256"},
+            )
 
     def test_collision_private_plan_byte_drift_is_rejected(self):
         release = _release()
@@ -255,6 +375,7 @@ class ReleaseVerificationTests(unittest.TestCase):
                 "collision_report_id": "JNSCOLLISION_TEST",
                 "readable_jar_sha256": "b" * 64,
                 "identifiers_included": True,
+                "remaps": [],
             }
             plan_path.write_text(
                 json.dumps(plan, sort_keys=True) + "\n",
@@ -269,6 +390,7 @@ class ReleaseVerificationTests(unittest.TestCase):
                 "collision_report_id": "JNSCOLLISION_TEST",
                 "collision_transform_id": "COLLTRANS_TEST",
                 "base_readable_jar_sha256": "b" * 64,
+                "collision_mapping_sha256": _private_mapping_sha256(plan),
             }
             clean = {
                 "readable_jar_sha256": "b" * 64,

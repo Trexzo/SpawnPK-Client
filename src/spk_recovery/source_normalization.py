@@ -2955,6 +2955,498 @@ def _parameter_type_spans(
     return out
 
 
+def _source_parameter_names(params: str) -> list[str] | None:
+    text = params.strip()
+    if not text:
+        return []
+    parts: list[str] = []
+    start = 0
+    depth = 0
+    for index, ch in enumerate(text):
+        if ch == "<":
+            depth += 1
+        elif ch == ">" and depth:
+            depth -= 1
+        elif ch == "," and depth == 0:
+            parts.append(text[start:index].strip())
+            start = index + 1
+    parts.append(text[start:].strip())
+
+    out: list[str] = []
+    for part in parts:
+        value = re.sub(r"^(?:final\s+)+", "", part.strip())
+        match = re.fullmatch(
+            r".+?\s+"
+            r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)"
+            r"(?:\[\])*",
+            value,
+        )
+        if match is None:
+            return None
+        out.append(match.group("name"))
+    return out
+
+
+def _normalize_invokedynamic_parameter_capture_aliases(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Repair Procyon lambda aliases proven by exact indy captures.
+
+    Procyon can emit a lambda body that refers to an undeclared suffixed
+    alias such as event2 even though the exact enclosing method captures its
+    original event parameter directly into invokedynamic.  Rewrite only
+    suffixed aliases of declared parameters, only in a uniquely correlated
+    exact method, and only when exact invokedynamic parameter shapes prove
+    that same source parameter is captured.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError:
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        source_params = method_match.group("params")
+        parameter_names = _source_parameter_names(source_params)
+        parameter_shapes = _source_parameter_shapes(source_params)
+        if (
+            parameter_names is None
+            or parameter_shapes is None
+            or not parameter_names
+            or len(parameter_names) != len(parameter_shapes)
+        ):
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        exact_candidates: list[dict[str, Any]] = []
+        for method in profile.get("methods", []):
+            if method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(method.get("descriptor", ""))
+            if (
+                _descriptor_parameter_count(descriptor)
+                != len(parameter_names)
+            ):
+                continue
+            if bool(int(method.get("access", 0)) & 0x0008) != source_static:
+                continue
+            if (
+                _source_parameters_match_descriptor(
+                    source_params,
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            exact_candidates.append(method)
+        if len(exact_candidates) != 1:
+            continue
+
+        exact_method = exact_candidates[0]
+        exact_method_descriptor = str(
+            exact_method.get("descriptor", "")
+        )
+        exact_parameter_shapes = _descriptor_parameter_shapes(
+            exact_method_descriptor
+        )
+        if (
+            exact_parameter_shapes is None
+            or len(exact_parameter_shapes) != len(parameter_names)
+        ):
+            continue
+
+        indy_calls = [
+            invocation
+            for invocation in exact_method.get(
+                "method_invocations", []
+            )
+            if invocation.get("operation") == "invokedynamic"
+        ]
+        if not indy_calls:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        pending: list[dict[str, Any]] = []
+
+        for index, parameter_name in enumerate(parameter_names):
+            target_shape = exact_parameter_shapes[index]
+            matching_calls = []
+            for invocation in indy_calls:
+                indy_descriptor = str(
+                    invocation.get("descriptor", "")
+                )
+                indy_shapes = _descriptor_parameter_shapes(
+                    indy_descriptor
+                )
+                if indy_shapes is None:
+                    continue
+                if target_shape not in indy_shapes:
+                    continue
+                matching_calls.append(
+                    {
+                        "descriptor": indy_descriptor,
+                        "offset": int(
+                            invocation.get("offset", -1)
+                        ),
+                        "bootstrap_method_attr_index": int(
+                            invocation.get(
+                                "bootstrap_method_attr_index",
+                                -1,
+                            )
+                        ),
+                    }
+                )
+            if not matching_calls:
+                continue
+
+            alias_re = re.compile(
+                r"(?<![A-Za-z0-9_$])"
+                + re.escape(parameter_name)
+                + r"(?P<suffix>[0-9]+)"
+                r"(?=\s*\.)"
+            )
+            alias_matches = list(alias_re.finditer(method_code))
+            if not alias_matches:
+                continue
+            alias_names = {
+                match.group(0) for match in alias_matches
+            }
+            if len(alias_names) != 1:
+                continue
+            alias_name = next(iter(alias_names))
+
+            declaration_re = re.compile(
+                r"\b(?:final\s+)?"
+                r"[A-Za-z_$][A-Za-z0-9_$.<>\[\]?]*\s+"
+                + re.escape(alias_name)
+                + r"\b"
+            )
+            if declaration_re.search(method_code):
+                continue
+
+            pending.append(
+                {
+                    "parameter_name": parameter_name,
+                    "alias_name": alias_name,
+                    "matches": alias_matches,
+                    "matching_calls": matching_calls,
+                }
+            )
+
+        for item in pending:
+            alias_matches = item["matches"]
+            for alias_match in alias_matches:
+                start = method_start + alias_match.start()
+                end = method_start + alias_match.end()
+                edits.append(
+                    (
+                        start,
+                        end,
+                        str(item["parameter_name"]),
+                    )
+                )
+            actions.append(
+                {
+                    "kind": (
+                        "invokedynamic_parameter_capture_alias"
+                    ),
+                    "source_path": rel,
+                    "method_name": method_match.group("name"),
+                    "method_descriptor": exact_method_descriptor,
+                    "parameter_name": item["parameter_name"],
+                    "alias_name": item["alias_name"],
+                    "replacement_count": len(alias_matches),
+                    "invokedynamic_callsites": item[
+                        "matching_calls"
+                    ],
+                    "provenance": {
+                        "kind": "source_safety",
+                        "reason": (
+                            "procyon_invokedynamic_parameter_capture_alias"
+                        ),
+                        "strategy": (
+                            "source_parameter_to_exact_invokedynamic_capture"
+                        ),
+                    },
+                }
+            )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping invokedynamic capture-alias edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
+def _normalize_hidden_layout_constructor_arguments(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore constructor arguments hidden by misleading Signature metadata.
+
+    The supported family is intentionally narrow and exact-bytecode gated:
+    a zero-argument same-package construction is passed directly to
+    JComponent.setLayout(), the exact caller invokes a constructor whose
+    descriptor is (currentOwner, LayoutManager, JComponent)V, and the source
+    method contains one unique LayoutManager local assigned from that same
+    component's getLayout() result before the bad construction.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError:
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    call_re = re.compile(
+        r"(?P<component>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\.setLayout\s*\(\s*new\s+"
+        r"(?P<type>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\(\s*\)\s*\)"
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        source_params = method_match.group("params")
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        source_param_count = _source_parameter_count(source_params)
+        exact_candidates: list[dict[str, Any]] = []
+        for method in profile.get("methods", []):
+            if method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(method.get("descriptor", ""))
+            if _descriptor_parameter_count(descriptor) != source_param_count:
+                continue
+            if bool(int(method.get("access", 0)) & 0x0008) != source_static:
+                continue
+            if (
+                _source_parameters_match_descriptor(
+                    source_params,
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            exact_candidates.append(method)
+        if len(exact_candidates) != 1:
+            continue
+
+        exact_method = exact_candidates[0]
+        exact_method_descriptor = str(
+            exact_method.get("descriptor", "")
+        )
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+
+        for call_match in call_re.finditer(method_code):
+            component = call_match.group("component")
+            simple_type = call_match.group("type")
+            target_owner = (
+                current_package + "/" + simple_type
+                if current_package
+                else simple_type
+            )
+            target_entry = target_owner + ".class"
+            target_source = source_root / (target_owner + ".java")
+            if not target_source.is_file():
+                continue
+            try:
+                target_bytes = readable_zip.read(target_entry)
+            except KeyError:
+                continue
+            try:
+                target_profile = profile_class_field_accesses(
+                    target_bytes
+                )
+            except BytecodeProfileError:
+                continue
+            if str(target_profile.get("internal_name", "")) != target_owner:
+                continue
+
+            expected_descriptor = (
+                "(L"
+                + current_owner
+                + ";Ljava/awt/LayoutManager;"
+                + "Ljavax/swing/JComponent;)V"
+            )
+            target_ctors = [
+                method
+                for method in target_profile.get("methods", [])
+                if method.get("name") == "<init>"
+                and str(method.get("descriptor", ""))
+                == expected_descriptor
+            ]
+            if len(target_ctors) != 1:
+                continue
+
+            caller_ctor_calls = [
+                invocation
+                for invocation in exact_method.get(
+                    "method_invocations", []
+                )
+                if invocation.get("operation") == "invokespecial"
+                and invocation.get("owner") == target_owner
+                and invocation.get("name") == "<init>"
+                and invocation.get("descriptor")
+                == expected_descriptor
+            ]
+            if len(caller_ctor_calls) != 1:
+                continue
+
+            prefix = method_code[:call_match.start()]
+            layout_re = re.compile(
+                r"(?m)^\s*(?:final\s+)?"
+                r"(?:java\.awt\.)?LayoutManager\s+"
+                r"(?P<layout>[A-Za-z_$][A-Za-z0-9_$]*)"
+                r"\s*=\s*"
+                + re.escape(component)
+                + r"\.getLayout\s*\(\s*\)\s*;"
+            )
+            layout_matches = list(layout_re.finditer(prefix))
+            if len(layout_matches) != 1:
+                continue
+            layout_name = layout_matches[0].group("layout")
+
+            replacement = (
+                component
+                + ".setLayout(new "
+                + simple_type
+                + "(this, "
+                + layout_name
+                + ", "
+                + component
+                + "))"
+            )
+            absolute_start = method_start + call_match.start()
+            absolute_end = method_start + call_match.end()
+            edits.append(
+                (
+                    absolute_start,
+                    absolute_end,
+                    replacement,
+                )
+            )
+            invocation = caller_ctor_calls[0]
+            actions.append(
+                {
+                    "kind": "hidden_layout_constructor_arguments",
+                    "source_path": rel,
+                    "method_name": method_match.group("name"),
+                    "method_descriptor": exact_method_descriptor,
+                    "target_owner": target_owner,
+                    "constructor_descriptor": expected_descriptor,
+                    "component_name": component,
+                    "layout_name": layout_name,
+                    "replacement_count": 1,
+                    "constructor_callsite": {
+                        "offset": int(invocation.get("offset", -1)),
+                        "operation": str(
+                            invocation.get("operation", "")
+                        ),
+                    },
+                    "provenance": {
+                        "kind": "source_safety",
+                        "reason": (
+                            "procyon_hidden_constructor_arguments"
+                        ),
+                        "strategy": (
+                            "exact_constructor_descriptor_plus_unique_layout_local"
+                        ),
+                    },
+                }
+            )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping hidden-constructor edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_invokedynamic_helper_return_casts(
     *,
     source_root: Path,
@@ -5340,6 +5832,20 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_invokedynamic_parameter_capture_aliases(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
+                    _normalize_hidden_layout_constructor_arguments(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_invokedynamic_helper_return_casts(
                         source_root=source_root,
                         path=path,
@@ -5497,6 +6003,26 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "shadowed_nested_static_field_owner_type_context"
+        ),
+        "invokedynamic_parameter_capture_alias_method_count": sum(
+            action["kind"]
+            == "invokedynamic_parameter_capture_alias"
+            for action in actions
+        ),
+        "invokedynamic_parameter_capture_alias_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "invokedynamic_parameter_capture_alias"
+        ),
+        "hidden_layout_constructor_argument_action_count": sum(
+            action["kind"] == "hidden_layout_constructor_arguments"
+            for action in actions
+        ),
+        "hidden_layout_constructor_argument_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"] == "hidden_layout_constructor_arguments"
         ),
         "invokedynamic_helper_return_cast_method_count": sum(
             action["kind"] == "invokedynamic_helper_return_cast"

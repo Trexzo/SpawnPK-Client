@@ -8,10 +8,24 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from spk_recovery.source_workspace_cli import main
+from spk_recovery.source_workspace import SourceWorkspaceError
+from spk_recovery.source_workspace_cli import _load, main
 
 
 class SourceWorkspaceCollisionCliTests(unittest.TestCase):
+    def test_loader_rejects_top_level_duplicate_json_keys(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "duplicate.json"
+            path.write_text(
+                '{"kind":"a","kind":"b"}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                SourceWorkspaceError,
+                "duplicate JSON key: 'kind'",
+            ):
+                _load(path)
+
     @patch("spk_recovery.source_workspace_cli.build_source_workspace")
     def test_cli_loads_and_forwards_collision_transform_report(
         self,

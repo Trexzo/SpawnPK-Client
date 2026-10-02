@@ -13,6 +13,7 @@ import zipfile
 from spk_recovery.classfile import parse_class
 from spk_recovery.collision_bytecode_remap import (
     CollisionBytecodeRemapError,
+    _load_plan,
     remap_class_bytes,
     transform_collision_jar,
 )
@@ -26,6 +27,21 @@ from spk_recovery.namespace_collision_plan import (
 
 @unittest.skipUnless(shutil.which("javac"), "javac required")
 class CollisionBytecodeRemapTests(unittest.TestCase):
+    def test_private_plan_loader_rejects_nested_duplicate_json_keys(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "plan.json"
+            path.write_text(
+                '{"schema_version":1,"kind":"class_package_namespace_collision_plan",'
+                '"identifiers_included":true,"remaps":[{"old_internal_name":"a/b",'
+                '"old_internal_name":"x/y","new_internal_name":"z/Q"}]}\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                CollisionBytecodeRemapError,
+                "duplicate JSON key: 'old_internal_name'",
+            ):
+                _load_plan(path)
+
     def _compile(
         self,
         out: Path,
@@ -174,6 +190,10 @@ class CollisionBytecodeRemapTests(unittest.TestCase):
             self.assertGreater(
                 report["summary"]["rewritten_class_count"],
                 0,
+            )
+            self.assertEqual(
+                len(report["private_mapping_sha256"]),
+                64,
             )
             self.assertTrue(output_jar.is_file())
 

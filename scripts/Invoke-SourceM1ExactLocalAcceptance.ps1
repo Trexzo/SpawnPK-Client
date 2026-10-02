@@ -14,6 +14,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$DecompilerJar,
     [string]$SourceRewriteAcceptance,
+    [string]$ExternalOracleReport,
     [string]$Jdk = "C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot",
     [string]$OutDir = "$env:USERPROFILE\Desktop\SpawnPK-SourceM1-Exact"
 )
@@ -321,8 +322,10 @@ Invoke-PyChecked "REBUILD EXACT READABLE AUTHORITY" $ReadableArgs
 
 $BootstrapReadableManifest = Join-Path $BootstrapReadableDir "readable-client-manifest.json"
 $BootstrapReadableJar = Join-Path $BootstrapReadableDir "readable-client.jar"
+$BootstrapClassRemapPlan = Join-Path $BootstrapReadableDir "class-remap-plan.json"
 Require-File $BootstrapReadableManifest
 Require-File $BootstrapReadableJar
+Require-File $BootstrapClassRemapPlan
 
 $ReadableDoc = Get-JsonProjection `
     -Path $BootstrapReadableManifest `
@@ -445,6 +448,10 @@ $Recovered = Get-JsonProjection `
         normalization_action_count = "/normalization_summary/action_count"
         invokedynamic_helper_return_cast_method_count = "/normalization_summary/invokedynamic_helper_return_cast_method_count"
         invokedynamic_helper_return_cast_reference_count = "/normalization_summary/invokedynamic_helper_return_cast_reference_count"
+        invokedynamic_parameter_capture_alias_method_count = "/normalization_summary/invokedynamic_parameter_capture_alias_method_count"
+        invokedynamic_parameter_capture_alias_reference_count = "/normalization_summary/invokedynamic_parameter_capture_alias_reference_count"
+        hidden_layout_constructor_argument_action_count = "/normalization_summary/hidden_layout_constructor_argument_action_count"
+        hidden_layout_constructor_argument_reference_count = "/normalization_summary/hidden_layout_constructor_argument_reference_count"
         undeclared_linkedhashmap_cast_placeholder_method_count = "/normalization_summary/undeclared_linkedhashmap_cast_placeholder_method_count"
         undeclared_linkedhashmap_cast_placeholder_reference_count = "/normalization_summary/undeclared_linkedhashmap_cast_placeholder_reference_count"
         shadowed_nested_static_field_method_count = "/normalization_summary/shadowed_nested_static_field_method_count"
@@ -506,6 +513,10 @@ Write-Host "SOURCE_NORMALIZATION_ID=$($Recovered.normalization_id)" -ForegroundC
 Write-Host "SOURCE_NORMALIZATION_ACTIONS=$($Recovered.normalization_action_count)"
 Write-Host "INVOKEDYNAMIC_HELPER_RETURN_CAST_METHODS=$($Recovered.invokedynamic_helper_return_cast_method_count)"
 Write-Host "INVOKEDYNAMIC_HELPER_RETURN_CAST_REFERENCES=$($Recovered.invokedynamic_helper_return_cast_reference_count)"
+Write-Host "INVOKEDYNAMIC_PARAMETER_CAPTURE_ALIAS_METHODS=$($Recovered.invokedynamic_parameter_capture_alias_method_count)"
+Write-Host "INVOKEDYNAMIC_PARAMETER_CAPTURE_ALIAS_REFERENCES=$($Recovered.invokedynamic_parameter_capture_alias_reference_count)"
+Write-Host "HIDDEN_LAYOUT_CONSTRUCTOR_ARGUMENT_ACTIONS=$($Recovered.hidden_layout_constructor_argument_action_count)"
+Write-Host "HIDDEN_LAYOUT_CONSTRUCTOR_ARGUMENT_REFERENCES=$($Recovered.hidden_layout_constructor_argument_reference_count)"
 Write-Host "LINKEDHASHMAP_PLACEHOLDER_METHODS=$($Recovered.undeclared_linkedhashmap_cast_placeholder_method_count)"
 Write-Host "LINKEDHASHMAP_PLACEHOLDER_REFERENCES=$($Recovered.undeclared_linkedhashmap_cast_placeholder_reference_count)"
 Write-Host "NESTED_STATIC_FIELD_SHADOW_METHODS=$($Recovered.shadowed_nested_static_field_method_count)"
@@ -652,6 +663,26 @@ if ($ReleaseExit -ne 0) {
                 "private_javac_summary_failed=" +
                 $PrivateSummaryExit
             ) -ForegroundColor Yellow
+        }
+
+        if (-not [string]::IsNullOrWhiteSpace($ExternalOracleReport)) {
+            Require-File $ExternalOracleReport
+            $ExternalFrontier = Join-Path $ReleaseDir "external-oracle-frontier-private.json"
+            $ExternalFrontierArgs = @(
+                "-3.13",
+                "-m",
+                "spk_recovery.external_oracle_frontier_cli",
+                $PrivateDiagnostic,
+                $ExternalOracleReport,
+                $BootstrapClassRemapPlan,
+                "--collision-plan",
+                $CollisionPlan,
+                "--out",
+                $ExternalFrontier
+            )
+            Invoke-PyChecked "INTERSECT EXTERNAL ORACLE WITH JAVAC FRONTIER" $ExternalFrontierArgs
+            Require-File $ExternalFrontier
+            Write-Host "external_oracle_frontier=$ExternalFrontier"
         }
     }
     exit 3

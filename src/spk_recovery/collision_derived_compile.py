@@ -255,6 +255,9 @@ def _validate_derivation(
         "collision_transform_id": transform["transform_id"],
         "collision_plan_id": transform["plan_id"],
         "collision_report_id": transform["collision_report_id"],
+        "collision_mapping_sha256": transform[
+            "private_mapping_sha256"
+        ],
         "base_readable_jar_sha256": transform["input_jar_sha256"],
         "readable_jar_sha256": transform["output_jar_sha256"],
     }

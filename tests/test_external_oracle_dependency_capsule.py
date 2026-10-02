@@ -45,6 +45,10 @@ class ExternalOracleDependencyCapsuleTests(unittest.TestCase):
                 report1["capsule_sha256"],
                 report2["capsule_sha256"],
             )
+            self.assertEqual(
+                report1["capsule_sha256"],
+                "12fe7d51cdc060541b9c2a06b7e61add82697f649d23ef38cda202059ad6b2f6",
+            )
             self.assertEqual(report1["class_count"], 2)
             self.assertEqual(report1["rs_class_count"], 0)
             self.assertEqual(

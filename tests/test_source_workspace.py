@@ -30,6 +30,7 @@ def _transform_report(
         "transform_id": transform_id,
         "plan_id": "JNSPLAN_1234567890ABCDEF1234",
         "collision_report_id": "JNSCOLLISION_1234567890ABCDEF12",
+        "private_mapping_sha256": "e" * 64,
         "input_jar_sha256": input_sha,
         "output_jar_sha256": output_sha,
         "summary": {},
@@ -219,6 +220,10 @@ class SourceWorkspaceTests(unittest.TestCase):
             self.assertEqual(
                 manifest["collision_report_id"],
                 transform["collision_report_id"],
+            )
+            self.assertEqual(
+                manifest["collision_mapping_sha256"],
+                transform["private_mapping_sha256"],
             )
 
             manifest_file = json.loads(
