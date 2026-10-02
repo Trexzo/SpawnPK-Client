@@ -1084,6 +1084,25 @@ def _descriptor_parameter_shapes(
     return out
 
 
+def _descriptor_parameter_local_slots(
+    descriptor: str,
+    *,
+    is_static: bool,
+) -> list[int] | None:
+    shapes = _descriptor_parameter_shapes(descriptor)
+    if shapes is None:
+        return None
+    slot = 0 if is_static else 1
+    slots: list[int] = []
+    for arrays, kind, name in shapes:
+        slots.append(slot)
+        width = 1
+        if arrays == 0 and kind == "primitive" and name in {"J", "D"}:
+            width = 2
+        slot += width
+    return slots
+
+
 def _source_parameters_match_descriptor(
     params: str,
     descriptor: str,
@@ -3702,6 +3721,23 @@ def _normalize_invokedynamic_lambda_outer_capture_collisions(
             or len(exact_shapes) != len(parameter_names)
         ):
             continue
+        exact_parameter_slots = _descriptor_parameter_local_slots(
+            str(exact_method.get("descriptor", "")),
+            is_static=source_static,
+        )
+        if (
+            exact_parameter_slots is None
+            or len(exact_parameter_slots) != len(parameter_names)
+        ):
+            continue
+        exact_instructions = list(
+            exact_method.get("instructions", [])
+        )
+        instruction_index_by_offset = {
+            int(instruction.get("offset", -1)): index
+            for index, instruction in enumerate(exact_instructions)
+            if int(instruction.get("offset", -1)) >= 0
+        }
 
         method_start = method_match.start()
         method_code = whole_code[method_start:body_end]
@@ -3719,6 +3755,7 @@ def _normalize_invokedynamic_lambda_outer_capture_collisions(
             ):
                 continue
             outer_owner = outer_shape[2]
+            outer_slot = exact_parameter_slots[param_index]
 
             lambda_re = re.compile(
                 r"(?P<lambda_paren>\(\s*)?"
@@ -3792,6 +3829,28 @@ def _normalize_invokedynamic_lambda_outer_capture_collisions(
                     and return_descriptor is not None
                     and return_descriptor.startswith("L")
                     and return_descriptor.endswith(";")
+                ):
+                    continue
+                invocation_offset = int(
+                    invocation.get("offset", -1)
+                )
+                instruction_index = instruction_index_by_offset.get(
+                    invocation_offset
+                )
+                if (
+                    instruction_index is None
+                    or instruction_index <= 0
+                ):
+                    continue
+                capture_load = exact_instructions[
+                    instruction_index - 1
+                ]
+                if not (
+                    capture_load.get("mnemonic") == "aload"
+                    and int(
+                        capture_load.get("local_index", -1)
+                    )
+                    == outer_slot
                 ):
                     continue
                 bootstrap_index = int(
@@ -3993,6 +4052,7 @@ def _normalize_invokedynamic_lambda_outer_capture_collisions(
                         "descriptor"
                     ),
                     "outer_parameter_name": outer_name,
+                    "outer_parameter_slot": outer_slot,
                     "undeclared_capture_alias": alias_name,
                     "source_lambda_parameter_name": outer_name,
                     "replacement_lambda_parameter_name": (
