@@ -8,6 +8,7 @@ import unittest
 from spk_recovery.bytecode_profile import (
     BytecodeProfileError,
     _bootstrap_methods_profile,
+    _signature_attribute_value,
     profile_class_field_accesses,
     profile_class_utf8_constants,
 )
@@ -231,6 +232,88 @@ class BytecodeMethodInvocationProfileTests(unittest.TestCase):
         payload = bytes.fromhex("000100010000")
         with self.assertRaises(BytecodeProfileError):
             _bootstrap_methods_profile(payload, cp)
+
+    def test_profiles_exact_method_signature_attribute(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "src" / "p"
+            classes = root / "classes"
+            source.mkdir(parents=True)
+            classes.mkdir(parents=True)
+
+            (source / "A.java").write_text(
+                "package p;\n"
+                "import java.util.Collections;\n"
+                "import java.util.List;\n"
+                "public class A {\n"
+                "    public static List<String> values(String prefix) {\n"
+                "        return Collections.singletonList(prefix);\n"
+                "    }\n"
+                "    public static String plain(String value) {\n"
+                "        return value;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            compiled = subprocess.run(
+                [
+                    "javac",
+                    "-d",
+                    str(classes),
+                    str(source / "A.java"),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                compiled.returncode,
+                0,
+                compiled.stdout + compiled.stderr,
+            )
+
+            profile = profile_class_field_accesses(
+                (classes / "p" / "A.class").read_bytes()
+            )
+            values = next(
+                row
+                for row in profile["methods"]
+                if row["name"] == "values"
+            )
+            plain = next(
+                row
+                for row in profile["methods"]
+                if row["name"] == "plain"
+            )
+            self.assertEqual(
+                values["descriptor"],
+                "(Ljava/lang/String;)Ljava/util/List;",
+            )
+            self.assertEqual(
+                values["signature"],
+                "(Ljava/lang/String;)Ljava/util/List<Ljava/lang/String;>;",
+            )
+            self.assertIsNone(plain["signature"])
+
+    def test_signature_attribute_profile_fails_closed_on_malformed_payload(self):
+        with self.assertRaises(BytecodeProfileError):
+            _signature_attribute_value(
+                b"\x00",
+                [None, (1, "()V")],
+                role="test method",
+            )
+        with self.assertRaises(BytecodeProfileError):
+            _signature_attribute_value(
+                b"\x00\x02",
+                [None, (1, "()V")],
+                role="test method",
+            )
+        with self.assertRaises(BytecodeProfileError):
+            _signature_attribute_value(
+                b"\x00\x01",
+                [None, (3, 7)],
+                role="test method",
+            )
 
     def test_profiles_lambda_bootstrap_implementation_target(self):
         with tempfile.TemporaryDirectory() as td:
