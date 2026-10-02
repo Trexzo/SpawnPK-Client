@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/v/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ClientRuntimeService",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_runtime_thread",
+          "detail": "The class is the singleton-style daemon runtime loop initialized with the client host InetAddress; it services queued socket, thread, DNS, URL/file/audio requests from shared static request state."
+        },
+        {
+          "family": "exact_cache_io",
+          "detail": "It opens and owns the main RandomAccessFile plus five cache index RandomAccessFiles under the selected client data/cache path."
+        },
+        {
+          "family": "exact_network_helpers",
+          "detail": "Public synchronized helpers request a Socket by port, resolve host names and open DataInputStreams from URL/code-base resources through the runtime loop."
+        },
+        {
+          "family": "exact_background_execution",
+          "detail": "The service starts daemon Runnables at caller-supplied priority, preserving the classic client background-work handoff role."
+        },
+        {
+          "family": "exact_audio_handoff",
+          "detail": "The runtime owns the live rs/w/c MidiPlayer and coordinates queued audio/MIDI save/playback work in the same service loop."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the legacy client runtime/signlink-style service. The historical source identifier 'Signlink' is not claimed as recovered authority."
+    }
+  ],
+  "conflicts": []
+}
