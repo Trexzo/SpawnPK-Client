@@ -4131,6 +4131,230 @@ def _normalize_invokedynamic_lambda_outer_capture_collisions(
     return actions
 
 
+def _signature_list_return_element_owner(
+    signature: str,
+) -> str | None:
+    match = re.search(
+        r"\)Ljava/util/List<L(?P<owner>[^;<>]+);>;$",
+        signature,
+    )
+    if match is None:
+        return None
+    owner = match.group("owner")
+    if not owner or not all(
+        _is_java_identifier(part) for part in owner.split("/")
+    ):
+        return None
+    return owner
+
+
+def _normalize_impossible_collectors_tolist_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Remove a Procyon collector cast contradicted by exact generic authority."""
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        profile = profile_class_field_accesses(
+            readable_zip.read(class_entry)
+        )
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    bootstrap_methods = list(profile.get("bootstrap_methods", []))
+    if not bootstrap_methods:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        candidates = []
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+            signature = str(exact_method.get("signature") or "")
+            element_owner = _signature_list_return_element_owner(signature)
+            if element_owner is None:
+                continue
+
+            invocations = list(exact_method.get("method_invocations", []))
+            to_list = [
+                row for row in invocations
+                if row.get("operation") == "invokestatic"
+                and row.get("owner") == "java/util/stream/Collectors"
+                and row.get("name") == "toList"
+                and row.get("descriptor") == "()Ljava/util/stream/Collector;"
+            ]
+            collect = [
+                row for row in invocations
+                if row.get("operation") in {"invokeinterface", "invokevirtual"}
+                and row.get("owner") == "java/util/stream/Stream"
+                and row.get("name") == "collect"
+                and row.get("descriptor")
+                == "(Ljava/util/stream/Collector;)Ljava/lang/Object;"
+            ]
+            if len(to_list) != 1 or len(collect) != 1:
+                continue
+
+            predicate_matches = []
+            expected_instantiated = "(L" + element_owner + ";)Z"
+            for invocation in invocations:
+                if invocation.get("operation") != "invokedynamic":
+                    continue
+                indy_descriptor = str(invocation.get("descriptor", ""))
+                if not indy_descriptor.endswith(
+                    ")Ljava/util/function/Predicate;"
+                ):
+                    continue
+                bootstrap_index = int(
+                    invocation.get("bootstrap_method_attr_index", -1)
+                )
+                if not (0 <= bootstrap_index < len(bootstrap_methods)):
+                    continue
+                bootstrap = bootstrap_methods[bootstrap_index]
+                bm = bootstrap.get("bootstrap_method", {})
+                if not (
+                    bm.get("owner") == "java/lang/invoke/LambdaMetafactory"
+                    and bm.get("name") in {"metafactory", "altMetafactory"}
+                ):
+                    continue
+                method_types = {
+                    str(arg.get("descriptor", ""))
+                    for arg in bootstrap.get("arguments", [])
+                    if arg.get("kind") == "method_type"
+                }
+                if expected_instantiated not in method_types:
+                    continue
+                predicate_matches.append(
+                    {
+                        "offset": int(invocation.get("offset", -1)),
+                        "descriptor": indy_descriptor,
+                        "bootstrap_method_attr_index": bootstrap_index,
+                    }
+                )
+            if len(predicate_matches) != 1:
+                continue
+
+            candidates.append(
+                {
+                    "method": exact_method,
+                    "element_owner": element_owner,
+                    "predicate": predicate_matches[0],
+                }
+            )
+        if len(candidates) != 1:
+            continue
+
+        proof = candidates[0]
+        element_simple = (
+            str(proof["element_owner"])
+            .rsplit("/", 1)[-1]
+            .rsplit("$", 1)[-1]
+        )
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        cast_re = re.compile(
+            r"(?P<cast>\(\s*(?:java\.util\.stream\.)?Collector\s*<\s*"
+            r"\?\s+super\s+Object\s*,\s*\?\s*,\s*"
+            r"(?:java\.util\.)?List\s*<\s*"
+            r"(?P<element>[A-Za-z_$][A-Za-z0-9_$.]*)\s*>\s*>\s*\)\s*)"
+            r"(?P<call>(?:java\.util\.stream\.)?Collectors\s*\.\s*toList\s*\(\s*\))"
+        )
+        matches = list(cast_re.finditer(method_code))
+        filtered_matches = []
+        for match in matches:
+            source_element = match.group("element")
+            if "." in source_element:
+                if source_element.replace(".", "/") != proof["element_owner"]:
+                    continue
+            elif source_element != element_simple:
+                continue
+            filtered_matches.append(match)
+        matches = filtered_matches
+        if len(matches) != 1:
+            continue
+        match = matches[0]
+
+        start = method_start + match.start("cast")
+        end = method_start + match.end("cast")
+        edits.append((start, end, ""))
+        actions.append(
+            {
+                "kind": "impossible_collectors_tolist_cast_removal",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"].get("descriptor"),
+                "method_signature": proof["method"].get("signature"),
+                "element_owner": proof["element_owner"],
+                "predicate_invokedynamic": proof["predicate"],
+                "replacement_count": 1,
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": "procyon_impossible_collectors_tolist_generic_cast",
+                    "strategy": (
+                        "exact_method_signature_plus_predicate_bootstrap_plus_erased_collect_calls"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping Collectors.toList cast edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_erased_generic_constructor_argument_casts(
     *,
     source_root: Path,
@@ -10259,6 +10483,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_impossible_collectors_tolist_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_erased_generic_constructor_argument_casts(
                         source_root=source_root,
                         path=path,
@@ -10533,6 +10764,15 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "invokedynamic_parameter_capture_alias"
+        ),
+        "impossible_collectors_tolist_cast_action_count": sum(
+            action["kind"] == "impossible_collectors_tolist_cast_removal"
+            for action in actions
+        ),
+        "impossible_collectors_tolist_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"] == "impossible_collectors_tolist_cast_removal"
         ),
         "erased_generic_constructor_argument_cast_action_count": sum(
             action["kind"]
