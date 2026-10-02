@@ -2446,6 +2446,160 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+    def test_compile_time_lombok_nonnull_is_erased_with_exact_metadata(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "lombok/NonNull.java": (
+                        "package lombok;\n"
+                        "import java.lang.annotation.ElementType;\n"
+                        "import java.lang.annotation.Retention;\n"
+                        "import java.lang.annotation.RetentionPolicy;\n"
+                        "import java.lang.annotation.Target;\n"
+                        "@Retention(RetentionPolicy.CLASS)\n"
+                        "@Target({ElementType.PARAMETER, ElementType.TYPE_USE, ElementType.METHOD})\n"
+                        "public @interface NonNull {}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import lombok.NonNull;\n"
+                        "public class A {\n"
+                        "    public static String value(@NonNull String value) {\n"
+                        "        if (value == null) {\n"
+                        "            throw new NullPointerException(\"value is marked non-null but is null\");\n"
+                        "        }\n"
+                        "        return value;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import lombok.NonNull;\n"
+                "public class A {\n"
+                "    public static String value(@NonNull String value) {\n"
+                "        if (value == null) {\n"
+                "            throw new NullPointerException(\"value is marked non-null but is null\");\n"
+                "        }\n"
+                "        return value;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-d",
+                    str(root / "before-lombok-erasure"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("lombok", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertNotIn("import lombok.NonNull;", normalized)
+            self.assertNotIn("@NonNull", normalized)
+            self.assertIn(
+                'throw new NullPointerException("value is marked non-null but is null");',
+                normalized,
+            )
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"] == "compile_time_lombok_nonnull_erasure"
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(action["removed_import_count"], 1)
+            self.assertEqual(
+                report["summary"][
+                    "compile_time_lombok_nonnull_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-d",
+                    str(root / "after-lombok-erasure"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_compile_time_lombok_nonnull_keeps_real_class_reference(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "lombok/NonNull.java": (
+                        "package lombok;\n"
+                        "import java.lang.annotation.ElementType;\n"
+                        "import java.lang.annotation.Retention;\n"
+                        "import java.lang.annotation.RetentionPolicy;\n"
+                        "import java.lang.annotation.Target;\n"
+                        "@Retention(RetentionPolicy.CLASS)\n"
+                        "@Target({ElementType.PARAMETER, ElementType.TYPE_USE})\n"
+                        "public @interface NonNull {}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import lombok.NonNull;\n"
+                        "public class A {\n"
+                        "    public static Class<?> type(@NonNull String value) {\n"
+                        "        return NonNull.class;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import lombok.NonNull;\n"
+                "public class A {\n"
+                "    public static Class<?> type(@NonNull String value) {\n"
+                "        return NonNull.class;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "compile_time_lombok_nonnull_reference_count"
+                ],
+                0,
+            )
+
     def test_two_string_swing_capture_aliases_use_exact_slot_order(
         self,
     ):

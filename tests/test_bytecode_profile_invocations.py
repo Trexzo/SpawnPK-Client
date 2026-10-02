@@ -5,7 +5,10 @@ import subprocess
 import tempfile
 import unittest
 
-from spk_recovery.bytecode_profile import profile_class_field_accesses
+from spk_recovery.bytecode_profile import (
+    profile_class_field_accesses,
+    profile_class_utf8_constants,
+)
 
 
 class BytecodeMethodInvocationProfileTests(unittest.TestCase):
@@ -188,6 +191,44 @@ class BytecodeMethodInvocationProfileTests(unittest.TestCase):
                 "(Ljava/lang/String;)Ljava/lang/String;",
             )
 
+
+    def test_profiles_exact_utf8_constants(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "src" / "p"
+            classes = root / "classes"
+            source.mkdir(parents=True)
+            classes.mkdir(parents=True)
+            (source / "A.java").write_text(
+                "package p;\n"
+                "public class A {\n"
+                "    public static final String VALUE = \"marker-value\";\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            compiled = subprocess.run(
+                [
+                    "javac",
+                    "-d",
+                    str(classes),
+                    str(source / "A.java"),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                compiled.returncode,
+                0,
+                compiled.stdout + compiled.stderr,
+            )
+
+            constants = profile_class_utf8_constants(
+                (classes / "p" / "A.class").read_bytes()
+            )
+            self.assertIn("marker-value", constants)
+            self.assertIn("Ljava/lang/String;", constants)
+            self.assertEqual(constants, sorted(set(constants)))
 
 if __name__ == "__main__":
     unittest.main()
