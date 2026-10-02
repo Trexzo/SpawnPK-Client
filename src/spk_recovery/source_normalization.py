@@ -6068,7 +6068,7 @@ def _normalize_undeclared_linkedhashmap_cast_placeholders(
                 (
                     int(occurrence["start"]),
                     int(occurrence["end"]),
-                    "?",
+                    str(occurrence["key_source_type"]),
                 )
             )
 
@@ -6084,6 +6084,12 @@ def _normalize_undeclared_linkedhashmap_cast_placeholders(
                     sorted(placeholder_counts.items())
                 ),
                 "member_counts": dict(sorted(member_counts.items())),
+                "field_signatures": sorted(
+                    {
+                        str(row["field_signature"])
+                        for row in occurrences
+                    }
+                ),
                 "replacement_count": len(occurrences),
                 "provenance": {
                     "kind": "source_safety",
@@ -6171,18 +6177,36 @@ def _normalize_linkedhashmap_field_cast_placeholders(
         ):
             exact_fields[str(field.get("name", ""))] = descriptor[1:-1]
 
-    map_fields: dict[str, str] = {}
+    map_fields: dict[str, dict[str, str]] = {}
     for field_name, target_owner in exact_fields.items():
         try:
             target_bytes = readable_zip.read(target_owner + ".class")
             target_parsed = parse_class(target_bytes)
-        except (KeyError, ClassFormatError):
+            target_utf8 = set(
+                profile_class_utf8_constants(target_bytes)
+            )
+        except (KeyError, ClassFormatError, BytecodeProfileError):
             continue
-        if (
+        if not (
             target_parsed.name == target_owner
             and target_parsed.super_name == "java/util/LinkedHashMap"
         ):
-            map_fields[field_name] = target_owner
+            continue
+        signatures = [
+            value
+            for value in target_utf8
+            if value.startswith(
+                "Ljava/util/LinkedHashMap<Ljava/lang/String;"
+            )
+            and value.endswith(">;")
+        ]
+        if len(signatures) != 1:
+            continue
+        map_fields[field_name] = {
+            "owner": target_owner,
+            "key_source_type": "String",
+            "signature": signatures[0],
+        }
     if not map_fields:
         return []
 
@@ -6236,16 +6260,19 @@ def _normalize_linkedhashmap_field_cast_placeholders(
             use_match = re.match(
                 r"\s*\)\s*this\s*\.\s*"
                 r"(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)"
-                r"\s*\)\s*\.\s*get\s*\(",
+                r"\s*\)\s*\.\s*"
+                r"(?P<member>get|keySet|put)\s*\(",
                 tail,
             )
             if use_match is None:
                 continue
 
             field_name = use_match.group("field")
-            target_owner = map_fields.get(field_name)
-            if target_owner is None:
+            field_proof = map_fields.get(field_name)
+            if field_proof is None:
                 continue
+            target_owner = field_proof["owner"]
+            member = use_match.group("member")
 
             leading = len(key_arg) - len(key_arg.lstrip())
             trailing = len(key_arg.rstrip())
@@ -6268,6 +6295,9 @@ def _normalize_linkedhashmap_field_cast_placeholders(
                     "placeholder": placeholder,
                     "field_name": field_name,
                     "field_owner": target_owner,
+                    "field_signature": field_proof["signature"],
+                    "key_source_type": field_proof["key_source_type"],
+                    "member": member,
                 }
             )
 
@@ -6305,19 +6335,32 @@ def _normalize_linkedhashmap_field_cast_placeholders(
             ):
                 continue
 
-            required_by_owner: dict[str, int] = {}
+            required_by_owner_member: dict[tuple[str, str], int] = {}
             for occurrence in occurrences:
-                owner = str(occurrence["field_owner"])
-                required_by_owner[owner] = (
-                    required_by_owner.get(owner, 0) + 1
+                key = (
+                    str(occurrence["field_owner"]),
+                    str(occurrence["member"]),
                 )
+                required_by_owner_member[key] = (
+                    required_by_owner_member.get(key, 0) + 1
+                )
+            expected_descriptors = {
+                "get": "(Ljava/lang/Object;)Ljava/lang/Object;",
+                "keySet": "()Ljava/util/Set;",
+                "put": (
+                    "(Ljava/lang/Object;Ljava/lang/Object;)"
+                    "Ljava/lang/Object;"
+                ),
+            }
             enough = True
-            for owner, required in required_by_owner.items():
+            for (owner, member), required in (
+                required_by_owner_member.items()
+            ):
                 observed = sum(
                     invocation.get("operation") == "invokevirtual"
-                    and invocation.get("name") == "get"
+                    and invocation.get("name") == member
                     and invocation.get("descriptor")
-                    == "(Ljava/lang/Object;)Ljava/lang/Object;"
+                    == expected_descriptors[member]
                     and invocation.get("owner")
                     in {owner, "java/util/LinkedHashMap"}
                     for invocation in method.get(
@@ -6345,6 +6388,7 @@ def _normalize_linkedhashmap_field_cast_placeholders(
 
         placeholder_counts: dict[str, int] = {}
         field_counts: dict[str, int] = {}
+        member_counts: dict[str, int] = {}
         for occurrence in occurrences:
             placeholder = str(occurrence["placeholder"])
             field_name = str(occurrence["field_name"])
@@ -6353,6 +6397,10 @@ def _normalize_linkedhashmap_field_cast_placeholders(
             )
             field_counts[field_name] = (
                 field_counts.get(field_name, 0) + 1
+            )
+            member = str(occurrence["member"])
+            member_counts[member] = (
+                member_counts.get(member, 0) + 1
             )
 
         actions.append(
@@ -6367,6 +6415,7 @@ def _normalize_linkedhashmap_field_cast_placeholders(
                     sorted(placeholder_counts.items())
                 ),
                 "field_counts": dict(sorted(field_counts.items())),
+                "member_counts": dict(sorted(member_counts.items())),
                 "field_owners": sorted(
                     {
                         str(row["field_owner"])
@@ -6380,7 +6429,7 @@ def _normalize_linkedhashmap_field_cast_placeholders(
                         "procyon_undeclared_linkedhashmap_field_generic_placeholder"
                     ),
                     "strategy": (
-                        "exact_map_field_erasure_irrelevant_key_to_wildcard"
+                        "exact_map_field_signature_key_type_reconstruction"
                     ),
                 },
             }
