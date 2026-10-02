@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/n/b/a/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "TimedTask",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "recovered_source_map",
+          "detail": "Recovered source map identifies rs/n/b/a/a as rs.interfaces.tasks.types.TimedTask."
+        },
+        {
+          "family": "exact_v308_task_contract",
+          "detail": "Exact v308 is the direct scheduled-task subtype whose constructor fixes the inherited interval and leaves the due-task hook abstract for concrete refresh jobs."
+        },
+        {
+          "family": "exact_task_family_join",
+          "detail": "The root/group/timed-task classes own the live task registries used by already-reviewed child task types and concrete interface refresh/hover/render jobs."
+        }
+      ],
+      "note": "Source-proven interface task/scheduler subtype with exact-v308 behavioral corroboration."
+    }
+  ],
+  "conflicts": []
+}
