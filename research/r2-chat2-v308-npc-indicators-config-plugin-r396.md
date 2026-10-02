@@ -1,57 +1,67 @@
-# Chat 2 — NPC Indicators plugin R396 correction
+# Chat 2 — R396 duplicate NPC Indicators audit
 
 Exact client authority:
 
 `854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`
 
-## Corrected result
+## Result
 
-- `rs/s/o/e` -> `CLIENT_CLASS_000945` -> `NpcIndicatorsPlugin`
+R396 retains **no semantic proposal**.
+
+The original R396 attempt re-proposed two already-owned exact-v308 classes:
+
+- `rs/s/o/d` / `CLIENT_CLASS_000944` / `NpcIndicatorsConfig`
+- `rs/s/o/e` / `CLIENT_CLASS_000945` / `NpcIndicatorsPlugin`
+
+Current-Main reconciliation exposed the duplicates through the repository-wide semantic
+uniqueness gate.
+
+## Existing authorities
+
+### Configuration
+
+R4 already owns the exact config class:
+
+- proposal: `SEMPROP_3EA119C8462103D4B8A1`
+- review: `SEMREVIEW_DE8D18FF905B89D02488`
+- owner: `rs/s/o/d`
+- stable id: `CLIENT_CLASS_000944`
+- name: `NpcIndicatorsConfig`
+
+R4 already fixes the literal `npcindicators` group and its highlight/render configuration
+surface.
+
+### Plugin
+
+R9 already owns the exact plugin class:
+
 - proposal: `SEMPROP_58AF0A206F7EA87B06E6`
-- review: `SEMREVIEW_522C412AEE140608E5CA`
+- review: `SEMREVIEW_F015AA6B979CF43ECBE6`
+- owner: `rs/s/o/e`
+- stable id: `CLIENT_CLASS_000945`
+- name: `NpcIndicatorsPlugin`
 
-## Duplicate correction
+R9 already fixes the NPC Indicators runtime/plugin identity and pairing with the R4 config.
 
-The first R396 attempt also proposed:
+## Corroborating evidence retained
 
-- `rs/s/o/d` -> `CLIENT_CLASS_000944` -> `NpcIndicatorsConfig`
+The later R396 investigation remains useful only as corroboration:
 
-After current Main was reconciled into the active Chat 2 continuation branch, the repository-wide
-uniqueness gate correctly exposed that exact owner/name/stable-id as already authoritative in
-**R4**:
+- exact menu vocabulary: `Tag`, `Un-tag`, `Tag-All`, `Un-tag-All`;
+- exact render-style vocabulary: `hull`, `tile`, `truetile`, `swtile`,
+  `swtruetile`, `outline`;
+- ConfigChanged / GameStateChanged / NpcSpawned / MenuHover event surface;
+- joins to R189 NpcIndicatorsOverlay, R26 HighlightedNpc and R243 MemorizedNpc.
 
-- R4 proposal: `SEMPROP_3EA119C8462103D4B8A1`
-- R4 review: `SEMREVIEW_DE8D18FF905B89D02488`
+These facts strengthen the existing R4/R9 authority. They do not create a second semantic
+identity.
 
-The duplicate config proposal has therefore been removed completely from R396.
+## CI evidence
 
-## Retained plugin evidence
+The post-Main reconciliation uniqueness gate correctly failed the duplicate R396 attempt.
+The subsequent partial correction that retained only `NpcIndicatorsPlugin` is also invalid,
+because R9 already owns that exact owner/name/stable-id.
 
-`rs/s/o/e` remains unowned by prior semantic reviews and extends the recovered plugin base.
+R396 is therefore closed as a correction/audit batch only.
 
-It provides/consumes the already-authoritative R4 `NpcIndicatorsConfig`, owns the plugin
-start/stop lifecycle, and coordinates R189 `NpcIndicatorsOverlay` together with the
-HighlightedNpc/MemorizedNpc state family.
-
-Surviving menu strings:
-
-- `Tag`
-- `Un-tag`
-- `Tag-All`
-- `Un-tag-All`
-
-Surviving render-style literals:
-
-- `hull`
-- `tile`
-- `truetile`
-- `swtile`
-- `swtruetile`
-- `outline`
-
-It subscribes to ConfigChanged, GameStateChanged, NpcSpawned and MenuHover.
-
-## Boundary
-
-R396 now retains exactly one non-canonical proposal. No semantic acceptance or source rewrite
-is performed by Chat 2.
+No candidate JSON, semantic-review JSON, acceptance spec or source rewrite is retained.
