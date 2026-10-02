@@ -1,0 +1,26 @@
+{
+  "schema_version":1,
+  "kind":"semantic_candidate_set",
+  "canonical":false,
+  "source_build":"v308",
+  "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates":[{
+    "schema_version":1,
+    "kind":"semantic_name_candidate",
+    "canonical":false,
+    "status":"CANDIDATE",
+    "source_build":"v308",
+    "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "target":{"kind":"class","owner":"rs/l/M","name":null,"descriptor":null},
+    "proposed_name":"Rasterizer2D",
+    "confidence":0.998,
+    "evidence":[
+      {"family":"exact_raster_surface","detail":"The class owns an independent pixel buffer, width/height, clip bounds and row-offset state and extends R55 DrawingArea."},
+      {"family":"exact_draw_primitives","detail":"Its static API implements clip reset/set, horizontal and vertical line drawing, bordered rectangles, alpha/filled primitives and general integer line rasterization with Bresenham-style stepping."},
+      {"family":"exact_rsfont_consumer","detail":"R55 RSFont invokes the class directly for inline strike/line rendering while drawing text; no unrelated domain state is owned."},
+      {"family":"historical_role_corroboration","detail":"Public RSPS client lineage uses the Rasterizer2D noun for this software 2D pixel/clip/drawing primitive role while retaining DrawingArea-era compatibility classes."}
+    ],
+    "note":"Exact-v308 software 2D rasterizer. DrawingArea remains a distinct older/base class; no invented qualifier is added."
+  }],
+  "conflicts":[]
+}
