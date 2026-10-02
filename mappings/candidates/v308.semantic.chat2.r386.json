@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {"kind": "class", "owner": "rs/gui/b/h", "name": null, "descriptor": null},
+      "proposed_name": "LoadoutsPanel",
+      "confidence": 0.999,
+      "evidence": [
+        {"family": "recovered_source_map", "detail": "Recovered semantic source map identifies rs/gui/b/h as rs.gui.loadouts.LoadoutsPanel."},
+        {"family": "exact_v308_contract", "detail": "Exact v308 class extends the shared side-panel base and owns LoadoutFolders, LoadoutStore, EquipmentPanel, list selector, popup menu, stat editor and loadout actions."},
+        {"family": "exact_loadout_family_join", "detail": "The panel directly composes the already-reviewed loadout definition/folder/persistence/equipment family and is the live top-level Swing presentation surface for those models."}
+      ],
+      "note": "Source-proven Loadouts GUI panel. This is the only retained R404 proposal; the other attempted R404 source-name upgrades overlapped existing owners and remain correction evidence only."
+    }
+  ],
+  "conflicts": []
+}
