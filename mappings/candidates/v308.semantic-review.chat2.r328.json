@@ -4,8 +4,8 @@
   "canonical": false,
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-  "proposal_count": 5,
-  "review_id": "SEMREVIEW_2369781C7646FAB1A15E",
+  "proposal_count": 6,
+  "review_id": "SEMREVIEW_DD2918DAD97E0DF32AAC",
   "proposals": [
     {
       "proposal_id": "SEMPROP_1D0635577B1C2051E49E",
@@ -24,18 +24,48 @@
       "evidence": [
         {
           "family": "exact_outgoing_opcode",
-          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 202 with no payload."
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 202."
         },
         {
           "family": "exact_protocol_contract",
-          "detail": "Exact-current C2S master table identifies opcode 202 as IDLE_LOGOUT_NOTICE with fixed zero-length payload."
+          "detail": "The exact-current C2S master table identifies opcode 202 as idle logout notice."
         },
         {
-          "family": "exact_generated_shape",
-          "detail": "The class contains no second packet role or unrelated behavior; its sole serializer exactly matches the current transport contract."
+          "family": "exact_family_boundary",
+          "detail": "The class contains no unrelated packet payload or second behavior beyond this control/ack transport."
         }
       ],
-      "note": "Exact-v308 transport identity from fixed opcode plus exact-current protocol authority."
+      "note": "Exact-v308 outgoing transport identity from generated packet bytecode plus exact-current C2S authority."
+    },
+    {
+      "proposal_id": "SEMPROP_44AC82477119BC29606E",
+      "target_kind": "class",
+      "stable_id": "CLIENT_CLASS_000735",
+      "owner_logical_id": "CLIENT_CLASS_000735",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate": {
+        "owner": "rs/o/a/a/a/W",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "RegionChangeAckPacket",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_outgoing_opcode",
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 210 followed by the exact fixed i32 acknowledgement value."
+        },
+        {
+          "family": "exact_protocol_contract",
+          "detail": "The exact-current C2S master table identifies opcode 210 as region-change acknowledgement."
+        },
+        {
+          "family": "exact_family_boundary",
+          "detail": "The class contains no unrelated packet payload or second behavior beyond this control/ack transport."
+        }
+      ],
+      "note": "Exact-v308 outgoing transport identity from generated packet bytecode plus exact-current C2S authority."
     },
     {
       "proposal_id": "SEMPROP_5901B5EE086CC9024166",
@@ -54,18 +84,18 @@
       "evidence": [
         {
           "family": "exact_outgoing_opcode",
-          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 153 and exactly one target-player index."
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 153."
         },
         {
           "family": "exact_protocol_contract",
-          "detail": "Exact-current outbound action matrix identifies opcode 153 as PLAYER_OPTION_2 with one target player index."
+          "detail": "The exact-current C2S master table identifies opcode 153 as player option 2."
         },
         {
-          "family": "exact_generated_shape",
-          "detail": "The class contains no second packet role or unrelated behavior; its sole serializer exactly matches the current transport contract."
+          "family": "exact_family_boundary",
+          "detail": "The name stops at the configured player option slot; visible option text is server-configurable through S2C104 and no gameplay verb is inferred."
         }
       ],
-      "note": "Exact-v308 transport identity from fixed opcode plus exact-current protocol authority."
+      "note": "Exact-v308 outgoing transport identity from generated packet bytecode plus exact-current C2S authority."
     },
     {
       "proposal_id": "SEMPROP_905B3EAF1157E1B400DA",
@@ -84,18 +114,18 @@
       "evidence": [
         {
           "family": "exact_outgoing_opcode",
-          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 73 and exactly one target-player index."
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 73."
         },
         {
           "family": "exact_protocol_contract",
-          "detail": "Exact-current outbound action matrix identifies opcode 73 as PLAYER_OPTION_3 with one target player index."
+          "detail": "The exact-current C2S master table identifies opcode 73 as player option 3."
         },
         {
-          "family": "exact_generated_shape",
-          "detail": "The class contains no second packet role or unrelated behavior; its sole serializer exactly matches the current transport contract."
+          "family": "exact_family_boundary",
+          "detail": "The name stops at the configured player option slot; visible option text is server-configurable through S2C104 and no gameplay verb is inferred."
         }
       ],
-      "note": "Exact-v308 transport identity from fixed opcode plus exact-current protocol authority."
+      "note": "Exact-v308 outgoing transport identity from generated packet bytecode plus exact-current C2S authority."
     },
     {
       "proposal_id": "SEMPROP_B7D8EA04FC27550BCF5B",
@@ -114,18 +144,18 @@
       "evidence": [
         {
           "family": "exact_outgoing_opcode",
-          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 121 with no payload."
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 121."
         },
         {
           "family": "exact_protocol_contract",
-          "detail": "Exact-current C2S master table identifies opcode 121 as REGION_LOADING_FINISHED_ACK with fixed zero-length payload."
+          "detail": "The exact-current C2S master table identifies opcode 121 as region-loading-finished acknowledgement."
         },
         {
-          "family": "exact_generated_shape",
-          "detail": "The class contains no second packet role or unrelated behavior; its sole serializer exactly matches the current transport contract."
+          "family": "exact_family_boundary",
+          "detail": "The class contains no unrelated packet payload or second behavior beyond this control/ack transport."
         }
       ],
-      "note": "Exact-v308 transport identity from fixed opcode plus exact-current protocol authority."
+      "note": "Exact-v308 outgoing transport identity from generated packet bytecode plus exact-current C2S authority."
     },
     {
       "proposal_id": "SEMPROP_D9375397C98C9CD36551",
@@ -144,18 +174,18 @@
       "evidence": [
         {
           "family": "exact_outgoing_opcode",
-          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 0 with no payload."
+          "detail": "The concrete R322 OutgoingPacket writes fixed C2S opcode 0."
         },
         {
           "family": "exact_protocol_contract",
-          "detail": "Exact-current C2S master table identifies opcode 0 as IDLE_KEEPALIVE with fixed zero-length payload."
+          "detail": "The exact-current C2S master table identifies opcode 0 as idle keepalive."
         },
         {
-          "family": "exact_generated_shape",
-          "detail": "The class contains no second packet role or unrelated behavior; its sole serializer exactly matches the current transport contract."
+          "family": "exact_family_boundary",
+          "detail": "The class contains no unrelated packet payload or second behavior beyond this control/ack transport."
         }
       ],
-      "note": "Exact-v308 transport identity from fixed opcode plus exact-current protocol authority."
+      "note": "Exact-v308 outgoing transport identity from generated packet bytecode plus exact-current C2S authority."
     }
   ],
   "unresolved": []

@@ -5,58 +5,101 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 3,
-  "review_id": "SEMREVIEW_4807A13BA5B947AAF223",
+  "review_id": "SEMREVIEW_53C95552A49FEFB7F48B",
   "proposals": [
     {
-      "proposal_id": "SEMPROP_7FA9A06A377894F2096E",
+      "proposal_id": "SEMPROP_551C002C5E81A3B33C4B",
       "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000293",
-      "owner_logical_id": "CLIENT_CLASS_000293",
+      "stable_id": "CLIENT_CLASS_001124",
+      "owner_logical_id": "CLIENT_CLASS_001124",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {"owner":"rs/h/e","name":null,"descriptor":null},
-      "proposed_name": "ClientLoopCallback",
+      "source_coordinate": {
+        "owner": "rs/y/c",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ScheduledTaskManager",
       "confidence": 0.999,
       "evidence": [
-        {"family":"exact_interface_contract","detail":"The interface contains exactly one method, boolean loop(), with no fields or secondary behavior."},
-        {"family":"exact_registry_lifecycle","detail":"The rs/h/a and rs/h/c registries keep keyed instances across ticks, invoke loop(), and remove the key when loop() returns false; a true result retains the callback for the next cycle."},
-        {"family":"exact_live_usage","detail":"Exact-v308 implementations/callers exist in GUI, interface and plugin/runtime classes, establishing this as a live repeating client callback rather than a dead functional interface."}
+        {
+          "family": "exact_task_registry",
+          "detail": "The class owns a CopyOnWriteArrayList of ScheduledTaskDescriptor records and exposes add/remove/read-only-list operations."
+        },
+        {
+          "family": "exact_trigger_loop",
+          "detail": "Its scheduler loop compares Instant.now() against each descriptor's last trigger using annotation amount + ChronoUnit, updates the trigger time and executes due work."
+        },
+        {
+          "family": "exact_execution_modes",
+          "detail": "Due tasks run either by submitting to injected ScheduledExecutorService when the annotation async flag is set or synchronously via Runnable/reflection otherwise."
+        },
+        {
+          "family": "exact_application_ownership",
+          "detail": "ClientApplicationBootstrap/Module provide this singleton scheduler service, and the live plugin manager is its only task-family consumer."
+        }
       ],
-      "note":"Descriptive exact-v308 name for the repeating callback contract whose boolean return controls continued registration."
+      "note": "Descriptive exact-v308 name for the singleton plugin scheduled-task registry and trigger runner."
     },
     {
-      "proposal_id": "SEMPROP_819235421EB9265C275F",
+      "proposal_id": "SEMPROP_68C2BBD3451F38FC8D93",
       "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000290",
-      "owner_logical_id": "CLIENT_CLASS_000290",
+      "stable_id": "CLIENT_CLASS_001122",
+      "owner_logical_id": "CLIENT_CLASS_001122",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {"owner":"rs/h/b","name":null,"descriptor":null},
-      "proposed_name": "ClientCallback",
+      "source_coordinate": {
+        "owner": "rs/y/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ScheduledTask",
       "confidence": 0.999,
       "evidence": [
-        {"family":"exact_interface_contract","detail":"The interface contains exactly one method, void invoke(), with no fields or secondary behavior."},
-        {"family":"exact_live_usage","detail":"Exact-v308 references span Client, custom-menu entries/manager, plugin/config/UI classes and client runtime helpers; callers invoke the interface as a generic deferred client action."},
-        {"family":"exact_registry_join","detail":"The duplicate rs/h/a and rs/h/c registries both store this interface as one-shot callbacks, invoke all queued/keyed values, and then clear them."}
+        {
+          "family": "exact_annotation_contract",
+          "detail": "Exact v308 rs/y/a is a runtime method annotation exposing interval amount, ChronoUnit, and an async/executor flag."
+        },
+        {
+          "family": "exact_plugin_manager_scan",
+          "detail": "The live plugin manager rs/s/g scans plugin methods for this annotation, creates one rs/y/b descriptor per annotated method, and registers it with rs/y/c."
+        },
+        {
+          "family": "exact_lifecycle_role",
+          "detail": "Plugin start adds these scheduled methods and plugin stop removes their associated descriptors, proving this annotation is the scheduler entry-point contract."
+        }
       ],
-      "note":"Generic descriptive name for the exact zero-argument callback contract used throughout client UI/runtime code."
+      "note": "Descriptive exact-v308 annotation name for plugin methods scheduled by the live plugin manager."
     },
     {
-      "proposal_id": "SEMPROP_AEBEAAB40CE003553DFB",
+      "proposal_id": "SEMPROP_8710E353881B6B047896",
       "target_kind": "class",
-      "stable_id": "CLIENT_CLASS_000078",
-      "owner_logical_id": "CLIENT_CLASS_000078",
+      "stable_id": "CLIENT_CLASS_001123",
+      "owner_logical_id": "CLIENT_CLASS_001123",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "source_coordinate": {"owner":"rs/b/a","name":null,"descriptor":null},
-      "proposed_name": "MouseCoordinateSampler",
+      "source_coordinate": {
+        "owner": "rs/y/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "ScheduledTaskDescriptor",
       "confidence": 0.999,
       "evidence": [
-        {"family":"exact_sampling_state","detail":"The Runnable owns two 500-element int arrays, one sample count, one lock object and one running flag; every 50 ms it snapshots Client.hP and Client.hQ into the paired arrays while capacity remains."},
-        {"family":"exact_client_lifecycle","detail":"Client constructs exactly one rs/b/a during initialization, schedules it as a background Runnable, resets its sample count during session setup and clears its running flag during client shutdown."},
-        {"family":"exact_scope_boundary","detail":"The class contains no mouse-button, click-dispatch, rendering or packet behavior; its entire responsibility is periodic coordinate sampling."}
+        {
+          "family": "exact_descriptor_state",
+          "detail": "The class stores the ScheduledTask annotation, reflective Method, target plugin/object, optional Runnable lambda, and last-trigger Instant."
+        },
+        {
+          "family": "exact_plugin_manager_creation",
+          "detail": "rs/s/g constructs this descriptor for each annotated plugin method and logs 'Scheduled task {}' before registering it with rs/y/c."
+        },
+        {
+          "family": "exact_manager_consumption",
+          "detail": "rs/y/c reads the descriptor's interval metadata, last-trigger Instant and Runnable/Method target to decide when and how to execute it."
+        }
       ],
-      "note":"Descriptive exact-v308 name for the background mouse-coordinate sampling buffer."
+      "note": "Descriptive exact-v308 name for one scheduled plugin method/task record."
     }
   ],
   "unresolved": []
