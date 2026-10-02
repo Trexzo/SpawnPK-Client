@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 2,
+  "review_id": "SEMREVIEW_6FB1B06E2FAFB648F712",
+  "proposals": [
+    {
+      "proposal_id": "SEMPROP_01ABB62F3DEE55929BF2",
+      "target_kind":"class",
+      "stable_id":"CLIENT_CLASS_000484",
+      "owner_logical_id":"CLIENT_CLASS_000484",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate":{"owner":"rs/l/f/c","name":null,"descriptor":null},
+      "proposed_name":"OverlayBounds",
+      "confidence":0.999,
+      "evidence":[
+        {"family":"exact_literal_identity","detail":"Exact-v308 toString constant-pool data preserves the source-style identity 'OverlayBounds(topLeft=..., topCenter=..., topRight=..., bottomLeft=..., bottomRight=..., aboveChatboxRight=..., canvasTopRight=...)'."},
+        {"family":"exact_value_shape","detail":"The class owns exactly seven Rectangle fields corresponding to the seven overlay positions, supports deep-copy/translation, position-to-rectangle lookup, rectangle-to-position lookup and collection access."},
+        {"family":"upstream_source_match","detail":"Historical RuneLite OverlayBounds has the same seven OverlayPosition-backed Rectangle slots and translation/value-object role, matching exact-v308 structure."},
+        {"family":"exact_stable_id","detail":"Sorted exact-v308 rs/** class order places rs/l/f/c at zero-based index 483, fixing CLIENT_CLASS_000484."}
+      ],
+      "note":"Source-correlated exact-v308 recovery of RuneLite OverlayBounds."
+    },
+    {
+      "proposal_id": "SEMPROP_A555897388EBF2921283",
+      "target_kind":"class",
+      "stable_id":"CLIENT_CLASS_000487",
+      "owner_logical_id":"CLIENT_CLASS_000487",
+      "source_build":"v308",
+      "source_sha256":"854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "source_coordinate":{"owner":"rs/l/f/f","name":null,"descriptor":null},
+      "proposed_name":"OverlayMenuEntry",
+      "confidence":0.999,
+      "evidence":[
+        {"family":"exact_literal_identity","detail":"Exact-v308 constant-pool/toString data preserves 'OverlayMenuEntry(menuAction=..., option=..., target=...)'."},
+        {"family":"exact_value_shape","detail":"The class stores exactly one menu-action integer plus option/target Strings, exposes value-style equals/hashCode/toString, and carries one callback Consumer<CustomMenuEntry> excluded from equality semantics."},
+        {"family":"upstream_source_match","detail":"Historical RuneLite OverlayMenuEntry has the same menu action / option / target value shape and callback-style menu integration, fixing the source identity."},
+        {"family":"exact_stable_id","detail":"Sorted exact-v308 rs/** class order places rs/l/f/f at zero-based index 486, fixing CLIENT_CLASS_000487."}
+      ],
+      "note":"Source-correlated exact-v308 recovery of RuneLite OverlayMenuEntry."
+    }
+  ],
+  "unresolved": []
+}
