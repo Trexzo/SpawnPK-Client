@@ -4211,6 +4211,574 @@ def _normalize_object_backed_map_get_narrow_locals(
     return actions
 
 
+
+def _match_map_scan_capture_outer(
+    method: dict[str, Any],
+    *,
+    current_owner: str,
+) -> dict[str, Any] | None:
+    instructions = list(method.get("instructions", []))
+    capture_prefix = (
+        "(L"
+        + current_owner
+        + ";ILjava/util/Set;Ljava/util/Map$Entry;"
+        + "ILjava/util/Map;)"
+    )
+    matches: list[dict[str, Any]] = []
+    for index, item in enumerate(instructions):
+        if not (
+            item.get("mnemonic") == "invokedynamic"
+            and str(item.get("descriptor", "")).startswith(
+                capture_prefix
+            )
+            and index >= 6
+        ):
+            continue
+        loads = instructions[index - 6:index]
+        expected = [
+            ("aload", 0),
+            ("iload", None),
+            ("aload", None),
+            ("aload", None),
+            ("iload", None),
+            ("aload", None),
+        ]
+        if any(
+            row.get("mnemonic") != mnemonic
+            or (
+                local_index is not None
+                and int(row.get("local_index", -1)) != local_index
+            )
+            for row, (mnemonic, local_index) in zip(loads, expected)
+        ):
+            continue
+        capture_slot = int(loads[1].get("local_index", -1))
+        set_slot = int(loads[2].get("local_index", -1))
+        entry_slot = int(loads[3].get("local_index", -1))
+        land_slot = int(loads[4].get("local_index", -1))
+        map_slot = int(loads[5].get("local_index", -1))
+        if min(capture_slot, set_slot, entry_slot, land_slot, map_slot) < 1:
+            continue
+
+        copy_rows = []
+        for copy_index in range(1, index - 6):
+            load = instructions[copy_index - 1]
+            store = instructions[copy_index]
+            if not (
+                load.get("mnemonic") == "iload"
+                and store.get("mnemonic") == "istore"
+                and int(store.get("local_index", -1)) == capture_slot
+            ):
+                continue
+            source_slot = int(load.get("local_index", -1))
+            if source_slot < 1 or source_slot == capture_slot:
+                continue
+            copy_rows.append(
+                {
+                    "source_slot": source_slot,
+                    "capture_slot": capture_slot,
+                    "offset": int(load.get("offset", -1)),
+                }
+            )
+        if len(copy_rows) != 1:
+            continue
+
+        functional_descriptor = str(item.get("descriptor", ""))[
+            len(capture_prefix):
+        ]
+        if not (
+            functional_descriptor.startswith("L")
+            and functional_descriptor.endswith(";")
+        ):
+            continue
+        matches.append(
+            {
+                "region_copy": copy_rows[0],
+                "set_slot": set_slot,
+                "entry_slot": entry_slot,
+                "land_slot": land_slot,
+                "map_slot": map_slot,
+                "functional_owner": functional_descriptor[1:-1],
+                "invokedynamic_offset": int(item.get("offset", -1)),
+            }
+        )
+    if len(matches) != 1:
+        return None
+    return matches[0]
+
+
+def _match_map_scan_capture_helper(
+    method: dict[str, Any],
+    *,
+    current_owner: str,
+) -> bool:
+    if method.get("descriptor") != (
+        "(ILjava/util/Set;Ljava/util/Map$Entry;"
+        "ILjava/util/Map;IIII)V"
+    ):
+        return False
+    if int(method.get("access", 0)) & 0x0008:
+        return False
+
+    instructions = list(method.get("instructions", []))
+    has_iterator_cast = any(
+        instructions[index].get("mnemonic") == "invokeinterface"
+        and instructions[index].get("owner") == "java/util/Iterator"
+        and instructions[index].get("name") == "next"
+        and instructions[index].get("descriptor")
+        == "()Ljava/lang/Object;"
+        and instructions[index + 1].get("mnemonic") == "checkcast"
+        for index in range(len(instructions) - 1)
+    )
+    invocations = list(method.get("method_invocations", []))
+    required_calls = [
+        (
+            "java/lang/Integer",
+            "valueOf",
+            "(I)Ljava/lang/Integer;",
+        ),
+        (
+            "java/util/Map$Entry",
+            "getKey",
+            "()Ljava/lang/Object;",
+        ),
+        (
+            "java/util/Map",
+            "getOrDefault",
+            "(Ljava/lang/Object;Ljava/lang/Object;)"
+            "Ljava/lang/Object;",
+        ),
+        (
+            "java/util/List",
+            "add",
+            "(Ljava/lang/Object;)Z",
+        ),
+    ]
+    if not has_iterator_cast:
+        return False
+    if not all(
+        any(
+            call.get("owner") == owner
+            and call.get("name") == name
+            and call.get("descriptor") == descriptor
+            for call in invocations
+        )
+        for owner, name, descriptor in required_calls
+    ):
+        return False
+
+    set_add_count = sum(
+        call.get("owner") == "java/util/Set"
+        and call.get("name") == "add"
+        and call.get("descriptor") == "(Ljava/lang/Object;)Z"
+        for call in invocations
+    )
+    if set_add_count < 3:
+        return False
+
+    self_set_fields = {
+        str(access.get("name", ""))
+        for access in method.get("field_accesses", [])
+        if access.get("owner") == current_owner
+        and access.get("operation") == "getfield"
+        and access.get("descriptor") == "Ljava/util/Set;"
+    }
+    self_list_fields = {
+        str(access.get("name", ""))
+        for access in method.get("field_accesses", [])
+        if access.get("owner") == current_owner
+        and access.get("operation") == "getfield"
+        and access.get("descriptor") == "Ljava/util/List;"
+    }
+    return bool(self_set_fields) and bool(self_list_fields)
+
+
+def _normalize_map_scan_lambda_capture_aliases(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore a lost effectively-final int copy and proven lambda captures.
+
+    The rule is selected by the exact six-capture invokedynamic shape
+    (this, int, Set, Map.Entry, int, Map) and a unique nine-argument
+    synthetic helper. Source names are recovered only from the surrounding
+    declarations and malformed lambda uses; no class/path or semantic field
+    names are hardcoded.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        profile = profile_class_field_accesses(
+            readable_zip.read(class_entry)
+        )
+    except (KeyError, BytecodeProfileError):
+        return []
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    field_descriptors = {
+        str(field.get("name", "")): str(field.get("descriptor", ""))
+        for field in profile.get("fields", [])
+    }
+
+    helper_matches = [
+        method
+        for method in profile.get("methods", [])
+        if _match_map_scan_capture_helper(
+            method,
+            current_owner=current_owner,
+        )
+    ]
+    if len(helper_matches) != 1:
+        return []
+    helper = helper_matches[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        if source_static:
+            continue
+
+        exact_candidates = []
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            if int(exact_method.get("access", 0)) & 0x0008:
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            outer = _match_map_scan_capture_outer(
+                exact_method,
+                current_owner=current_owner,
+            )
+            if outer is not None:
+                exact_candidates.append((exact_method, outer))
+        if len(exact_candidates) != 1:
+            continue
+        exact_method, outer = exact_candidates[0]
+
+        method_start = method_match.start()
+        method_text = text[method_start:body_end]
+        method_code = whole_code[method_start:body_end]
+
+        entry_match = re.search(
+            r"\bfor\s*\(\s*[^:;(){}]+\s+"
+            r"(?P<entry>[A-Za-z_$][A-Za-z0-9_$]*)\s*:\s*"
+            r"[A-Za-z_$][A-Za-z0-9_$]*"
+            r"\s*\.\s*entrySet\s*\(\s*\)\s*\)",
+            method_code,
+        )
+        if entry_match is None:
+            continue
+        entry_name = entry_match.group("entry")
+
+        map_match = re.search(
+            r"(?m)^[ \t]*(?:final\s+)?"
+            r"(?:Map(?:\s*<[^;\n]+>)?|[A-Za-z_$][A-Za-z0-9_$.]*)"
+            r"\s+(?P<map>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*"
+            r"(?:\([^;\n)]*\)\s*)?"
+            + re.escape(entry_name)
+            + r"\s*\.\s*getValue\s*\(\s*\)\s*;",
+            method_code,
+        )
+        if map_match is None:
+            continue
+        map_name = map_match.group("map")
+
+        region_match = re.search(
+            r"(?m)^[ \t]*(?:final\s+)?int\s+"
+            r"(?P<region>[A-Za-z_$][A-Za-z0-9_$]*)"
+            r"\s*=\s*-1\s*;",
+            method_code,
+        )
+        if region_match is None:
+            continue
+        region_name = region_match.group("region")
+        region_assignment = re.search(
+            r"(?m)^[ \t]*"
+            + re.escape(region_name)
+            + r"\s*=\s*[^;\n]+;",
+            method_code[region_match.end():],
+        )
+        if region_assignment is None:
+            continue
+        region_assignment_end = (
+            region_match.end() + region_assignment.end()
+        )
+
+        land_match = re.search(
+            r"(?m)^[ \t]*(?:final\s+)?int\s+"
+            r"(?P<land>[A-Za-z_$][A-Za-z0-9_$]*)"
+            r"\s*=\s*[^;\n]+;",
+            method_code[region_assignment_end:],
+        )
+        if land_match is None:
+            continue
+        land_name = land_match.group("land")
+
+        set_match = re.search(
+            r"(?m)^(?P<indent>[ \t]*)(?:final\s+)?"
+            r"(?:HashSet|Set)(?:\s*<[^;\n]+>)?\s+"
+            r"(?P<set>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*"
+            r"new\s+HashSet(?:\s*<[^;\n]+>)?\s*\([^;\n]*\)\s*;",
+            method_code[region_assignment_end:],
+        )
+        if set_match is None:
+            continue
+        set_name = set_match.group("set")
+        set_absolute_start = (
+            method_start + region_assignment_end + set_match.start()
+        )
+
+        lambda_matches = list(
+            re.finditer(
+                r"\(\s*(?P<p1>[A-Za-z_$][A-Za-z0-9_$]*)\s*,\s*"
+                r"(?P<p2>[A-Za-z_$][A-Za-z0-9_$]*)\s*,\s*"
+                r"(?P<p3>[A-Za-z_$][A-Za-z0-9_$]*)\s*,\s*"
+                r"(?P<p4>[A-Za-z_$][A-Za-z0-9_$]*)\s*\)"
+                r"\s*->\s*\{",
+                method_code,
+            )
+        )
+        if len(lambda_matches) != 1:
+            continue
+        lambda_match = lambda_matches[0]
+        lambda_params = {
+            lambda_match.group("p1"),
+            lambda_match.group("p2"),
+            lambda_match.group("p3"),
+            lambda_match.group("p4"),
+        }
+        lambda_brace = method_code.find(
+            "{", lambda_match.start(), lambda_match.end()
+        )
+        if lambda_brace < 0:
+            continue
+        try:
+            lambda_end = _matching_brace_end(
+                method_code,
+                lambda_brace,
+            )
+        except SourceNormalizationError:
+            continue
+        lambda_text = method_text[lambda_brace + 1:lambda_end - 1]
+        lambda_code = method_code[lambda_brace + 1:lambda_end - 1]
+        lambda_offset = method_start + lambda_brace + 1
+
+        region_candidates = []
+        region_use_re = re.compile(
+            r"this\.(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)"
+            r"\s*\.\s*add\s*\(\s*"
+            r"(?P<alias>[A-Za-z_$][A-Za-z0-9_$]*)\s*\)"
+        )
+        for use in region_use_re.finditer(lambda_code):
+            if field_descriptors.get(use.group("field")) != "Ljava/util/Set;":
+                continue
+            alias = use.group("alias")
+            if alias in lambda_params:
+                continue
+            region_candidates.append(alias)
+        if len(set(region_candidates)) != 1:
+            continue
+        region_alias = region_candidates[0]
+
+        set_alias_matches = list(
+            re.finditer(
+                r"\bif\s*\(\s*"
+                r"(?P<alias>[A-Za-z_$][A-Za-z0-9_$]*)"
+                r"\s*\.\s*add\s*\(\s*"
+                r"[A-Za-z_$][A-Za-z0-9_$]*\s*\)\s*\)",
+                lambda_code,
+            )
+        )
+        if len(set_alias_matches) != 1:
+            continue
+        set_alias = set_alias_matches[0].group("alias")
+
+        entry_aliases = {
+            match.group("alias")
+            for match in re.finditer(
+                r"(?P<alias>[A-Za-z_$][A-Za-z0-9_$]*)"
+                r"\s*\.\s*getKey\s*\(\s*\)",
+                lambda_code,
+            )
+        }
+        map_aliases = {
+            match.group("alias")
+            for match in re.finditer(
+                r"(?P<alias>[A-Za-z_$][A-Za-z0-9_$]*)"
+                r"\s*\.\s*getOrDefault\s*\(",
+                lambda_code,
+            )
+        }
+        if len(entry_aliases) != 1 or len(map_aliases) != 1:
+            continue
+        entry_alias = next(iter(entry_aliases))
+        map_alias = next(iter(map_aliases))
+
+        land_alias_match = re.search(
+            r'" land="\s*\+\s*'
+            r"(?P<alias>[A-Za-z_$][A-Za-z0-9_$]*)"
+            r"\s*\+\s*\" group=\"",
+            lambda_text,
+        )
+        if land_alias_match is None:
+            continue
+        land_alias = land_alias_match.group("alias")
+
+        aliases = {
+            region_alias,
+            set_alias,
+            entry_alias,
+            map_alias,
+            land_alias,
+        }
+        if len(aliases) != 5 or aliases & lambda_params:
+            continue
+        declared_local_re = re.compile(
+            r"\b(?:final\s+)?"
+            r"[A-Za-z_$][A-Za-z0-9_$.<>\[\]?]*\s+"
+            r"(?P<name>"
+            + "|".join(re.escape(name) for name in sorted(aliases))
+            + r")\b"
+        )
+        declared_aliases = {
+            match.group("name")
+            for match in declared_local_re.finditer(method_code)
+        }
+        if region_alias in declared_aliases:
+            continue
+
+        replacements = [
+            (set_alias, set_name),
+            (entry_alias, entry_name),
+            (map_alias, map_name),
+            (land_alias, land_name),
+        ]
+        lambda_edits: list[tuple[int, int, str]] = []
+        for alias, replacement in replacements:
+            if alias == replacement:
+                continue
+            token_re = re.compile(
+                r"(?<![A-Za-z0-9_$])"
+                + re.escape(alias)
+                + r"(?![A-Za-z0-9_$])"
+            )
+            hits = list(token_re.finditer(lambda_code))
+            if not hits:
+                break
+            for hit in hits:
+                lambda_edits.append(
+                    (
+                        lambda_offset + hit.start(),
+                        lambda_offset + hit.end(),
+                        replacement,
+                    )
+                )
+        else:
+            indent = set_match.group("indent")
+            copy_text = (
+                indent
+                + "final int "
+                + region_alias
+                + " = "
+                + region_name
+                + ";\n"
+            )
+            lambda_edits.append(
+                (
+                    set_absolute_start,
+                    set_absolute_start,
+                    copy_text,
+                )
+            )
+            lambda_edits.sort(key=lambda row: row[0])
+            if any(
+                left[1] > right[0]
+                for left, right in zip(
+                    lambda_edits, lambda_edits[1:]
+                )
+            ):
+                continue
+            edits.extend(lambda_edits)
+            actions.append(
+                {
+                    "kind": "map_scan_lambda_capture_alias_reconstruction",
+                    "source_path": rel,
+                    "method_name": method_match.group("name"),
+                    "method_descriptor": exact_method["descriptor"],
+                    "helper_method_name": helper.get("name"),
+                    "helper_method_descriptor": helper.get("descriptor"),
+                    "region_source_name": region_name,
+                    "region_capture_name": region_alias,
+                    "set_source_name": set_name,
+                    "entry_source_name": entry_name,
+                    "land_source_name": land_name,
+                    "map_source_name": map_name,
+                    "replaced_aliases": {
+                        set_alias: set_name,
+                        entry_alias: entry_name,
+                        land_alias: land_name,
+                        map_alias: map_name,
+                    },
+                    "slot_evidence": outer,
+                    "replacement_count": len(lambda_edits),
+                    "provenance": {
+                        "kind": "source_safety",
+                        "reason": (
+                            "procyon_invokedynamic_map_scan_capture_alias_loss"
+                        ),
+                        "strategy": (
+                            "exact_six_capture_indy_plus_unique_helper_flow"
+                        ),
+                    },
+                }
+            )
+
+    if not edits:
+        return []
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping map-scan capture edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_erased_generic_constructor_argument_casts(
     *,
     source_root: Path,
@@ -9223,6 +9791,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_map_scan_lambda_capture_aliases(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_erased_generic_constructor_argument_casts(
                         source_root=source_root,
                         path=path,
@@ -9485,6 +10060,17 @@ def normalize_procyon_source(
             int(action.get("replacement_count", 0))
             for action in actions
             if action["kind"] == "object_backed_map_get_narrow_local"
+        ),
+        "map_scan_lambda_capture_alias_action_count": sum(
+            action["kind"]
+            == "map_scan_lambda_capture_alias_reconstruction"
+            for action in actions
+        ),
+        "map_scan_lambda_capture_alias_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "map_scan_lambda_capture_alias_reconstruction"
         ),
         "erased_generic_constructor_argument_cast_action_count": sum(
             action["kind"]
