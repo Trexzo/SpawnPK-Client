@@ -4729,10 +4729,17 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                     ),
                     "p/A.java": (
                         "package p;\n"
+                        "import java.util.Set;\n"
                         "public class A {\n"
                         "    private final FolderMap folders = new FolderMap();\n"
                         "    public Value byKey(String key) {\n"
                         "        return folders.get(key);\n"
+                        "    }\n"
+                        "    public Set<String> keys() {\n"
+                        "        return folders.keySet();\n"
+                        "    }\n"
+                        "    public void putValue(String key, Value value) {\n"
+                        "        folders.put(key, value);\n"
                         "    }\n"
                         "}\n"
                     ),
@@ -4743,10 +4750,17 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
             source.write_text(
                 "package p;\n"
                 "import java.util.LinkedHashMap;\n"
+                "import java.util.Set;\n"
                 "public class A {\n"
                 "    private final FolderMap folders = new FolderMap();\n"
                 "    public Value byKey(String key) {\n"
                 "        return ((LinkedHashMap<K, Value>)this.folders).get(key);\n"
+                "    }\n"
+                "    public Set<String> keys() {\n"
+                "        return ((LinkedHashMap<K, Value>)this.folders).keySet();\n"
+                "    }\n"
+                "    public void putValue(String key, Value value) {\n"
+                "        ((LinkedHashMap<K, Value>)this.folders).put(key, value);\n"
                 "    }\n"
                 "}\n",
                 encoding="utf-8",
@@ -4774,35 +4788,46 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 "((LinkedHashMap<String, Value>)this.folders).get(key)",
                 normalized,
             )
+            self.assertIn(
+                "((LinkedHashMap<String, Value>)this.folders).keySet()",
+                normalized,
+            )
+            self.assertIn(
+                "((LinkedHashMap<String, Value>)this.folders).put(key, value)",
+                normalized,
+            )
 
-            action = next(
+            actions = [
                 row
                 for row in report["actions"]
-                if row["kind"]
-                == "undeclared_linkedhashmap_field_cast_placeholder_wildcard"
-            )
-            self.assertEqual(action["method_name"], "byKey")
+                if row["kind"] == "linkedhashmap_field_key_reconstruction"
+            ]
+            self.assertEqual(len(actions), 3)
+            by_name = {row["method_name"]: row for row in actions}
             self.assertEqual(
-                action["method_descriptor"],
+                by_name["byKey"]["method_descriptor"],
                 "(Ljava/lang/String;)Lp/Value;",
             )
-            self.assertEqual(action["placeholder_counts"], {"K": 1})
-            self.assertEqual(action["field_counts"], {"folders": 1})
-            self.assertEqual(action["field_owners"], ["p/FolderMap"])
-            self.assertEqual(
-                action["field_signatures"],
-                [
-                    "Ljava/util/LinkedHashMap<"
-                    "Ljava/lang/String;Lp/Value;>;"
-                ],
-            )
-            self.assertEqual(action["member_counts"], {"get": 1})
-            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(by_name["byKey"]["member_counts"], {"get": 1})
+            self.assertEqual(by_name["keys"]["member_counts"], {"keySet": 1})
+            self.assertEqual(by_name["putValue"]["member_counts"], {"put": 1})
+            for action in actions:
+                self.assertEqual(action["placeholder_counts"], {"K": 1})
+                self.assertEqual(action["field_counts"], {"folders": 1})
+                self.assertEqual(action["field_owners"], ["p/FolderMap"])
+                self.assertEqual(
+                    action["field_signatures"],
+                    [
+                        "Ljava/util/LinkedHashMap<"
+                        "Ljava/lang/String;Lp/Value;>;"
+                    ],
+                )
+                self.assertEqual(action["replacement_count"], 1)
             self.assertEqual(
                 report["summary"][
-                    "undeclared_linkedhashmap_field_cast_placeholder_reference_count"
+                    "linkedhashmap_field_key_reconstruction_reference_count"
                 ],
-                1,
+                3,
             )
 
             after = subprocess.run(
@@ -4872,7 +4897,7 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
             self.assertEqual(source.read_text(encoding="utf-8"), original)
             self.assertEqual(
                 report["summary"][
-                    "undeclared_linkedhashmap_field_cast_placeholder_reference_count"
+                    "linkedhashmap_field_key_reconstruction_reference_count"
                 ],
                 0,
             )
