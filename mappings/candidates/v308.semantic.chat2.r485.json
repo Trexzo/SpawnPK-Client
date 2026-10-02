@@ -12,15 +12,29 @@
       "status": "CANDIDATE",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target":{"kind":"class","owner":"rs/ui/a/a","name":null,"descriptor":null},
-      "proposed_name":"BoostInfoBox",
-      "confidence":0.999,
-      "evidence":[
-        {"family":"exact_literal_identity","detail":"Exact-v308 toString constant-pool data preserves 'BoostInfoBox(offset=..., skillId=...)'."},
-        {"family":"exact_infobox_behavior","detail":"The class extends the already-recovered InfoBox base, stores one signed boost/offset and one skill id, renders a signed numeric text value, and colors negative values red / non-negative values green."},
-        {"family":"exact_stable_id","detail":"Sorted exact-v308 rs/** class order places rs/ui/a/a at zero-based index 1016, fixing CLIENT_CLASS_001017."}
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/a/b",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "CounterInfoBox",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_identity",
+          "detail": "Exact-v308 toString constant-pool data preserves 'CounterInfoBox(count=...)'."
+        },
+        {
+          "family": "exact_infobox_behavior",
+          "detail": "The class extends InfoBox, stores exactly one count integer, renders an empty String only for -1 otherwise the decimal count, and always renders white text."
+        },
+        {
+          "family": "exact_stable_id",
+          "detail": "Sorted exact-v308 rs/** class order places rs/ui/a/b at zero-based index 1017, fixing CLIENT_CLASS_001018."
+        }
       ],
-      "note":"Exact-v308 source-style identity recovered from the surviving BoostInfoBox literal and behavior."
+      "note": "Exact-v308 source-style identity recovered from the surviving CounterInfoBox literal and behavior."
     },
     {
       "schema_version": 1,
@@ -29,50 +43,30 @@
       "status": "CANDIDATE",
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target":{"kind":"class","owner":"rs/ui/a/b","name":null,"descriptor":null},
-      "proposed_name":"CounterInfoBox",
-      "confidence":0.999,
-      "evidence":[
-        {"family":"exact_literal_identity","detail":"Exact-v308 toString constant-pool data preserves 'CounterInfoBox(count=...)'."},
-        {"family":"exact_infobox_behavior","detail":"The class extends InfoBox, stores exactly one count integer, renders an empty String only for -1 otherwise the decimal count, and always renders white text."},
-        {"family":"exact_stable_id","detail":"Sorted exact-v308 rs/** class order places rs/ui/a/b at zero-based index 1017, fixing CLIENT_CLASS_001018."}
+      "target": {
+        "kind": "class",
+        "owner": "rs/ui/a/i",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "StatusInfoBox",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_literal_identity",
+          "detail": "Exact-v308 constant-pool/toString data preserves 'StatusInfoBox(EMPTY=...)'."
+        },
+        {
+          "family": "exact_infobox_behavior",
+          "detail": "The class extends InfoBox, owns no mutable status payload, returns the exact empty display String and white text color, and otherwise inherits InfoBox presentation/state."
+        },
+        {
+          "family": "exact_stable_id",
+          "detail": "Sorted exact-v308 rs/** class order places rs/ui/a/i at zero-based index 1024, fixing CLIENT_CLASS_001025."
+        }
       ],
-      "note":"Exact-v308 source-style identity recovered from the surviving CounterInfoBox literal and behavior."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target":{"kind":"class","owner":"rs/ui/a/i","name":null,"descriptor":null},
-      "proposed_name":"StatusInfoBox",
-      "confidence":0.999,
-      "evidence":[
-        {"family":"exact_literal_identity","detail":"Exact-v308 constant-pool/toString data preserves 'StatusInfoBox(EMPTY=...)'."},
-        {"family":"exact_infobox_behavior","detail":"The class extends InfoBox, owns no mutable status payload, returns the exact empty display String and white text color, and otherwise inherits InfoBox presentation/state."},
-        {"family":"exact_stable_id","detail":"Sorted exact-v308 rs/** class order places rs/ui/a/i at zero-based index 1024, fixing CLIENT_CLASS_001025."}
-      ],
-      "note":"Exact-v308 source-style identity recovered from the surviving StatusInfoBox literal."
-    },
-    {
-      "schema_version": 1,
-      "kind": "semantic_name_candidate",
-      "canonical": false,
-      "status": "CANDIDATE",
-      "source_build": "v308",
-      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
-      "target":{"kind":"class","owner":"rs/ui/a/j","name":null,"descriptor":null},
-      "proposed_name":"TimerInfoBox",
-      "confidence":0.999,
-      "evidence":[
-        {"family":"exact_literal_identity","detail":"Exact-v308 constant-pool/toString data preserves 'TimerInfoBox(startTime=..., endTime=..., duration=...)'."},
-        {"family":"exact_timer_behavior","detail":"The class extends InfoBox, stores start/end Instant plus Duration, renders remaining time in h/m/s-style formats, exposes expiration state and changes text color near expiry."},
-        {"family":"exact_stable_id","detail":"Sorted exact-v308 rs/** class order places rs/ui/a/j at zero-based index 1025, fixing CLIENT_CLASS_001026."}
-      ],
-      "note":"Exact-v308 source-style identity recovered from the surviving TimerInfoBox literal and duration behavior."
+      "note": "Exact-v308 source-style identity recovered from the surviving StatusInfoBox literal."
     }
   ],
-  "conflicts":[]
+  "conflicts": []
 }

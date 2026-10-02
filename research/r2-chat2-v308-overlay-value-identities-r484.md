@@ -1,42 +1,22 @@
-# Chat 2 — Overlay value identities R484
+# Chat 2 — R484 duplicate Overlay value audit
 
 Exact client authority:
 
 `854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`
 
-## Result
+R484 retains **no semantic proposal**.
 
-- `rs/l/f/c` -> `CLIENT_CLASS_000484` -> `OverlayBounds`
-- `rs/l/f/f` -> `CLIENT_CLASS_000487` -> `OverlayMenuEntry`
-- review: `SEMREVIEW_6FB1B06E2FAFB648F712`
+The exact-v308 literal/source scan independently recovered:
 
-## OverlayBounds
+- `rs/l/f/c` -> `OverlayBounds`
+- `rs/l/f/f` -> `OverlayMenuEntry`
 
-Exact-v308 preserves the source-style toString field names:
+However, R12 already owns both exact classes with the same proposal identities:
 
-- topLeft
-- topCenter
-- topRight
-- bottomLeft
-- bottomRight
-- aboveChatboxRight
-- canvasTopRight
+- `OverlayBounds`: `SEMPROP_01ABB62F3DEE55929BF2`
+- `OverlayMenuEntry`: `SEMPROP_A555897388EBF2921283`
 
-The class owns exactly seven Rectangle values, supports copy/translation, maps
-OverlayPosition <-> Rectangle and exposes all bounds as a collection.
+The stronger later source fingerprinting is retained only as corroboration. The R484
+candidate/review/test artifacts are removed to preserve repository-wide semantic uniqueness.
 
-Historical RuneLite OverlayBounds has the same structure.
-
-## OverlayMenuEntry
-
-Exact-v308 preserves:
-
-`OverlayMenuEntry(menuAction=..., option=..., target=...)`
-
-The class stores menuAction + option + target and one callback
-`Consumer<CustomMenuEntry>`. The callback is excluded from value equality, matching
-historical RuneLite OverlayMenuEntry behavior.
-
-## Boundary
-
-Names are source-correlated exact-v308 identities. R484 remains non-canonical research only.
+R484 is a correction/audit batch only.

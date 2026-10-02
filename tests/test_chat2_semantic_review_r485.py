@@ -6,10 +6,8 @@ from spk_recovery.semantic_review import resolve_semantic_candidates
 SHA="854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 ROOT=Path(__file__).resolve().parents[1]
 CLASS_COORDS=[
-("CLIENT_CLASS_001017","rs/ui/a/a"),
 ("CLIENT_CLASS_001018","rs/ui/a/b"),
 ("CLIENT_CLASS_001025","rs/ui/a/i"),
-("CLIENT_CLASS_001026","rs/ui/a/j"),
 ]
 
 def _class_lineage():
@@ -28,18 +26,16 @@ class Chat2SemanticReviewR485Tests(unittest.TestCase):
     def test_r485_resolves_deterministically(self):
         actual=resolve_semantic_candidates(_class_lineage(),_member_lineage(),_load("mappings/candidates/v308.semantic.chat2.r485.json"))
         expected=_load("mappings/candidates/v308.semantic-review.chat2.r485.json")
-        self.assertEqual(actual["proposal_count"],4)
+        self.assertEqual(actual["proposal_count"],2)
         self.assertEqual(actual["unresolved"],[])
-        self.assertEqual(actual["review_id"],"SEMREVIEW_87DCA8E01DE2EB648DC6")
+        self.assertEqual(actual["review_id"],"SEMREVIEW_CE764AB3A4FDFFEF8646")
         self.assertEqual(actual,expected)
 
     def test_r485_expected_stable_ids(self):
         review=_load("mappings/candidates/v308.semantic-review.chat2.r485.json")
         self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{
-            "BoostInfoBox":"CLIENT_CLASS_001017",
             "CounterInfoBox":"CLIENT_CLASS_001018",
             "StatusInfoBox":"CLIENT_CLASS_001025",
-            "TimerInfoBox":"CLIENT_CLASS_001026",
         })
 
     def test_r485_names_owners_and_ids_do_not_overlap_prior_reviews(self):
