@@ -3041,6 +3041,364 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
             )
 
 
+    def test_iterator_next_assignment_cast_uses_exact_checkcast(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Item.java": (
+                        "package p;\n"
+                        "public class Item {}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Iterator;\n"
+                        "public class A {\n"
+                        "    public Item first(Iterator<Item> iterator) {\n"
+                        "        Item item = iterator.next();\n"
+                        "        return item;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.Iterator;\n"
+                "public class A {\n"
+                "    public Item first(Iterator iterator) {\n"
+                "        final Item item = iterator.next();\n"
+                "        return item;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac", "-cp", str(jar),
+                    "-d", str(root / "before-iterator-cast"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "final Item item = (Item)iterator.next();",
+                normalized,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "iterator_next_assignment_cast_action_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac", "-cp", str(jar),
+                    "-d", str(root / "after-iterator-cast"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode, 0, after.stdout + after.stderr
+            )
+
+    def test_iterator_next_assignment_cast_fails_without_checkcast(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Item.java": "package p; public class Item {}\n",
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Iterator;\n"
+                        "public class A {\n"
+                        "    public Object first(Iterator iterator) {\n"
+                        "        return iterator.next();\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.util.Iterator;\n"
+                "public class A {\n"
+                "    public Item first(Iterator iterator) {\n"
+                "        final Item item = iterator.next();\n"
+                "        return item;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "iterator_next_assignment_cast_action_count"
+                ],
+                0,
+            )
+
+    def test_primitive_enhanced_for_cast_uses_integer_unbox_flow(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Set;\n"
+                        "public class A {\n"
+                        "    public int sum(Set<Integer> values) {\n"
+                        "        int total = 0;\n"
+                        "        for (int value : values) total += value;\n"
+                        "        return total;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.Set;\n"
+                "public class A {\n"
+                "    public int sum(Set values) {\n"
+                "        int total = 0;\n"
+                "        for (int value : values) total += value;\n"
+                "        return total;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac", "-cp", str(jar),
+                    "-d", str(root / "before-enhanced-for"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "for (int value : (Iterable<Integer>)values)",
+                normalized,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "primitive_enhanced_for_iterable_cast_action_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac", "-cp", str(jar),
+                    "-d", str(root / "after-enhanced-for"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode, 0, after.stdout + after.stderr
+            )
+
+    def test_primitive_enhanced_for_cast_fails_without_integer_unbox(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Set;\n"
+                        "public class A {\n"
+                        "    public Object first(Set values) {\n"
+                        "        for (Object value : values) return value;\n"
+                        "        return null;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.util.Set;\n"
+                "public class A {\n"
+                "    public int sum(Set values) {\n"
+                "        int total = 0;\n"
+                "        for (int value : values) total += value;\n"
+                "        return total;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "primitive_enhanced_for_iterable_cast_action_count"
+                ],
+                0,
+            )
+
+    def test_map_get_narrow_local_uses_object_instanceof_checkcast(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Map;\n"
+                        "public class A {\n"
+                        "    public static int read(Map<String, Object> map, String key) {\n"
+                        "        Object value = map.get(key);\n"
+                        "        if (!(value instanceof Number)) {\n"
+                        "            throw new IllegalArgumentException(key);\n"
+                        "        }\n"
+                        "        return ((Number)value).intValue();\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    public static int read(Map<String, Object> map, String key) {\n"
+                "        final Number value = map.get(key);\n"
+                "        if (!(value instanceof Number)) {\n"
+                "            throw new IllegalArgumentException(key);\n"
+                "        }\n"
+                "        return value.intValue();\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac", "-cp", str(jar),
+                    "-d", str(root / "before-map-narrow"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "final Object value = map.get(key);",
+                normalized,
+            )
+            self.assertIn(
+                "return ((Number)value).intValue();",
+                normalized,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "object_backed_map_get_narrow_local_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "object_backed_map_get_narrow_local_reference_count"
+                ],
+                2,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac", "-cp", str(jar),
+                    "-d", str(root / "after-map-narrow"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode, 0, after.stdout + after.stderr
+            )
+
+    def test_map_get_narrow_local_fails_without_instanceof_checkcast(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Map;\n"
+                        "public class A {\n"
+                        "    public static Object read(Map map, String key) {\n"
+                        "        return map.get(key);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    public static int read(Map map, String key) {\n"
+                "        final Number value = map.get(key);\n"
+                "        if (!(value instanceof Number)) return -1;\n"
+                "        return value.intValue();\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "object_backed_map_get_narrow_local_action_count"
+                ],
+                0,
+            )
+
     def test_erased_generic_constructor_argument_cast_uses_exact_call(
         self,
     ):
