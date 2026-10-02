@@ -6284,6 +6284,7 @@ class ErasedSetIntEnhancedForTests(unittest.TestCase):
                 == "erased_set_int_enhanced_for_reconstruction"
             )
             self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(action["exact_set_iterator_call_count"], 1)
             self.assertEqual(action["exact_integer_unbox_flow_count"], 1)
 
             after = subprocess.run(
@@ -6419,6 +6420,63 @@ class ErasedIteratorAssignmentCastTests(unittest.TestCase):
                 text=True,
             )
             self.assertEqual(after.returncode, 0, after.stderr)
+
+    def test_erased_iterator_assignment_fails_closed_on_extra_exact_flow(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Value.java": (
+                        "package p;\n"
+                        "public class Value {}\n"
+                    ),
+                    "p/Current.java": (
+                        "package p;\n"
+                        "import java.util.ArrayList;\n"
+                        "import java.util.Iterator;\n"
+                        "import java.util.List;\n"
+                        "public class Current {\n"
+                        "    public static Value first() {\n"
+                        "        List<Value> values = new ArrayList<>();\n"
+                        "        values.add(new Value());\n"
+                        "        values.add(new Value());\n"
+                        "        Iterator<Value> iterator = values.iterator();\n"
+                        "        Value first = iterator.next();\n"
+                        "        Value second = iterator.next();\n"
+                        "        return first != null ? first : second;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.ArrayList;\n"
+                "import java.util.Iterator;\n"
+                "import java.util.List;\n"
+                "public class Current {\n"
+                "    public static Value first() {\n"
+                "        List values = new ArrayList();\n"
+                "        Iterator iterator = values.iterator();\n"
+                "        final Value value = iterator.next();\n"
+                "        return value;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "erased_iterator_assignment_cast_reconstruction"
+                    for row in report["actions"]
+                )
+            )
 
     def test_erased_iterator_assignment_fails_closed_on_checkcast_drift(self):
         with tempfile.TemporaryDirectory() as td:
