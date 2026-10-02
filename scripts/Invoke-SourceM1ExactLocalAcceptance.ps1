@@ -14,6 +14,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$DecompilerJar,
     [string]$SourceRewriteAcceptance,
+    [string]$ExternalOracleReport,
     [string]$Jdk = "C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot",
     [string]$OutDir = "$env:USERPROFILE\Desktop\SpawnPK-SourceM1-Exact"
 )
@@ -321,8 +322,10 @@ Invoke-PyChecked "REBUILD EXACT READABLE AUTHORITY" $ReadableArgs
 
 $BootstrapReadableManifest = Join-Path $BootstrapReadableDir "readable-client-manifest.json"
 $BootstrapReadableJar = Join-Path $BootstrapReadableDir "readable-client.jar"
+$BootstrapClassRemapPlan = Join-Path $BootstrapReadableDir "class-remap-plan.json"
 Require-File $BootstrapReadableManifest
 Require-File $BootstrapReadableJar
+Require-File $BootstrapClassRemapPlan
 
 $ReadableDoc = Get-JsonProjection `
     -Path $BootstrapReadableManifest `
@@ -652,6 +655,26 @@ if ($ReleaseExit -ne 0) {
                 "private_javac_summary_failed=" +
                 $PrivateSummaryExit
             ) -ForegroundColor Yellow
+        }
+
+        if (-not [string]::IsNullOrWhiteSpace($ExternalOracleReport)) {
+            Require-File $ExternalOracleReport
+            $ExternalFrontier = Join-Path $ReleaseDir "external-oracle-frontier-private.json"
+            $ExternalFrontierArgs = @(
+                "-3.13",
+                "-m",
+                "spk_recovery.external_oracle_frontier_cli",
+                $PrivateDiagnostic,
+                $ExternalOracleReport,
+                $BootstrapClassRemapPlan,
+                "--collision-plan",
+                $CollisionPlan,
+                "--out",
+                $ExternalFrontier
+            )
+            Invoke-PyChecked "INTERSECT EXTERNAL ORACLE WITH JAVAC FRONTIER" $ExternalFrontierArgs
+            Require-File $ExternalFrontier
+            Write-Host "external_oracle_frontier=$ExternalFrontier"
         }
     }
     exit 3
