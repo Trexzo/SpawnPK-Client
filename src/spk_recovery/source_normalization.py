@@ -3860,12 +3860,12 @@ def _normalize_erased_map_number_assignments(
     actions: list[dict[str, Any]] = []
 
     map_param_re = re.compile(
-        r"(?:java\\.util\\.)?Map\\s*<\\s*String\\s*,\\s*Object\\s*>\\s+"
-        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\\b"
+        r"(?:java\.util\.)?Map\s*<\s*String\s*,\s*Object\s*>\s+"
+        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b"
     )
     string_param_re = re.compile(
-        r"(?:java\\.lang\\.)?String\\s+"
-        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\\b"
+        r"(?:java\.lang\.)?String\s+"
+        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b"
     )
 
     for method_match in _METHOD_DECL_RE.finditer(whole_code):
@@ -3892,10 +3892,10 @@ def _normalize_erased_map_number_assignments(
         method_start = method_match.start()
         method_code = whole_code[method_start:body_end]
         assignment_re = re.compile(
-            r"\\b(?:(?:final)\\s+)?(?P<type>Number)\\s+"
-            r"(?P<value>[A-Za-z_$][A-Za-z0-9_$]*)\\s*=\\s*"
-            r"(?P<map>[A-Za-z_$][A-Za-z0-9_$]*)\\s*\\.\\s*get\\s*\\(\\s*"
-            r"(?P<key>[A-Za-z_$][A-Za-z0-9_$]*)\\s*\\)\\s*;"
+            r"\b(?:(?:final)\s+)?(?P<type>Number)\s+"
+            r"(?P<value>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*"
+            r"(?P<map>[A-Za-z_$][A-Za-z0-9_$]*)\s*\.\s*get\s*\(\s*"
+            r"(?P<key>[A-Za-z_$][A-Za-z0-9_$]*)\s*\)\s*;"
         )
         assignments = [
             match
@@ -3911,15 +3911,15 @@ def _normalize_erased_map_number_assignments(
             value_name = assignment.group("value")
             after = method_code[assignment.end():]
             if not re.search(
-                r"\\b" + re.escape(value_name)
-                + r"\\s+instanceof\\s+Number\\b",
+                r"\b" + re.escape(value_name)
+                + r"\s+instanceof\s+Number\b",
                 after,
             ):
                 continue
             if not re.search(
-                r"\\(\\s*Number\\s*\\)\\s*"
+                r"\(\s*Number\s*\)\s*"
                 + re.escape(value_name)
-                + r"\\b",
+                + r"\b",
                 after,
             ):
                 continue
@@ -3929,7 +3929,7 @@ def _normalize_erased_map_number_assignments(
 
         source_static = bool(
             re.search(
-                r"\\bstatic\\b",
+                r"\bstatic\b",
                 whole_code[method_match.start():brace_start],
             )
         )
