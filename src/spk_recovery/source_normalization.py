@@ -6489,13 +6489,13 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
     path: Path,
     readable_zip: zipfile.ZipFile,
 ) -> list[dict[str, Any]]:
-    """Qualify imported static-call owners hidden by primitive values.
+    """Qualify imported static-call owners hidden by source values.
 
     An explicit imported type such as b can be hidden in expression context
-    by a primitive field, parameter or local also named b. Source calls like
-    b.a(...) are rewritten to the fully-qualified imported type only when one
-    exact readable method proves the complete invokestatic owner/name
-    multiset.
+    by a field, parameter or local also named b. Source calls like b.a(...)
+    are rewritten to the fully-qualified imported type only when source scope
+    proves the shadow and one exact readable method proves the complete
+    invokestatic owner/name multiset.
     """
     rel = path.relative_to(source_root).as_posix()
     class_entry = Path(rel).with_suffix(".class").as_posix()
@@ -6584,8 +6584,6 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
                     simple_name=simple,
                 )
             )
-            if reference_parameter:
-                continue
 
             primitive_parameter, primitive_local_spans = (
                 _primitive_same_name_value_shadow_spans(
@@ -6595,8 +6593,9 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
                 )
             )
 
-            hierarchy_primitive_shadow = False
+            hierarchy_shadow = False
             hierarchy_shadow_owner: str | None = None
+            hierarchy_primitive_shadow_owner: str | None = None
             for owner, parsed in hierarchy:
                 declarations = [
                     field
@@ -6616,16 +6615,21 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
                     descriptor = str(
                         declarations[0].get("descriptor", "")
                     )
+                    hierarchy_shadow = True
+                    hierarchy_shadow_owner = owner
                     if descriptor in _PRIMITIVE_FIELD_DESCRIPTORS:
-                        hierarchy_primitive_shadow = True
-                        hierarchy_shadow_owner = owner
+                        hierarchy_primitive_shadow_owner = owner
                 break
 
-            if (
-                not hierarchy_primitive_shadow
-                and not primitive_parameter
-                and not primitive_local_spans
-            ):
+            whole_method_shadow = bool(
+                hierarchy_shadow
+                or reference_parameter
+                or primitive_parameter
+            )
+            local_shadow_spans = sorted(
+                set(reference_local_spans + primitive_local_spans)
+            )
+            if not whole_method_shadow and not local_shadow_spans:
                 continue
 
             affected_counts: dict[str, int] = {}
@@ -6641,14 +6645,9 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
                     + re.escape(method_name)
                     + r"\s*\("
                 )
-                simple_hits = [
-                    hit
-                    for hit in simple_call.finditer(method_code)
-                    if not any(
-                        start <= hit.start() < end
-                        for start, end in reference_local_spans
-                    )
-                ]
+                simple_hits = list(
+                    simple_call.finditer(method_code)
+                )
                 qualified_call = re.compile(
                     r"(?<![A-Za-z0-9_$.])"
                     + re.escape(qualified_owner)
@@ -6664,11 +6663,10 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
                     hit
                     for hit in simple_hits
                     if (
-                        hierarchy_primitive_shadow
-                        or primitive_parameter
+                        whole_method_shadow
                         or any(
                             start <= hit.start() < end
-                            for start, end in primitive_local_spans
+                            for start, end in local_shadow_spans
                         )
                     )
                 ]
@@ -6741,10 +6739,15 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
                     "method_descriptor": exact_method["descriptor"],
                     "simple_owner": simple,
                     "imported_owner": imported_owner,
+                    "hierarchy_shadow_owner": hierarchy_shadow_owner,
                     "hierarchy_primitive_shadow_owner": (
-                        hierarchy_shadow_owner
+                        hierarchy_primitive_shadow_owner
                     ),
+                    "reference_parameter_shadow": reference_parameter,
                     "primitive_parameter_shadow": primitive_parameter,
+                    "reference_local_shadow_scope_count": len(
+                        reference_local_spans
+                    ),
                     "primitive_local_shadow_scope_count": len(
                         primitive_local_spans
                     ),
@@ -6754,7 +6757,7 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
                     "provenance": {
                         "kind": "source_safety",
                         "reason": (
-                            "procyon_imported_static_method_owner_hidden_by_primitive_value"
+                            "procyon_imported_static_method_owner_hidden_by_value"
                         ),
                         "strategy": (
                             "exact_invokestatic_owner_name_multiset_qualification"
