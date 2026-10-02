@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_review_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "proposal_count": 1,
+  "review_id": "SEMREVIEW_390CONFIG000167A1",
+  "proposals": [{
+    "proposal_id": "SEMPROP_CONFIG000167A1",
+    "target_kind": "class",
+    "stable_id": "CLIENT_CLASS_000167",
+    "owner_logical_id": "CLIENT_CLASS_000167",
+    "source_build": "v308",
+    "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+    "source_coordinate": {"owner":"rs/f/a","name":null,"descriptor":null},
+    "proposed_name": "Configuration",
+    "confidence": 0.999,
+    "evidence": [
+      {"family":"recovered_source_map","detail":"Recovered semantic source map identifies rs/f/a as rs.Configuration."},
+      {"family":"exact_global_configuration_surface","detail":"Exact v308 rs/f/a is a global static configuration holder with a very large settings surface spanning server/client mode, rendering/gameframe, updater, developer-console and feature toggles; it is not an instance-domain model."},
+      {"family":"exact_wide_live_consumption","detail":"Exact dependency analysis finds direct rs/f/a references from over one hundred project classes including Client, Launcher, definitions, cache updaters, renderers, overlays and UI subsystems, proving it is live global client configuration authority."},
+      {"family":"cross_version_identity","detail":"Exact v307/v308 authority differs in only rs/f/a.class and the meaningful observed delta is the build constant 307 -> 308, independently corroborating this class as build/client configuration authority."}
+    ],
+    "note":"Source-proven global client Configuration class. No individual field semantics are proposed by this batch."
+  }],
+  "unresolved": []
+}
