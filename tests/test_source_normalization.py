@@ -3190,6 +3190,163 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+    def test_invokedynamic_lambda_outer_capture_collision_uses_bootstrap_helper(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Arrays;\n"
+                        "public class A {\n"
+                        "    public static long count(String prefix) {\n"
+                        "        return Arrays.asList(\"a\", \"ab\").stream()\n"
+                        "            .filter(value -> value.startsWith(prefix))\n"
+                        "            .count();\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.Arrays;\n"
+                "public class A {\n"
+                "    public static long count(String prefix) {\n"
+                "        return Arrays.asList(\"a\", \"ab\").stream()\n"
+                "            .filter(prefix -> prefix.startsWith(captured))\n"
+                "            .count();\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-d",
+                    str(root / "before-lambda-capture-collision"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertNotIn("startsWith(captured)", normalized)
+            self.assertNotIn(".filter(prefix ->", normalized)
+            self.assertIn("startsWith(prefix)", normalized)
+            self.assertRegex(
+                normalized,
+                r"\.filter\(recoveredLambdaArg_[0-9a-f]{12}"
+                r" -> recoveredLambdaArg_[0-9a-f]{12}"
+                r"\.startsWith\(prefix\)\)",
+            )
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "invokedynamic_lambda_outer_capture_collision"
+            )
+            self.assertEqual(
+                action["outer_parameter_name"],
+                "prefix",
+            )
+            self.assertEqual(
+                action["undeclared_capture_alias"],
+                "captured",
+            )
+            self.assertEqual(
+                action["member_name"],
+                "startsWith",
+            )
+            self.assertEqual(
+                action["invokedynamic"]["helper_descriptor"],
+                "(Ljava/lang/String;Ljava/lang/String;)Z",
+            )
+            self.assertEqual(action["replacement_count"], 3)
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_lambda_outer_capture_collision_action_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-d",
+                    str(root / "after-lambda-capture-collision"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_invokedynamic_lambda_outer_capture_collision_fails_on_helper_member_drift(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Arrays;\n"
+                        "public class A {\n"
+                        "    public static long count(String prefix) {\n"
+                        "        return Arrays.asList(\"a\", \"ab\").stream()\n"
+                        "            .filter(value -> value.endsWith(prefix))\n"
+                        "            .count();\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.Arrays;\n"
+                "public class A {\n"
+                "    public static long count(String prefix) {\n"
+                "        return Arrays.asList(\"a\", \"ab\").stream()\n"
+                "            .filter(prefix -> prefix.startsWith(captured))\n"
+                "            .count();\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_lambda_outer_capture_collision_action_count"
+                ],
+                0,
+            )
+
     def test_invokedynamic_parameter_alias_requires_capture_proof(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
