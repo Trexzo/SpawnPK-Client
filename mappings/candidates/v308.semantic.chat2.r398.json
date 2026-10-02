@@ -13,15 +13,15 @@
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "target": {"kind": "class", "owner": "rs/s/n/a", "name": null, "descriptor": null},
-      "proposed_name": "NotificationAlertsConfig",
+      "proposed_name": "NotificationsConfig",
       "confidence": 0.999,
       "evidence": [
+        {"family":"exact_source_map","detail":"Recovered semantic source map identifies rs/s/n/a as rs.plugins.notifications.NotificationsConfig."},
         {"family":"exact_config_group","detail":"The interface extends the shared config contract and carries exact config-group key 'notifications'."},
-        {"family":"exact_alert_sections","detail":"Its two exact sections are 'Alerts' / 'Configure things that alert notifications' and 'Settings' / 'The general settings for all notification alerts'."},
-        {"family":"exact_config_surface","detail":"Config items include de-aggro timer alerts, superior slayer/boss alerts, private-message alerts, tray icon, tray notifications, request focus, NotificationSound, timeout, FlashNotification, focused-client notification policy and flash color."},
-        {"family":"exact_plugin_pairing","detail":"rs/s/n/b provides this exact config interface from ConfigManager and consults its alert toggles before dispatching messages through the already-owned R14 Notifier."}
+        {"family":"exact_config_surface","detail":"Config items cover de-aggro, superior spawn and private-message alerts plus tray, focus, sound, timeout, FlashNotification, focused-client policy and flash color."},
+        {"family":"exact_plugin_pairing","detail":"rs/s/n/b provides this exact config interface from ConfigManager and consults its values before dispatching messages through R14 Notifier."}
       ],
-      "note":"Descriptive SpawnPK exact-v308 name for the dedicated notifications/alerts config interface. No upstream source-name identity is claimed."
+      "note":"Source-identified by the recovered semantic map and independently corroborated by exact-v308 config annotations and plugin pairing."
     },
     {
       "schema_version": 1,
@@ -31,15 +31,15 @@
       "source_build": "v308",
       "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
       "target": {"kind": "class", "owner": "rs/s/n/b", "name": null, "descriptor": null},
-      "proposed_name": "NotificationAlertsPlugin",
+      "proposed_name": "NotificationsPlugin",
       "confidence": 0.999,
       "evidence": [
+        {"family":"exact_source_map","detail":"Recovered semantic source map identifies rs/s/n/b as rs.plugins.notifications.NotificationsPlugin."},
         {"family":"exact_plugin_descriptor","detail":"The class extends the plugin base and its exact runtime descriptor is title 'Notifications', key 'notifications', tags ['notify','alert','notification'], hidden=true."},
-        {"family":"exact_notifier_ownership","detail":"The plugin injects R14 Notifier and NotificationAlertsConfig and routes qualifying events to Notifier with TrayIcon message types."},
-        {"family":"exact_alert_events","detail":"Subscribed event handlers implement de-aggro timer notification, superior slayer/boss spawn notification and private-message notification according to the config toggles; focus change resets de-aggro alert suppression."},
-        {"family":"exact_provider_pairing","detail":"The class provides NotificationAlertsConfig directly from the shared ConfigManager, fixing the config/plugin pair within one notifications feature."}
+        {"family":"exact_notifier_ownership","detail":"The plugin injects R14 Notifier and NotificationsConfig and routes qualifying events to Notifier with TrayIcon message types."},
+        {"family":"exact_alert_events","detail":"Subscribed handlers cover de-aggro timer, superior slayer/boss spawn and private-message notifications; focus changes reset the de-aggro suppression flag."}
       ],
-      "note":"Descriptive SpawnPK exact-v308 name. The runtime descriptor title is 'Notifications'; 'AlertsPlugin' distinguishes this event-generating plugin from the separately recovered Notifier delivery service."
+      "note":"Exact source identity is corroborated by the runtime plugin descriptor, event surface and direct Notifier/config pairing."
     }
   ],
   "conflicts": []
