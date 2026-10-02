@@ -100,6 +100,37 @@ class BytecodeMethodInvocationProfileTests(unittest.TestCase):
                 observed,
             )
 
+            instructions = method["instructions"]
+            self.assertTrue(
+                any(
+                    row.get("mnemonic") == "new"
+                    and row.get("type") == "p/B"
+                    for row in instructions
+                )
+            )
+            self.assertTrue(
+                any(
+                    row.get("mnemonic") == "astore"
+                    and row.get("local_index") == 0
+                    for row in instructions
+                )
+            )
+            self.assertTrue(
+                any(
+                    row.get("mnemonic") == "aload"
+                    and row.get("local_index") == 0
+                    for row in instructions
+                )
+            )
+            self.assertTrue(
+                any(
+                    row.get("mnemonic") == "invokestatic"
+                    and row.get("owner") == "p/B"
+                    and row.get("name") == "s"
+                    for row in instructions
+                )
+            )
+
             interface_method = next(
                 row
                 for row in profile["methods"]
@@ -144,6 +175,17 @@ class BytecodeMethodInvocationProfileTests(unittest.TestCase):
             self.assertGreaterEqual(
                 dynamic[0]["bootstrap_method_attr_index"],
                 0,
+            )
+
+            dynamic_instructions = [
+                row
+                for row in dynamic_method["instructions"]
+                if row.get("mnemonic") == "invokedynamic"
+            ]
+            self.assertEqual(len(dynamic_instructions), 1)
+            self.assertEqual(
+                dynamic_instructions[0]["descriptor"],
+                "(Ljava/lang/String;)Ljava/lang/String;",
             )
 
 
