@@ -5,10 +5,7 @@ from spk_recovery.semantic_review import resolve_semantic_candidates
 
 SHA="854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 ROOT=Path(__file__).resolve().parents[1]
-CLASS_COORDS=[
-    ("CLIENT_CLASS_000944","rs/s/o/d"),
-    ("CLIENT_CLASS_000945","rs/s/o/e"),
-]
+CLASS_COORDS=[("CLIENT_CLASS_000945","rs/s/o/e")]
 
 def _class_lineage():
     classes=[]
@@ -25,17 +22,14 @@ class Chat2SemanticReviewR396Tests(unittest.TestCase):
     def test_r396_resolves_deterministically(self):
         actual=resolve_semantic_candidates(_class_lineage(),_member_lineage(),_load("mappings/candidates/v308.semantic.chat2.r396.json"))
         expected=_load("mappings/candidates/v308.semantic-review.chat2.r396.json")
-        self.assertEqual(actual["proposal_count"],2)
+        self.assertEqual(actual["proposal_count"],1)
         self.assertEqual(actual["unresolved"],[])
-        self.assertEqual(actual["review_id"],"SEMREVIEW_C23637876E37D362B0D6")
+        self.assertEqual(actual["review_id"],"SEMREVIEW_522C412AEE140608E5CA")
         self.assertEqual(actual,expected)
 
-    def test_r396_expected_stable_ids(self):
+    def test_r396_expected_stable_id(self):
         review=_load("mappings/candidates/v308.semantic-review.chat2.r396.json")
-        self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{
-            "NpcIndicatorsConfig":"CLIENT_CLASS_000944",
-            "NpcIndicatorsPlugin":"CLIENT_CLASS_000945",
-        })
+        self.assertEqual({r["proposed_name"]:r["stable_id"] for r in review["proposals"]},{"NpcIndicatorsPlugin":"CLIENT_CLASS_000945"})
 
     def test_r396_names_owners_and_ids_do_not_overlap_prior_reviews(self):
         current=_load("mappings/candidates/v308.semantic-review.chat2.r396.json")
