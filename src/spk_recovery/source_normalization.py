@@ -3707,6 +3707,21 @@ def _normalize_invokedynamic_captured_class_local_aliases(
 
         capture_name = stream_match.group("capture")
         field_name = block_map.group("field")
+
+        capture_decl_re = re.compile(
+            r"\b(?:(?:java\.lang\.)?Class)"
+            r"(?:\s*<[^;=(){}]+>)?\s+"
+            + re.escape(capture_name)
+            + r"\b"
+        )
+        capture_decls = [
+            match
+            for match in capture_decl_re.finditer(method_code)
+            if match.start() < stream_match.start()
+        ]
+        if len(capture_decls) != 1:
+            continue
+
         field_get_re = re.compile(
             r"(?<![A-Za-z0-9_$])"
             + re.escape(field_name)
