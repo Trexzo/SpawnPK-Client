@@ -128,6 +128,18 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 "/normalization_summary/invokedynamic_image_loader_local_action_count",
             "invokedynamic_image_loader_local_reference_count":
                 "/normalization_summary/invokedynamic_image_loader_local_reference_count",
+            "iterator_next_assignment_cast_action_count":
+                "/normalization_summary/iterator_next_assignment_cast_action_count",
+            "iterator_next_assignment_cast_reference_count":
+                "/normalization_summary/iterator_next_assignment_cast_reference_count",
+            "primitive_enhanced_for_iterable_cast_action_count":
+                "/normalization_summary/primitive_enhanced_for_iterable_cast_action_count",
+            "primitive_enhanced_for_iterable_cast_reference_count":
+                "/normalization_summary/primitive_enhanced_for_iterable_cast_reference_count",
+            "object_backed_map_get_narrow_local_action_count":
+                "/normalization_summary/object_backed_map_get_narrow_local_action_count",
+            "object_backed_map_get_narrow_local_reference_count":
+                "/normalization_summary/object_backed_map_get_narrow_local_reference_count",
         }
         for name, pointer in expected.items():
             self.assertIn(
@@ -153,6 +165,21 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         self.assertIn(
             'INVOKEDYNAMIC_IMAGE_LOADER_LOCAL_REFERENCES='
             '$($Recovered.invokedynamic_image_loader_local_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'ITERATOR_NEXT_ASSIGNMENT_CAST_REFERENCES='
+            '$($Recovered.iterator_next_assignment_cast_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'PRIMITIVE_ENHANCED_FOR_ITERABLE_CAST_REFERENCES='
+            '$($Recovered.primitive_enhanced_for_iterable_cast_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'OBJECT_BACKED_MAP_GET_NARROW_LOCAL_REFERENCES='
+            '$($Recovered.object_backed_map_get_narrow_local_reference_count)',
             script,
         )
 
