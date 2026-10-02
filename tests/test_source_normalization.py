@@ -3236,6 +3236,240 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
             )
 
 
+
+    def test_collectors_to_list_wildcard_sink_casts_use_exact_sink_signature(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/G.java": (
+                        "package p;\n"
+                        "public class G {}\n"
+                    ),
+                    "p/M.java": (
+                        "package p;\n"
+                        "public class M {}\n"
+                    ),
+                    "p/H.java": (
+                        "package p;\n"
+                        "public class H {}\n"
+                    ),
+                    "p/D.java": (
+                        "package p;\n"
+                        "import java.util.Collection;\n"
+                        "public class D {\n"
+                        "    public D(G group, Collection<M> sections, "
+                        "Collection<H> items) {}\n"
+                        "}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Arrays;\n"
+                        "import java.util.Collection;\n"
+                        "import java.util.stream.Collectors;\n"
+                        "public class A {\n"
+                        "    public D build(Class<?> clazz) {\n"
+                        "        return new D(new G(),\n"
+                        "            Arrays.stream(clazz.getDeclaredFields())\n"
+                        "                .map(field -> new M())\n"
+                        "                .collect(Collectors.toList()),\n"
+                        "            Arrays.stream(clazz.getMethods())\n"
+                        "                .map(method -> new H())\n"
+                        "                .collect(Collectors.toList()));\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.Arrays;\n"
+                "import java.util.Collection;\n"
+                "import java.util.List;\n"
+                "import java.util.stream.Collector;\n"
+                "import java.util.stream.Collectors;\n"
+                "public class A {\n"
+                "    public D build(Class<?> clazz) {\n"
+                "        return new D(new G(),\n"
+                "            (Collection<M>)Arrays.stream("
+                "clazz.getDeclaredFields())\n"
+                "                .map(field -> new M())\n"
+                "                .collect((Collector<? super Object, ?, "
+                "List<? super Object>>)Collectors.toList()),\n"
+                "            (Collection<H>)Arrays.stream("
+                "clazz.getMethods())\n"
+                "                .map(method -> new H())\n"
+                "                .collect((Collector<? super Object, ?, "
+                "List<? super Object>>)Collectors.toList()));\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-wildcard-collector"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertNotIn(
+                "Collector<? super Object, ?, List<? super Object>>",
+                normalized,
+            )
+            self.assertEqual(
+                normalized.count("Collectors.toList()"),
+                2,
+            )
+            self.assertIn("(Collection<M>)Arrays.stream", normalized)
+            self.assertIn("(Collection<H>)Arrays.stream", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "collectors_to_list_wildcard_sink_cast_removal"
+            )
+            self.assertEqual(action["source_element_types"], ["M", "H"])
+            self.assertEqual(action["exact_element_owners"], ["p/M", "p/H"])
+            self.assertEqual(action["sink_owner"], "p/D")
+            self.assertEqual(action["replacement_count"], 2)
+            self.assertEqual(
+                report["summary"][
+                    "collectors_to_list_wildcard_sink_cast_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "collectors_to_list_wildcard_sink_cast_reference_count"
+                ],
+                2,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-wildcard-collector"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_collectors_to_list_wildcard_sink_casts_require_typed_sink(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/G.java": (
+                        "package p;\n"
+                        "public class G {}\n"
+                    ),
+                    "p/M.java": (
+                        "package p;\n"
+                        "public class M {}\n"
+                    ),
+                    "p/H.java": (
+                        "package p;\n"
+                        "public class H {}\n"
+                    ),
+                    "p/D.java": (
+                        "package p;\n"
+                        "import java.util.Collection;\n"
+                        "public class D {\n"
+                        "    public D(G group, Collection<?> sections, "
+                        "Collection<?> items) {}\n"
+                        "}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Arrays;\n"
+                        "import java.util.stream.Collectors;\n"
+                        "public class A {\n"
+                        "    public D build(Class<?> clazz) {\n"
+                        "        return new D(new G(),\n"
+                        "            Arrays.stream(clazz.getDeclaredFields())\n"
+                        "                .map(field -> new M())\n"
+                        "                .collect(Collectors.toList()),\n"
+                        "            Arrays.stream(clazz.getMethods())\n"
+                        "                .map(method -> new H())\n"
+                        "                .collect(Collectors.toList()));\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.util.Arrays;\n"
+                "import java.util.Collection;\n"
+                "import java.util.List;\n"
+                "import java.util.stream.Collector;\n"
+                "import java.util.stream.Collectors;\n"
+                "public class A {\n"
+                "    public D build(Class<?> clazz) {\n"
+                "        return new D(new G(),\n"
+                "            (Collection<M>)Arrays.stream("
+                "clazz.getDeclaredFields())\n"
+                "                .map(field -> new M())\n"
+                "                .collect((Collector<? super Object, ?, "
+                "List<? super Object>>)Collectors.toList()),\n"
+                "            (Collection<H>)Arrays.stream("
+                "clazz.getMethods())\n"
+                "                .map(method -> new H())\n"
+                "                .collect((Collector<? super Object, ?, "
+                "List<? super Object>>)Collectors.toList()));\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "collectors_to_list_wildcard_sink_cast_action_count"
+                ],
+                0,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "collectors_to_list_wildcard_sink_cast_reference_count"
+                ],
+                0,
+            )
+
     def test_erased_generic_constructor_argument_cast_uses_exact_call(
         self,
     ):
