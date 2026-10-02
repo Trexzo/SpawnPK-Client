@@ -4584,6 +4584,312 @@ def _normalize_erased_generic_constructor_argument_casts(
 
 
 
+def _normalize_enum_valueof_object_class_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Replace impossible Class<Object> Enum.valueOf casts with raw Class.
+
+    Procyon can emit Enum.valueOf((Class<Object>) type, value), which is
+    source-illegal because Enum.valueOf requires Class<T> where
+    T extends Enum<T>. The exact JVM call is erased to raw Class. Rewrite
+    only the Class<Object> type token when one uniquely correlated method
+    proves the same source parameters and the exact bytecode flow:
+    instanceof Class -> Class.isEnum -> checkcast Class ->
+    Enum.valueOf(Class,String).
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    call_re = re.compile(
+        r"(?:(?:java\.lang\.)?Enum)\s*\.\s*valueOf\s*\(\s*"
+        r"\(\s*(?P<class_type>(?:java\.lang\.)?Class\s*<\s*"
+        r"(?:java\.lang\.)?Object\s*>)\s*\)\s*"
+        r"(?P<class_arg>[A-Za-z_$][A-Za-z0-9_$]*)\s*,\s*"
+        r"(?P<string_arg>[A-Za-z_$][A-Za-z0-9_$]*)\s*\)"
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        params = method_match.group("params")
+        source_shapes = _source_parameter_shapes(params)
+        if source_shapes is None:
+            continue
+
+        parts: list[str] = []
+        start = 0
+        depth = 0
+        for index, ch in enumerate(params):
+            if ch == "<":
+                depth += 1
+            elif ch == ">" and depth:
+                depth -= 1
+            elif ch == "," and depth == 0:
+                parts.append(params[start:index].strip())
+                start = index + 1
+        if params.strip():
+            parts.append(params[start:].strip())
+        if len(parts) != len(source_shapes):
+            continue
+
+        param_names: list[str] = []
+        for part in parts:
+            name_match = re.search(
+                r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)"
+                r"\s*(?:\[\]\s*)*$",
+                part,
+            )
+            if name_match is None:
+                param_names = []
+                break
+            param_names.append(name_match.group("name"))
+        if len(param_names) != len(source_shapes):
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        source_calls = list(call_re.finditer(method_code))
+        if len(source_calls) != 1:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        proven: list[
+            tuple[dict[str, Any], re.Match[str], int, int]
+        ] = []
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    params,
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+            if (
+                _descriptor_return_descriptor(descriptor)
+                != "Ljava/lang/Object;"
+            ):
+                continue
+
+            descriptor_shapes = _descriptor_parameter_shapes(descriptor)
+            slots = _descriptor_parameter_local_slots(
+                descriptor,
+                is_static=source_static,
+            )
+            if (
+                descriptor_shapes is None
+                or slots is None
+                or len(descriptor_shapes) != len(param_names)
+                or len(slots) != len(param_names)
+            ):
+                continue
+
+            string_positions = [
+                index
+                for index, (arrays, kind, name) in enumerate(
+                    descriptor_shapes
+                )
+                if arrays == 0
+                and kind == "ref"
+                and name == "java/lang/String"
+            ]
+            type_positions = [
+                index
+                for index, (arrays, kind, name) in enumerate(
+                    descriptor_shapes
+                )
+                if arrays == 0
+                and kind == "ref"
+                and name == "java/lang/reflect/Type"
+            ]
+            if len(string_positions) != 1 or len(type_positions) != 1:
+                continue
+
+            string_position = string_positions[0]
+            type_position = type_positions[0]
+            string_name = param_names[string_position]
+            type_name = param_names[type_position]
+            matching_source_calls = [
+                call
+                for call in source_calls
+                if call.group("class_arg") == type_name
+                and call.group("string_arg") == string_name
+            ]
+            if len(matching_source_calls) != 1:
+                continue
+
+            string_slot = slots[string_position]
+            type_slot = slots[type_position]
+            instructions = list(exact_method.get("instructions", []))
+
+            enum_calls = [
+                index
+                for index, item in enumerate(instructions)
+                if item.get("mnemonic") == "invokestatic"
+                and item.get("owner") == "java/lang/Enum"
+                and item.get("name") == "valueOf"
+                and item.get("descriptor")
+                == "(Ljava/lang/Class;Ljava/lang/String;)"
+                "Ljava/lang/Enum;"
+            ]
+            if len(enum_calls) != 1:
+                continue
+            enum_index = enum_calls[0]
+            if enum_index < 3:
+                continue
+            if not (
+                instructions[enum_index - 3].get("mnemonic") == "aload"
+                and int(
+                    instructions[enum_index - 3].get("local_index", -1)
+                )
+                == type_slot
+                and instructions[enum_index - 2].get("mnemonic")
+                == "checkcast"
+                and instructions[enum_index - 2].get("type")
+                == "java/lang/Class"
+                and instructions[enum_index - 1].get("mnemonic") == "aload"
+                and int(
+                    instructions[enum_index - 1].get("local_index", -1)
+                )
+                == string_slot
+            ):
+                continue
+
+            instanceof_sites = [
+                index
+                for index in range(1, len(instructions))
+                if instructions[index].get("mnemonic") == "instanceof"
+                and instructions[index].get("type") == "java/lang/Class"
+                and instructions[index - 1].get("mnemonic") == "aload"
+                and int(
+                    instructions[index - 1].get("local_index", -1)
+                )
+                == type_slot
+            ]
+            is_enum_sites = [
+                index
+                for index in range(2, len(instructions))
+                if instructions[index].get("mnemonic") == "invokevirtual"
+                and instructions[index].get("owner") == "java/lang/Class"
+                and instructions[index].get("name") == "isEnum"
+                and instructions[index].get("descriptor") == "()Z"
+                and instructions[index - 1].get("mnemonic") == "checkcast"
+                and instructions[index - 1].get("type")
+                == "java/lang/Class"
+                and instructions[index - 2].get("mnemonic") == "aload"
+                and int(
+                    instructions[index - 2].get("local_index", -1)
+                )
+                == type_slot
+            ]
+            if (
+                len(instanceof_sites) != 1
+                or len(is_enum_sites) != 1
+                or not (
+                    instanceof_sites[0]
+                    < is_enum_sites[0]
+                    < enum_index
+                )
+            ):
+                continue
+
+            proven.append(
+                (
+                    exact_method,
+                    matching_source_calls[0],
+                    type_slot,
+                    string_slot,
+                )
+            )
+
+        if len(proven) != 1:
+            continue
+
+        exact_method, call, type_slot, string_slot = proven[0]
+        raw_class = call.group("class_type").split("<", 1)[0].strip()
+        edit_start = method_start + call.start("class_type")
+        edit_end = method_start + call.end("class_type")
+        edits.append((edit_start, edit_end, raw_class))
+        actions.append(
+            {
+                "kind": "enum_valueof_raw_class_cast_reconstruction",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": exact_method.get("descriptor"),
+                "class_argument_name": call.group("class_arg"),
+                "string_argument_name": call.group("string_arg"),
+                "class_argument_slot": type_slot,
+                "string_argument_slot": string_slot,
+                "replacement_count": 1,
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_enum_valueof_impossible_class_object_cast"
+                    ),
+                    "strategy": (
+                        "exact_class_is_enum_and_erased_enum_valueof_flow"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping Enum.valueOf cast edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_erased_map_number_assignments(
     *,
     source_root: Path,
@@ -10497,6 +10803,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_enum_valueof_object_class_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_erased_map_number_assignments(
                         source_root=source_root,
                         path=path,
@@ -10784,6 +11097,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "erased_generic_constructor_argument_cast_removal"
+        ),
+        "enum_valueof_raw_class_cast_action_count": sum(
+            action["kind"]
+            == "enum_valueof_raw_class_cast_reconstruction"
+            for action in actions
+        ),
+        "enum_valueof_raw_class_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "enum_valueof_raw_class_cast_reconstruction"
         ),
         "erased_map_number_assignment_action_count": sum(
             action["kind"]
