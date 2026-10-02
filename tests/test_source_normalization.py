@@ -2095,6 +2095,201 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 after.stdout + after.stderr,
             )
 
+    def test_imported_static_method_owner_shadowed_by_reference_field(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/r.java": (
+                        "package dep;\n"
+                        "public class r {\n"
+                        "    public static r c(int x) { return new r(); }\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "import dep.r;\n"
+                        "public class Current {\n"
+                        "    public byte[][][] r;\n"
+                        "    public r m(int n) {\n"
+                        "        return dep.r.c(n);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package use;\n"
+                "import dep.r;\n"
+                "public class Current {\n"
+                "    public byte[][][] r;\n"
+                "    public r m(int n) {\n"
+                "        return r.c(n);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-imported-reference-field"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn("return dep.r.c(n);", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "shadowed_imported_static_method_owner_qualification"
+            )
+            self.assertEqual(action["hierarchy_shadow_owner"], "use/Current")
+            self.assertIsNone(
+                action["hierarchy_primitive_shadow_owner"]
+            )
+            self.assertEqual(action["replacement_count"], 1)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-imported-reference-field"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_imported_static_method_owner_shadowed_by_reference_parameter(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/r.java": (
+                        "package dep;\n"
+                        "public class r {\n"
+                        "    public static int c(int x) { return x + 1; }\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "import dep.r;\n"
+                        "public class Current {\n"
+                        "    public static int m(byte[] r, int n) {\n"
+                        "        return dep.r.c(n);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package use;\n"
+                "import dep.r;\n"
+                "public class Current {\n"
+                "    public static int m(byte[] r, int n) {\n"
+                "        return r.c(n);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn("return dep.r.c(n);", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "shadowed_imported_static_method_owner_qualification"
+            )
+            self.assertTrue(action["reference_parameter_shadow"])
+            self.assertEqual(action["replacement_count"], 1)
+
+    def test_imported_static_method_owner_shadowed_by_reference_local_scope(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/r.java": (
+                        "package dep;\n"
+                        "public class r {\n"
+                        "    public static int c(int x) { return x + 1; }\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "import dep.r;\n"
+                        "public class Current {\n"
+                        "    public static int m(int n) {\n"
+                        "        { byte[] r = null; return dep.r.c(n); }\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package use;\n"
+                "import dep.r;\n"
+                "public class Current {\n"
+                "    public static int m(int n) {\n"
+                "        { byte[] r = null; return r.c(n); }\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn("return dep.r.c(n);", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "shadowed_imported_static_method_owner_qualification"
+            )
+            self.assertEqual(
+                action["reference_local_shadow_scope_count"],
+                1,
+            )
+            self.assertEqual(action["replacement_count"], 1)
+
     def test_imported_static_method_owner_count_mismatch_fails_closed(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
