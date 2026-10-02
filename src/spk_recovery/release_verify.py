@@ -143,6 +143,51 @@ def _load_json_authority(
     return data
 
 
+def _private_mapping_sha256(plan: dict[str, Any]) -> str:
+    rows = plan.get("remaps")
+    if not isinstance(rows, list):
+        raise RecoveryReleaseVerificationError(
+            "private collision plan remaps must be a list"
+        )
+    mapping: dict[str, str] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            raise RecoveryReleaseVerificationError(
+                "private collision plan remap row is malformed"
+            )
+        old = row.get("old_internal_name")
+        new = row.get("new_internal_name")
+        if (
+            not isinstance(old, str)
+            or not old
+            or not isinstance(new, str)
+            or not new
+        ):
+            raise RecoveryReleaseVerificationError(
+                "private collision plan remap lacks exact names"
+            )
+        prior = mapping.get(old)
+        if prior is not None and prior != new:
+            raise RecoveryReleaseVerificationError(
+                "private collision plan has conflicting remap authority"
+            )
+        mapping[old] = new
+    material = [
+        {
+            "old_internal_name": old,
+            "new_internal_name": mapping[old],
+        }
+        for old in sorted(mapping)
+    ]
+    raw = json.dumps(
+        material,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()
+
+
 def _sha_list(value: Any, *, label: str) -> list[str]:
     if (
         not isinstance(value, list)
@@ -493,6 +538,17 @@ def verify_recovery_release(
                     )
                 ).lower(),
                 actual=_sha256_file(plan_path),
+            )
+            _check(
+                checks,
+                name="collision_private_mapping_sha256",
+                expected=str(
+                    recovered_source_manifest.get(
+                        "collision_mapping_sha256",
+                        "",
+                    )
+                ).lower(),
+                actual=_private_mapping_sha256(private_plan),
             )
 
     official_first_mode = (
