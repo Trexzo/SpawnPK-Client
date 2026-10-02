@@ -3970,6 +3970,305 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+    def test_invokedynamic_captured_class_local_alias_uses_exact_helper(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/D.java": (
+                        "package p;\n"
+                        "public class D {\n"
+                        "    public D(String value) {}\n"
+                        "}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Arrays;\n"
+                        "import java.util.List;\n"
+                        "import java.util.stream.Collectors;\n"
+                        "public class A {\n"
+                        "    public List<D> scan(Object value) {\n"
+                        "        Class<?> clazz = value.getClass();\n"
+                        "        return Arrays.stream(clazz.getDeclaredFields())\n"
+                        "            .map(field -> {\n"
+                        "                try {\n"
+                        "                    return new D(String.valueOf("
+                        "field.get(clazz)));\n"
+                        "                } catch (IllegalAccessException ex) {\n"
+                        "                    System.err.println("
+                        "clazz.getSimpleName() + field.getName());\n"
+                        "                    return null;\n"
+                        "                }\n"
+                        "            })\n"
+                        "            .collect(Collectors.toList());\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.Arrays;\n"
+                "import java.util.List;\n"
+                "import java.util.stream.Collectors;\n"
+                "public class A {\n"
+                "    public List<D> scan(Object value) {\n"
+                "        Class<?> clazz = value.getClass();\n"
+                "        return Arrays.stream(clazz.getDeclaredFields())\n"
+                "            .map(field -> {\n"
+                "                try {\n"
+                "                    return new D(String.valueOf("
+                "field.get(obj)));\n"
+                "                } catch (IllegalAccessException ex) {\n"
+                "                    System.err.println("
+                "obj.getSimpleName() + field.getName());\n"
+                "                    return null;\n"
+                "                }\n"
+                "            })\n"
+                "            .collect(Collectors.toList());\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-captured-class-alias"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn("field.get(clazz)", normalized)
+            self.assertIn("clazz.getSimpleName()", normalized)
+            self.assertNotIn("field.get(obj)", normalized)
+            self.assertNotIn("obj.getSimpleName()", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "invokedynamic_captured_class_local_alias"
+            )
+            self.assertEqual(action["capture_source_name"], "clazz")
+            self.assertEqual(action["undeclared_capture_alias"], "obj")
+            self.assertEqual(
+                action["field_lambda_parameter_name"],
+                "field",
+            )
+            self.assertEqual(action["replacement_count"], 2)
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_captured_class_local_alias_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_captured_class_local_alias_reference_count"
+                ],
+                2,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-captured-class-alias"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_invokedynamic_captured_class_local_alias_requires_capture(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/D.java": (
+                        "package p;\n"
+                        "public class D {\n"
+                        "    public D(String value) {}\n"
+                        "}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Arrays;\n"
+                        "import java.util.List;\n"
+                        "import java.util.stream.Collectors;\n"
+                        "public class A {\n"
+                        "    public List<D> scan(Object value) {\n"
+                        "        Class<?> clazz = value.getClass();\n"
+                        "        return Arrays.stream(clazz.getDeclaredFields())\n"
+                        "            .map(field -> {\n"
+                        "                try {\n"
+                        "                    return new D(String.valueOf("
+                        "field.get(null)));\n"
+                        "                } catch (IllegalAccessException ex) {\n"
+                        "                    System.err.println(field.getName());\n"
+                        "                    return null;\n"
+                        "                }\n"
+                        "            })\n"
+                        "            .collect(Collectors.toList());\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.util.Arrays;\n"
+                "import java.util.List;\n"
+                "import java.util.stream.Collectors;\n"
+                "public class A {\n"
+                "    public List<D> scan(Object value) {\n"
+                "        Class<?> clazz = value.getClass();\n"
+                "        return Arrays.stream(clazz.getDeclaredFields())\n"
+                "            .map(field -> {\n"
+                "                try {\n"
+                "                    return new D(String.valueOf("
+                "field.get(obj)));\n"
+                "                } catch (IllegalAccessException ex) {\n"
+                "                    System.err.println("
+                "obj.getSimpleName() + field.getName());\n"
+                "                    return null;\n"
+                "                }\n"
+                "            })\n"
+                "            .collect(Collectors.toList());\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_captured_class_local_alias_action_count"
+                ],
+                0,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_captured_class_local_alias_reference_count"
+                ],
+                0,
+            )
+
+    def test_invokedynamic_captured_class_local_alias_requires_declared_class_source(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/D.java": (
+                        "package p;\n"
+                        "public class D {\n"
+                        "    public D(String value) {}\n"
+                        "}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Arrays;\n"
+                        "import java.util.List;\n"
+                        "import java.util.stream.Collectors;\n"
+                        "public class A {\n"
+                        "    public List<D> scan(Object value) {\n"
+                        "        Class<?> clazz = value.getClass();\n"
+                        "        return Arrays.stream(clazz.getDeclaredFields())\n"
+                        "            .map(field -> {\n"
+                        "                try {\n"
+                        "                    return new D(String.valueOf("
+                        "field.get(clazz)));\n"
+                        "                } catch (IllegalAccessException ex) {\n"
+                        "                    System.err.println("
+                        "clazz.getSimpleName() + field.getName());\n"
+                        "                    return null;\n"
+                        "                }\n"
+                        "            })\n"
+                        "            .collect(Collectors.toList());\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.util.Arrays;\n"
+                "import java.util.List;\n"
+                "import java.util.stream.Collectors;\n"
+                "public class A {\n"
+                "    public List<D> scan(Object value) {\n"
+                "        return Arrays.stream(clazz.getDeclaredFields())\n"
+                "            .map(field -> {\n"
+                "                try {\n"
+                "                    return new D(String.valueOf("
+                "field.get(obj)));\n"
+                "                } catch (IllegalAccessException ex) {\n"
+                "                    System.err.println("
+                "obj.getSimpleName() + field.getName());\n"
+                "                    return null;\n"
+                "                }\n"
+                "            })\n"
+                "            .collect(Collectors.toList());\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_captured_class_local_alias_action_count"
+                ],
+                0,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_captured_class_local_alias_reference_count"
+                ],
+                0,
+            )
+
+
     def test_erased_generic_constructor_argument_cast_uses_exact_call(
         self,
     ):
