@@ -192,6 +192,105 @@ class BytecodeMethodInvocationProfileTests(unittest.TestCase):
             )
 
 
+    def test_profiles_lambda_bootstrap_implementation_target(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "src" / "p"
+            classes = root / "classes"
+            source.mkdir(parents=True)
+            classes.mkdir(parents=True)
+
+            (source / "A.java").write_text(
+                "package p;\n"
+                "import java.util.function.Predicate;\n"
+                "public class A {\n"
+                "    public static Predicate<String> make(String prefix) {\n"
+                "        return value -> value.startsWith(prefix);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            compiled = subprocess.run(
+                [
+                    "javac",
+                    "-d",
+                    str(classes),
+                    str(source / "A.java"),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                compiled.returncode,
+                0,
+                compiled.stdout + compiled.stderr,
+            )
+
+            profile = profile_class_field_accesses(
+                (classes / "p" / "A.class").read_bytes()
+            )
+            method = next(
+                row
+                for row in profile["methods"]
+                if row["name"] == "make"
+                and row["descriptor"]
+                == "(Ljava/lang/String;)Ljava/util/function/Predicate;"
+            )
+            dynamic = [
+                row
+                for row in method["method_invocations"]
+                if row["operation"] == "invokedynamic"
+            ]
+            self.assertEqual(len(dynamic), 1)
+
+            bootstrap_index = dynamic[0][
+                "bootstrap_method_attr_index"
+            ]
+            bootstrap = profile["bootstrap_methods"][
+                bootstrap_index
+            ]
+            self.assertEqual(bootstrap["index"], bootstrap_index)
+            self.assertEqual(
+                bootstrap["bootstrap_method"]["owner"],
+                "java/lang/invoke/LambdaMetafactory",
+            )
+            self.assertEqual(
+                bootstrap["bootstrap_method"]["name"],
+                "metafactory",
+            )
+
+            method_handles = [
+                row["method_handle"]
+                for row in bootstrap["arguments"]
+                if row["kind"] == "method_handle"
+            ]
+            implementation = next(
+                row
+                for row in method_handles
+                if row["owner"] == "p/A"
+            )
+            self.assertEqual(
+                implementation["descriptor"],
+                "(Ljava/lang/String;Ljava/lang/String;)Z",
+            )
+            self.assertEqual(
+                implementation["target_kind"],
+                "method",
+            )
+            self.assertEqual(
+                implementation["reference_kind"],
+                6,
+            )
+
+            method_types = [
+                row["descriptor"]
+                for row in bootstrap["arguments"]
+                if row["kind"] == "method_type"
+            ]
+            self.assertIn("(Ljava/lang/Object;)Z", method_types)
+            self.assertIn("(Ljava/lang/String;)Z", method_types)
+
     def test_profiles_exact_utf8_constants(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
