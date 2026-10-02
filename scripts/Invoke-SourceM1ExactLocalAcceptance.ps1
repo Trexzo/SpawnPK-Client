@@ -15,6 +15,8 @@ param(
     [string]$DecompilerJar,
     [string]$SourceRewriteAcceptance,
     [string]$ExternalOracleReport,
+    [ValidateRange(1, 20)]
+    [int]$FocusFiles = 8,
     [string]$Jdk = "C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot",
     [string]$OutDir = "$env:USERPROFILE\Desktop\SpawnPK-SourceM1-Exact"
 )
@@ -655,7 +657,7 @@ if ($ReleaseExit -ne 0) {
         & py -3.13 -m spk_recovery.javac_frontier_summary_cli `
             $PrivateDiagnostic `
             --top 20 `
-            --focus-files 3 `
+            --focus-files $FocusFiles `
             --source-lines
         $PrivateSummaryExit = $LASTEXITCODE
         if ($PrivateSummaryExit -ne 0) {
