@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "kind": "semantic_candidate_set",
+  "canonical": false,
+  "source_build": "v308",
+  "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "candidates": [
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/m/a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InputEventQueue",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_awt_producers",
+          "detail": "rs/C enqueues into rs/m/a from its live AWT mouse/key input handlers, including press/release, motion/drag and key-event paths, passing event type, button/key code, coordinates and event timestamps."
+        },
+        {
+          "family": "exact_ring_buffer",
+          "detail": "The class owns a fixed 256-entry rs/m/a$a ring, synchronized enqueue/reset/drain operations, and coalesces consecutive type-3 movement records while preserving min/max x/y bounds and latest timestamp."
+        },
+        {
+          "family": "exact_client_drain",
+          "detail": "Client.by() drains rs/m/a into its preallocated record array before the normal input/game-tick path, then applies record types 1..5 to live mouse-button, release, pointer/movement and key state."
+        },
+        {
+          "family": "exact_scope_boundary",
+          "detail": "The class is not network telemetry or rendering state; it is the synchronized handoff queue between AWT input callbacks and Client input processing."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for the synchronized AWT-to-client input event queue."
+    },
+    {
+      "schema_version": 1,
+      "kind": "semantic_name_candidate",
+      "canonical": false,
+      "status": "CANDIDATE",
+      "source_build": "v308",
+      "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+      "target": {
+        "kind": "class",
+        "owner": "rs/m/a$a",
+        "name": null,
+        "descriptor": null
+      },
+      "proposed_name": "InputEventRecord",
+      "confidence": 0.999,
+      "evidence": [
+        {
+          "family": "exact_record_state",
+          "detail": "Each record stores event type, button/key code, current x/y, movement min/max x/y bounds and timestamp; enqueue initializes these fields and movement coalescing widens the bounds."
+        },
+        {
+          "family": "exact_queue_ownership",
+          "detail": "InputEventQueue owns exactly 256 preallocated records and copies queued record state into Client's drain buffer."
+        },
+        {
+          "family": "exact_client_consumption",
+          "detail": "Client.by() branches on the record type and consumes the stored code, coordinates, bounds and timestamp to update live input state."
+        }
+      ],
+      "note": "Descriptive exact-v308 name for one buffered client input event record."
+    }
+  ],
+  "conflicts": []
+}
