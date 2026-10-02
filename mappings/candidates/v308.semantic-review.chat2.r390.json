@@ -5,7 +5,7 @@
   "source_build": "v308",
   "source_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
   "proposal_count": 1,
-  "review_id": "SEMREVIEW_CE03CC434B82E76F3095",
+  "review_id": "SEMREVIEW_9732A12EFE1BAC09C59D",
   "proposals": [{
     "proposal_id": "SEMPROP_D7F083FC761F2981A368",
     "target_kind": "class",
