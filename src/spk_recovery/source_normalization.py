@@ -3686,6 +3686,211 @@ def _normalize_dimension_capture_locals(
     return actions
 
 
+def _normalize_exact_parameter_receiver_aliases(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Repair a proven ClientShutdown helper receiver alias.
+
+    Exact bytecode proves the helper's sole ClientShutdown parameter lives in
+    local slot 1 and is the receiver of waitForAllConsumers(Duration).  If
+    Procyon emits one undeclared receiver alias instead, rewrite only that
+    token to the declared source parameter name.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError:
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    expected_descriptor = (
+        "(Lrs/runelite/events/ClientShutdown;)V"
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        source_params = method_match.group("params")
+        parameter_names = _source_parameter_names(source_params)
+        if parameter_names is None or len(parameter_names) != 1:
+            continue
+
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        if source_static:
+            continue
+
+        exact_candidates: list[dict[str, Any]] = []
+        for method in profile.get("methods", []):
+            if method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(method.get("descriptor", ""))
+            if descriptor != expected_descriptor:
+                continue
+            if bool(int(method.get("access", 0)) & 0x0008):
+                continue
+            if (
+                _source_parameters_match_descriptor(
+                    source_params,
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            exact_candidates.append(method)
+        if len(exact_candidates) != 1:
+            continue
+
+        exact_method = exact_candidates[0]
+        instructions = list(
+            exact_method.get("instructions", [])
+        )
+        if len(instructions) < 4:
+            continue
+
+        first_four = instructions[:4]
+        if not (
+            first_four[0].get("mnemonic") == "aload"
+            and int(first_four[0].get("local_index", -1)) == 1
+            and first_four[1].get("mnemonic") == "ldc2_w"
+            and first_four[2].get("mnemonic") == "invokestatic"
+            and first_four[2].get("owner") == "java/time/Duration"
+            and first_four[2].get("name") == "ofSeconds"
+            and first_four[2].get("descriptor")
+            == "(J)Ljava/time/Duration;"
+            and first_four[3].get("mnemonic") == "invokevirtual"
+            and first_four[3].get("owner")
+            == "rs/runelite/events/ClientShutdown"
+            and first_four[3].get("name") == "waitForAllConsumers"
+            and first_four[3].get("descriptor")
+            == "(Ljava/time/Duration;)V"
+        ):
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        receiver_re = re.compile(
+            r"(?<![A-Za-z0-9_$])"
+            r"(?P<receiver>[A-Za-z_$][A-Za-z0-9_$]*)"
+            r"(?=\s*\.\s*waitForAllConsumers\s*\()"
+        )
+        receiver_matches = list(receiver_re.finditer(method_code))
+        if len(receiver_matches) != 1:
+            continue
+
+        receiver_match = receiver_matches[0]
+        alias = receiver_match.group("receiver")
+        parameter_name = parameter_names[0]
+        if alias == parameter_name:
+            continue
+
+        declaration_re = re.compile(
+            r"\b(?:final\s+)?"
+            r"[A-Za-z_$][A-Za-z0-9_$.<>\[\]?]*\s+"
+            + re.escape(alias)
+            + r"\b"
+        )
+        body_code = method_code[
+            method_code.find("{") + 1:
+        ]
+        if declaration_re.search(body_code):
+            continue
+
+        alias_occurrences = len(
+            re.findall(
+                r"(?<![A-Za-z0-9_$])"
+                + re.escape(alias)
+                + r"(?![A-Za-z0-9_$])",
+                body_code,
+            )
+        )
+        if alias_occurrences != 1:
+            continue
+
+        absolute_start = (
+            method_start + receiver_match.start("receiver")
+        )
+        absolute_end = (
+            method_start + receiver_match.end("receiver")
+        )
+        edits.append(
+            (
+                absolute_start,
+                absolute_end,
+                parameter_name,
+            )
+        )
+        actions.append(
+            {
+                "kind": "exact_parameter_receiver_alias",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": expected_descriptor,
+                "parameter_name": parameter_name,
+                "alias_name": alias,
+                "receiver_owner": (
+                    "rs/runelite/events/ClientShutdown"
+                ),
+                "receiver_method": "waitForAllConsumers",
+                "replacement_count": 1,
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_exact_parameter_receiver_alias"
+                    ),
+                    "strategy": (
+                        "exact_slot1_receiver_to_declared_source_parameter"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping parameter-receiver alias edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_hidden_layout_constructor_arguments(
     *,
     source_root: Path,
@@ -6553,6 +6758,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_exact_parameter_receiver_aliases(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_hidden_layout_constructor_arguments(
                         source_root=source_root,
                         path=path,
@@ -6744,6 +6956,15 @@ def normalize_procyon_source(
             int(action.get("replacement_count", 0))
             for action in actions
             if action["kind"] == "dimension_capture_local_reconstruction"
+        ),
+        "exact_parameter_receiver_alias_action_count": sum(
+            action["kind"] == "exact_parameter_receiver_alias"
+            for action in actions
+        ),
+        "exact_parameter_receiver_alias_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"] == "exact_parameter_receiver_alias"
         ),
         "hidden_layout_constructor_argument_action_count": sum(
             action["kind"] == "hidden_layout_constructor_arguments"
