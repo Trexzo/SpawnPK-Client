@@ -10169,6 +10169,123 @@ class ErasedNestedListIntegerUnboxTests(unittest.TestCase):
             )
 
 
+
+
+class ErasedRawListIntegerStreamMethodRefTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        element_type: str = "Integer",
+    ) -> Path:
+        return _compile_java_fixture(
+            root,
+            {
+                "p/A.java": (
+                    "package p;\n"
+                    "import java.util.List;\n"
+                    "public class A {\n"
+                    "    public static int[] values(Object o) {\n"
+                    f"        return ((List<{element_type}>)o).stream()"
+                    f".mapToInt({element_type}::intValue).toArray();\n"
+                    "    }\n"
+                    "}\n"
+                )
+            },
+        )
+
+    def test_raw_list_integer_stream_restores_generic_cast(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.List;\n"
+                "public class A {\n"
+                "    public static int[] values(Object o) {\n"
+                "        return ((List)o).stream()"
+                ".mapToInt(Integer::intValue).toArray();\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac", "-cp", str(jar), "-d",
+                    str(root / "before-int-stream"), str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "return ((List<Integer>)o).stream()"
+                ".mapToInt(Integer::intValue).toArray();",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_raw_list_integer_stream_method_ref_reconstruction"
+            )
+            self.assertEqual(action["element_type"], "java/lang/Integer")
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(len(action["flows"]), 1)
+            self.assertEqual(
+                report["summary"][
+                    "erased_raw_list_integer_stream_method_ref_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac", "-cp", str(jar), "-d",
+                    str(root / "after-int-stream"), str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stderr)
+
+    def test_raw_list_integer_stream_fails_closed_on_element_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, element_type="Long")
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.List;\n"
+                "public class A {\n"
+                "    public static int[] values(Object o) {\n"
+                "        return ((List)o).stream()"
+                ".mapToInt(Integer::intValue).toArray();\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "erased_raw_list_integer_stream_method_ref_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
+
 class ErasedSetIntEnhancedForTests(unittest.TestCase):
     def _fixture(self, root: Path, *, exact_drift: bool = False) -> Path:
         value_type = "Long" if exact_drift else "Integer"
