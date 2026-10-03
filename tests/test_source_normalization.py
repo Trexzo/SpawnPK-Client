@@ -10905,6 +10905,84 @@ class ErasedMapKeySetIntEnhancedForTests(unittest.TestCase):
             )
             self.assertEqual(after.returncode, 0, after.stderr)
 
+    def test_map_keyset_int_enhanced_for_ignores_unrelated_keyset_flow(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.LinkedHashMap;\n"
+                        "import java.util.Map;\n"
+                        "public class A {\n"
+                        "    public static int sum(Object input) {\n"
+                        "        Map<String, Object> extra = new LinkedHashMap<>();\n"
+                        "        extra.put(\"x\", new Object());\n"
+                        "        int total = 0;\n"
+                        "        for (String ignored : extra.keySet()) {\n"
+                        "            total += ignored.length() - 1;\n"
+                        "        }\n"
+                        "        Map<Integer, Object> map = "
+                        "(Map<Integer, Object>)input;\n"
+                        "        for (int value : map.keySet()) {\n"
+                        "            total += value;\n"
+                        "        }\n"
+                        "        return total;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.LinkedHashMap;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    public static int sum(Object input) {\n"
+                "        Map<String, Object> extra = new LinkedHashMap<>();\n"
+                "        extra.put(\"x\", new Object());\n"
+                "        int total = 0;\n"
+                "        for (String ignored : extra.keySet()) {\n"
+                "            total += ignored.length() - 1;\n"
+                "        }\n"
+                "        Map map = (Map)input;\n"
+                "        for (final int value : map.keySet()) {\n"
+                "            total += value;\n"
+                "        }\n"
+                "        return total;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "for (final int value : "
+                "((java.util.Set<Integer>)map.keySet()))",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_map_keyset_int_enhanced_for_reconstruction"
+            )
+            self.assertEqual(action["exact_map_keyset_call_count"], 2)
+            self.assertEqual(action["exact_proven_map_keyset_flow_count"], 1)
+            self.assertEqual(action["replacement_count"], 1)
+
+            after = subprocess.run(
+                ["javac", "-d", str(root / "after-map-keyset-extra"), str(source)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stderr)
+
     def test_map_keyset_int_enhanced_for_fails_closed_on_element_drift(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -11143,6 +11221,92 @@ class ErasedListIntegerEnhancedForTests(unittest.TestCase):
 
             after = subprocess.run(
                 ["javac", "-d", str(root / "after-list-integer"), str(source)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stderr)
+
+    def test_raw_list_integer_enhanced_for_ignores_unrelated_iterator(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.ArrayList;\n"
+                        "import java.util.List;\n"
+                        "public class A {\n"
+                        "    public static int sum() {\n"
+                        "        List<String> extra = new ArrayList<>();\n"
+                        "        extra.add(\"x\");\n"
+                        "        int total = 0;\n"
+                        "        for (String ignored : extra) {\n"
+                        "            total += ignored.length() - 1;\n"
+                        "        }\n"
+                        "        List<Integer> values = new ArrayList<>();\n"
+                        "        values.add(Integer.valueOf(1));\n"
+                        "        values.add(Integer.valueOf(2));\n"
+                        "        for (Integer value : values) {\n"
+                        "            total += value.intValue();\n"
+                        "        }\n"
+                        "        for (Integer value : values) {\n"
+                        "            total += value.intValue();\n"
+                        "        }\n"
+                        "        return total;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.ArrayList;\n"
+                "import java.util.List;\n"
+                "public class A {\n"
+                "    public static int sum() {\n"
+                "        List<String> extra = new ArrayList<>();\n"
+                "        extra.add(\"x\");\n"
+                "        int total = 0;\n"
+                "        for (String ignored : extra) {\n"
+                "            total += ignored.length() - 1;\n"
+                "        }\n"
+                "        List values = new ArrayList();\n"
+                "        values.add(Integer.valueOf(1));\n"
+                "        values.add(Integer.valueOf(2));\n"
+                "        for (final Integer value : values) {\n"
+                "            total += value.intValue();\n"
+                "        }\n"
+                "        for (final Integer value : values) {\n"
+                "            total += value.intValue();\n"
+                "        }\n"
+                "        return total;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertEqual(
+                normalized.count("((java.util.List<Integer>)values)"),
+                2,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_list_integer_enhanced_for_reconstruction"
+            )
+            self.assertEqual(action["exact_list_iterator_call_count"], 3)
+            self.assertEqual(action["exact_proven_list_integer_flow_count"], 2)
+            self.assertEqual(action["replacement_count"], 2)
+
+            after = subprocess.run(
+                ["javac", "-d", str(root / "after-list-integer-extra"), str(source)],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
