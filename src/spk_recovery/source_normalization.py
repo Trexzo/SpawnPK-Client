@@ -6498,7 +6498,7 @@ def _normalize_object_boolean_conditions(
                     and unbox.get("owner") == "java/lang/Boolean"
                     and unbox.get("name") == "booleanValue"
                     and unbox.get("descriptor") == "()Z"
-                    and branch.get("mnemonic") in {"ifeq", "ifne"}
+                    and (\n                        branch.get("mnemonic") in {"ifeq", "ifne"}\n                        or branch.get("opcode") in {"0x99", "0x9a"}\n                    )
                 ):
                     continue
                 flows.append(
