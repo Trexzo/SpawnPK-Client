@@ -3863,9 +3863,8 @@ def _normalize_intpredicate_parameter_capture_aliases(
                         )
                     )
                     == 0
-                    and str(
-                        helper_instructions[2].get("mnemonic", "")
-                    ).startswith("if_icmp")
+                    and helper_instructions[2].get("opcode")
+                    in {"0x9f", "0xa0"}
                     and helper_instructions[-1].get("mnemonic")
                     == "ireturn"
                 ):
