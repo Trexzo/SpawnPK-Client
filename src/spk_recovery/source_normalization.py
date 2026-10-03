@@ -6418,11 +6418,11 @@ def _normalize_object_boolean_conditions(
     actions: list[dict[str, Any]] = []
 
     object_decl_re = re.compile(
-        r"\\b(?:(?:final)\\s+)?(?:java\\.lang\\.)?Object\\s+"
-        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\\s*="
+        r"\b(?:(?:final)\s+)?(?:java\.lang\.)?Object\s+"
+        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*="
     )
     condition_re = re.compile(
-        r"\\bif\\s*\\(\\s*(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\\s*\\)"
+        r"\bif\s*\(\s*(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*\)"
     )
 
     for method_match in _METHOD_DECL_RE.finditer(whole_code):
@@ -6458,7 +6458,7 @@ def _normalize_object_boolean_conditions(
 
         source_static = bool(
             re.search(
-                r"\\bstatic\\b",
+                r"\bstatic\b",
                 whole_code[method_match.start():brace_start],
             )
         )
