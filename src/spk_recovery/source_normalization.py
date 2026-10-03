@@ -6570,6 +6570,539 @@ def _normalize_collectors_to_list_wildcard_sink_casts(
     return actions
 
 
+def _normalize_cc_generic_value_object_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Remove impossible Object casts from cc<T>.a(int, T) calls.
+
+    The JVM descriptor erases cc<V>.a(int,V) to Object, but source generic
+    substitution still requires the concrete field type argument. Repair only
+    when exact field Signature authority binds T and the value expression is
+    independently proven to have that exact source type.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+        cc_profile = profile_class_field_accesses(
+            readable_zip.read("gnu/trove/f/b/cc.class")
+        )
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    current_simple = _source_simple_type_name(current_owner)
+    current_dotted = current_owner.replace("/", ".")
+
+    cc_methods = [
+        method
+        for method in cc_profile.get("methods", [])
+        if (
+            method.get("name") == "a"
+            and method.get("descriptor")
+            == "(ILjava/lang/Object;)Ljava/lang/Object;"
+            and method.get("signature") == "(ITV;)TV;"
+        )
+    ]
+    if len(cc_methods) != 1:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+
+    imports: dict[str, str] = {}
+    duplicate_imports: set[str] = set()
+    for import_match in _SINGLE_TYPE_IMPORT_RE.finditer(text):
+        dotted = import_match.group("name")
+        simple = dotted.rsplit(".", 1)[-1]
+        internal = dotted.replace(".", "/")
+        previous = imports.get(simple)
+        if previous is not None and previous != internal:
+            duplicate_imports.add(simple)
+        else:
+            imports[simple] = internal
+    for simple in duplicate_imports:
+        imports.pop(simple, None)
+
+    def class_exists(internal: str) -> bool:
+        try:
+            readable_zip.getinfo(internal + ".class")
+            return True
+        except KeyError:
+            return False
+
+    def resolve_source_type(type_text: str) -> str | None:
+        value = type_text.strip()
+        value = re.sub(r"<.*>$", "", value).strip()
+        while value.endswith("[]"):
+            value = value[:-2].strip()
+        if not re.fullmatch(
+            r"[A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)*",
+            value,
+        ):
+            return None
+        if value == current_simple or value == current_dotted:
+            return current_owner
+        if value in imports:
+            return imports[value]
+        if "." in value:
+            candidate = value.replace(".", "/")
+            return candidate if class_exists(candidate) else None
+        same_package = (
+            current_package + "/" + value
+            if current_package
+            else value
+        )
+        if class_exists(same_package):
+            return same_package
+        java_lang = "java/lang/" + value
+        if class_exists(java_lang):
+            return java_lang
+        return None
+
+    owner_cache: dict[str, dict[str, Any]] = {
+        current_owner: profile,
+        "gnu/trove/f/b/cc": cc_profile,
+    }
+
+    def owner_profile(owner: str) -> dict[str, Any] | None:
+        cached = owner_cache.get(owner)
+        if cached is not None:
+            return cached
+        try:
+            parsed = profile_class_field_accesses(
+                readable_zip.read(owner + ".class")
+            )
+        except (KeyError, BytecodeProfileError):
+            return None
+        if str(parsed.get("internal_name", "")) != owner:
+            return None
+        owner_cache[owner] = parsed
+        return parsed
+
+    field_signature_re = re.compile(
+        r"^Lgnu/trove/f/b/cc<L(?P<value>[^;<>]+);>;$"
+    )
+
+    def resolve_receiver(
+        receiver: str,
+    ) -> tuple[str, str, str] | None:
+        owner_text, dot, field_name = receiver.rpartition(".")
+        if not dot or not owner_text or not field_name:
+            return None
+        if owner_text in {current_simple, current_dotted}:
+            owner = current_owner
+        elif owner_text in imports:
+            owner = imports[owner_text]
+        elif "." in owner_text:
+            owner = owner_text.replace(".", "/")
+        else:
+            candidate = (
+                current_package + "/" + owner_text
+                if current_package
+                else owner_text
+            )
+            if not class_exists(candidate):
+                return None
+            owner = candidate
+
+        parsed = owner_profile(owner)
+        if parsed is None:
+            return None
+        fields = [
+            field
+            for field in parsed.get("fields", [])
+            if (
+                field.get("name") == field_name
+                and int(field.get("access", 0)) & 0x0008
+                and field.get("descriptor") == "Lgnu/trove/f/b/cc;"
+            )
+        ]
+        if len(fields) != 1:
+            return None
+        signature = fields[0].get("signature")
+        if not isinstance(signature, str):
+            return None
+        match = field_signature_re.fullmatch(signature)
+        if match is None:
+            return None
+        value_owner = match.group("value")
+        if not class_exists(value_owner):
+            return None
+        return owner, field_name, value_owner
+
+    def identifier_source_type(
+        *,
+        method_match: re.Match[str],
+        method_text: str,
+        before: int,
+        identifier: str,
+    ) -> str | None:
+        candidates: list[str] = []
+
+        parameter_names = _source_parameter_names(
+            method_match.group("params")
+        )
+        parameter_spans = _parameter_type_spans(
+            method_match.group("params")
+        )
+        if (
+            parameter_names is not None
+            and parameter_spans is not None
+            and len(parameter_names) == len(parameter_spans)
+        ):
+            for name, (_left, _right, type_text) in zip(
+                parameter_names, parameter_spans
+            ):
+                if name != identifier:
+                    continue
+                resolved = resolve_source_type(type_text)
+                if resolved is not None:
+                    candidates.append(resolved)
+
+        prefix = method_text[:before]
+        local_re = re.compile(
+            r"(?m)(?:^|[;{}]\s*)[ \t]*"
+            r"(?:(?:final)\s+)?"
+            r"(?P<type>[A-Za-z_$][A-Za-z0-9_$.]*)\s+"
+            + re.escape(identifier)
+            + r"\b\s*(?:=|;)"
+        )
+        for local in local_re.finditer(prefix):
+            resolved = resolve_source_type(local.group("type"))
+            if resolved is not None:
+                candidates.append(resolved)
+
+        unique = sorted(set(candidates))
+        return unique[0] if len(unique) == 1 else None
+
+    call_re = re.compile(
+        r"(?P<receiver>"
+        r"(?:[A-Za-z_$][A-Za-z0-9_$]*\.)+"
+        r"[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\.\s*a\s*\(\s*"
+        r"(?P<first>[^\n]+)\s*,\s*"
+        r"(?P<cast>\(\s*Object\s*\)\s*)"
+        r"(?:"
+        r"(?P<boolean>true|false)\b"
+        r"|new\s+(?P<new_type>"
+        r"[A-Za-z_$][A-Za-z0-9_$.]*)\s*\("
+        r"|(?P<identifier>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+        r")"
+    )
+
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_text = text[method_start:body_end]
+        method_code = whole_code[method_start:body_end]
+        calls: list[dict[str, Any]] = []
+
+        for call in call_re.finditer(method_text):
+            if (
+                call.start() >= len(method_code)
+                or method_code[call.start()].isspace()
+            ):
+                continue
+
+            resolved_receiver = resolve_receiver(
+                call.group("receiver")
+            )
+            if resolved_receiver is None:
+                continue
+            field_owner, field_name, generic_value = (
+                resolved_receiver
+            )
+
+            value_kind: str
+            if call.group("boolean") is not None:
+                if generic_value != "java/lang/Boolean":
+                    continue
+                value_kind = "boolean"
+            elif call.group("new_type") is not None:
+                resolved_new = resolve_source_type(
+                    call.group("new_type")
+                )
+                if resolved_new != generic_value:
+                    continue
+                value_kind = "new"
+            else:
+                identifier = call.group("identifier")
+                if identifier is None:
+                    continue
+                resolved_identifier = identifier_source_type(
+                    method_match=method_match,
+                    method_text=method_text,
+                    before=call.start(),
+                    identifier=identifier,
+                )
+                if resolved_identifier != generic_value:
+                    continue
+                value_kind = "identifier"
+
+            calls.append(
+                {
+                    "match": call,
+                    "field_owner": field_owner,
+                    "field_name": field_name,
+                    "generic_value": generic_value,
+                    "value_kind": value_kind,
+                }
+            )
+
+        if not calls:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        exact_candidates: list[dict[str, Any]] = []
+
+        target_fields = {
+            (
+                call["field_owner"],
+                call["field_name"],
+                call["generic_value"],
+            )
+            for call in calls
+        }
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            flows: list[dict[str, Any]] = []
+
+            for index, field_access in enumerate(instructions):
+                key = (
+                    str(field_access.get("owner", "")),
+                    str(field_access.get("name", "")),
+                )
+                matching = [
+                    row
+                    for row in target_fields
+                    if row[0] == key[0] and row[1] == key[1]
+                ]
+                if not matching:
+                    continue
+                if not (
+                    field_access.get("mnemonic") == "getstatic"
+                    and field_access.get("descriptor")
+                    == "Lgnu/trove/f/b/cc;"
+                ):
+                    continue
+                if len(matching) != 1:
+                    continue
+                generic_value = matching[0][2]
+
+                target_index: int | None = None
+                for probe in range(
+                    index + 1,
+                    min(len(instructions), index + 33),
+                ):
+                    item = instructions[probe]
+                    if (
+                        item.get("mnemonic")
+                        in {"invokevirtual", "invokeinterface"}
+                        and item.get("owner") == "gnu/trove/f/b/cc"
+                        and item.get("name") == "a"
+                        and item.get("descriptor")
+                        == "(ILjava/lang/Object;)Ljava/lang/Object;"
+                    ):
+                        target_index = probe
+                        break
+                if target_index is None:
+                    continue
+
+                segment = instructions[index + 1:target_index]
+                value_kind: str | None = None
+
+                if (
+                    generic_value == "java/lang/Boolean"
+                    and any(
+                        item.get("mnemonic") == "invokestatic"
+                        and item.get("owner") == "java/lang/Boolean"
+                        and item.get("name") == "valueOf"
+                        and item.get("descriptor")
+                        == "(Z)Ljava/lang/Boolean;"
+                        for item in segment
+                    )
+                ):
+                    value_kind = "boolean"
+                else:
+                    new_indices = [
+                        offset
+                        for offset, item in enumerate(segment)
+                        if (
+                            item.get("mnemonic") == "new"
+                            and item.get("type") == generic_value
+                        )
+                    ]
+                    if len(new_indices) == 1:
+                        new_index = new_indices[0]
+                        if any(
+                            item.get("mnemonic") == "invokespecial"
+                            and item.get("owner") == generic_value
+                            and item.get("name") == "<init>"
+                            for item in segment[new_index + 1:]
+                        ):
+                            value_kind = "new"
+
+                if value_kind is None:
+                    aloads = [
+                        item
+                        for item in segment
+                        if item.get("mnemonic") == "aload"
+                    ]
+                    if len(aloads) == 1:
+                        value_kind = "identifier"
+
+                if value_kind is None:
+                    continue
+
+                flows.append(
+                    {
+                        "field_owner": key[0],
+                        "field_name": key[1],
+                        "generic_value": generic_value,
+                        "value_kind": value_kind,
+                        "field_offset": int(
+                            field_access.get("offset", -1)
+                        ),
+                        "invoke_offset": int(
+                            instructions[target_index].get(
+                                "offset", -1
+                            )
+                        ),
+                    }
+                )
+
+            source_proofs = [
+                (
+                    call["field_owner"],
+                    call["field_name"],
+                    call["generic_value"],
+                    call["value_kind"],
+                )
+                for call in calls
+            ]
+            exact_proofs = [
+                (
+                    flow["field_owner"],
+                    flow["field_name"],
+                    flow["generic_value"],
+                    flow["value_kind"],
+                )
+                for flow in flows
+            ]
+            if exact_proofs != source_proofs:
+                continue
+
+            exact_candidates.append(
+                {
+                    "method": exact_method,
+                    "flows": flows,
+                }
+            )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        proof = exact_candidates[0]
+        for call in calls:
+            match = call["match"]
+            edits.append(
+                (
+                    method_start + match.start("cast"),
+                    method_start + match.end("cast"),
+                    "",
+                )
+            )
+
+        actions.append(
+            {
+                "kind": "cc_generic_value_object_cast_removal",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "fields": [
+                    call["field_owner"] + "." + call["field_name"]
+                    for call in calls
+                ],
+                "generic_value_types": [
+                    call["generic_value"] for call in calls
+                ],
+                "value_kinds": [
+                    call["value_kind"] for call in calls
+                ],
+                "flows": proof["flows"],
+                "replacement_count": len(calls),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_erased_cc_generic_value_object_cast"
+                    ),
+                    "strategy": (
+                        "exact_field_signature_plus_method_signature_and_value_type"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping cc<T> Object-cast edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_erased_generic_constructor_argument_casts(
     *,
     source_root: Path,
@@ -17002,6 +17535,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_cc_generic_value_object_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_erased_generic_constructor_argument_casts(
                         source_root=source_root,
                         path=path,
@@ -17437,6 +17977,15 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "collectors_to_list_wildcard_sink_cast_removal"
+        ),
+        "cc_generic_value_object_cast_action_count": sum(
+            action["kind"] == "cc_generic_value_object_cast_removal"
+            for action in actions
+        ),
+        "cc_generic_value_object_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"] == "cc_generic_value_object_cast_removal"
         ),
         "erased_generic_constructor_argument_cast_action_count": sum(
             action["kind"]
