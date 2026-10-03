@@ -8069,6 +8069,96 @@ class ErasedMapNumberAssignmentTests(unittest.TestCase):
             )
             self.assertEqual(after.returncode, 0, after.stderr)
 
+    def test_erased_map_number_assignment_restores_elided_terminal_cast(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    public static int parse("
+                "Map<String, Object> map, String s) {\n"
+                "        final Number value = map.get(s);\n"
+                "        if (!(value instanceof Number)) {\n"
+                "            throw new IllegalArgumentException();\n"
+                "        }\n"
+                "        return value.intValue();\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                ["javac", "-d", str(root / "before-map-elided"), str(source)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn("final Object value = map.get(s);", normalized)
+            self.assertIn(
+                "return ((Number)value).intValue();",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_map_number_assignment_reconstruction"
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(action["terminal_cast_replacement_count"], 1)
+
+            after = subprocess.run(
+                ["javac", "-d", str(root / "after-map-elided"), str(source)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stderr)
+
+    def test_erased_map_number_assignment_rejects_multiple_plain_terminals(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    public static int parse("
+                "Map<String, Object> map, String s) {\n"
+                "        final Number value = map.get(s);\n"
+                "        if (!(value instanceof Number)) {\n"
+                "            throw new IllegalArgumentException();\n"
+                "        }\n"
+                "        return value.intValue() + value.intValue();\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "erased_map_number_assignment_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
     def test_erased_map_number_assignment_fails_closed_on_exact_drift(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -8185,6 +8275,64 @@ class ErasedSetIntEnhancedForTests(unittest.TestCase):
             )
             self.assertEqual(after.returncode, 0, after.stderr)
 
+
+    def test_erased_set_int_enhanced_for_accepts_raw_linkedhashset_source(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.LinkedHashSet;\n"
+                "public class A {\n"
+                "    public static int sum() {\n"
+                "        LinkedHashSet set = new LinkedHashSet();\n"
+                "        set.add(Integer.valueOf(7));\n"
+                "        int total = 0;\n"
+                "        for (int value : set) {\n"
+                "            total += value;\n"
+                "        }\n"
+                "        return total;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                ["javac", "-d", str(root / "before-linked-set"), str(source)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "for (int value : ((java.util.Set<Integer>)set))",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_set_int_enhanced_for_reconstruction"
+            )
+            self.assertEqual(
+                action["iterable_declaration_types"],
+                {"set": "LinkedHashSet"},
+            )
+
+            after = subprocess.run(
+                ["javac", "-d", str(root / "after-linked-set"), str(source)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stderr)
 
     def test_erased_set_int_enhanced_for_fails_closed_on_unrelated_iterator(self):
         with tempfile.TemporaryDirectory() as td:
