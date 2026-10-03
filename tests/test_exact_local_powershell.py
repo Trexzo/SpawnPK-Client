@@ -128,6 +128,18 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 "/normalization_summary/impossible_collectors_tolist_cast_action_count",
             "impossible_collectors_tolist_cast_reference_count":
                 "/normalization_summary/impossible_collectors_tolist_cast_reference_count",
+            "two_string_swing_capture_alias_action_count":
+                "/normalization_summary/two_string_swing_capture_alias_action_count",
+            "two_string_swing_capture_alias_reference_count":
+                "/normalization_summary/two_string_swing_capture_alias_reference_count",
+            "compile_time_lombok_nonnull_action_count":
+                "/normalization_summary/compile_time_lombok_nonnull_action_count",
+            "compile_time_lombok_nonnull_reference_count":
+                "/normalization_summary/compile_time_lombok_nonnull_reference_count",
+            "linkedhashmap_field_key_reconstruction_method_count":
+                "/normalization_summary/linkedhashmap_field_key_reconstruction_method_count",
+            "linkedhashmap_field_key_reconstruction_reference_count":
+                "/normalization_summary/linkedhashmap_field_key_reconstruction_reference_count",
             "intpredicate_parameter_capture_alias_action_count":
                 "/normalization_summary/intpredicate_parameter_capture_alias_action_count",
             "intpredicate_parameter_capture_alias_reference_count":
@@ -193,6 +205,21 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         self.assertIn(
             'IMPOSSIBLE_COLLECTORS_TOLIST_CAST_REFERENCES='
             '$($Recovered.impossible_collectors_tolist_cast_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'TWO_STRING_SWING_CAPTURE_ALIAS_REFERENCES='
+            '$($Recovered.two_string_swing_capture_alias_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'COMPILE_TIME_LOMBOK_NONNULL_REFERENCES='
+            '$($Recovered.compile_time_lombok_nonnull_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'LINKEDHASHMAP_FIELD_KEY_RECONSTRUCTION_REFERENCES='
+            '$($Recovered.linkedhashmap_field_key_reconstruction_reference_count)',
             script,
         )
         self.assertIn(
