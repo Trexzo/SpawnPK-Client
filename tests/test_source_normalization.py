@@ -7541,6 +7541,105 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 after.stdout + after.stderr,
             )
 
+    def test_same_package_static_method_owner_matches_source_staticness(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/c.java": (
+                        "package p;\n"
+                        "public class c {\n"
+                        "    public static int a() { return 7; }\n"
+                        "}\n"
+                    ),
+                    "p1/Ref.java": (
+                        "package p1;\n"
+                        "public class Ref {}\n"
+                    ),
+                    "p2/Ref.java": (
+                        "package p2;\n"
+                        "public class Ref {}\n"
+                    ),
+                    "p/h.java": (
+                        "package p;\n"
+                        "public class h {\n"
+                        "    public int c;\n"
+                        "    public static int m(p1.Ref ref) {\n"
+                        "        return p.c.a();\n"
+                        "    }\n"
+                        "    public int m(p2.Ref ref) {\n"
+                        "        return p.c.a();\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "h.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import p1.Ref;\n"
+                "public class h {\n"
+                "    public int c;\n"
+                "    public static int m(final Ref ref) {\n"
+                "        return c.a();\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-same-package-call-staticness"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn("return p.c.a();", normalized)
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "shadowed_same_package_static_method_owner_qualification"
+            )
+            self.assertEqual(action["method_name"], "m")
+            self.assertEqual(action["method_descriptor"], "(Lp1/Ref;)I")
+            self.assertEqual(action["same_package_owner"], "p/c")
+            self.assertEqual(action["replacement_count"], 1)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-same-package-call-staticness"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
     def test_same_package_static_method_owner_count_mismatch_fails_closed(
         self,
     ):

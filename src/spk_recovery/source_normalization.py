@@ -11710,6 +11710,8 @@ def _normalize_same_package_static_method_owners_shadowed_by_values(
         )
         if brace_start < 0:
             continue
+        header_code = whole_code[method_match.start():brace_start]
+        source_static = re.search(r"\bstatic\b", header_code) is not None
         body_end = _matching_brace_end(text, brace_start)
         method_text = text[method_match.start():body_end]
         method_code = _java_code_mask(method_text)
@@ -11817,6 +11819,11 @@ def _normalize_same_package_static_method_owners_shadowed_by_values(
             candidates: list[dict[str, Any]] = []
             for method in profile.get("methods", []):
                 if method.get("name") != method_match.group("name"):
+                    continue
+                method_static = bool(
+                    int(method.get("access", 0)) & 0x0008
+                )
+                if method_static != source_static:
                     continue
                 descriptor = str(method.get("descriptor", ""))
                 if _descriptor_parameter_count(descriptor) != source_arity:
