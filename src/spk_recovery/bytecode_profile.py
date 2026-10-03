@@ -811,14 +811,32 @@ def profile_class_field_accesses(
         access = r.u2()
         name = _utf8(cp, r.u2())
         descriptor = _utf8(cp, r.u2())
+        signature: str | None = None
+        signature_seen = False
+        for _ in range(r.u2()):
+            attr_name = _utf8(cp, r.u2())
+            attr_length = r.u4()
+            payload = r.take(attr_length)
+            if attr_name != "Signature":
+                continue
+            if signature_seen:
+                raise BytecodeProfileError(
+                    f"duplicate field Signature attribute: {name}:{descriptor}"
+                )
+            signature_seen = True
+            signature = _signature_attribute_value(
+                payload,
+                cp,
+                role=f"field {name}:{descriptor}",
+            )
         fields.append(
             {
                 "name": name,
                 "descriptor": descriptor,
                 "access": access,
+                "signature": signature,
             }
         )
-        _skip_attributes(r, cp)
 
     methods = []
     for _ in range(r.u2()):
