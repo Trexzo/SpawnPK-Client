@@ -4071,6 +4071,387 @@ def _normalize_invokedynamic_captured_class_local_aliases(
     return actions
 
 
+def _normalize_intpredicate_parameter_capture_aliases(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore undeclared IntPredicate aliases from exact parameter captures.
+
+    Procyon can emit an anyMatch lambda whose comparison operand names an
+    undeclared alias even though LambdaMetafactory captures an int method
+    parameter directly. Bind that operand back to the source parameter only
+    when source anyMatch order and exact invokedynamic/IntStream.anyMatch
+    order agree one-for-one and the bootstrap helper proves stream element
+    equals captured parameter.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    bootstrap_methods = list(profile.get("bootstrap_methods", []))
+    if not bootstrap_methods:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    identifier = r"[A-Za-z_$][A-Za-z0-9_$]*"
+    source_predicate_re = re.compile(
+        r"\.\s*anyMatch\s*\(\s*"
+        r"(?P<lambda>" + identifier + r")\s*->\s*"
+        r"(?P<left>" + identifier + r")\s*==\s*"
+        r"(?P<right>" + identifier + r")\s*\)"
+    )
+    expected_bootstrap_descriptors = {
+        "metafactory": (
+            "(Ljava/lang/invoke/MethodHandles$Lookup;"
+            "Ljava/lang/String;"
+            "Ljava/lang/invoke/MethodType;"
+            "Ljava/lang/invoke/MethodType;"
+            "Ljava/lang/invoke/MethodHandle;"
+            "Ljava/lang/invoke/MethodType;)"
+            "Ljava/lang/invoke/CallSite;"
+        ),
+        "altMetafactory": (
+            "(Ljava/lang/invoke/MethodHandles$Lookup;"
+            "Ljava/lang/String;"
+            "Ljava/lang/invoke/MethodType;"
+            "[Ljava/lang/Object;)"
+            "Ljava/lang/invoke/CallSite;"
+        ),
+    }
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        source_matches = list(source_predicate_re.finditer(method_code))
+        if not source_matches:
+            continue
+
+        source_params = method_match.group("params")
+        parameter_names = _source_parameter_names(source_params)
+        parameter_shapes = _source_parameter_shapes(source_params)
+        if (
+            parameter_names is None
+            or parameter_shapes is None
+            or len(parameter_names) != len(parameter_shapes)
+        ):
+            continue
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+
+        exact_candidates: list[dict[str, Any]] = []
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    source_params,
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            exact_shapes = _descriptor_parameter_shapes(descriptor)
+            parameter_slots = _descriptor_parameter_local_slots(
+                descriptor,
+                is_static=source_static,
+            )
+            if (
+                exact_shapes is None
+                or parameter_slots is None
+                or len(exact_shapes) != len(parameter_names)
+                or len(parameter_slots) != len(parameter_names)
+            ):
+                continue
+
+            int_parameter_by_slot = {
+                slot: parameter_names[index]
+                for index, (shape, slot) in enumerate(
+                    zip(exact_shapes, parameter_slots)
+                )
+                if shape == (0, "primitive", "I")
+            }
+            if not int_parameter_by_slot:
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            exact_predicates: list[dict[str, Any]] = []
+            for index in range(1, len(instructions) - 1):
+                instruction = instructions[index]
+                if not (
+                    instruction.get("mnemonic") == "invokedynamic"
+                    and instruction.get("name") == "test"
+                    and instruction.get("descriptor")
+                    == "(I)Ljava/util/function/IntPredicate;"
+                ):
+                    continue
+                capture_load = instructions[index - 1]
+                any_match = instructions[index + 1]
+                if not (
+                    capture_load.get("mnemonic") == "iload"
+                    and any_match.get("mnemonic") == "invokeinterface"
+                    and any_match.get("owner")
+                    == "java/util/stream/IntStream"
+                    and any_match.get("name") == "anyMatch"
+                    and any_match.get("descriptor")
+                    == "(Ljava/util/function/IntPredicate;)Z"
+                ):
+                    continue
+                capture_slot = int(
+                    capture_load.get("local_index", -1)
+                )
+                bootstrap_index = int(
+                    instruction.get(
+                        "bootstrap_method_attr_index",
+                        -1,
+                    )
+                )
+                if not (
+                    0 <= bootstrap_index < len(bootstrap_methods)
+                ):
+                    continue
+                bootstrap = bootstrap_methods[bootstrap_index]
+                handle = bootstrap.get("bootstrap_method", {})
+                bootstrap_name = str(handle.get("name", ""))
+                if not (
+                    handle.get("owner")
+                    == "java/lang/invoke/LambdaMetafactory"
+                    and bootstrap_name
+                    in expected_bootstrap_descriptors
+                    and handle.get("descriptor")
+                    == expected_bootstrap_descriptors[bootstrap_name]
+                    and handle.get("target_kind") == "method"
+                    and int(handle.get("reference_kind", -1)) == 6
+                ):
+                    continue
+
+                implementation_handles = [
+                    argument.get("method_handle", {})
+                    for argument in bootstrap.get("arguments", [])
+                    if argument.get("kind") == "method_handle"
+                    and argument.get("method_handle", {}).get("owner")
+                    == current_owner
+                ]
+                if len(implementation_handles) != 1:
+                    continue
+                implementation = implementation_handles[0]
+                if not (
+                    implementation.get("target_kind") == "method"
+                    and int(
+                        implementation.get("reference_kind", -1)
+                    )
+                    == 6
+                    and implementation.get("descriptor") == "(II)Z"
+                ):
+                    continue
+                instantiated_types = [
+                    str(argument.get("descriptor", ""))
+                    for argument in bootstrap.get("arguments", [])
+                    if argument.get("kind") == "method_type"
+                ]
+                if instantiated_types.count("(I)Z") != 2:
+                    continue
+
+                helpers = [
+                    helper
+                    for helper in profile.get("methods", [])
+                    if helper.get("name") == implementation.get("name")
+                    and helper.get("descriptor") == "(II)Z"
+                    and int(helper.get("access", 0)) & 0x0008
+                    and int(helper.get("access", 0)) & 0x1000
+                ]
+                if len(helpers) != 1:
+                    continue
+                helper_instructions = list(
+                    helpers[0].get("instructions", [])
+                )
+                if len(helper_instructions) < 5:
+                    continue
+                if not (
+                    helper_instructions[0].get("mnemonic") == "iload"
+                    and int(
+                        helper_instructions[0].get(
+                            "local_index", -1
+                        )
+                    )
+                    == 1
+                    and helper_instructions[1].get("mnemonic")
+                    == "iload"
+                    and int(
+                        helper_instructions[1].get(
+                            "local_index", -1
+                        )
+                    )
+                    == 0
+                    and helper_instructions[2].get("opcode")
+                    in {"0x9f", "0xa0"}
+                    and helper_instructions[-1].get("mnemonic")
+                    == "ireturn"
+                ):
+                    continue
+
+                exact_predicates.append(
+                    {
+                        "offset": int(
+                            instruction.get("offset", -1)
+                        ),
+                        "bootstrap_method_attr_index": (
+                            bootstrap_index
+                        ),
+                        "helper_name": str(
+                            implementation.get("name", "")
+                        ),
+                        "capture_slot": capture_slot,
+                        "parameter_name": (
+                            int_parameter_by_slot.get(capture_slot)
+                        ),
+                    }
+                )
+
+            if len(exact_predicates) != len(source_matches):
+                continue
+            exact_candidates.append(
+                {
+                    "method": exact_method,
+                    "predicates": exact_predicates,
+                }
+            )
+
+        if len(exact_candidates) != 1:
+            continue
+        proof = exact_candidates[0]
+
+        for source_match, exact_predicate in zip(
+            source_matches,
+            proof["predicates"],
+        ):
+            parameter_name = exact_predicate.get("parameter_name")
+            if not parameter_name:
+                continue
+
+            lambda_name = source_match.group("lambda")
+            left_name = source_match.group("left")
+            right_name = source_match.group("right")
+            if left_name == lambda_name and right_name != lambda_name:
+                alias_group = "right"
+                alias_name = right_name
+            elif right_name == lambda_name and left_name != lambda_name:
+                alias_group = "left"
+                alias_name = left_name
+            else:
+                continue
+
+            if alias_name in parameter_names:
+                continue
+            if alias_name == parameter_name:
+                continue
+            if _block_has_same_name_local_declaration(
+                method_code,
+                simple_name=alias_name,
+            ):
+                continue
+
+            alias_hits = list(
+                re.finditer(
+                    r"(?<![A-Za-z0-9_$])"
+                    + re.escape(alias_name)
+                    + r"(?![A-Za-z0-9_$])",
+                    method_code,
+                )
+            )
+            if len(alias_hits) != 1:
+                continue
+            if alias_hits[0].start() != source_match.start(alias_group):
+                continue
+
+            edits.append(
+                (
+                    method_start + source_match.start(alias_group),
+                    method_start + source_match.end(alias_group),
+                    str(parameter_name),
+                )
+            )
+            actions.append(
+                {
+                    "kind": "intpredicate_parameter_capture_alias",
+                    "source_path": rel,
+                    "method_name": method_match.group("name"),
+                    "method_descriptor": proof["method"].get(
+                        "descriptor"
+                    ),
+                    "lambda_parameter_name": lambda_name,
+                    "undeclared_capture_alias": alias_name,
+                    "captured_parameter_name": parameter_name,
+                    "capture_slot": exact_predicate["capture_slot"],
+                    "invokedynamic_offset": exact_predicate["offset"],
+                    "bootstrap_method_attr_index": exact_predicate[
+                        "bootstrap_method_attr_index"
+                    ],
+                    "helper_name": exact_predicate["helper_name"],
+                    "replacement_count": 1,
+                    "provenance": {
+                        "kind": "source_safety",
+                        "reason": (
+                            "procyon_intpredicate_parameter_capture_alias"
+                        ),
+                        "strategy": (
+                            "ordered_anymatch_plus_exact_parameter_slot_and_equality_helper"
+                        ),
+                    },
+                }
+            )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping IntPredicate parameter-capture edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_invokedynamic_lambda_outer_capture_collisions(
     *,
     source_root: Path,
@@ -11661,6 +12042,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_intpredicate_parameter_capture_aliases(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_invokedynamic_lambda_outer_capture_collisions(
                         source_root=source_root,
                         path=path,
@@ -11963,6 +12351,16 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "invokedynamic_parameter_capture_alias"
+        ),
+        "intpredicate_parameter_capture_alias_action_count": sum(
+            action["kind"] == "intpredicate_parameter_capture_alias"
+            for action in actions
+        ),
+        "intpredicate_parameter_capture_alias_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "intpredicate_parameter_capture_alias"
         ),
         "impossible_collectors_tolist_cast_action_count": sum(
             action["kind"] == "impossible_collectors_tolist_cast_removal"
