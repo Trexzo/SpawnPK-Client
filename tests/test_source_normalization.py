@@ -1821,6 +1821,143 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 after.stdout + after.stderr,
             )
 
+    def test_reference_field_shadowed_self_static_owner_in_instance_method_is_qualified(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/q.java": (
+                        "package pkg;\n"
+                        "public class q {\n"
+                        "    public String q;\n"
+                        "    public static int a = 1;\n"
+                        "    public static int f = 2;\n"
+                        "    public int read() {\n"
+                        "        return pkg.q.a + pkg.q.f;\n"
+                        "    }\n"
+                        "}\n"
+                    )
+                },
+            )
+            source = root / "src" / "pkg" / "q.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package pkg;\n"
+                "public class q {\n"
+                "    public String q;\n"
+                "    public static int a = 1;\n"
+                "    public static int f = 2;\n"
+                "    public int read() {\n"
+                "        return q.a + q.f;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-reference-instance-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn("return pkg.q.a + pkg.q.f;", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if (
+                    row["kind"]
+                    == "reference_shadowed_self_static_field_owner_qualification"
+                    and row["method_name"] == "read"
+                )
+            )
+            self.assertEqual(action["method_descriptor"], "()I")
+            self.assertEqual(action["reference_shadow_owners"], ["pkg/q"])
+            self.assertEqual(
+                action["field_access_counts"],
+                {"pkg/q.a": 1, "pkg/q.f": 1},
+            )
+            self.assertEqual(action["replacement_count"], 2)
+            self.assertEqual(
+                action["provenance"]["strategy"],
+                "exact_instance_method_complete_field_access_qualification",
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-reference-instance-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_reference_field_shadowed_self_instance_count_mismatch_fails_closed(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/q.java": (
+                        "package pkg;\n"
+                        "public class q {\n"
+                        "    public String q;\n"
+                        "    public static int a = 1;\n"
+                        "    public int read() { return pkg.q.a; }\n"
+                        "}\n"
+                    )
+                },
+            )
+            source = root / "src" / "pkg" / "q.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package pkg;\n"
+                "public class q {\n"
+                "    public String q;\n"
+                "    public static int a = 1;\n"
+                "    public int read() { return q.a + q.a; }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "reference_shadowed_self_static_field_owner_qualification"
+                    and row["method_name"] == "read"
+                    for row in report["actions"]
+                )
+            )
+
     def test_reference_field_shadowed_self_static_owner_in_constructor_is_qualified(
         self,
     ):
