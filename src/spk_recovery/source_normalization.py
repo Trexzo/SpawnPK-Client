@@ -2356,11 +2356,11 @@ def _normalize_reference_shadowed_self_static_field_owners(
         )
 
     constructor_re = re.compile(
-        r"(?m)^(?P<indent>[ \\t]*)"
-        r"(?:(?:public|private|protected)\\s+)*"
+        r"(?m)^(?P<indent>[ \t]*)"
+        r"(?:(?:public|private|protected)\s+)*"
         + re.escape(simple_name)
-        + r"\\s*\\((?P<params>[^()\\n]*)\\)\\s*"
-        r"(?:throws\\s+[^\\{\\n]+\\s*)?\\{"
+        + r"\s*\((?P<params>[^()\n]*)\)\s*"
+        r"(?:throws\s+[^\{\n]+\s*)?\{"
     )
     for match in constructor_re.finditer(text):
         brace_start = text.find("{", match.start(), match.end())
@@ -2384,9 +2384,9 @@ def _normalize_reference_shadowed_self_static_field_owners(
             simple_token = re.compile(
                 r"(?<![A-Za-z0-9_$.])"
                 + re.escape(simple_name)
-                + r"\\."
+                + r"\."
                 + re.escape(field_name)
-                + r"\\b(?!\\s*\\()"
+                + r"\b(?!\s*\()"
             )
             simple_hits = list(simple_token.finditer(constructor_code))
             if not simple_hits:
@@ -2395,9 +2395,9 @@ def _normalize_reference_shadowed_self_static_field_owners(
             qualified_token = re.compile(
                 r"(?<![A-Za-z0-9_$.])"
                 + re.escape(qualified_owner)
-                + r"\\."
+                + r"\."
                 + re.escape(field_name)
-                + r"\\b(?!\\s*\\()"
+                + r"\b(?!\s*\()"
             )
             qualified_hits = list(
                 qualified_token.finditer(constructor_code)
