@@ -6794,7 +6794,11 @@ def _normalize_erased_iterator_assignment_casts(
 
     Procyon can emit a raw Iterator local and then assign next() directly to a
     concrete reference variable, which is illegal Java because next() erases
-    to Object. Restore only the cast already proven by exact JVM bytecode.
+    to Object. The exact checkcast may live in the correlated JVM method or
+    in a same-class synthetic LambdaMetafactory helper when Procyon has
+    reconstructed that helper back into a source lambda. Restore only the
+    cast when exactly one of those proof scopes matches the complete source
+    assignment multiset.
     """
 
     rel = path.relative_to(source_root).as_posix()
@@ -6809,6 +6813,7 @@ def _normalize_erased_iterator_assignment_casts(
     if current_owner != class_entry[:-6]:
         return []
     current_package = current_owner.rpartition("/")[0]
+    bootstrap_methods = list(profile.get("bootstrap_methods", []))
 
     text = path.read_text(encoding="utf-8")
     whole_code = _java_code_mask(text)
@@ -6830,6 +6835,80 @@ def _normalize_erased_iterator_assignment_casts(
         r"\s*\.\s*next\s*\(\s*\)"
         r"(?P<suffix>\s*;)"
     )
+
+    expected_bootstrap_descriptors = {
+        "metafactory": (
+            "(Ljava/lang/invoke/MethodHandles$Lookup;"
+            "Ljava/lang/String;"
+            "Ljava/lang/invoke/MethodType;"
+            "Ljava/lang/invoke/MethodType;"
+            "Ljava/lang/invoke/MethodHandle;"
+            "Ljava/lang/invoke/MethodType;)"
+            "Ljava/lang/invoke/CallSite;"
+        ),
+        "altMetafactory": (
+            "(Ljava/lang/invoke/MethodHandles$Lookup;"
+            "Ljava/lang/String;"
+            "Ljava/lang/invoke/MethodType;"
+            "[Ljava/lang/Object;)"
+            "Ljava/lang/invoke/CallSite;"
+        ),
+    }
+
+    def exact_iterator_checkcast_types(
+        method: dict[str, Any],
+    ) -> list[str]:
+        instructions = list(method.get("instructions", []))
+        exact_types: list[str] = []
+        for index in range(len(instructions) - 1):
+            first = instructions[index]
+            second = instructions[index + 1]
+            if not (
+                first.get("mnemonic")
+                in {"invokeinterface", "invokevirtual"}
+                and first.get("owner") == "java/util/Iterator"
+                and first.get("name") == "next"
+                and first.get("descriptor")
+                == "()Ljava/lang/Object;"
+                and second.get("mnemonic") == "checkcast"
+            ):
+                continue
+            target = str(second.get("type", ""))
+            if target:
+                exact_types.append(target)
+        return exact_types
+
+    def match_assignments_to_types(
+        assignments: list[re.Match[str]],
+        exact_types: list[str],
+    ) -> list[tuple[re.Match[str], str]] | None:
+        if len(exact_types) != len(assignments):
+            return None
+        remaining = list(exact_types)
+        matched: list[tuple[re.Match[str], str]] = []
+        for assignment in assignments:
+            source_type = assignment.group("type")
+            source_simple = source_type.rsplit(".", 1)[-1]
+            if "." in source_type:
+                expected_target = source_type.replace(".", "/")
+                hits = [
+                    (index, target)
+                    for index, target in enumerate(remaining)
+                    if target == expected_target
+                ]
+            else:
+                hits = [
+                    (index, target)
+                    for index, target in enumerate(remaining)
+                    if target.rsplit("/", 1)[-1].rsplit("$", 1)[-1]
+                    == source_simple
+                ]
+            if len(hits) != 1:
+                return None
+            index, target = hits[0]
+            remaining.pop(index)
+            matched.append((assignment, target))
+        return matched
 
     for method_match in _METHOD_DECL_RE.finditer(whole_code):
         brace_start = whole_code.find(
@@ -6885,62 +6964,139 @@ def _normalize_erased_iterator_assignment_casts(
             ):
                 continue
 
-            instructions = list(exact_method.get("instructions", []))
-            exact_types: list[str] = []
-            for index in range(len(instructions) - 1):
-                first = instructions[index]
-                second = instructions[index + 1]
-                if not (
-                    first.get("mnemonic") in {
-                        "invokeinterface", "invokevirtual"
-                    }
-                    and first.get("owner") == "java/util/Iterator"
-                    and first.get("name") == "next"
-                    and first.get("descriptor") == "()Ljava/lang/Object;"
-                    and second.get("mnemonic") == "checkcast"
-                ):
-                    continue
-                target = str(second.get("type", ""))
-                if target:
-                    exact_types.append(target)
+            proof_options: list[dict[str, Any]] = []
 
-            if len(exact_types) != len(assignments):
-                continue
-
-            remaining = list(exact_types)
-            matched: list[tuple[re.Match[str], str]] = []
-            exact_ok = True
-            for assignment in assignments:
-                source_type = assignment.group("type")
-                source_simple = source_type.rsplit(".", 1)[-1]
-                if "." in source_type:
-                    expected_target = source_type.replace(".", "/")
-                    hits = [
-                        (index, target)
-                        for index, target in enumerate(remaining)
-                        if target == expected_target
-                    ]
-                else:
-                    hits = [
-                        (index, target)
-                        for index, target in enumerate(remaining)
-                        if target.rsplit("/", 1)[-1].rsplit("$", 1)[-1]
-                        == source_simple
-                    ]
-                if len(hits) != 1:
-                    exact_ok = False
-                    break
-                index, target = hits[0]
-                remaining.pop(index)
-                matched.append((assignment, target))
-
-            if exact_ok and len(matched) == len(assignments):
-                candidates.append(
+            direct_types = exact_iterator_checkcast_types(exact_method)
+            direct_matched = match_assignments_to_types(
+                assignments,
+                direct_types,
+            )
+            if direct_matched is not None:
+                proof_options.append(
                     {
-                        "method": exact_method,
-                        "matched": matched,
+                        "scope": "direct_method",
+                        "matched": direct_matched,
+                        "lambda_helpers": [],
                     }
                 )
+
+            helper_types: list[str] = []
+            helper_records: list[dict[str, Any]] = []
+            for invocation in exact_method.get("instructions", []):
+                if invocation.get("mnemonic") != "invokedynamic":
+                    continue
+                bootstrap_index = int(
+                    invocation.get("bootstrap_method_attr_index", -1)
+                )
+                if not (
+                    0 <= bootstrap_index < len(bootstrap_methods)
+                ):
+                    continue
+                bootstrap = bootstrap_methods[bootstrap_index]
+                bootstrap_method = bootstrap.get("bootstrap_method", {})
+                bootstrap_name = str(
+                    bootstrap_method.get("name", "")
+                )
+                if not (
+                    bootstrap_method.get("owner")
+                    == "java/lang/invoke/LambdaMetafactory"
+                    and bootstrap_name
+                    in expected_bootstrap_descriptors
+                    and bootstrap_method.get("descriptor")
+                    == expected_bootstrap_descriptors[bootstrap_name]
+                    and bootstrap_method.get("target_kind") == "method"
+                    and int(
+                        bootstrap_method.get("reference_kind", -1)
+                    )
+                    == 6
+                ):
+                    continue
+
+                implementations = [
+                    argument.get("method_handle", {})
+                    for argument in bootstrap.get("arguments", [])
+                    if argument.get("kind") == "method_handle"
+                    and argument.get("method_handle", {}).get("owner")
+                    == current_owner
+                ]
+                if len(implementations) != 1:
+                    continue
+                implementation = implementations[0]
+                reference_kind = int(
+                    implementation.get("reference_kind", -1)
+                )
+                if not (
+                    implementation.get("target_kind") == "method"
+                    and reference_kind in {6, 7}
+                ):
+                    continue
+                helper_descriptor = str(
+                    implementation.get("descriptor", "")
+                )
+                helpers = [
+                    helper
+                    for helper in profile.get("methods", [])
+                    if helper.get("name")
+                    == implementation.get("name")
+                    and helper.get("descriptor")
+                    == helper_descriptor
+                    and int(helper.get("access", 0)) & 0x1000
+                    and bool(
+                        int(helper.get("access", 0)) & 0x0008
+                    )
+                    == (reference_kind == 6)
+                ]
+                if len(helpers) != 1:
+                    continue
+                exact_helper_types = (
+                    exact_iterator_checkcast_types(helpers[0])
+                )
+                if not exact_helper_types:
+                    continue
+                helper_types.extend(exact_helper_types)
+                helper_records.append(
+                    {
+                        "name": str(
+                            implementation.get("name", "")
+                        ),
+                        "descriptor": helper_descriptor,
+                        "reference_kind": reference_kind,
+                        "bootstrap_method_attr_index": (
+                            bootstrap_index
+                        ),
+                        "exact_checkcast_types": (
+                            exact_helper_types
+                        ),
+                    }
+                )
+
+            helper_matched = match_assignments_to_types(
+                assignments,
+                helper_types,
+            )
+            if (
+                helper_records
+                and helper_matched is not None
+            ):
+                proof_options.append(
+                    {
+                        "scope": "lambda_helper",
+                        "matched": helper_matched,
+                        "lambda_helpers": helper_records,
+                    }
+                )
+
+            if len(proof_options) != 1:
+                continue
+            proof = proof_options[0]
+            candidates.append(
+                {
+                    "method": exact_method,
+                    "matched": proof["matched"],
+                    "proof_scope": proof["scope"],
+                    "lambda_helpers": proof["lambda_helpers"],
+                }
+            )
 
         if len(candidates) != 1:
             continue
@@ -6976,6 +7132,8 @@ def _normalize_erased_iterator_assignment_casts(
                     {match.group("iterator") for match in assignments}
                 ),
                 "exact_checkcast_types": sorted(restored_types),
+                "proof_scope": candidates[0]["proof_scope"],
+                "lambda_helpers": candidates[0]["lambda_helpers"],
                 "replacement_count": len(assignments),
                 "provenance": {
                     "kind": "source_safety",
