@@ -2679,6 +2679,126 @@ def _resolve_shadowed_simple_nested_static_field(
     return candidate, shadow_owners, java_owner
 
 
+_DOTTED_STATIC_METHOD_RE = re.compile(
+    r"(?<![A-Za-z0-9_$])"
+    r"(?P<owner>[A-Za-z_$][A-Za-z0-9_$]*"
+    r"(?:\.[A-Za-z_$][A-Za-z0-9_$]*){2,})"
+    r"\.(?P<method>[A-Za-z_$][A-Za-z0-9_$]*)\s*\("
+)
+_SIMPLE_STATIC_METHOD_RE = re.compile(
+    r"(?<![A-Za-z0-9_$.])"
+    r"(?P<owner>[A-Za-z_$][A-Za-z0-9_$]*)"
+    r"\.(?P<method>[A-Za-z_$][A-Za-z0-9_$]*)\s*\("
+)
+
+
+def _resolve_shadowed_nested_static_method(
+    *,
+    owner: str,
+    method_name: str,
+    current_owner: str,
+    readable_zip: zipfile.ZipFile,
+    entries: set[str],
+    class_cache: dict[str, Any],
+) -> tuple[str, list[str]] | None:
+    matches: list[tuple[str, list[str]]] = []
+
+    for candidate in _java_owner_binary_candidates(owner):
+        entry = candidate + ".class"
+        if entry not in entries:
+            continue
+        if "$" not in candidate.rsplit("/", 1)[-1]:
+            continue
+
+        parsed = class_cache.get(candidate)
+        if parsed is None:
+            try:
+                parsed = parse_class(readable_zip.read(entry))
+            except (KeyError, ClassFormatError):
+                continue
+            class_cache[candidate] = parsed
+
+        declarations = [
+            method
+            for method in parsed.methods
+            if (
+                str(method.get("name", "")) == method_name
+                and int(method.get("access", 0)) & 0x0008
+                and _field_visible_from(
+                    declaring_owner=candidate,
+                    current_owner=current_owner,
+                    access=int(method.get("access", 0)),
+                )
+            )
+        ]
+        if not declarations:
+            continue
+
+        shadowed, shadow_owners = _nested_owner_has_visible_name_shadow(
+            nested_internal=candidate,
+            current_owner=current_owner,
+            readable_zip=readable_zip,
+        )
+        if not shadowed:
+            continue
+
+        matches.append((candidate, shadow_owners))
+
+    if len(matches) != 1:
+        return None
+    return matches[0]
+
+
+def _resolve_shadowed_simple_nested_static_method(
+    *,
+    owner: str,
+    method_name: str,
+    current_owner: str,
+    readable_zip: zipfile.ZipFile,
+    entries: set[str],
+    class_cache: dict[str, Any],
+) -> tuple[str, list[str], str] | None:
+    if not _is_java_identifier(owner):
+        return None
+
+    candidate = current_owner + "$" + owner
+    entry = candidate + ".class"
+    if entry not in entries:
+        return None
+
+    parsed = class_cache.get(candidate)
+    if parsed is None:
+        try:
+            parsed = parse_class(readable_zip.read(entry))
+        except (KeyError, ClassFormatError):
+            return None
+        class_cache[candidate] = parsed
+    if parsed.name != candidate:
+        return None
+
+    declarations = [
+        method
+        for method in parsed.methods
+        if (
+            str(method.get("name", "")) == method_name
+            and int(method.get("access", 0)) & 0x0008
+        )
+    ]
+    if not declarations:
+        return None
+
+    shadowed, shadow_owners = _nested_owner_has_visible_name_shadow(
+        nested_internal=candidate,
+        current_owner=current_owner,
+        readable_zip=readable_zip,
+    )
+    if not shadowed:
+        return None
+
+    java_owner = current_owner.replace("/", ".") + "." + owner
+    return candidate, shadow_owners, java_owner
+
+
 def _normalize_shadowed_nested_static_field_owners(
     *,
     source_root: Path,
@@ -3210,6 +3330,214 @@ def _normalize_shadowed_nested_static_field_owners(
         text = text[:start] + replacement + text[end:]
     path.write_text(text, encoding="utf-8")
     return actions
+
+def _normalize_shadowed_nested_static_method_owners_in_clinit(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Force shadowed nested static-method owners into type context in clinit.
+
+    This is the invokestatic counterpart to nested static-field recovery.
+    Only top-level class static initializer blocks are considered, and every
+    rewrite is bound to the exact readable <clinit>()V invocation multiset.
+    """
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+    except KeyError:
+        return []
+
+    try:
+        profile = profile_class_field_accesses(class_bytes)
+    except BytecodeProfileError:
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+
+    exact_clinits = [
+        method
+        for method in profile.get("methods", [])
+        if method.get("name") == "<clinit>"
+        and method.get("descriptor") == "()V"
+    ]
+    if len(exact_clinits) != 1:
+        return []
+    exact_clinit = exact_clinits[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    entries = {
+        info.filename
+        for info in readable_zip.infolist()
+        if not info.is_dir() and info.filename.endswith(".class")
+    }
+    class_cache: dict[str, Any] = {}
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+    static_block_re = re.compile(r"(?m)^[ \t]*static[ \t]*\{")
+
+    for block_match in static_block_re.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", block_match.start(), block_match.end()
+        )
+        if (
+            brace_start < 0
+            or _brace_depth_before(whole_code, brace_start) != 1
+        ):
+            continue
+        block_end = _matching_brace_end(whole_code, brace_start)
+        block_code = whole_code[block_match.start():block_end]
+
+        source_counts: dict[tuple[str, str, str], int] = {}
+        source_occurrences: dict[
+            tuple[str, str, str],
+            list[tuple[int, int, str]],
+        ] = {}
+        shadow_owners_by_key: dict[
+            tuple[str, str, str],
+            list[str],
+        ] = {}
+
+        tokens: list[tuple[re.Match[str], bool]] = [
+            (token, False)
+            for token in _DOTTED_STATIC_METHOD_RE.finditer(block_code)
+        ]
+        tokens.extend(
+            (token, True)
+            for token in _SIMPLE_STATIC_METHOD_RE.finditer(block_code)
+        )
+        tokens.sort(key=lambda row: row[0].start())
+
+        for token, simple_owner in tokens:
+            owner = token.group("owner")
+            method_name = token.group("method")
+            if simple_owner:
+                simple_resolved = (
+                    _resolve_shadowed_simple_nested_static_method(
+                        owner=owner,
+                        method_name=method_name,
+                        current_owner=current_owner,
+                        readable_zip=readable_zip,
+                        entries=entries,
+                        class_cache=class_cache,
+                    )
+                )
+                if simple_resolved is None:
+                    continue
+                (
+                    nested_internal,
+                    shadow_owners,
+                    java_owner,
+                ) = simple_resolved
+            else:
+                resolved = _resolve_shadowed_nested_static_method(
+                    owner=owner,
+                    method_name=method_name,
+                    current_owner=current_owner,
+                    readable_zip=readable_zip,
+                    entries=entries,
+                    class_cache=class_cache,
+                )
+                if resolved is None:
+                    continue
+                nested_internal, shadow_owners = resolved
+                java_owner = owner
+
+            key = (nested_internal, method_name, java_owner)
+            source_counts[key] = source_counts.get(key, 0) + 1
+            shadow_owners_by_key[key] = shadow_owners
+            source_occurrences.setdefault(key, []).append(
+                (
+                    block_match.start() + token.start("owner"),
+                    block_match.start() + token.end("owner"),
+                    "((" + java_owner + ")null)",
+                )
+            )
+
+        if not source_counts:
+            continue
+
+        invocation_counts: dict[tuple[str, str, str], int] = {}
+        for invocation in exact_clinit.get("method_invocations", []):
+            if invocation.get("operation") != "invokestatic":
+                continue
+            for key in source_counts:
+                nested_internal, method_name, _owner = key
+                if (
+                    str(invocation.get("owner", "")) == nested_internal
+                    and str(invocation.get("name", "")) == method_name
+                ):
+                    invocation_counts[key] = (
+                        invocation_counts.get(key, 0) + 1
+                    )
+
+        if not all(
+            invocation_counts.get(key, 0) == count
+            for key, count in source_counts.items()
+        ):
+            continue
+
+        edits.extend(
+            edit
+            for key in source_counts
+            for edit in source_occurrences[key]
+        )
+        actions.append(
+            {
+                "kind": (
+                    "shadowed_nested_static_method_owner_type_context"
+                ),
+                "source_path": rel,
+                "method_name": "<clinit>",
+                "method_descriptor": "()V",
+                "nested_owners": sorted(
+                    {key[0] for key in source_counts}
+                ),
+                "shadow_declaring_owners": sorted(
+                    {
+                        shadow_owner
+                        for key in source_counts
+                        for shadow_owner in shadow_owners_by_key[key]
+                    }
+                ),
+                "method_invocation_counts": {
+                    nested + "." + method: count
+                    for (nested, method, _owner), count in sorted(
+                        source_counts.items()
+                    )
+                },
+                "replacement_count": sum(source_counts.values()),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_nested_type_hidden_before_static_method_in_clinit"
+                    ),
+                    "strategy": (
+                        "exact_clinit_invokestatic_owner_name_multiset_qualification"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping nested static-call owner edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
 
 _PACKAGE_DECL_RE = re.compile(
     r"(?m)^\s*package\s+"
@@ -13237,6 +13565,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_shadowed_nested_static_method_owners_in_clinit(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_compile_time_lombok_nonnull(
                         source_root=source_root,
                         path=path,
@@ -13566,6 +13901,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "shadowed_nested_static_field_owner_type_context"
+        ),
+        "shadowed_nested_static_method_action_count": sum(
+            action["kind"]
+            == "shadowed_nested_static_method_owner_type_context"
+            for action in actions
+        ),
+        "shadowed_nested_static_method_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "shadowed_nested_static_method_owner_type_context"
         ),
         "compile_time_lombok_nonnull_action_count": sum(
             action["kind"] == "compile_time_lombok_nonnull_erasure"
