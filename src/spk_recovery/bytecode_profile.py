@@ -665,6 +665,24 @@ def _decoded_instructions(
                     "descriptor": descriptor,
                 }
             )
+        elif opcode in {*range(0x99, 0xA9), 0xC6, 0xC7}:
+            if offset + 3 > len(code):
+                raise BytecodeProfileError(
+                    f"truncated branch instruction at {offset}"
+                )
+            row["branch_target_offset"] = (
+                offset
+                + struct.unpack_from(">h", code, offset + 1)[0]
+            )
+        elif opcode in {0xC8, 0xC9}:
+            if offset + 5 > len(code):
+                raise BytecodeProfileError(
+                    f"truncated wide branch instruction at {offset}"
+                )
+            row["branch_target_offset"] = (
+                offset
+                + struct.unpack_from(">i", code, offset + 1)[0]
+            )
         elif opcode in {0xBB, 0xBD, 0xC0, 0xC1}:
             row["mnemonic"] = {
                 0xBB: "new",
