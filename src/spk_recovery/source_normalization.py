@@ -7923,6 +7923,236 @@ def _normalize_erased_raw_collection_get_assignment_casts(
     return actions
 
 
+
+def _normalize_erased_map_get_direct_argument_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore Map casts lost from direct current-class call arguments.
+
+    Procyon can erase Map.get() to Object when that result is passed directly
+    into another method whose JVM descriptor requires Map. Restore only the
+    exact cast proven by a contiguous get -> checkcast Map -> invocation flow.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    source_re = re.compile(
+        r"\bthis\s*\.\s*(?P<target>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\(\s*"
+        r"(?P<first>[A-Za-z_$][A-Za-z0-9_$]*)\s*,\s*"
+        r"(?P<expr>"
+        r"(?P<receiver>(?:(?:this)\s*\.\s*)?"
+        r"[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\.\s*get\s*\(\s*"
+        r"(?P<key>[A-Za-z_$][A-Za-z0-9_$]*)\s*\)"
+        r")\s*\)"
+    )
+    map_get_owners = {
+        "java/util/Map",
+        "java/util/HashMap",
+        "java/util/LinkedHashMap",
+        "java/util/TreeMap",
+    }
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        source_matches = list(source_re.finditer(method_code))
+        if not source_matches:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        if source_static:
+            continue
+
+        exact_candidates: list[dict[str, Any]] = []
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if bool(int(exact_method.get("access", 0)) & 0x0008):
+                continue
+
+            exact_return = _descriptor_return_descriptor(descriptor)
+            source_return = method_match.group("return").strip()
+            if source_return == "void":
+                if exact_return != "V":
+                    continue
+            elif exact_return is None or (
+                _source_parameters_match_descriptor(
+                    source_return + " recoveredReturn",
+                    "(" + exact_return + ")V",
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            flows: list[dict[str, Any]] = []
+            for index in range(len(instructions) - 2):
+                get_call = instructions[index]
+                cast = instructions[index + 1]
+                invocation = instructions[index + 2]
+                if not (
+                    get_call.get("mnemonic")
+                    in {"invokeinterface", "invokevirtual"}
+                    and get_call.get("owner") in map_get_owners
+                    and get_call.get("name") == "get"
+                    and get_call.get("descriptor")
+                    == "(Ljava/lang/Object;)Ljava/lang/Object;"
+                    and cast.get("mnemonic") == "checkcast"
+                    and cast.get("type") == "java/util/Map"
+                    and invocation.get("mnemonic")
+                    in {"invokevirtual", "invokespecial"}
+                    and invocation.get("owner") == current_owner
+                ):
+                    continue
+                invocation_descriptor = str(
+                    invocation.get("descriptor", "")
+                )
+                invocation_shapes = _descriptor_parameter_shapes(
+                    invocation_descriptor
+                )
+                if (
+                    invocation_shapes is None
+                    or len(invocation_shapes) != 2
+                    or invocation_shapes[1]
+                    != (0, "ref", "java/util/Map")
+                ):
+                    continue
+                flows.append(
+                    {
+                        "target_method": str(
+                            invocation.get("name", "")
+                        ),
+                        "target_descriptor": invocation_descriptor,
+                        "get_offset": int(get_call.get("offset", -1)),
+                        "checkcast_offset": int(cast.get("offset", -1)),
+                        "invoke_offset": int(
+                            invocation.get("offset", -1)
+                        ),
+                    }
+                )
+
+            if len(flows) != len(source_matches):
+                continue
+            if [
+                flow["target_method"] for flow in flows
+            ] != [
+                match.group("target") for match in source_matches
+            ]:
+                continue
+
+            exact_candidates.append(
+                {
+                    "method": exact_method,
+                    "flows": flows,
+                }
+            )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        proof = exact_candidates[0]
+        for source_match in source_matches:
+            expression = text[
+                method_start + source_match.start("expr"):
+                method_start + source_match.end("expr")
+            ]
+            edits.append(
+                (
+                    method_start + source_match.start("expr"),
+                    method_start + source_match.end("expr"),
+                    "(java.util.Map)" + expression,
+                )
+            )
+
+        actions.append(
+            {
+                "kind": (
+                    "erased_map_get_direct_argument_cast_reconstruction"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "target_methods": [
+                    match.group("target") for match in source_matches
+                ],
+                "receiver_names": [
+                    match.group("receiver") for match in source_matches
+                ],
+                "flows": proof["flows"],
+                "replacement_count": len(source_matches),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_erased_map_get_direct_argument_cast"
+                    ),
+                    "strategy": (
+                        "exact_map_get_checkcast_direct_call_argument"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping direct Map.get argument edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
 def _normalize_erased_raw_list_toarray_returns(
     *,
     source_root: Path,
@@ -15751,6 +15981,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_erased_map_get_direct_argument_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_erased_raw_map_string_key_stream_predicates(
                         source_root=source_root,
                         path=path,
@@ -16167,6 +16404,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "erased_map_number_assignment_reconstruction"
+        ),
+        "erased_map_get_direct_argument_cast_action_count": sum(
+            action["kind"]
+            == "erased_map_get_direct_argument_cast_reconstruction"
+            for action in actions
+        ),
+        "erased_map_get_direct_argument_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "erased_map_get_direct_argument_cast_reconstruction"
         ),
         "erased_raw_map_string_key_stream_predicate_action_count": sum(
             action["kind"]

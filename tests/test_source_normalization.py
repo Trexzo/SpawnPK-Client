@@ -10287,6 +10287,154 @@ class ErasedRawListIntegerStreamMethodRefTests(unittest.TestCase):
 
 
 
+
+class ErasedMapGetDirectArgumentCastTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        target_type: str = "Map",
+    ) -> Path:
+        import_line = (
+            "import java.util.Map;\n"
+            if target_type == "Map"
+            else "import java.util.List;\nimport java.util.Map;\n"
+        )
+        return _compile_java_fixture(
+            root,
+            {
+                "p/A.java": (
+                    "package p;\n"
+                    + import_line
+                    + "import java.util.HashMap;\n"
+                    "public class A {\n"
+                    f"    public Object decode(int key, {target_type} value) {{\n"
+                    "        return value;\n"
+                    "    }\n"
+                    "    public Object read(int key) {\n"
+                    "        Map values = new HashMap();\n"
+                    f"        return this.decode(key, ({target_type})"
+                    "values.get(key));\n"
+                    "    }\n"
+                    "}\n"
+                )
+            },
+        )
+
+    def test_map_get_direct_argument_restores_exact_cast(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.HashMap;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    public Object decode(int key, Map value) {\n"
+                "        return value;\n"
+                "    }\n"
+                "    public Object read(int key) {\n"
+                "        Map values = new HashMap();\n"
+                "        return this.decode(key, values.get(key));\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-map-argument"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "return this.decode(key, "
+                "(java.util.Map)values.get(key));",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_map_get_direct_argument_cast_reconstruction"
+            )
+            self.assertEqual(action["target_methods"], ["decode"])
+            self.assertEqual(action["receiver_names"], ["values"])
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(len(action["flows"]), 1)
+            self.assertEqual(
+                action["flows"][0]["target_descriptor"],
+                "(ILjava/util/Map;)Ljava/lang/Object;",
+            )
+            self.assertEqual(
+                report["summary"][
+                    "erased_map_get_direct_argument_cast_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-map-argument"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stderr)
+
+    def test_map_get_direct_argument_fails_closed_on_cast_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, target_type="List")
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.HashMap;\n"
+                "import java.util.List;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    public Object decode(int key, List value) {\n"
+                "        return value;\n"
+                "    }\n"
+                "    public Object read(int key) {\n"
+                "        Map values = new HashMap();\n"
+                "        return this.decode(key, values.get(key));\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "erased_map_get_direct_argument_cast_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
+
 class ErasedRawMapStringKeyStreamPredicateTests(unittest.TestCase):
     def _fixture(
         self,
