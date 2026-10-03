@@ -2597,6 +2597,120 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+    def test_same_package_outer_nested_static_owners_in_clinit(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Base.java": (
+                        "package p;\n"
+                        "public class Base { public Object b; }\n"
+                    ),
+                    "p/Outer.java": (
+                        "package p;\n"
+                        "public class Outer extends Base {\n"
+                        "    public static class b {\n"
+                        "        public static int h = 7;\n"
+                        "        public static int a() { return 8; }\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "p/Current.java": (
+                        "package p;\n"
+                        "public class Current {\n"
+                        "    public static int value;\n"
+                        "    static {\n"
+                        "        value = ((p.Outer.b)null).h"
+                        " + ((p.Outer.b)null).a();\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "public class Current {\n"
+                "    public static int value;\n"
+                "    static {\n"
+                "        value = Outer.b.h + Outer.b.a();\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-same-package-nested-clinit"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn("((p.Outer.b)null).h", normalized)
+            self.assertIn("((p.Outer.b)null).a()", normalized)
+
+            field_action = next(
+                row
+                for row in report["actions"]
+                if (
+                    row["kind"]
+                    == "shadowed_nested_static_field_owner_type_context"
+                    and row.get("method_name") == "<clinit>"
+                )
+            )
+            self.assertEqual(field_action["nested_owners"], ["p/Outer$b"])
+            self.assertEqual(
+                field_action["field_access_counts"],
+                {"p/Outer$b.h": 1},
+            )
+
+            method_action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "shadowed_nested_static_method_owner_type_context"
+            )
+            self.assertEqual(method_action["nested_owners"], ["p/Outer$b"])
+            self.assertEqual(
+                method_action["method_invocation_counts"],
+                {"p/Outer$b.a": 1},
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-same-package-nested-clinit"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
     def test_imported_static_method_owner_shadowed_by_primitive_parameter(
         self,
     ):
