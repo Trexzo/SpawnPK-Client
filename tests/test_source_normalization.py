@@ -9466,6 +9466,126 @@ class ObjectBooleanConditionCastTests(unittest.TestCase):
 
 
 
+
+class ErasedHashMapArrayReturnCastTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        return_type: str = "int[]",
+    ) -> Path:
+        literal = {
+            "int[]": "new int[] {1}",
+            "boolean[]": "new boolean[] {true}",
+        }[return_type]
+        return _compile_java_fixture(
+            root,
+            {
+                "p/Key.java": (
+                    "package p;\n"
+                    "public class Key {}\n"
+                ),
+                "p/A.java": (
+                    "package p;\n"
+                    "import java.util.HashMap;\n"
+                    "public class A {\n"
+                    "    public HashMap<Key, Object> f = new HashMap<>();\n"
+                    f"    public {return_type} read(Key key) {{\n"
+                    f"        f.put(key, {literal});\n"
+                    f"        return ({return_type})this.f.get(key);\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def test_hashmap_object_value_array_return_restores_exact_cast(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.HashMap;\n"
+                "public class A {\n"
+                "    public HashMap<Key, Object> f = new HashMap<>();\n"
+                "    public int[] read(Key key) {\n"
+                "        return this.f.get(key);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac", "-cp", str(jar), "-d",
+                    str(root / "before-hashmap-array"), str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "return (int[])this.f.get(key);",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_hashmap_get_array_return_cast_reconstruction"
+            )
+            self.assertEqual(action["array_return_descriptor"], "[I")
+            self.assertEqual(action["field_names"], ["f"])
+            self.assertEqual(action["replacement_count"], 1)
+
+            after = subprocess.run(
+                [
+                    "javac", "-cp", str(jar), "-d",
+                    str(root / "after-hashmap-array"), str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stderr)
+
+    def test_hashmap_object_value_array_return_fails_closed_on_type_drift(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, return_type="boolean[]")
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.HashMap;\n"
+                "public class A {\n"
+                "    public HashMap<Key, Object> f = new HashMap<>();\n"
+                "    public int[] read(Key key) {\n"
+                "        return this.f.get(key);\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "erased_hashmap_get_array_return_cast_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
 
