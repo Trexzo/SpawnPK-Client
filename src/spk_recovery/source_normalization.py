@@ -9099,6 +9099,373 @@ def _normalize_object_boolean_conditions(
     path.write_text(text, encoding="utf-8")
     return actions
 
+
+def _normalize_erased_raw_map_string_key_stream_predicates(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore String typing for raw Map keySet() predicate streams.
+
+    Procyon can erase a Map<String, ?> local to raw Map while retaining a
+    String-only lambda body. javac then types keySet().stream() as
+    Stream<Object> and rejects the String member access. Restore only the
+    source type context already proven by an exact zero-capture Predicate
+    LambdaMetafactory bootstrap instantiated as String -> boolean.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    bootstrap_methods = list(profile.get("bootstrap_methods", []))
+    if not bootstrap_methods:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    expected_bootstrap_descriptors = {
+        "metafactory": (
+            "(Ljava/lang/invoke/MethodHandles$Lookup;"
+            "Ljava/lang/String;"
+            "Ljava/lang/invoke/MethodType;"
+            "Ljava/lang/invoke/MethodType;"
+            "Ljava/lang/invoke/MethodHandle;"
+            "Ljava/lang/invoke/MethodType;)"
+            "Ljava/lang/invoke/CallSite;"
+        ),
+        "altMetafactory": (
+            "(Ljava/lang/invoke/MethodHandles$Lookup;"
+            "Ljava/lang/String;"
+            "Ljava/lang/invoke/MethodType;"
+            "[Ljava/lang/Object;)"
+            "Ljava/lang/invoke/CallSite;"
+        ),
+    }
+    source_re = re.compile(
+        r"(?P<keyset>"
+        r"(?P<receiver>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\.\s*keySet\s*\(\s*\)"
+        r")\s*\.\s*stream\s*\(\s*\)"
+        r"\s*\.\s*anyMatch\s*\(\s*"
+        r"(?P<alias>[A-Za-z_$][A-Za-z0-9_$]*)\s*->\s*"
+        r"(?P=alias)\s*\.\s*equalsIgnoreCase\s*"
+        r"\(\s*[^()]*\s*\)\s*\)"
+    )
+    literal_re = re.compile(
+        r"equalsIgnoreCase\s*\(\s*"
+        r'"(?P<literal>[^"\\]*)"\s*\)'
+    )
+
+    map_keyset_owners = {
+        "java/util/Map",
+        "java/util/HashMap",
+        "java/util/LinkedHashMap",
+        "java/util/TreeMap",
+    }
+
+    def exact_predicate_flow(
+        *,
+        instructions: list[dict[str, Any]],
+        index: int,
+    ) -> dict[str, Any] | None:
+        if index + 3 >= len(instructions):
+            return None
+        key_set = instructions[index]
+        stream = instructions[index + 1]
+        indy = instructions[index + 2]
+        any_match = instructions[index + 3]
+        if not (
+            key_set.get("mnemonic") in {"invokeinterface", "invokevirtual"}
+            and key_set.get("owner") in map_keyset_owners
+            and key_set.get("name") == "keySet"
+            and key_set.get("descriptor") == "()Ljava/util/Set;"
+            and stream.get("mnemonic") in {"invokeinterface", "invokevirtual"}
+            and stream.get("owner") == "java/util/Set"
+            and stream.get("name") == "stream"
+            and stream.get("descriptor") == "()Ljava/util/stream/Stream;"
+            and indy.get("mnemonic") == "invokedynamic"
+            and indy.get("name") == "test"
+            and indy.get("descriptor")
+            == "()Ljava/util/function/Predicate;"
+            and any_match.get("mnemonic")
+            in {"invokeinterface", "invokevirtual"}
+            and any_match.get("owner") == "java/util/stream/Stream"
+            and any_match.get("name") == "anyMatch"
+            and any_match.get("descriptor")
+            == "(Ljava/util/function/Predicate;)Z"
+        ):
+            return None
+
+        bootstrap_index = int(
+            indy.get("bootstrap_method_attr_index", -1)
+        )
+        if not 0 <= bootstrap_index < len(bootstrap_methods):
+            return None
+        bootstrap = bootstrap_methods[bootstrap_index]
+        bootstrap_handle = bootstrap.get("bootstrap_method", {})
+        bootstrap_name = str(bootstrap_handle.get("name", ""))
+        if not (
+            bootstrap_handle.get("owner")
+            == "java/lang/invoke/LambdaMetafactory"
+            and bootstrap_name in expected_bootstrap_descriptors
+            and bootstrap_handle.get("descriptor")
+            == expected_bootstrap_descriptors[bootstrap_name]
+            and bootstrap_handle.get("target_kind") == "method"
+            and int(bootstrap_handle.get("reference_kind", -1)) == 6
+        ):
+            return None
+
+        method_types = [
+            str(argument.get("descriptor", ""))
+            for argument in bootstrap.get("arguments", [])
+            if argument.get("kind") == "method_type"
+        ]
+        if (
+            method_types.count("(Ljava/lang/Object;)Z") != 1
+            or method_types.count("(Ljava/lang/String;)Z") != 1
+        ):
+            return None
+
+        implementation_handles = [
+            argument.get("method_handle", {})
+            for argument in bootstrap.get("arguments", [])
+            if argument.get("kind") == "method_handle"
+        ]
+        exact_impls = [
+            implementation
+            for implementation in implementation_handles
+            if (
+                implementation.get("owner") == current_owner
+                and implementation.get("descriptor")
+                == "(Ljava/lang/String;)Z"
+                and implementation.get("target_kind") == "method"
+                and int(implementation.get("reference_kind", -1)) == 6
+            )
+        ]
+        if len(exact_impls) != 1:
+            return None
+
+        implementation = exact_impls[0]
+        helper_candidates = [
+            helper
+            for helper in profile.get("methods", [])
+            if (
+                helper.get("name") == implementation.get("name")
+                and helper.get("descriptor") == "(Ljava/lang/String;)Z"
+                and bool(int(helper.get("access", 0)) & 0x0008)
+                and bool(int(helper.get("access", 0)) & 0x1000)
+            )
+        ]
+        if len(helper_candidates) != 1:
+            return None
+        helper = helper_candidates[0]
+        helper_instructions = list(helper.get("instructions", []))
+        if len(helper_instructions) != 4:
+            return None
+        load, literal, equals_call, ret = helper_instructions
+        if not (
+            load.get("mnemonic") == "aload"
+            and int(load.get("local_index", -1)) == 0
+            and literal.get("mnemonic") in {"ldc", "ldc_w"}
+            and isinstance(literal.get("constant"), str)
+            and equals_call.get("mnemonic") == "invokevirtual"
+            and equals_call.get("owner") == "java/lang/String"
+            and equals_call.get("name") == "equalsIgnoreCase"
+            and equals_call.get("descriptor")
+            == "(Ljava/lang/String;)Z"
+            and ret.get("mnemonic") == "ireturn"
+        ):
+            return None
+
+        return {
+            "key_set_offset": int(key_set.get("offset", -1)),
+            "stream_offset": int(stream.get("offset", -1)),
+            "invokedynamic_offset": int(indy.get("offset", -1)),
+            "any_match_offset": int(any_match.get("offset", -1)),
+            "bootstrap_method_attr_index": bootstrap_index,
+            "implementation_method": str(
+                implementation.get("name", "")
+            ),
+            "literal": str(literal.get("constant", "")),
+        }
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        structural_matches = list(source_re.finditer(method_code))
+        if not structural_matches:
+            continue
+
+        source_matches: list[tuple[re.Match[str], str]] = []
+        for source_match in structural_matches:
+            actual = text[
+                method_start + source_match.start():
+                method_start + source_match.end()
+            ]
+            literal_match = literal_re.search(actual)
+            if literal_match is None:
+                source_matches = []
+                break
+            source_matches.append(
+                (source_match, literal_match.group("literal"))
+            )
+        if not source_matches:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        exact_candidates: list[dict[str, Any]] = []
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            exact_return = _descriptor_return_descriptor(descriptor)
+            source_return = method_match.group("return").strip()
+            if source_return == "void":
+                if exact_return != "V":
+                    continue
+            elif exact_return is None or (
+                _source_parameters_match_descriptor(
+                    source_return + " recoveredReturn",
+                    "(" + exact_return + ")V",
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            flows = [
+                flow
+                for index in range(len(instructions) - 3)
+                if (
+                    flow := exact_predicate_flow(
+                        instructions=instructions,
+                        index=index,
+                    )
+                )
+                is not None
+            ]
+            if len(flows) != len(source_matches):
+                continue
+            if [
+                flow["literal"] for flow in flows
+            ] != [
+                literal for _match, literal in source_matches
+            ]:
+                continue
+            exact_candidates.append(
+                {
+                    "method": exact_method,
+                    "flows": flows,
+                }
+            )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        proof = exact_candidates[0]
+        for source_match, _literal in source_matches:
+            keyset_text = text[
+                method_start + source_match.start("keyset"):
+                method_start + source_match.end("keyset")
+            ]
+            edits.append(
+                (
+                    method_start + source_match.start("keyset"),
+                    method_start + source_match.end("keyset"),
+                    "((java.util.Set<String>)" + keyset_text + ")",
+                )
+            )
+
+        actions.append(
+            {
+                "kind": (
+                    "erased_raw_map_string_key_stream_predicate_reconstruction"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "receiver_names": sorted(
+                    {
+                        match.group("receiver")
+                        for match, _literal in source_matches
+                    }
+                ),
+                "literals": [
+                    literal for _match, literal in source_matches
+                ],
+                "flows": proof["flows"],
+                "replacement_count": len(source_matches),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_erased_raw_map_string_key_stream_predicate"
+                    ),
+                    "strategy": (
+                        "exact_predicate_string_instantiation_type_context"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping raw Map String-key stream edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
 def _normalize_erased_set_int_enhanced_for(
     *,
     source_root: Path,
@@ -15384,6 +15751,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_erased_raw_map_string_key_stream_predicates(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_erased_raw_list_toarray_returns(
                         source_root=source_root,
                         path=path,
@@ -15793,6 +16167,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "erased_map_number_assignment_reconstruction"
+        ),
+        "erased_raw_map_string_key_stream_predicate_action_count": sum(
+            action["kind"]
+            == "erased_raw_map_string_key_stream_predicate_reconstruction"
+            for action in actions
+        ),
+        "erased_raw_map_string_key_stream_predicate_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "erased_raw_map_string_key_stream_predicate_reconstruction"
         ),
         "erased_raw_collection_get_assignment_cast_action_count": sum(
             action["kind"]
