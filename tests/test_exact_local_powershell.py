@@ -156,6 +156,10 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 "/normalization_summary/enum_valueof_raw_class_cast_action_count",
             "enum_valueof_raw_class_cast_reference_count":
                 "/normalization_summary/enum_valueof_raw_class_cast_reference_count",
+            "shadowed_nested_static_method_action_count":
+                "/normalization_summary/shadowed_nested_static_method_action_count",
+            "shadowed_nested_static_method_reference_count":
+                "/normalization_summary/shadowed_nested_static_method_reference_count",
             "reference_shadowed_self_static_field_method_count":
                 "/normalization_summary/reference_shadowed_self_static_field_method_count",
             "reference_shadowed_self_static_field_reference_count":
@@ -256,6 +260,16 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         self.assertIn(
             'ENUM_VALUEOF_RAW_CLASS_CAST_REFERENCES='
             '$($Recovered.enum_valueof_raw_class_cast_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'NESTED_STATIC_METHOD_SHADOW_ACTIONS='
+            '$($Recovered.shadowed_nested_static_method_action_count)',
+            script,
+        )
+        self.assertIn(
+            'NESTED_STATIC_METHOD_SHADOW_REFERENCES='
+            '$($Recovered.shadowed_nested_static_method_reference_count)',
             script,
         )
         self.assertIn(
