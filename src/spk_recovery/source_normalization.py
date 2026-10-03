@@ -3042,6 +3042,161 @@ def _normalize_shadowed_nested_static_field_owners(
             }
         )
 
+    exact_clinits = [
+        method
+        for method in profile.get("methods", [])
+        if method.get("name") == "<clinit>"
+        and method.get("descriptor") == "()V"
+    ]
+    if len(exact_clinits) == 1:
+        exact_clinit = exact_clinits[0]
+        whole_code = _java_code_mask(text)
+        static_block_re = re.compile(r"(?m)^[ \t]*static[ \t]*\{")
+
+        for block_match in static_block_re.finditer(whole_code):
+            brace_start = whole_code.find(
+                "{", block_match.start(), block_match.end()
+            )
+            if (
+                brace_start < 0
+                or _brace_depth_before(whole_code, brace_start) != 1
+            ):
+                continue
+            block_end = _matching_brace_end(whole_code, brace_start)
+            block_code = whole_code[block_match.start():block_end]
+
+            source_counts: dict[tuple[str, str, str], int] = {}
+            source_occurrences: dict[
+                tuple[str, str, str],
+                list[tuple[int, int, str]],
+            ] = {}
+            shadow_owners_by_key: dict[
+                tuple[str, str, str],
+                list[str],
+            ] = {}
+
+            tokens: list[tuple[re.Match[str], bool]] = [
+                (token, False)
+                for token in _DOTTED_STATIC_FIELD_RE.finditer(block_code)
+            ]
+            tokens.extend(
+                (token, True)
+                for token in _SIMPLE_STATIC_FIELD_RE.finditer(block_code)
+            )
+            tokens.sort(key=lambda row: row[0].start())
+
+            for token, simple_owner in tokens:
+                owner = token.group("owner")
+                field_name = token.group("field")
+                if simple_owner:
+                    simple_resolved = (
+                        _resolve_shadowed_simple_nested_static_field(
+                            owner=owner,
+                            field_name=field_name,
+                            current_owner=current_owner,
+                            readable_zip=readable_zip,
+                            entries=entries,
+                            class_cache=class_cache,
+                        )
+                    )
+                    if simple_resolved is None:
+                        continue
+                    (
+                        nested_internal,
+                        shadow_owners,
+                        java_owner,
+                    ) = simple_resolved
+                else:
+                    resolved = _resolve_shadowed_nested_static_field(
+                        owner=owner,
+                        field_name=field_name,
+                        current_owner=current_owner,
+                        readable_zip=readable_zip,
+                        entries=entries,
+                        class_cache=class_cache,
+                    )
+                    if resolved is None:
+                        continue
+                    nested_internal, shadow_owners = resolved
+                    java_owner = owner
+
+                key = (nested_internal, field_name, java_owner)
+                source_counts[key] = source_counts.get(key, 0) + 1
+                shadow_owners_by_key[key] = shadow_owners
+                source_occurrences.setdefault(key, []).append(
+                    (
+                        block_match.start() + token.start(),
+                        block_match.start() + token.end(),
+                        "((" + java_owner + ")null)." + field_name,
+                    )
+                )
+
+            if not source_counts:
+                continue
+
+            byte_counts: dict[tuple[str, str, str], int] = {}
+            for access in exact_clinit.get("field_accesses", []):
+                if access.get("operation") not in {
+                    "getstatic",
+                    "putstatic",
+                }:
+                    continue
+                for key in source_counts:
+                    nested_internal, field_name, _owner = key
+                    if (
+                        str(access.get("owner", "")) == nested_internal
+                        and str(access.get("name", "")) == field_name
+                    ):
+                        byte_counts[key] = byte_counts.get(key, 0) + 1
+
+            if not all(
+                byte_counts.get(key, 0) == count
+                for key, count in source_counts.items()
+            ):
+                continue
+
+            edits.extend(
+                edit
+                for key in source_counts
+                for edit in source_occurrences[key]
+            )
+            actions.append(
+                {
+                    "kind": (
+                        "shadowed_nested_static_field_owner_type_context"
+                    ),
+                    "source_path": rel,
+                    "method_name": "<clinit>",
+                    "method_descriptor": "()V",
+                    "nested_owners": sorted(
+                        {key[0] for key in source_counts}
+                    ),
+                    "shadow_declaring_owners": sorted(
+                        {
+                            shadow_owner
+                            for key in source_counts
+                            for shadow_owner in shadow_owners_by_key[key]
+                        }
+                    ),
+                    "field_access_counts": {
+                        nested + "." + field: count
+                        for (nested, field, _owner), count in sorted(
+                            source_counts.items()
+                        )
+                    },
+                    "replacement_count": sum(source_counts.values()),
+                    "provenance": {
+                        "kind": "source_safety",
+                        "reason": (
+                            "procyon_nested_type_hidden_by_enclosing_hierarchy_field"
+                        ),
+                        "strategy": (
+                            "exact_clinit_static_field_type_context_qualification"
+                        ),
+                    },
+                }
+            )
+
     if not edits:
         return []
 
