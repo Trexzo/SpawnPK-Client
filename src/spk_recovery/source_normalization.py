@@ -12067,6 +12067,329 @@ def _normalize_linkedhashmap_self_get_result_casts(
     path.write_text(text, encoding="utf-8")
     return actions
 
+
+def _normalize_missing_synthetic_bridge_forwarders(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Reconstruct source-level overrides omitted with synthetic bridges.
+
+    Some Procyon output omits an exact synthetic bridge entirely. Recover a
+    legal source override only when exact bytecode proves that the bridge does
+    nothing except load this and every parameter, invoke one concrete
+    same-class instance method, and return that result, while the nearest
+    readable superclass declaration for the erased bridge descriptor is
+    abstract. The injected source method reuses the target method's existing
+    return type, parameter list, parameter names, and indentation.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    simple_name = current_owner.rsplit("/", 1)[-1]
+    if Path(rel).stem != simple_name:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    hierarchy = _read_readable_hierarchy(
+        readable_zip=readable_zip,
+        internal_name=current_owner,
+    )
+    if len(hierarchy) < 2:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    source_methods = list(_METHOD_DECL_RE.finditer(whole_code))
+
+    class_re = re.compile(
+        r"\\bclass\\s+" + re.escape(simple_name) + r"\\b[^\\{]*\\{"
+    )
+    class_matches = list(class_re.finditer(whole_code))
+    if len(class_matches) != 1:
+        return []
+    class_brace = whole_code.find(
+        "{", class_matches[0].start(), class_matches[0].end()
+    )
+    if class_brace < 0:
+        return []
+    try:
+        class_end = _matching_brace_end(whole_code, class_brace)
+    except SourceNormalizationError:
+        return []
+    if class_end <= 0 or text[class_end - 1] != "}":
+        return []
+
+    exact_methods = list(profile.get("methods", []))
+    insertions: list[str] = []
+    actions: list[dict[str, Any]] = []
+
+    for bridge in exact_methods:
+        bridge_access = int(bridge.get("access", 0))
+        if (
+            not (bridge_access & 0x1000)
+            or not (bridge_access & 0x0040)
+            or (bridge_access & 0x0008)
+        ):
+            continue
+
+        bridge_name = str(bridge.get("name", ""))
+        bridge_descriptor = str(bridge.get("descriptor", ""))
+        if (
+            not _is_java_identifier(bridge_name)
+            or _descriptor_return_descriptor(bridge_descriptor)
+            != "Ljava/lang/Object;"
+        ):
+            continue
+
+        bridge_shapes = _descriptor_parameter_shapes(bridge_descriptor)
+        bridge_slots = _descriptor_parameter_local_slots(
+            bridge_descriptor,
+            is_static=False,
+        )
+        if (
+            bridge_shapes is None
+            or bridge_slots is None
+            or len(bridge_shapes) != len(bridge_slots)
+        ):
+            continue
+
+        instructions = list(bridge.get("instructions", []))
+        if len(instructions) != len(bridge_shapes) + 3:
+            continue
+        if not (
+            instructions[0].get("mnemonic") == "aload"
+            and int(instructions[0].get("local_index", -1)) == 0
+            and instructions[-1].get("mnemonic") == "areturn"
+        ):
+            continue
+
+        loads_ok = True
+        for index, (shape, slot) in enumerate(
+            zip(bridge_shapes, bridge_slots),
+            start=1,
+        ):
+            arrays, kind, primitive = shape
+            if arrays > 0 or kind == "ref":
+                expected_load = "aload"
+            elif primitive in {"Z", "B", "C", "S", "I"}:
+                expected_load = "iload"
+            elif primitive == "J":
+                expected_load = "lload"
+            elif primitive == "F":
+                expected_load = "fload"
+            elif primitive == "D":
+                expected_load = "dload"
+            else:
+                loads_ok = False
+                break
+            if not (
+                instructions[index].get("mnemonic") == expected_load
+                and int(instructions[index].get("local_index", -1)) == slot
+            ):
+                loads_ok = False
+                break
+        if not loads_ok:
+            continue
+
+        invocation = instructions[-2]
+        if not (
+            invocation.get("mnemonic") == "invokevirtual"
+            and invocation.get("owner") == current_owner
+        ):
+            continue
+        target_name = str(invocation.get("name", ""))
+        target_descriptor = str(invocation.get("descriptor", ""))
+        if (
+            not _is_java_identifier(target_name)
+            or target_name == bridge_name
+            or not target_descriptor
+        ):
+            continue
+
+        bridge_close = bridge_descriptor.find(")")
+        target_close = target_descriptor.find(")")
+        if (
+            bridge_close < 0
+            or target_close < 0
+            or bridge_descriptor[: bridge_close + 1]
+            != target_descriptor[: target_close + 1]
+        ):
+            continue
+        target_return = _descriptor_return_descriptor(target_descriptor)
+        if not (
+            target_return
+            and target_return != "Ljava/lang/Object;"
+            and (
+                target_return.startswith("L")
+                or target_return.startswith("[")
+            )
+        ):
+            continue
+
+        target_exact = [
+            method
+            for method in exact_methods
+            if method.get("name") == target_name
+            and method.get("descriptor") == target_descriptor
+            and not (int(method.get("access", 0)) & 0x0008)
+            and not (int(method.get("access", 0)) & 0x1000)
+            and not (int(method.get("access", 0)) & 0x0040)
+        ]
+        if len(target_exact) != 1:
+            continue
+
+        nearest_super: dict[str, Any] | None = None
+        nearest_super_owner = ""
+        for owner, parsed in hierarchy[1:]:
+            declarations = [
+                method
+                for method in parsed.methods
+                if (
+                    str(method.get("name", "")) == bridge_name
+                    and str(method.get("descriptor", ""))
+                    == bridge_descriptor
+                )
+            ]
+            if declarations:
+                if len(declarations) != 1:
+                    nearest_super = None
+                else:
+                    nearest_super = declarations[0]
+                    nearest_super_owner = owner
+                break
+        if (
+            nearest_super is None
+            or not (int(nearest_super.get("access", 0)) & 0x0400)
+        ):
+            continue
+
+        existing_bridge_source = [
+            method
+            for method in source_methods
+            if method.group("name") == bridge_name
+            and (
+                _source_parameters_match_descriptor(
+                    method.group("params"),
+                    bridge_descriptor,
+                    current_package=current_package,
+                )
+                is True
+            )
+        ]
+        if existing_bridge_source:
+            continue
+
+        target_source = []
+        for method in source_methods:
+            if method.group("name") != target_name:
+                continue
+            if (
+                _source_parameters_match_descriptor(
+                    method.group("params"),
+                    target_descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            return_probe = (
+                method.group("return").strip()
+                + " recoveredBridgeReturn"
+            )
+            if (
+                _source_parameters_match_descriptor(
+                    return_probe,
+                    "(" + target_return + ")V",
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            target_source.append(method)
+        if len(target_source) != 1:
+            continue
+
+        target_match = target_source[0]
+        parameter_names = _source_parameter_names(
+            target_match.group("params")
+        )
+        if parameter_names is None:
+            continue
+
+        if bridge_access & 0x0001:
+            visibility = "public "
+        elif bridge_access & 0x0004:
+            visibility = "protected "
+        elif bridge_access & 0x0002:
+            visibility = "private "
+        else:
+            visibility = ""
+
+        indent = target_match.group("indent")
+        return_type = target_match.group("return").strip()
+        params = target_match.group("params").strip()
+        args = ", ".join(parameter_names)
+        method_source = (
+            "\\n"
+            + indent
+            + visibility
+            + return_type
+            + " "
+            + bridge_name
+            + "("
+            + params
+            + ") {\\n"
+            + indent
+            + "    return this."
+            + target_name
+            + "("
+            + args
+            + ");\\n"
+            + indent
+            + "}\\n"
+        )
+        insertions.append(method_source)
+        actions.append(
+            {
+                "kind": "missing_synthetic_bridge_forwarder_reconstruction",
+                "source_path": rel,
+                "bridge_name": bridge_name,
+                "bridge_descriptor": bridge_descriptor,
+                "target_name": target_name,
+                "target_descriptor": target_descriptor,
+                "abstract_super_owner": nearest_super_owner,
+                "source_return_type": return_type,
+                "source_parameter_names": parameter_names,
+                "replacement_count": 1,
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": "procyon_omitted_synthetic_generic_forwarder",
+                    "strategy": (
+                        "exact_bridge_full_body_plus_abstract_super_and_existing_target"
+                    ),
+                },
+            }
+        )
+
+    if not insertions:
+        return []
+
+    insertion = "".join(insertions)
+    text = text[: class_end - 1] + insertion + text[class_end - 1:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
 def normalize_procyon_source(
     source_root: Path,
     readable_jar: Path,
@@ -12343,6 +12666,13 @@ def normalize_procyon_source(
                         readable_zip=z,
                     )
                 )
+                actions.extend(
+                    _normalize_missing_synthetic_bridge_forwarders(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
     except zipfile.BadZipFile as exc:
         raise SourceNormalizationError(
             f"readable JAR is invalid: {readable_jar}"
@@ -12375,6 +12705,17 @@ def normalize_procyon_source(
             len(action.get("inserted_fields", []))
             for action in actions
             if action["kind"] == "synthetic_class_reconstruction"
+        ),
+        "missing_synthetic_bridge_forwarder_action_count": sum(
+            action["kind"]
+            == "missing_synthetic_bridge_forwarder_reconstruction"
+            for action in actions
+        ),
+        "missing_synthetic_bridge_forwarder_method_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "missing_synthetic_bridge_forwarder_reconstruction"
         ),
         "discarded_string_expression_count": sum(
             action["kind"] == "discarded_string_expression_capture"
