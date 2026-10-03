@@ -6277,6 +6277,230 @@ def _normalize_enum_valueof_object_class_casts(
     return actions
 
 
+def _normalize_erased_hashmap_get_array_returns(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore array casts lost from HashMap<K,Object>.get return sites.
+
+    Procyon can emit an uncast HashMap.get return in an array-returning method
+    even though the erased get() result is Object and exact bytecode
+    immediately checkcasts it to the method's array return type. Restore only
+    that cast when the source field is explicitly HashMap<...,Object>, the
+    source/exact method correlation is unique, and every edited return maps
+    one-for-one to an exact field-get -> HashMap.get -> checkcast -> areturn
+    flow for the same field and exact array descriptor.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    field_re = re.compile(
+        r"(?:(?:java\.util\.)?HashMap)\s*<\s*"
+        r"[^,<>]+\s*,\s*(?:java\.lang\.)?Object\s*>\s+"
+        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*"
+        r"(?:=\s*[^;{}]+)?;"
+    )
+    object_hashmap_fields = {
+        match.group("name") for match in field_re.finditer(whole_code)
+    }
+    if not object_hashmap_fields:
+        return []
+
+    return_re = re.compile(
+        r"\breturn\s+"
+        r"(?P<expr>(?:(?:this)\s*\.\s*)?"
+        r"(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\s*\.\s*get\s*"
+        r"\(\s*(?P<key>[A-Za-z_$][A-Za-z0-9_$]*)\s*\))"
+        r"\s*;"
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        returns = [
+            match
+            for match in return_re.finditer(method_code)
+            if match.group("field") in object_hashmap_fields
+        ]
+        if not returns:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        if source_static:
+            continue
+
+        candidates: list[dict[str, Any]] = []
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if bool(int(exact_method.get("access", 0)) & 0x0008):
+                continue
+
+            return_descriptor = _descriptor_return_descriptor(descriptor)
+            if (
+                return_descriptor is None
+                or not return_descriptor.startswith("[")
+            ):
+                continue
+            return_probe = (
+                method_match.group("return").strip()
+                + " recoveredArrayReturn"
+            )
+            if (
+                _source_parameters_match_descriptor(
+                    return_probe,
+                    "(" + return_descriptor + ")V",
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            flows: list[dict[str, Any]] = []
+            for index in range(len(instructions) - 4):
+                field_get = instructions[index]
+                key_load = instructions[index + 1]
+                get_call = instructions[index + 2]
+                cast = instructions[index + 3]
+                ret = instructions[index + 4]
+                if not (
+                    field_get.get("mnemonic") == "getfield"
+                    and field_get.get("owner") == current_owner
+                    and field_get.get("name") in object_hashmap_fields
+                    and field_get.get("descriptor")
+                    == "Ljava/util/HashMap;"
+                    and key_load.get("mnemonic") == "aload"
+                    and get_call.get("mnemonic") == "invokevirtual"
+                    and get_call.get("owner") == "java/util/HashMap"
+                    and get_call.get("name") == "get"
+                    and get_call.get("descriptor")
+                    == "(Ljava/lang/Object;)Ljava/lang/Object;"
+                    and cast.get("mnemonic") == "checkcast"
+                    and cast.get("type") == return_descriptor
+                    and ret.get("mnemonic") == "areturn"
+                ):
+                    continue
+                flows.append(
+                    {
+                        "field_name": str(field_get.get("name", "")),
+                        "return_descriptor": return_descriptor,
+                        "checkcast_offset": int(cast.get("offset", -1)),
+                    }
+                )
+
+            source_fields = [row.group("field") for row in returns]
+            exact_fields = [row["field_name"] for row in flows]
+            if sorted(source_fields) != sorted(exact_fields):
+                continue
+            if len(flows) != len(returns):
+                continue
+            candidates.append(
+                {
+                    "method": exact_method,
+                    "flows": flows,
+                    "return_descriptor": return_descriptor,
+                }
+            )
+
+        if len(candidates) != 1:
+            continue
+
+        proof = candidates[0]
+        source_return = method_match.group("return").strip()
+        for match in returns:
+            expression = text[
+                method_start + match.start("expr"):
+                method_start + match.end("expr")
+            ]
+            edits.append(
+                (
+                    method_start + match.start("expr"),
+                    method_start + match.end("expr"),
+                    "(" + source_return + ")" + expression,
+                )
+            )
+
+        actions.append(
+            {
+                "kind": "erased_hashmap_get_array_return_cast_reconstruction",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "field_names": sorted(
+                    {match.group("field") for match in returns}
+                ),
+                "array_return_descriptor": proof["return_descriptor"],
+                "exact_flows": proof["flows"],
+                "replacement_count": len(returns),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": "procyon_erased_hashmap_get_array_return_cast",
+                    "strategy": (
+                        "source_hashmap_object_value_plus_exact_get_checkcast_return"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping HashMap array-return cast edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_erased_map_number_assignments(
     *,
     source_root: Path,
@@ -12928,6 +13152,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_erased_hashmap_get_array_returns(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_erased_map_number_assignments(
                         source_root=source_root,
                         path=path,
@@ -13283,6 +13514,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "enum_valueof_raw_class_cast_reconstruction"
+        ),
+        "erased_hashmap_get_array_return_cast_action_count": sum(
+            action["kind"]
+            == "erased_hashmap_get_array_return_cast_reconstruction"
+            for action in actions
+        ),
+        "erased_hashmap_get_array_return_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "erased_hashmap_get_array_return_cast_reconstruction"
         ),
         "erased_map_number_assignment_action_count": sum(
             action["kind"]
