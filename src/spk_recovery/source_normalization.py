@@ -2490,7 +2490,7 @@ def _normalize_reference_shadowed_self_static_field_owners(
         )
 
     whole_code = _java_code_mask(text)
-    static_block_re = re.compile(r"(?m)^[ \t]*static[ \t]*\\{")
+    static_block_re = re.compile(r"(?m)^[ \t]*static[ \t]*\{")
     exact_clinits = [
         method
         for method in profile.get("methods", [])
@@ -2526,18 +2526,18 @@ def _normalize_reference_shadowed_self_static_field_owners(
                 simple_token = re.compile(
                     r"(?<![A-Za-z0-9_$.])"
                     + re.escape(simple_name)
-                    + r"\\."
+                    + r"\."
                     + re.escape(field_name)
-                    + r"\\b(?!\\s*\\()"
+                    + r"\b(?!\s*\()"
                 )
                 simple_hits = list(simple_token.finditer(block_code))
 
                 qualified_token = re.compile(
                     r"(?<![A-Za-z0-9_$.])"
                     + re.escape(qualified_owner)
-                    + r"\\."
+                    + r"\."
                     + re.escape(field_name)
-                    + r"\\b(?!\\s*\\()"
+                    + r"\b(?!\s*\()"
                 )
                 qualified_hits = list(
                     qualified_token.finditer(block_code)
