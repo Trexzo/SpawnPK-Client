@@ -15420,14 +15420,19 @@ def _normalize_same_package_static_method_owners_shadowed_by_values(
         if sibling.name != sibling_owner:
             continue
 
+        sibling_hierarchy = _read_readable_hierarchy(
+            readable_zip=readable_zip,
+            internal_name=sibling_owner,
+        )
         static_names = {
             str(method.get("name", ""))
-            for method in sibling.methods
+            for declaring_owner, parsed in sibling_hierarchy
+            for method in parsed.methods
             if (
                 int(method.get("access", 0)) & 0x0008
                 and _is_java_identifier(str(method.get("name", "")))
                 and _field_visible_from(
-                    declaring_owner=sibling_owner,
+                    declaring_owner=declaring_owner,
                     current_owner=current_owner,
                     access=int(method.get("access", 0)),
                 )
