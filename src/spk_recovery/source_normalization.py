@@ -6554,6 +6554,192 @@ def _normalize_erased_map_number_assignments(
     return actions
 
 
+def _normalize_object_boolean_conditions(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore Boolean casts lost from Object-valued source conditions.
+
+    Procyon can emit ``if (value)`` even when the source local is Object.
+    Restore only the cast already proven by exact JVM bytecode:
+    aload -> checkcast java/lang/Boolean -> Boolean.booleanValue() -> branch.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    object_decl_re = re.compile(
+        r"\b(?:(?:final)\s+)?(?:java\.lang\.)?Object\s+"
+        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*="
+    )
+    condition_re = re.compile(
+        r"\bif\s*\(\s*(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*\)"
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        object_names = {
+            match.group("name")
+            for match in object_decl_re.finditer(method_code)
+        }
+        if not object_names:
+            continue
+
+        conditions = [
+            match
+            for match in condition_re.finditer(method_code)
+            if match.group("name") in object_names
+        ]
+        if not conditions:
+            continue
+        condition_names = [match.group("name") for match in conditions]
+        if len(condition_names) != len(set(condition_names)):
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        candidates: list[dict[str, Any]] = []
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            flows: list[dict[str, int]] = []
+            for index in range(len(instructions) - 3):
+                load = instructions[index]
+                cast = instructions[index + 1]
+                unbox = instructions[index + 2]
+                branch = instructions[index + 3]
+                if not (
+                    load.get("mnemonic") == "aload"
+                    and cast.get("mnemonic") == "checkcast"
+                    and cast.get("type") == "java/lang/Boolean"
+                    and unbox.get("mnemonic") == "invokevirtual"
+                    and unbox.get("owner") == "java/lang/Boolean"
+                    and unbox.get("name") == "booleanValue"
+                    and unbox.get("descriptor") == "()Z"
+                    and (
+                        branch.get("mnemonic") in {"ifeq", "ifne"}
+                        or branch.get("opcode") in {"0x99", "0x9a"}
+                    )
+                ):
+                    continue
+                flows.append(
+                    {
+                        "local_slot": int(load.get("local_index", -1)),
+                        "checkcast_offset": int(cast.get("offset", -1)),
+                        "branch_offset": int(branch.get("offset", -1)),
+                    }
+                )
+
+            if len(flows) != len(conditions):
+                continue
+            if any(flow["local_slot"] < 0 for flow in flows):
+                continue
+            candidates.append(
+                {
+                    "method": exact_method,
+                    "flows": flows,
+                }
+            )
+
+        if len(candidates) != 1:
+            continue
+
+        exact_method = candidates[0]["method"]
+        for condition in conditions:
+            name = condition.group("name")
+            edits.append(
+                (
+                    method_start + condition.start("name"),
+                    method_start + condition.end("name"),
+                    "(Boolean)" + name,
+                )
+            )
+
+        actions.append(
+            {
+                "kind": "object_boolean_condition_cast_reconstruction",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": exact_method["descriptor"],
+                "condition_names": condition_names,
+                "exact_object_local_slots": [
+                    flow["local_slot"] for flow in candidates[0]["flows"]
+                ],
+                "replacement_count": len(conditions),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": "procyon_lost_object_boolean_condition_cast",
+                    "strategy": (
+                        "source_object_condition_plus_exact_boolean_unbox_branch"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping Object->Boolean condition edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
 def _normalize_erased_set_int_enhanced_for(
     *,
     source_root: Path,
@@ -12749,6 +12935,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_object_boolean_conditions(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_erased_set_int_enhanced_for(
                         source_root=source_root,
                         path=path,
@@ -13101,6 +13294,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "erased_map_number_assignment_reconstruction"
+        ),
+        "object_boolean_condition_cast_action_count": sum(
+            action["kind"]
+            == "object_boolean_condition_cast_reconstruction"
+            for action in actions
+        ),
+        "object_boolean_condition_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "object_boolean_condition_cast_reconstruction"
         ),
         "erased_set_int_enhanced_for_action_count": sum(
             action["kind"]
