@@ -6639,6 +6639,9 @@ def _normalize_cc_generic_value_object_casts(
         except KeyError:
             return False
 
+    def reference_type_known(internal: str) -> bool:
+        return internal.startswith("java/") or class_exists(internal)
+
     def resolve_source_type(type_text: str) -> str | None:
         value = type_text.strip()
         value = re.sub(r"<.*>$", "", value).strip()
@@ -6664,7 +6667,7 @@ def _normalize_cc_generic_value_object_casts(
         if class_exists(same_package):
             return same_package
         java_lang = "java/lang/" + value
-        if class_exists(java_lang):
+        if reference_type_known(java_lang):
             return java_lang
         return None
 
@@ -6735,7 +6738,7 @@ def _normalize_cc_generic_value_object_casts(
         if match is None:
             return None
         value_owner = match.group("value")
-        if not class_exists(value_owner):
+        if not reference_type_known(value_owner):
             return None
         return owner, field_name, value_owner
 
