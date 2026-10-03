@@ -7606,6 +7606,323 @@ def _normalize_erased_map_number_assignments(
     return actions
 
 
+def _normalize_erased_raw_collection_get_assignment_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore exact casts lost from raw Map/List get() local assignments.
+
+    Procyon can emit a raw Map/List receiver and assign get() directly to a
+    concrete reference local even though the erased JVM return is Object.
+    Restore only the source cast already proven by one exact readable method:
+    every edited raw get() assignment must correspond one-for-one to an exact
+    get -> checkcast target -> astore flow of the same collection family.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    raw_decl_re = re.compile(
+        r"\b(?P<type>(?:java\.util\.)?"
+        r"(?:Map|HashMap|LinkedHashMap|TreeMap|"
+        r"List|ArrayList|LinkedList))\s+"
+        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+    )
+    assignment_re = re.compile(
+        r"(?P<prefix>\b(?:(?:final)\s+)?)"
+        r"(?P<type>[A-Za-z_$][A-Za-z0-9_$.]*(?:\[\])*)\s+"
+        r"(?P<var>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*"
+        r"(?P<expr>"
+        r"(?P<receiver>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\.\s*get\s*\(\s*"
+        r"(?P<key>[A-Za-z_$][A-Za-z0-9_$]*)\s*\)"
+        r")\s*;"
+    )
+
+    map_source_types = {
+        "Map", "HashMap", "LinkedHashMap", "TreeMap",
+    }
+    list_source_types = {"List", "ArrayList", "LinkedList"}
+    map_exact_owners = {
+        "java/util/Map",
+        "java/util/HashMap",
+        "java/util/LinkedHashMap",
+        "java/util/TreeMap",
+    }
+    list_exact_owners = {
+        "java/util/List",
+        "java/util/ArrayList",
+        "java/util/LinkedList",
+    }
+
+    def source_family(raw_type: str) -> str | None:
+        simple = raw_type.rsplit(".", 1)[-1]
+        if simple in map_source_types:
+            return "map"
+        if simple in list_source_types:
+            return "list"
+        return None
+
+    def exact_family(call: dict[str, Any]) -> str | None:
+        owner = str(call.get("owner", ""))
+        descriptor = str(call.get("descriptor", ""))
+        if (
+            owner in map_exact_owners
+            and descriptor
+            == "(Ljava/lang/Object;)Ljava/lang/Object;"
+        ):
+            return "map"
+        if (
+            owner in list_exact_owners
+            and descriptor == "(I)Ljava/lang/Object;"
+        ):
+            return "list"
+        return None
+
+    def cast_matches_source(source_type: str, cast_type: str) -> bool:
+        if not cast_type:
+            return False
+        cast_descriptor = (
+            cast_type if cast_type.startswith("[")
+            else "L" + cast_type + ";"
+        )
+        return (
+            _source_parameters_match_descriptor(
+                source_type + " recoveredValue",
+                "(" + cast_descriptor + ")V",
+                current_package=current_package,
+            )
+            is True
+        )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        scope_code = (
+            method_match.group("params")
+            + "\n"
+            + whole_code[brace_start + 1:body_end]
+        )
+        raw_declarations = {
+            match.group("name"): match.group("type")
+            for match in raw_decl_re.finditer(scope_code)
+        }
+        if not raw_declarations:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        assignments = [
+            match
+            for match in assignment_re.finditer(method_code)
+            if match.group("receiver") in raw_declarations
+            and match.group("type") != "Object"
+            and source_family(
+                raw_declarations[match.group("receiver")]
+            )
+            is not None
+        ]
+        if not assignments:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        candidates: list[dict[str, Any]] = []
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            exact_return = _descriptor_return_descriptor(descriptor)
+            source_return = method_match.group("return").strip()
+            if source_return == "void":
+                if exact_return != "V":
+                    continue
+            elif exact_return is None or (
+                _source_parameters_match_descriptor(
+                    source_return + " recoveredReturn",
+                    "(" + exact_return + ")V",
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            flows: list[dict[str, Any]] = []
+            for index in range(len(instructions) - 2):
+                call = instructions[index]
+                cast = instructions[index + 1]
+                store = instructions[index + 2]
+                family = exact_family(call)
+                if family is None:
+                    continue
+                if not (
+                    call.get("mnemonic")
+                    in {"invokeinterface", "invokevirtual"}
+                    and call.get("name") == "get"
+                    and cast.get("mnemonic") == "checkcast"
+                    and store.get("mnemonic") == "astore"
+                ):
+                    continue
+                flows.append(
+                    {
+                        "family": family,
+                        "checkcast_type": str(cast.get("type", "")),
+                        "checkcast_offset": int(cast.get("offset", -1)),
+                        "store_slot": int(store.get("local_index", -1)),
+                    }
+                )
+
+            if len(flows) != len(assignments):
+                continue
+
+            remaining = list(flows)
+            matched: list[dict[str, Any]] = []
+            exact_ok = True
+            for assignment in assignments:
+                family = source_family(
+                    raw_declarations[assignment.group("receiver")]
+                )
+                source_type = assignment.group("type")
+                match_index = next(
+                    (
+                        index
+                        for index, flow in enumerate(remaining)
+                        if flow["family"] == family
+                        and cast_matches_source(
+                            source_type,
+                            flow["checkcast_type"],
+                        )
+                    ),
+                    None,
+                )
+                if match_index is None:
+                    exact_ok = False
+                    break
+                matched.append(remaining.pop(match_index))
+
+            if not exact_ok or remaining:
+                continue
+            candidates.append(
+                {
+                    "method": exact_method,
+                    "flows": matched,
+                }
+            )
+
+        if len(candidates) != 1:
+            continue
+
+        proof = candidates[0]
+        for assignment in assignments:
+            expression = text[
+                method_start + assignment.start("expr"):
+                method_start + assignment.end("expr")
+            ]
+            edits.append(
+                (
+                    method_start + assignment.start("expr"),
+                    method_start + assignment.end("expr"),
+                    "(" + assignment.group("type") + ")" + expression,
+                )
+            )
+
+        actions.append(
+            {
+                "kind": (
+                    "erased_raw_collection_get_assignment_cast_reconstruction"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "receiver_names": sorted(
+                    {match.group("receiver") for match in assignments}
+                ),
+                "receiver_types": {
+                    name: raw_declarations[name]
+                    for name in sorted(
+                        {match.group("receiver") for match in assignments}
+                    )
+                },
+                "exact_checkcast_types": [
+                    flow["checkcast_type"] for flow in proof["flows"]
+                ],
+                "exact_store_slots": [
+                    flow["store_slot"] for flow in proof["flows"]
+                ],
+                "replacement_count": len(assignments),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_erased_raw_collection_get_assignment_cast"
+                    ),
+                    "strategy": (
+                        "raw_collection_source_plus_exact_get_checkcast_store"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping raw collection get assignment edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_object_boolean_conditions(
     *,
     source_root: Path,
@@ -14070,6 +14387,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_erased_raw_collection_get_assignment_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_object_boolean_conditions(
                         source_root=source_root,
                         path=path,
@@ -14451,6 +14775,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "erased_map_number_assignment_reconstruction"
+        ),
+        "erased_raw_collection_get_assignment_cast_action_count": sum(
+            action["kind"]
+            == "erased_raw_collection_get_assignment_cast_reconstruction"
+            for action in actions
+        ),
+        "erased_raw_collection_get_assignment_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "erased_raw_collection_get_assignment_cast_reconstruction"
         ),
         "object_boolean_condition_cast_action_count": sum(
             action["kind"]
