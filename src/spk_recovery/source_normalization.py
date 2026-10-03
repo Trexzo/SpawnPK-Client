@@ -2489,6 +2489,129 @@ def _normalize_reference_shadowed_self_static_field_owners(
             }
         )
 
+    whole_code = _java_code_mask(text)
+    static_block_re = re.compile(r"(?m)^[ \t]*static[ \t]*\{")
+    exact_clinits = [
+        method
+        for method in profile.get("methods", [])
+        if method.get("name") == "<clinit>"
+        and method.get("descriptor") == "()V"
+    ]
+    if len(exact_clinits) == 1:
+        exact_clinit = exact_clinits[0]
+        for block_match in static_block_re.finditer(whole_code):
+            brace_start = whole_code.find(
+                "{", block_match.start(), block_match.end()
+            )
+            if (
+                brace_start < 0
+                or _brace_depth_before(whole_code, brace_start) != 1
+            ):
+                continue
+            block_end = _matching_brace_end(whole_code, brace_start)
+            block_code = whole_code[block_match.start():block_end]
+            if _block_has_same_name_local_declaration(
+                block_code,
+                simple_name=simple_name,
+            ):
+                continue
+
+            source_counts: dict[tuple[str, str], int] = {}
+            total_source_counts: dict[tuple[str, str], int] = {}
+            occurrences: list[tuple[int, int, str]] = []
+
+            for field_name, declaring_owner in sorted(
+                static_targets.items()
+            ):
+                simple_token = re.compile(
+                    r"(?<![A-Za-z0-9_$.])"
+                    + re.escape(simple_name)
+                    + r"\."
+                    + re.escape(field_name)
+                    + r"\b(?!\s*\()"
+                )
+                simple_hits = list(simple_token.finditer(block_code))
+
+                qualified_token = re.compile(
+                    r"(?<![A-Za-z0-9_$.])"
+                    + re.escape(qualified_owner)
+                    + r"\."
+                    + re.escape(field_name)
+                    + r"\b(?!\s*\()"
+                )
+                qualified_hits = list(
+                    qualified_token.finditer(block_code)
+                )
+
+                if not simple_hits:
+                    continue
+
+                key = (declaring_owner, field_name)
+                source_counts[key] = len(simple_hits)
+                total_source_counts[key] = (
+                    len(simple_hits) + len(qualified_hits)
+                )
+                for hit in simple_hits:
+                    occurrences.append(
+                        (
+                            block_match.start() + hit.start(),
+                            block_match.start() + hit.end(),
+                            qualified_owner + "." + field_name,
+                        )
+                    )
+
+            if not source_counts:
+                continue
+
+            exact_counts = _hierarchy_static_field_access_counts(
+                exact_clinit,
+                hierarchy=hierarchy,
+                targets=static_targets,
+            )
+            if not all(
+                exact_counts.get(key, 0) == count
+                for key, count in total_source_counts.items()
+            ):
+                continue
+
+            edits.extend(occurrences)
+            actions.append(
+                {
+                    "kind": (
+                        "reference_shadowed_self_static_field_owner_qualification"
+                    ),
+                    "source_path": rel,
+                    "method_name": "<clinit>",
+                    "method_descriptor": "()V",
+                    "qualified_owner": internal_name,
+                    "reference_shadow_owners": sorted(
+                        set(reference_shadow_owners)
+                    ),
+                    "field_access_counts": {
+                        owner + "." + name: count
+                        for (owner, name), count in sorted(
+                            source_counts.items()
+                        )
+                    },
+                    "total_field_access_counts": {
+                        owner + "." + name: count
+                        for (owner, name), count in sorted(
+                            total_source_counts.items()
+                        )
+                    },
+                    "replacement_count": sum(source_counts.values()),
+                    "provenance": {
+                        "kind": "source_safety",
+                        "reason": (
+                            "procyon_reference_value_shadowed_self_class_owner"
+                        ),
+                        "strategy": (
+                            "exact_clinit_complete_field_access_qualification"
+                        ),
+                    },
+                }
+            )
+
     if not edits:
         return []
 

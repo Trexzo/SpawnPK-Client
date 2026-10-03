@@ -2000,6 +2000,142 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+    def test_reference_field_shadowed_self_static_owner_in_clinit_is_qualified(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/q.java": (
+                        "package pkg;\n"
+                        "public class q {\n"
+                        "    public String q;\n"
+                        "    public static int a;\n"
+                        "    public static int f;\n"
+                        "    static { pkg.q.a = 1; pkg.q.f = 2; }\n"
+                        "}\n"
+                    )
+                },
+            )
+            source = root / "src" / "pkg" / "q.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package pkg;\n"
+                "public class q {\n"
+                "    public String q;\n"
+                "    public static int a;\n"
+                "    public static int f;\n"
+                "    static { q.a = 1; q.f = 2; }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-reference-clinit-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn(
+                "non-static variable q cannot be referenced",
+                before.stderr,
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "static { pkg.q.a = 1; pkg.q.f = 2; }",
+                normalized,
+            )
+
+            action = next(
+                row
+                for row in report["actions"]
+                if (
+                    row["kind"]
+                    == "reference_shadowed_self_static_field_owner_qualification"
+                    and row["method_name"] == "<clinit>"
+                )
+            )
+            self.assertEqual(action["method_descriptor"], "()V")
+            self.assertEqual(action["reference_shadow_owners"], ["pkg/q"])
+            self.assertEqual(
+                action["field_access_counts"],
+                {"pkg/q.a": 1, "pkg/q.f": 1},
+            )
+            self.assertEqual(action["replacement_count"], 2)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-reference-clinit-classes"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_reference_field_shadowed_self_clinit_count_mismatch_fails_closed(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/q.java": (
+                        "package pkg;\n"
+                        "public class q {\n"
+                        "    public String q;\n"
+                        "    public static int a;\n"
+                        "    static { pkg.q.a = 1; }\n"
+                        "}\n"
+                    )
+                },
+            )
+            source = root / "src" / "pkg" / "q.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package pkg;\n"
+                "public class q {\n"
+                "    public String q;\n"
+                "    public static int a;\n"
+                "    static { q.a = 1; q.a = 2; }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "reference_shadowed_self_static_field_owner_qualification"
+                    and row["method_name"] == "<clinit>"
+                    for row in report["actions"]
+                )
+            )
+
     def test_nested_type_static_field_shadow_forces_type_context(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
