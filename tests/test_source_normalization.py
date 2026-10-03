@@ -9180,6 +9180,160 @@ class ErasedIteratorAssignmentCastTests(unittest.TestCase):
             )
 
 
+class MissingSyntheticBridgeForwarderTests(unittest.TestCase):
+    def _malformed_source(self) -> str:
+        return (
+            "package p;\n"
+            "import java.util.Map;\n"
+            "public class F extends Base<R> {\n"
+            "    public R b(int id, Map<String,Object> values) {\n"
+            "        return new R();\n"
+            "    }\n"
+            "}\n"
+        )
+
+    def test_missing_synthetic_bridge_forwarder_is_reconstructed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _synthetic_bridge_forwarder_fixture(
+                root,
+                retarget_bridge=True,
+            )
+
+            with zipfile.ZipFile(jar) as z:
+                profile = profile_class_field_accesses_exact(
+                    z.read("p/F.class")
+                )
+            bridge = next(
+                method
+                for method in profile["methods"]
+                if (
+                    method["name"] == "a"
+                    and method["descriptor"]
+                    == "(ILjava/util/Map;)Ljava/lang/Object;"
+                    and int(method["access"]) & 0x1000
+                    and int(method["access"]) & 0x0040
+                )
+            )
+            bridge_calls = [
+                row
+                for row in bridge["instructions"]
+                if row.get("mnemonic") == "invokevirtual"
+            ]
+            self.assertEqual(len(bridge_calls), 1)
+            self.assertEqual(bridge_calls[0]["owner"], "p/F")
+            self.assertEqual(bridge_calls[0]["name"], "b")
+            self.assertEqual(
+                bridge_calls[0]["descriptor"],
+                "(ILjava/util/Map;)Lp/R;",
+            )
+
+            source = root / "src" / "p" / "F.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                self._malformed_source(),
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-synthetic-bridge"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "public R a(int id, Map<String,Object> values) {",
+                normalized,
+            )
+            self.assertIn(
+                "return this.b(id, values);",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "missing_synthetic_bridge_forwarder_reconstruction"
+            )
+            self.assertEqual(action["bridge_name"], "a")
+            self.assertEqual(action["target_name"], "b")
+            self.assertEqual(action["abstract_super_owner"], "p/Base")
+            self.assertEqual(action["source_return_type"], "R")
+            self.assertEqual(
+                action["source_parameter_names"],
+                ["id", "values"],
+            )
+            self.assertEqual(
+                report["summary"][
+                    "missing_synthetic_bridge_forwarder_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "missing_synthetic_bridge_forwarder_method_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-synthetic-bridge"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_missing_synthetic_bridge_forwarder_rejects_same_name_target(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _synthetic_bridge_forwarder_fixture(
+                root,
+                retarget_bridge=False,
+            )
+            source = root / "src" / "p" / "F.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "missing_synthetic_bridge_forwarder_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
+
+
 if __name__ == "__main__":
     unittest.main()
 
