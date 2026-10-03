@@ -7924,6 +7924,343 @@ def _normalize_erased_raw_collection_get_assignment_casts(
 
 
 
+def _normalize_erased_map_get_integer_ternaries(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore Integer casts erased from one arm of Map.get ternaries.
+
+    The source candidate must assign an int from a containsKey-selected
+    ternary where one Map.get arm is raw and the other already has an int
+    cast. Exact bytecode must prove the same Map parameter slot, String keys,
+    two Integer unbox flows, selector branch, and common int-store merge.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    key_token = r'[A-Za-z0-9_.:-]+'
+    source_re = re.compile(
+        r"\b(?:(?:final)\s+)?int\s+"
+        r"(?P<target>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*"
+        r"(?P<map>[A-Za-z_$][A-Za-z0-9_$]*)\s*\.\s*"
+        r"containsKey\s*\(\s*\"(?P<key1>" + key_token + r")\"\s*\)"
+        r"\s*\?\s*"
+        r"(?P<raw>(?P=map)\s*\.\s*get\s*\(\s*\"(?P=key1)\""
+        r"\s*\))\s*:\s*"
+        r"\(\s*\(\s*int\s*\)\s*(?P=map)\s*\.\s*get\s*"
+        r"\(\s*\"(?P<key2>" + key_token + r")\"\s*\)\s*\)"
+        r"\s*;"
+    )
+
+    def is_map_call(
+        row: dict[str, Any],
+        *,
+        name: str,
+        descriptor: str,
+    ) -> bool:
+        return (
+            row.get("mnemonic") in {"invokeinterface", "invokevirtual"}
+            and row.get("owner") == "java/util/Map"
+            and row.get("name") == name
+            and row.get("descriptor") == descriptor
+        )
+
+    def integer_unbox(
+        rows: list[dict[str, Any]],
+        start: int,
+        *,
+        slot: int,
+        key: str,
+    ) -> bool:
+        if start + 4 >= len(rows):
+            return False
+        load, key_row, get_call, cast, unbox = rows[start:start + 5]
+        return (
+            load.get("mnemonic") == "aload"
+            and int(load.get("local_index", -1)) == slot
+            and key_row.get("mnemonic") in {"ldc", "ldc_w"}
+            and key_row.get("constant") == key
+            and is_map_call(
+                get_call,
+                name="get",
+                descriptor="(Ljava/lang/Object;)Ljava/lang/Object;",
+            )
+            and cast.get("mnemonic") == "checkcast"
+            and cast.get("type") == "java/lang/Integer"
+            and unbox.get("mnemonic") == "invokevirtual"
+            and unbox.get("owner") == "java/lang/Integer"
+            and unbox.get("name") == "intValue"
+            and unbox.get("descriptor") == "()I"
+        )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        method_text = text[method_start:body_end]
+        source_matches = [
+            match
+            for match in source_re.finditer(method_text)
+            if (
+                match.start() < len(method_code)
+                and not method_code[match.start()].isspace()
+            )
+        ]
+        if not source_matches:
+            continue
+
+        params = method_match.group("params")
+        parameter_names = _source_parameter_names(params)
+        if parameter_names is None:
+            continue
+        source_map_names = [row.group("map") for row in source_matches]
+        if any(name not in parameter_names for name in source_map_names):
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        exact_candidates: list[dict[str, Any]] = []
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    params,
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            shapes = _descriptor_parameter_shapes(descriptor)
+            slots = _descriptor_parameter_local_slots(
+                descriptor,
+                is_static=source_static,
+            )
+            if (
+                shapes is None
+                or slots is None
+                or len(shapes) != len(parameter_names)
+            ):
+                continue
+            slot_by_name: dict[str, int] = {}
+            for name, shape, slot in zip(parameter_names, shapes, slots):
+                if shape == (0, "ref", "java/util/Map"):
+                    slot_by_name[name] = slot
+            if any(name not in slot_by_name for name in source_map_names):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            by_offset = {
+                int(row.get("offset", -1)): index
+                for index, row in enumerate(instructions)
+            }
+            flows: list[dict[str, Any]] = []
+
+            for index in range(len(instructions) - 9):
+                load, key_row, contains, selector = instructions[
+                    index:index + 4
+                ]
+                if not (
+                    load.get("mnemonic") == "aload"
+                    and key_row.get("mnemonic") in {"ldc", "ldc_w"}
+                    and isinstance(key_row.get("constant"), str)
+                    and is_map_call(
+                        contains,
+                        name="containsKey",
+                        descriptor="(Ljava/lang/Object;)Z",
+                    )
+                    and selector.get("opcode") == "0x99"
+                    and "branch_target_offset" in selector
+                ):
+                    continue
+                map_slot = int(load.get("local_index", -1))
+                if map_slot < 0:
+                    continue
+                key1 = str(key_row["constant"])
+
+                first_start = index + 4
+                if not integer_unbox(
+                    instructions,
+                    first_start,
+                    slot=map_slot,
+                    key=key1,
+                ):
+                    continue
+                goto_index = first_start + 5
+                if goto_index >= len(instructions):
+                    continue
+                goto = instructions[goto_index]
+                if (
+                    goto.get("opcode") not in {"0xa7", "0xc8"}
+                    or "branch_target_offset" not in goto
+                ):
+                    continue
+
+                second_offset = int(selector["branch_target_offset"])
+                second_start = by_offset.get(second_offset)
+                if second_start is None:
+                    continue
+                if not integer_unbox(
+                    instructions,
+                    second_start,
+                    slot=map_slot,
+                    key=str(
+                        instructions[second_start + 1].get("constant", "")
+                    ),
+                ):
+                    continue
+                key2 = str(
+                    instructions[second_start + 1].get("constant", "")
+                )
+
+                merge_offset = int(goto["branch_target_offset"])
+                merge_index = by_offset.get(merge_offset)
+                if (
+                    merge_index is None
+                    or second_start + 5 != merge_index
+                    or instructions[merge_index].get("mnemonic")
+                    != "istore"
+                ):
+                    continue
+
+                flows.append(
+                    {
+                        "map_slot": map_slot,
+                        "key1": key1,
+                        "key2": key2,
+                        "selector_offset": int(selector["offset"]),
+                        "second_arm_offset": second_offset,
+                        "goto_offset": int(goto["offset"]),
+                        "merge_offset": merge_offset,
+                        "store_slot": int(
+                            instructions[merge_index].get(
+                                "local_index", -1
+                            )
+                        ),
+                    }
+                )
+
+            source_proofs = [
+                (
+                    slot_by_name[row.group("map")],
+                    row.group("key1"),
+                    row.group("key2"),
+                )
+                for row in source_matches
+            ]
+            exact_proofs = [
+                (
+                    row["map_slot"],
+                    row["key1"],
+                    row["key2"],
+                )
+                for row in flows
+            ]
+            if exact_proofs != source_proofs:
+                continue
+
+            exact_candidates.append(
+                {
+                    "method": exact_method,
+                    "flows": flows,
+                }
+            )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        proof = exact_candidates[0]
+        for source_match in source_matches:
+            expression = text[
+                method_start + source_match.start("raw"):
+                method_start + source_match.end("raw")
+            ]
+            edits.append(
+                (
+                    method_start + source_match.start("raw"),
+                    method_start + source_match.end("raw"),
+                    "((int)" + expression + ")",
+                )
+            )
+
+        actions.append(
+            {
+                "kind": (
+                    "erased_map_get_integer_ternary_cast_reconstruction"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "map_parameters": sorted(set(source_map_names)),
+                "flows": proof["flows"],
+                "replacement_count": len(source_matches),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_erased_map_get_integer_ternary_cast"
+                    ),
+                    "strategy": (
+                        "exact_containskey_two_arm_integer_unbox_diamond"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping Map.get Integer ternary edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_erased_map_get_direct_argument_casts(
     *,
     source_root: Path,
@@ -15981,6 +16318,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_erased_map_get_integer_ternaries(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_erased_map_get_direct_argument_casts(
                         source_root=source_root,
                         path=path,
@@ -16404,6 +16748,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "erased_map_number_assignment_reconstruction"
+        ),
+        "erased_map_get_integer_ternary_cast_action_count": sum(
+            action["kind"]
+            == "erased_map_get_integer_ternary_cast_reconstruction"
+            for action in actions
+        ),
+        "erased_map_get_integer_ternary_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "erased_map_get_integer_ternary_cast_reconstruction"
         ),
         "erased_map_get_direct_argument_cast_action_count": sum(
             action["kind"]
