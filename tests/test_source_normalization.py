@@ -11026,6 +11026,207 @@ class ErasedMapKeySetIntEnhancedForTests(unittest.TestCase):
                 0,
             )
 
+class ErasedListIntegerEnhancedForTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        exact_drift: bool = False,
+    ) -> Path:
+        element_type = "Long" if exact_drift else "Integer"
+        add_values = (
+            "        values.add(Long.valueOf(1L));\n"
+            "        values.add(Long.valueOf(2L));\n"
+            if exact_drift
+            else
+            "        values.add(Integer.valueOf(1));\n"
+            "        values.add(Integer.valueOf(2));\n"
+        )
+        body = (
+            "            total += value.intValue();\n"
+            if not exact_drift
+            else
+            "            total += value.intValue();\n"
+        )
+        return _compile_java_fixture(
+            root,
+            {
+                "p/A.java": (
+                    "package p;\n"
+                    "import java.util.ArrayList;\n"
+                    "import java.util.List;\n"
+                    "public class A {\n"
+                    "    public static int sum() {\n"
+                    "        List<" + element_type + "> values = "
+                    "new ArrayList<>();\n"
+                    + add_values
+                    + "        int total = 0;\n"
+                    "        for (" + element_type + " value : values) {\n"
+                    + body
+                    + "        }\n"
+                    "        for (" + element_type + " value : values) {\n"
+                    + body
+                    + "        }\n"
+                    "        return total;\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def test_raw_list_integer_enhanced_for_restores_iterable_type(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.ArrayList;\n"
+                "import java.util.List;\n"
+                "public class A {\n"
+                "    public static int sum() {\n"
+                "        List values = new ArrayList();\n"
+                "        values.add(Integer.valueOf(1));\n"
+                "        values.add(Integer.valueOf(2));\n"
+                "        int total = 0;\n"
+                "        for (final Integer value : values) {\n"
+                "            total += value.intValue();\n"
+                "        }\n"
+                "        for (final Integer value : values) {\n"
+                "            total += value.intValue();\n"
+                "        }\n"
+                "        return total;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                ["javac", "-d", str(root / "before-list-integer"), str(source)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertEqual(
+                normalized.count(
+                    "((java.util.List<Integer>)values)"
+                ),
+                2,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_list_integer_enhanced_for_reconstruction"
+            )
+            self.assertEqual(action["iterable_name"], "values")
+            self.assertEqual(action["replacement_count"], 2)
+            self.assertEqual(action["exact_list_iterator_call_count"], 2)
+            self.assertEqual(len(action["flows"]), 2)
+            self.assertEqual(
+                report["summary"][
+                    "erased_list_integer_enhanced_for_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "erased_list_integer_enhanced_for_reference_count"
+                ],
+                2,
+            )
+
+            after = subprocess.run(
+                ["javac", "-d", str(root / "after-list-integer"), str(source)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stderr)
+
+    def test_raw_list_integer_enhanced_for_fails_closed_on_element_drift(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, exact_drift=True)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.ArrayList;\n"
+                "import java.util.List;\n"
+                "public class A {\n"
+                "    public static int sum() {\n"
+                "        List values = new ArrayList();\n"
+                "        int total = 0;\n"
+                "        for (Integer value : values) {\n"
+                "            total += value.intValue();\n"
+                "        }\n"
+                "        for (Integer value : values) {\n"
+                "            total += value.intValue();\n"
+                "        }\n"
+                "        return total;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "erased_list_integer_enhanced_for_action_count"
+                ],
+                0,
+            )
+
+    def test_raw_list_integer_enhanced_for_refuses_parameterized_source(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.util.ArrayList;\n"
+                "import java.util.List;\n"
+                "public class A {\n"
+                "    public static int sum() {\n"
+                "        List<Integer> values = new ArrayList<>();\n"
+                "        int total = 0;\n"
+                "        for (Integer value : values) {\n"
+                "            total += value.intValue();\n"
+                "        }\n"
+                "        for (Integer value : values) {\n"
+                "            total += value.intValue();\n"
+                "        }\n"
+                "        return total;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "erased_list_integer_enhanced_for_action_count"
+                ],
+                0,
+            )
+
+
+
 class ErasedIteratorAssignmentCastTests(unittest.TestCase):
     def _fixture(self, root: Path, *, exact_drift: bool = False) -> Path:
         target = "Other" if exact_drift else "Value"
