@@ -12115,6 +12115,252 @@ class ErasedMapGetIntegerTernaryTests(unittest.TestCase):
 
 
 
+class CcGenericValueObjectCastTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        field_value_type: str = "Boolean",
+        generic_method: bool = True,
+        duplicate_boolean_call: bool = False,
+    ) -> Path:
+        cc_method = (
+            "    public V a(int key, V value) { return value; }\n"
+            if generic_method
+            else
+            "    public Object a(int key, Object value) { return value; }\n"
+        )
+        if field_value_type == "Boolean":
+            exact_call = "        A.flags.a(1, true);\n"
+            if duplicate_boolean_call:
+                exact_call += "        A.flags.a(2, false);\n"
+        else:
+            exact_call = "        A.flags.a(1, \"value\");\n"
+
+        return _compile_java_fixture(
+            root,
+            {
+                "gnu/trove/f/b/cc.java": (
+                    "package gnu.trove.f.b;\n"
+                    "public class cc<V> {\n"
+                    + cc_method
+                    + "}\n"
+                ),
+                "p/Value.java": (
+                    "package p;\n"
+                    "public class Value { public Value() {} }\n"
+                ),
+                "p/A.java": (
+                    "package p;\n"
+                    "import gnu.trove.f.b.cc;\n"
+                    "public class A {\n"
+                    "    public static cc<"
+                    + field_value_type
+                    + "> flags = new cc<>();\n"
+                    "    public static cc<Value> values = new cc<>();\n"
+                    "    public static boolean run(Value value) {\n"
+                    + exact_call
+                    + (
+                        "        A.values.a(2, new Value());\n"
+                        "        A.values.a(3, value);\n"
+                        if field_value_type == "Boolean"
+                        and generic_method
+                        and not duplicate_boolean_call
+                        else ""
+                    )
+                    + "        return true;\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def _malformed_source(self) -> str:
+        return (
+            "package p;\n"
+            "import gnu.trove.f.b.cc;\n"
+            "public class A {\n"
+            "    public static cc<Boolean> flags = new cc<>();\n"
+            "    public static cc<Value> values = new cc<>();\n"
+            "    public static boolean run(Value value) {\n"
+            "        A.flags.a(1, (Object)true);\n"
+            "        A.values.a(2, (Object)new Value());\n"
+            "        A.values.a(3, (Object)value);\n"
+            "        return true;\n"
+            "    }\n"
+            "}\n"
+        )
+
+    def test_cc_generic_value_object_casts_restore_source_typing(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                self._malformed_source(),
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-cc-generic"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn("A.flags.a(1, true);", normalized)
+            self.assertIn(
+                "A.values.a(2, new Value());",
+                normalized,
+            )
+            self.assertIn("A.values.a(3, value);", normalized)
+            self.assertNotIn("(Object)true", normalized)
+            self.assertNotIn("(Object)new Value()", normalized)
+            self.assertNotIn("(Object)value", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"] == "cc_generic_value_object_cast_removal"
+            )
+            self.assertEqual(action["replacement_count"], 3)
+            self.assertEqual(
+                action["value_kinds"],
+                ["boolean", "new", "identifier"],
+            )
+            self.assertEqual(
+                report["summary"][
+                    "cc_generic_value_object_cast_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "cc_generic_value_object_cast_reference_count"
+                ],
+                3,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-cc-generic"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_cc_generic_value_object_casts_fail_on_field_type_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, field_value_type="String")
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import gnu.trove.f.b.cc;\n"
+                "public class A {\n"
+                "    public static cc<Boolean> flags = new cc<>();\n"
+                "    public static boolean run(Value value) {\n"
+                "        A.flags.a(1, (Object)true);\n"
+                "        return true;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "cc_generic_value_object_cast_action_count"
+                ],
+                0,
+            )
+
+    def test_cc_generic_value_object_casts_fail_without_method_signature(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, generic_method=False)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import gnu.trove.f.b.cc;\n"
+                "public class A {\n"
+                "    public static cc<Boolean> flags = new cc<>();\n"
+                "    public static boolean run(Value value) {\n"
+                "        A.flags.a(1, (Object)true);\n"
+                "        return true;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "cc_generic_value_object_cast_action_count"
+                ],
+                0,
+            )
+
+    def test_cc_generic_value_object_casts_fail_on_multiplicity_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, duplicate_boolean_call=True)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import gnu.trove.f.b.cc;\n"
+                "public class A {\n"
+                "    public static cc<Boolean> flags = new cc<>();\n"
+                "    public static boolean run(Value value) {\n"
+                "        A.flags.a(1, (Object)true);\n"
+                "        return true;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "cc_generic_value_object_cast_action_count"
+                ],
+                0,
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
 
