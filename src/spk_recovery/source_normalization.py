@@ -3401,8 +3401,7 @@ def _normalize_shadowed_nested_static_field_owners(
                     )
                     if resolved is None:
                         continue
-                    nested_internal, shadow_owners = resolved
-                    java_owner = owner
+                    nested_internal, shadow_owners, java_owner = resolved
 
                 key = (nested_internal, field_name, java_owner)
                 source_counts[key] = source_counts.get(key, 0) + 1
