@@ -234,6 +234,64 @@ class BytecodeMethodInvocationProfileTests(unittest.TestCase):
         with self.assertRaises(BytecodeProfileError):
             _bootstrap_methods_profile(payload, cp)
 
+    def test_profiles_exact_field_signature_attribute(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "src" / "p"
+            classes = root / "classes"
+            source.mkdir(parents=True)
+            classes.mkdir(parents=True)
+
+            (source / "A.java").write_text(
+                "package p;\n"
+                "import java.util.List;\n"
+                "public class A {\n"
+                "    public List<String> values;\n"
+                "    public int plain;\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            compiled = subprocess.run(
+                [
+                    "javac",
+                    "-d",
+                    str(classes),
+                    str(source / "A.java"),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                compiled.returncode,
+                0,
+                compiled.stdout + compiled.stderr,
+            )
+
+            profile = profile_class_field_accesses(
+                (classes / "p" / "A.class").read_bytes()
+            )
+            values = next(
+                row
+                for row in profile["fields"]
+                if row["name"] == "values"
+            )
+            plain = next(
+                row
+                for row in profile["fields"]
+                if row["name"] == "plain"
+            )
+            self.assertEqual(
+                values["descriptor"],
+                "Ljava/util/List;",
+            )
+            self.assertEqual(
+                values["signature"],
+                "Ljava/util/List<Ljava/lang/String;>;",
+            )
+            self.assertEqual(plain["descriptor"], "I")
+            self.assertIsNone(plain["signature"])
+
     def test_profiles_exact_method_signature_attribute(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
