@@ -7865,6 +7865,358 @@ def _normalize_erased_hashmap_get_array_returns(
     return actions
 
 
+def _normalize_erased_map_mixed_object_locals(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore Object locals for mixed-type Map.get result lifetimes.
+
+    Procyon can assign one branch-specific cast type to a Map<String,Object>
+    result even though exact bytecode stores the raw Object and refines the
+    same local through multiple later checkcast targets. Change only the
+    declaration type when one exact local lifetime proves that mixed flow.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    map_param_re = re.compile(
+        r"(?:java\.util\.)?Map\s*<\s*[^,<>]+\s*,\s*"
+        r"(?:java\.lang\.)?Object\s*>\s+"
+        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+    )
+    assignment_re = re.compile(
+        r"\b(?:(?:final)\s+)?"
+        r"(?P<type>[A-Za-z_$][A-Za-z0-9_$.]*)\s+"
+        r"(?P<value>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*"
+        r"(?P<map>[A-Za-z_$][A-Za-z0-9_$]*)\s*\.\s*get\s*\(\s*"
+        r"(?P<key>[A-Za-z_$][A-Za-z0-9_$]*)\s*\)\s*;"
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        params = method_match.group("params")
+        parameter_names = _source_parameter_names(params)
+        if parameter_names is None:
+            continue
+        map_params = {
+            match.group("name")
+            for match in map_param_re.finditer(params)
+        }
+        if not map_params:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        source_matches = [
+            match
+            for match in assignment_re.finditer(method_code)
+            if match.group("map") in map_params
+            and match.group("type") not in {
+                "Object",
+                "java.lang.Object",
+            }
+        ]
+        if not source_matches:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        exact_candidates: list[dict[str, Any]] = []
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    params,
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            shapes = _descriptor_parameter_shapes(descriptor)
+            slots = _descriptor_parameter_local_slots(
+                descriptor,
+                is_static=source_static,
+            )
+            if (
+                shapes is None
+                or slots is None
+                or len(shapes) != len(parameter_names)
+            ):
+                continue
+
+            map_slots: dict[str, int] = {}
+            for name, shape, slot in zip(parameter_names, shapes, slots):
+                if (
+                    name in map_params
+                    and shape[0] == 0
+                    and shape[1] == "ref"
+                    and shape[2] in {
+                        "java/util/Map",
+                        "java/util/HashMap",
+                        "java/util/LinkedHashMap",
+                        "java/util/TreeMap",
+                    }
+                ):
+                    map_slots[name] = slot
+            if any(
+                match.group("map") not in map_slots
+                for match in source_matches
+            ):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            flows: list[dict[str, Any]] = []
+
+            for index, item in enumerate(instructions[:-1]):
+                if not (
+                    item.get("mnemonic")
+                    in {"invokeinterface", "invokevirtual"}
+                    and item.get("owner")
+                    in {
+                        "java/util/Map",
+                        "java/util/HashMap",
+                        "java/util/LinkedHashMap",
+                        "java/util/TreeMap",
+                    }
+                    and item.get("name") == "get"
+                    and item.get("descriptor")
+                    == "(Ljava/lang/Object;)Ljava/lang/Object;"
+                ):
+                    continue
+                store = instructions[index + 1]
+                if store.get("mnemonic") != "astore":
+                    continue
+                local_slot = int(store.get("local_index", -1))
+                if local_slot < 0:
+                    continue
+
+                receiver_slot: int | None = None
+                for probe in range(max(0, index - 4), index):
+                    prior = instructions[probe]
+                    if prior.get("mnemonic") != "aload":
+                        continue
+                    candidate_slot = int(
+                        prior.get("local_index", -1)
+                    )
+                    if candidate_slot in set(map_slots.values()):
+                        receiver_slot = candidate_slot
+                if receiver_slot is None:
+                    continue
+
+                next_store = len(instructions)
+                for tail in range(index + 2, len(instructions)):
+                    candidate = instructions[tail]
+                    if (
+                        candidate.get("mnemonic") == "astore"
+                        and int(candidate.get("local_index", -1))
+                        == local_slot
+                    ):
+                        next_store = tail
+                        break
+
+                checkcasts: list[dict[str, Any]] = []
+                for tail in range(index + 2, next_store - 1):
+                    load = instructions[tail]
+                    cast = instructions[tail + 1]
+                    if not (
+                        load.get("mnemonic") == "aload"
+                        and int(load.get("local_index", -1))
+                        == local_slot
+                        and cast.get("mnemonic") == "checkcast"
+                    ):
+                        continue
+                    cast_type = str(cast.get("type", ""))
+                    if not cast_type or cast_type.startswith("["):
+                        continue
+                    checkcasts.append(
+                        {
+                            "type": cast_type,
+                            "load_offset": int(
+                                load.get("offset", -1)
+                            ),
+                            "checkcast_offset": int(
+                                cast.get("offset", -1)
+                            ),
+                        }
+                    )
+
+                cast_types = sorted(
+                    {row["type"] for row in checkcasts}
+                )
+                if len(cast_types) < 2:
+                    continue
+
+                flows.append(
+                    {
+                        "map_slot": receiver_slot,
+                        "object_local_slot": local_slot,
+                        "get_offset": int(item.get("offset", -1)),
+                        "store_offset": int(store.get("offset", -1)),
+                        "checkcast_types": cast_types,
+                        "checkcasts": checkcasts,
+                    }
+                )
+
+            if len(flows) != len(source_matches):
+                continue
+
+            source_proofs: list[tuple[int, str]] = []
+            valid_source = True
+            for match in source_matches:
+                source_type = match.group("type")
+                matching_types = [
+                    cast_type
+                    for cast_type in next(
+                        flow["checkcast_types"]
+                        for flow in flows
+                        if flow["map_slot"]
+                        == map_slots[match.group("map")]
+                    )
+                    if (
+                        _source_parameters_match_descriptor(
+                            source_type + " recoveredMixedLocal",
+                            "(L" + cast_type + ";)V",
+                            current_package=current_package,
+                        )
+                        is True
+                    )
+                ]
+                if len(matching_types) != 1:
+                    valid_source = False
+                    break
+                source_proofs.append(
+                    (
+                        map_slots[match.group("map")],
+                        matching_types[0],
+                    )
+                )
+            if not valid_source:
+                continue
+
+            exact_proofs = [
+                (
+                    flow["map_slot"],
+                    next(
+                        cast_type
+                        for cast_type in flow["checkcast_types"]
+                        if any(
+                            proof[0] == flow["map_slot"]
+                            and proof[1] == cast_type
+                            for proof in source_proofs
+                        )
+                    ),
+                )
+                for flow in flows
+                if any(
+                    proof[0] == flow["map_slot"]
+                    for proof in source_proofs
+                )
+            ]
+            if exact_proofs != source_proofs:
+                continue
+
+            exact_candidates.append(
+                {
+                    "method": exact_method,
+                    "flows": flows,
+                }
+            )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        proof = exact_candidates[0]
+        for match in source_matches:
+            edits.append(
+                (
+                    method_start + match.start("type"),
+                    method_start + match.end("type"),
+                    "Object",
+                )
+            )
+
+        actions.append(
+            {
+                "kind": "erased_map_mixed_object_local_reconstruction",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "map_parameters": sorted(
+                    {match.group("map") for match in source_matches}
+                ),
+                "local_names": [
+                    match.group("value") for match in source_matches
+                ],
+                "flows": proof["flows"],
+                "replacement_count": len(source_matches),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_branch_specific_type_for_mixed_map_object_local"
+                    ),
+                    "strategy": (
+                        "exact_map_get_object_store_plus_multi_checkcast_lifetime"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping mixed Map Object-local edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_erased_map_number_assignments(
     *,
     source_root: Path,
@@ -17590,6 +17942,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_erased_map_mixed_object_locals(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_erased_map_number_assignments(
                         source_root=source_root,
                         path=path,
@@ -18046,6 +18405,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "erased_hashmap_get_array_return_cast_reconstruction"
+        ),
+        "erased_map_mixed_object_local_action_count": sum(
+            action["kind"]
+            == "erased_map_mixed_object_local_reconstruction"
+            for action in actions
+        ),
+        "erased_map_mixed_object_local_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "erased_map_mixed_object_local_reconstruction"
         ),
         "erased_map_number_assignment_action_count": sum(
             action["kind"]
