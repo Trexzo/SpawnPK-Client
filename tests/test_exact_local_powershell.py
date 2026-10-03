@@ -200,6 +200,10 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 "/normalization_summary/erased_iterator_assignment_cast_action_count",
             "erased_iterator_assignment_cast_reference_count":
                 "/normalization_summary/erased_iterator_assignment_cast_reference_count",
+            "cc_generic_value_object_cast_action_count":
+                "/normalization_summary/cc_generic_value_object_cast_action_count",
+            "cc_generic_value_object_cast_reference_count":
+                "/normalization_summary/cc_generic_value_object_cast_reference_count",
             "erased_generic_constructor_argument_cast_action_count":
                 "/normalization_summary/erased_generic_constructor_argument_cast_action_count",
             "erased_generic_constructor_argument_cast_reference_count":
@@ -367,6 +371,16 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         self.assertIn(
             'ERASED_ITERATOR_ASSIGNMENT_CAST_REFERENCES='
             '$($Recovered.erased_iterator_assignment_cast_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'CC_GENERIC_VALUE_OBJECT_CAST_ACTIONS='
+            '$($Recovered.cc_generic_value_object_cast_action_count)',
+            script,
+        )
+        self.assertIn(
+            'CC_GENERIC_VALUE_OBJECT_CAST_REFERENCES='
+            '$($Recovered.cc_generic_value_object_cast_reference_count)',
             script,
         )
         self.assertIn(
