@@ -11019,7 +11019,24 @@ def _normalize_erased_map_keyset_int_enhanced_for(
                     continue
 
                 integer_flows: list[dict[str, Any]] = []
-                for tail in range(index + 3, len(instructions) - 4):
+                stop = len(instructions)
+                for later in range(index + 1, len(instructions)):
+                    candidate_keyset = instructions[later]
+                    if (
+                        candidate_keyset.get("mnemonic")
+                        in {"invokeinterface", "invokevirtual"}
+                        and candidate_keyset.get("owner") in map_owners
+                        and candidate_keyset.get("name") == "keySet"
+                        and candidate_keyset.get("descriptor")
+                        == "()Ljava/util/Set;"
+                    ):
+                        stop = later
+                        break
+
+                for tail in range(
+                    index + 3,
+                    max(index + 3, stop - 4),
+                ):
                     load = instructions[tail]
                     next_call = instructions[tail + 1]
                     cast = instructions[tail + 2]
@@ -11077,10 +11094,7 @@ def _normalize_erased_map_keyset_int_enhanced_for(
                     }
                 )
 
-            if (
-                map_keyset_call_count == len(loops)
-                and len(flows) == len(loops)
-            ):
+            if len(flows) == len(loops):
                 candidates.append(
                     {
                         "method": exact_method,
@@ -11126,6 +11140,9 @@ def _normalize_erased_map_keyset_int_enhanced_for(
                 "exact_map_keyset_call_count": proof[
                     "map_keyset_call_count"
                 ],
+                "exact_proven_map_keyset_flow_count": len(
+                    proof["flows"]
+                ),
                 "flows": proof["flows"],
                 "replacement_count": len(loops),
                 "provenance": {
@@ -11430,8 +11447,7 @@ def _normalize_erased_list_integer_enhanced_for(
                 )
 
             if (
-                list_iterator_call_count == len(loops)
-                and len(flows) == len(loops)
+                len(flows) == len(loops)
                 and len(
                     {
                         (
@@ -11488,6 +11504,9 @@ def _normalize_erased_list_integer_enhanced_for(
                 "exact_list_iterator_call_count": proof[
                     "list_iterator_call_count"
                 ],
+                "exact_proven_list_integer_flow_count": len(
+                    proof["flows"]
+                ),
                 "flows": proof["flows"],
                 "replacement_count": len(loops),
                 "provenance": {
