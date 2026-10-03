@@ -156,6 +156,22 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 "/normalization_summary/enum_valueof_raw_class_cast_action_count",
             "enum_valueof_raw_class_cast_reference_count":
                 "/normalization_summary/enum_valueof_raw_class_cast_reference_count",
+            "reference_shadowed_self_static_field_method_count":
+                "/normalization_summary/reference_shadowed_self_static_field_method_count",
+            "reference_shadowed_self_static_field_reference_count":
+                "/normalization_summary/reference_shadowed_self_static_field_reference_count",
+            "missing_synthetic_bridge_forwarder_action_count":
+                "/normalization_summary/missing_synthetic_bridge_forwarder_action_count",
+            "missing_synthetic_bridge_forwarder_method_count":
+                "/normalization_summary/missing_synthetic_bridge_forwarder_method_count",
+            "object_boolean_condition_cast_action_count":
+                "/normalization_summary/object_boolean_condition_cast_action_count",
+            "object_boolean_condition_cast_reference_count":
+                "/normalization_summary/object_boolean_condition_cast_reference_count",
+            "erased_hashmap_get_array_return_cast_action_count":
+                "/normalization_summary/erased_hashmap_get_array_return_cast_action_count",
+            "erased_hashmap_get_array_return_cast_reference_count":
+                "/normalization_summary/erased_hashmap_get_array_return_cast_reference_count",
             "erased_map_number_assignment_action_count":
                 "/normalization_summary/erased_map_number_assignment_action_count",
             "erased_map_number_assignment_reference_count":
@@ -240,6 +256,46 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         self.assertIn(
             'ENUM_VALUEOF_RAW_CLASS_CAST_REFERENCES='
             '$($Recovered.enum_valueof_raw_class_cast_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'REFERENCE_SHADOWED_SELF_STATIC_FIELD_METHODS='
+            '$($Recovered.reference_shadowed_self_static_field_method_count)',
+            script,
+        )
+        self.assertIn(
+            'REFERENCE_SHADOWED_SELF_STATIC_FIELD_REFERENCES='
+            '$($Recovered.reference_shadowed_self_static_field_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'MISSING_SYNTHETIC_BRIDGE_FORWARDER_ACTIONS='
+            '$($Recovered.missing_synthetic_bridge_forwarder_action_count)',
+            script,
+        )
+        self.assertIn(
+            'MISSING_SYNTHETIC_BRIDGE_FORWARDER_METHODS='
+            '$($Recovered.missing_synthetic_bridge_forwarder_method_count)',
+            script,
+        )
+        self.assertIn(
+            'OBJECT_BOOLEAN_CONDITION_CAST_ACTIONS='
+            '$($Recovered.object_boolean_condition_cast_action_count)',
+            script,
+        )
+        self.assertIn(
+            'OBJECT_BOOLEAN_CONDITION_CAST_REFERENCES='
+            '$($Recovered.object_boolean_condition_cast_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'ERASED_HASHMAP_GET_ARRAY_RETURN_CAST_ACTIONS='
+            '$($Recovered.erased_hashmap_get_array_return_cast_action_count)',
+            script,
+        )
+        self.assertIn(
+            'ERASED_HASHMAP_GET_ARRAY_RETURN_CAST_REFERENCES='
+            '$($Recovered.erased_hashmap_get_array_return_cast_reference_count)',
             script,
         )
         self.assertIn(
