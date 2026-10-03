@@ -8515,6 +8515,137 @@ class ErasedIteratorAssignmentCastTests(unittest.TestCase):
             )
 
 
+class ObjectBooleanConditionCastTests(unittest.TestCase):
+    def _fixture(self, root: Path, *, boolean_unbox: bool = True) -> Path:
+        condition = "(Boolean)value" if boolean_unbox else "value != null"
+        return _compile_java_fixture(
+            root,
+            {
+                "p/A.java": (
+                    "package p;\n"
+                    "public class A {\n"
+                    "    public static int read() {\n"
+                    "        Object value = Boolean.TRUE;\n"
+                    "        if (" + condition + ") {\n"
+                    "            return 1;\n"
+                    "        }\n"
+                    "        return 0;\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def test_object_boolean_condition_restores_exact_cast(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "public class A {\n"
+                "    public static int read() {\n"
+                "        Object value = Boolean.TRUE;\n"
+                "        if (value) {\n"
+                "            return 1;\n"
+                "        }\n"
+                "        return 0;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-object-boolean"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn("if ((Boolean)value) {", normalized)
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "object_boolean_condition_cast_reconstruction"
+            )
+            self.assertEqual(action["condition_names"], ["value"])
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                report["summary"][
+                    "object_boolean_condition_cast_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "object_boolean_condition_cast_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-object-boolean"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_object_boolean_condition_fails_closed_without_exact_unbox(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, boolean_unbox=False)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "public class A {\n"
+                "    public static int read() {\n"
+                "        Object value = Boolean.TRUE;\n"
+                "        if (value) {\n"
+                "            return 1;\n"
+                "        }\n"
+                "        return 0;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "object_boolean_condition_cast_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
+
+
 if __name__ == "__main__":
     unittest.main()
 
