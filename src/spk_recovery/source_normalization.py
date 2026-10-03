@@ -6313,10 +6313,10 @@ def _normalize_erased_hashmap_get_array_returns(
     actions: list[dict[str, Any]] = []
 
     field_re = re.compile(
-        r"(?:(?:java\\.util\\.)?HashMap)\\s*<\\s*"
-        r"[^,<>]+\\s*,\\s*(?:java\\.lang\\.)?Object\\s*>\\s+"
-        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\\s*"
-        r"(?:=\\s*[^;{}]+)?;"
+        r"(?:(?:java\.util\.)?HashMap)\s*<\s*"
+        r"[^,<>]+\s*,\s*(?:java\.lang\.)?Object\s*>\s+"
+        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*"
+        r"(?:=\s*[^;{}]+)?;"
     )
     object_hashmap_fields = {
         match.group("name") for match in field_re.finditer(whole_code)
@@ -6325,11 +6325,11 @@ def _normalize_erased_hashmap_get_array_returns(
         return []
 
     return_re = re.compile(
-        r"\\breturn\\s+"
-        r"(?P<expr>(?:(?:this)\\s*\\.\\s*)?"
-        r"(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\\s*\\.\\s*get\\s*"
-        r"\\(\\s*(?P<key>[A-Za-z_$][A-Za-z0-9_$]*)\\s*\\))"
-        r"\\s*;"
+        r"\breturn\s+"
+        r"(?P<expr>(?:(?:this)\s*\.\s*)?"
+        r"(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\s*\.\s*get\s*"
+        r"\(\s*(?P<key>[A-Za-z_$][A-Za-z0-9_$]*)\s*\))"
+        r"\s*;"
     )
 
     for method_match in _METHOD_DECL_RE.finditer(whole_code):
@@ -6355,7 +6355,7 @@ def _normalize_erased_hashmap_get_array_returns(
 
         source_static = bool(
             re.search(
-                r"\\bstatic\\b",
+                r"\bstatic\b",
                 whole_code[method_match.start():brace_start],
             )
         )
