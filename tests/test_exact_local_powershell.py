@@ -128,6 +128,46 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 "/normalization_summary/impossible_collectors_tolist_cast_action_count",
             "impossible_collectors_tolist_cast_reference_count":
                 "/normalization_summary/impossible_collectors_tolist_cast_reference_count",
+            "two_string_swing_capture_alias_action_count":
+                "/normalization_summary/two_string_swing_capture_alias_action_count",
+            "two_string_swing_capture_alias_reference_count":
+                "/normalization_summary/two_string_swing_capture_alias_reference_count",
+            "compile_time_lombok_nonnull_action_count":
+                "/normalization_summary/compile_time_lombok_nonnull_action_count",
+            "compile_time_lombok_nonnull_reference_count":
+                "/normalization_summary/compile_time_lombok_nonnull_reference_count",
+            "linkedhashmap_field_key_reconstruction_method_count":
+                "/normalization_summary/linkedhashmap_field_key_reconstruction_method_count",
+            "linkedhashmap_field_key_reconstruction_reference_count":
+                "/normalization_summary/linkedhashmap_field_key_reconstruction_reference_count",
+            "intpredicate_parameter_capture_alias_action_count":
+                "/normalization_summary/intpredicate_parameter_capture_alias_action_count",
+            "intpredicate_parameter_capture_alias_reference_count":
+                "/normalization_summary/intpredicate_parameter_capture_alias_reference_count",
+            "invokedynamic_captured_class_local_alias_action_count":
+                "/normalization_summary/invokedynamic_captured_class_local_alias_action_count",
+            "invokedynamic_captured_class_local_alias_reference_count":
+                "/normalization_summary/invokedynamic_captured_class_local_alias_reference_count",
+            "collectors_to_list_wildcard_sink_cast_action_count":
+                "/normalization_summary/collectors_to_list_wildcard_sink_cast_action_count",
+            "collectors_to_list_wildcard_sink_cast_reference_count":
+                "/normalization_summary/collectors_to_list_wildcard_sink_cast_reference_count",
+            "enum_valueof_raw_class_cast_action_count":
+                "/normalization_summary/enum_valueof_raw_class_cast_action_count",
+            "enum_valueof_raw_class_cast_reference_count":
+                "/normalization_summary/enum_valueof_raw_class_cast_reference_count",
+            "erased_map_number_assignment_action_count":
+                "/normalization_summary/erased_map_number_assignment_action_count",
+            "erased_map_number_assignment_reference_count":
+                "/normalization_summary/erased_map_number_assignment_reference_count",
+            "erased_set_int_enhanced_for_action_count":
+                "/normalization_summary/erased_set_int_enhanced_for_action_count",
+            "erased_set_int_enhanced_for_reference_count":
+                "/normalization_summary/erased_set_int_enhanced_for_reference_count",
+            "erased_iterator_assignment_cast_action_count":
+                "/normalization_summary/erased_iterator_assignment_cast_action_count",
+            "erased_iterator_assignment_cast_reference_count":
+                "/normalization_summary/erased_iterator_assignment_cast_reference_count",
             "erased_generic_constructor_argument_cast_action_count":
                 "/normalization_summary/erased_generic_constructor_argument_cast_action_count",
             "erased_generic_constructor_argument_cast_reference_count":
@@ -165,6 +205,56 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         self.assertIn(
             'IMPOSSIBLE_COLLECTORS_TOLIST_CAST_REFERENCES='
             '$($Recovered.impossible_collectors_tolist_cast_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'TWO_STRING_SWING_CAPTURE_ALIAS_REFERENCES='
+            '$($Recovered.two_string_swing_capture_alias_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'COMPILE_TIME_LOMBOK_NONNULL_REFERENCES='
+            '$($Recovered.compile_time_lombok_nonnull_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'LINKEDHASHMAP_FIELD_KEY_RECONSTRUCTION_REFERENCES='
+            '$($Recovered.linkedhashmap_field_key_reconstruction_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'INTPREDICATE_PARAMETER_CAPTURE_ALIAS_REFERENCES='
+            '$($Recovered.intpredicate_parameter_capture_alias_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'INVOKEDYNAMIC_CAPTURED_CLASS_LOCAL_ALIAS_REFERENCES='
+            '$($Recovered.invokedynamic_captured_class_local_alias_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'COLLECTORS_TOLIST_WILDCARD_SINK_CAST_REFERENCES='
+            '$($Recovered.collectors_to_list_wildcard_sink_cast_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'ENUM_VALUEOF_RAW_CLASS_CAST_REFERENCES='
+            '$($Recovered.enum_valueof_raw_class_cast_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'ERASED_MAP_NUMBER_ASSIGNMENT_REFERENCES='
+            '$($Recovered.erased_map_number_assignment_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'ERASED_SET_INT_ENHANCED_FOR_REFERENCES='
+            '$($Recovered.erased_set_int_enhanced_for_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'ERASED_ITERATOR_ASSIGNMENT_CAST_REFERENCES='
+            '$($Recovered.erased_iterator_assignment_cast_reference_count)',
             script,
         )
         self.assertIn(
