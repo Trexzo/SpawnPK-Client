@@ -8867,6 +8867,172 @@ class ErasedIteratorAssignmentCastTests(unittest.TestCase):
             )
             self.assertEqual(after.returncode, 0, after.stderr)
 
+    def test_erased_iterator_assignment_uses_lambda_helper_checkcast(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Value.java": (
+                        "package p;\n"
+                        "public class Value {}\n"
+                    ),
+                    "p/Current.java": (
+                        "package p;\n"
+                        "import java.util.ArrayList;\n"
+                        "import java.util.Iterator;\n"
+                        "import java.util.List;\n"
+                        "public class Current {\n"
+                        "    public static Value first() {\n"
+                        "        List<Value> values = new ArrayList<>();\n"
+                        "        values.add(new Value());\n"
+                        "        Runnable task = () -> {\n"
+                        "            Iterator<Value> iterator = "
+                        "values.iterator();\n"
+                        "            Value value = iterator.next();\n"
+                        "            if (value == null) throw "
+                        "new IllegalStateException();\n"
+                        "        };\n"
+                        "        task.run();\n"
+                        "        return values.get(0);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.ArrayList;\n"
+                "import java.util.Iterator;\n"
+                "import java.util.List;\n"
+                "public class Current {\n"
+                "    public static Value first() {\n"
+                "        List<Value> values = new ArrayList<>();\n"
+                "        values.add(new Value());\n"
+                "        Runnable task = () -> {\n"
+                "            Iterator iterator = values.iterator();\n"
+                "            final Value value = iterator.next();\n"
+                "            if (value == null) throw "
+                "new IllegalStateException();\n"
+                "        };\n"
+                "        task.run();\n"
+                "        return values.get(0);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac", "-cp", str(jar), "-d",
+                    str(root / "before-iterator-lambda"), str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "final Value value = (Value)iterator.next();",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_iterator_assignment_cast_reconstruction"
+            )
+            self.assertEqual(action["proof_scope"], "lambda_helper")
+            self.assertEqual(action["exact_checkcast_types"], ["p/Value"])
+            self.assertEqual(len(action["lambda_helpers"]), 1)
+
+            after = subprocess.run(
+                [
+                    "javac", "-cp", str(jar), "-d",
+                    str(root / "after-iterator-lambda"), str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stderr)
+
+    def test_erased_iterator_assignment_lambda_helper_type_drift_fails_closed(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Value.java": (
+                        "package p;\n"
+                        "public class Value {}\n"
+                    ),
+                    "p/Other.java": (
+                        "package p;\n"
+                        "public class Other {}\n"
+                    ),
+                    "p/Current.java": (
+                        "package p;\n"
+                        "import java.util.ArrayList;\n"
+                        "import java.util.Iterator;\n"
+                        "import java.util.List;\n"
+                        "public class Current {\n"
+                        "    public static Other first() {\n"
+                        "        List<Other> values = new ArrayList<>();\n"
+                        "        values.add(new Other());\n"
+                        "        Runnable task = () -> {\n"
+                        "            Iterator<Other> iterator = "
+                        "values.iterator();\n"
+                        "            Other value = iterator.next();\n"
+                        "            if (value == null) throw "
+                        "new IllegalStateException();\n"
+                        "        };\n"
+                        "        task.run();\n"
+                        "        return values.get(0);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.Iterator;\n"
+                "import java.util.List;\n"
+                "public class Current {\n"
+                "    public static Other first() {\n"
+                "        List<Other> values = null;\n"
+                "        Runnable task = () -> {\n"
+                "            Iterator iterator = values.iterator();\n"
+                "            final Value value = iterator.next();\n"
+                "        };\n"
+                "        task.run();\n"
+                "        return null;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "erased_iterator_assignment_cast_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
     def test_erased_iterator_assignment_fails_closed_on_extra_exact_flow(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
