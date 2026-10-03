@@ -12113,7 +12113,7 @@ def _normalize_missing_synthetic_bridge_forwarders(
     source_methods = list(_METHOD_DECL_RE.finditer(whole_code))
 
     class_re = re.compile(
-        r"\\bclass\\s+" + re.escape(simple_name) + r"\\b[^\\{]*\\{"
+        r"\bclass\s+" + re.escape(simple_name) + r"\b[^\{]*\{"
     )
     class_matches = list(class_re.finditer(whole_code))
     if len(class_matches) != 1:
@@ -12341,7 +12341,7 @@ def _normalize_missing_synthetic_bridge_forwarders(
         params = target_match.group("params").strip()
         args = ", ".join(parameter_names)
         method_source = (
-            "\\n"
+            "\n"
             + indent
             + visibility
             + return_type
@@ -12349,15 +12349,15 @@ def _normalize_missing_synthetic_bridge_forwarders(
             + bridge_name
             + "("
             + params
-            + ") {\\n"
+            + ") {\n"
             + indent
             + "    return this."
             + target_name
             + "("
             + args
-            + ");\\n"
+            + ");\n"
             + indent
-            + "}\\n"
+            + "}\n"
         )
         insertions.append(method_source)
         actions.append(
