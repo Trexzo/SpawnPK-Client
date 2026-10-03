@@ -8135,6 +8135,261 @@ def _normalize_erased_raw_list_toarray_returns(
     return actions
 
 
+def _normalize_erased_nested_list_receivers(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore List casts lost before nested raw-List dereferences.
+
+    Procyon can emit rawList.get(i).size()/get(j) even though exact bytecode
+    checkcasts the outer get() result to java/util/List before the nested call.
+    Restore only that receiver cast when one exact readable method proves the
+    same List.get -> checkcast List -> nested List member flow one-for-one.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    raw_list_decl_re = re.compile(
+        r"\b(?P<type>(?:java\.util\.)?List)\s+"
+        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+    )
+    nested_re = re.compile(
+        r"(?P<expr>"
+        r"(?P<receiver>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\.\s*get\s*\(\s*"
+        r"(?P<index>[A-Za-z_$][A-Za-z0-9_$]*)\s*\)"
+        r")\s*\.\s*(?P<member>size|get)\s*\("
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        scope_code = (
+            method_match.group("params")
+            + "\n"
+            + whole_code[brace_start + 1:body_end]
+        )
+        raw_lists = {
+            match.group("name"): match.group("type")
+            for match in raw_list_decl_re.finditer(scope_code)
+        }
+        if not raw_lists:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        occurrences = [
+            match
+            for match in nested_re.finditer(method_code)
+            if match.group("receiver") in raw_lists
+        ]
+        if not occurrences:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        candidates: list[dict[str, Any]] = []
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            exact_return = _descriptor_return_descriptor(descriptor)
+            source_return = method_match.group("return").strip()
+            if source_return == "void":
+                if exact_return != "V":
+                    continue
+            elif exact_return is None or (
+                _source_parameters_match_descriptor(
+                    source_return + " recoveredReturn",
+                    "(" + exact_return + ")V",
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            flows: list[dict[str, Any]] = []
+            for index in range(len(instructions) - 2):
+                outer_get = instructions[index]
+                cast = instructions[index + 1]
+                if not (
+                    outer_get.get("mnemonic")
+                    in {"invokeinterface", "invokevirtual"}
+                    and outer_get.get("owner") == "java/util/List"
+                    and outer_get.get("name") == "get"
+                    and outer_get.get("descriptor")
+                    == "(I)Ljava/lang/Object;"
+                    and cast.get("mnemonic") == "checkcast"
+                    and cast.get("type") == "java/util/List"
+                ):
+                    continue
+
+                next_item = instructions[index + 2]
+                if (
+                    next_item.get("mnemonic")
+                    in {"invokeinterface", "invokevirtual"}
+                    and next_item.get("owner") == "java/util/List"
+                    and next_item.get("name") == "size"
+                    and next_item.get("descriptor") == "()I"
+                ):
+                    flows.append(
+                        {
+                            "member": "size",
+                            "checkcast_offset": int(
+                                cast.get("offset", -1)
+                            ),
+                        }
+                    )
+                    continue
+
+                if index + 3 >= len(instructions):
+                    continue
+                nested_call = instructions[index + 3]
+                if not (
+                    next_item.get("mnemonic") == "iload"
+                    and nested_call.get("mnemonic")
+                    in {"invokeinterface", "invokevirtual"}
+                    and nested_call.get("owner") == "java/util/List"
+                    and nested_call.get("name") == "get"
+                    and nested_call.get("descriptor")
+                    == "(I)Ljava/lang/Object;"
+                ):
+                    continue
+                flows.append(
+                    {
+                        "member": "get",
+                        "checkcast_offset": int(cast.get("offset", -1)),
+                    }
+                )
+
+            source_counts = {
+                member: sum(
+                    match.group("member") == member
+                    for match in occurrences
+                )
+                for member in {"size", "get"}
+            }
+            exact_counts = {
+                member: sum(
+                    flow["member"] == member for flow in flows
+                )
+                for member in {"size", "get"}
+            }
+            if source_counts != exact_counts:
+                continue
+
+            candidates.append(
+                {
+                    "method": exact_method,
+                    "flows": flows,
+                    "member_counts": source_counts,
+                }
+            )
+
+        if len(candidates) != 1:
+            continue
+
+        proof = candidates[0]
+        for match in occurrences:
+            expression = text[
+                method_start + match.start("expr"):
+                method_start + match.end("expr")
+            ]
+            receiver_type = raw_lists[match.group("receiver")]
+            edits.append(
+                (
+                    method_start + match.start("expr"),
+                    method_start + match.end("expr"),
+                    "((" + receiver_type + ")" + expression + ")",
+                )
+            )
+
+        actions.append(
+            {
+                "kind": "erased_nested_list_receiver_cast_reconstruction",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "receiver_names": sorted(
+                    {match.group("receiver") for match in occurrences}
+                ),
+                "member_counts": proof["member_counts"],
+                "exact_checkcast_offsets": [
+                    flow["checkcast_offset"] for flow in proof["flows"]
+                ],
+                "replacement_count": len(occurrences),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": "procyon_erased_nested_list_receiver_cast",
+                    "strategy": (
+                        "raw_list_source_plus_exact_nested_list_checkcast_flow"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping nested List receiver edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_object_boolean_conditions(
     *,
     source_root: Path,
@@ -14613,6 +14868,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_erased_nested_list_receivers(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_object_boolean_conditions(
                         source_root=source_root,
                         path=path,
@@ -15016,6 +15278,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "erased_raw_list_toarray_return_cast_reconstruction"
+        ),
+        "erased_nested_list_receiver_cast_action_count": sum(
+            action["kind"]
+            == "erased_nested_list_receiver_cast_reconstruction"
+            for action in actions
+        ),
+        "erased_nested_list_receiver_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "erased_nested_list_receiver_cast_reconstruction"
         ),
         "object_boolean_condition_cast_action_count": sum(
             action["kind"]
