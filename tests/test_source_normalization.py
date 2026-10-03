@@ -12621,6 +12621,459 @@ class CcGenericValueObjectCastTests(unittest.TestCase):
             )
 
 
+class MissingSyntheticConstructorAccessorTests(unittest.TestCase):
+    def _fixture(self, root: Path) -> Path:
+        legal = root / "synthetic-accessor-legal"
+        outer = legal / "p" / "Outer.java"
+        marker = legal / "p" / "Marker.java"
+        outer.parent.mkdir(parents=True)
+        marker.write_text(
+            "package p;\n"
+            "public final class Marker {}\n",
+            encoding="utf-8",
+        )
+        outer.write_text(
+            "package p;\n"
+            "public class Outer {\n"
+            "    private static class Inner {\n"
+            "        private Inner() {}\n"
+            "        Inner(Marker ignored) { this(); }\n"
+            "    }\n"
+            "    private Inner value = new Inner(null);\n"
+            "    public Object value() { return value; }\n"
+            "}\n",
+            encoding="utf-8",
+        )
+        classes = root / "synthetic-accessor-classes"
+        classes.mkdir()
+        proc = subprocess.run(
+            [
+                "javac",
+                "-d",
+                str(classes),
+                str(marker),
+                str(outer),
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+
+        nested_path = classes / "p" / "Outer$Inner.class"
+        data = bytearray(nested_path.read_bytes())
+
+        def u2_at(offset: int) -> int:
+            return struct.unpack_from(">H", data, offset)[0]
+
+        def u4_at(offset: int) -> int:
+            return struct.unpack_from(">I", data, offset)[0]
+
+        cp_count = u2_at(8)
+        offset = 10
+        utf8: dict[int, str] = {}
+        index = 1
+        while index < cp_count:
+            tag = data[offset]
+            offset += 1
+            if tag == 1:
+                length = u2_at(offset)
+                offset += 2
+                utf8[index] = bytes(
+                    data[offset:offset + length]
+                ).decode("utf-8")
+                offset += length
+            elif tag in {3, 4}:
+                offset += 4
+            elif tag in {5, 6}:
+                offset += 8
+                index += 1
+            elif tag in {7, 8, 16, 19, 20}:
+                offset += 2
+            elif tag in {9, 10, 11, 12, 17, 18}:
+                offset += 4
+            elif tag == 15:
+                offset += 3
+            else:
+                raise AssertionError(
+                    f"unsupported constant-pool tag {tag}"
+                )
+            index += 1
+
+        cursor = offset
+        cursor += 6
+        interfaces_count = u2_at(cursor)
+        cursor += 2 + 2 * interfaces_count
+        fields_count = u2_at(cursor)
+        cursor += 2
+        for _ in range(fields_count):
+            cursor += 6
+            attribute_count = u2_at(cursor)
+            cursor += 2
+            for _ in range(attribute_count):
+                cursor += 2
+                length = u4_at(cursor)
+                cursor += 4 + length
+
+        methods_count = u2_at(cursor)
+        cursor += 2
+        patched = 0
+        for _ in range(methods_count):
+            method_start = cursor
+            access = u2_at(cursor)
+            name_index = u2_at(cursor + 2)
+            descriptor_index = u2_at(cursor + 4)
+            attribute_count = u2_at(cursor + 6)
+            cursor += 8
+            method_name = utf8.get(name_index, "")
+            descriptor = utf8.get(descriptor_index, "")
+            if (
+                method_name == "<init>"
+                and descriptor == "(Lp/Marker;)V"
+            ):
+                struct.pack_into(
+                    ">H",
+                    data,
+                    method_start,
+                    access | 0x1000,
+                )
+                patched += 1
+            for _ in range(attribute_count):
+                cursor += 2
+                length = u4_at(cursor)
+                cursor += 4 + length
+
+        self.assertEqual(patched, 1)
+        nested_path.write_bytes(bytes(data))
+
+        jar = root / "synthetic-accessor-readable.jar"
+        with zipfile.ZipFile(jar, "w") as z:
+            for class_file in sorted(classes.rglob("*.class")):
+                z.write(
+                    class_file,
+                    class_file.relative_to(classes).as_posix(),
+                )
+
+        with zipfile.ZipFile(jar) as z:
+            nested = profile_class_field_accesses_exact(
+                z.read("p/Outer$Inner.class")
+            )
+        synthetic = [
+            method
+            for method in nested["methods"]
+            if method["name"] == "<init>"
+            and int(method["access"]) & 0x1000
+        ]
+        self.assertEqual(len(synthetic), 1)
+        self.assertEqual(
+            synthetic[0]["descriptor"],
+            "(Lp/Marker;)V",
+        )
+        self.assertEqual(
+            synthetic[0]["instructions"][0]["mnemonic"],
+            "aload",
+        )
+        self.assertEqual(
+            synthetic[0]["instructions"][0]["local_index"],
+            0,
+        )
+        self.assertEqual(
+            synthetic[0]["instructions"][1]["mnemonic"],
+            "invokespecial",
+        )
+        self.assertEqual(
+            synthetic[0]["instructions"][2]["mnemonic"],
+            "return",
+        )
+        return jar
+
+    def _malformed_source(self, *, duplicate_call: bool = False) -> str:
+        second = (
+            "    private Inner value2 = new Inner(null);\n"
+            if duplicate_call
+            else ""
+        )
+        return (
+            "package p;\n"
+            "public class Outer {\n"
+            "    private static class Inner {\n"
+            "        private Inner() {}\n"
+            "    }\n"
+            "    private Inner value = new Inner(null);\n"
+            + second
+            + "    public Object value() { return value; }\n"
+            "}\n"
+        )
+
+    def _patch_synthetic_constructor_opcode(
+        self,
+        jar: Path,
+        *,
+        instruction_index: int,
+        opcode: int,
+    ) -> Path:
+        with zipfile.ZipFile(jar) as z:
+            entries = {
+                info.filename: z.read(info.filename)
+                for info in z.infolist()
+            }
+
+        name = "p/Outer$Inner.class"
+        data = bytearray(entries[name])
+
+        def u2_at(offset: int) -> int:
+            return struct.unpack_from(">H", data, offset)[0]
+
+        def u4_at(offset: int) -> int:
+            return struct.unpack_from(">I", data, offset)[0]
+
+        cp_count = u2_at(8)
+        offset = 10
+        utf8: dict[int, str] = {}
+        index = 1
+        while index < cp_count:
+            tag = data[offset]
+            offset += 1
+            if tag == 1:
+                length = u2_at(offset)
+                offset += 2
+                utf8[index] = bytes(
+                    data[offset:offset + length]
+                ).decode("utf-8")
+                offset += length
+            elif tag in {3, 4}:
+                offset += 4
+            elif tag in {5, 6}:
+                offset += 8
+                index += 1
+            elif tag in {7, 8, 16, 19, 20}:
+                offset += 2
+            elif tag in {9, 10, 11, 12, 17, 18}:
+                offset += 4
+            elif tag == 15:
+                offset += 3
+            else:
+                raise AssertionError(
+                    f"unsupported constant-pool tag {tag}"
+                )
+            index += 1
+
+        cursor = offset
+        cursor += 6
+        interfaces_count = u2_at(cursor)
+        cursor += 2 + 2 * interfaces_count
+
+        fields_count = u2_at(cursor)
+        cursor += 2
+        for _ in range(fields_count):
+            cursor += 6
+            attribute_count = u2_at(cursor)
+            cursor += 2
+            for _ in range(attribute_count):
+                cursor += 2
+                length = u4_at(cursor)
+                cursor += 4 + length
+
+        methods_count = u2_at(cursor)
+        cursor += 2
+        patched = 0
+        for _ in range(methods_count):
+            access = u2_at(cursor)
+            name_index = u2_at(cursor + 2)
+            descriptor_index = u2_at(cursor + 4)
+            attribute_count = u2_at(cursor + 6)
+            cursor += 8
+            method_name = utf8.get(name_index, "")
+            descriptor = utf8.get(descriptor_index, "")
+
+            for _ in range(attribute_count):
+                attr_name_index = u2_at(cursor)
+                length = u4_at(cursor + 2)
+                payload = cursor + 6
+                if (
+                    method_name == "<init>"
+                    and descriptor != "()V"
+                    and (access & 0x1000)
+                    and utf8.get(attr_name_index) == "Code"
+                ):
+                    code_length = u4_at(payload + 4)
+                    code_start = payload + 8
+                    profile = profile_class_field_accesses_exact(
+                        bytes(data)
+                    )
+                    method = next(
+                        row
+                        for row in profile["methods"]
+                        if row["name"] == "<init>"
+                        and row["descriptor"] == descriptor
+                    )
+                    instructions = method["instructions"]
+                    self.assertGreater(
+                        len(instructions),
+                        instruction_index,
+                    )
+                    target_offset = int(
+                        instructions[instruction_index]["offset"]
+                    )
+                    self.assertLess(target_offset, code_length)
+                    data[code_start + target_offset] = opcode
+                    patched += 1
+                cursor = payload + length
+
+        self.assertEqual(patched, 1)
+        entries[name] = bytes(data)
+        out = jar.with_name(
+            jar.stem
+            + f"-patched-{instruction_index}-{opcode:02x}.jar"
+        )
+        with zipfile.ZipFile(out, "w") as z:
+            for entry_name, payload in sorted(entries.items()):
+                z.writestr(entry_name, payload)
+        return out
+
+    def test_reconstructs_omitted_synthetic_constructor_accessor(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "Outer.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                self._malformed_source(),
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-synthetic-accessor"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "Inner(final p.Marker recoveredSyntheticAccessor)",
+                normalized,
+            )
+            self.assertIn("this();", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "missing_synthetic_constructor_accessor_reconstruction"
+            )
+            self.assertEqual(action["nested_owner"], "p/Outer$Inner")
+            self.assertEqual(action["source_callsite_count"], 1)
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                report["summary"][
+                    "missing_synthetic_constructor_accessor_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "missing_synthetic_constructor_accessor_method_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-synthetic-accessor"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_synthetic_constructor_accessor_fails_on_dummy_use(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            drift = self._patch_synthetic_constructor_opcode(
+                jar,
+                instruction_index=0,
+                opcode=0x2B,
+            )
+            source = root / "src" / "p" / "Outer.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", drift)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "missing_synthetic_constructor_accessor_action_count"
+                ],
+                0,
+            )
+
+    def test_synthetic_constructor_accessor_fails_on_body_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            drift = self._patch_synthetic_constructor_opcode(
+                jar,
+                instruction_index=1,
+                opcode=0xB6,
+            )
+            source = root / "src" / "p" / "Outer.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", drift)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "missing_synthetic_constructor_accessor_action_count"
+                ],
+                0,
+            )
+
+    def test_synthetic_constructor_accessor_fails_on_callsite_multiplicity(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "Outer.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source(duplicate_call=True)
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "missing_synthetic_constructor_accessor_action_count"
+                ],
+                0,
+            )
+
+
+
+
+
 if __name__ == "__main__":
     unittest.main()
 
