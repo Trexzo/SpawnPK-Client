@@ -17072,6 +17072,257 @@ def _normalize_linkedhashmap_self_get_result_casts(
     return actions
 
 
+def _normalize_missing_synthetic_constructor_accessors(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Reconstruct omitted synthetic private-constructor accessors.
+
+    Older javac output can expose a synthetic one-reference-argument
+    constructor that forwards to a private zero-argument constructor. Procyon
+    may omit that declaration while retaining a null dummy callsite. Recover
+    only when exact nested-class and enclosing-callsite bytecode prove it.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        outer_bytes = readable_zip.read(class_entry)
+        outer_profile = profile_class_field_accesses(outer_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(outer_profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    outer_simple = current_owner.rsplit("/", 1)[-1]
+    if Path(rel).stem != outer_simple:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    class_re = re.compile(
+        r"(?m)^(?P<indent>[ \t]*)"
+        r"(?:(?:public|private|protected|static|final|abstract|strictfp)\s+)*"
+        r"class\s+(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b[^\{]*\{"
+    )
+
+    insertions: list[tuple[int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for class_match in class_re.finditer(whole_code):
+        nested_name = class_match.group("name")
+        if nested_name == outer_simple:
+            continue
+        class_brace = whole_code.find(
+            "{", class_match.start(), class_match.end()
+        )
+        if class_brace < 0 or _brace_depth_before(whole_code, class_brace) != 1:
+            continue
+        try:
+            class_end = _matching_brace_end(whole_code, class_brace)
+        except SourceNormalizationError:
+            continue
+
+        nested_owner = current_owner + "$" + nested_name
+        try:
+            nested_profile = profile_class_field_accesses(
+                readable_zip.read(nested_owner + ".class")
+            )
+        except (KeyError, BytecodeProfileError):
+            continue
+        if str(nested_profile.get("internal_name", "")) != nested_owner:
+            continue
+
+        exact_ctors = [
+            method
+            for method in nested_profile.get("methods", [])
+            if method.get("name") == "<init>"
+        ]
+        real = [
+            method
+            for method in exact_ctors
+            if (
+                method.get("descriptor") == "()V"
+                and (int(method.get("access", 0)) & 0x0002)
+                and not (int(method.get("access", 0)) & 0x1000)
+            )
+        ]
+        synthetic = []
+        for method in exact_ctors:
+            access = int(method.get("access", 0))
+            descriptor = str(method.get("descriptor", ""))
+            shapes = _descriptor_parameter_shapes(descriptor)
+            if not (
+                (access & 0x1000)
+                and not (access & (0x0001 | 0x0002 | 0x0004))
+                and shapes is not None
+                and len(shapes) == 1
+                and shapes[0][0] == 0
+                and shapes[0][1] == "ref"
+                and _descriptor_return_descriptor(descriptor) == "V"
+            ):
+                continue
+            instructions = list(method.get("instructions", []))
+            if len(instructions) != 3:
+                continue
+            first, invoke, last = instructions
+            if not (
+                first.get("mnemonic") == "aload"
+                and int(first.get("local_index", -1)) == 0
+                and invoke.get("mnemonic") == "invokespecial"
+                and invoke.get("owner") == nested_owner
+                and invoke.get("name") == "<init>"
+                and invoke.get("descriptor") == "()V"
+                and last.get("mnemonic") == "return"
+            ):
+                continue
+            synthetic.append(
+                {
+                    "method": method,
+                    "dummy_owner": shapes[0][2],
+                }
+            )
+        if len(real) != 1 or len(synthetic) != 1:
+            continue
+
+        synthetic_method = synthetic[0]["method"]
+        synthetic_descriptor = str(
+            synthetic_method.get("descriptor", "")
+        )
+        dummy_owner = str(synthetic[0]["dummy_owner"])
+
+        nested_code = whole_code[class_match.start():class_end]
+        zero_ctor_re = re.compile(
+            r"(?m)^(?P<indent>[ \t]*)private\s+"
+            + re.escape(nested_name)
+            + r"\s*\(\s*\)\s*"
+            r"(?:throws\s+[^\{\n]+\s*)?\{"
+        )
+        zero_ctors = list(zero_ctor_re.finditer(nested_code))
+        if len(zero_ctors) != 1:
+            continue
+
+        any_ctor_re = re.compile(
+            r"(?m)^(?P<indent>[ \t]*)"
+            r"(?:(?:public|private|protected)\s+)?"
+            + re.escape(nested_name)
+            + r"\s*\((?P<params>[^()\n]*)\)\s*"
+            r"(?:throws\s+[^\{\n]+\s*)?\{"
+        )
+        existing_synthetic_source = [
+            match
+            for match in any_ctor_re.finditer(nested_code)
+            if (
+                _source_parameters_match_descriptor(
+                    match.group("params"),
+                    synthetic_descriptor,
+                    current_package=current_owner.rpartition("/")[0],
+                )
+                is True
+            )
+        ]
+        if existing_synthetic_source:
+            continue
+
+        call_re = re.compile(
+            r"\bnew\s+"
+            + re.escape(nested_name)
+            + r"\s*\(\s*null\s*\)"
+        )
+        source_calls = list(call_re.finditer(whole_code))
+        if not source_calls:
+            continue
+
+        exact_calls: list[dict[str, Any]] = []
+        for outer_method in outer_profile.get("methods", []):
+            instructions = list(outer_method.get("instructions", []))
+            for index in range(len(instructions) - 3):
+                new, dup, null, invoke = instructions[index:index + 4]
+                if not (
+                    new.get("mnemonic") == "new"
+                    and new.get("type") == nested_owner
+                    and dup.get("mnemonic") == "dup"
+                    and null.get("mnemonic") == "aconst_null"
+                    and invoke.get("mnemonic") == "invokespecial"
+                    and invoke.get("owner") == nested_owner
+                    and invoke.get("name") == "<init>"
+                    and invoke.get("descriptor") == synthetic_descriptor
+                ):
+                    continue
+                exact_calls.append(
+                    {
+                        "method_name": str(
+                            outer_method.get("name", "")
+                        ),
+                        "method_descriptor": str(
+                            outer_method.get("descriptor", "")
+                        ),
+                        "new_offset": int(new.get("offset", -1)),
+                        "invoke_offset": int(invoke.get("offset", -1)),
+                    }
+                )
+        if len(exact_calls) != len(source_calls):
+            continue
+
+        ctor_indent = zero_ctors[0].group("indent")
+        dummy_type = dummy_owner.replace("/", ".")
+        constructor_source = (
+            "\n"
+            + ctor_indent
+            + nested_name
+            + "(final "
+            + dummy_type
+            + " recoveredSyntheticAccessor) {\n"
+            + ctor_indent
+            + "    this();\n"
+            + ctor_indent
+            + "}\n"
+        )
+        insertions.append((class_end - 1, constructor_source))
+        actions.append(
+            {
+                "kind": (
+                    "missing_synthetic_constructor_accessor_reconstruction"
+                ),
+                "source_path": rel,
+                "nested_owner": nested_owner,
+                "real_constructor_descriptor": "()V",
+                "synthetic_constructor_descriptor": (
+                    synthetic_descriptor
+                ),
+                "dummy_parameter_owner": dummy_owner,
+                "source_callsite_count": len(source_calls),
+                "exact_callsites": exact_calls,
+                "replacement_count": 1,
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_omitted_synthetic_private_constructor_accessor"
+                    ),
+                    "strategy": (
+                        "exact_nested_constructor_body_plus_enclosing_null_callsite"
+                    ),
+                },
+            }
+        )
+
+    if not insertions:
+        return []
+
+    insertions.sort(key=lambda row: row[0])
+    if len({offset for offset, _ in insertions}) != len(insertions):
+        raise SourceNormalizationError(
+            f"{rel}: overlapping synthetic constructor accessor insertions"
+        )
+    for offset, insertion in reversed(insertions):
+        text = text[:offset] + insertion + text[offset:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_missing_synthetic_bridge_forwarders(
     *,
     source_root: Path,
@@ -17769,6 +18020,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_missing_synthetic_constructor_accessors(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_missing_synthetic_bridge_forwarders(
                         source_root=source_root,
                         path=path,
@@ -17807,6 +18065,17 @@ def normalize_procyon_source(
             len(action.get("inserted_fields", []))
             for action in actions
             if action["kind"] == "synthetic_class_reconstruction"
+        ),
+        "missing_synthetic_constructor_accessor_action_count": sum(
+            action["kind"]
+            == "missing_synthetic_constructor_accessor_reconstruction"
+            for action in actions
+        ),
+        "missing_synthetic_constructor_accessor_method_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "missing_synthetic_constructor_accessor_reconstruction"
         ),
         "missing_synthetic_bridge_forwarder_action_count": sum(
             action["kind"]
