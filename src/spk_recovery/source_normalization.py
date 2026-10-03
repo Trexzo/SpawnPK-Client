@@ -10620,6 +10620,370 @@ def _normalize_erased_map_keyset_int_enhanced_for(
 
 
 
+def _normalize_erased_list_integer_enhanced_for(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore boxed Integer typing for raw-List enhanced-for loops.
+
+    Procyon can erase List<Integer> locals to raw List while retaining an
+    enhanced-for element declaration of boxed Integer. Java then rejects
+    Iterator.next():Object -> Integer. Restore only the iterable cast when one
+    uniquely correlated exact method proves List provenance plus
+    List.iterator -> Iterator.next -> checkcast Integer -> astore for every
+    matching source loop.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    raw_list_decl_re = re.compile(
+        r"(?m)(?:^|[;{}]\s*)"
+        r"(?:(?:final)\s+)?"
+        r"(?P<type>(?:java\.util\.)?"
+        r"(?:List|ArrayList|LinkedList))\s+"
+        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*"
+        r"(?:=|;)"
+    )
+    enhanced_for_re = re.compile(
+        r"for\s*\(\s*(?:(?:final)\s+)?"
+        r"(?P<type>(?:java\.lang\.)?Integer)\s+"
+        r"(?P<element>[A-Za-z_$][A-Za-z0-9_$]*)\s*:\s*"
+        r"(?P<iterable>[A-Za-z_$][A-Za-z0-9_$]*)\s*\)"
+    )
+    list_owners = {
+        "java/util/List",
+        "java/util/ArrayList",
+        "java/util/LinkedList",
+    }
+    list_descriptors = {"L" + owner + ";" for owner in list_owners}
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        raw_list_declarations = {
+            match.group("name"): match.group("type")
+            for match in raw_list_decl_re.finditer(method_code)
+        }
+        if not raw_list_declarations:
+            continue
+
+        loops = [
+            match
+            for match in enhanced_for_re.finditer(method_code)
+            if match.group("iterable") in raw_list_declarations
+        ]
+        if not loops:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        exact_candidates: list[dict[str, Any]] = []
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            parameter_shapes = _descriptor_parameter_shapes(descriptor)
+            parameter_slots = _descriptor_parameter_local_slots(
+                descriptor,
+                is_static=source_static,
+            )
+            list_parameter_slots: set[int] = set()
+            if (
+                parameter_shapes is not None
+                and parameter_slots is not None
+                and len(parameter_shapes) == len(parameter_slots)
+            ):
+                for shape, slot in zip(parameter_shapes, parameter_slots):
+                    if (
+                        shape[1] == "ref"
+                        and str(shape[2]) in list_owners
+                    ):
+                        list_parameter_slots.add(slot)
+
+            instructions = list(exact_method.get("instructions", []))
+
+            def local_has_list_provenance(slot: int, before: int) -> bool:
+                if slot in list_parameter_slots:
+                    return True
+                for probe in range(max(0, before - 96), before):
+                    item = instructions[probe]
+                    if (
+                        item.get("mnemonic") == "new"
+                        and item.get("type")
+                        in {"java/util/ArrayList", "java/util/LinkedList"}
+                    ):
+                        for tail in range(
+                            probe + 1,
+                            min(before, probe + 8),
+                        ):
+                            store = instructions[tail]
+                            if (
+                                store.get("mnemonic") == "astore"
+                                and int(store.get("local_index", -1)) == slot
+                            ):
+                                return True
+                    if probe + 1 < before:
+                        cast = instructions[probe]
+                        store = instructions[probe + 1]
+                        if (
+                            cast.get("mnemonic") == "checkcast"
+                            and cast.get("type") in list_owners
+                            and store.get("mnemonic") == "astore"
+                            and int(store.get("local_index", -1)) == slot
+                        ):
+                            return True
+                return False
+
+            flows: list[dict[str, Any]] = []
+            list_iterator_call_count = 0
+            for index in range(1, len(instructions) - 3):
+                iterator_call = instructions[index]
+                if not (
+                    iterator_call.get("mnemonic")
+                    in {"invokeinterface", "invokevirtual"}
+                    and iterator_call.get("owner") == "java/util/List"
+                    and iterator_call.get("name") == "iterator"
+                    and iterator_call.get("descriptor")
+                    == "()Ljava/util/Iterator;"
+                ):
+                    continue
+                list_iterator_call_count += 1
+
+                producer = instructions[index - 1]
+                receiver_proof: dict[str, Any] | None = None
+                if producer.get("mnemonic") == "aload":
+                    list_slot = int(producer.get("local_index", -1))
+                    if (
+                        list_slot >= 0
+                        and local_has_list_provenance(list_slot, index - 1)
+                    ):
+                        receiver_proof = {
+                            "kind": "local",
+                            "local_slot": list_slot,
+                        }
+                elif (
+                    producer.get("mnemonic") in {"getfield", "getstatic"}
+                    and producer.get("descriptor") in list_descriptors
+                ):
+                    receiver_proof = {
+                        "kind": "field",
+                        "owner": str(producer.get("owner", "")),
+                        "name": str(producer.get("name", "")),
+                        "descriptor": str(producer.get("descriptor", "")),
+                    }
+                if receiver_proof is None:
+                    continue
+
+                iterator_store = instructions[index + 1]
+                if iterator_store.get("mnemonic") != "astore":
+                    continue
+                iterator_slot = int(
+                    iterator_store.get("local_index", -1)
+                )
+                if iterator_slot < 0:
+                    continue
+
+                integer_flows: list[dict[str, Any]] = []
+                stop = len(instructions)
+                for later in range(index + 2, len(instructions)):
+                    candidate_call = instructions[later]
+                    if (
+                        candidate_call.get("mnemonic")
+                        in {"invokeinterface", "invokevirtual"}
+                        and candidate_call.get("owner") == "java/util/List"
+                        and candidate_call.get("name") == "iterator"
+                        and candidate_call.get("descriptor")
+                        == "()Ljava/util/Iterator;"
+                    ):
+                        stop = later
+                        break
+
+                for tail in range(index + 2, max(index + 2, stop - 3)):
+                    load = instructions[tail]
+                    next_call = instructions[tail + 1]
+                    cast = instructions[tail + 2]
+                    store = instructions[tail + 3]
+                    if not (
+                        load.get("mnemonic") == "aload"
+                        and int(load.get("local_index", -1))
+                        == iterator_slot
+                        and next_call.get("mnemonic")
+                        in {"invokeinterface", "invokevirtual"}
+                        and next_call.get("owner")
+                        == "java/util/Iterator"
+                        and next_call.get("name") == "next"
+                        and next_call.get("descriptor")
+                        == "()Ljava/lang/Object;"
+                        and cast.get("mnemonic") == "checkcast"
+                        and cast.get("type") == "java/lang/Integer"
+                        and store.get("mnemonic") == "astore"
+                    ):
+                        continue
+                    integer_flows.append(
+                        {
+                            "next_offset": int(
+                                next_call.get("offset", -1)
+                            ),
+                            "checkcast_offset": int(
+                                cast.get("offset", -1)
+                            ),
+                            "element_slot": int(
+                                store.get("local_index", -1)
+                            ),
+                        }
+                    )
+
+                if len(integer_flows) != 1:
+                    continue
+
+                flows.append(
+                    {
+                        "receiver": receiver_proof,
+                        "iterator_offset": int(
+                            iterator_call.get("offset", -1)
+                        ),
+                        "iterator_slot": iterator_slot,
+                        **integer_flows[0],
+                    }
+                )
+
+            if (
+                list_iterator_call_count == len(loops)
+                and len(flows) == len(loops)
+                and len(
+                    {
+                        (
+                            flow["receiver"].get("kind"),
+                            flow["receiver"].get("local_slot"),
+                            flow["receiver"].get("owner"),
+                            flow["receiver"].get("name"),
+                        )
+                        for flow in flows
+                    }
+                )
+                == 1
+            ):
+                exact_candidates.append(
+                    {
+                        "method": exact_method,
+                        "flows": flows,
+                        "list_iterator_call_count": (
+                            list_iterator_call_count
+                        ),
+                    }
+                )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        proof = exact_candidates[0]
+        source_iterables = [loop.group("iterable") for loop in loops]
+        if len(set(source_iterables)) != 1:
+            continue
+
+        for loop in loops:
+            iterable = loop.group("iterable")
+            edits.append(
+                (
+                    method_start + loop.start("iterable"),
+                    method_start + loop.end("iterable"),
+                    "((java.util.List<Integer>)" + iterable + ")",
+                )
+            )
+
+        actions.append(
+            {
+                "kind": (
+                    "erased_list_integer_enhanced_for_reconstruction"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "iterable_name": source_iterables[0],
+                "iterable_declaration_type": raw_list_declarations[
+                    source_iterables[0]
+                ],
+                "exact_list_iterator_call_count": proof[
+                    "list_iterator_call_count"
+                ],
+                "flows": proof["flows"],
+                "replacement_count": len(loops),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_erased_raw_list_integer_enhanced_for"
+                    ),
+                    "strategy": (
+                        "raw_list_source_plus_exact_integer_checkcast_loop"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping raw List<Integer> enhanced-for edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
+
 def _normalize_erased_iterator_assignment_casts(
     *,
     source_root: Path,
@@ -16745,6 +17109,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_erased_list_integer_enhanced_for(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_erased_iterator_assignment_casts(
                         source_root=source_root,
                         path=path,
@@ -17233,6 +17604,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "erased_map_keyset_int_enhanced_for_reconstruction"
+        ),
+        "erased_list_integer_enhanced_for_action_count": sum(
+            action["kind"]
+            == "erased_list_integer_enhanced_for_reconstruction"
+            for action in actions
+        ),
+        "erased_list_integer_enhanced_for_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "erased_list_integer_enhanced_for_reconstruction"
         ),
         "erased_iterator_assignment_cast_action_count": sum(
             action["kind"]
