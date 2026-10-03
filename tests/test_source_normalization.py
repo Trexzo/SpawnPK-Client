@@ -10972,6 +10972,60 @@ class ErasedMapKeySetIntEnhancedForTests(unittest.TestCase):
 
 
 
+
+    def test_map_keyset_int_enhanced_for_rejects_stale_local_provenance(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Collections;\n"
+                        "import java.util.Map;\n"
+                        "public class A {\n"
+                        "    public static int sum(Object input) {\n"
+                        "        Map<Integer, Object> map = "
+                        "(Map<Integer, Object>)input;\n"
+                        "        map = Collections.emptyMap();\n"
+                        "        int total = 0;\n"
+                        "        for (int value : map.keySet()) {\n"
+                        "            total += value;\n"
+                        "        }\n"
+                        "        return total;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    public static int sum(Object input) {\n"
+                "        Map map = (Map)input;\n"
+                "        int total = 0;\n"
+                "        for (int value : map.keySet()) {\n"
+                "            total += value;\n"
+                "        }\n"
+                "        return total;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "erased_map_keyset_int_enhanced_for_action_count"
+                ],
+                0,
+            )
+
 class ErasedIteratorAssignmentCastTests(unittest.TestCase):
     def _fixture(self, root: Path, *, exact_drift: bool = False) -> Path:
         target = "Other" if exact_drift else "Value"
