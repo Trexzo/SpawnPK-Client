@@ -8024,7 +8024,15 @@ def _normalize_erased_map_get_integer_ternaries(
 
         method_start = method_match.start()
         method_code = whole_code[method_start:body_end]
-        source_matches = list(source_re.finditer(method_code))
+        method_text = text[method_start:body_end]
+        source_matches = [
+            match
+            for match in source_re.finditer(method_text)
+            if (
+                match.start() < len(method_code)
+                and not method_code[match.start()].isspace()
+            )
+        ]
         if not source_matches:
             continue
 
