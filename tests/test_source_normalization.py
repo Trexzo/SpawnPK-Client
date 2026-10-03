@@ -11493,6 +11493,147 @@ class ObjectBooleanConditionCastTests(unittest.TestCase):
 
 
 
+
+class ErasedMapGetIntegerTernaryTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        first_key: str = "fullClone",
+    ) -> Path:
+        return _compile_java_fixture(
+            root,
+            {
+                "p/A.java": (
+                    "package p;\n"
+                    "import java.util.Map;\n"
+                    "public class A {\n"
+                    "    public static int read(Map<String, Object> map) {\n"
+                    "        final int value = map.containsKey(\""
+                    + first_key
+                    + "\") ? ((int)map.get(\""
+                    + first_key
+                    + "\")) : ((int)map.get(\"clone\"));\n"
+                    "        return value;\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def test_map_get_integer_ternary_restores_exact_first_arm_cast(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    public static int read(Map<String, Object> map) {\n"
+                "        final int value = map.containsKey(\"fullClone\") "
+                "? map.get(\"fullClone\") "
+                ": ((int)map.get(\"clone\"));\n"
+                "        return value;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-map-ternary"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                'map.containsKey("fullClone") '
+                '? ((int)map.get("fullClone")) '
+                ': ((int)map.get("clone"))',
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_map_get_integer_ternary_cast_reconstruction"
+            )
+            self.assertEqual(action["map_parameters"], ["map"])
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(action["flows"][0]["key1"], "fullClone")
+            self.assertEqual(action["flows"][0]["key2"], "clone")
+            self.assertGreater(
+                action["flows"][0]["second_arm_offset"],
+                action["flows"][0]["selector_offset"],
+            )
+            self.assertGreater(
+                action["flows"][0]["merge_offset"],
+                action["flows"][0]["goto_offset"],
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-map-ternary"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_map_get_integer_ternary_fails_closed_on_key_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, first_key="other")
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    public static int read(Map<String, Object> map) {\n"
+                "        final int value = map.containsKey(\"fullClone\") "
+                "? map.get(\"fullClone\") "
+                ": ((int)map.get(\"clone\"));\n"
+                "        return value;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "erased_map_get_integer_ternary_cast_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
+
+
 if __name__ == "__main__":
     unittest.main()
 
