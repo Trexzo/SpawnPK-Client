@@ -8629,6 +8629,290 @@ def _normalize_erased_nested_list_integer_unbox(
 
 
 
+def _normalize_erased_raw_list_integer_stream_method_refs(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore a lost List<Integer> cast for Integer::intValue streams.
+
+    Procyon can erase a source List<Integer> cast to raw List while preserving
+    Integer::intValue. javac then sees Stream<Object> and rejects the method
+    reference. Restore only the generic element type when one exact readable
+    method proves a zero-capture ToIntFunction LambdaMetafactory bootstrap with
+    erased Object->int SAM type, instantiated Integer->int type, implementation
+    handle Integer.intValue()I, and immediate Stream.mapToInt consumption.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    bootstrap_methods = list(profile.get("bootstrap_methods", []))
+    if not bootstrap_methods:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    expected_bootstrap_descriptors = {
+        "metafactory": (
+            "(Ljava/lang/invoke/MethodHandles$Lookup;"
+            "Ljava/lang/String;"
+            "Ljava/lang/invoke/MethodType;"
+            "Ljava/lang/invoke/MethodType;"
+            "Ljava/lang/invoke/MethodHandle;"
+            "Ljava/lang/invoke/MethodType;)"
+            "Ljava/lang/invoke/CallSite;"
+        ),
+        "altMetafactory": (
+            "(Ljava/lang/invoke/MethodHandles$Lookup;"
+            "Ljava/lang/String;"
+            "Ljava/lang/invoke/MethodType;"
+            "[Ljava/lang/Object;)"
+            "Ljava/lang/invoke/CallSite;"
+        ),
+    }
+    source_re = re.compile(
+        r"\(\s*\(\s*"
+        r"(?P<list_type>(?:java\.util\.)?List)"
+        r"\s*\)\s*"
+        r"(?P<receiver>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\)\s*\.\s*stream\s*\(\s*\)"
+        r"\s*\.\s*mapToInt\s*\(\s*"
+        r"(?P<element_type>(?:java\.lang\.)?Integer)"
+        r"\s*::\s*intValue\s*\)"
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        source_matches = list(source_re.finditer(method_code))
+        if not source_matches:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        exact_candidates: list[dict[str, Any]] = []
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            exact_return = _descriptor_return_descriptor(descriptor)
+            source_return = method_match.group("return").strip()
+            if source_return == "void":
+                if exact_return != "V":
+                    continue
+            elif exact_return is None or (
+                _source_parameters_match_descriptor(
+                    source_return + " recoveredReturn",
+                    "(" + exact_return + ")V",
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            flows: list[dict[str, Any]] = []
+            for index in range(len(instructions) - 1):
+                indy = instructions[index]
+                map_to_int = instructions[index + 1]
+                if not (
+                    indy.get("mnemonic") == "invokedynamic"
+                    and indy.get("name") == "applyAsInt"
+                    and indy.get("descriptor")
+                    == "()Ljava/util/function/ToIntFunction;"
+                    and map_to_int.get("mnemonic")
+                    in {"invokeinterface", "invokevirtual"}
+                    and map_to_int.get("owner")
+                    == "java/util/stream/Stream"
+                    and map_to_int.get("name") == "mapToInt"
+                    and map_to_int.get("descriptor")
+                    == (
+                        "(Ljava/util/function/ToIntFunction;)"
+                        "Ljava/util/stream/IntStream;"
+                    )
+                ):
+                    continue
+
+                bootstrap_index = int(
+                    indy.get("bootstrap_method_attr_index", -1)
+                )
+                if not (
+                    0 <= bootstrap_index < len(bootstrap_methods)
+                ):
+                    continue
+                bootstrap = bootstrap_methods[bootstrap_index]
+                handle = bootstrap.get("bootstrap_method", {})
+                bootstrap_name = str(handle.get("name", ""))
+                if not (
+                    handle.get("owner")
+                    == "java/lang/invoke/LambdaMetafactory"
+                    and bootstrap_name
+                    in expected_bootstrap_descriptors
+                    and handle.get("descriptor")
+                    == expected_bootstrap_descriptors[bootstrap_name]
+                    and handle.get("target_kind") == "method"
+                    and int(handle.get("reference_kind", -1)) == 6
+                ):
+                    continue
+
+                method_types = [
+                    str(argument.get("descriptor", ""))
+                    for argument in bootstrap.get("arguments", [])
+                    if argument.get("kind") == "method_type"
+                ]
+                if (
+                    method_types.count("(Ljava/lang/Object;)I") != 1
+                    or method_types.count("(Ljava/lang/Integer;)I") != 1
+                ):
+                    continue
+
+                implementation_handles = [
+                    argument.get("method_handle", {})
+                    for argument in bootstrap.get("arguments", [])
+                    if argument.get("kind") == "method_handle"
+                ]
+                exact_impls = [
+                    implementation
+                    for implementation in implementation_handles
+                    if (
+                        implementation.get("owner")
+                        == "java/lang/Integer"
+                        and implementation.get("name") == "intValue"
+                        and implementation.get("descriptor") == "()I"
+                        and implementation.get("target_kind") == "method"
+                        and int(
+                            implementation.get("reference_kind", -1)
+                        )
+                        in {5, 9}
+                    )
+                ]
+                if len(exact_impls) != 1:
+                    continue
+
+                flows.append(
+                    {
+                        "invokedynamic_offset": int(
+                            indy.get("offset", -1)
+                        ),
+                        "map_to_int_offset": int(
+                            map_to_int.get("offset", -1)
+                        ),
+                        "bootstrap_method_attr_index": bootstrap_index,
+                        "implementation_reference_kind": int(
+                            exact_impls[0].get("reference_kind", -1)
+                        ),
+                    }
+                )
+
+            if len(flows) != len(source_matches):
+                continue
+            exact_candidates.append(
+                {
+                    "method": exact_method,
+                    "flows": flows,
+                }
+            )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        proof = exact_candidates[0]
+        for match in source_matches:
+            list_type = match.group("list_type")
+            element_type = match.group("element_type")
+            edits.append(
+                (
+                    method_start + match.start("list_type"),
+                    method_start + match.end("list_type"),
+                    list_type + "<" + element_type + ">",
+                )
+            )
+
+        actions.append(
+            {
+                "kind": (
+                    "erased_raw_list_integer_stream_method_ref_reconstruction"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "receiver_names": sorted(
+                    {match.group("receiver") for match in source_matches}
+                ),
+                "element_type": "java/lang/Integer",
+                "flows": proof["flows"],
+                "replacement_count": len(source_matches),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_erased_raw_list_integer_stream_method_ref"
+                    ),
+                    "strategy": (
+                        "exact_tointfunction_integer_methodref_bootstrap"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping raw List<Integer> stream edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_object_boolean_conditions(
     *,
     source_root: Path,
@@ -15121,6 +15405,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_erased_raw_list_integer_stream_method_refs(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_object_boolean_conditions(
                         source_root=source_root,
                         path=path,
@@ -15546,6 +15837,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "erased_nested_list_integer_unbox_reconstruction"
+        ),
+        "erased_raw_list_integer_stream_method_ref_action_count": sum(
+            action["kind"]
+            == "erased_raw_list_integer_stream_method_ref_reconstruction"
+            for action in actions
+        ),
+        "erased_raw_list_integer_stream_method_ref_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "erased_raw_list_integer_stream_method_ref_reconstruction"
         ),
         "object_boolean_condition_cast_action_count": sum(
             action["kind"]
