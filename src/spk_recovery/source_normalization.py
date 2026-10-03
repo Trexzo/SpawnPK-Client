@@ -6315,7 +6315,8 @@ def _normalize_erased_hashmap_get_array_returns(
     field_re = re.compile(
         r"(?:(?:java\\.util\\.)?HashMap)\\s*<\\s*"
         r"[^,<>]+\\s*,\\s*(?:java\\.lang\\.)?Object\\s*>\\s+"
-        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\\s*;"
+        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\\s*"
+        r"(?:=\\s*[^;{}]+)?;"
     )
     object_hashmap_fields = {
         match.group("name") for match in field_re.finditer(whole_code)
