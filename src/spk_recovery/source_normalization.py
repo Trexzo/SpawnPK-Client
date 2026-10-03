@@ -6153,10 +6153,13 @@ def _normalize_erased_map_number_assignments(
 
     Procyon can incorrectly collapse an exact JVM Object local plus a later
     instanceof/checkcast Number sequence into an illegal source declaration
-    such as Number value = map.get(key). Rewrite only the declaration type
-    back to Object when the source parameter is explicitly Map<String,Object>
-    and one exact readable JVM method proves the complete get -> astore ->
-    instanceof Number -> checkcast Number -> intValue flow.
+    such as Number value = map.get(key). Procyon may also elide the later
+    source cast and emit value.intValue() because it already mis-typed the
+    local as Number. Restore the Object declaration and, only for that plain
+    terminal form, restore the Number receiver cast already proven by exact
+    bytecode. The source parameters and one exact readable JVM method must
+    prove the complete get -> astore -> instanceof Number -> checkcast Number
+    -> intValue flow.
     """
 
     rel = path.relative_to(source_root).as_posix()
@@ -6224,7 +6227,9 @@ def _normalize_erased_map_number_assignments(
         if not assignments:
             continue
 
-        proven_assignments: list[re.Match[str]] = []
+        proven_assignments: list[
+            tuple[re.Match[str], re.Match[str] | None]
+        ] = []
         for assignment in assignments:
             value_name = assignment.group("value")
             after = method_code[assignment.end():]
@@ -6234,14 +6239,23 @@ def _normalize_erased_map_number_assignments(
                 after,
             ):
                 continue
-            if not re.search(
-                r"\(\s*Number\s*\)\s*"
+
+            explicit_terminal_re = re.compile(
+                r"\(\s*\(\s*Number\s*\)\s*"
                 + re.escape(value_name)
-                + r"\b",
-                after,
-            ):
+                + r"\s*\)\s*\.\s*intValue\s*\(\s*\)"
+            )
+            plain_terminal_re = re.compile(
+                r"(?P<receiver>\b"
+                + re.escape(value_name)
+                + r"\b)\s*\.\s*intValue\s*\(\s*\)"
+            )
+            explicit_hits = list(explicit_terminal_re.finditer(after))
+            plain_hits = list(plain_terminal_re.finditer(after))
+            if len(explicit_hits) + len(plain_hits) != 1:
                 continue
-            proven_assignments.append(assignment)
+            plain_terminal = plain_hits[0] if plain_hits else None
+            proven_assignments.append((assignment, plain_terminal))
         if not proven_assignments:
             continue
 
@@ -6341,7 +6355,8 @@ def _normalize_erased_map_number_assignments(
             continue
 
         exact_method = candidates[0]["method"]
-        for assignment in proven_assignments:
+        terminal_cast_replacement_count = 0
+        for assignment, plain_terminal in proven_assignments:
             edits.append(
                 (
                     method_start + assignment.start("type"),
@@ -6349,6 +6364,23 @@ def _normalize_erased_map_number_assignments(
                     "Object",
                 )
             )
+            if plain_terminal is not None:
+                receiver_start = (
+                    assignment.end()
+                    + plain_terminal.start("receiver")
+                )
+                receiver_end = (
+                    assignment.end()
+                    + plain_terminal.end("receiver")
+                )
+                edits.append(
+                    (
+                        method_start + receiver_start,
+                        method_start + receiver_end,
+                        "((Number)" + assignment.group("value") + ")",
+                    )
+                )
+                terminal_cast_replacement_count += 1
 
         actions.append(
             {
@@ -6360,6 +6392,9 @@ def _normalize_erased_map_number_assignments(
                 "string_parameters": sorted(string_params),
                 "exact_object_local_slots": candidates[0]["local_slots"],
                 "replacement_count": len(proven_assignments),
+                "terminal_cast_replacement_count": (
+                    terminal_cast_replacement_count
+                ),
                 "provenance": {
                     "kind": "source_safety",
                     "reason": "procyon_erased_map_get_number_local",
@@ -6580,9 +6615,10 @@ def _normalize_erased_set_int_enhanced_for(
     Procyon can emit a raw Set local while retaining an enhanced-for loop whose
     element variable is primitive int. Java source then rejects Object -> int,
     even though exact JVM bytecode performs Iterator.next(), checkcast Integer,
-    and Integer.intValue(). Wrap only the iterable expression in an explicit
+    and Integer.intValue(). Procyon may preserve the declaration as raw Set or
+    raw LinkedHashSet. Wrap only the iterable expression in an explicit
     java.util.Set<Integer> cast when one exact readable method proves the full
-    erased element flow and the source iterable is a raw Set local.
+    erased element flow and the source iterable is one of those raw Set forms.
     """
 
     rel = path.relative_to(source_root).as_posix()
@@ -6606,7 +6642,7 @@ def _normalize_erased_set_int_enhanced_for(
     raw_set_decl_re = re.compile(
         r"(?m)(?:^|[;{}]\s*)"
         r"(?:(?:final)\s+)?"
-        r"(?:(?:java\.util\.)?Set)\s+"
+        r"(?P<type>(?:java\.util\.)?(?:Set|LinkedHashSet))\s+"
         r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*"
         r"(?:=|;)"
     )
@@ -6629,10 +6665,11 @@ def _normalize_erased_set_int_enhanced_for(
 
         method_start = method_match.start()
         method_code = whole_code[method_start:body_end]
-        raw_sets = {
-            match.group("name")
+        raw_set_declarations = {
+            match.group("name"): match.group("type")
             for match in raw_set_decl_re.finditer(method_code)
         }
+        raw_sets = set(raw_set_declarations)
         if not raw_sets:
             continue
 
@@ -6756,6 +6793,12 @@ def _normalize_erased_set_int_enhanced_for(
                 "iterable_names": sorted(
                     {loop.group("iterable") for loop in loops}
                 ),
+                "iterable_declaration_types": {
+                    name: raw_set_declarations[name]
+                    for name in sorted(
+                        {loop.group("iterable") for loop in loops}
+                    )
+                },
                 "exact_set_iterator_call_count": candidates[0][
                     "set_iterator_call_count"
                 ],
