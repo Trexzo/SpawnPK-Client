@@ -8,6 +8,7 @@ import unittest
 from spk_recovery.bytecode_profile import (
     BytecodeProfileError,
     _bootstrap_methods_profile,
+    _decoded_instructions,
     _signature_attribute_value,
     profile_class_field_accesses,
     profile_class_utf8_constants,
@@ -451,6 +452,110 @@ class BytecodeMethodInvocationProfileTests(unittest.TestCase):
             self.assertIn("marker-value", constants)
             self.assertIn("Ljava/lang/String;", constants)
             self.assertEqual(constants, sorted(set(constants)))
+
+    def test_profiles_signed_branch_targets_on_instruction_offsets(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "src" / "p"
+            classes = root / "classes"
+            source.mkdir(parents=True)
+            classes.mkdir(parents=True)
+
+            (source / "A.java").write_text(
+                "package p;\n"
+                "public class A {\n"
+                "    public static int sumEvenDown(int value) {\n"
+                "        int total = 0;\n"
+                "        while (value > 0) {\n"
+                "            if ((value & 1) == 0) {\n"
+                "                total += value;\n"
+                "            }\n"
+                "            value--;\n"
+                "        }\n"
+                "        return total;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            compiled = subprocess.run(
+                [
+                    "javac",
+                    "-d",
+                    str(classes),
+                    str(source / "A.java"),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                compiled.returncode,
+                0,
+                compiled.stdout + compiled.stderr,
+            )
+
+            profile = profile_class_field_accesses(
+                (classes / "p" / "A.class").read_bytes()
+            )
+            method = next(
+                row
+                for row in profile["methods"]
+                if row["name"] == "sumEvenDown"
+                and row["descriptor"] == "(I)I"
+            )
+            instructions = method["instructions"]
+            offsets = {row["offset"] for row in instructions}
+            branches = [
+                row
+                for row in instructions
+                if "branch_target_offset" in row
+            ]
+            self.assertTrue(branches)
+            self.assertTrue(
+                any(
+                    row["branch_target_offset"] > row["offset"]
+                    for row in branches
+                )
+            )
+            self.assertTrue(
+                any(
+                    row["branch_target_offset"] < row["offset"]
+                    for row in branches
+                )
+            )
+            self.assertTrue(
+                all(
+                    row["branch_target_offset"] in offsets
+                    for row in branches
+                )
+            )
+
+    def test_profiles_signed_wide_branch_target_offsets(self):
+        forward = _decoded_instructions(
+            bytes([0xC8, 0x00, 0x00, 0x00, 0x05, 0xB1]),
+            [None],
+        )
+        self.assertEqual(forward[0]["offset"], 0)
+        self.assertEqual(forward[0]["opcode"], "0xc8")
+        self.assertEqual(forward[0]["branch_target_offset"], 5)
+        self.assertEqual(forward[1]["offset"], 5)
+
+        backward = _decoded_instructions(
+            bytes([0x00, 0xC8, 0xFF, 0xFF, 0xFF, 0xFF]),
+            [None],
+        )
+        self.assertEqual(backward[1]["offset"], 1)
+        self.assertEqual(backward[1]["branch_target_offset"], 0)
+
+    def test_truncated_branch_target_profiles_fail_closed(self):
+        with self.assertRaises(BytecodeProfileError):
+            _decoded_instructions(bytes([0x99, 0x00]), [None])
+        with self.assertRaises(BytecodeProfileError):
+            _decoded_instructions(
+                bytes([0xC8, 0x00, 0x00, 0x00]),
+                [None],
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
