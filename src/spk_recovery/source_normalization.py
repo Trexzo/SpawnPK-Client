@@ -10751,36 +10751,34 @@ def _normalize_erased_list_integer_enhanced_for(
             instructions = list(exact_method.get("instructions", []))
 
             def local_has_list_provenance(slot: int, before: int) -> bool:
-                if slot in list_parameter_slots:
-                    return True
-                for probe in range(max(0, before - 96), before):
+                nearest_store: int | None = None
+                for probe in range(before - 1, -1, -1):
                     item = instructions[probe]
                     if (
-                        item.get("mnemonic") == "new"
-                        and item.get("type")
-                        in {"java/util/ArrayList", "java/util/LinkedList"}
+                        item.get("mnemonic") == "astore"
+                        and int(item.get("local_index", -1)) == slot
                     ):
-                        for tail in range(
-                            probe + 1,
-                            min(before, probe + 8),
-                        ):
-                            store = instructions[tail]
-                            if (
-                                store.get("mnemonic") == "astore"
-                                and int(store.get("local_index", -1)) == slot
-                            ):
-                                return True
-                    if probe + 1 < before:
-                        cast = instructions[probe]
-                        store = instructions[probe + 1]
-                        if (
-                            cast.get("mnemonic") == "checkcast"
-                            and cast.get("type") in list_owners
-                            and store.get("mnemonic") == "astore"
-                            and int(store.get("local_index", -1)) == slot
-                        ):
-                            return True
-                return False
+                        nearest_store = probe
+                        break
+
+                if nearest_store is None:
+                    return slot in list_parameter_slots
+                if nearest_store == 0:
+                    return False
+
+                producer = instructions[nearest_store - 1]
+                if (
+                    producer.get("mnemonic") == "checkcast"
+                    and producer.get("type") in list_owners
+                ):
+                    return True
+                return (
+                    producer.get("mnemonic") == "invokespecial"
+                    and producer.get("owner")
+                    in {"java/util/ArrayList", "java/util/LinkedList"}
+                    and producer.get("name") == "<init>"
+                    and producer.get("descriptor") == "()V"
+                )
 
             flows: list[dict[str, Any]] = []
             list_iterator_call_count = 0
