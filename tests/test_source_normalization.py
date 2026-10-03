@@ -10037,6 +10037,138 @@ class ErasedNestedListReceiverTests(unittest.TestCase):
             )
 
 
+class ErasedNestedListIntegerUnboxTests(unittest.TestCase):
+    def _fixture(self, root: Path) -> Path:
+        return _compile_java_fixture(
+            root,
+            {
+                "p/A.java": (
+                    "package p;\n"
+                    "import java.util.List;\n"
+                    "public class A {\n"
+                    "    public static int valueAt("
+                    "List list, int i, int j) {\n"
+                    "        return ((Integer)((List)list.get(i)).get(j))"
+                    ".intValue();\n"
+                    "    }\n"
+                    "}\n"
+                )
+            },
+        )
+
+    def test_nested_raw_list_integer_flow_restores_cast_and_unbox(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.List;\n"
+                "public class A {\n"
+                "    public static int valueAt("
+                "List list, int i, int j) {\n"
+                "        return list.get(i).get(j);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac", "-cp", str(jar), "-d",
+                    str(root / "before-nested-int"), str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "return ((Integer)((List)list.get(i)).get(j)).intValue();",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_nested_list_integer_unbox_reconstruction"
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(len(action["exact_list_checkcast_offsets"]), 1)
+            self.assertEqual(
+                len(action["exact_integer_checkcast_offsets"]),
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "erased_nested_list_integer_unbox_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac", "-cp", str(jar), "-d",
+                    str(root / "after-nested-int"), str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stderr)
+
+    def test_nested_raw_list_integer_flow_fails_closed_on_type_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.List;\n"
+                        "public class A {\n"
+                        "    public static int valueAt("
+                        "List list, int i, int j) {\n"
+                        "        return ((Long)((List)list.get(i)).get(j))"
+                        ".intValue();\n"
+                        "    }\n"
+                        "}\n"
+                    )
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.List;\n"
+                "public class A {\n"
+                "    public static int valueAt("
+                "List list, int i, int j) {\n"
+                "        return list.get(i).get(j);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "return ((List)list.get(i)).get(j);",
+                normalized,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "erased_nested_list_integer_unbox_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
+
 class ErasedSetIntEnhancedForTests(unittest.TestCase):
     def _fixture(self, root: Path, *, exact_drift: bool = False) -> Path:
         value_type = "Long" if exact_drift else "Integer"
