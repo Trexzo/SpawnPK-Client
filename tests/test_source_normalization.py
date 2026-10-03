@@ -2572,6 +2572,168 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 )
             )
 
+    def test_nested_type_static_method_shadow_in_ordinary_method_forces_type_context(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/Base.java": (
+                        "package pkg;\n"
+                        "public class Base { public Object b; }\n"
+                    ),
+                    "pkg/Outer.java": (
+                        "package pkg;\n"
+                        "public class Outer extends Base {\n"
+                        "    public static class b {\n"
+                        "        public static int a(String s) {\n"
+                        "            return s.length();\n"
+                        "        }\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "public class Current {\n"
+                        "    public static int m(String s) {\n"
+                        "        return ((pkg.Outer.b)null).a(s);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package use;\n"
+                "public class Current {\n"
+                "    public static int m(String s) {\n"
+                "        return pkg.Outer.b.a(s);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-nested-method-ordinary"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "return ((pkg.Outer.b)null).a(s);",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if (
+                    row["kind"]
+                    == "shadowed_nested_static_method_owner_type_context"
+                    and row["method_name"] == "m"
+                )
+            )
+            self.assertEqual(
+                action["method_descriptor"],
+                "(Ljava/lang/String;)I",
+            )
+            self.assertEqual(action["nested_owners"], ["pkg/Outer$b"])
+            self.assertEqual(
+                action["method_invocation_counts"],
+                {"pkg/Outer$b.a": 1},
+            )
+            self.assertEqual(action["replacement_count"], 1)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-nested-method-ordinary"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_nested_type_static_method_shadow_in_ordinary_method_count_mismatch_fails_closed(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "pkg/Base.java": (
+                        "package pkg;\n"
+                        "public class Base { public Object b; }\n"
+                    ),
+                    "pkg/Outer.java": (
+                        "package pkg;\n"
+                        "public class Outer extends Base {\n"
+                        "    public static class b {\n"
+                        "        public static int a(String s) {\n"
+                        "            return s.length();\n"
+                        "        }\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "public class Current {\n"
+                        "    public static int m(String s) {\n"
+                        "        return ((pkg.Outer.b)null).a(s);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package use;\n"
+                "public class Current {\n"
+                "    public static int m(String s) {\n"
+                "        return pkg.Outer.b.a(s)"
+                " + pkg.Outer.b.a(s);\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "shadowed_nested_static_method_owner_type_context"
+                    and row["method_name"] == "m"
+                    for row in report["actions"]
+                )
+            )
+
     def test_nested_type_static_method_shadow_in_clinit_forces_type_context(
         self,
     ):
