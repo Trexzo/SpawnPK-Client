@@ -3375,6 +3375,57 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+    def test_intpredicate_parameter_capture_alias_rejects_non_equality_helper(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Arrays;\n"
+                        "public class A {\n"
+                        "    public boolean contains(int target) {\n"
+                        "        return Arrays.stream(new int[] {1, 2, 3})\n"
+                        "            .anyMatch(value -> value < target);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.util.Arrays;\n"
+                "public class A {\n"
+                "    public boolean contains(int target) {\n"
+                "        return Arrays.stream(new int[] {1, 2, 3})\n"
+                "            .anyMatch(value -> value == n5);\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "intpredicate_parameter_capture_alias_action_count"
+                ],
+                0,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "intpredicate_parameter_capture_alias_reference_count"
+                ],
+                0,
+            )
+
+
     def test_invokedynamic_parameter_capture_alias_uses_exact_callsite(
         self,
     ):
