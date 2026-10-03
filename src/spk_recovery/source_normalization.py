@@ -8987,13 +8987,74 @@ def _normalize_invokedynamic_image_loader_locals(
             r"[ \t]*(?:\r?\n)?"
         )
         image_matches = list(image_decl_re.finditer(lambda_text))
-        if len(graphics_matches) != 1 or len(image_matches) != 1:
+        if len(graphics_matches) != 1:
             continue
         graphics_match = graphics_matches[0]
-        image_match = image_matches[0]
         buffer_alias = graphics_match.group("buffer_alias")
         graphics_name = graphics_match.group("graphics")
-        image_name = image_match.group("image")
+
+        image_match = None
+        image_name = ""
+        if proof["variant"] == "three_int":
+            if len(image_matches) != 1:
+                continue
+            image_match = image_matches[0]
+            image_name = image_match.group("image")
+        else:
+            if len(image_matches) > 1:
+                continue
+            if len(image_matches) == 1:
+                image_match = image_matches[0]
+                image_name = image_match.group("image")
+            else:
+                draw_image_re = re.compile(
+                    r"(?<![A-Za-z0-9_$])"
+                    + re.escape(graphics_name)
+                    + r"\s*\.\s*drawImage\s*\(\s*"
+                    r"(?P<image>[A-Za-z_$][A-Za-z0-9_$]*)\s*,"
+                )
+                draw_image_matches = list(
+                    draw_image_re.finditer(lambda_text)
+                )
+                if len(draw_image_matches) != 1:
+                    continue
+                image_name = draw_image_matches[0].group("image")
+
+                image_null_re = re.compile(
+                    r"(?<![A-Za-z0-9_$])"
+                    + re.escape(image_name)
+                    + r"\s*==\s*null\b"
+                )
+                image_width_re = re.compile(
+                    r"(?<![A-Za-z0-9_$])"
+                    + re.escape(image_name)
+                    + r"\s*\.\s*getWidth\s*\(\s*null\s*\)"
+                )
+                image_height_re = re.compile(
+                    r"(?<![A-Za-z0-9_$])"
+                    + re.escape(image_name)
+                    + r"\s*\.\s*getHeight\s*\(\s*null\s*\)"
+                )
+                if not (
+                    len(image_null_re.findall(lambda_text)) == 1
+                    and len(image_width_re.findall(lambda_text)) == 1
+                    and len(image_height_re.findall(lambda_text)) == 1
+                ):
+                    continue
+
+                image_declaration_re = re.compile(
+                    r"\b(?:final\s+)?"
+                    r"[A-Za-z_$][A-Za-z0-9_$.<>?\[\]]*\s+"
+                    + re.escape(image_name)
+                    + r"\b"
+                )
+                prefix_to_lambda = method_text[:lambda_match.start()]
+                if (
+                    image_declaration_re.search(lambda_text)
+                    or image_declaration_re.search(prefix_to_lambda)
+                ):
+                    continue
+
         if buffer_alias == buffer_name:
             continue
         buffer_alias_count = len(
@@ -9037,13 +9098,14 @@ def _normalize_invokedynamic_image_loader_locals(
                 + ".createGraphics();",
             )
         )
-        method_edits.append(
-            (
-                lambda_offset + image_match.start(),
-                lambda_offset + image_match.end(),
-                "",
+        if image_match is not None:
+            method_edits.append(
+                (
+                    lambda_offset + image_match.start(),
+                    lambda_offset + image_match.end(),
+                    "",
+                )
             )
-        )
         finalizer_match = finalizer_matches[0]
         method_edits.append(
             (

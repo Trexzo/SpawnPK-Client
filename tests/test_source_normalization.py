@@ -6534,7 +6534,6 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 "                if (image == null || image.getWidth(null) <= 0 || image.getHeight(null) <= 0) return true;\n"
                 "                d2.createGraphics();\n"
                 "                final Graphics2D graphics2D;\n"
-                "                final Image image;\n"
                 "                graphics2D.drawImage(image, 0, 0, null);\n"
                 "                graphics2D.dispose();\n"
                 "                d2.ready();\n"
@@ -6611,7 +6610,7 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 report["summary"][
                     "invokedynamic_image_loader_local_reference_count"
                 ],
-                9,
+                8,
             )
 
             after = subprocess.run(
