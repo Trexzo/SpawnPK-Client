@@ -7839,6 +7839,102 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 after.stdout + after.stderr,
             )
 
+    def test_same_package_static_method_owner_inherited_api_shadowed_by_field(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Base.java": (
+                        "package p;\n"
+                        "public class Base {\n"
+                        "    public static boolean a() { return true; }\n"
+                        "    public static void a(boolean value) {}\n"
+                        "}\n"
+                    ),
+                    "p/c.java": (
+                        "package p;\n"
+                        "public class c extends Base {}\n"
+                    ),
+                    "p/h.java": (
+                        "package p;\n"
+                        "public class h {\n"
+                        "    public int c;\n"
+                        "    public static void m() {\n"
+                        "        boolean value = p.c.a();\n"
+                        "        p.c.a(value);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "h.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "public class h {\n"
+                "    public int c;\n"
+                "    public static void m() {\n"
+                "        boolean value = c.a();\n"
+                "        c.a(value);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-inherited-same-package-call"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("non-static variable c", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn("boolean value = p.c.a();", normalized)
+            self.assertIn("p.c.a(value);", normalized)
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "shadowed_same_package_static_method_owner_qualification"
+            )
+            self.assertEqual(action["same_package_owner"], "p/c")
+            self.assertEqual(action["hierarchy_shadow_owner"], "p/h")
+            self.assertEqual(action["call_counts"], {"a": 2})
+            self.assertEqual(action["replacement_count"], 2)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-inherited-same-package-call"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
     def test_same_package_static_method_owner_matches_source_staticness(
         self,
     ):
