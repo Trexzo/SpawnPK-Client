@@ -180,6 +180,14 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 "/normalization_summary/erased_map_number_assignment_action_count",
             "erased_map_number_assignment_reference_count":
                 "/normalization_summary/erased_map_number_assignment_reference_count",
+            "erased_map_get_integer_ternary_cast_action_count":
+                "/normalization_summary/erased_map_get_integer_ternary_cast_action_count",
+            "erased_map_get_integer_ternary_cast_reference_count":
+                "/normalization_summary/erased_map_get_integer_ternary_cast_reference_count",
+            "erased_map_keyset_int_enhanced_for_action_count":
+                "/normalization_summary/erased_map_keyset_int_enhanced_for_action_count",
+            "erased_map_keyset_int_enhanced_for_reference_count":
+                "/normalization_summary/erased_map_keyset_int_enhanced_for_reference_count",
             "erased_set_int_enhanced_for_action_count":
                 "/normalization_summary/erased_set_int_enhanced_for_action_count",
             "erased_set_int_enhanced_for_reference_count":
@@ -315,6 +323,26 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         self.assertIn(
             'ERASED_MAP_NUMBER_ASSIGNMENT_REFERENCES='
             '$($Recovered.erased_map_number_assignment_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'ERASED_MAP_GET_INTEGER_TERNARY_CAST_ACTIONS='
+            '$($Recovered.erased_map_get_integer_ternary_cast_action_count)',
+            script,
+        )
+        self.assertIn(
+            'ERASED_MAP_GET_INTEGER_TERNARY_CAST_REFERENCES='
+            '$($Recovered.erased_map_get_integer_ternary_cast_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'ERASED_MAP_KEYSET_INT_ENHANCED_FOR_ACTIONS='
+            '$($Recovered.erased_map_keyset_int_enhanced_for_action_count)',
+            script,
+        )
+        self.assertIn(
+            'ERASED_MAP_KEYSET_INT_ENHANCED_FOR_REFERENCES='
+            '$($Recovered.erased_map_keyset_int_enhanced_for_reference_count)',
             script,
         )
         self.assertIn(

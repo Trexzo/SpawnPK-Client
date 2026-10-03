@@ -10802,6 +10802,230 @@ class ErasedSetIntEnhancedForTests(unittest.TestCase):
 
 
 
+
+class ErasedMapKeySetIntEnhancedForTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        exact_drift: bool = False,
+    ) -> Path:
+        value_type = "Long" if exact_drift else "Integer"
+        loop_type = "long" if exact_drift else "int"
+        return _compile_java_fixture(
+            root,
+            {
+                "p/A.java": (
+                    "package p;\n"
+                    "import java.util.Map;\n"
+                    "public class A {\n"
+                    "    public static int sum(Object input) {\n"
+                    "        Map<" + value_type + ", Object> map = "
+                    "(Map<" + value_type + ", Object>)input;\n"
+                    "        int total = 0;\n"
+                    "        for (" + loop_type + " value : map.keySet()) {\n"
+                    "            total += (int)value;\n"
+                    "        }\n"
+                    "        return total;\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def test_map_keyset_int_enhanced_for_restores_iterable_type(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    public static int sum(Object input) {\n"
+                "        Map map = (Map)input;\n"
+                "        int total = 0;\n"
+                "        for (final int value : map.keySet()) {\n"
+                "            total += value;\n"
+                "        }\n"
+                "        return total;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                ["javac", "-d", str(root / "before-map-keyset"), str(source)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "for (final int value : "
+                "((java.util.Set<Integer>)map.keySet()))",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_map_keyset_int_enhanced_for_reconstruction"
+            )
+            self.assertEqual(action["receiver_names"], ["map"])
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(action["exact_map_keyset_call_count"], 1)
+            self.assertEqual(action["flows"][0]["receiver"]["kind"], "local")
+            self.assertGreaterEqual(
+                action["flows"][0]["receiver"]["local_slot"],
+                0,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "erased_map_keyset_int_enhanced_for_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "erased_map_keyset_int_enhanced_for_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                ["javac", "-d", str(root / "after-map-keyset"), str(source)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stderr)
+
+    def test_map_keyset_int_enhanced_for_fails_closed_on_element_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, exact_drift=True)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    public static int sum(Object input) {\n"
+                "        Map map = (Map)input;\n"
+                "        int total = 0;\n"
+                "        for (int value : map.keySet()) {\n"
+                "            total += value;\n"
+                "        }\n"
+                "        return total;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "erased_map_keyset_int_enhanced_for_action_count"
+                ],
+                0,
+            )
+
+    def test_map_keyset_int_enhanced_for_fails_closed_without_raw_map(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    public static int sum(Object input) {\n"
+                "        Map<Integer, Object> map = "
+                "(Map<Integer, Object>)input;\n"
+                "        int total = 0;\n"
+                "        for (int value : map.keySet()) {\n"
+                "            total += value;\n"
+                "        }\n"
+                "        return total;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "erased_map_keyset_int_enhanced_for_action_count"
+                ],
+                0,
+            )
+
+
+
+
+    def test_map_keyset_int_enhanced_for_rejects_stale_local_provenance(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Collections;\n"
+                        "import java.util.Map;\n"
+                        "public class A {\n"
+                        "    public static int sum(Object input) {\n"
+                        "        Map<Integer, Object> map = "
+                        "(Map<Integer, Object>)input;\n"
+                        "        map = Collections.emptyMap();\n"
+                        "        int total = 0;\n"
+                        "        for (int value : map.keySet()) {\n"
+                        "            total += value;\n"
+                        "        }\n"
+                        "        return total;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    public static int sum(Object input) {\n"
+                "        Map map = (Map)input;\n"
+                "        int total = 0;\n"
+                "        for (int value : map.keySet()) {\n"
+                "            total += value;\n"
+                "        }\n"
+                "        return total;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "erased_map_keyset_int_enhanced_for_action_count"
+                ],
+                0,
+            )
+
 class ErasedIteratorAssignmentCastTests(unittest.TestCase):
     def _fixture(self, root: Path, *, exact_drift: bool = False) -> Path:
         target = "Other" if exact_drift else "Value"

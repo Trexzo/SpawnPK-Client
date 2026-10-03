@@ -10263,6 +10263,363 @@ def _normalize_erased_set_int_enhanced_for(
     return actions
 
 
+
+def _normalize_erased_map_keyset_int_enhanced_for(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore Integer typing for raw Map.keySet enhanced-for loops.
+
+    Procyon can erase a Map<K,V> local to raw Map while retaining an
+    enhanced-for loop whose element variable is primitive int. Restore only
+    the iterable cast when one uniquely correlated exact method proves the
+    same Map receiver shape plus Map.keySet -> Set.iterator ->
+    Iterator.next -> checkcast Integer -> Integer.intValue -> istore.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    raw_map_decl_re = re.compile(
+        r"(?m)(?:^|[;{}]\s*)"
+        r"(?:(?:final)\s+)?"
+        r"(?P<type>(?:java\.util\.)?"
+        r"(?:Map|HashMap|LinkedHashMap|TreeMap))\s+"
+        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*"
+        r"(?:=|;)"
+    )
+    enhanced_for_re = re.compile(
+        r"for\s*\(\s*(?:(?:final)\s+)?int\s+"
+        r"(?P<element>[A-Za-z_$][A-Za-z0-9_$]*)\s*:\s*"
+        r"(?P<expr>(?P<receiver>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\.\s*keySet\s*\(\s*\))\s*\)"
+    )
+    map_owners = {
+        "java/util/Map",
+        "java/util/HashMap",
+        "java/util/LinkedHashMap",
+        "java/util/TreeMap",
+    }
+    map_descriptors = {"L" + owner + ";" for owner in map_owners}
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        raw_map_declarations = {
+            match.group("name"): match.group("type")
+            for match in raw_map_decl_re.finditer(method_code)
+        }
+        if not raw_map_declarations:
+            continue
+
+        loops = [
+            match
+            for match in enhanced_for_re.finditer(method_code)
+            if match.group("receiver") in raw_map_declarations
+        ]
+        if not loops:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        candidates: list[dict[str, Any]] = []
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            parameter_shapes = _descriptor_parameter_shapes(descriptor)
+            parameter_slots = _descriptor_parameter_local_slots(
+                descriptor,
+                is_static=source_static,
+            )
+            map_parameter_slots: set[int] = set()
+            if (
+                parameter_shapes is not None
+                and parameter_slots is not None
+                and len(parameter_shapes) == len(parameter_slots)
+            ):
+                for shape, slot in zip(parameter_shapes, parameter_slots):
+                    if (
+                        shape[1] == "ref"
+                        and str(shape[2]) in map_owners
+                    ):
+                        map_parameter_slots.add(slot)
+
+            instructions = list(exact_method.get("instructions", []))
+            map_keyset_call_count = sum(
+                1
+                for item in instructions
+                if (
+                    item.get("mnemonic")
+                    in {"invokeinterface", "invokevirtual"}
+                    and item.get("owner") in map_owners
+                    and item.get("name") == "keySet"
+                    and item.get("descriptor") == "()Ljava/util/Set;"
+                )
+            )
+            flows: list[dict[str, Any]] = []
+
+            def local_has_map_provenance(slot: int, before: int) -> bool:
+                nearest_store: int | None = None
+                for probe in range(before - 1, -1, -1):
+                    item = instructions[probe]
+                    if (
+                        item.get("mnemonic") == "astore"
+                        and int(item.get("local_index", -1)) == slot
+                    ):
+                        nearest_store = probe
+                        break
+
+                if nearest_store is None:
+                    return slot in map_parameter_slots
+                if nearest_store == 0:
+                    return False
+
+                cast = instructions[nearest_store - 1]
+                return (
+                    cast.get("mnemonic") == "checkcast"
+                    and cast.get("type") in map_owners
+                )
+
+            for index in range(1, len(instructions) - 3):
+                keyset = instructions[index]
+                if not (
+                    keyset.get("mnemonic")
+                    in {"invokeinterface", "invokevirtual"}
+                    and keyset.get("owner") in map_owners
+                    and keyset.get("name") == "keySet"
+                    and keyset.get("descriptor") == "()Ljava/util/Set;"
+                ):
+                    continue
+
+                producer = instructions[index - 1]
+                receiver_proof: dict[str, Any] | None = None
+                if producer.get("mnemonic") == "aload":
+                    local_slot = int(producer.get("local_index", -1))
+                    if (
+                        local_slot >= 0
+                        and local_has_map_provenance(local_slot, index - 1)
+                    ):
+                        receiver_proof = {
+                            "kind": "local",
+                            "local_slot": local_slot,
+                        }
+                elif (
+                    producer.get("mnemonic") in {"getfield", "getstatic"}
+                    and producer.get("descriptor") in map_descriptors
+                ):
+                    receiver_proof = {
+                        "kind": "field",
+                        "owner": str(producer.get("owner", "")),
+                        "name": str(producer.get("name", "")),
+                        "descriptor": str(producer.get("descriptor", "")),
+                    }
+                if receiver_proof is None:
+                    continue
+
+                iterator_call = instructions[index + 1]
+                iterator_store = instructions[index + 2]
+                if not (
+                    iterator_call.get("mnemonic")
+                    in {"invokeinterface", "invokevirtual"}
+                    and iterator_call.get("owner") == "java/util/Set"
+                    and iterator_call.get("name") == "iterator"
+                    and iterator_call.get("descriptor")
+                    == "()Ljava/util/Iterator;"
+                    and iterator_store.get("mnemonic") == "astore"
+                ):
+                    continue
+                iterator_slot = int(
+                    iterator_store.get("local_index", -1)
+                )
+                if iterator_slot < 0:
+                    continue
+
+                integer_flows: list[dict[str, Any]] = []
+                for tail in range(index + 3, len(instructions) - 4):
+                    load = instructions[tail]
+                    next_call = instructions[tail + 1]
+                    cast = instructions[tail + 2]
+                    unbox = instructions[tail + 3]
+                    store = instructions[tail + 4]
+                    if not (
+                        load.get("mnemonic") == "aload"
+                        and int(load.get("local_index", -1))
+                        == iterator_slot
+                        and next_call.get("mnemonic")
+                        in {"invokeinterface", "invokevirtual"}
+                        and next_call.get("owner")
+                        == "java/util/Iterator"
+                        and next_call.get("name") == "next"
+                        and next_call.get("descriptor")
+                        == "()Ljava/lang/Object;"
+                        and cast.get("mnemonic") == "checkcast"
+                        and cast.get("type") == "java/lang/Integer"
+                        and unbox.get("mnemonic")
+                        in {"invokevirtual", "invokeinterface"}
+                        and unbox.get("owner") == "java/lang/Integer"
+                        and unbox.get("name") == "intValue"
+                        and unbox.get("descriptor") == "()I"
+                        and store.get("mnemonic") == "istore"
+                    ):
+                        continue
+                    integer_flows.append(
+                        {
+                            "next_offset": int(
+                                next_call.get("offset", -1)
+                            ),
+                            "checkcast_offset": int(
+                                cast.get("offset", -1)
+                            ),
+                            "intvalue_offset": int(
+                                unbox.get("offset", -1)
+                            ),
+                            "element_slot": int(
+                                store.get("local_index", -1)
+                            ),
+                        }
+                    )
+
+                if len(integer_flows) != 1:
+                    continue
+                flows.append(
+                    {
+                        "receiver": receiver_proof,
+                        "keyset_offset": int(keyset.get("offset", -1)),
+                        "iterator_offset": int(
+                            iterator_call.get("offset", -1)
+                        ),
+                        "iterator_slot": iterator_slot,
+                        **integer_flows[0],
+                    }
+                )
+
+            if (
+                map_keyset_call_count == len(loops)
+                and len(flows) == len(loops)
+            ):
+                candidates.append(
+                    {
+                        "method": exact_method,
+                        "flows": flows,
+                        "map_keyset_call_count": map_keyset_call_count,
+                    }
+                )
+
+        if len(candidates) != 1:
+            continue
+
+        proof = candidates[0]
+        for loop in loops:
+            expression = text[
+                method_start + loop.start("expr"):
+                method_start + loop.end("expr")
+            ]
+            edits.append(
+                (
+                    method_start + loop.start("expr"),
+                    method_start + loop.end("expr"),
+                    "((java.util.Set<Integer>)" + expression + ")",
+                )
+            )
+
+        actions.append(
+            {
+                "kind": (
+                    "erased_map_keyset_int_enhanced_for_reconstruction"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "receiver_names": [
+                    loop.group("receiver") for loop in loops
+                ],
+                "receiver_declaration_types": {
+                    name: raw_map_declarations[name]
+                    for name in sorted(
+                        {loop.group("receiver") for loop in loops}
+                    )
+                },
+                "exact_map_keyset_call_count": proof[
+                    "map_keyset_call_count"
+                ],
+                "flows": proof["flows"],
+                "replacement_count": len(loops),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_erased_raw_map_keyset_int_enhanced_for"
+                    ),
+                    "strategy": (
+                        "raw_map_keyset_source_plus_exact_integer_iterator_flow"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping raw Map.keySet<int> enhanced-for edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
+
 def _normalize_erased_iterator_assignment_casts(
     *,
     source_root: Path,
@@ -16381,6 +16738,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_erased_map_keyset_int_enhanced_for(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_erased_iterator_assignment_casts(
                         source_root=source_root,
                         path=path,
@@ -16858,6 +17222,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "erased_set_int_enhanced_for_reconstruction"
+        ),
+        "erased_map_keyset_int_enhanced_for_action_count": sum(
+            action["kind"]
+            == "erased_map_keyset_int_enhanced_for_reconstruction"
+            for action in actions
+        ),
+        "erased_map_keyset_int_enhanced_for_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "erased_map_keyset_int_enhanced_for_reconstruction"
         ),
         "erased_iterator_assignment_cast_action_count": sum(
             action["kind"]
