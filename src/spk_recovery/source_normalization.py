@@ -2129,10 +2129,10 @@ def _normalize_reference_shadowed_self_static_field_owners(
 ) -> list[dict[str, Any]]:
     """Qualify self static fields hidden by a same-name reference field.
 
-    This is the reference-valued counterpart to the primitive hierarchy rule,
-    but intentionally narrower: only static source methods are considered,
-    parameter/local value shadows remain excluded, and the exact readable
-    bytecode must account for the complete source field-access multiset.
+    This is the reference-valued counterpart to the primitive hierarchy rule.
+    Static source methods and constructors are eligible; parameter/local value
+    shadows remain excluded, and the exact readable bytecode must account for
+    the complete source field-access multiset before any owner is qualified.
     """
     rel = path.relative_to(source_root).as_posix()
     simple_name_from_path = Path(rel).stem
@@ -2350,6 +2350,140 @@ def _normalize_reference_shadowed_self_static_field_owners(
                     ),
                     "strategy": (
                         "exact_static_method_complete_field_access_qualification"
+                    ),
+                },
+            }
+        )
+
+    constructor_re = re.compile(
+        r"(?m)^(?P<indent>[ \\t]*)"
+        r"(?:(?:public|private|protected)\\s+)*"
+        + re.escape(simple_name)
+        + r"\\s*\\((?P<params>[^()\\n]*)\\)\\s*"
+        r"(?:throws\\s+[^\\{\\n]+\\s*)?\\{"
+    )
+    for match in constructor_re.finditer(text):
+        brace_start = text.find("{", match.start(), match.end())
+        if brace_start < 0:
+            continue
+        body_end = _matching_brace_end(text, brace_start)
+        constructor_text = text[match.start():body_end]
+        constructor_code = _java_code_mask(constructor_text)
+
+        if _block_has_same_name_local_declaration(
+            constructor_code,
+            simple_name=simple_name,
+        ):
+            continue
+
+        source_counts: dict[tuple[str, str], int] = {}
+        total_source_counts: dict[tuple[str, str], int] = {}
+        occurrences: list[tuple[int, int, str]] = []
+
+        for field_name, declaring_owner in sorted(static_targets.items()):
+            simple_token = re.compile(
+                r"(?<![A-Za-z0-9_$.])"
+                + re.escape(simple_name)
+                + r"\\."
+                + re.escape(field_name)
+                + r"\\b(?!\\s*\\()"
+            )
+            simple_hits = list(simple_token.finditer(constructor_code))
+            if not simple_hits:
+                continue
+
+            qualified_token = re.compile(
+                r"(?<![A-Za-z0-9_$.])"
+                + re.escape(qualified_owner)
+                + r"\\."
+                + re.escape(field_name)
+                + r"\\b(?!\\s*\\()"
+            )
+            qualified_hits = list(
+                qualified_token.finditer(constructor_code)
+            )
+
+            key = (declaring_owner, field_name)
+            source_counts[key] = len(simple_hits)
+            total_source_counts[key] = (
+                len(simple_hits) + len(qualified_hits)
+            )
+            for hit in simple_hits:
+                occurrences.append(
+                    (
+                        match.start() + hit.start(),
+                        match.start() + hit.end(),
+                        qualified_owner + "." + field_name,
+                    )
+                )
+
+        if not source_counts:
+            continue
+
+        candidates: list[dict[str, Any]] = []
+        source_arity = _source_parameter_count(match.group("params"))
+        for method in profile.get("methods", []):
+            if method.get("name") != "<init>":
+                continue
+            descriptor = str(method.get("descriptor", ""))
+            if _descriptor_parameter_count(descriptor) != source_arity:
+                continue
+            parameter_match = _source_parameters_match_descriptor(
+                match.group("params"),
+                descriptor,
+                current_package=internal_name.rpartition("/")[0],
+            )
+            if parameter_match is False:
+                continue
+
+            exact_counts = _hierarchy_static_field_access_counts(
+                method,
+                hierarchy=hierarchy,
+                targets=static_targets,
+            )
+            if all(
+                exact_counts.get(key, 0) == count
+                for key, count in total_source_counts.items()
+            ):
+                candidates.append(method)
+
+        if len(candidates) != 1:
+            continue
+
+        exact_method = candidates[0]
+        edits.extend(occurrences)
+        actions.append(
+            {
+                "kind": (
+                    "reference_shadowed_self_static_field_owner_qualification"
+                ),
+                "source_path": rel,
+                "method_name": "<init>",
+                "method_descriptor": exact_method["descriptor"],
+                "qualified_owner": internal_name,
+                "reference_shadow_owners": sorted(
+                    set(reference_shadow_owners)
+                ),
+                "field_access_counts": {
+                    owner + "." + name: count
+                    for (owner, name), count in sorted(
+                        source_counts.items()
+                    )
+                },
+                "total_field_access_counts": {
+                    owner + "." + name: count
+                    for (owner, name), count in sorted(
+                        total_source_counts.items()
+                    )
+                },
+                "replacement_count": sum(source_counts.values()),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_reference_value_shadowed_self_class_owner"
+                    ),
+                    "strategy": (
+                        "exact_constructor_complete_field_access_qualification"
                     ),
                 },
             }
