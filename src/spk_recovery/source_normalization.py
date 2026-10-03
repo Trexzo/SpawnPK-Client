@@ -2130,9 +2130,10 @@ def _normalize_reference_shadowed_self_static_field_owners(
     """Qualify self static fields hidden by a same-name reference field.
 
     This is the reference-valued counterpart to the primitive hierarchy rule.
-    Static source methods and constructors are eligible; parameter/local value
-    shadows remain excluded, and the exact readable bytecode must account for
-    the complete source field-access multiset before any owner is qualified.
+    Ordinary methods and constructors are eligible; parameter/local value
+    shadows remain excluded, source/exact method staticness must match, and
+    exact readable bytecode must account for the complete source field-access
+    multiset before any owner is qualified.
     """
     rel = path.relative_to(source_root).as_posix()
     simple_name_from_path = Path(rel).stem
@@ -2222,8 +2223,7 @@ def _normalize_reference_shadowed_self_static_field_owners(
         if brace_start < 0:
             continue
         header_code = code[match.start():brace_start]
-        if re.search(r"\bstatic\b", header_code) is None:
-            continue
+        source_static = re.search(r"\bstatic\b", header_code) is not None
 
         body_end = _matching_brace_end(text, brace_start)
         method_text = text[match.start():body_end]
@@ -2291,7 +2291,10 @@ def _normalize_reference_shadowed_self_static_field_owners(
         for method in profile.get("methods", []):
             if method.get("name") != match.group("name"):
                 continue
-            if not (int(method.get("access", 0)) & 0x0008):
+            method_static = bool(
+                int(method.get("access", 0)) & 0x0008
+            )
+            if method_static != source_static:
                 continue
             descriptor = str(method.get("descriptor", ""))
             if _descriptor_parameter_count(descriptor) != source_arity:
@@ -2350,6 +2353,8 @@ def _normalize_reference_shadowed_self_static_field_owners(
                     ),
                     "strategy": (
                         "exact_static_method_complete_field_access_qualification"
+                        if source_static
+                        else "exact_instance_method_complete_field_access_qualification"
                     ),
                 },
             }
