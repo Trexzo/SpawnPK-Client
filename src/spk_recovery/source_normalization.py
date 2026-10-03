@@ -2507,7 +2507,7 @@ def _normalize_reference_shadowed_self_static_field_owners(
 _DOTTED_STATIC_FIELD_RE = re.compile(
     r"(?<![A-Za-z0-9_$])"
     r"(?P<owner>[A-Za-z_$][A-Za-z0-9_$]*"
-    r"(?:\.[A-Za-z_$][A-Za-z0-9_$]*){2,})"
+    r"(?:\.[A-Za-z_$][A-Za-z0-9_$]*){1,})"
     r"\.(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\b"
     r"(?!\s*\()"
 )
@@ -2529,6 +2529,43 @@ def _java_owner_binary_candidates(owner: str) -> list[str]:
         if candidate not in candidates:
             candidates.append(candidate)
     return candidates
+
+
+def _nested_owner_binary_candidates(
+    *,
+    owner: str,
+    current_owner: str,
+) -> list[tuple[str, str]]:
+    """Return exact binary candidates plus the Java owner used for rewriting.
+
+    In addition to already-qualified owners, allow exactly one compact
+    same-package outer+nested interpretation such as d.a -> rs/d$a when the
+    current class is in package rs.
+    """
+    out: list[tuple[str, str]] = []
+    seen: set[str] = set()
+
+    for candidate in _java_owner_binary_candidates(owner):
+        if candidate in seen:
+            continue
+        seen.add(candidate)
+        out.append((candidate, owner))
+
+    current_package = current_owner.rpartition("/")[0]
+    parts = owner.split(".")
+    if current_package and len(parts) >= 2:
+        candidate = (
+            current_package
+            + "/"
+            + parts[0]
+            + "$"
+            + "$".join(parts[1:])
+        )
+        if candidate not in seen:
+            java_owner = current_package.replace("/", ".") + "." + owner
+            out.append((candidate, java_owner))
+
+    return out
 
 
 def _nested_owner_has_visible_name_shadow(
@@ -2575,10 +2612,13 @@ def _resolve_shadowed_nested_static_field(
     readable_zip: zipfile.ZipFile,
     entries: set[str],
     class_cache: dict[str, Any],
-) -> tuple[str, list[str]] | None:
-    matches: list[tuple[str, list[str]]] = []
+) -> tuple[str, list[str], str] | None:
+    matches: list[tuple[str, list[str], str]] = []
 
-    for candidate in _java_owner_binary_candidates(owner):
+    for candidate, java_owner in _nested_owner_binary_candidates(
+        owner=owner,
+        current_owner=current_owner,
+    ):
         entry = candidate + ".class"
         if entry not in entries:
             continue
@@ -2612,7 +2652,7 @@ def _resolve_shadowed_nested_static_field(
         if not shadowed:
             continue
 
-        matches.append((candidate, shadow_owners))
+        matches.append((candidate, shadow_owners, java_owner))
 
     if len(matches) != 1:
         return None
@@ -2682,7 +2722,7 @@ def _resolve_shadowed_simple_nested_static_field(
 _DOTTED_STATIC_METHOD_RE = re.compile(
     r"(?<![A-Za-z0-9_$])"
     r"(?P<owner>[A-Za-z_$][A-Za-z0-9_$]*"
-    r"(?:\.[A-Za-z_$][A-Za-z0-9_$]*){2,})"
+    r"(?:\.[A-Za-z_$][A-Za-z0-9_$]*){1,})"
     r"\.(?P<method>[A-Za-z_$][A-Za-z0-9_$]*)\s*\("
 )
 _SIMPLE_STATIC_METHOD_RE = re.compile(
@@ -2700,10 +2740,13 @@ def _resolve_shadowed_nested_static_method(
     readable_zip: zipfile.ZipFile,
     entries: set[str],
     class_cache: dict[str, Any],
-) -> tuple[str, list[str]] | None:
-    matches: list[tuple[str, list[str]]] = []
+) -> tuple[str, list[str], str] | None:
+    matches: list[tuple[str, list[str], str]] = []
 
-    for candidate in _java_owner_binary_candidates(owner):
+    for candidate, java_owner in _nested_owner_binary_candidates(
+        owner=owner,
+        current_owner=current_owner,
+    ):
         entry = candidate + ".class"
         if entry not in entries:
             continue
@@ -2742,7 +2785,7 @@ def _resolve_shadowed_nested_static_method(
         if not shadowed:
             continue
 
-        matches.append((candidate, shadow_owners))
+        matches.append((candidate, shadow_owners, java_owner))
 
     if len(matches) != 1:
         return None
@@ -2901,8 +2944,7 @@ def _normalize_shadowed_nested_static_field_owners(
                 )
                 if resolved is None:
                     continue
-                nested_internal, shadow_owners = resolved
-                java_owner = owner
+                nested_internal, shadow_owners, java_owner = resolved
 
             key = (nested_internal, field_name, java_owner)
             source_counts[key] = source_counts.get(key, 0) + 1
@@ -3063,8 +3105,7 @@ def _normalize_shadowed_nested_static_field_owners(
                 )
                 if resolved is None:
                     continue
-                nested_internal, shadow_owners = resolved
-                java_owner = owner
+                nested_internal, shadow_owners, java_owner = resolved
 
             key = (nested_internal, field_name, java_owner)
             source_counts[key] = source_counts.get(key, 0) + 1
@@ -3445,8 +3486,7 @@ def _normalize_shadowed_nested_static_method_owners_in_clinit(
                 )
                 if resolved is None:
                     continue
-                nested_internal, shadow_owners = resolved
-                java_owner = owner
+                nested_internal, shadow_owners, java_owner = resolved
 
             key = (nested_internal, method_name, java_owner)
             source_counts[key] = source_counts.get(key, 0) + 1
