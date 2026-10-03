@@ -10407,21 +10407,26 @@ def _normalize_erased_map_keyset_int_enhanced_for(
             flows: list[dict[str, Any]] = []
 
             def local_has_map_provenance(slot: int, before: int) -> bool:
-                if slot in map_parameter_slots:
-                    return True
-                for probe in range(max(0, before - 64), before):
-                    if probe + 1 >= before:
-                        break
-                    cast = instructions[probe]
-                    store = instructions[probe + 1]
+                nearest_store: int | None = None
+                for probe in range(before - 1, -1, -1):
+                    item = instructions[probe]
                     if (
-                        cast.get("mnemonic") == "checkcast"
-                        and cast.get("type") in map_owners
-                        and store.get("mnemonic") == "astore"
-                        and int(store.get("local_index", -1)) == slot
+                        item.get("mnemonic") == "astore"
+                        and int(item.get("local_index", -1)) == slot
                     ):
-                        return True
-                return False
+                        nearest_store = probe
+                        break
+
+                if nearest_store is None:
+                    return slot in map_parameter_slots
+                if nearest_store == 0:
+                    return False
+
+                cast = instructions[nearest_store - 1]
+                return (
+                    cast.get("mnemonic") == "checkcast"
+                    and cast.get("type") in map_owners
+                )
 
             for index in range(1, len(instructions) - 3):
                 keyset = instructions[index]
