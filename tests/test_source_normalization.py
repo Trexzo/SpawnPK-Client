@@ -9631,6 +9631,162 @@ class ErasedMapNumberAssignmentTests(unittest.TestCase):
 
 
 
+
+class ErasedRawCollectionGetAssignmentTests(unittest.TestCase):
+    def _fixture(self, root: Path) -> Path:
+        return _compile_java_fixture(
+            root,
+            {
+                "p/A.java": (
+                    "package p;\n"
+                    "import java.util.List;\n"
+                    "import java.util.Map;\n"
+                    "public class A {\n"
+                    "    public static String mapValue("
+                    "Map map, Object key) {\n"
+                    "        String value = (String)map.get(key);\n"
+                    "        return value;\n"
+                    "    }\n"
+                    "    public static List listValue("
+                    "List list, int i) {\n"
+                    "        List value = (List)list.get(i);\n"
+                    "        return value;\n"
+                    "    }\n"
+                    "}\n"
+                )
+            },
+        )
+
+    def test_raw_map_and_list_get_assignments_restore_exact_casts(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.List;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    public static String mapValue("
+                "Map map, Object key) {\n"
+                "        final String value = map.get(key);\n"
+                "        return value;\n"
+                "    }\n"
+                "    public static List listValue("
+                "List list, int i) {\n"
+                "        final List value = list.get(i);\n"
+                "        return value;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac", "-cp", str(jar), "-d",
+                    str(root / "before-raw-get"), str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "final String value = (String)map.get(key);",
+                normalized,
+            )
+            self.assertIn(
+                "final List value = (List)list.get(i);",
+                normalized,
+            )
+            actions = [
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_raw_collection_get_assignment_cast_reconstruction"
+            ]
+            self.assertEqual(len(actions), 2)
+            self.assertEqual(
+                sorted(
+                    cast
+                    for row in actions
+                    for cast in row["exact_checkcast_types"]
+                ),
+                ["java/lang/String", "java/util/List"],
+            )
+            self.assertEqual(
+                report["summary"][
+                    "erased_raw_collection_get_assignment_cast_action_count"
+                ],
+                2,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "erased_raw_collection_get_assignment_cast_reference_count"
+                ],
+                2,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac", "-cp", str(jar), "-d",
+                    str(root / "after-raw-get"), str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stderr)
+
+    def test_raw_collection_get_assignment_fails_closed_on_cast_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Map;\n"
+                        "public class A {\n"
+                        "    public static String mapValue("
+                        "Map map, Object key) {\n"
+                        "        Integer value = (Integer)map.get(key);\n"
+                        "        return String.valueOf(value);\n"
+                        "    }\n"
+                        "}\n"
+                    )
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    public static String mapValue("
+                "Map map, Object key) {\n"
+                "        final String value = map.get(key);\n"
+                "        return value;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "erased_raw_collection_get_assignment_cast_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
+
 class ErasedSetIntEnhancedForTests(unittest.TestCase):
     def _fixture(self, root: Path, *, exact_drift: bool = False) -> Path:
         value_type = "Long" if exact_drift else "Integer"
