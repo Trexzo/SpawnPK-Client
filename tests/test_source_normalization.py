@@ -252,6 +252,216 @@ def _compile_java_fixture(root: Path, files: dict[str, str]) -> Path:
     return jar
 
 
+
+def _patch_bridge_invoke_methodref(
+    class_bytes: bytes,
+    *,
+    bridge_name: str,
+    bridge_descriptor: str,
+    target_owner: str,
+    target_name: str,
+    target_descriptor: str,
+) -> bytes:
+    data = bytearray(class_bytes)
+
+    def u2_at(offset: int) -> int:
+        return struct.unpack_from(">H", data, offset)[0]
+
+    def u4_at(offset: int) -> int:
+        return struct.unpack_from(">I", data, offset)[0]
+
+    cp_count = u2_at(8)
+    offset = 10
+    utf8: dict[int, str] = {}
+    classes: dict[int, int] = {}
+    name_and_types: dict[int, tuple[int, int]] = {}
+    methodrefs: dict[int, tuple[int, int]] = {}
+    index = 1
+    while index < cp_count:
+        tag = data[offset]
+        offset += 1
+        if tag == 1:
+            length = u2_at(offset)
+            offset += 2
+            utf8[index] = bytes(data[offset:offset + length]).decode("utf-8")
+            offset += length
+        elif tag in {3, 4}:
+            offset += 4
+        elif tag in {5, 6}:
+            offset += 8
+            index += 1
+        elif tag == 7:
+            classes[index] = u2_at(offset)
+            offset += 2
+        elif tag == 8:
+            offset += 2
+        elif tag in {9, 10, 11}:
+            class_index = u2_at(offset)
+            nat_index = u2_at(offset + 2)
+            if tag == 10:
+                methodrefs[index] = (class_index, nat_index)
+            offset += 4
+        elif tag == 12:
+            name_and_types[index] = (u2_at(offset), u2_at(offset + 2))
+            offset += 4
+        elif tag == 15:
+            offset += 3
+        elif tag == 16:
+            offset += 2
+        elif tag in {17, 18}:
+            offset += 4
+        elif tag in {19, 20}:
+            offset += 2
+        else:
+            raise AssertionError(f"unsupported constant-pool tag {tag}")
+        index += 1
+
+    def methodref_identity(cp_index: int) -> tuple[str, str, str] | None:
+        ref = methodrefs.get(cp_index)
+        if ref is None:
+            return None
+        class_index, nat_index = ref
+        class_name_index = classes.get(class_index)
+        nat = name_and_types.get(nat_index)
+        if class_name_index is None or nat is None:
+            return None
+        name_index, descriptor_index = nat
+        return (
+            utf8.get(class_name_index, ""),
+            utf8.get(name_index, ""),
+            utf8.get(descriptor_index, ""),
+        )
+
+    target_indexes = [
+        cp_index
+        for cp_index in methodrefs
+        if methodref_identity(cp_index)
+        == (target_owner, target_name, target_descriptor)
+    ]
+    if len(target_indexes) != 1:
+        raise AssertionError(
+            f"expected one target Methodref, found {target_indexes}"
+        )
+    target_index = target_indexes[0]
+
+    cursor = offset
+    cursor += 6
+    interfaces_count = u2_at(cursor)
+    cursor += 2 + 2 * interfaces_count
+
+    fields_count = u2_at(cursor)
+    cursor += 2
+    for _ in range(fields_count):
+        cursor += 6
+        attribute_count = u2_at(cursor)
+        cursor += 2
+        for _ in range(attribute_count):
+            cursor += 2
+            length = u4_at(cursor)
+            cursor += 4 + length
+
+    methods_count = u2_at(cursor)
+    cursor += 2
+    patched = 0
+    for _ in range(methods_count):
+        access = u2_at(cursor)
+        name_index = u2_at(cursor + 2)
+        descriptor_index = u2_at(cursor + 4)
+        attribute_count = u2_at(cursor + 6)
+        cursor += 8
+        name = utf8.get(name_index, "")
+        descriptor = utf8.get(descriptor_index, "")
+
+        for _ in range(attribute_count):
+            attribute_name_index = u2_at(cursor)
+            length = u4_at(cursor + 2)
+            payload = cursor + 6
+            attribute_name = utf8.get(attribute_name_index, "")
+            if (
+                name == bridge_name
+                and descriptor == bridge_descriptor
+                and (access & 0x1000)
+                and (access & 0x0040)
+                and attribute_name == "Code"
+            ):
+                code_length = u4_at(payload + 4)
+                code_start = payload + 8
+                code_end = code_start + code_length
+                invoke_offsets = [
+                    pos
+                    for pos in range(code_start, code_end - 2)
+                    if data[pos] == 0xB6
+                ]
+                if len(invoke_offsets) != 1:
+                    raise AssertionError(
+                        f"expected one bridge invokevirtual, found {invoke_offsets}"
+                    )
+                pos = invoke_offsets[0]
+                struct.pack_into(">H", data, pos + 1, target_index)
+                patched += 1
+            cursor = payload + length
+
+    if patched != 1:
+        raise AssertionError(f"expected one patched bridge, got {patched}")
+    return bytes(data)
+
+
+def _synthetic_bridge_forwarder_fixture(
+    root: Path,
+    *,
+    retarget_bridge: bool,
+) -> Path:
+    jar = _compile_java_fixture(
+        root,
+        {
+            "p/Base.java": (
+                "package p;\n"
+                "import java.util.Map;\n"
+                "public abstract class Base<T> {\n"
+                "    public abstract T a(int id, Map<String,Object> values);\n"
+                "}\n"
+            ),
+            "p/R.java": (
+                "package p;\n"
+                "public class R {}\n"
+            ),
+            "p/F.java": (
+                "package p;\n"
+                "import java.util.Map;\n"
+                "public class F extends Base<R> {\n"
+                "    public R a(int id, Map<String,Object> values) {\n"
+                "        return b(id, values);\n"
+                "    }\n"
+                "    public R b(int id, Map<String,Object> values) {\n"
+                "        return new R();\n"
+                "    }\n"
+                "}\n"
+            ),
+        },
+    )
+    if not retarget_bridge:
+        return jar
+
+    patched = root / "synthetic-bridge-readable.jar"
+    bridge_descriptor = "(ILjava/util/Map;)Ljava/lang/Object;"
+    target_descriptor = "(ILjava/util/Map;)Lp/R;"
+    with zipfile.ZipFile(jar) as source_zip, zipfile.ZipFile(
+        patched, "w"
+    ) as target_zip:
+        for info in source_zip.infolist():
+            payload = source_zip.read(info.filename)
+            if info.filename == "p/F.class":
+                payload = _patch_bridge_invoke_methodref(
+                    payload,
+                    bridge_name="a",
+                    bridge_descriptor=bridge_descriptor,
+                    target_owner="p/F",
+                    target_name="b",
+                    target_descriptor=target_descriptor,
+                )
+            target_zip.writestr(info, payload)
+    return patched
+
 def _import_shadow_parameter_fixture(
     root: Path,
     *,
@@ -8654,6 +8864,160 @@ class ErasedIteratorAssignmentCastTests(unittest.TestCase):
                     for row in report["actions"]
                 )
             )
+
+
+class MissingSyntheticBridgeForwarderTests(unittest.TestCase):
+    def _malformed_source(self) -> str:
+        return (
+            "package p;\n"
+            "import java.util.Map;\n"
+            "public class F extends Base<R> {\n"
+            "    public R b(int id, Map<String,Object> values) {\n"
+            "        return new R();\n"
+            "    }\n"
+            "}\n"
+        )
+
+    def test_missing_synthetic_bridge_forwarder_is_reconstructed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _synthetic_bridge_forwarder_fixture(
+                root,
+                retarget_bridge=True,
+            )
+
+            with zipfile.ZipFile(jar) as z:
+                profile = profile_class_field_accesses_exact(
+                    z.read("p/F.class")
+                )
+            bridge = next(
+                method
+                for method in profile["methods"]
+                if (
+                    method["name"] == "a"
+                    and method["descriptor"]
+                    == "(ILjava/util/Map;)Ljava/lang/Object;"
+                    and int(method["access"]) & 0x1000
+                    and int(method["access"]) & 0x0040
+                )
+            )
+            bridge_calls = [
+                row
+                for row in bridge["instructions"]
+                if row.get("mnemonic") == "invokevirtual"
+            ]
+            self.assertEqual(len(bridge_calls), 1)
+            self.assertEqual(bridge_calls[0]["owner"], "p/F")
+            self.assertEqual(bridge_calls[0]["name"], "b")
+            self.assertEqual(
+                bridge_calls[0]["descriptor"],
+                "(ILjava/util/Map;)Lp/R;",
+            )
+
+            source = root / "src" / "p" / "F.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                self._malformed_source(),
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-synthetic-bridge"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "public R a(int id, Map<String,Object> values) {",
+                normalized,
+            )
+            self.assertIn(
+                "return this.b(id, values);",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "missing_synthetic_bridge_forwarder_reconstruction"
+            )
+            self.assertEqual(action["bridge_name"], "a")
+            self.assertEqual(action["target_name"], "b")
+            self.assertEqual(action["abstract_super_owner"], "p/Base")
+            self.assertEqual(action["source_return_type"], "R")
+            self.assertEqual(
+                action["source_parameter_names"],
+                ["id", "values"],
+            )
+            self.assertEqual(
+                report["summary"][
+                    "missing_synthetic_bridge_forwarder_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "missing_synthetic_bridge_forwarder_method_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-synthetic-bridge"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_missing_synthetic_bridge_forwarder_rejects_same_name_target(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _synthetic_bridge_forwarder_fixture(
+                root,
+                retarget_bridge=False,
+            )
+            source = root / "src" / "p" / "F.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "missing_synthetic_bridge_forwarder_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
 
 
 if __name__ == "__main__":
