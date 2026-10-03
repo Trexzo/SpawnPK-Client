@@ -9466,6 +9466,805 @@ class ObjectBooleanConditionCastTests(unittest.TestCase):
 
 
 
+
+class ErasedHashMapArrayReturnCastTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        return_type: str = "int[]",
+    ) -> Path:
+        literal = {
+            "int[]": "new int[] {1}",
+            "boolean[]": "new boolean[] {true}",
+        }[return_type]
+        return _compile_java_fixture(
+            root,
+            {
+                "p/Key.java": (
+                    "package p;\n"
+                    "public class Key {}\n"
+                ),
+                "p/A.java": (
+                    "package p;\n"
+                    "import java.util.HashMap;\n"
+                    "public class A {\n"
+                    "    public HashMap<Key, Object> f = new HashMap<>();\n"
+                    f"    public {return_type} read(Key key) {{\n"
+                    f"        f.put(key, {literal});\n"
+                    f"        return ({return_type})this.f.get(key);\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def test_hashmap_object_value_array_return_restores_exact_cast(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.HashMap;\n"
+                "public class A {\n"
+                "    public HashMap<Key, Object> f = new HashMap<>();\n"
+                "    public int[] read(Key key) {\n"
+                "        return this.f.get(key);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac", "-cp", str(jar), "-d",
+                    str(root / "before-hashmap-array"), str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "return (int[])this.f.get(key);",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_hashmap_get_array_return_cast_reconstruction"
+            )
+            self.assertEqual(action["array_return_descriptor"], "[I")
+            self.assertEqual(action["field_names"], ["f"])
+            self.assertEqual(action["replacement_count"], 1)
+
+            after = subprocess.run(
+                [
+                    "javac", "-cp", str(jar), "-d",
+                    str(root / "after-hashmap-array"), str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stderr)
+
+    def test_hashmap_object_value_array_return_fails_closed_on_type_drift(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, return_type="boolean[]")
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.HashMap;\n"
+                "public class A {\n"
+                "    public HashMap<Key, Object> f = new HashMap<>();\n"
+                "    public int[] read(Key key) {\n"
+                "        return this.f.get(key);\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "erased_hashmap_get_array_return_cast_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
+
+class ErasedMapNumberAssignmentTests(unittest.TestCase):
+    def _fixture(self, root: Path, *, exact_drift: bool = False) -> Path:
+        terminal = "byteValue" if exact_drift else "intValue"
+        return _compile_java_fixture(
+            root,
+            {
+                "p/A.java": (
+                    "package p;\n"
+                    "import java.util.Map;\n"
+                    "public class A {\n"
+                    "    public static int parse("
+                    "Map<String, Object> map, String s) {\n"
+                    "        Object value = map.get(s);\n"
+                    "        if (!(value instanceof Number)) {\n"
+                    "            throw new IllegalArgumentException();\n"
+                    "        }\n"
+                    f"        return ((Number)value).{terminal}();\n"
+                    "    }\n"
+                    "}\n"
+                )
+            },
+        )
+
+    def test_erased_map_number_assignment_restores_object_local(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    public static int parse("
+                "Map<String, Object> map, String s) {\n"
+                "        final Number value = map.get(s);\n"
+                "        if (!(value instanceof Number)) {\n"
+                "            throw new IllegalArgumentException();\n"
+                "        }\n"
+                "        return ((Number)value).intValue();\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                ["javac", "-d", str(root / "before"), str(source)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn("final Object value = map.get(s);", normalized)
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_map_number_assignment_reconstruction"
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(action["exact_object_local_slots"], [2])
+            self.assertEqual(
+                report["summary"][
+                    "erased_map_number_assignment_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                ["javac", "-d", str(root / "after"), str(source)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stderr)
+
+    def test_erased_map_number_assignment_fails_closed_on_exact_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, exact_drift=True)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.Map;\n"
+                "public class A {\n"
+                "    public static int parse("
+                "Map<String, Object> map, String s) {\n"
+                "        final Number value = map.get(s);\n"
+                "        if (!(value instanceof Number)) {\n"
+                "            throw new IllegalArgumentException();\n"
+                "        }\n"
+                "        return ((Number)value).intValue();\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "erased_map_number_assignment_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
+
+
+class ErasedSetIntEnhancedForTests(unittest.TestCase):
+    def _fixture(self, root: Path, *, exact_drift: bool = False) -> Path:
+        value_type = "Long" if exact_drift else "Integer"
+        loop_type = "long" if exact_drift else "int"
+        add_expr = "(int)value" if exact_drift else "value"
+        return _compile_java_fixture(
+            root,
+            {
+                "p/A.java": (
+                    "package p;\n"
+                    "import java.util.LinkedHashSet;\n"
+                    "import java.util.Set;\n"
+                    "public class A {\n"
+                    "    public static int sum() {\n"
+                    f"        Set<{value_type}> set = new LinkedHashSet<>();\n"
+                    f"        set.add({value_type}.valueOf(7));\n"
+                    "        int total = 0;\n"
+                    f"        for ({loop_type} value : set) {{\n"
+                    f"            total += {add_expr};\n"
+                    "        }\n"
+                    "        return total;\n"
+                    "    }\n"
+                    "}\n"
+                )
+            },
+        )
+
+    def test_erased_set_int_enhanced_for_restores_iterable_type(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.LinkedHashSet;\n"
+                "import java.util.Set;\n"
+                "public class A {\n"
+                "    public static int sum() {\n"
+                "        Set set = new LinkedHashSet();\n"
+                "        set.add(Integer.valueOf(7));\n"
+                "        int total = 0;\n"
+                "        for (int value : set) {\n"
+                "            total += value;\n"
+                "        }\n"
+                "        return total;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                ["javac", "-d", str(root / "before-set-int"), str(source)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "for (int value : ((java.util.Set<Integer>)set))",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_set_int_enhanced_for_reconstruction"
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(action["exact_integer_unbox_flow_count"], 1)
+
+            after = subprocess.run(
+                ["javac", "-d", str(root / "after-set-int"), str(source)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stderr)
+
+
+    def test_erased_set_int_enhanced_for_fails_closed_on_unrelated_iterator(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.ArrayList;\n"
+                        "import java.util.Iterator;\n"
+                        "import java.util.LinkedHashSet;\n"
+                        "import java.util.List;\n"
+                        "import java.util.Set;\n"
+                        "public class A {\n"
+                        "    public static int sum() {\n"
+                        "        Set<Integer> set = new LinkedHashSet<>();\n"
+                        "        set.add(Integer.valueOf(7));\n"
+                        "        int total = 0;\n"
+                        "        for (int value : set) { total += value; }\n"
+                        "        List<String> extra = new ArrayList<>();\n"
+                        "        extra.add(\"x\");\n"
+                        "        Iterator<String> it = extra.iterator();\n"
+                        "        String ignored = it.next();\n"
+                        "        return total + ignored.length() - 1;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.LinkedHashSet;\n"
+                "import java.util.Set;\n"
+                "public class A {\n"
+                "    public static int sum() {\n"
+                "        Set set = new LinkedHashSet();\n"
+                "        int total = 0;\n"
+                "        for (int value : set) { total += value; }\n"
+                "        return total;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "erased_set_int_enhanced_for_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
+    def test_erased_set_int_enhanced_for_fails_closed_on_exact_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, exact_drift=True)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.LinkedHashSet;\n"
+                "import java.util.Set;\n"
+                "public class A {\n"
+                "    public static int sum() {\n"
+                "        Set set = new LinkedHashSet();\n"
+                "        set.add(Integer.valueOf(7));\n"
+                "        int total = 0;\n"
+                "        for (int value : set) { total += value; }\n"
+                "        return total;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "erased_set_int_enhanced_for_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
+
+
+class ErasedIteratorAssignmentCastTests(unittest.TestCase):
+    def _fixture(self, root: Path, *, exact_drift: bool = False) -> Path:
+        target = "Other" if exact_drift else "Value"
+        return _compile_java_fixture(
+            root,
+            {
+                "p/Value.java": (
+                    "package p;\n"
+                    "public class Value {}\n"
+                ),
+                "p/Other.java": (
+                    "package p;\n"
+                    "public class Other {}\n"
+                ),
+                "p/Current.java": (
+                    "package p;\n"
+                    "import java.util.ArrayList;\n"
+                    "import java.util.Iterator;\n"
+                    "import java.util.List;\n"
+                    "public class Current {\n"
+                    f"    public static {target} first() {{\n"
+                    f"        List<{target}> values = new ArrayList<>();\n"
+                    f"        values.add(new {target}());\n"
+                    f"        Iterator<{target}> iterator = values.iterator();\n"
+                    f"        {target} value = iterator.next();\n"
+                    "        return value;\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def test_erased_iterator_assignment_restores_exact_cast(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.ArrayList;\n"
+                "import java.util.Iterator;\n"
+                "import java.util.List;\n"
+                "public class Current {\n"
+                "    public static Value first() {\n"
+                "        List values = new ArrayList();\n"
+                "        values.add(new Value());\n"
+                "        Iterator iterator = values.iterator();\n"
+                "        final Value value = iterator.next();\n"
+                "        return value;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac", "-cp", str(jar), "-d",
+                    str(root / "before-iterator-cast"), str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "final Value value = (Value)iterator.next();",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_iterator_assignment_cast_reconstruction"
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(action["exact_checkcast_types"], ["p/Value"])
+
+            after = subprocess.run(
+                [
+                    "javac", "-cp", str(jar), "-d",
+                    str(root / "after-iterator-cast"), str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stderr)
+
+    def test_erased_iterator_assignment_fails_closed_on_extra_exact_flow(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Value.java": (
+                        "package p;\n"
+                        "public class Value {}\n"
+                    ),
+                    "p/Current.java": (
+                        "package p;\n"
+                        "import java.util.ArrayList;\n"
+                        "import java.util.Iterator;\n"
+                        "import java.util.List;\n"
+                        "public class Current {\n"
+                        "    public static Value first() {\n"
+                        "        List<Value> values = new ArrayList<>();\n"
+                        "        values.add(new Value());\n"
+                        "        values.add(new Value());\n"
+                        "        Iterator<Value> iterator = values.iterator();\n"
+                        "        Value first = iterator.next();\n"
+                        "        Value second = iterator.next();\n"
+                        "        return first != null ? first : second;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.ArrayList;\n"
+                "import java.util.Iterator;\n"
+                "import java.util.List;\n"
+                "public class Current {\n"
+                "    public static Value first() {\n"
+                "        List values = new ArrayList();\n"
+                "        Iterator iterator = values.iterator();\n"
+                "        final Value value = iterator.next();\n"
+                "        return value;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "erased_iterator_assignment_cast_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
+
+    def test_erased_iterator_assignment_fq_type_requires_exact_owner(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Value.java": (
+                        "package p;\n"
+                        "public class Value {}\n"
+                    ),
+                    "q/Value.java": (
+                        "package q;\n"
+                        "public class Value {}\n"
+                    ),
+                    "p/Current.java": (
+                        "package p;\n"
+                        "import java.util.ArrayList;\n"
+                        "import java.util.Iterator;\n"
+                        "import java.util.List;\n"
+                        "public class Current {\n"
+                        "    public static q.Value first() {\n"
+                        "        List<q.Value> values = new ArrayList<>();\n"
+                        "        values.add(new q.Value());\n"
+                        "        Iterator<q.Value> iterator = values.iterator();\n"
+                        "        q.Value value = iterator.next();\n"
+                        "        return value;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.Iterator;\n"
+                "public class Current {\n"
+                "    public static q.Value first() {\n"
+                "        Iterator iterator = null;\n"
+                "        final p.Value value = iterator.next();\n"
+                "        return null;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "erased_iterator_assignment_cast_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
+    def test_erased_iterator_assignment_fails_closed_on_checkcast_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, exact_drift=True)
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.ArrayList;\n"
+                "import java.util.Iterator;\n"
+                "import java.util.List;\n"
+                "public class Current {\n"
+                "    public static Value first() {\n"
+                "        List values = new ArrayList();\n"
+                "        Iterator iterator = values.iterator();\n"
+                "        final Value value = iterator.next();\n"
+                "        return value;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "erased_iterator_assignment_cast_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
+
+class MissingSyntheticBridgeForwarderTests(unittest.TestCase):
+    def _malformed_source(self) -> str:
+        return (
+            "package p;\n"
+            "import java.util.Map;\n"
+            "public class F extends Base<R> {\n"
+            "    public R b(int id, Map<String,Object> values) {\n"
+            "        return new R();\n"
+            "    }\n"
+            "}\n"
+        )
+
+    def test_missing_synthetic_bridge_forwarder_is_reconstructed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _synthetic_bridge_forwarder_fixture(
+                root,
+                retarget_bridge=True,
+            )
+
+            with zipfile.ZipFile(jar) as z:
+                profile = profile_class_field_accesses_exact(
+                    z.read("p/F.class")
+                )
+            bridge = next(
+                method
+                for method in profile["methods"]
+                if (
+                    method["name"] == "a"
+                    and method["descriptor"]
+                    == "(ILjava/util/Map;)Ljava/lang/Object;"
+                    and int(method["access"]) & 0x1000
+                    and int(method["access"]) & 0x0040
+                )
+            )
+            bridge_calls = [
+                row
+                for row in bridge["instructions"]
+                if row.get("mnemonic") == "invokevirtual"
+            ]
+            self.assertEqual(len(bridge_calls), 1)
+            self.assertEqual(bridge_calls[0]["owner"], "p/F")
+            self.assertEqual(bridge_calls[0]["name"], "b")
+            self.assertEqual(
+                bridge_calls[0]["descriptor"],
+                "(ILjava/util/Map;)Lp/R;",
+            )
+
+            source = root / "src" / "p" / "F.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                self._malformed_source(),
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-synthetic-bridge"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "public R a(int id, Map<String,Object> values) {",
+                normalized,
+            )
+            self.assertIn(
+                "return this.b(id, values);",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "missing_synthetic_bridge_forwarder_reconstruction"
+            )
+            self.assertEqual(action["bridge_name"], "a")
+            self.assertEqual(action["target_name"], "b")
+            self.assertEqual(action["abstract_super_owner"], "p/Base")
+            self.assertEqual(action["source_return_type"], "R")
+            self.assertEqual(
+                action["source_parameter_names"],
+                ["id", "values"],
+            )
+            self.assertEqual(
+                report["summary"][
+                    "missing_synthetic_bridge_forwarder_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "missing_synthetic_bridge_forwarder_method_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-synthetic-bridge"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_missing_synthetic_bridge_forwarder_rejects_same_name_target(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _synthetic_bridge_forwarder_fixture(
+                root,
+                retarget_bridge=False,
+            )
+            source = root / "src" / "p" / "F.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "missing_synthetic_bridge_forwarder_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
+
+
 if __name__ == "__main__":
     unittest.main()
 
