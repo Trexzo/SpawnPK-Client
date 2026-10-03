@@ -9787,6 +9787,116 @@ class ErasedRawCollectionGetAssignmentTests(unittest.TestCase):
             )
 
 
+class ErasedRawListToArrayReturnTests(unittest.TestCase):
+    def _fixture(self, root: Path) -> Path:
+        return _compile_java_fixture(
+            root,
+            {
+                "p/A.java": (
+                    "package p;\n"
+                    "import java.util.List;\n"
+                    "public class A {\n"
+                    "    public static String[] values(Object o) {\n"
+                    "        return (String[])((List)o).toArray("
+                    "new String[((List)o).size()]);\n"
+                    "    }\n"
+                    "}\n"
+                )
+            },
+        )
+
+    def test_raw_list_toarray_return_restores_exact_array_cast(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.List;\n"
+                "public class A {\n"
+                "    public static String[] values(Object o) {\n"
+                "        return ((List)o).toArray("
+                "new String[((List)o).size()]);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac", "-cp", str(jar), "-d",
+                    str(root / "before-list-toarray"), str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "return (String[])((List)o).toArray("
+                "new String[((List)o).size()]);",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_raw_list_toarray_return_cast_reconstruction"
+            )
+            self.assertEqual(action["array_return_descriptor"], "[Ljava/lang/String;")
+            self.assertEqual(action["component_types"], ["String"])
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                report["summary"][
+                    "erased_raw_list_toarray_return_cast_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac", "-cp", str(jar), "-d",
+                    str(root / "after-list-toarray"), str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stderr)
+
+    def test_raw_list_toarray_return_fails_closed_on_component_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "import java.util.List;\n"
+                "public class A {\n"
+                "    public static String[] values(Object o) {\n"
+                "        return ((List)o).toArray("
+                "new Integer[((List)o).size()]);\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "erased_raw_list_toarray_return_cast_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
+
 class ErasedSetIntEnhancedForTests(unittest.TestCase):
     def _fixture(self, root: Path, *, exact_drift: bool = False) -> Path:
         value_type = "Long" if exact_drift else "Integer"
