@@ -9629,9 +9629,15 @@ class LinkedHashMapFieldGetResultCastTests(unittest.TestCase):
         map_super: str = "LinkedHashMap<String, ItemList>",
         duplicate_exact: bool = False,
     ) -> Path:
+        exact_get = (
+            '((LinkedHashMap)folders).get'
+            if map_super.startswith("LinkedHashMap<")
+            else '(Object)folders.get'
+        )
         second = (
-            '        store.save("Other", '
-            '(List<Item>)((LinkedHashMap)folders).get("Other"));\n'
+            '        store.save("Other", (List<Item>)'
+            + exact_get
+            + '("Other"));\n'
             if duplicate_exact
             else ""
         )
@@ -9668,9 +9674,9 @@ class LinkedHashMapFieldGetResultCastTests(unittest.TestCase):
                     "    private final FolderMap folders = new FolderMap();\n"
                     "    private final Store store = new Store();\n"
                     "    public A() {\n"
-                    '        store.save("Main folder", '
-                    '(List<Item>)((LinkedHashMap)folders)'
-                    '.get("Main folder"));\n'
+                    '        store.save("Main folder", (List<Item>)'
+                    + exact_get
+                    + '("Main folder"));\n'
                     + second
                     + "    }\n"
                     "}\n"
