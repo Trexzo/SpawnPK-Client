@@ -15,8 +15,13 @@ class Java9MacosEawtBridgeError(ValueError):
 
 
 BRIDGE_NAME = "java9_macos_eawt_v308_required_surface"
+V308_SOURCE_AUTHORITY_SHA256 = (
+    "854f26ff9f134b0317572e7ac1688e6f"
+    "40a231d5a4c66f8db5d655b7f45ce7c6"
+)
 
 V308_AUTHORITY = {
+    "source_authority_sha256": V308_SOURCE_AUTHORITY_SHA256,
     "classfile_major": 53,
     "project_classes": {
         "rs/A/n.class": (
@@ -336,6 +341,13 @@ def _verify_classes(classes_root: Path) -> None:
         raise Java9MacosEawtBridgeError(
             "FullScreenAdapter listener authority drifted"
         )
+
+
+def bridge_class_entries() -> frozenset[str]:
+    return frozenset(
+        internal + ".class"
+        for internal in _EXPECTED_METHODS
+    )
 
 
 def bridge_id() -> str:
