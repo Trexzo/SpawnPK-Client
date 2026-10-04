@@ -25,6 +25,8 @@ from .javac_diagnostics import (
 )
 from .java9_macos_eawt_bridge import (
     Java9MacosEawtBridgeError,
+    V308_SOURCE_AUTHORITY_SHA256,
+    bridge_class_entries,
     build_java9_macos_eawt_compile_bridge,
 )
 from .source_digest import source_tree_digest
@@ -401,6 +403,24 @@ def compile_collision_derived_source(
     compile_classpath = [str(transformed_dependency)]
     platform_bridges: list[dict[str, Any]] = []
     if java9_macos_eawt_compile_bridge:
+        if (
+            recovered_manifest.get("source_authority_sha256")
+            != V308_SOURCE_AUTHORITY_SHA256
+        ):
+            raise CollisionDerivedCompileError(
+                "Java 9 macOS eAWT bridge requires exact v308 "
+                "source authority"
+            )
+        with zipfile.ZipFile(transformed_dependency) as archive:
+            overlap = sorted(
+                bridge_class_entries()
+                & set(archive.namelist())
+            )
+        if overlap:
+            raise CollisionDerivedCompileError(
+                "Java 9 macOS eAWT bridge would shadow dependency "
+                "classes: " + ", ".join(overlap)
+            )
         try:
             bridge_classes, bridge_report = (
                 build_java9_macos_eawt_compile_bridge(
