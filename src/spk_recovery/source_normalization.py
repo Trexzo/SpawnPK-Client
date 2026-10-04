@@ -2663,6 +2663,7 @@ def _nested_owner_binary_candidates(
     *,
     owner: str,
     current_owner: str,
+    explicit_imports: dict[str, str] | None = None,
 ) -> list[tuple[str, str]]:
     """Return exact binary candidates plus the Java owner used for rewriting.
 
@@ -2692,6 +2693,23 @@ def _nested_owner_binary_candidates(
         if candidate not in seen:
             java_owner = current_package.replace("/", ".") + "." + owner
             out.append((candidate, java_owner))
+            seen.add(candidate)
+
+    if explicit_imports and len(parts) >= 2:
+        imported_outer = explicit_imports.get(parts[0])
+        if imported_outer:
+            candidate = (
+                imported_outer
+                + "$"
+                + "$".join(parts[1:])
+            )
+            if candidate not in seen:
+                java_owner = (
+                    imported_outer.replace("/", ".")
+                    + "."
+                    + ".".join(parts[1:])
+                )
+                out.append((candidate, java_owner))
 
     return out
 
@@ -2740,12 +2758,14 @@ def _resolve_shadowed_nested_static_field(
     readable_zip: zipfile.ZipFile,
     entries: set[str],
     class_cache: dict[str, Any],
+    explicit_imports: dict[str, str] | None = None,
 ) -> tuple[str, list[str], str] | None:
     matches: list[tuple[str, list[str], str]] = []
 
     for candidate, java_owner in _nested_owner_binary_candidates(
         owner=owner,
         current_owner=current_owner,
+        explicit_imports=explicit_imports,
     ):
         entry = candidate + ".class"
         if entry not in entries:
@@ -3008,6 +3028,25 @@ def _normalize_shadowed_nested_static_field_owners(
     if "." not in text:
         return []
 
+    explicit_imports: dict[str, str] = {}
+    ambiguous_imports: set[str] = set()
+    import_re = re.compile(
+        r"(?m)^\s*import\s+(?!static\b)"
+        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*"
+        r"(?:\.[A-Za-z_$][A-Za-z0-9_$]*)+)\s*;"
+    )
+    for import_match in import_re.finditer(text):
+        dotted = import_match.group("name")
+        simple = dotted.rsplit(".", 1)[-1]
+        internal = dotted.replace(".", "/")
+        existing = explicit_imports.get(simple)
+        if existing is None:
+            explicit_imports[simple] = internal
+        elif existing != internal:
+            ambiguous_imports.add(simple)
+    for simple in ambiguous_imports:
+        explicit_imports.pop(simple, None)
+
     entries = {
         info.filename
         for info in readable_zip.infolist()
@@ -3069,6 +3108,7 @@ def _normalize_shadowed_nested_static_field_owners(
                     readable_zip=readable_zip,
                     entries=entries,
                     class_cache=class_cache,
+                    explicit_imports=explicit_imports,
                 )
                 if resolved is None:
                     continue
@@ -3230,6 +3270,7 @@ def _normalize_shadowed_nested_static_field_owners(
                     readable_zip=readable_zip,
                     entries=entries,
                     class_cache=class_cache,
+                    explicit_imports=explicit_imports,
                 )
                 if resolved is None:
                     continue
