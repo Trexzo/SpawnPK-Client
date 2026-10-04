@@ -140,6 +140,10 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 "/normalization_summary/compile_time_lombok_nonnull_action_count",
             "compile_time_lombok_nonnull_reference_count":
                 "/normalization_summary/compile_time_lombok_nonnull_reference_count",
+            "linkedhashmap_field_get_result_cast_method_count":
+                "/normalization_summary/linkedhashmap_field_get_result_cast_method_count",
+            "linkedhashmap_field_get_result_cast_reference_count":
+                "/normalization_summary/linkedhashmap_field_get_result_cast_reference_count",
             "linkedhashmap_field_key_reconstruction_method_count":
                 "/normalization_summary/linkedhashmap_field_key_reconstruction_method_count",
             "linkedhashmap_field_key_reconstruction_reference_count":
@@ -281,6 +285,16 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         self.assertIn(
             'COMPILE_TIME_LOMBOK_NONNULL_REFERENCES='
             '$($Recovered.compile_time_lombok_nonnull_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'LINKEDHASHMAP_FIELD_GET_RESULT_CAST_METHODS='
+            '$($Recovered.linkedhashmap_field_get_result_cast_method_count)',
+            script,
+        )
+        self.assertIn(
+            'LINKEDHASHMAP_FIELD_GET_RESULT_CAST_REFERENCES='
+            '$($Recovered.linkedhashmap_field_get_result_cast_reference_count)',
             script,
         )
         self.assertIn(
