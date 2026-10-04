@@ -14226,8 +14226,15 @@ def _normalize_methodhandle_invokeexact_result_casts(
             return False
         source_arrays, source_kind, source_name = source_shapes[0]
         target_arrays, target_kind, target_name = target_shapes[0]
-        if target_kind != "ref" or source_arrays != target_arrays:
+        if source_arrays != target_arrays:
             return False
+        if target_arrays == 0 and target_kind != "ref":
+            return False
+        if target_arrays > 0 and target_kind == "primitive":
+            return (
+                source_kind == "primitive"
+                and source_name == target_name
+            )
         if source_kind == "primitive":
             return False
 
@@ -14301,6 +14308,12 @@ def _normalize_methodhandle_invokeexact_result_casts(
             body_relative_start,
         ):
             expr_code = source_match.group("expr")
+            if re.match(
+                r"^\s*\(\s*[A-Za-z_$][A-Za-z0-9_$.]*"
+                r"(?:\s*<[^>\n]+>)?(?:\s*\[\s*\])*\s*\)",
+                expr_code,
+            ):
+                continue
             if not terminal_invokeexact(expr_code):
                 continue
             expr_start = source_match.start("expr")
@@ -14328,6 +14341,12 @@ def _normalize_methodhandle_invokeexact_result_casts(
             ):
                 continue
             expr_code = source_match.group("expr")
+            if re.match(
+                r"^\s*\(\s*[A-Za-z_$][A-Za-z0-9_$.]*"
+                r"(?:\s*<[^>\n]+>)?(?:\s*\[\s*\])*\s*\)",
+                expr_code,
+            ):
+                continue
             if not terminal_invokeexact(expr_code):
                 continue
             target_name = source_match.group("target")
@@ -14433,7 +14452,10 @@ def _normalize_methodhandle_invokeexact_result_casts(
                 if (
                     return_shapes is None
                     or len(return_shapes) != 1
-                    or return_shapes[0][1] != "ref"
+                    or (
+                        return_shapes[0][0] == 0
+                        and return_shapes[0][1] != "ref"
+                    )
                 ):
                     exact_ok = False
                     break
