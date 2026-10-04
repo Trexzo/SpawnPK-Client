@@ -1103,14 +1103,11 @@ def _exact_finally_handler_duplicate_invocations(
         ):
             continue
 
-        athrows = [
-            int(row.get("offset", -1))
-            for row in handler_instructions
-            if row.get("mnemonic") == "athrow"
-        ]
-        if not athrows:
+        if handler_instructions[-1].get("mnemonic") != "athrow":
             continue
-        athrow_offset = athrows[0]
+        athrow_offset = int(
+            handler_instructions[-1].get("offset", -1)
+        )
 
         for invocation in invocations:
             offset = int(invocation.get("offset", -1))
