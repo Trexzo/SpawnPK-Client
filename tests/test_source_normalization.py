@@ -13295,6 +13295,270 @@ class ErasedMapMixedObjectLocalTests(unittest.TestCase):
 
 
 
+
+class MethodHandleInvokeExactResultCastTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        mode: str = "consumer",
+        duplicate: bool = False,
+    ) -> Path:
+        if mode == "consumer":
+            target = "Consumer<Object>"
+            cast = "(Consumer<Object>)"
+        elif mode == "string":
+            target = "String"
+            cast = "(String)"
+        elif mode == "object":
+            target = "Object"
+            cast = "(Object)"
+        else:
+            raise AssertionError(mode)
+
+        second = (
+            "        " + target + " other;\n"
+            "        other = " + cast
+            + "(handle.invokeExact());\n"
+            if duplicate
+            else ""
+        )
+        return _compile_java_fixture(
+            root,
+            {
+                "p/A.java": (
+                    "package p;\n"
+                    "import java.lang.invoke.MethodHandle;\n"
+                    "import java.util.function.Consumer;\n"
+                    "public class A {\n"
+                    "    public static Object read(MethodHandle handle) "
+                    "throws Throwable {\n"
+                    "        " + target + " value;\n"
+                    "        value = " + cast
+                    + "(handle.invokeExact());\n"
+                    + second
+                    + "        return value;\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def _malformed_source(
+        self,
+        *,
+        target: str = "Consumer<Object>",
+    ) -> str:
+        return (
+            "package p;\n"
+            "import java.lang.invoke.MethodHandle;\n"
+            "import java.util.function.Consumer;\n"
+            "public class A {\n"
+            "    public static Object read(MethodHandle handle) "
+            "throws Throwable {\n"
+            "        " + target + " value;\n"
+            "        value = handle.invokeExact();\n"
+            "        return value;\n"
+            "    }\n"
+            "}\n"
+        )
+
+    def test_invokeexact_result_cast_restores_exact_target_type(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                self._malformed_source(),
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-invokeexact-result"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "Consumer<Object> value;",
+                normalized,
+            )
+            self.assertIn(
+                "value = (Consumer<Object>)(handle.invokeExact());",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "methodhandle_invokeexact_result_cast_reconstruction"
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(action["local_names"], ["value"])
+            self.assertEqual(
+                action["flows"][0]["return_descriptor"],
+                "Ljava/util/function/Consumer;",
+            )
+            self.assertEqual(
+                report["summary"][
+                    "methodhandle_invokeexact_result_cast_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "methodhandle_invokeexact_result_cast_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-invokeexact-result"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_invokeexact_result_cast_fails_on_target_type_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, mode="string")
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "methodhandle_invokeexact_result_cast_action_count"
+                ],
+                0,
+            )
+
+    def test_invokeexact_result_cast_fails_on_object_return_descriptor(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, mode="object")
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source(target="Object")
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "methodhandle_invokeexact_result_cast_action_count"
+                ],
+                0,
+            )
+
+    def test_invokeexact_result_cast_fails_on_same_simple_name_type_collision(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Consumer.java": (
+                        "package p;\n"
+                        "public class Consumer {}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.lang.invoke.MethodHandle;\n"
+                        "public class A {\n"
+                        "    public static Object read(MethodHandle handle) "
+                        "throws Throwable {\n"
+                        "        java.util.function.Consumer<Object> value;\n"
+                        "        value = (java.util.function.Consumer<Object>)"
+                        "(handle.invokeExact());\n"
+                        "        return value;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source_root = root / "src"
+            source = source_root / "p" / "A.java"
+            local_consumer = source_root / "p" / "Consumer.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.lang.invoke.MethodHandle;\n"
+                "public class A {\n"
+                "    public static Object read(MethodHandle handle) "
+                "throws Throwable {\n"
+                "        Consumer value;\n"
+                "        value = handle.invokeExact();\n"
+                "        return value;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+            local_consumer.write_text(
+                "package p;\n"
+                "public class Consumer {}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(source_root, jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "methodhandle_invokeexact_result_cast_action_count"
+                ],
+                0,
+            )
+
+    def test_invokeexact_result_cast_fails_on_multiplicity_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, duplicate=True)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "methodhandle_invokeexact_result_cast_action_count"
+                ],
+                0,
+            )
+
+
+
 if __name__ == "__main__":
     unittest.main()
 
