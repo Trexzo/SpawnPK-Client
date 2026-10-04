@@ -3360,6 +3360,292 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 after.stdout + after.stderr,
             )
 
+    def test_package_relative_static_owners_hidden_by_field_in_clinit(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/q/Kind.java": (
+                        "package p.q;\n"
+                        "public enum Kind { A, B, C }\n"
+                    ),
+                    "p/Current.java": (
+                        "package p;\n"
+                        "public class Current {\n"
+                        "    public static int q;\n"
+                        "    public static int[] map;\n"
+                        "    static {\n"
+                        "        map = new int[p.q.Kind.values().length];\n"
+                        "        map[p.q.Kind.A.ordinal()] = 1;\n"
+                        "        map[p.q.Kind.B.ordinal()] = 2;\n"
+                        "        map[p.q.Kind.C.ordinal()] = 3;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "public class Current {\n"
+                "    public static int q;\n"
+                "    public static int[] map;\n"
+                "    static {\n"
+                "        map = new int[q.Kind.values().length];\n"
+                "        map[q.Kind.A.ordinal()] = 1;\n"
+                "        map[q.Kind.B.ordinal()] = 2;\n"
+                "        map[q.Kind.C.ordinal()] = 3;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-package-relative-clinit"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("int cannot be dereferenced", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "((p.q.Kind)null).values().length",
+                normalized,
+            )
+            self.assertIn(
+                "((p.q.Kind)null).A.ordinal()",
+                normalized,
+            )
+            self.assertIn(
+                "((p.q.Kind)null).B.ordinal()",
+                normalized,
+            )
+            self.assertIn(
+                "((p.q.Kind)null).C.ordinal()",
+                normalized,
+            )
+
+            field_action = next(
+                row
+                for row in report["actions"]
+                if (
+                    row["kind"]
+                    == "shadowed_nested_static_field_owner_type_context"
+                    and row.get("method_name") == "<clinit>"
+                    and "p/q/Kind" in row.get("nested_owners", [])
+                )
+            )
+            self.assertEqual(
+                field_action["field_access_counts"],
+                {
+                    "p/q/Kind.A": 1,
+                    "p/q/Kind.B": 1,
+                    "p/q/Kind.C": 1,
+                },
+            )
+            self.assertEqual(
+                field_action["shadow_declaring_owners"],
+                ["p/Current"],
+            )
+
+            method_action = next(
+                row
+                for row in report["actions"]
+                if (
+                    row["kind"]
+                    == "shadowed_nested_static_method_owner_type_context"
+                    and "p/q/Kind" in row.get("nested_owners", [])
+                )
+            )
+            self.assertEqual(
+                method_action["method_invocation_counts"],
+                {"p/q/Kind.values": 1},
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-package-relative-clinit"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_package_relative_owner_without_shadow_fails_closed(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/q/Kind.java": (
+                        "package p.q;\n"
+                        "public enum Kind { A }\n"
+                    ),
+                    "p/Current.java": (
+                        "package p;\n"
+                        "public class Current {\n"
+                        "    public static int[] map;\n"
+                        "    static {\n"
+                        "        map = new int[p.q.Kind.values().length];\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "public class Current {\n"
+                "    public static int[] map;\n"
+                "    static {\n"
+                "        map = new int[q.Kind.values().length];\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertFalse(
+                any(
+                    (
+                        row["kind"]
+                        == "shadowed_nested_static_method_owner_type_context"
+                        and "p/q/Kind" in row.get("nested_owners", [])
+                    )
+                    for row in report["actions"]
+                )
+            )
+
+    def test_package_relative_and_nested_owner_ambiguity_fails_closed(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/q.java": (
+                        "package p;\n"
+                        "public class q {\n"
+                        "    public Object Kind;\n"
+                        "    public static class Kind {\n"
+                        "        public static int A = 1;\n"
+                        "        public static Kind[] values() {\n"
+                        "            return new Kind[0];\n"
+                        "        }\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "p/Current.java": (
+                        "package p;\n"
+                        "public class Current {\n"
+                        "    public static int q;\n"
+                        "    public static int value;\n"
+                        "    static {\n"
+                        "        value = ((p.q.Kind)null).A"
+                        " + ((p.q.Kind)null).values().length;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            package_source = root / "package-src" / "p" / "q" / "Kind.java"
+            package_source.parent.mkdir(parents=True)
+            package_source.write_text(
+                "package p.q;\n"
+                "public class Kind {\n"
+                "    public static int A = 1;\n"
+                "    public static Kind[] values() { return new Kind[0]; }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            package_classes = root / "package-classes"
+            package_classes.mkdir()
+            proc = subprocess.run(
+                [
+                    "javac",
+                    "-d",
+                    str(package_classes),
+                    str(package_source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            package_class = package_classes / "p" / "q" / "Kind.class"
+            with zipfile.ZipFile(jar, "a") as archive:
+                archive.write(package_class, "p/q/Kind.class")
+
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "public class Current {\n"
+                "    public static int q;\n"
+                "    public static int value;\n"
+                "    static {\n"
+                "        value = q.Kind.A + q.Kind.values().length;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertFalse(
+                any(
+                    (
+                        row["kind"]
+                        in {
+                            "shadowed_nested_static_field_owner_type_context",
+                            "shadowed_nested_static_method_owner_type_context",
+                        }
+                        and row.get("method_name") == "<clinit>"
+                    )
+                    for row in report["actions"]
+                )
+            )
+
     def test_imported_static_method_owner_shadowed_by_primitive_parameter(
         self,
     ):
