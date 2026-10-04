@@ -18422,6 +18422,7 @@ def _normalize_linkedhashmap_field_get_result_casts(
             continue
 
         block_start = block_match.start()
+        block_text = text[block_start:body_end]
         block_code = whole_code[block_start:body_end]
         source_occurrences: list[dict[str, Any]] = []
         for match in cast_re.finditer(block_code):
