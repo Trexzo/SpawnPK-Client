@@ -18403,9 +18403,7 @@ def _normalize_linkedhashmap_field_get_result_casts(
         r"(?P<result_type>(?P<list_owner>(?:java\.util\.)?List)"
         r"\s*<[^;{}()]+>)\s*>\s*\)"
         r"\s*this\s*\.\s*(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\s*\)"
-        r"\s*\.\s*get\s*\(\s*"
-        r"(?P<key>[A-Za-z_$][A-Za-z0-9_$]*|\"(?:\\.|[^\"\\])*\")"
-        r"\s*\)"
+        r"\s*\.\s*get\s*\("
         r")"
     )
 
@@ -18448,17 +18446,38 @@ def _normalize_linkedhashmap_field_get_result_casts(
             ):
                 continue
 
+            call_open = match.end("expr") - 1
+            depth = 0
+            call_end: int | None = None
+            for offset in range(call_open, len(block_code)):
+                ch = block_code[offset]
+                if ch == "(":
+                    depth += 1
+                elif ch == ")":
+                    depth -= 1
+                    if depth == 0:
+                        call_end = offset
+                        break
+                    if depth < 0:
+                        break
+            if call_end is None:
+                continue
+
+            key_text = block_text[call_open + 1:call_end]
+            if not key_text.strip():
+                continue
+
             source_occurrences.append(
                 {
                     "start": block_start + match.start("expr"),
-                    "end": block_start + match.end("expr"),
+                    "end": block_start + call_end + 1,
                     "field_name": field_name,
                     "field_owner": field_proof["owner"],
                     "field_descriptor": field_proof["descriptor"],
                     "field_signature": field_proof["signature"],
                     "result_type": match.group("result_type"),
                     "map_owner": map_owner,
-                    "key": match.group("key"),
+                    "key": key_text,
                 }
             )
         if not source_occurrences:
