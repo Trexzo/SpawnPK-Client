@@ -963,6 +963,187 @@ def _source_parameter_count(params: str) -> int:
     return count
 
 
+def _source_call_argument_count(
+    code: str,
+    *,
+    open_paren: int,
+) -> int | None:
+    """Count one source invocation's arguments from its opening parenthesis.
+
+    The input is normally a Java code mask, so comments and literals cannot
+    manufacture delimiter tokens. Return None rather than guessing on an
+    unbalanced expression.
+    """
+    if not (0 <= open_paren < len(code)) or code[open_paren] != "(":
+        return None
+
+    paren_depth = 1
+    bracket_depth = 0
+    brace_depth = 0
+    comma_count = 0
+    saw_argument_token = False
+    index = open_paren + 1
+
+    while index < len(code):
+        ch = code[index]
+        if ch == "(":
+            paren_depth += 1
+        elif ch == ")":
+            paren_depth -= 1
+            if paren_depth == 0:
+                return (
+                    0
+                    if not saw_argument_token
+                    else comma_count + 1
+                )
+            if paren_depth < 0:
+                return None
+        elif ch == "[":
+            bracket_depth += 1
+        elif ch == "]":
+            if bracket_depth == 0:
+                return None
+            bracket_depth -= 1
+        elif ch == "{":
+            brace_depth += 1
+        elif ch == "}":
+            if brace_depth == 0:
+                return None
+            brace_depth -= 1
+        elif (
+            ch == ","
+            and paren_depth == 1
+            and bracket_depth == 0
+            and brace_depth == 0
+        ):
+            comma_count += 1
+        elif (
+            not ch.isspace()
+            and paren_depth == 1
+            and bracket_depth == 0
+            and brace_depth == 0
+        ):
+            saw_argument_token = True
+        index += 1
+    return None
+
+
+def _exact_finally_handler_duplicate_invocations(
+    method: dict[str, Any],
+    *,
+    owner: str,
+    relevant_signatures: set[tuple[str, int]],
+) -> dict[tuple[str, int], int]:
+    """Prove javac-style catch-all finally call duplication.
+
+    A qualifying duplicate must live in a catch-all handler ending in athrow
+    and have one descriptor-identical normal-exit copy between the protected
+    range end and the handler entry. This is deliberately narrower than
+    accepting arbitrary source/bytecode multiplicity drift.
+    """
+    if not relevant_signatures:
+        return {}
+
+    invocations = [
+        row
+        for row in method.get("method_invocations", [])
+        if (
+            row.get("operation") == "invokestatic"
+            and str(row.get("owner", "")) == owner
+        )
+    ]
+    instructions = sorted(
+        method.get("instructions", []),
+        key=lambda row: int(row.get("offset", -1)),
+    )
+    handlers = sorted(
+        method.get("exception_handlers", []),
+        key=lambda row: int(row.get("handler_pc", -1)),
+    )
+    code_length = int(method.get("code_length") or 0)
+    if not invocations or not instructions or not handlers or code_length <= 0:
+        return {}
+
+    result: dict[tuple[str, int], int] = {}
+    counted_handler_offsets: set[int] = set()
+
+    for index, handler in enumerate(handlers):
+        if handler.get("catch_type") is not None:
+            continue
+        start_pc = int(handler.get("start_pc", -1))
+        end_pc = int(handler.get("end_pc", -1))
+        handler_pc = int(handler.get("handler_pc", -1))
+        if not (
+            0 <= start_pc <= end_pc <= handler_pc < code_length
+        ):
+            continue
+
+        next_handler_pc = min(
+            [
+                int(other.get("handler_pc", code_length))
+                for other in handlers[index + 1:]
+                if int(other.get("handler_pc", -1)) > handler_pc
+            ]
+            or [code_length]
+        )
+        handler_instructions = [
+            row
+            for row in instructions
+            if (
+                handler_pc
+                <= int(row.get("offset", -1))
+                < next_handler_pc
+            )
+        ]
+        if (
+            not handler_instructions
+            or not str(
+                handler_instructions[0].get("mnemonic", "")
+            ).startswith("astore")
+        ):
+            continue
+
+        athrows = [
+            int(row.get("offset", -1))
+            for row in handler_instructions
+            if row.get("mnemonic") == "athrow"
+        ]
+        if not athrows:
+            continue
+        athrow_offset = athrows[0]
+
+        for invocation in invocations:
+            offset = int(invocation.get("offset", -1))
+            if not (handler_pc <= offset < athrow_offset):
+                continue
+            descriptor = str(invocation.get("descriptor", ""))
+            arity = _descriptor_parameter_count(descriptor)
+            if arity is None:
+                continue
+            signature = (str(invocation.get("name", "")), arity)
+            if signature not in relevant_signatures:
+                continue
+            normal_copies = [
+                row
+                for row in invocations
+                if (
+                    str(row.get("name", "")) == signature[0]
+                    and str(row.get("descriptor", "")) == descriptor
+                    and end_pc
+                    <= int(row.get("offset", -1))
+                    < handler_pc
+                )
+            ]
+            if len(normal_copies) != 1:
+                continue
+            if offset in counted_handler_offsets:
+                continue
+            counted_handler_offsets.add(offset)
+            result[signature] = result.get(signature, 0) + 1
+
+    return result
+
+
 def _descriptor_parameter_count(descriptor: str) -> int | None:
     if not descriptor.startswith("("):
         return None
@@ -2093,6 +2274,12 @@ def _normalize_primitive_shadowed_instance_field_receivers(
                     ),
                     "call_counts": dict(sorted(affected_counts.items())),
                     "total_call_counts": dict(sorted(total_counts.items())),
+                    "finally_lowered_duplicate_call_counts": {
+                        f"{name}/{arity}": count
+                        for (name, arity), count in sorted(
+                            finally_duplicate_counts.items()
+                        )
+                    },
                     "replacement_count": len(affected_hits),
                     "provenance": {
                         "kind": "source_safety",
@@ -17357,6 +17544,28 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
         method_text = text[match.start():body_end]
         method_code = _java_code_mask(method_text)
 
+        finally_spans: list[tuple[int, int]] = []
+        for finally_match in re.finditer(
+            r"\bfinally\s*\{",
+            method_code,
+        ):
+            finally_brace = method_code.find(
+                "{",
+                finally_match.start(),
+                finally_match.end(),
+            )
+            if finally_brace < 0:
+                continue
+            try:
+                finally_end = _matching_brace_end(
+                    method_code,
+                    finally_brace,
+                )
+            except SourceNormalizationError:
+                finally_spans = []
+                break
+            finally_spans.append((finally_brace, finally_end))
+
         method_imported_methods = dict(imported_methods)
         source_simples = {
             token_match.group("owner")
@@ -17480,6 +17689,9 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
 
             affected_counts: dict[str, int] = {}
             total_counts: dict[str, int] = {}
+            total_signature_counts: dict[tuple[str, int], int] = {}
+            finally_signature_counts: dict[tuple[str, int], int] = {}
+            source_signature_counts_complete = True
             affected_hits: list[re.Match[str]] = []
 
             qualified_owner = imported_owner.replace("/", ".")
@@ -17505,6 +17717,32 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
                     qualified_call.finditer(method_code)
                 )
 
+                all_hits = simple_hits + qualified_hits
+                for hit in all_hits:
+                    open_paren = method_code.find(
+                        "(",
+                        hit.start(),
+                        hit.end(),
+                    )
+                    arity = _source_call_argument_count(
+                        method_code,
+                        open_paren=open_paren,
+                    )
+                    if arity is None:
+                        source_signature_counts_complete = False
+                        continue
+                    signature = (method_name, arity)
+                    total_signature_counts[signature] = (
+                        total_signature_counts.get(signature, 0) + 1
+                    )
+                    if any(
+                        start <= hit.start() < end
+                        for start, end in finally_spans
+                    ):
+                        finally_signature_counts[signature] = (
+                            finally_signature_counts.get(signature, 0) + 1
+                        )
+
                 selected = [
                     hit
                     for hit in simple_hits
@@ -17520,16 +17758,16 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
                     continue
 
                 affected_counts[method_name] = len(selected)
-                total_counts[method_name] = (
-                    len(simple_hits) + len(qualified_hits)
-                )
+                total_counts[method_name] = len(all_hits)
                 affected_hits.extend(selected)
 
             if not affected_counts:
                 continue
 
             source_arity = _source_parameter_count(match.group("params"))
-            candidates: list[dict[str, Any]] = []
+            candidates: list[
+                tuple[dict[str, Any], dict[tuple[str, int], int]]
+            ] = []
             for method in profile.get("methods", []):
                 if method.get("name") != match.group("name"):
                     continue
@@ -17545,6 +17783,10 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
                     continue
 
                 invocation_counts: dict[str, int] = {}
+                invocation_signature_counts: dict[
+                    tuple[str, int], int
+                ] = {}
+                exact_signature_counts_complete = True
                 for invocation in method.get("method_invocations", []):
                     if invocation.get("operation") != "invokestatic":
                         continue
@@ -17556,17 +17798,72 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
                     invocation_counts[name] = (
                         invocation_counts.get(name, 0) + 1
                     )
+                    descriptor = str(
+                        invocation.get("descriptor", "")
+                    )
+                    arity = _descriptor_parameter_count(descriptor)
+                    if arity is None:
+                        exact_signature_counts_complete = False
+                        continue
+                    signature = (name, arity)
+                    invocation_signature_counts[signature] = (
+                        invocation_signature_counts.get(signature, 0) + 1
+                    )
 
-                if all(
+                ordinary_match = all(
                     invocation_counts.get(name, 0) == count
                     for name, count in total_counts.items()
+                )
+                if ordinary_match:
+                    candidates.append((method, {}))
+                    continue
+
+                if not (
+                    source_signature_counts_complete
+                    and exact_signature_counts_complete
+                    and finally_signature_counts
                 ):
-                    candidates.append(method)
+                    continue
+
+                signatures = (
+                    set(total_signature_counts)
+                    | set(invocation_signature_counts)
+                )
+                extras: dict[tuple[str, int], int] = {}
+                invalid_drift = False
+                for signature in signatures:
+                    source_count = total_signature_counts.get(
+                        signature,
+                        0,
+                    )
+                    exact_count = invocation_signature_counts.get(
+                        signature,
+                        0,
+                    )
+                    if exact_count < source_count:
+                        invalid_drift = True
+                        break
+                    extra = exact_count - source_count
+                    if extra:
+                        extras[signature] = extra
+                if invalid_drift or extras != finally_signature_counts:
+                    continue
+
+                proven_finally_duplicates = (
+                    _exact_finally_handler_duplicate_invocations(
+                        method,
+                        owner=imported_owner,
+                        relevant_signatures=set(extras),
+                    )
+                )
+                if proven_finally_duplicates != extras:
+                    continue
+                candidates.append((method, proven_finally_duplicates))
 
             if len(candidates) != 1:
                 continue
 
-            exact_method = candidates[0]
+            exact_method, finally_duplicate_counts = candidates[0]
             for hit in affected_hits:
                 edits.append(
                     (
