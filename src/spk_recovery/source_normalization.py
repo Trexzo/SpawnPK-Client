@@ -6311,7 +6311,10 @@ def _normalize_raw_iterable_map_entry_lambda_casts(
     zero-argument getter returns a container of Map.Entry<K,V> from the same
     type variables, the enclosing static filter call is itself generic over
     Iterable<T>, and the exact LambdaMetafactory helper receives the same
-    erased Map.Entry element after all captured parameters.
+    erased Map.Entry element after all captured parameters.  Unrelated calls
+    to the same filter owner/name may coexist in the exact method only when
+    every such invocation resolves to one identical generic filter contract;
+    receiver and Map.Entry-lambda multiplicities remain exact.
     """
 
     rel = path.relative_to(source_root).as_posix()
@@ -6851,6 +6854,7 @@ def _normalize_raw_iterable_map_entry_lambda_casts(
             for filter_key, source_count in filter_counts.items():
                 source_owner, source_name = filter_key
                 matching: list[dict[str, Any]] = []
+                same_filter_invocation_count = 0
                 for invocation in exact_method.get(
                     "method_invocations", []
                 ):
@@ -6863,6 +6867,7 @@ def _normalize_raw_iterable_map_entry_lambda_casts(
                         )
                     ):
                         continue
+                    same_filter_invocation_count += 1
                     proof = generic_filter_method(
                         owner=str(invocation.get("owner", "")),
                         name=source_name,
@@ -6870,16 +6875,37 @@ def _normalize_raw_iterable_map_entry_lambda_casts(
                             invocation.get("descriptor", "")
                         ),
                     )
-                    if proof is not None:
-                        matching.append(
-                            {
-                                **proof,
-                                "offset": int(
-                                    invocation.get("offset", -1)
-                                ),
-                            }
-                        )
-                if len(matching) != source_count:
+                    if proof is None:
+                        filter_ok = False
+                        break
+                    matching.append(
+                        {
+                            **proof,
+                            "offset": int(
+                                invocation.get("offset", -1)
+                            ),
+                        }
+                    )
+                if not filter_ok:
+                    break
+                if (
+                    len(matching) < source_count
+                    or same_filter_invocation_count != len(matching)
+                ):
+                    filter_ok = False
+                    break
+                semantic_filter_contracts = {
+                    (
+                        proof["owner"],
+                        proof["name"],
+                        proof["descriptor"],
+                        proof["signature"],
+                        proof["functional_owner"],
+                        proof["type_variable"],
+                    )
+                    for proof in matching
+                }
+                if len(semantic_filter_contracts) != 1:
                     filter_ok = False
                     break
                 filter_proofs[filter_key] = matching
