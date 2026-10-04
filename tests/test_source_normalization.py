@@ -13317,7 +13317,8 @@ class MethodHandleInvokeExactResultCastTests(unittest.TestCase):
             raise AssertionError(mode)
 
         second = (
-            "        " + target + " other = " + cast
+            "        " + target + " other;\n"
+            "        other = " + cast
             + "(handle.invokeExact());\n"
             if duplicate
             else ""
@@ -13332,7 +13333,8 @@ class MethodHandleInvokeExactResultCastTests(unittest.TestCase):
                     "public class A {\n"
                     "    public static Object read(MethodHandle handle) "
                     "throws Throwable {\n"
-                    "        " + target + " value = " + cast
+                    "        " + target + " value;\n"
+                    "        value = " + cast
                     + "(handle.invokeExact());\n"
                     + second
                     + "        return value;\n"
@@ -13354,8 +13356,8 @@ class MethodHandleInvokeExactResultCastTests(unittest.TestCase):
             "public class A {\n"
             "    public static Object read(MethodHandle handle) "
             "throws Throwable {\n"
-            "        final " + target
-            + " value = handle.invokeExact();\n"
+            "        " + target + " value;\n"
+            "        value = handle.invokeExact();\n"
             "        return value;\n"
             "    }\n"
             "}\n"
@@ -13390,8 +13392,11 @@ class MethodHandleInvokeExactResultCastTests(unittest.TestCase):
             report = normalize_procyon_source(root / "src", jar)
             normalized = source.read_text(encoding="utf-8")
             self.assertIn(
-                "final Consumer<Object> value = "
-                "(Consumer<Object>)(handle.invokeExact());",
+                "Consumer<Object> value;",
+                normalized,
+            )
+            self.assertIn(
+                "value = (Consumer<Object>)(handle.invokeExact());",
                 normalized,
             )
             action = next(
