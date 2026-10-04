@@ -13559,6 +13559,210 @@ class MethodHandleInvokeExactResultCastTests(unittest.TestCase):
 
 
 
+
+class RawIterableMapEntryLambdaTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        raw_field: bool = False,
+        object_view: bool = False,
+    ) -> Path:
+        field_type = "Bag" if raw_field else "Bag<String, Integer>"
+        view_return = (
+            "Iterable<Object>"
+            if object_view
+            else "Iterable<Map.Entry<K, V>>"
+        )
+        lambda_body = (
+            "value -> value != captured"
+            if object_view
+            else "entry -> entry.getValue() != captured"
+        )
+        return _compile_java_fixture(
+            root,
+            {
+                "p/Bag.java": (
+                    "package p;\n"
+                    "import java.util.Map;\n"
+                    "public class Bag<K, V> {\n"
+                    "    public " + view_return + " entries() { return null; }\n"
+                    "}\n"
+                ),
+                "p/Filters.java": (
+                    "package p;\n"
+                    "import java.util.function.Predicate;\n"
+                    "public class Filters {\n"
+                    "    public static <T> Iterable<T> keep("
+                    "Iterable<T> values, Predicate<? super T> predicate) {\n"
+                    "        return values;\n"
+                    "    }\n"
+                    "}\n"
+                ),
+                "p/A.java": (
+                    "package p;\n"
+                    "public class A {\n"
+                    "    private " + field_type + " subscribers;\n"
+                    "    public void unregister(Object captured) {\n"
+                    "        Filters.keep(subscribers.entries(), "
+                    + lambda_body + ");\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def _malformed_source(self) -> str:
+        return (
+            "package p;\n"
+            "public class A {\n"
+            "    private Bag<String, Integer> subscribers;\n"
+            "    public void unregister(Object captured) {\n"
+            "        Filters.keep((Iterable)this.subscribers.entries(), "
+            "entry -> entry.getValue() != captured);\n"
+            "    }\n"
+            "}\n"
+        )
+
+    def test_raw_iterable_map_entry_lambda_removes_erasing_cast(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source_root = root / "src"
+            source = source_root / "p" / "A.java"
+            bag = source_root / "p" / "Bag.java"
+            filters = source_root / "p" / "Filters.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(self._malformed_source(), encoding="utf-8")
+            bag.write_text(
+                "package p;\n"
+                "import java.util.Map;\n"
+                "public class Bag<K, V> {\n"
+                "    public Iterable<Map.Entry<K, V>> entries() "
+                "{ return null; }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            filters.write_text(
+                "package p;\n"
+                "import java.util.function.Predicate;\n"
+                "public class Filters {\n"
+                "    public static <T> Iterable<T> keep("
+                "Iterable<T> values, Predicate<? super T> predicate) "
+                "{ return values; }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-entry-lambda"),
+                    str(bag),
+                    str(filters),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(source_root, jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "Filters.keep(this.subscribers.entries(), "
+                "entry -> entry.getValue() != captured);",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "raw_iterable_map_entry_lambda_reconstruction"
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(action["field_names"], ["subscribers"])
+            self.assertEqual(action["member_names"], ["entries"])
+            self.assertEqual(
+                action["flows"][0]["instantiated_sam"],
+                "(Ljava/util/Map$Entry;)Z",
+            )
+            self.assertEqual(
+                report["summary"][
+                    "raw_iterable_map_entry_lambda_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "raw_iterable_map_entry_lambda_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-entry-lambda"),
+                    str(bag),
+                    str(filters),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_raw_iterable_map_entry_lambda_fails_without_field_signature(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, raw_field=True)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "raw_iterable_map_entry_lambda_action_count"
+                ],
+                0,
+            )
+
+    def test_raw_iterable_map_entry_lambda_fails_on_view_signature_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, object_view=True)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "raw_iterable_map_entry_lambda_action_count"
+                ],
+                0,
+            )
+
+
+
 if __name__ == "__main__":
     unittest.main()
 
