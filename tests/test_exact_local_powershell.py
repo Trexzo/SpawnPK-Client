@@ -180,6 +180,10 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 "/normalization_summary/erased_hashmap_get_array_return_cast_action_count",
             "erased_hashmap_get_array_return_cast_reference_count":
                 "/normalization_summary/erased_hashmap_get_array_return_cast_reference_count",
+            "raw_iterable_map_entry_lambda_action_count":
+                "/normalization_summary/raw_iterable_map_entry_lambda_action_count",
+            "raw_iterable_map_entry_lambda_reference_count":
+                "/normalization_summary/raw_iterable_map_entry_lambda_reference_count",
             "methodhandle_invokeexact_result_cast_action_count":
                 "/normalization_summary/methodhandle_invokeexact_result_cast_action_count",
             "methodhandle_invokeexact_result_cast_reference_count":
@@ -348,6 +352,16 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         self.assertIn(
             'ERASED_HASHMAP_GET_ARRAY_RETURN_CAST_REFERENCES='
             '$($Recovered.erased_hashmap_get_array_return_cast_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'RAW_ITERABLE_MAP_ENTRY_LAMBDA_ACTIONS='
+            '$($Recovered.raw_iterable_map_entry_lambda_action_count)',
+            script,
+        )
+        self.assertIn(
+            'RAW_ITERABLE_MAP_ENTRY_LAMBDA_REFERENCES='
+            '$($Recovered.raw_iterable_map_entry_lambda_reference_count)',
             script,
         )
         self.assertIn(
