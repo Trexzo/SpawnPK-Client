@@ -180,6 +180,10 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 "/normalization_summary/erased_hashmap_get_array_return_cast_action_count",
             "erased_hashmap_get_array_return_cast_reference_count":
                 "/normalization_summary/erased_hashmap_get_array_return_cast_reference_count",
+            "erased_map_mixed_object_local_action_count":
+                "/normalization_summary/erased_map_mixed_object_local_action_count",
+            "erased_map_mixed_object_local_reference_count":
+                "/normalization_summary/erased_map_mixed_object_local_reference_count",
             "erased_map_number_assignment_action_count":
                 "/normalization_summary/erased_map_number_assignment_action_count",
             "erased_map_number_assignment_reference_count":
@@ -340,6 +344,16 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         self.assertIn(
             'ERASED_HASHMAP_GET_ARRAY_RETURN_CAST_REFERENCES='
             '$($Recovered.erased_hashmap_get_array_return_cast_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'ERASED_MAP_MIXED_OBJECT_LOCAL_ACTIONS='
+            '$($Recovered.erased_map_mixed_object_local_action_count)',
+            script,
+        )
+        self.assertIn(
+            'ERASED_MAP_MIXED_OBJECT_LOCAL_REFERENCES='
+            '$($Recovered.erased_map_mixed_object_local_reference_count)',
             script,
         )
         self.assertIn(
