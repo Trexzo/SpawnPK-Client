@@ -7865,6 +7865,213 @@ def _normalize_erased_hashmap_get_array_returns(
     return actions
 
 
+def _normalize_methodhandle_invokeexact_result_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore source casts for signature-polymorphic invokeExact results."""
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    assignment_re = re.compile(
+        r"\b(?:(?:final)\s+)?"
+        r"(?P<type>[A-Za-z_$][A-Za-z0-9_$.]*"
+        r"(?:\s*<[^;{}=]+>)?(?:\s*\[\])*)\s+"
+        r"(?P<value>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*"
+        r"(?P<expr>[^;{}]*?\.\s*invokeExact\s*\([^;{}]*\))"
+        r"\s*;"
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        source_matches = list(assignment_re.finditer(method_code))
+        if not source_matches:
+            continue
+
+        params = method_match.group("params")
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        exact_candidates: list[dict[str, Any]] = []
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    params,
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            flows: list[dict[str, Any]] = []
+            for index, item in enumerate(instructions[:-1]):
+                if not (
+                    item.get("mnemonic")
+                    in {"invokevirtual", "invokeinterface"}
+                    and item.get("owner")
+                    == "java/lang/invoke/MethodHandle"
+                    and item.get("name") == "invokeExact"
+                ):
+                    continue
+                call_descriptor = str(item.get("descriptor", ""))
+                return_descriptor = _descriptor_return_descriptor(
+                    call_descriptor
+                )
+                if (
+                    return_descriptor is None
+                    or return_descriptor in {"V", "Ljava/lang/Object;"}
+                    or (
+                        not return_descriptor.startswith("L")
+                        and not return_descriptor.startswith("[")
+                    )
+                ):
+                    continue
+                store = instructions[index + 1]
+                if store.get("mnemonic") != "astore":
+                    continue
+                flows.append(
+                    {
+                        "invoke_offset": int(item.get("offset", -1)),
+                        "store_offset": int(store.get("offset", -1)),
+                        "store_slot": int(store.get("local_index", -1)),
+                        "call_descriptor": call_descriptor,
+                        "return_descriptor": return_descriptor,
+                    }
+                )
+
+            if len(flows) != len(source_matches):
+                continue
+
+            proven = True
+            for source_match, flow in zip(source_matches, flows):
+                source_type = source_match.group("type").strip()
+                if (
+                    _source_parameters_match_descriptor(
+                        source_type + " recoveredInvokeExactResult",
+                        "(" + flow["return_descriptor"] + ")V",
+                        current_package=current_package,
+                    )
+                    is not True
+                ):
+                    proven = False
+                    break
+            if not proven:
+                continue
+
+            exact_candidates.append(
+                {
+                    "method": exact_method,
+                    "flows": flows,
+                }
+            )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        proof = exact_candidates[0]
+        for source_match in source_matches:
+            expression = text[
+                method_start + source_match.start("expr"):
+                method_start + source_match.end("expr")
+            ]
+            source_type = text[
+                method_start + source_match.start("type"):
+                method_start + source_match.end("type")
+            ].strip()
+            edits.append(
+                (
+                    method_start + source_match.start("expr"),
+                    method_start + source_match.end("expr"),
+                    "(" + source_type + ")(" + expression + ")",
+                )
+            )
+
+        actions.append(
+            {
+                "kind": (
+                    "methodhandle_invokeexact_result_cast_reconstruction"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "local_names": [
+                    row.group("value") for row in source_matches
+                ],
+                "target_types": [
+                    row.group("type").strip() for row in source_matches
+                ],
+                "flows": proof["flows"],
+                "replacement_count": len(source_matches),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "signature_polymorphic_invokeexact_result_type_erasure"
+                    ),
+                    "strategy": (
+                        "exact_invokeexact_descriptor_return_plus_immediate_store"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping invokeExact result-cast edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_erased_map_mixed_object_locals(
     *,
     source_root: Path,
@@ -18194,6 +18401,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_methodhandle_invokeexact_result_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_erased_map_mixed_object_locals(
                         source_root=source_root,
                         path=path,
@@ -18675,6 +18889,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "erased_hashmap_get_array_return_cast_reconstruction"
+        ),
+        "methodhandle_invokeexact_result_cast_action_count": sum(
+            action["kind"]
+            == "methodhandle_invokeexact_result_cast_reconstruction"
+            for action in actions
+        ),
+        "methodhandle_invokeexact_result_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "methodhandle_invokeexact_result_cast_reconstruction"
         ),
         "erased_map_mixed_object_local_action_count": sum(
             action["kind"]
