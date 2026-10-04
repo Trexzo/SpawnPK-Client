@@ -264,27 +264,6 @@ def main(argv: list[str] | None = None) -> int:
                 "runtime_alias_dependency_allowed="
                 f"{transport['runtime_alias_dependency_allowed']}"
             )
-        elif mode == "collision_derived_remap":
-            bridges = transport.get(
-                "compile_only_platform_bridges",
-                [],
-            )
-            if bridges:
-                print(
-                    "compile_only_platform_bridge_ids_json="
-                    + json.dumps(
-                        [
-                            row["bridge_id"]
-                            for row in bridges
-                        ],
-                        sort_keys=True,
-                        separators=(",", ":"),
-                    )
-                )
-            print(
-                "runtime_platform_bridges_allowed="
-                f"{transport.get('runtime_platform_bridges_allowed', False)}"
-            )
         elif mode == "official_first_restored":
             print(
                 "official_compile_id="
@@ -311,6 +290,26 @@ def main(argv: list[str] | None = None) -> int:
                 f"{transport['restored_project_bytecode_ready_for_runtime_assembly']}"
             )
         elif mode == "collision_derived_remap":
+            bridges = transport.get(
+                "compile_only_platform_bridges",
+                [],
+            )
+            if bridges:
+                print(
+                    "compile_only_platform_bridge_ids_json="
+                    + json.dumps(
+                        [
+                            row["bridge_id"]
+                            for row in bridges
+                        ],
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    )
+                )
+            print(
+                "runtime_platform_bridges_allowed="
+                f"{transport.get('runtime_platform_bridges_allowed', False)}"
+            )
             print(
                 "collision_compile_id="
                 f"{transport['collision_compile_id']}"
