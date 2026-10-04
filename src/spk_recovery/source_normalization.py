@@ -16058,7 +16058,7 @@ def _normalize_imported_outer_nested_static_fields_shadowed_by_values(
         occurrences: list[dict[str, Any]] = []
         total_source_counts: dict[tuple[str, str], int] = {}
 
-        for simple, imported_owner in sorted(all_imports.items()):
+        for simple, imported_owner in sorted(imports.items()):
             reference_parameter, reference_local_spans = (
                 _same_name_value_shadow_spans(
                     method_match=method_match,
@@ -16924,7 +16924,7 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
         return names
 
     imported_methods: dict[str, tuple[str, set[str]]] = {}
-    for simple, imported_owner in sorted(imports.items()):
+    for simple, imported_owner in sorted(all_imports.items()):
         names = visible_static_names(imported_owner)
         if names:
             imported_methods[simple] = (imported_owner, names)
