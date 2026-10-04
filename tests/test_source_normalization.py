@@ -15240,6 +15240,221 @@ class ErasedMixedObjectIntegerSinkTests(unittest.TestCase):
         self._assert_no_integer_sink_action(mode="two_lifetimes")
 
 
+class CcGenericInstanceValueObjectCastTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        mode: str = "exact",
+    ) -> Path:
+        field_decl = (
+            "    private final cc<String> h = new cc<>();\n"
+        )
+        params = "Map<String, Object> map"
+        prefix = (
+            "        Object value = map.get(\"name\");\n"
+            "        String s2 = (String)value;\n"
+        )
+        calls = (
+            "        this.h.a((int)map.get(\"id\"), s2);\n"
+        )
+
+        if mode == "static_field":
+            field_decl = (
+                "    private static final cc<String> h = new cc<>();\n"
+            )
+            calls = "        A.h.a((int)map.get(\"id\"), s2);\n"
+        elif mode == "signature_drift":
+            field_decl = (
+                "    private final cc<Integer> h = new cc<>();\n"
+            )
+            prefix = ""
+            calls = (
+                "        this.h.a((int)map.get(\"id\"), "
+                "(Integer)map.get(\"value\"));\n"
+            )
+        elif mode == "parameter_value":
+            params += ", String supplied"
+            calls = (
+                "        this.h.a((int)map.get(\"id\"), supplied);\n"
+            )
+        elif mode == "multiplicity":
+            calls += (
+                "        this.h.a((int)map.get(\"id\"), s2);\n"
+            )
+        elif mode != "exact":
+            raise AssertionError(mode)
+
+        return _compile_java_fixture(
+            root,
+            {
+                "gnu/trove/f/b/cc.java": (
+                    "package gnu.trove.f.b;\n"
+                    "public class cc<V> {\n"
+                    "    public V a(int key, V value) { return value; }\n"
+                    "}\n"
+                ),
+                "p/A.java": (
+                    "package p;\n"
+                    "import java.util.Map;\n"
+                    "import gnu.trove.f.b.cc;\n"
+                    "public class A {\n"
+                    + field_decl
+                    + "    public void run("
+                    + params
+                    + ") {\n"
+                    + prefix
+                    + calls
+                    + "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def _malformed_source(
+        self,
+        *,
+        with_parameter: bool = False,
+    ) -> str:
+        params = "Map<String, Object> map"
+        if with_parameter:
+            params += ", String supplied"
+        return (
+            "package p;\n"
+            "import java.util.Map;\n"
+            "import gnu.trove.f.b.cc;\n"
+            "public class A {\n"
+            "    private final cc<String> h = new cc<>();\n"
+            "    public void run("
+            + params
+            + ") {\n"
+            "        Object value = map.get(\"name\");\n"
+            "        String s2 = (String)value;\n"
+            "        this.h.a((int)map.get(\"id\"), (Object)s2);\n"
+            "    }\n"
+            "}\n"
+        )
+
+    def test_cc_generic_instance_field_removes_object_cast(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                self._malformed_source(),
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-cc-instance"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                'this.h.a((int)map.get("id"), s2);',
+                normalized,
+            )
+            self.assertNotIn("(Object)s2", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"] == "cc_generic_value_object_cast_removal"
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                action["generic_value_types"],
+                ["java/lang/String"],
+            )
+            self.assertEqual(action["value_kinds"], ["identifier"])
+            self.assertEqual(
+                action["flows"][0]["field_is_static"],
+                False,
+            )
+            self.assertGreaterEqual(
+                action["flows"][0]["identifier_slot"],
+                0,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-cc-instance"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def _assert_no_instance_action(
+        self,
+        *,
+        mode: str,
+        with_parameter: bool = False,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, mode=mode)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source(
+                with_parameter=with_parameter,
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "cc_generic_value_object_cast_removal"
+                    for row in report["actions"]
+                )
+            )
+
+    def test_cc_generic_instance_field_fails_on_static_kind_drift(self):
+        self._assert_no_instance_action(mode="static_field")
+
+    def test_cc_generic_instance_field_fails_on_signature_drift(self):
+        self._assert_no_instance_action(mode="signature_drift")
+
+    def test_cc_generic_instance_field_fails_without_local_slot_type_proof(
+        self,
+    ):
+        self._assert_no_instance_action(
+            mode="parameter_value",
+            with_parameter=True,
+        )
+
+    def test_cc_generic_instance_field_fails_on_multiplicity_drift(self):
+        self._assert_no_instance_action(mode="multiplicity")
+
 if __name__ == "__main__":
     unittest.main()
 
