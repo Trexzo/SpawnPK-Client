@@ -300,6 +300,92 @@ class CollisionDerivedCompileTests(unittest.TestCase):
                 self.assertNotIn(old_name + ".class", names)
                 self.assertNotIn("rs/A.class", names)
 
+    def test_java9_eawt_bridge_is_compile_only(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                readable,
+                plan_path,
+                recovered,
+                manifest,
+                _old_name,
+                _new_name,
+                _transform,
+            ) = self._fixture(root)
+
+            source = recovered / "rs" / "A.java"
+            source.write_text(
+                "package rs; "
+                "import com.apple.eawt.Application; "
+                "import com.apple.eawt.FullScreenAdapter; "
+                "import com.apple.eawt.FullScreenListener; "
+                "import com.apple.eawt.FullScreenUtilities; "
+                "import com.apple.eawt.event.FullScreenEvent; "
+                "import java.awt.Window; "
+                "public class A extends FullScreenAdapter { "
+                "public void a(FullScreenEvent event) {} "
+                "public static void install(Window window) { "
+                "FullScreenUtilities.setWindowCanFullScreen(window, true); "
+                "FullScreenUtilities.addFullScreenListenerTo("
+                "window, (FullScreenListener)new A()); "
+                "Application.getApplication().requestForeground(true); "
+                "Application.getApplication().requestUserAttention(true); "
+                "} }\n",
+                encoding="utf-8",
+            )
+            manifest = dict(manifest)
+            manifest["source_tree_sha256"] = source_tree_digest(
+                recovered
+            )[0]
+
+            report = compile_collision_derived_source(
+                manifest,
+                recovered,
+                readable,
+                plan_path,
+                ["rs/"],
+                root / "compile-eawt",
+                javac_command="javac",
+                release=9,
+                java9_macos_eawt_compile_bridge=True,
+            )
+
+            self.assertEqual(report["status"], "complete")
+            self.assertEqual(
+                report["compiler"]["classpath_entry_count"],
+                2,
+            )
+            self.assertEqual(
+                len(report["compile_only_platform_bridges"]),
+                1,
+            )
+            self.assertFalse(
+                report["compile_only_platform_bridges"][0][
+                    "runtime_allowed"
+                ]
+            )
+            self.assertFalse(
+                report["runtime_platform_bridges_allowed"]
+            )
+            self.assertFalse(
+                any(
+                    (root / "compile-eawt" / "restored-classes")
+                    .rglob("com/apple/eawt/*.class")
+                )
+            )
+
+            javac_args = (
+                root / "compile-eawt" / "javac.args"
+            ).read_text(encoding="utf-8").replace("\\", "/")
+            self.assertIn(
+                "/java9-macos-eawt-bridge/classes",
+                javac_args,
+            )
+            self.assertNotIn(
+                "/java9-macos-eawt-bridge/source/",
+                javac_args,
+            )
+
     def test_mapping_commitment_mismatch_is_refused(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -476,6 +562,7 @@ class CollisionDerivedCompileTests(unittest.TestCase):
                 out_dir=root / "clean",
                 source_prefixes=["rs/"],
                 private_collision_plan_path=plan_path,
+                java9_macos_eawt_compile_bridge=True,
             )
 
             self.assertEqual(report["status"], "complete")
@@ -487,6 +574,19 @@ class CollisionDerivedCompileTests(unittest.TestCase):
                 report["compile_transport"][
                     "runtime_transformed_dependency_allowed"
                 ]
+            )
+            self.assertFalse(
+                report["compile_transport"][
+                    "runtime_platform_bridges_allowed"
+                ]
+            )
+            self.assertEqual(
+                len(
+                    report["compile_transport"][
+                        "compile_only_platform_bridges"
+                    ]
+                ),
+                1,
             )
             self.assertEqual(
                 report["dependency_capsule"]["source"],
@@ -506,6 +606,10 @@ class CollisionDerivedCompileTests(unittest.TestCase):
                     names,
                 )
                 self.assertNotIn(new_name + ".class", names)
+                self.assertNotIn(
+                    "com/apple/eawt/Application.class",
+                    names,
+                )
                 self.assertEqual(
                     archive.read(old_name + ".class"),
                     original_blocker,
