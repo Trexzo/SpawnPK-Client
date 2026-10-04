@@ -389,6 +389,7 @@ def build_existing_authority_release_from_workspace(
     private_diagnostic_report_out: Path | None = None,
     java_command: str = "java",
     javac_command: str = "javac",
+    java9_macos_eawt_compile_bridge: bool = False,
 ) -> dict[str, Any]:
     """Release from an existing collision-derived recovered source authority."""
 
@@ -548,6 +549,9 @@ def build_existing_authority_release_from_workspace(
             source_prefixes=source_prefixes,
             private_diagnostic_report_out=private_diagnostic_report_out,
             private_collision_plan_path=private_collision_plan_path,
+            java9_macos_eawt_compile_bridge=(
+                java9_macos_eawt_compile_bridge
+            ),
         )
     except CleanRebuildError as exc:
         raise ExistingAuthorityReleaseError(str(exc)) from exc
