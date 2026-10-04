@@ -7891,10 +7891,19 @@ def _normalize_methodhandle_invokeexact_result_casts(
     edits: list[tuple[int, int, str]] = []
     actions: list[dict[str, Any]] = []
 
-    assignment_re = re.compile(
+    type_pattern = (
+        r"[A-Za-z_$][A-Za-z0-9_$.]*"
+        r"(?:\s*<[^;{}=]+>)?(?:\s*\[\])*"
+    )
+    declaration_assignment_re = re.compile(
         r"\b(?:(?:final)\s+)?"
-        r"(?P<type>[A-Za-z_$][A-Za-z0-9_$.]*"
-        r"(?:\s*<[^;{}=]+>)?(?:\s*\[\])*)\s+"
+        r"(?P<type>" + type_pattern + r")\s+"
+        r"(?P<value>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*"
+        r"(?P<expr>[^;{}]*?\.\s*invokeExact\s*\([^;{}]*\))"
+        r"\s*;"
+    )
+    plain_assignment_re = re.compile(
+        r"(?<![A-Za-z0-9_$.])"
         r"(?P<value>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*"
         r"(?P<expr>[^;{}]*?\.\s*invokeExact\s*\([^;{}]*\))"
         r"\s*;"
@@ -7913,8 +7922,58 @@ def _normalize_methodhandle_invokeexact_result_casts(
 
         method_start = method_match.start()
         method_code = whole_code[method_start:body_end]
-        source_matches = list(assignment_re.finditer(method_code))
-        if not source_matches:
+        source_rows: list[dict[str, Any]] = []
+
+        declaration_matches = list(
+            declaration_assignment_re.finditer(method_code)
+        )
+        covered = [
+            (match.start(), match.end())
+            for match in declaration_matches
+        ]
+        for match in declaration_matches:
+            source_rows.append(
+                {
+                    "start": match.start(),
+                    "type": match.group("type").strip(),
+                    "value": match.group("value"),
+                    "expr_start": match.start("expr"),
+                    "expr_end": match.end("expr"),
+                }
+            )
+
+        for match in plain_assignment_re.finditer(method_code):
+            if any(
+                left <= match.start() < right
+                for left, right in covered
+            ):
+                continue
+            value_name = match.group("value")
+            declaration_re = re.compile(
+                r"\b(?:(?:final)\s+)?"
+                r"(?P<type>" + type_pattern + r")\s+"
+                + re.escape(value_name)
+                + r"\s*(?:;|=)"
+            )
+            prior = list(
+                declaration_re.finditer(
+                    method_code[:match.start()]
+                )
+            )
+            if len(prior) != 1:
+                continue
+            source_rows.append(
+                {
+                    "start": match.start(),
+                    "type": prior[0].group("type").strip(),
+                    "value": value_name,
+                    "expr_start": match.start("expr"),
+                    "expr_end": match.end("expr"),
+                }
+            )
+
+        source_rows.sort(key=lambda row: int(row["start"]))
+        if not source_rows:
             continue
 
         params = method_match.group("params")
@@ -7982,12 +8041,12 @@ def _normalize_methodhandle_invokeexact_result_casts(
                     }
                 )
 
-            if len(flows) != len(source_matches):
+            if len(flows) != len(source_rows):
                 continue
 
             proven = True
-            for source_match, flow in zip(source_matches, flows):
-                source_type = source_match.group("type").strip()
+            for source_row, flow in zip(source_rows, flows):
+                source_type = str(source_row["type"])
                 if (
                     _source_parameters_match_descriptor(
                         source_type + " recoveredInvokeExactResult",
@@ -8012,19 +8071,18 @@ def _normalize_methodhandle_invokeexact_result_casts(
             continue
 
         proof = exact_candidates[0]
-        for source_match in source_matches:
+        for source_row in source_rows:
+            expr_start = int(source_row["expr_start"])
+            expr_end = int(source_row["expr_end"])
             expression = text[
-                method_start + source_match.start("expr"):
-                method_start + source_match.end("expr")
+                method_start + expr_start:
+                method_start + expr_end
             ]
-            source_type = text[
-                method_start + source_match.start("type"):
-                method_start + source_match.end("type")
-            ].strip()
+            source_type = str(source_row["type"])
             edits.append(
                 (
-                    method_start + source_match.start("expr"),
-                    method_start + source_match.end("expr"),
+                    method_start + expr_start,
+                    method_start + expr_end,
                     "(" + source_type + ")(" + expression + ")",
                 )
             )
@@ -8038,13 +8096,13 @@ def _normalize_methodhandle_invokeexact_result_casts(
                 "method_name": method_match.group("name"),
                 "method_descriptor": proof["method"]["descriptor"],
                 "local_names": [
-                    row.group("value") for row in source_matches
+                    str(row["value"]) for row in source_rows
                 ],
                 "target_types": [
-                    row.group("type").strip() for row in source_matches
+                    str(row["type"]) for row in source_rows
                 ],
                 "flows": proof["flows"],
-                "replacement_count": len(source_matches),
+                "replacement_count": len(source_rows),
                 "provenance": {
                     "kind": "source_safety",
                     "reason": (
