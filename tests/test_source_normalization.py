@@ -3550,6 +3550,102 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 )
             )
 
+    def test_package_relative_and_nested_owner_ambiguity_fails_closed(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/q.java": (
+                        "package p;\n"
+                        "public class q {\n"
+                        "    public Object Kind;\n"
+                        "    public static class Kind {\n"
+                        "        public static int A = 1;\n"
+                        "        public static Kind[] values() {\n"
+                        "            return new Kind[0];\n"
+                        "        }\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "p/Current.java": (
+                        "package p;\n"
+                        "public class Current {\n"
+                        "    public static int q;\n"
+                        "    public static int value;\n"
+                        "    static {\n"
+                        "        value = ((p.q.Kind)null).A"
+                        " + ((p.q.Kind)null).values().length;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+
+            package_source = root / "package-src" / "p" / "q" / "Kind.java"
+            package_source.parent.mkdir(parents=True)
+            package_source.write_text(
+                "package p.q;\n"
+                "public class Kind {\n"
+                "    public static int A = 1;\n"
+                "    public static Kind[] values() { return new Kind[0]; }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            package_classes = root / "package-classes"
+            package_classes.mkdir()
+            proc = subprocess.run(
+                [
+                    "javac",
+                    "-d",
+                    str(package_classes),
+                    str(package_source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            package_class = package_classes / "p" / "q" / "Kind.class"
+            with zipfile.ZipFile(jar, "a") as archive:
+                archive.write(package_class, "p/q/Kind.class")
+
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "public class Current {\n"
+                "    public static int q;\n"
+                "    public static int value;\n"
+                "    static {\n"
+                "        value = q.Kind.A + q.Kind.values().length;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertFalse(
+                any(
+                    (
+                        row["kind"]
+                        in {
+                            "shadowed_nested_static_field_owner_type_context",
+                            "shadowed_nested_static_method_owner_type_context",
+                        }
+                        and row.get("method_name") == "<clinit>"
+                    )
+                    for row in report["actions"]
+                )
+            )
+
     def test_imported_static_method_owner_shadowed_by_primitive_parameter(
         self,
     ):
