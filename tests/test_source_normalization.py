@@ -2840,6 +2840,181 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 after.stdout + after.stderr,
             )
 
+    def test_exact_static_call_rewrites_companion_nested_field_uses(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/r.java": (
+                        "package dep;\n"
+                        "public class r {\n"
+                        "    public static int a = 7;\n"
+                        "    public static class a {\n"
+                        "        public static final a d = new a();\n"
+                        "    }\n"
+                        "    public static a E = new a();\n"
+                        "    public static void use(a mode, byte[] x, byte[] y) {}\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "import dep.r;\n"
+                        "public class Current {\n"
+                        "    public void load(byte[] x, byte[] y) {\n"
+                        "        if (r.E != ((dep.r.a)null).d) {\n"
+                        "            r.use(((dep.r.a)null).d, x, y);\n"
+                        "        }\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package use;\n"
+                "import dep.r;\n"
+                "public class Current {\n"
+                "    public void load(byte[] x, byte[] y) {\n"
+                "        if (r.E != r.a.d) {\n"
+                "            r.use(r.a.d, x, y);\n"
+                "        }\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-exact-nested-companion"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("int cannot be dereferenced", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "if (r.E != ((dep.r.a)null).d) {",
+                normalized,
+            )
+            self.assertIn(
+                "r.use(((dep.r.a)null).d, x, y);",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "exact_static_call_nested_type_collision_reconstruction"
+            )
+            self.assertEqual(action["pair_count"], 1)
+            self.assertEqual(action["replacement_count"], 2)
+            self.assertEqual(action["groups"][0]["source_count"], 1)
+            self.assertEqual(action["groups"][0]["source_call_count"], 1)
+            self.assertEqual(action["groups"][0]["source_field_count"], 2)
+            self.assertEqual(
+                len(action["groups"][0]["invocation_offsets"]),
+                1,
+            )
+            self.assertEqual(
+                len(action["groups"][0]["field_offsets"]),
+                2,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "exact_static_call_nested_type_collision_reference_count"
+                ],
+                2,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-exact-nested-companion"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_exact_static_call_companion_field_count_drift_fails_closed(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/r.java": (
+                        "package dep;\n"
+                        "public class r {\n"
+                        "    public static int a = 7;\n"
+                        "    public static class a {\n"
+                        "        public static final a d = new a();\n"
+                        "    }\n"
+                        "    public static a E = new a();\n"
+                        "    public static void use(a mode, byte[] x, byte[] y) {}\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "import dep.r;\n"
+                        "public class Current {\n"
+                        "    public void load(byte[] x, byte[] y) {\n"
+                        "        if (r.E != ((dep.r.a)null).d) {\n"
+                        "            r.use(((dep.r.a)null).d, x, y);\n"
+                        "        }\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package use;\n"
+                "import dep.r;\n"
+                "public class Current {\n"
+                "    public void load(byte[] x, byte[] y) {\n"
+                "        r.use(r.a.d, x, y);\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "exact_static_call_nested_type_collision_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
     def test_exact_static_call_nested_collision_count_drift_fails_closed(
         self,
     ):
