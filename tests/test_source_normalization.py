@@ -10881,6 +10881,306 @@ class ErasedRawMapStringKeyStreamPredicateTests(unittest.TestCase):
             )
 
 
+
+class RawIterableMapEntryLambdaTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        getter_drift: bool = False,
+        filter_drift: bool = False,
+        duplicate: bool = False,
+    ) -> Path:
+        getter_entry = (
+            "Map.Entry<String, V>"
+            if getter_drift
+            else "Map.Entry<K, V>"
+        )
+        filters = (
+            "package p;\n"
+            "import java.util.Map;\n"
+            "import java.util.function.Predicate;\n"
+            "public final class Filters {\n"
+            "    public static Iterable c(\n"
+            "            Iterable values,\n"
+            "            Predicate<Map.Entry<Class<?>, A.Subscriber>> "
+            "predicate) {\n"
+            "        return values;\n"
+            "    }\n"
+            "}\n"
+            if filter_drift
+            else
+            "package p;\n"
+            "import java.util.function.Predicate;\n"
+            "public final class Filters {\n"
+            "    public static <T> Iterable<T> c(\n"
+            "            Iterable<T> values,\n"
+            "            Predicate<? super T> predicate) {\n"
+            "        return values;\n"
+            "    }\n"
+            "}\n"
+        )
+        duplicate_call = (
+            "        Filters.c(this.subscribers.B(), "
+            "entry -> entry.getValue().getObject() == o);\n"
+            if duplicate
+            else ""
+        )
+        return _compile_java_fixture(
+            root,
+            {
+                "p/Entries.java": (
+                    "package p;\n"
+                    "import java.util.Collections;\n"
+                    "import java.util.Iterator;\n"
+                    "public final class Entries<T> "
+                    "implements Iterable<T> {\n"
+                    "    public Iterator<T> iterator() {\n"
+                    "        return Collections.<T>emptyList().iterator();\n"
+                    "    }\n"
+                    "}\n"
+                ),
+                "p/Bag.java": (
+                    "package p;\n"
+                    "import java.util.Map;\n"
+                    "public final class Bag<K, V> {\n"
+                    "    public Entries<" + getter_entry + "> B() {\n"
+                    "        return new Entries<>();\n"
+                    "    }\n"
+                    "}\n"
+                ),
+                "p/Filters.java": filters,
+                "p/A.java": (
+                    "package p;\n"
+                    "public class A {\n"
+                    "    public static final class Subscriber {\n"
+                    "        private final Object object;\n"
+                    "        public Subscriber(Object object) {\n"
+                    "            this.object = object;\n"
+                    "        }\n"
+                    "        public Object getObject() {\n"
+                    "            return this.object;\n"
+                    "        }\n"
+                    "    }\n"
+                    "    private Bag<Class<?>, Subscriber> subscribers "
+                    "= new Bag<>();\n"
+                    "    public void unregister(Object o) {\n"
+                    "        Filters.c(this.subscribers.B(), "
+                    "entry -> entry.getValue().getObject() != o);\n"
+                    + duplicate_call +
+                    "    }\n"
+                    "    public void unregisterSubscriber("
+                    "Subscriber subscriber) {\n"
+                    "        Filters.c(this.subscribers.B(), "
+                    "entry -> subscriber != entry.getValue());\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def _malformed_source(
+        self,
+        *,
+        include_second: bool = True,
+    ) -> str:
+        second = (
+            "    public void unregisterSubscriber("
+            "Subscriber subscriber) {\n"
+            "        Filters.c((Iterable)this.subscribers.B(), "
+            "entry -> subscriber != entry.getValue());\n"
+            "    }\n"
+            if include_second
+            else ""
+        )
+        return (
+            "package p;\n"
+            "public class A {\n"
+            "    public static final class Subscriber {\n"
+            "        private final Object object;\n"
+            "        public Subscriber(Object object) {\n"
+            "            this.object = object;\n"
+            "        }\n"
+            "        public Object getObject() {\n"
+            "            return this.object;\n"
+            "        }\n"
+            "    }\n"
+            "    private Bag<Class<?>, Subscriber> subscribers "
+            "= new Bag<>();\n"
+            "    public void unregister(Object o) {\n"
+            "        Filters.c((Iterable)this.subscribers.B(), "
+            "entry -> entry.getValue().getObject() != o);\n"
+            "    }\n"
+            + second +
+            "}\n"
+        )
+
+    def test_raw_iterable_entry_lambdas_remove_only_erasing_casts(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                self._malformed_source(),
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-entry-lambda"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertNotIn(
+                "(Iterable)this.subscribers.B()",
+                normalized,
+            )
+            self.assertEqual(
+                normalized.count("Filters.c(this.subscribers.B(),"),
+                2,
+            )
+
+            actions = [
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "raw_iterable_map_entry_lambda_cast_removal"
+            ]
+            self.assertEqual(len(actions), 2)
+            self.assertEqual(
+                {row["method_name"] for row in actions},
+                {"unregister", "unregisterSubscriber"},
+            )
+            self.assertTrue(
+                all(row["replacement_count"] == 1 for row in actions)
+            )
+            self.assertTrue(
+                all(
+                    row["functional_owner"]
+                    == "java/util/function/Predicate"
+                    for row in actions
+                )
+            )
+            self.assertTrue(
+                all(
+                    len(row["filter_proofs"]) == 1
+                    and row["filter_proofs"][0]["type_variable"] == "T"
+                    for row in actions
+                )
+            )
+            helper_descriptors = {
+                row["lambda_bootstraps"][0]["helper_descriptor"]
+                for row in actions
+            }
+            self.assertIn(
+                "(Ljava/lang/Object;Ljava/util/Map$Entry;)Z",
+                helper_descriptors,
+            )
+            self.assertIn(
+                "(Lp/A$Subscriber;Ljava/util/Map$Entry;)Z",
+                helper_descriptors,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "raw_iterable_map_entry_lambda_cast_action_count"
+                ],
+                2,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "raw_iterable_map_entry_lambda_cast_reference_count"
+                ],
+                2,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-entry-lambda"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_raw_iterable_entry_lambda_fails_on_getter_signature_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, getter_drift=True)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "raw_iterable_map_entry_lambda_cast_action_count"
+                ],
+                0,
+            )
+
+    def test_raw_iterable_entry_lambda_fails_on_filter_signature_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, filter_drift=True)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "raw_iterable_map_entry_lambda_cast_action_count"
+                ],
+                0,
+            )
+
+    def test_raw_iterable_entry_lambda_fails_on_multiplicity_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, duplicate=True)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source(include_second=False)
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "raw_iterable_map_entry_lambda_cast_action_count"
+                ],
+                0,
+            )
+
 class ErasedSetIntEnhancedForTests(unittest.TestCase):
     def _fixture(self, root: Path, *, exact_drift: bool = False) -> Path:
         value_type = "Long" if exact_drift else "Integer"
