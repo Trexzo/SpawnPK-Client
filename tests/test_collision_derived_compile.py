@@ -24,6 +24,9 @@ from spk_recovery.collision_derived_compile import (
 from spk_recovery.namespace_collision_plan import (
     build_namespace_collision_plan,
 )
+from spk_recovery.java9_macos_eawt_bridge import (
+    V308_SOURCE_AUTHORITY_SHA256,
+)
 from spk_recovery.source_digest import source_tree_digest
 
 
@@ -163,6 +166,7 @@ class CollisionDerivedCompileTests(unittest.TestCase):
             "schema_version": 1,
             "kind": "recovered_source_workspace_manifest",
             "workspace_id": "SRCWS_" + "7" * 20,
+            "source_authority_sha256": V308_SOURCE_AUTHORITY_SHA256,
             "source_tree_sha256": tree_sha,
             "readable_jar_sha256": transform[
                 "output_jar_sha256"
@@ -386,6 +390,37 @@ class CollisionDerivedCompileTests(unittest.TestCase):
                 javac_args,
             )
 
+    def test_java9_eawt_bridge_refuses_non_v308_authority(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (
+                readable,
+                plan_path,
+                recovered,
+                manifest,
+                _old_name,
+                _new_name,
+                _transform,
+            ) = self._fixture(root)
+            manifest = dict(manifest)
+            manifest["source_authority_sha256"] = "0" * 64
+
+            with self.assertRaisesRegex(
+                CollisionDerivedCompileError,
+                "requires exact v308 source authority",
+            ):
+                compile_collision_derived_source(
+                    manifest,
+                    recovered,
+                    readable,
+                    plan_path,
+                    ["rs/"],
+                    root / "compile-wrong-authority",
+                    javac_command="javac",
+                    release=9,
+                    java9_macos_eawt_compile_bridge=True,
+                )
+
     def test_mapping_commitment_mismatch_is_refused(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -486,7 +521,7 @@ class CollisionDerivedCompileTests(unittest.TestCase):
         manifest.update(
             {
                 "build_id": "v308",
-                "source_authority_sha256": "a" * 64,
+                "source_authority_sha256": V308_SOURCE_AUTHORITY_SHA256,
                 "namespace_id": "SEMNS_" + "b" * 20,
             }
         )
