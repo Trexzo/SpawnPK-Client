@@ -124,6 +124,10 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 "/normalization_summary/hidden_layout_constructor_argument_action_count",
             "hidden_layout_constructor_argument_reference_count":
                 "/normalization_summary/hidden_layout_constructor_argument_reference_count",
+            "raw_iterable_map_entry_lambda_cast_action_count":
+                "/normalization_summary/raw_iterable_map_entry_lambda_cast_action_count",
+            "raw_iterable_map_entry_lambda_cast_reference_count":
+                "/normalization_summary/raw_iterable_map_entry_lambda_cast_reference_count",
             "impossible_collectors_tolist_cast_action_count":
                 "/normalization_summary/impossible_collectors_tolist_cast_action_count",
             "impossible_collectors_tolist_cast_reference_count":
@@ -252,6 +256,16 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         self.assertIn(
             'HIDDEN_LAYOUT_CONSTRUCTOR_ARGUMENT_REFERENCES='
             '$($Recovered.hidden_layout_constructor_argument_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'RAW_ITERABLE_MAP_ENTRY_LAMBDA_CAST_ACTIONS='
+            '$($Recovered.raw_iterable_map_entry_lambda_cast_action_count)',
+            script,
+        )
+        self.assertIn(
+            'RAW_ITERABLE_MAP_ENTRY_LAMBDA_CAST_REFERENCES='
+            '$($Recovered.raw_iterable_map_entry_lambda_cast_reference_count)',
             script,
         )
         self.assertIn(
