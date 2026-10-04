@@ -14795,6 +14795,168 @@ class MethodHandleInvokeExactResultCastTests(unittest.TestCase):
 
 
 
+
+class OmittedImportedStaticMethodOwnerTests(unittest.TestCase):
+    def test_omitted_import_static_owner_same_package_collision(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/Base.java": (
+                        "package dep;\n"
+                        "public class Base {\n"
+                        "    public static boolean a() { return true; }\n"
+                        "    public static void a(boolean v) {}\n"
+                        "}\n"
+                    ),
+                    "dep/c.java": (
+                        "package dep;\n"
+                        "public class c extends Base {}\n"
+                    ),
+                    "use/c.java": (
+                        "package use;\n"
+                        "public class c {}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "public class Current {\n"
+                        "    public int c;\n"
+                        "    public static void b(int n) {\n"
+                        "        boolean a = dep.c.a();\n"
+                        "        dep.c.a(true);\n"
+                        "        dep.c.a(a);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package use;\n"
+                "public class Current {\n"
+                "    public int c;\n"
+                "    public static void b(int n) {\n"
+                "        boolean a = c.a();\n"
+                "        c.a(true);\n"
+                "        c.a(a);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-omitted-import-static-owner"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("non-static variable c", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn("boolean a = dep.c.a();", normalized)
+            self.assertIn("dep.c.a(true);", normalized)
+            self.assertIn("dep.c.a(a);", normalized)
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "shadowed_imported_static_method_owner_qualification"
+            )
+            self.assertEqual(action["imported_owner"], "dep/c")
+            self.assertEqual(action["owner_source"], "exact_omitted_import")
+            self.assertEqual(
+                action["same_package_collision_owner"],
+                "use/c",
+            )
+            self.assertEqual(
+                action["hierarchy_primitive_shadow_owner"],
+                "use/Current",
+            )
+            self.assertEqual(action["method_descriptor"], "(I)V")
+            self.assertEqual(action["call_counts"], {"a": 3})
+            self.assertEqual(action["total_call_counts"], {"a": 3})
+            self.assertEqual(action["replacement_count"], 3)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-omitted-import-static-owner"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_omitted_import_static_owner_requires_same_package_collision(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/c.java": (
+                        "package dep;\n"
+                        "public class c {\n"
+                        "    public static boolean a() { return true; }\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "public class Current {\n"
+                        "    public int c;\n"
+                        "    public static boolean b() {\n"
+                        "        return dep.c.a();\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package use;\n"
+                "public class Current {\n"
+                "    public int c;\n"
+                "    public static boolean b() {\n"
+                "        return c.a();\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "shadowed_imported_static_method_owner_qualification"
+                    and row.get("owner_source") == "exact_omitted_import"
+                    for row in report["actions"]
+                )
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
 
