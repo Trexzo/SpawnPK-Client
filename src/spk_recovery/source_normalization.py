@@ -19635,6 +19635,36 @@ def _normalize_missing_synthetic_constructor_accessors(
         r"class\s+(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b[^\{]*\{"
     )
 
+    # Exact callsites below come only from the outer classfile methods.
+    # Keep source multiplicity on the same authority boundary: calls inside
+    # member/local nested-class bodies compile into different classfiles and
+    # must not be allowed to poison one exact outer->nested constructor match.
+    outer_call_code = whole_code
+    nested_class_ranges: list[tuple[int, int]] = []
+    for candidate in class_re.finditer(whole_code):
+        candidate_brace = whole_code.find(
+            "{", candidate.start(), candidate.end()
+        )
+        if candidate_brace < 0:
+            continue
+        if _brace_depth_before(whole_code, candidate_brace) < 1:
+            continue
+        try:
+            candidate_end = _matching_brace_end(
+                whole_code,
+                candidate_brace,
+            )
+        except SourceNormalizationError:
+            continue
+        nested_class_ranges.append(
+            (candidate.start(), candidate_end)
+        )
+    for start, end in reversed(nested_class_ranges):
+        masked = re.sub(r"[^\n]", " ", outer_call_code[start:end])
+        outer_call_code = (
+            outer_call_code[:start] + masked + outer_call_code[end:]
+        )
+
     insertions: list[tuple[int, str]] = []
     actions: list[dict[str, Any]] = []
 
@@ -19757,8 +19787,9 @@ def _normalize_missing_synthetic_constructor_accessors(
             r"\bnew\s+"
             + re.escape(nested_name)
             + r"\s*\(\s*null\s*\)"
+            r"(?!\s*\{)"
         )
-        source_calls = list(call_re.finditer(whole_code))
+        source_calls = list(call_re.finditer(outer_call_code))
         if not source_calls:
             continue
 
