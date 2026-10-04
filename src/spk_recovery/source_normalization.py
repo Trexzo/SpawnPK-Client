@@ -7891,6 +7891,79 @@ def _normalize_methodhandle_invokeexact_result_casts(
     edits: list[tuple[int, int, str]] = []
     actions: list[dict[str, Any]] = []
 
+    imports: dict[str, str] = {}
+    duplicate_imports: set[str] = set()
+    for import_match in _SINGLE_TYPE_IMPORT_RE.finditer(whole_code):
+        dotted = import_match.group("name")
+        simple = dotted.rsplit(".", 1)[-1]
+        internal = dotted.replace(".", "/")
+        previous = imports.get(simple)
+        if previous is not None and previous != internal:
+            duplicate_imports.add(simple)
+        else:
+            imports[simple] = internal
+    for simple in duplicate_imports:
+        imports.pop(simple, None)
+
+    def invokeexact_target_type_matches(
+        source_type: str,
+        return_descriptor: str,
+    ) -> bool:
+        source_shapes = _source_parameter_shapes(
+            source_type + " recoveredInvokeExactResult"
+        )
+        target_shapes = _descriptor_parameter_shapes(
+            "(" + return_descriptor + ")V"
+        )
+        if (
+            source_shapes is None
+            or target_shapes is None
+            or len(source_shapes) != 1
+            or len(target_shapes) != 1
+        ):
+            return False
+
+        source_arrays, source_kind, source_name = source_shapes[0]
+        target_arrays, target_kind, target_name = target_shapes[0]
+        if source_arrays != target_arrays:
+            return False
+        if target_arrays == 0 and target_kind != "ref":
+            return False
+        if target_arrays > 0 and target_kind == "primitive":
+            return (
+                source_kind == "primitive"
+                and source_name == target_name
+            )
+        if source_kind == "primitive":
+            return False
+
+        if source_kind == "qualified_ref":
+            return (
+                _source_parameters_match_descriptor(
+                    source_type + " recoveredInvokeExactResult",
+                    "(" + return_descriptor + ")V",
+                    current_package=current_package,
+                )
+                is True
+            )
+
+        imported = imports.get(source_name)
+        if imported is not None:
+            return imported == target_name
+
+        if target_name == "java/lang/" + source_name:
+            return True
+        if (
+            current_package
+            and target_name == current_package + "/" + source_name
+        ):
+            try:
+                readable_zip.getinfo(target_name + ".class")
+            except KeyError:
+                return False
+            return True
+        return False
+
     type_pattern = (
         r"[A-Za-z_$][A-Za-z0-9_$.]*"
         r"(?:\s*<[^;{}=]+>)?(?:\s*\[\])*"
@@ -8047,13 +8120,9 @@ def _normalize_methodhandle_invokeexact_result_casts(
             proven = True
             for source_row, flow in zip(source_rows, flows):
                 source_type = str(source_row["type"])
-                if (
-                    _source_parameters_match_descriptor(
-                        source_type + " recoveredInvokeExactResult",
-                        "(" + flow["return_descriptor"] + ")V",
-                        current_package=current_package,
-                    )
-                    is not True
+                if not invokeexact_target_type_matches(
+                    source_type,
+                    str(flow["return_descriptor"]),
                 ):
                     proven = False
                     break
