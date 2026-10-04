@@ -74,6 +74,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--java-command", default="java")
     p.add_argument("--javac-command", default="javac")
     p.add_argument(
+        "--java9-macos-eawt-compile-bridge",
+        action="store_true",
+        help=(
+            "explicitly add the v308-required Java 9 macOS eAWT public "
+            "API surface to collision-derived javac only"
+        ),
+    )
+    p.add_argument(
         "--private-diagnostic-report-out",
         type=Path,
         help=(
@@ -115,6 +123,9 @@ def main(argv: list[str] | None = None) -> int:
             ),
             java_command=args.java_command,
             javac_command=args.javac_command,
+            java9_macos_eawt_compile_bridge=(
+                args.java9_macos_eawt_compile_bridge
+            ),
         )
     except (
         ExistingAuthorityReleaseError,
