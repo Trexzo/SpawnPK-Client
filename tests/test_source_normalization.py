@@ -14803,12 +14803,16 @@ class OmittedImportedStaticMethodOwnerTests(unittest.TestCase):
             jar = _compile_java_fixture(
                 root,
                 {
-                    "dep/c.java": (
+                    "dep/Base.java": (
                         "package dep;\n"
-                        "public class c {\n"
+                        "public class Base {\n"
                         "    public static boolean a() { return true; }\n"
                         "    public static void a(boolean v) {}\n"
                         "}\n"
+                    ),
+                    "dep/c.java": (
+                        "package dep;\n"
+                        "public class c extends Base {}\n"
                     ),
                     "use/c.java": (
                         "package use;\n"
