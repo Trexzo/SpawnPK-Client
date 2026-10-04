@@ -2274,12 +2274,6 @@ def _normalize_primitive_shadowed_instance_field_receivers(
                     ),
                     "call_counts": dict(sorted(affected_counts.items())),
                     "total_call_counts": dict(sorted(total_counts.items())),
-                    "finally_lowered_duplicate_call_counts": {
-                        f"{name}/{arity}": count
-                        for (name, arity), count in sorted(
-                            finally_duplicate_counts.items()
-                        )
-                    },
                     "replacement_count": len(affected_hits),
                     "provenance": {
                         "kind": "source_safety",
@@ -17887,6 +17881,12 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
                         if simple in imports
                         else "exact_omitted_import"
                     ),
+                    "finally_lowered_duplicate_call_counts": {
+                        f"{name}/{arity}": count
+                        for (name, arity), count in sorted(
+                            finally_duplicate_counts.items()
+                        )
+                    },
                     "same_package_collision_owner": (
                         None
                         if simple in imports
