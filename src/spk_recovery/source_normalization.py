@@ -14104,6 +14104,434 @@ def _normalize_hidden_layout_constructor_arguments(
     return actions
 
 
+def _normalize_methodhandle_invokeexact_result_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore source casts for signature-polymorphic invokeExact results.
+
+    MethodHandle.invokeExact is signature-polymorphic: the concrete JVM return
+    descriptor is encoded at the callsite even though ordinary Java source
+    lookup exposes Object. Procyon can therefore emit a direct local
+    declaration/assignment whose RHS terminates in invokeExact(), losing the
+    source cast required to preserve that exact descriptor.
+
+    Admit only uniquely correlated methods where every source candidate maps
+    one-for-one to an exact MethodHandle.invokeExact call whose concrete
+    reference/array result is stored immediately with no checkcast. The source
+    target type must resolve, after generic erasure, to that exact return type.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+
+    imports: dict[str, str] = {}
+    duplicate_imports: set[str] = set()
+    for import_match in _SINGLE_TYPE_IMPORT_RE.finditer(whole_code):
+        dotted = import_match.group("name")
+        simple = dotted.rsplit(".", 1)[-1]
+        internal = dotted.replace(".", "/")
+        previous = imports.get(simple)
+        if previous is not None and previous != internal:
+            duplicate_imports.add(simple)
+        else:
+            imports[simple] = internal
+    for simple in duplicate_imports:
+        imports.pop(simple, None)
+
+    declaration_re = re.compile(
+        r"(?m)^(?P<indent>[ \t]*)"
+        r"(?:(?:final)\s+)?"
+        r"(?P<type>[A-Za-z_$][A-Za-z0-9_$.]*"
+        r"(?:\s*<[^;=\n]+>)?(?:\s*\[\s*\])*)\s+"
+        r"(?P<target>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*"
+        r"(?P<expr>[^;\n]+)\s*;"
+    )
+    assignment_re = re.compile(
+        r"(?m)^(?P<indent>[ \t]*)"
+        r"(?P<target>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*"
+        r"(?P<expr>[^;\n]+)\s*;"
+    )
+    local_decl_re = re.compile(
+        r"(?m)(?:^|[;{}]\s*)"
+        r"(?:(?:final)\s+)?"
+        r"(?P<type>[A-Za-z_$][A-Za-z0-9_$.]*"
+        r"(?:\s*<[^;=\n]+>)?(?:\s*\[\s*\])*)\s+"
+        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\s*(?==|;)"
+    )
+
+    def terminal_invokeexact(expr_code: str) -> bool:
+        hits = list(
+            re.finditer(
+                r"\.\s*invokeExact\s*\(",
+                expr_code,
+            )
+        )
+        if len(hits) != 1:
+            return False
+        hit = hits[0]
+        open_paren = expr_code.find("(", hit.start())
+        if open_paren < 0:
+            return False
+        depth = 0
+        close_paren: int | None = None
+        for index in range(open_paren, len(expr_code)):
+            ch = expr_code[index]
+            if ch == "(":
+                depth += 1
+            elif ch == ")":
+                depth -= 1
+                if depth == 0:
+                    close_paren = index + 1
+                    break
+                if depth < 0:
+                    return False
+        if close_paren is None:
+            return False
+        return not expr_code[close_paren:].strip()
+
+    def target_matches_return(
+        source_type: str,
+        return_descriptor: str,
+    ) -> bool:
+        if return_descriptor in {"V", "Ljava/lang/Object;"}:
+            return False
+        target_shapes = _descriptor_parameter_shapes(
+            "(" + return_descriptor + ")V"
+        )
+        source_shapes = _source_parameter_shapes(
+            source_type + " recoveredInvokeExactTarget"
+        )
+        if (
+            target_shapes is None
+            or source_shapes is None
+            or len(target_shapes) != 1
+            or len(source_shapes) != 1
+        ):
+            return False
+        source_arrays, source_kind, source_name = source_shapes[0]
+        target_arrays, target_kind, target_name = target_shapes[0]
+        if target_kind != "ref" or source_arrays != target_arrays:
+            return False
+        if source_kind == "primitive":
+            return False
+
+        if source_kind == "qualified_ref":
+            return (
+                _source_parameters_match_descriptor(
+                    source_type + " recoveredInvokeExactTarget",
+                    "(" + return_descriptor + ")V",
+                    current_package=current_package,
+                )
+                is True
+            )
+
+        imported = imports.get(source_name)
+        if imported is not None:
+            return imported == target_name
+
+        # Without an explicit import, admit only java.lang or an exact
+        # same-package readable type. Wildcard-import resolution remains
+        # intentionally unsupported/fail-closed.
+        if target_name == "java/lang/" + source_name:
+            return True
+        if (
+            current_package
+            and target_name == current_package + "/" + source_name
+        ):
+            try:
+                readable_zip.getinfo(target_name + ".class")
+            except KeyError:
+                return False
+            return True
+        return False
+
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        body_relative_start = brace_start + 1 - method_start
+
+        local_declarations: dict[str, list[tuple[int, str]]] = {}
+        for local_match in local_decl_re.finditer(
+            method_code,
+            body_relative_start,
+        ):
+            local_declarations.setdefault(
+                local_match.group("name"),
+                [],
+            ).append(
+                (
+                    local_match.start(),
+                    local_match.group("type").strip(),
+                )
+            )
+
+        targets: list[dict[str, Any]] = []
+        declaration_spans: set[tuple[int, int]] = set()
+        for source_match in declaration_re.finditer(
+            method_code,
+            body_relative_start,
+        ):
+            expr_code = source_match.group("expr")
+            if not terminal_invokeexact(expr_code):
+                continue
+            expr_start = source_match.start("expr")
+            expr_end = source_match.end("expr")
+            declaration_spans.add(
+                (source_match.start(), source_match.end())
+            )
+            targets.append(
+                {
+                    "kind": "declaration",
+                    "target": source_match.group("target"),
+                    "source_type": source_match.group("type").strip(),
+                    "expr_start": expr_start,
+                    "expr_end": expr_end,
+                }
+            )
+
+        for source_match in assignment_re.finditer(
+            method_code,
+            body_relative_start,
+        ):
+            if any(
+                start <= source_match.start() < end
+                for start, end in declaration_spans
+            ):
+                continue
+            expr_code = source_match.group("expr")
+            if not terminal_invokeexact(expr_code):
+                continue
+            target_name = source_match.group("target")
+            prior = [
+                (offset, source_type)
+                for offset, source_type in local_declarations.get(
+                    target_name, []
+                )
+                if offset < source_match.start()
+            ]
+            if len(prior) != 1:
+                continue
+            targets.append(
+                {
+                    "kind": "assignment",
+                    "target": target_name,
+                    "source_type": prior[0][1],
+                    "expr_start": source_match.start("expr"),
+                    "expr_end": source_match.end("expr"),
+                }
+            )
+
+        if not targets:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        candidates: list[dict[str, Any]] = []
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            exact_return = _descriptor_return_descriptor(descriptor)
+            source_return = method_match.group("return").strip()
+            if source_return == "void":
+                if exact_return != "V":
+                    continue
+            elif exact_return is None or (
+                _source_parameters_match_descriptor(
+                    source_return + " recoveredReturn",
+                    "(" + exact_return + ")V",
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            invoke_indices = [
+                index
+                for index, item in enumerate(instructions)
+                if (
+                    item.get("mnemonic") == "invokevirtual"
+                    and item.get("owner")
+                    == "java/lang/invoke/MethodHandle"
+                    and item.get("name") == "invokeExact"
+                )
+            ]
+            if len(invoke_indices) != len(targets):
+                continue
+
+            flows: list[dict[str, Any]] = []
+            exact_ok = True
+            for index in invoke_indices:
+                if index + 1 >= len(instructions):
+                    exact_ok = False
+                    break
+                invoke = instructions[index]
+                return_descriptor = _descriptor_return_descriptor(
+                    str(invoke.get("descriptor", ""))
+                )
+                store = instructions[index + 1]
+                if (
+                    return_descriptor is None
+                    or return_descriptor in {"V", "Ljava/lang/Object;"}
+                    or store.get("mnemonic") != "astore"
+                ):
+                    exact_ok = False
+                    break
+                return_shapes = _descriptor_parameter_shapes(
+                    "(" + return_descriptor + ")V"
+                )
+                if (
+                    return_shapes is None
+                    or len(return_shapes) != 1
+                    or return_shapes[0][1] != "ref"
+                ):
+                    exact_ok = False
+                    break
+                flows.append(
+                    {
+                        "return_descriptor": return_descriptor,
+                        "invoke_offset": int(invoke.get("offset", -1)),
+                        "store_offset": int(store.get("offset", -1)),
+                        "store_slot": int(store.get("local_index", -1)),
+                    }
+                )
+            if not exact_ok:
+                continue
+
+            remaining = list(flows)
+            matched: list[dict[str, Any]] = []
+            for target in targets:
+                matching = [
+                    index
+                    for index, flow in enumerate(remaining)
+                    if target_matches_return(
+                        str(target["source_type"]),
+                        str(flow["return_descriptor"]),
+                    )
+                ]
+                if len(matching) != 1:
+                    exact_ok = False
+                    break
+                matched.append(remaining.pop(matching[0]))
+            if not exact_ok or remaining:
+                continue
+
+            candidates.append(
+                {
+                    "method": exact_method,
+                    "flows": matched,
+                }
+            )
+
+        if len(candidates) != 1:
+            continue
+
+        proof = candidates[0]
+        for target in targets:
+            expr_start = method_start + int(target["expr_start"])
+            expr_end = method_start + int(target["expr_end"])
+            expression = text[expr_start:expr_end]
+            edits.append(
+                (
+                    expr_start,
+                    expr_end,
+                    "(" + str(target["source_type"]) + ")" + expression,
+                )
+            )
+
+        actions.append(
+            {
+                "kind": "methodhandle_invokeexact_result_cast_reconstruction",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "targets": [
+                    {
+                        "kind": target["kind"],
+                        "name": target["target"],
+                        "source_type": target["source_type"],
+                    }
+                    for target in targets
+                ],
+                "flows": proof["flows"],
+                "replacement_count": len(targets),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_signature_polymorphic_invokeexact_result"
+                    ),
+                    "strategy": (
+                        "exact_invokeexact_descriptor_to_source_target_cast"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping invokeExact result-cast edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_invokedynamic_helper_return_casts(
     *,
     source_root: Path,
@@ -18327,6 +18755,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_methodhandle_invokeexact_result_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_invokedynamic_helper_return_casts(
                         source_root=source_root,
                         path=path,
@@ -18918,6 +19353,17 @@ def normalize_procyon_source(
             int(action.get("replacement_count", 0))
             for action in actions
             if action["kind"] == "linkedhashmap_self_get_result_cast"
+        ),
+        "methodhandle_invokeexact_result_cast_action_count": sum(
+            action["kind"]
+            == "methodhandle_invokeexact_result_cast_reconstruction"
+            for action in actions
+        ),
+        "methodhandle_invokeexact_result_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "methodhandle_invokeexact_result_cast_reconstruction"
         ),
         "imported_parameter_shadow_method_count": sum(
             action["kind"]
