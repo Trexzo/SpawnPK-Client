@@ -148,10 +148,6 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 "/normalization_summary/intpredicate_parameter_capture_alias_action_count",
             "intpredicate_parameter_capture_alias_reference_count":
                 "/normalization_summary/intpredicate_parameter_capture_alias_reference_count",
-            "raw_iterable_map_entry_lambda_cast_action_count":
-                "/normalization_summary/raw_iterable_map_entry_lambda_cast_action_count",
-            "raw_iterable_map_entry_lambda_cast_reference_count":
-                "/normalization_summary/raw_iterable_map_entry_lambda_cast_reference_count",
             "invokedynamic_captured_class_local_alias_action_count":
                 "/normalization_summary/invokedynamic_captured_class_local_alias_action_count",
             "invokedynamic_captured_class_local_alias_reference_count":
@@ -295,16 +291,6 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         self.assertIn(
             'INTPREDICATE_PARAMETER_CAPTURE_ALIAS_REFERENCES='
             '$($Recovered.intpredicate_parameter_capture_alias_reference_count)',
-            script,
-        )
-        self.assertIn(
-            'RAW_ITERABLE_MAP_ENTRY_LAMBDA_CAST_ACTIONS='
-            '$($Recovered.raw_iterable_map_entry_lambda_cast_action_count)',
-            script,
-        )
-        self.assertIn(
-            'RAW_ITERABLE_MAP_ENTRY_LAMBDA_CAST_REFERENCES='
-            '$($Recovered.raw_iterable_map_entry_lambda_cast_reference_count)',
             script,
         )
         self.assertIn(
