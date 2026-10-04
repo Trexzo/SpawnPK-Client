@@ -232,6 +232,10 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 "/normalization_summary/exact_static_call_nested_type_collision_action_count",
             "exact_static_call_nested_type_collision_reference_count":
                 "/normalization_summary/exact_static_call_nested_type_collision_reference_count",
+            "linkedhashmap_field_get_result_cast_action_count":
+                "/normalization_summary/linkedhashmap_field_get_result_cast_action_count",
+            "linkedhashmap_field_get_result_cast_reference_count":
+                "/normalization_summary/linkedhashmap_field_get_result_cast_reference_count",
             "imported_outer_nested_static_field_action_count":
                 "/normalization_summary/shadowed_imported_outer_nested_static_field_action_count",
             "imported_outer_nested_static_field_reference_count":
@@ -281,6 +285,16 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         self.assertIn(
             'COMPILE_TIME_LOMBOK_NONNULL_REFERENCES='
             '$($Recovered.compile_time_lombok_nonnull_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'LINKEDHASHMAP_FIELD_GET_RESULT_CAST_ACTIONS='
+            '$($Recovered.linkedhashmap_field_get_result_cast_action_count)',
+            script,
+        )
+        self.assertIn(
+            'LINKEDHASHMAP_FIELD_GET_RESULT_CAST_REFERENCES='
+            '$($Recovered.linkedhashmap_field_get_result_cast_reference_count)',
             script,
         )
         self.assertIn(
