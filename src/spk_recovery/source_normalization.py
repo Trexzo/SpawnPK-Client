@@ -16062,6 +16062,504 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
     return actions
 
 
+def _normalize_shadowed_exact_static_nested_owner_pairs(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Recover paired static owner contexts without relying on imports.
+
+    Procyon can emit X.method(X.Nested.FIELD, ...) while a value named X is
+    in scope.  When the intended type import is absent or unusable, javac
+    resolves both X tokens as that value.  Recover only the paired type
+    contexts when one exact readable JVM method proves matching invokestatic
+    and getstatic owners/counts, and the source scope independently proves
+    the value shadow.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    hierarchy = _read_readable_hierarchy(
+        readable_zip=readable_zip,
+        internal_name=current_owner,
+    )
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    pair_re = re.compile(
+        r"(?<![A-Za-z0-9_$.])"
+        r"(?P<outer>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\.(?P<method>[A-Za-z_$][A-Za-z0-9_$]*)\s*"
+        r"\(\s*"
+        r"(?P<nested_expr>"
+        r"(?P=outer)"
+        r"\.(?P<nested>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\.(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r")\b"
+    )
+
+    nested_cache: dict[str, Any] = {}
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+
+        shadow_cache: dict[
+            str,
+            tuple[
+                bool,
+                list[tuple[int, int]],
+                bool,
+                list[tuple[int, int]],
+                str | None,
+            ],
+        ] = {}
+
+        def shadow_details(
+            simple: str,
+        ) -> tuple[
+            bool,
+            list[tuple[int, int]],
+            bool,
+            list[tuple[int, int]],
+            str | None,
+        ]:
+            cached = shadow_cache.get(simple)
+            if cached is not None:
+                return cached
+            reference_parameter, reference_local_spans = (
+                _same_name_value_shadow_spans(
+                    method_match=method_match,
+                    method_code=method_code,
+                    simple_name=simple,
+                )
+            )
+            primitive_parameter, primitive_local_spans = (
+                _primitive_same_name_value_shadow_spans(
+                    method_match=method_match,
+                    method_code=method_code,
+                    simple_name=simple,
+                )
+            )
+            hierarchy_shadow_owner: str | None = None
+            for owner, parsed in hierarchy:
+                declarations = [
+                    field
+                    for field in parsed.fields
+                    if (
+                        str(field.get("name", "")) == simple
+                        and _field_visible_from(
+                            declaring_owner=owner,
+                            current_owner=current_owner,
+                            access=int(field.get("access", 0)),
+                        )
+                    )
+                ]
+                if not declarations:
+                    continue
+                if len(declarations) == 1:
+                    hierarchy_shadow_owner = owner
+                break
+            result = (
+                reference_parameter,
+                reference_local_spans,
+                primitive_parameter,
+                primitive_local_spans,
+                hierarchy_shadow_owner,
+            )
+            shadow_cache[simple] = result
+            return result
+
+        occurrences: list[dict[str, Any]] = []
+        for match in pair_re.finditer(method_code):
+            outer = match.group("outer")
+            (
+                reference_parameter,
+                reference_local_spans,
+                primitive_parameter,
+                primitive_local_spans,
+                hierarchy_shadow_owner,
+            ) = shadow_details(outer)
+            whole_method_shadow = bool(
+                reference_parameter
+                or primitive_parameter
+                or hierarchy_shadow_owner
+            )
+            local_spans = sorted(
+                set(reference_local_spans + primitive_local_spans)
+            )
+            if not (
+                whole_method_shadow
+                or any(
+                    start <= match.start("outer") < end
+                    for start, end in local_spans
+                )
+            ):
+                continue
+
+            occurrences.append(
+                {
+                    "outer": outer,
+                    "method": match.group("method"),
+                    "nested": match.group("nested"),
+                    "field": match.group("field"),
+                    "outer_start": method_start + match.start("outer"),
+                    "outer_end": method_start + match.end("outer"),
+                    "nested_start": (
+                        method_start + match.start("nested_expr")
+                    ),
+                    "nested_end": (
+                        method_start + match.end("nested_expr")
+                    ),
+                    "reference_parameter_shadow": reference_parameter,
+                    "primitive_parameter_shadow": primitive_parameter,
+                    "reference_local_shadow_scope_count": len(
+                        reference_local_spans
+                    ),
+                    "primitive_local_shadow_scope_count": len(
+                        primitive_local_spans
+                    ),
+                    "hierarchy_shadow_owner": hierarchy_shadow_owner,
+                }
+            )
+
+        if not occurrences:
+            continue
+
+        source_counts: dict[tuple[str, str, str, str], int] = {}
+        for occurrence in occurrences:
+            key = (
+                str(occurrence["outer"]),
+                str(occurrence["method"]),
+                str(occurrence["nested"]),
+                str(occurrence["field"]),
+            )
+            source_counts[key] = source_counts.get(key, 0) + 1
+
+        candidates: list[dict[str, Any]] = []
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            exact_return = _descriptor_return_descriptor(descriptor)
+            source_return = method_match.group("return").strip()
+            if source_return == "void":
+                if exact_return != "V":
+                    continue
+            elif exact_return is None or (
+                _source_parameters_match_descriptor(
+                    source_return + " recoveredReturn",
+                    "(" + exact_return + ")V",
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+
+            group_proofs: dict[
+                tuple[str, str, str, str],
+                dict[str, Any],
+            ] = {}
+            exact_ok = True
+
+            for key, source_count in sorted(source_counts.items()):
+                outer, method_name, nested, field_name = key
+                invocation_rows = [
+                    invocation
+                    for invocation in exact_method.get(
+                        "method_invocations", []
+                    )
+                    if (
+                        invocation.get("operation") == "invokestatic"
+                        and invocation.get("name") == method_name
+                        and str(
+                            invocation.get("owner", "")
+                        ).rsplit("/", 1)[-1]
+                        == outer
+                    )
+                ]
+                owner_candidates = sorted(
+                    {
+                        str(invocation.get("owner", ""))
+                        for invocation in invocation_rows
+                    }
+                )
+                valid_owners: list[dict[str, Any]] = []
+
+                for exact_outer in owner_candidates:
+                    matching_invocations = [
+                        invocation
+                        for invocation in invocation_rows
+                        if invocation.get("owner") == exact_outer
+                    ]
+                    if len(matching_invocations) != source_count:
+                        continue
+
+                    nested_owner = exact_outer + "$" + nested
+                    parsed = nested_cache.get(nested_owner)
+                    if parsed is None:
+                        try:
+                            parsed = parse_class(
+                                readable_zip.read(
+                                    nested_owner + ".class"
+                                )
+                            )
+                        except (KeyError, ClassFormatError):
+                            continue
+                        nested_cache[nested_owner] = parsed
+                    if parsed.name != nested_owner:
+                        continue
+
+                    field_declarations = [
+                        field
+                        for field in parsed.fields
+                        if (
+                            str(field.get("name", "")) == field_name
+                            and int(field.get("access", 0)) & 0x0008
+                            and _field_visible_from(
+                                declaring_owner=nested_owner,
+                                current_owner=current_owner,
+                                access=int(field.get("access", 0)),
+                            )
+                        )
+                    ]
+                    if len(field_declarations) != 1:
+                        continue
+                    field_descriptor = str(
+                        field_declarations[0].get("descriptor", "")
+                    )
+
+                    exact_fields = [
+                        access
+                        for access in exact_method.get(
+                            "field_accesses", []
+                        )
+                        if (
+                            access.get("operation") == "getstatic"
+                            and access.get("owner") == nested_owner
+                            and access.get("name") == field_name
+                            and str(access.get("descriptor", ""))
+                            == field_descriptor
+                        )
+                    ]
+                    if len(exact_fields) != source_count:
+                        continue
+
+                    field_shape = _descriptor_parameter_shapes(
+                        "(" + field_descriptor + ")V"
+                    )
+                    if field_shape is None or len(field_shape) != 1:
+                        continue
+
+                    invocation_descriptors: list[str] = []
+                    descriptor_match = True
+                    for invocation in matching_invocations:
+                        invocation_descriptor = str(
+                            invocation.get("descriptor", "")
+                        )
+                        invocation_shapes = (
+                            _descriptor_parameter_shapes(
+                                invocation_descriptor
+                            )
+                        )
+                        if (
+                            invocation_shapes is None
+                            or not invocation_shapes
+                            or invocation_shapes[0] != field_shape[0]
+                        ):
+                            descriptor_match = False
+                            break
+                        invocation_descriptors.append(
+                            invocation_descriptor
+                        )
+                    if not descriptor_match:
+                        continue
+
+                    valid_owners.append(
+                        {
+                            "exact_outer": exact_outer,
+                            "nested_owner": nested_owner,
+                            "field_descriptor": field_descriptor,
+                            "invocation_descriptors": sorted(
+                                invocation_descriptors
+                            ),
+                            "invocation_offsets": [
+                                int(row.get("offset", -1))
+                                for row in matching_invocations
+                            ],
+                            "field_offsets": [
+                                int(row.get("offset", -1))
+                                for row in exact_fields
+                            ],
+                        }
+                    )
+
+                if len(valid_owners) != 1:
+                    exact_ok = False
+                    break
+                group_proofs[key] = valid_owners[0]
+
+            if not exact_ok:
+                continue
+            candidates.append(
+                {
+                    "method": exact_method,
+                    "groups": group_proofs,
+                }
+            )
+
+        if len(candidates) != 1:
+            continue
+
+        proof = candidates[0]
+        for occurrence in occurrences:
+            key = (
+                str(occurrence["outer"]),
+                str(occurrence["method"]),
+                str(occurrence["nested"]),
+                str(occurrence["field"]),
+            )
+            group = proof["groups"][key]
+            exact_outer = str(group["exact_outer"])
+            java_outer = exact_outer.replace("/", ".")
+            nested = str(occurrence["nested"])
+            field_name = str(occurrence["field"])
+
+            edits.append(
+                (
+                    int(occurrence["outer_start"]),
+                    int(occurrence["outer_end"]),
+                    java_outer,
+                )
+            )
+            edits.append(
+                (
+                    int(occurrence["nested_start"]),
+                    int(occurrence["nested_end"]),
+                    "(("
+                    + java_outer
+                    + "."
+                    + nested
+                    + ")null)."
+                    + field_name,
+                )
+            )
+
+        actions.append(
+            {
+                "kind": (
+                    "shadowed_exact_static_nested_owner_pair_qualification"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "pair_count": len(occurrences),
+                "replacement_count": 2 * len(occurrences),
+                "groups": [
+                    {
+                        "source_outer": key[0],
+                        "method_name": key[1],
+                        "nested_name": key[2],
+                        "field_name": key[3],
+                        "source_count": source_counts[key],
+                        **group,
+                    }
+                    for key, group in sorted(
+                        proof["groups"].items()
+                    )
+                ],
+                "shadow_proofs": [
+                    {
+                        "source_outer": row["outer"],
+                        "reference_parameter_shadow": row[
+                            "reference_parameter_shadow"
+                        ],
+                        "primitive_parameter_shadow": row[
+                            "primitive_parameter_shadow"
+                        ],
+                        "reference_local_shadow_scope_count": row[
+                            "reference_local_shadow_scope_count"
+                        ],
+                        "primitive_local_shadow_scope_count": row[
+                            "primitive_local_shadow_scope_count"
+                        ],
+                        "hierarchy_shadow_owner": row[
+                            "hierarchy_shadow_owner"
+                        ],
+                    }
+                    for row in occurrences
+                ],
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_shadowed_exact_static_owner_pair_without_import"
+                    ),
+                    "strategy": (
+                        "exact_invokestatic_plus_nested_getstatic_pair"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping exact static/nested owner-pair edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_same_package_static_method_owners_shadowed_by_values(
     *,
     source_root: Path,
@@ -18724,6 +19222,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_shadowed_exact_static_nested_owner_pairs(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_same_package_static_method_owners_shadowed_by_values(
                         source_root=source_root,
                         path=path,
@@ -19331,6 +19836,17 @@ def normalize_procyon_source(
             action["kind"]
             == "shadowed_same_package_static_method_owner_qualification"
             for action in actions
+        ),
+        "shadowed_exact_static_nested_owner_pair_action_count": sum(
+            action["kind"]
+            == "shadowed_exact_static_nested_owner_pair_qualification"
+            for action in actions
+        ),
+        "shadowed_exact_static_nested_owner_pair_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "shadowed_exact_static_nested_owner_pair_qualification"
         ),
         "shadowed_same_package_static_method_reference_count": sum(
             int(action.get("replacement_count", 0))
