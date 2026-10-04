@@ -6467,8 +6467,8 @@ def _normalize_raw_iterable_map_entry_lambda_casts(
 
         marker_annotation = re.compile(
             r"(?<![A-Za-z0-9_$])@"
-            r"(?:[A-Za-z_$][A-Za-z0-9_$]*\\.)*"
-            r"[A-Za-z_$][A-Za-z0-9_$]*\\s*"
+            r"(?:[A-Za-z_$][A-Za-z0-9_$]*\.)*"
+            r"[A-Za-z_$][A-Za-z0-9_$]*\s*"
         )
         stripped = marker_annotation.sub("", params)
         if stripped == params:
