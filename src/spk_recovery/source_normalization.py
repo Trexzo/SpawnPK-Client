@@ -9627,6 +9627,358 @@ def _normalize_erased_map_mixed_object_locals(
     return actions
 
 
+def _normalize_erased_mixed_object_integer_sinks(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore Integer unboxing at primitive sinks of mixed Object locals.
+
+    A mixed Map<String,Object>.get result must remain source-typed Object.
+    Procyon can nevertheless elide branch-local Integer casts/unboxing after
+    assigning the raw result to that Object local. Restore only primitive-int
+    sinks whose exact local lifetime proves aload -> checkcast Integer ->
+    Integer.intValue(), with the exact sink family and multiplicity preserved.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    map_param_re = re.compile(
+        r"(?:java\.util\.)?Map\s*<\s*[^,<>]+\s*,\s*"
+        r"(?:java\.lang\.)?Object\s*>\s+"
+        r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+    )
+    object_assignment_re = re.compile(
+        r"\b(?:(?:final)\s+)?(?:java\.lang\.)?Object\s+"
+        r"(?P<value>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*"
+        r"(?P<map>[A-Za-z_$][A-Za-z0-9_$]*)\s*\.\s*get\s*\(\s*"
+        r"(?P<key>[A-Za-z_$][A-Za-z0-9_$]*)\s*\)\s*;"
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        params = method_match.group("params")
+        parameter_names = _source_parameter_names(params)
+        if parameter_names is None:
+            continue
+        map_params = {
+            match.group("name")
+            for match in map_param_re.finditer(params)
+        }
+        if not map_params:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        assignments = [
+            match
+            for match in object_assignment_re.finditer(method_code)
+            if match.group("map") in map_params
+        ]
+        if len(assignments) != 1:
+            continue
+        assignment = assignments[0]
+        value_name = assignment.group("value")
+
+        array_sink_re = re.compile(
+            r"(?P<expr>"
+            r"(?P<array>[A-Za-z_$][A-Za-z0-9_$]*)"
+            r"\s*\[\s*(?P<index>[A-Za-z_$][A-Za-z0-9_$]*)\s*\]"
+            r"\s*=\s*"
+            r"(?P<value>\b" + re.escape(value_name) + r"\b)"
+            r"\s*;)"
+        )
+        int_local_sink_re = re.compile(
+            r"(?P<expr>\b(?:(?:final)\s+)?int\s+"
+            r"(?P<local>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*"
+            r"(?P<value>\b" + re.escape(value_name) + r"\b)"
+            r"\s*;)"
+        )
+        array_sinks = [
+            match
+            for match in array_sink_re.finditer(method_code)
+            if match.start() > assignment.end()
+        ]
+        local_sinks = [
+            match
+            for match in int_local_sink_re.finditer(method_code)
+            if match.start() > assignment.end()
+        ]
+        if not array_sinks and not local_sinks:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        exact_candidates: list[dict[str, Any]] = []
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    params,
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            shapes = _descriptor_parameter_shapes(descriptor)
+            slots = _descriptor_parameter_local_slots(
+                descriptor,
+                is_static=source_static,
+            )
+            if (
+                shapes is None
+                or slots is None
+                or len(shapes) != len(parameter_names)
+            ):
+                continue
+
+            map_slots: dict[str, int] = {}
+            for name, shape, slot in zip(parameter_names, shapes, slots):
+                if (
+                    name in map_params
+                    and shape[0] == 0
+                    and shape[1] == "ref"
+                    and shape[2] in {
+                        "java/util/Map",
+                        "java/util/HashMap",
+                        "java/util/LinkedHashMap",
+                        "java/util/TreeMap",
+                    }
+                ):
+                    map_slots[name] = slot
+            map_slot = map_slots.get(assignment.group("map"))
+            if map_slot is None:
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            object_flows: list[dict[str, Any]] = []
+
+            for index, item in enumerate(instructions[:-1]):
+                if not (
+                    item.get("mnemonic")
+                    in {"invokeinterface", "invokevirtual"}
+                    and item.get("owner")
+                    in {
+                        "java/util/Map",
+                        "java/util/HashMap",
+                        "java/util/LinkedHashMap",
+                        "java/util/TreeMap",
+                    }
+                    and item.get("name") == "get"
+                    and item.get("descriptor")
+                    == "(Ljava/lang/Object;)Ljava/lang/Object;"
+                ):
+                    continue
+                store = instructions[index + 1]
+                if store.get("mnemonic") != "astore":
+                    continue
+
+                receiver_matches = False
+                for probe in range(max(0, index - 5), index):
+                    prior = instructions[probe]
+                    if (
+                        prior.get("mnemonic") == "aload"
+                        and int(prior.get("local_index", -1)) == map_slot
+                    ):
+                        receiver_matches = True
+                if not receiver_matches:
+                    continue
+
+                local_slot = int(store.get("local_index", -1))
+                if local_slot < 0:
+                    continue
+                object_flows.append(
+                    {
+                        "local_slot": local_slot,
+                        "get_offset": int(item.get("offset", -1)),
+                        "store_offset": int(store.get("offset", -1)),
+                        "store_instruction_index": index + 1,
+                    }
+                )
+
+            if len(object_flows) != 1:
+                continue
+            object_flow = object_flows[0]
+            local_slot = object_flow["local_slot"]
+            store_index = object_flow["store_instruction_index"]
+
+            lifetime_end = len(instructions)
+            for tail in range(store_index + 1, len(instructions)):
+                candidate = instructions[tail]
+                if (
+                    candidate.get("mnemonic") == "astore"
+                    and int(candidate.get("local_index", -1)) == local_slot
+                ):
+                    lifetime_end = tail
+                    break
+
+            exact_sinks: list[dict[str, Any]] = []
+            for index in range(store_index + 1, lifetime_end - 3):
+                load = instructions[index]
+                cast = instructions[index + 1]
+                unbox = instructions[index + 2]
+                sink = instructions[index + 3]
+                if not (
+                    load.get("mnemonic") == "aload"
+                    and int(load.get("local_index", -1)) == local_slot
+                    and cast.get("mnemonic") == "checkcast"
+                    and cast.get("type") == "java/lang/Integer"
+                    and unbox.get("mnemonic")
+                    in {"invokevirtual", "invokeinterface"}
+                    and unbox.get("owner") == "java/lang/Integer"
+                    and unbox.get("name") == "intValue"
+                    and unbox.get("descriptor") == "()I"
+                ):
+                    continue
+
+                sink_mnemonic = str(sink.get("mnemonic", ""))
+                if sink_mnemonic == "iastore":
+                    sink_kind = "array"
+                elif sink_mnemonic == "istore":
+                    sink_kind = "local"
+                else:
+                    continue
+                exact_sinks.append(
+                    {
+                        "kind": sink_kind,
+                        "load_offset": int(load.get("offset", -1)),
+                        "checkcast_offset": int(cast.get("offset", -1)),
+                        "unbox_offset": int(unbox.get("offset", -1)),
+                        "sink_offset": int(sink.get("offset", -1)),
+                        "sink_local_index": (
+                            int(sink.get("local_index", -1))
+                            if sink_kind == "local"
+                            else None
+                        ),
+                    }
+                )
+
+            exact_array_count = sum(
+                row["kind"] == "array" for row in exact_sinks
+            )
+            exact_local_count = sum(
+                row["kind"] == "local" for row in exact_sinks
+            )
+            if (
+                exact_array_count != len(array_sinks)
+                or exact_local_count != len(local_sinks)
+            ):
+                continue
+
+            exact_candidates.append(
+                {
+                    "method": exact_method,
+                    "object_flow": object_flow,
+                    "sinks": exact_sinks,
+                }
+            )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        proof = exact_candidates[0]
+        replacement = "((Integer)" + value_name + ").intValue()"
+        source_sinks = sorted(
+            [
+                (match.start("value"), match.end("value"), "array")
+                for match in array_sinks
+            ]
+            + [
+                (match.start("value"), match.end("value"), "local")
+                for match in local_sinks
+            ]
+        )
+        for start, end, _kind in source_sinks:
+            edits.append(
+                (
+                    method_start + start,
+                    method_start + end,
+                    replacement,
+                )
+            )
+
+        actions.append(
+            {
+                "kind": (
+                    "erased_mixed_object_integer_sink_unbox_reconstruction"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "map_parameter": assignment.group("map"),
+                "value_local": value_name,
+                "exact_object_flow": proof["object_flow"],
+                "exact_integer_sinks": proof["sinks"],
+                "array_sink_count": len(array_sinks),
+                "local_sink_count": len(local_sinks),
+                "replacement_count": len(source_sinks),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_lost_branch_integer_unbox_for_mixed_object_local"
+                    ),
+                    "strategy": (
+                        "exact_object_slot_integer_checkcast_intvalue_sink"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping mixed Object Integer-sink edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_erased_map_number_assignments(
     *,
     source_root: Path,
@@ -20494,6 +20846,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_erased_mixed_object_integer_sinks(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_erased_map_number_assignments(
                         source_root=source_root,
                         path=path,
@@ -21026,6 +21385,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "erased_map_mixed_object_local_reconstruction"
+        ),
+        "erased_mixed_object_integer_sink_unbox_action_count": sum(
+            action["kind"]
+            == "erased_mixed_object_integer_sink_unbox_reconstruction"
+            for action in actions
+        ),
+        "erased_mixed_object_integer_sink_unbox_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "erased_mixed_object_integer_sink_unbox_reconstruction"
         ),
         "erased_map_number_assignment_action_count": sum(
             action["kind"]

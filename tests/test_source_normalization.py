@@ -14957,6 +14957,289 @@ class OmittedImportedStaticMethodOwnerTests(unittest.TestCase):
             )
 
 
+class ErasedMixedObjectIntegerSinkTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        mode: str = "exact",
+    ) -> Path:
+        if mode == "exact":
+            integer_body = (
+                "            a[n] = ((Integer)value).intValue();\n"
+                "            b[n] = ((Integer)value).intValue();\n"
+                "            c[n] = ((Integer)value).intValue();\n"
+                "            int intValue = ((Integer)value).intValue();\n"
+                "            if (intValue < 0) { return intValue; }\n"
+            )
+            extra_decl = ""
+            helper = ""
+        elif mode == "wrong_wrapper":
+            integer_body = (
+                "            a[n] = ((Number)value).intValue();\n"
+                "            b[n] = ((Number)value).intValue();\n"
+                "            c[n] = ((Number)value).intValue();\n"
+                "            int intValue = ((Number)value).intValue();\n"
+                "            if (intValue < 0) { return intValue; }\n"
+            )
+            extra_decl = ""
+            helper = ""
+        elif mode == "sink_shape":
+            integer_body = (
+                "            consume(((Integer)value).intValue());\n"
+                "            consume(((Integer)value).intValue());\n"
+                "            consume(((Integer)value).intValue());\n"
+                "            consume(((Integer)value).intValue());\n"
+            )
+            extra_decl = ""
+            helper = "    private static void consume(int value) {}\n"
+        elif mode == "multiplicity":
+            integer_body = (
+                "            a[n] = ((Integer)value).intValue();\n"
+                "            b[n] = ((Integer)value).intValue();\n"
+                "            int intValue = ((Integer)value).intValue();\n"
+                "            if (intValue < 0) { return intValue; }\n"
+            )
+            extra_decl = ""
+            helper = ""
+        elif mode == "two_lifetimes":
+            integer_body = (
+                "            a[n] = ((Integer)value).intValue();\n"
+                "            b[n] = ((Integer)value).intValue();\n"
+                "            c[n] = ((Integer)value).intValue();\n"
+                "            int intValue = ((Integer)value).intValue();\n"
+                "            if (intValue < 0) { return intValue; }\n"
+            )
+            extra_decl = (
+                "        Object other = map.get(otherKey);\n"
+                "        if (other instanceof Integer) {\n"
+                "            return ((Integer)other).intValue();\n"
+                "        }\n"
+            )
+            helper = ""
+        elif mode == "helper_unbox":
+            integer_body = (
+                "            a[n] = unbox(value);\n"
+                "            b[n] = unbox(value);\n"
+                "            c[n] = unbox(value);\n"
+                "            int intValue = unbox(value);\n"
+                "            if (intValue < 0) { return intValue; }\n"
+            )
+            extra_decl = ""
+            helper = (
+                "    private static int unbox(Object value) {\n"
+                "        return ((Integer)value).intValue();\n"
+                "    }\n"
+            )
+        else:
+            raise AssertionError(mode)
+
+        return _compile_java_fixture(
+            root,
+            {
+                "p/A.java": (
+                    "package p;\n"
+                    "import java.util.Map;\n"
+                    "public class A {\n"
+                    + helper
+                    + "    public static int read("
+                    "Map<String, Object> map, String key, String otherKey, "
+                    "int n, int[] a, int[] b, int[] c) {\n"
+                    "        Object value = map.get(key);\n"
+                    "        if (value instanceof Integer) {\n"
+                    + integer_body
+                    + "        }\n"
+                    "        if (value instanceof String) {\n"
+                    "            return ((String)value).length();\n"
+                    "        }\n"
+                    "        if (value instanceof Boolean"
+                    " && ((Boolean)value).booleanValue()) {\n"
+                    "            return 1;\n"
+                    "        }\n"
+                    + extra_decl
+                    + "        return 0;\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def _malformed_source(
+        self,
+        *,
+        declaration_type: str = "Integer",
+    ) -> str:
+        return (
+            "package p;\n"
+            "import java.util.Map;\n"
+            "public class A {\n"
+            "    public static int read("
+            "Map<String, Object> map, String key, String otherKey, "
+            "int n, int[] a, int[] b, int[] c) {\n"
+            f"        final {declaration_type} value = map.get(key);\n"
+            "        if (value instanceof Integer) {\n"
+            "            a[n] = value;\n"
+            "            b[n] = value;\n"
+            "            c[n] = value;\n"
+            "            final int intValue = value;\n"
+            "            if (intValue < 0) { return intValue; }\n"
+            "        }\n"
+            "        if (((String)value).isEmpty()) {\n"
+            "            return 2;\n"
+            "        }\n"
+            "        if (((Boolean)value).booleanValue()) {\n"
+            "            return 1;\n"
+            "        }\n"
+            "        return 0;\n"
+            "    }\n"
+            "}\n"
+        )
+
+    def _write_source(
+        self,
+        root: Path,
+        *,
+        declaration_type: str = "Integer",
+    ) -> Path:
+        source = root / "src" / "p" / "A.java"
+        source.parent.mkdir(parents=True)
+        source.write_text(
+            self._malformed_source(
+                declaration_type=declaration_type,
+            ),
+            encoding="utf-8",
+        )
+        return source
+
+    def test_mixed_object_integer_sinks_restore_exact_unboxing(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = self._write_source(root)
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-mixed-object-int-sinks"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "final Object value = map.get(key);",
+                normalized,
+            )
+            self.assertEqual(
+                normalized.count("((Integer)value).intValue()"),
+                4,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_mixed_object_integer_sink_unbox_reconstruction"
+            )
+            self.assertEqual(action["method_descriptor"], (
+                "(Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;"
+                "I[I[I[I)I"
+            ))
+            self.assertEqual(action["value_local"], "value")
+            self.assertEqual(action["array_sink_count"], 3)
+            self.assertEqual(action["local_sink_count"], 1)
+            self.assertEqual(action["replacement_count"], 4)
+            self.assertEqual(
+                len(action["exact_integer_sinks"]),
+                4,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "erased_mixed_object_integer_sink_unbox_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "erased_mixed_object_integer_sink_unbox_reference_count"
+                ],
+                4,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-mixed-object-int-sinks"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def _assert_no_integer_sink_action(
+        self,
+        *,
+        mode: str,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, mode=mode)
+            source = self._write_source(
+                root,
+                declaration_type="Object",
+            )
+            original = source.read_text(encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == (
+                        "erased_mixed_object_integer_sink_"
+                        "unbox_reconstruction"
+                    )
+                    for row in report["actions"]
+                )
+            )
+
+    def test_mixed_object_integer_sinks_fail_on_wrong_wrapper(self):
+        self._assert_no_integer_sink_action(mode="wrong_wrapper")
+
+    def test_mixed_object_integer_sinks_fail_on_missing_direct_checkcast(self):
+        self._assert_no_integer_sink_action(mode="helper_unbox")
+
+    def test_mixed_object_integer_sinks_fail_on_sink_shape_drift(self):
+        self._assert_no_integer_sink_action(mode="sink_shape")
+
+    def test_mixed_object_integer_sinks_fail_on_multiplicity_drift(self):
+        self._assert_no_integer_sink_action(mode="multiplicity")
+
+    def test_mixed_object_integer_sinks_fail_on_multiple_object_lifetimes(self):
+        self._assert_no_integer_sink_action(mode="two_lifetimes")
+
+
 if __name__ == "__main__":
     unittest.main()
 
