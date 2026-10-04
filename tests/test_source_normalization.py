@@ -9195,6 +9195,264 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
             )
             self.assertEqual(after.returncode, 0, after.stdout + after.stderr)
 
+    def test_linkedhashmap_field_get_result_cast_repairs_constructor(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Value.java": (
+                        "package p;\n"
+                        "public class Value {}\n"
+                    ),
+                    "p/Actual.java": (
+                        "package p;\n"
+                        "public class Actual {}\n"
+                    ),
+                    "p/FolderMap.java": (
+                        "package p;\n"
+                        "import java.util.LinkedHashMap;\n"
+                        "public class FolderMap "
+                        "extends LinkedHashMap<String, Actual> {}\n"
+                    ),
+                    "p/Sink.java": (
+                        "package p;\n"
+                        "import java.util.List;\n"
+                        "public class Sink {\n"
+                        "    public void a(String key, List<Value> values) {}\n"
+                        "}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.LinkedHashMap;\n"
+                        "import java.util.List;\n"
+                        "public class A {\n"
+                        "    private final FolderMap folders = new FolderMap();\n"
+                        "    private final Sink sink = new Sink();\n"
+                        "    public A() {\n"
+                        "        this.sink.a(\"Main\", "
+                        "(List<Value>)((LinkedHashMap)this.folders)"
+                        ".get(\"Main\"));\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.LinkedHashMap;\n"
+                "import java.util.List;\n"
+                "public class A {\n"
+                "    private final FolderMap folders = new FolderMap();\n"
+                "    private final Sink sink = new Sink();\n"
+                "    public A() {\n"
+                "        this.sink.a(\"Main\", "
+                "((LinkedHashMap<K, List<Value>>)this.folders)"
+                ".get(\"Main\"));\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-map-field-result"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                '((List<Value>)((LinkedHashMap)this.folders).get("Main"))',
+                normalized,
+            )
+            self.assertNotIn("LinkedHashMap<K, List<Value>>", normalized)
+
+            actions = [
+                row
+                for row in report["actions"]
+                if row["kind"] == "linkedhashmap_field_get_result_cast"
+            ]
+            self.assertEqual(len(actions), 1)
+            action = actions[0]
+            self.assertEqual(action["method_name"], "<init>")
+            self.assertEqual(action["method_descriptor"], "()V")
+            self.assertEqual(action["field_counts"], {"folders": 1})
+            self.assertEqual(action["field_owners"], ["p/FolderMap"])
+            self.assertEqual(
+                action["field_signatures"],
+                [
+                    "Ljava/util/LinkedHashMap<"
+                    "Ljava/lang/String;Lp/Actual;>;"
+                ],
+            )
+            self.assertEqual(action["result_types"], ["List<Value>"])
+            self.assertEqual(action["exact_flow_counts"], {"folders": 1})
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                report["summary"][
+                    "linkedhashmap_field_get_result_cast_method_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "linkedhashmap_field_get_result_cast_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-map-field-result"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stdout + after.stderr)
+
+    def test_linkedhashmap_field_get_result_cast_requires_exact_list_checkcast(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Value.java": "package p; public class Value {}\n",
+                    "p/Actual.java": "package p; public class Actual {}\n",
+                    "p/FolderMap.java": (
+                        "package p;\n"
+                        "import java.util.LinkedHashMap;\n"
+                        "public class FolderMap "
+                        "extends LinkedHashMap<String, Actual> {}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.LinkedHashMap;\n"
+                        "public class A {\n"
+                        "    private final FolderMap folders = new FolderMap();\n"
+                        "    public A() {\n"
+                        "        Object ignored = "
+                        "((LinkedHashMap)this.folders).get(\"Main\");\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.util.LinkedHashMap;\n"
+                "import java.util.List;\n"
+                "public class A {\n"
+                "    private final FolderMap folders = new FolderMap();\n"
+                "    public A() {\n"
+                "        Object ignored = "
+                "((LinkedHashMap<K, List<Value>>)this.folders)"
+                ".get(\"Main\");\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "linkedhashmap_field_get_result_cast_reference_count"
+                ],
+                0,
+            )
+
+    def test_linkedhashmap_field_get_result_cast_fails_on_multiplicity_drift(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Value.java": "package p; public class Value {}\n",
+                    "p/Actual.java": "package p; public class Actual {}\n",
+                    "p/FolderMap.java": (
+                        "package p;\n"
+                        "import java.util.LinkedHashMap;\n"
+                        "public class FolderMap "
+                        "extends LinkedHashMap<String, Actual> {}\n"
+                    ),
+                    "p/Sink.java": (
+                        "package p;\n"
+                        "import java.util.List;\n"
+                        "public class Sink {\n"
+                        "    public void a(String key, List<Value> values) {}\n"
+                        "}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.LinkedHashMap;\n"
+                        "import java.util.List;\n"
+                        "public class A {\n"
+                        "    private final FolderMap folders = new FolderMap();\n"
+                        "    private final Sink sink = new Sink();\n"
+                        "    public A() {\n"
+                        "        this.sink.a(\"A\", "
+                        "(List<Value>)((LinkedHashMap)this.folders).get(\"A\"));\n"
+                        "        this.sink.a(\"B\", "
+                        "(List<Value>)((LinkedHashMap)this.folders).get(\"B\"));\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.util.LinkedHashMap;\n"
+                "import java.util.List;\n"
+                "public class A {\n"
+                "    private final FolderMap folders = new FolderMap();\n"
+                "    private final Sink sink = new Sink();\n"
+                "    public A() {\n"
+                "        this.sink.a(\"A\", "
+                "((LinkedHashMap<K, List<Value>>)this.folders).get(\"A\"));\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "linkedhashmap_field_get_result_cast_reference_count"
+                ],
+                0,
+            )
+
     def test_linkedhashmap_field_placeholder_uses_exact_map_field(
         self,
     ):
