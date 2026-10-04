@@ -7865,6 +7865,340 @@ def _normalize_erased_hashmap_get_array_returns(
     return actions
 
 
+def _normalize_methodhandle_invokeexact_result_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore source casts for signature-polymorphic invokeExact results."""
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    imports: dict[str, str] = {}
+    duplicate_imports: set[str] = set()
+    for import_match in _SINGLE_TYPE_IMPORT_RE.finditer(whole_code):
+        dotted = import_match.group("name")
+        simple = dotted.rsplit(".", 1)[-1]
+        internal = dotted.replace(".", "/")
+        previous = imports.get(simple)
+        if previous is not None and previous != internal:
+            duplicate_imports.add(simple)
+        else:
+            imports[simple] = internal
+    for simple in duplicate_imports:
+        imports.pop(simple, None)
+
+    def invokeexact_target_type_matches(
+        source_type: str,
+        return_descriptor: str,
+    ) -> bool:
+        source_shapes = _source_parameter_shapes(
+            source_type + " recoveredInvokeExactResult"
+        )
+        target_shapes = _descriptor_parameter_shapes(
+            "(" + return_descriptor + ")V"
+        )
+        if (
+            source_shapes is None
+            or target_shapes is None
+            or len(source_shapes) != 1
+            or len(target_shapes) != 1
+        ):
+            return False
+
+        source_arrays, source_kind, source_name = source_shapes[0]
+        target_arrays, target_kind, target_name = target_shapes[0]
+        if source_arrays != target_arrays:
+            return False
+        if target_arrays == 0 and target_kind != "ref":
+            return False
+        if target_arrays > 0 and target_kind == "primitive":
+            return (
+                source_kind == "primitive"
+                and source_name == target_name
+            )
+        if source_kind == "primitive":
+            return False
+
+        if source_kind == "qualified_ref":
+            return (
+                _source_parameters_match_descriptor(
+                    source_type + " recoveredInvokeExactResult",
+                    "(" + return_descriptor + ")V",
+                    current_package=current_package,
+                )
+                is True
+            )
+
+        imported = imports.get(source_name)
+        if imported is not None:
+            return imported == target_name
+
+        if target_name == "java/lang/" + source_name:
+            return True
+        if (
+            current_package
+            and target_name == current_package + "/" + source_name
+        ):
+            try:
+                readable_zip.getinfo(target_name + ".class")
+            except KeyError:
+                return False
+            return True
+        return False
+
+    type_pattern = (
+        r"[A-Za-z_$][A-Za-z0-9_$.]*"
+        r"(?:\s*<[^;{}=]+>)?(?:\s*\[\])*"
+    )
+    declaration_assignment_re = re.compile(
+        r"\b(?:(?:final)\s+)?"
+        r"(?P<type>" + type_pattern + r")\s+"
+        r"(?P<value>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*"
+        r"(?P<expr>[^;{}]*?\.\s*invokeExact\s*\([^;{}]*\))"
+        r"\s*;"
+    )
+    plain_assignment_re = re.compile(
+        r"(?<![A-Za-z0-9_$.])"
+        r"(?P<value>[A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*"
+        r"(?P<expr>[^;{}]*?\.\s*invokeExact\s*\([^;{}]*\))"
+        r"\s*;"
+    )
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        source_rows: list[dict[str, Any]] = []
+
+        declaration_matches = list(
+            declaration_assignment_re.finditer(method_code)
+        )
+        covered = [
+            (match.start(), match.end())
+            for match in declaration_matches
+        ]
+        for match in declaration_matches:
+            source_rows.append(
+                {
+                    "start": match.start(),
+                    "type": match.group("type").strip(),
+                    "value": match.group("value"),
+                    "expr_start": match.start("expr"),
+                    "expr_end": match.end("expr"),
+                }
+            )
+
+        for match in plain_assignment_re.finditer(method_code):
+            if any(
+                left <= match.start() < right
+                for left, right in covered
+            ):
+                continue
+            value_name = match.group("value")
+            declaration_re = re.compile(
+                r"\b(?:(?:final)\s+)?"
+                r"(?P<type>" + type_pattern + r")\s+"
+                + re.escape(value_name)
+                + r"\s*(?:;|=)"
+            )
+            prior = list(
+                declaration_re.finditer(
+                    method_code[:match.start()]
+                )
+            )
+            if len(prior) != 1:
+                continue
+            source_rows.append(
+                {
+                    "start": match.start(),
+                    "type": prior[0].group("type").strip(),
+                    "value": value_name,
+                    "expr_start": match.start("expr"),
+                    "expr_end": match.end("expr"),
+                }
+            )
+
+        source_rows.sort(key=lambda row: int(row["start"]))
+        if not source_rows:
+            continue
+
+        params = method_match.group("params")
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        exact_candidates: list[dict[str, Any]] = []
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    params,
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            flows: list[dict[str, Any]] = []
+            for index, item in enumerate(instructions[:-1]):
+                if not (
+                    item.get("mnemonic")
+                    in {"invokevirtual", "invokeinterface"}
+                    and item.get("owner")
+                    == "java/lang/invoke/MethodHandle"
+                    and item.get("name") == "invokeExact"
+                ):
+                    continue
+                call_descriptor = str(item.get("descriptor", ""))
+                return_descriptor = _descriptor_return_descriptor(
+                    call_descriptor
+                )
+                if (
+                    return_descriptor is None
+                    or return_descriptor in {"V", "Ljava/lang/Object;"}
+                    or (
+                        not return_descriptor.startswith("L")
+                        and not return_descriptor.startswith("[")
+                    )
+                ):
+                    continue
+                store = instructions[index + 1]
+                if store.get("mnemonic") != "astore":
+                    continue
+                flows.append(
+                    {
+                        "invoke_offset": int(item.get("offset", -1)),
+                        "store_offset": int(store.get("offset", -1)),
+                        "store_slot": int(store.get("local_index", -1)),
+                        "call_descriptor": call_descriptor,
+                        "return_descriptor": return_descriptor,
+                    }
+                )
+
+            if len(flows) != len(source_rows):
+                continue
+
+            proven = True
+            for source_row, flow in zip(source_rows, flows):
+                source_type = str(source_row["type"])
+                if not invokeexact_target_type_matches(
+                    source_type,
+                    str(flow["return_descriptor"]),
+                ):
+                    proven = False
+                    break
+            if not proven:
+                continue
+
+            exact_candidates.append(
+                {
+                    "method": exact_method,
+                    "flows": flows,
+                }
+            )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        proof = exact_candidates[0]
+        for source_row in source_rows:
+            expr_start = int(source_row["expr_start"])
+            expr_end = int(source_row["expr_end"])
+            expression = text[
+                method_start + expr_start:
+                method_start + expr_end
+            ]
+            source_type = str(source_row["type"])
+            edits.append(
+                (
+                    method_start + expr_start,
+                    method_start + expr_end,
+                    "(" + source_type + ")(" + expression + ")",
+                )
+            )
+
+        actions.append(
+            {
+                "kind": (
+                    "methodhandle_invokeexact_result_cast_reconstruction"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "local_names": [
+                    str(row["value"]) for row in source_rows
+                ],
+                "target_types": [
+                    str(row["type"]) for row in source_rows
+                ],
+                "flows": proof["flows"],
+                "replacement_count": len(source_rows),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "signature_polymorphic_invokeexact_result_type_erasure"
+                    ),
+                    "strategy": (
+                        "exact_invokeexact_descriptor_return_plus_immediate_store"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping invokeExact result-cast edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_erased_map_mixed_object_locals(
     *,
     source_root: Path,
@@ -18194,6 +18528,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_methodhandle_invokeexact_result_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_erased_map_mixed_object_locals(
                         source_root=source_root,
                         path=path,
@@ -18675,6 +19016,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "erased_hashmap_get_array_return_cast_reconstruction"
+        ),
+        "methodhandle_invokeexact_result_cast_action_count": sum(
+            action["kind"]
+            == "methodhandle_invokeexact_result_cast_reconstruction"
+            for action in actions
+        ),
+        "methodhandle_invokeexact_result_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "methodhandle_invokeexact_result_cast_reconstruction"
         ),
         "erased_map_mixed_object_local_action_count": sum(
             action["kind"]
