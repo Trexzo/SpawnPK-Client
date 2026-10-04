@@ -14818,7 +14818,7 @@ class OmittedImportedStaticMethodOwnerTests(unittest.TestCase):
                         "package use;\n"
                         "public class Current {\n"
                         "    public int c;\n"
-                        "    public static void b() {\n"
+                        "    public static void b(int n) {\n"
                         "        boolean a = dep.c.a();\n"
                         "        dep.c.a(true);\n"
                         "        dep.c.a(a);\n"
@@ -14833,7 +14833,7 @@ class OmittedImportedStaticMethodOwnerTests(unittest.TestCase):
                 "package use;\n"
                 "public class Current {\n"
                 "    public int c;\n"
-                "    public static void b() {\n"
+                "    public static void b(int n) {\n"
                 "        boolean a = c.a();\n"
                 "        c.a(true);\n"
                 "        c.a(a);\n"
@@ -14880,6 +14880,7 @@ class OmittedImportedStaticMethodOwnerTests(unittest.TestCase):
                 action["hierarchy_primitive_shadow_owner"],
                 "use/Current",
             )
+            self.assertEqual(action["method_descriptor"], "(I)V")
             self.assertEqual(action["call_counts"], {"a": 3})
             self.assertEqual(action["total_call_counts"], {"a": 3})
             self.assertEqual(action["replacement_count"], 3)
