@@ -8022,7 +8022,6 @@ def _normalize_raw_iterable_map_entry_lambdas(
                 for index in range(len(instructions) - 2):
                     field_get = instructions[index]
                     member_call = instructions[index + 1]
-                    indy = instructions[index + 2]
                     if not (
                         field_get.get("mnemonic") == "getfield"
                         and field_get.get("owner") == current_owner
@@ -8035,7 +8034,43 @@ def _normalize_raw_iterable_map_entry_lambdas(
                         and member_call.get("name") == member_name
                         and member_call.get("descriptor")
                         == member_descriptor
-                        and indy.get("mnemonic") == "invokedynamic"
+                    ):
+                        continue
+
+                    indy_index = next(
+                        (
+                            probe
+                            for probe in range(
+                                index + 2,
+                                min(len(instructions), index + 6),
+                            )
+                            if instructions[probe].get("mnemonic")
+                            == "invokedynamic"
+                        ),
+                        None,
+                    )
+                    if indy_index is None:
+                        continue
+                    indy = instructions[indy_index]
+                    indy_descriptor = str(
+                        indy.get("descriptor", "")
+                    )
+                    capture_shapes = _descriptor_parameter_shapes(
+                        indy_descriptor
+                    )
+                    if capture_shapes is None:
+                        continue
+                    capture_rows = instructions[
+                        index + 2:indy_index
+                    ]
+                    if len(capture_rows) != len(capture_shapes):
+                        continue
+                    load_mnemonics = {
+                        "aload", "iload", "lload", "fload", "dload"
+                    }
+                    if any(
+                        row.get("mnemonic") not in load_mnemonics
+                        for row in capture_rows
                     ):
                         continue
 
@@ -8112,6 +8147,11 @@ def _normalize_raw_iterable_map_entry_lambdas(
                             "invokedynamic_offset": int(
                                 indy.get("offset", -1)
                             ),
+                            "capture_load_offsets": [
+                                int(row.get("offset", -1))
+                                for row in capture_rows
+                            ],
+                            "capture_descriptor": indy_descriptor,
                             "bootstrap_method_attr_index": (
                                 bootstrap_index
                             ),
