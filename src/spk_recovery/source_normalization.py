@@ -19341,6 +19341,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_raw_iterable_map_entry_lambda_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_impossible_collectors_tolist_casts(
                         source_root=source_root,
                         path=path,
@@ -19809,6 +19816,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "intpredicate_parameter_capture_alias"
+        ),
+        "raw_iterable_map_entry_lambda_cast_action_count": sum(
+            action["kind"]
+            == "raw_iterable_map_entry_lambda_cast_removal"
+            for action in actions
+        ),
+        "raw_iterable_map_entry_lambda_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "raw_iterable_map_entry_lambda_cast_removal"
         ),
         "impossible_collectors_tolist_cast_action_count": sum(
             action["kind"] == "impossible_collectors_tolist_cast_removal"
