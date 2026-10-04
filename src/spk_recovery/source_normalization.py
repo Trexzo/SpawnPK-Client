@@ -6311,7 +6311,10 @@ def _normalize_raw_iterable_map_entry_lambda_casts(
     zero-argument getter returns a container of Map.Entry<K,V> from the same
     type variables, the enclosing static filter call is itself generic over
     Iterable<T>, and the exact LambdaMetafactory helper receives the same
-    erased Map.Entry element after all captured parameters.
+    erased Map.Entry element after all captured parameters.  Source method
+    correlation tolerates marker parameter annotations because they are not
+    part of a JVM method descriptor; every exact receiver/filter/lambda
+    multiplicity gate remains unchanged.
     """
 
     rel = path.relative_to(source_root).as_posix()
@@ -6449,6 +6452,32 @@ def _normalize_raw_iterable_map_entry_lambda_casts(
             "entry_key_type_variable": signature_match.group("key"),
             "entry_value_type_variable": signature_match.group("value"),
         }
+
+    def source_parameters_match_descriptor(
+        params: str,
+        descriptor: str,
+    ) -> bool | None:
+        direct = _source_parameters_match_descriptor(
+            params,
+            descriptor,
+            current_package=current_package,
+        )
+        if direct is True:
+            return True
+
+        marker_annotation = re.compile(
+            r"(?<![A-Za-z0-9_$])@"
+            r"(?:[A-Za-z_$][A-Za-z0-9_$]*\.)*"
+            r"[A-Za-z_$][A-Za-z0-9_$]*\s*"
+        )
+        stripped = marker_annotation.sub("", params)
+        if stripped == params:
+            return direct
+        return _source_parameters_match_descriptor(
+            stripped,
+            descriptor,
+            current_package=current_package,
+        )
 
     def source_owner_matches(
         source_owner: str,
@@ -6759,10 +6788,9 @@ def _normalize_raw_iterable_map_entry_lambda_casts(
                 exact_method.get("descriptor", "")
             )
             if (
-                _source_parameters_match_descriptor(
+                source_parameters_match_descriptor(
                     method_match.group("params"),
                     exact_descriptor,
-                    current_package=current_package,
                 )
                 is not True
             ):

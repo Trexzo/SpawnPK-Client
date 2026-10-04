@@ -11181,6 +11181,173 @@ class RawIterableMapEntryLambdaTests(unittest.TestCase):
                 0,
             )
 
+    def test_raw_iterable_entry_lambda_custom_sam_overloads_match_production_shape(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/Nonnull.java": (
+                        "package p;\n"
+                        "import java.lang.annotation.ElementType;\n"
+                        "import java.lang.annotation.Retention;\n"
+                        "import java.lang.annotation.RetentionPolicy;\n"
+                        "import java.lang.annotation.Target;\n"
+                        "@Retention(RetentionPolicy.RUNTIME)\n"
+                        "@Target(ElementType.PARAMETER)\n"
+                        "public @interface Nonnull {}\n"
+                    ),
+                    "p/W.java": (
+                        "package p;\n"
+                        "@FunctionalInterface\n"
+                        "public interface W<T> {\n"
+                        "    boolean a(T value);\n"
+                        "}\n"
+                    ),
+                    "p/cb.java": (
+                        "package p;\n"
+                        "import java.util.Collections;\n"
+                        "import java.util.Iterator;\n"
+                        "public final class cb<T> implements Iterable<T> {\n"
+                        "    public Iterator<T> iterator() {\n"
+                        "        return Collections.<T>emptyList().iterator();\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "p/cv.java": (
+                        "package p;\n"
+                        "import java.util.Map;\n"
+                        "public final class cv<K, V> {\n"
+                        "    public cb<Map.Entry<K, V>> B() {\n"
+                        "        return new cb<>();\n"
+                        "    }\n"
+                        "    public static <K, V> cv<K, V> b(\n"
+                        "            Iterable<? extends Map.Entry<? extends K, "
+                        "? extends V>> values) {\n"
+                        "        return new cv<>();\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "p/db.java": (
+                        "package p;\n"
+                        "public final class db {\n"
+                        "    public static <T> Iterable<T> c(\n"
+                        "            Iterable<T> values, W<? super T> predicate) {\n"
+                        "        return values;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                    "p/EventBus.java": (
+                        "package p;\n"
+                        "public class EventBus {\n"
+                        "    public static final class Subscriber {\n"
+                        "        private final Object object;\n"
+                        "        public Subscriber(Object object) { this.object = object; }\n"
+                        "        public Object getObject() { return this.object; }\n"
+                        "    }\n"
+                        "    private cv<Class<?>, Subscriber> subscribers = new cv<>();\n"
+                        "    public void unregister(@Nonnull final Object o) {\n"                        "        this.subscribers = cv.b(db.c(this.subscribers.B(), "
+                        "entry -> entry.getValue().getObject() != o));\n"
+                        "    }\n"
+                        "    public void unregister(Subscriber subscriber) {\n"
+                        "        this.subscribers = cv.b(db.c(this.subscribers.B(), "
+                        "entry -> subscriber != entry.getValue()));\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "EventBus.java"
+            source.parent.mkdir(parents=True)
+            malformed = (
+                "package p;\n"
+                "public class EventBus {\n"
+                "    public static final class Subscriber {\n"
+                "        private final Object object;\n"
+                "        public Subscriber(Object object) { this.object = object; }\n"
+                "        public Object getObject() { return this.object; }\n"
+                "    }\n"
+                "    private cv<Class<?>, Subscriber> subscribers = new cv<>();\n"
+                "    public void unregister(@Nonnull final Object o) {\n"                "        this.subscribers = (cv<Class<?>, Subscriber>)cv.b("
+                "db.c((Iterable)this.subscribers.B(), "
+                "entry -> entry.getValue().getObject() != o));\n"
+                "    }\n"
+                "    public void unregister(Subscriber subscriber) {\n"
+                "        this.subscribers = (cv<Class<?>, Subscriber>)cv.b("
+                "db.c((Iterable)this.subscribers.B(), "
+                "entry -> subscriber != entry.getValue()));\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-production-entry-lambda"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("getValue", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertEqual(
+                normalized.count("(Iterable)this.subscribers.B()"),
+                0,
+            )
+            actions = [
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "raw_iterable_map_entry_lambda_cast_removal"
+            ]
+            self.assertEqual(len(actions), 2)
+            self.assertEqual(
+                {row["method_name"] for row in actions},
+                {"unregister"},
+            )
+            self.assertTrue(
+                all(row["functional_owner"] == "p/W" for row in actions)
+            )
+            helper_descriptors = {
+                row["lambda_bootstraps"][0]["helper_descriptor"]
+                for row in actions
+            }
+            self.assertIn(
+                "(Ljava/lang/Object;Ljava/util/Map$Entry;)Z",
+                helper_descriptors,
+            )
+            self.assertIn(
+                "(Lp/EventBus$Subscriber;Ljava/util/Map$Entry;)Z",
+                helper_descriptors,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-production-entry-lambda"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stderr)
+
+
 class ErasedSetIntEnhancedForTests(unittest.TestCase):
     def _fixture(self, root: Path, *, exact_drift: bool = False) -> Path:
         value_type = "Long" if exact_drift else "Integer"
