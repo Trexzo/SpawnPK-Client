@@ -13074,6 +13074,226 @@ class MissingSyntheticConstructorAccessorTests(unittest.TestCase):
 
 
 
+class ErasedMapMixedObjectLocalTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        mode: str = "mixed",
+    ) -> Path:
+        if mode == "mixed":
+            body = (
+                "        Object value = map.get(key);\n"
+                "        if (value instanceof Integer) {\n"
+                "            return ((Integer)value).intValue();\n"
+                "        }\n"
+                "        if (value instanceof String) {\n"
+                "            return ((String)value).length();\n"
+                "        }\n"
+                "        return 0;\n"
+            )
+        elif mode == "single":
+            body = (
+                "        Object value = map.get(key);\n"
+                "        if (value instanceof Integer) {\n"
+                "            return ((Integer)value).intValue();\n"
+                "        }\n"
+                "        return 0;\n"
+            )
+        elif mode == "immediate":
+            body = (
+                "        Integer value = (Integer)map.get(key);\n"
+                "        return value.intValue();\n"
+            )
+        elif mode == "double":
+            body = (
+                "        Object value = map.get(key);\n"
+                "        if (value instanceof Integer) {\n"
+                "            ((Integer)value).intValue();\n"
+                "        }\n"
+                "        if (value instanceof String) {\n"
+                "            ((String)value).length();\n"
+                "        }\n"
+                "        Object other = map.get(otherKey);\n"
+                "        if (other instanceof Integer) {\n"
+                "            ((Integer)other).intValue();\n"
+                "        }\n"
+                "        if (other instanceof String) {\n"
+                "            ((String)other).length();\n"
+                "        }\n"
+                "        return 0;\n"
+            )
+        else:
+            raise AssertionError(mode)
+
+        return _compile_java_fixture(
+            root,
+            {
+                "p/A.java": (
+                    "package p;\n"
+                    "import java.util.Map;\n"
+                    "public class A {\n"
+                    "    public static int read("
+                    "Map<String, Object> map, String key, "
+                    "String otherKey) {\n"
+                    + body
+                    + "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def _malformed_source(self) -> str:
+        return (
+            "package p;\n"
+            "import java.util.Map;\n"
+            "public class A {\n"
+            "    public static int read("
+            "Map<String, Object> map, String key, "
+            "String otherKey) {\n"
+            "        final Integer value = map.get(key);\n"
+            "        if (value instanceof Integer) {\n"
+            "            return ((Integer)value).intValue();\n"
+            "        }\n"
+            "        if (((String)value).isEmpty()) {\n"
+            "            return 1;\n"
+            "        }\n"
+            "        return ((String)value).length();\n"
+            "    }\n"
+            "}\n"
+        )
+
+    def test_mixed_map_get_local_restores_object_declaration(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                self._malformed_source(),
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-mixed-map-local"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "final Object value = map.get(key);",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "erased_map_mixed_object_local_reconstruction"
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(action["local_names"], ["value"])
+            self.assertEqual(
+                set(action["flows"][0]["checkcast_types"]),
+                {"java/lang/Integer", "java/lang/String"},
+            )
+            self.assertEqual(
+                report["summary"][
+                    "erased_map_mixed_object_local_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "erased_map_mixed_object_local_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-mixed-map-local"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_mixed_map_get_local_fails_on_single_type_lifetime(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, mode="single")
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "erased_map_mixed_object_local_action_count"
+                ],
+                0,
+            )
+
+    def test_mixed_map_get_local_fails_on_immediate_checkcast(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, mode="immediate")
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "erased_map_mixed_object_local_action_count"
+                ],
+                0,
+            )
+
+    def test_mixed_map_get_local_fails_on_exact_multiplicity_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, mode="double")
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertEqual(
+                report["summary"][
+                    "erased_map_mixed_object_local_action_count"
+                ],
+                0,
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
 
