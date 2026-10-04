@@ -726,6 +726,7 @@ $ReleaseArgs = @(
     $Java,
     "--javac-command",
     $Javac,
+    "--java9-macos-eawt-compile-bridge",
     "--private-diagnostic-report-out",
     $PrivateDiagnostic,
     "--out-dir",
