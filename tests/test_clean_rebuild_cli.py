@@ -35,6 +35,10 @@ class CleanRebuildCliTests(unittest.TestCase):
                 "collision_plan_id": "JCOLLISIONPLAN_TEST",
                 "collision_report_id": "JNSCOLLISION_TEST",
                 "runtime_transformed_dependency_allowed": False,
+                "runtime_platform_bridges_allowed": False,
+                "compile_only_platform_bridges": [
+                    {"bridge_id": "J9EAWTBRIDGE_TEST"}
+                ],
             },
         }
 
@@ -61,6 +65,7 @@ class CleanRebuildCliTests(unittest.TestCase):
                 str(root / "source"),
                 "--private-collision-plan",
                 str(collision_plan),
+                "--java9-macos-eawt-compile-bridge",
                 "--out-dir",
                 str(root / "out"),
             ]
@@ -78,6 +83,11 @@ class CleanRebuildCliTests(unittest.TestCase):
                     "private_collision_plan_path"
                 ],
                 collision_plan,
+            )
+            self.assertTrue(
+                mocked.call_args.kwargs[
+                    "java9_macos_eawt_compile_bridge"
+                ]
             )
 
         text = output.getvalue()
@@ -103,6 +113,14 @@ class CleanRebuildCliTests(unittest.TestCase):
         )
         self.assertIn(
             "runtime_transformed_dependency_allowed=False",
+            text,
+        )
+        self.assertIn(
+            'compile_only_platform_bridge_ids_json=["J9EAWTBRIDGE_TEST"]',
+            text,
+        )
+        self.assertIn(
+            "runtime_platform_bridges_allowed=False",
             text,
         )
         self.assertNotIn("namespace_compile_id=", text)
