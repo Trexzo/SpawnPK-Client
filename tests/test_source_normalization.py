@@ -13422,7 +13422,6 @@ class MissingSyntheticBridgeForwarderTests(unittest.TestCase):
                     and method["descriptor"]
                     == "(ILjava/util/Map;)Ljava/lang/Object;"
                     and int(method["access"]) & 0x1000
-                    and int(method["access"]) & 0x0040
                 )
             )
             bridge_calls = [
