@@ -18494,7 +18494,8 @@ def _normalize_linkedhashmap_field_get_result_casts(
 
             instructions = list(exact_method.get("instructions", []))
             flows: list[dict[str, Any]] = []
-            for index in range(len(instructions) - 3):
+            for index in range(1, len(instructions) - 3):
+                receiver_load = instructions[index - 1]
                 field_get = instructions[index]
                 key_load = instructions[index + 1]
                 get_call = instructions[index + 2]
@@ -18504,7 +18505,9 @@ def _normalize_linkedhashmap_field_get_result_casts(
                 if proof is None:
                     continue
                 if not (
-                    field_get.get("mnemonic") == "getfield"
+                    receiver_load.get("mnemonic") == "aload"
+                    and int(receiver_load.get("local_index", -1)) == 0
+                    and field_get.get("mnemonic") == "getfield"
                     and field_get.get("owner") == current_owner
                     and field_get.get("descriptor") == proof["descriptor"]
                     and key_load.get("mnemonic")
