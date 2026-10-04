@@ -19635,6 +19635,26 @@ def _normalize_missing_synthetic_constructor_accessors(
         r"class\s+(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)\b[^\{]*\{"
     )
 
+    nested_source_ranges: list[tuple[int, int]] = []
+    for lexical_class in class_re.finditer(whole_code):
+        lexical_brace = whole_code.find(
+            "{", lexical_class.start(), lexical_class.end()
+        )
+        if lexical_brace < 0:
+            continue
+        if _brace_depth_before(whole_code, lexical_brace) < 1:
+            continue
+        try:
+            lexical_end = _matching_brace_end(
+                whole_code,
+                lexical_brace,
+            )
+        except SourceNormalizationError:
+            continue
+        nested_source_ranges.append(
+            (lexical_class.start(), lexical_end)
+        )
+
     insertions: list[tuple[int, str]] = []
     actions: list[dict[str, Any]] = []
 
@@ -19758,7 +19778,15 @@ def _normalize_missing_synthetic_constructor_accessors(
             + re.escape(nested_name)
             + r"\s*\(\s*null\s*\)"
         )
-        source_calls = list(call_re.finditer(whole_code))
+        all_simple_name_calls = list(call_re.finditer(whole_code))
+        source_calls = [
+            match
+            for match in all_simple_name_calls
+            if not any(
+                start <= match.start() < end
+                for start, end in nested_source_ranges
+            )
+        ]
         if not source_calls:
             continue
 
@@ -19821,6 +19849,9 @@ def _normalize_missing_synthetic_constructor_accessors(
                 ),
                 "dummy_parameter_owner": dummy_owner,
                 "source_callsite_count": len(source_calls),
+                "excluded_nested_source_callsite_count": (
+                    len(all_simple_name_calls) - len(source_calls)
+                ),
                 "exact_callsites": exact_calls,
                 "replacement_count": 1,
                 "provenance": {
