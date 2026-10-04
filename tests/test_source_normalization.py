@@ -10890,6 +10890,7 @@ class RawIterableMapEntryLambdaTests(unittest.TestCase):
         getter_drift: bool = False,
         filter_drift: bool = False,
         duplicate: bool = False,
+        unrelated_filter: bool = False,
     ) -> Path:
         getter_entry = (
             "Map.Entry<String, V>"
@@ -10924,6 +10925,12 @@ class RawIterableMapEntryLambdaTests(unittest.TestCase):
             "        Filters.c(this.subscribers.B(), "
             "entry -> entry.getValue().getObject() == o);\n"
             if duplicate
+            else ""
+        )
+        unrelated_call = (
+            "        Filters.c(java.util.Collections.singletonList(\"x\"), "
+            "value -> !value.isEmpty());\n"
+            if unrelated_filter
             else ""
         )
         return _compile_java_fixture(
@@ -10968,6 +10975,7 @@ class RawIterableMapEntryLambdaTests(unittest.TestCase):
                     "        Filters.c(this.subscribers.B(), "
                     "entry -> entry.getValue().getObject() != o);\n"
                     + duplicate_call +
+                    unrelated_call +
                     "    }\n"
                     "    public void unregisterSubscriber("
                     "Subscriber subscriber) {\n"
@@ -10983,6 +10991,7 @@ class RawIterableMapEntryLambdaTests(unittest.TestCase):
         self,
         *,
         include_second: bool = True,
+        include_unrelated: bool = False,
     ) -> str:
         second = (
             "    public void unregisterSubscriber("
@@ -10991,6 +11000,12 @@ class RawIterableMapEntryLambdaTests(unittest.TestCase):
             "entry -> subscriber != entry.getValue());\n"
             "    }\n"
             if include_second
+            else ""
+        )
+        unrelated = (
+            "        Filters.c(java.util.Collections.singletonList(\"x\"), "
+            "value -> !value.isEmpty());\n"
+            if include_unrelated
             else ""
         )
         return (
@@ -11010,6 +11025,7 @@ class RawIterableMapEntryLambdaTests(unittest.TestCase):
             "    public void unregister(Object o) {\n"
             "        Filters.c((Iterable)this.subscribers.B(), "
             "entry -> entry.getValue().getObject() != o);\n"
+            + unrelated +
             "    }\n"
             + second +
             "}\n"
@@ -11112,6 +11128,102 @@ class RawIterableMapEntryLambdaTests(unittest.TestCase):
                     str(jar),
                     "-d",
                     str(root / "after-entry-lambda"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_raw_iterable_entry_lambda_ignores_unrelated_same_filter_call(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, unrelated_filter=True)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                self._malformed_source(
+                    include_second=False,
+                    include_unrelated=True,
+                ),
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-unrelated-filter"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertNotIn(
+                "(Iterable)this.subscribers.B()",
+                normalized,
+            )
+            self.assertIn(
+                'Filters.c(java.util.Collections.singletonList("x"),',
+                normalized,
+            )
+
+            actions = [
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "raw_iterable_map_entry_lambda_cast_removal"
+            ]
+            self.assertEqual(len(actions), 1)
+            self.assertEqual(actions[0]["replacement_count"], 1)
+            self.assertEqual(len(actions[0]["filter_proofs"]), 2)
+            self.assertEqual(
+                {
+                    (
+                        row["owner"],
+                        row["name"],
+                        row["descriptor"],
+                        row["signature"],
+                        row["functional_owner"],
+                    )
+                    for row in actions[0]["filter_proofs"]
+                }.__len__(),
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "raw_iterable_map_entry_lambda_cast_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "raw_iterable_map_entry_lambda_cast_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-unrelated-filter"),
                     str(source),
                 ],
                 stdout=subprocess.PIPE,
