@@ -7865,6 +7865,340 @@ def _normalize_erased_hashmap_get_array_returns(
     return actions
 
 
+def _normalize_raw_iterable_map_entry_lambdas(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Remove raw Iterable casts that erase proven Map.Entry lambda typing."""
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    bootstrap_methods = list(profile.get("bootstrap_methods", []))
+    if not bootstrap_methods:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+    owner_cache: dict[str, dict[str, Any]] = {}
+
+    source_re = re.compile(
+        r"(?P<callowner>[A-Za-z_$][A-Za-z0-9_$.]*)\s*\.\s*"
+        r"(?P<filter>[A-Za-z_$][A-Za-z0-9_$]*)\s*\(\s*"
+        r"(?P<cast>\(\s*(?:java\.lang\.)?Iterable\s*\)\s*)"
+        r"this\s*\.\s*(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\.\s*(?P<member>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\(\s*\)\s*,\s*"
+        r"(?P<lambda>[A-Za-z_$][A-Za-z0-9_$]*)\s*->"
+    )
+
+    expected_bootstrap_owners = {"java/lang/invoke/LambdaMetafactory"}
+
+    def class_profile(owner: str) -> dict[str, Any] | None:
+        cached = owner_cache.get(owner)
+        if cached is not None:
+            return cached
+        try:
+            parsed = profile_class_field_accesses(
+                readable_zip.read(owner + ".class")
+            )
+        except (KeyError, BytecodeProfileError):
+            return None
+        if str(parsed.get("internal_name", "")) != owner:
+            return None
+        owner_cache[owner] = parsed
+        return parsed
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        source_matches = list(source_re.finditer(method_code))
+        if not source_matches:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        exact_candidates: list[dict[str, Any]] = []
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            proofs: list[dict[str, Any]] = []
+
+            for source_match in source_matches:
+                field_name = source_match.group("field")
+                member_name = source_match.group("member")
+                fields = [
+                    row
+                    for row in profile.get("fields", [])
+                    if row.get("name") == field_name
+                    and str(row.get("descriptor", "")).startswith("L")
+                    and isinstance(row.get("signature"), str)
+                ]
+                if len(fields) != 1:
+                    proofs = []
+                    break
+                field = fields[0]
+                field_descriptor = str(field["descriptor"])
+                field_owner = field_descriptor[1:-1]
+                field_signature = str(field["signature"])
+                if not (
+                    field_signature.startswith("L" + field_owner + "<")
+                    and field_signature.endswith(">;")
+                ):
+                    proofs = []
+                    break
+
+                receiver_profile = class_profile(field_owner)
+                if receiver_profile is None:
+                    proofs = []
+                    break
+                members = [
+                    row
+                    for row in receiver_profile.get("methods", [])
+                    if row.get("name") == member_name
+                    and str(row.get("descriptor", "")).startswith("()L")
+                    and isinstance(row.get("signature"), str)
+                    and re.fullmatch(
+                        r"\(\)L[^;<>]+<"
+                        r"Ljava/util/Map\$Entry<"
+                        r"T[A-Za-z0-9_$]+;"
+                        r"T[A-Za-z0-9_$]+;"
+                        r">;>;",
+                        str(row.get("signature")),
+                    )
+                ]
+                if len(members) != 1:
+                    proofs = []
+                    break
+                member = members[0]
+                member_descriptor = str(member["descriptor"])
+
+                matching_flows: list[dict[str, Any]] = []
+                for index in range(len(instructions) - 2):
+                    field_get = instructions[index]
+                    member_call = instructions[index + 1]
+                    indy = instructions[index + 2]
+                    if not (
+                        field_get.get("mnemonic") == "getfield"
+                        and field_get.get("owner") == current_owner
+                        and field_get.get("name") == field_name
+                        and field_get.get("descriptor")
+                        == field_descriptor
+                        and member_call.get("mnemonic")
+                        in {"invokevirtual", "invokeinterface"}
+                        and member_call.get("owner") == field_owner
+                        and member_call.get("name") == member_name
+                        and member_call.get("descriptor")
+                        == member_descriptor
+                        and indy.get("mnemonic") == "invokedynamic"
+                    ):
+                        continue
+
+                    bootstrap_index = int(
+                        indy.get("bootstrap_method_attr_index", -1)
+                    )
+                    if not (
+                        0 <= bootstrap_index < len(bootstrap_methods)
+                    ):
+                        continue
+                    bootstrap = bootstrap_methods[bootstrap_index]
+                    bm = bootstrap.get("bootstrap_method", {})
+                    if not (
+                        bm.get("owner") in expected_bootstrap_owners
+                        and bm.get("name")
+                        in {"metafactory", "altMetafactory"}
+                    ):
+                        continue
+
+                    method_types = [
+                        str(arg.get("descriptor", ""))
+                        for arg in bootstrap.get("arguments", [])
+                        if arg.get("kind") == "method_type"
+                    ]
+                    entry_sam = [
+                        value
+                        for value in method_types
+                        if value
+                        == "(Ljava/util/Map$Entry;)Z"
+                    ]
+                    if len(entry_sam) != 1:
+                        continue
+
+                    implementation_handles = [
+                        arg.get("method_handle", {})
+                        for arg in bootstrap.get("arguments", [])
+                        if arg.get("kind") == "method_handle"
+                        and arg.get("method_handle", {}).get("owner")
+                        == current_owner
+                    ]
+                    if len(implementation_handles) != 1:
+                        continue
+                    helper = implementation_handles[0]
+                    helper_shapes = _descriptor_parameter_shapes(
+                        str(helper.get("descriptor", ""))
+                    )
+                    helper_return = _descriptor_return_descriptor(
+                        str(helper.get("descriptor", ""))
+                    )
+                    if not (
+                        helper_shapes is not None
+                        and helper_return == "Z"
+                        and helper_shapes
+                        and helper_shapes[-1]
+                        == (0, "ref", "java/util/Map$Entry")
+                    ):
+                        continue
+
+                    matching_flows.append(
+                        {
+                            "field_name": field_name,
+                            "field_owner": field_owner,
+                            "field_signature": field_signature,
+                            "member_name": member_name,
+                            "member_signature": str(
+                                member.get("signature", "")
+                            ),
+                            "field_get_offset": int(
+                                field_get.get("offset", -1)
+                            ),
+                            "member_call_offset": int(
+                                member_call.get("offset", -1)
+                            ),
+                            "invokedynamic_offset": int(
+                                indy.get("offset", -1)
+                            ),
+                            "bootstrap_method_attr_index": (
+                                bootstrap_index
+                            ),
+                            "helper_name": str(
+                                helper.get("name", "")
+                            ),
+                            "helper_descriptor": str(
+                                helper.get("descriptor", "")
+                            ),
+                            "instantiated_sam": (
+                                "(Ljava/util/Map$Entry;)Z"
+                            ),
+                        }
+                    )
+
+                if len(matching_flows) != 1:
+                    proofs = []
+                    break
+                proofs.append(matching_flows[0])
+
+            if len(proofs) != len(source_matches):
+                continue
+
+            exact_candidates.append(
+                {
+                    "method": exact_method,
+                    "proofs": proofs,
+                }
+            )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        proof = exact_candidates[0]
+        for source_match in source_matches:
+            edits.append(
+                (
+                    method_start + source_match.start("cast"),
+                    method_start + source_match.end("cast"),
+                    "",
+                )
+            )
+
+        actions.append(
+            {
+                "kind": "raw_iterable_map_entry_lambda_reconstruction",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "field_names": [
+                    row.group("field") for row in source_matches
+                ],
+                "member_names": [
+                    row.group("member") for row in source_matches
+                ],
+                "lambda_names": [
+                    row.group("lambda") for row in source_matches
+                ],
+                "flows": proof["proofs"],
+                "replacement_count": len(source_matches),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_raw_iterable_erases_map_entry_lambda_type"
+                    ),
+                    "strategy": (
+                        "exact_field_and_member_signature_plus_entry_sam"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping raw Iterable lambda edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_methodhandle_invokeexact_result_casts(
     *,
     source_root: Path,
@@ -18528,6 +18862,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_raw_iterable_map_entry_lambdas(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_methodhandle_invokeexact_result_casts(
                         source_root=source_root,
                         path=path,
@@ -19016,6 +19357,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "erased_hashmap_get_array_return_cast_reconstruction"
+        ),
+        "raw_iterable_map_entry_lambda_action_count": sum(
+            action["kind"]
+            == "raw_iterable_map_entry_lambda_reconstruction"
+            for action in actions
+        ),
+        "raw_iterable_map_entry_lambda_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "raw_iterable_map_entry_lambda_reconstruction"
         ),
         "methodhandle_invokeexact_result_cast_action_count": sum(
             action["kind"]
