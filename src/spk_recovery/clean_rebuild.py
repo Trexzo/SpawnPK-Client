@@ -706,6 +706,7 @@ def _clean_project_rebuild_collision_derived(
     javac_command: str = "javac",
     source_prefixes: list[str] | None = None,
     private_diagnostic_report_out: Path | None = None,
+    java9_macos_eawt_compile_bridge: bool = False,
 ) -> dict[str, Any]:
     source_root = source_root.resolve()
     readable_jar = readable_jar.resolve()
@@ -811,6 +812,9 @@ def _clean_project_rebuild_collision_derived(
                 compile_root,
                 javac_command=javac_probe["resolved_path"],
                 release=release,
+                java9_macos_eawt_compile_bridge=(
+                    java9_macos_eawt_compile_bridge
+                ),
                 report_compile_failure=True,
                 private_diagnostic_report_out=(
                     private_diagnostic_report_out
@@ -892,6 +896,13 @@ def _clean_project_rebuild_collision_derived(
         ],
         "collision_plan_id": derived["collision_plan_id"],
         "collision_plan_sha256": collision_plan_sha256,
+        "compile_only_platform_bridge_ids": [
+            row["bridge_id"]
+            for row in derived.get(
+                "compile_only_platform_bridges",
+                [],
+            )
+        ],
         "source_derivation": source_derivation,
     }
     rebuild_id = (
@@ -984,6 +995,10 @@ def _clean_project_rebuild_collision_derived(
             "compile_only_transformed_dependency": derived[
                 "compile_only_transformed_dependency"
             ],
+            "compile_only_platform_bridges": derived.get(
+                "compile_only_platform_bridges",
+                [],
+            ),
             "mapping": derived["mapping"],
             "generated_transformed_classes": derived[
                 "generated_transformed_classes"
@@ -992,6 +1007,7 @@ def _clean_project_rebuild_collision_derived(
                 "restored_classes"
             ],
             "runtime_transformed_dependency_allowed": False,
+            "runtime_platform_bridges_allowed": False,
             "runtime_dependency_source": (
                 "original_verified_dependency_capsule"
             ),
@@ -1732,6 +1748,7 @@ def clean_project_rebuild(
     private_dependency_replacement_plan_path: Path | None = None,
     private_dependency_reverse_plan_path: Path | None = None,
     official_artifacts: list[Path] | None = None,
+    java9_macos_eawt_compile_bridge: bool = False,
     java_command: str = "java",
 ) -> dict[str, Any]:
     try:
@@ -1763,6 +1780,7 @@ def clean_project_rebuild(
             private_namespace_alias_plan is not None
             or auto_namespace_alias
             or private_collision_plan_path is not None
+            or java9_macos_eawt_compile_bridge
         ):
             raise CleanRebuildError(
                 "official-first restored transport is mutually exclusive "
@@ -1831,6 +1849,15 @@ def clean_project_rebuild(
             javac_command=javac_command,
             source_prefixes=source_prefixes,
             private_diagnostic_report_out=private_diagnostic_report_out,
+            java9_macos_eawt_compile_bridge=(
+                java9_macos_eawt_compile_bridge
+            ),
+        )
+
+    if java9_macos_eawt_compile_bridge:
+        raise CleanRebuildError(
+            "Java 9 macOS eAWT compile bridge requires "
+            "collision-derived source authority"
         )
 
     if private_collision_plan_path is not None:

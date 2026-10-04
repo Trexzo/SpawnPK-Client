@@ -23,6 +23,12 @@ from .javac_diagnostics import (
     classify_javac_diagnostics,
     write_javac_diagnostic_report,
 )
+from .java9_macos_eawt_bridge import (
+    Java9MacosEawtBridgeError,
+    V308_SOURCE_AUTHORITY_SHA256,
+    bridge_class_entries,
+    build_java9_macos_eawt_compile_bridge,
+)
 from .source_digest import source_tree_digest
 
 
@@ -280,6 +286,7 @@ def compile_collision_derived_source(
     *,
     javac_command: str = "javac",
     release: int | None = 9,
+    java9_macos_eawt_compile_bridge: bool = False,
     report_compile_failure: bool = False,
     private_diagnostic_report_out: Path | None = None,
     diagnostic_source_root: Path | None = None,
@@ -393,6 +400,40 @@ def compile_collision_derived_source(
         transformed_dependency,
     )
 
+    compile_classpath = [str(transformed_dependency)]
+    platform_bridges: list[dict[str, Any]] = []
+    if java9_macos_eawt_compile_bridge:
+        if (
+            recovered_manifest.get("source_authority_sha256")
+            != V308_SOURCE_AUTHORITY_SHA256
+        ):
+            raise CollisionDerivedCompileError(
+                "Java 9 macOS eAWT bridge requires exact v308 "
+                "source authority"
+            )
+        with zipfile.ZipFile(transformed_dependency) as archive:
+            overlap = sorted(
+                bridge_class_entries()
+                & set(archive.namelist())
+            )
+        if overlap:
+            raise CollisionDerivedCompileError(
+                "Java 9 macOS eAWT bridge would shadow dependency "
+                "classes: " + ", ".join(overlap)
+            )
+        try:
+            bridge_classes, bridge_report = (
+                build_java9_macos_eawt_compile_bridge(
+                    out_dir / "java9-macos-eawt-bridge",
+                    javac_command=javac,
+                    release=release,
+                )
+            )
+        except Java9MacosEawtBridgeError as exc:
+            raise CollisionDerivedCompileError(str(exc)) from exc
+        compile_classpath.append(str(bridge_classes))
+        platform_bridges.append(bridge_report)
+
     sources = sorted(
         source_root.rglob("*.java"),
         key=lambda path: path.relative_to(source_root).as_posix(),
@@ -423,7 +464,7 @@ def compile_collision_derived_source(
         "-sourcepath",
         str(empty_sourcepath),
         "-classpath",
-        str(transformed_dependency),
+        os.pathsep.join(compile_classpath),
         "-d",
         str(generated_dir),
     ]
@@ -497,6 +538,10 @@ def compile_collision_derived_source(
             "collision_plan_id": transform["plan_id"],
             "canonical_source_tree_sha256": canonical_before_sha,
             "compile_dependency_sha256": dependency_sha,
+            "compile_only_platform_bridge_ids": [
+                row["bridge_id"]
+                for row in platform_bridges
+            ],
             "release": release,
             "source_count": len(sources),
             "source_transport": "case_unique_explicit_inputs",
@@ -529,6 +574,7 @@ def compile_collision_derived_source(
                 "class_count": dependency_class_count,
                 "runtime_allowed": False,
             },
+            "compile_only_platform_bridges": platform_bridges,
             "mapping": {
                 "explicit_count": int(
                     transform["summary"]["explicit_remap_count"]
@@ -541,6 +587,7 @@ def compile_collision_derived_source(
                 "source_count": len(sources),
                 "staged_source_count": len(staged_sources),
                 "source_transport": "case_unique_explicit_inputs",
+                "classpath_entry_count": len(compile_classpath),
                 "exit_code": proc.returncode,
                 "diagnostic_classification": (
                     _public_diagnostic_summary(
@@ -561,6 +608,7 @@ def compile_collision_derived_source(
                 "transformed_reference_count": 0,
             },
             "runtime_transformed_dependency_allowed": False,
+            "runtime_platform_bridges_allowed": False,
         }
         (out_dir / "collision-derived-compile.json").write_text(
             json.dumps(report, indent=2, sort_keys=True) + "\n",
@@ -654,6 +702,10 @@ def compile_collision_derived_source(
         "collision_plan_id": transform["plan_id"],
         "canonical_source_tree_sha256": canonical_before_sha,
         "compile_dependency_sha256": dependency_sha,
+        "compile_only_platform_bridge_ids": [
+            row["bridge_id"]
+            for row in platform_bridges
+        ],
         "release": release,
         "source_count": len(sources),
         "source_transport": "case_unique_explicit_inputs",
@@ -686,6 +738,7 @@ def compile_collision_derived_source(
             "class_count": dependency_class_count,
             "runtime_allowed": False,
         },
+        "compile_only_platform_bridges": platform_bridges,
         "mapping": {
             "explicit_count": int(
                 transform["summary"]["explicit_remap_count"]
@@ -698,6 +751,7 @@ def compile_collision_derived_source(
             "source_count": len(sources),
             "staged_source_count": len(staged_sources),
             "source_transport": "case_unique_explicit_inputs",
+            "classpath_entry_count": len(compile_classpath),
             "exit_code": 0,
             "diagnostic_classification": None,
         },
@@ -714,6 +768,7 @@ def compile_collision_derived_source(
             "transformed_reference_count": 0,
         },
         "runtime_transformed_dependency_allowed": False,
+        "runtime_platform_bridges_allowed": False,
     }
 
     (out_dir / "collision-derived-compile.json").write_text(

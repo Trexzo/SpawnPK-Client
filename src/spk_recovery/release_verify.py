@@ -7,6 +7,10 @@ import shutil
 import subprocess
 from typing import Any
 
+from .java9_macos_eawt_bridge import (
+    V308_SOURCE_AUTHORITY_SHA256,
+    bridge_id as java9_macos_eawt_bridge_id,
+)
 from .release_manifest import (
     RecoveryReleaseError,
     build_recovery_release_manifest,
@@ -464,6 +468,84 @@ def verify_recovery_release(
                 )
             ).lower(),
         )
+
+        platform_bridges = compile_transport.get(
+            "compile_only_platform_bridges",
+            [],
+        )
+        if platform_bridges:
+            if not isinstance(platform_bridges, list):
+                raise RecoveryReleaseVerificationError(
+                    "compile-only platform bridges must be a list"
+                )
+            _check(
+                checks,
+                name="collision_platform_bridge_count",
+                expected=1,
+                actual=len(platform_bridges),
+            )
+            bridge = (
+                platform_bridges[0]
+                if len(platform_bridges) == 1
+                and isinstance(platform_bridges[0], dict)
+                else {}
+            )
+            _check(
+                checks,
+                name="collision_platform_bridge_id",
+                expected=java9_macos_eawt_bridge_id(),
+                actual=bridge.get("bridge_id"),
+            )
+            _check(
+                checks,
+                name="collision_platform_bridge_release",
+                expected=9,
+                actual=bridge.get("target_release"),
+            )
+            _check(
+                checks,
+                name="collision_platform_bridge_runtime_forbidden",
+                expected=False,
+                actual=bridge.get("runtime_allowed"),
+            )
+            _check(
+                checks,
+                name="collision_platform_bridge_transport_runtime_forbidden",
+                expected=False,
+                actual=compile_transport.get(
+                    "runtime_platform_bridges_allowed"
+                ),
+            )
+            bridge_authority = bridge.get("authority")
+            if not isinstance(bridge_authority, dict):
+                bridge_authority = {}
+            _check(
+                checks,
+                name="collision_platform_bridge_v308_authority",
+                expected=V308_SOURCE_AUTHORITY_SHA256,
+                actual=str(
+                    bridge_authority.get(
+                        "source_authority_sha256",
+                        "",
+                    )
+                ).lower(),
+            )
+            _check(
+                checks,
+                name="collision_platform_bridge_source_authority",
+                expected=str(
+                    recovered_source_manifest.get(
+                        "source_authority_sha256",
+                        "",
+                    )
+                ).lower(),
+                actual=str(
+                    bridge_authority.get(
+                        "source_authority_sha256",
+                        "",
+                    )
+                ).lower(),
+            )
 
         if private_collision_plan_path is not None:
             plan_path = private_collision_plan_path.resolve()

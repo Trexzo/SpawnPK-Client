@@ -86,6 +86,7 @@ class ReleaseWorkspaceOrchestratorCliTests(unittest.TestCase):
                 "v308",
                 "--source-prefix",
                 "rs/",
+                "--java9-macos-eawt-compile-bridge",
                 "--private-diagnostic-report-out",
                 str(root / "private-javac.json"),
                 "--out-dir",
@@ -125,6 +126,11 @@ class ReleaseWorkspaceOrchestratorCliTests(unittest.TestCase):
             self.assertEqual(
                 call.kwargs["private_diagnostic_report_out"],
                 root / "private-javac.json",
+            )
+            self.assertTrue(
+                call.kwargs[
+                    "java9_macos_eawt_compile_bridge"
+                ]
             )
 
         text = output.getvalue()

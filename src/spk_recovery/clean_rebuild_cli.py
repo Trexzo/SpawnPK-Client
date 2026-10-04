@@ -65,6 +65,14 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     p.add_argument(
+        "--java9-macos-eawt-compile-bridge",
+        action="store_true",
+        help=(
+            "explicitly add the v308-required Java 9 macOS eAWT public "
+            "API surface to collision-derived javac only"
+        ),
+    )
+    p.add_argument(
         "--official-first-restored",
         action="store_true",
         help=(
@@ -145,6 +153,9 @@ def main(argv: list[str] | None = None) -> int:
                 args.private_dependency_reverse_plan
             ),
             official_artifacts=args.official_artifacts,
+            java9_macos_eawt_compile_bridge=(
+                args.java9_macos_eawt_compile_bridge
+            ),
             java_command=args.java_command,
         )
     except (
@@ -279,6 +290,26 @@ def main(argv: list[str] | None = None) -> int:
                 f"{transport['restored_project_bytecode_ready_for_runtime_assembly']}"
             )
         elif mode == "collision_derived_remap":
+            bridges = transport.get(
+                "compile_only_platform_bridges",
+                [],
+            )
+            if bridges:
+                print(
+                    "compile_only_platform_bridge_ids_json="
+                    + json.dumps(
+                        [
+                            row["bridge_id"]
+                            for row in bridges
+                        ],
+                        sort_keys=True,
+                        separators=(",", ":"),
+                    )
+                )
+            print(
+                "runtime_platform_bridges_allowed="
+                f"{transport.get('runtime_platform_bridges_allowed', False)}"
+            )
             print(
                 "collision_compile_id="
                 f"{transport['collision_compile_id']}"

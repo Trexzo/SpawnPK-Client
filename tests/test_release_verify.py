@@ -5,6 +5,10 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+from spk_recovery.java9_macos_eawt_bridge import (
+    V308_SOURCE_AUTHORITY_SHA256,
+    bridge_id as java9_macos_eawt_bridge_id,
+)
 from spk_recovery.release_verify import (
     RecoveryReleaseVerificationError,
     _load_json_authority,
@@ -280,6 +284,148 @@ class ReleaseVerificationTests(unittest.TestCase):
                 "collision_private_mapping_sha256",
                 names,
             )
+
+    def test_collision_platform_bridge_provenance_passes(self):
+        release = _release()
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            plan_path = root / "collision-plan.json"
+            plan = {
+                "schema_version": 1,
+                "kind": "class_package_namespace_collision_plan",
+                "plan_id": "JNSPLAN_TEST",
+                "collision_report_id": "JNSCOLLISION_TEST",
+                "readable_jar_sha256": "b" * 64,
+                "identifiers_included": True,
+                "remaps": [],
+            }
+            plan_path.write_text(
+                json.dumps(plan, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            plan_sha = hashlib.sha256(
+                plan_path.read_bytes()
+            ).hexdigest()
+
+            recovered = {
+                "source_authority_sha256": V308_SOURCE_AUTHORITY_SHA256,
+                "collision_plan_id": "JNSPLAN_TEST",
+                "collision_report_id": "JNSCOLLISION_TEST",
+                "collision_transform_id": "COLLTRANS_TEST",
+                "base_readable_jar_sha256": "b" * 64,
+                "collision_mapping_sha256": _private_mapping_sha256(plan),
+            }
+            bridge = {
+                "bridge_id": java9_macos_eawt_bridge_id(),
+                "target_release": 9,
+                "runtime_allowed": False,
+                "authority": {
+                    "source_authority_sha256": (
+                        V308_SOURCE_AUTHORITY_SHA256
+                    ),
+                },
+            }
+            clean = {
+                "readable_jar_sha256": "b" * 64,
+                "compile_transport": {
+                    "mode": "collision_derived_remap",
+                    "collision_plan_id": "JNSPLAN_TEST",
+                    "collision_plan_sha256": plan_sha,
+                    "collision_report_id": "JNSCOLLISION_TEST",
+                    "collision_transform_id": "COLLTRANS_TEST",
+                    "compile_only_platform_bridges": [bridge],
+                    "runtime_platform_bridges_allowed": False,
+                },
+            }
+
+            with patch(
+                "spk_recovery.release_verify.build_recovery_release_manifest",
+                return_value=release.copy(),
+            ):
+                report = verify_recovery_release(
+                    release,
+                    {},
+                    {},
+                    {},
+                    {},
+                    recovered,
+                    clean,
+                    {},
+                    private_collision_plan_path=plan_path,
+                )
+
+            self.assertTrue(report["verified"])
+            names = {row["name"] for row in report["checks"]}
+            self.assertIn("collision_platform_bridge_id", names)
+            self.assertIn(
+                "collision_platform_bridge_runtime_forbidden",
+                names,
+            )
+            self.assertIn(
+                "collision_platform_bridge_source_authority",
+                names,
+            )
+
+    def test_collision_platform_bridge_runtime_drift_is_rejected(self):
+        release = _release()
+        recovered = {
+            "source_authority_sha256": V308_SOURCE_AUTHORITY_SHA256,
+            "collision_plan_id": "JNSPLAN_TEST",
+            "collision_report_id": "JNSCOLLISION_TEST",
+            "collision_transform_id": "COLLTRANS_TEST",
+            "base_readable_jar_sha256": "b" * 64,
+        }
+        clean = {
+            "readable_jar_sha256": "b" * 64,
+            "compile_transport": {
+                "mode": "collision_derived_remap",
+                "collision_plan_id": "JNSPLAN_TEST",
+                "collision_report_id": "JNSCOLLISION_TEST",
+                "collision_transform_id": "COLLTRANS_TEST",
+                "compile_only_platform_bridges": [
+                    {
+                        "bridge_id": java9_macos_eawt_bridge_id(),
+                        "target_release": 9,
+                        "runtime_allowed": True,
+                        "authority": {
+                            "source_authority_sha256": (
+                                V308_SOURCE_AUTHORITY_SHA256
+                            ),
+                        },
+                    }
+                ],
+                "runtime_platform_bridges_allowed": True,
+            },
+        }
+
+        with patch(
+            "spk_recovery.release_verify.build_recovery_release_manifest",
+            return_value=release.copy(),
+        ):
+            report = verify_recovery_release(
+                release,
+                {},
+                {},
+                {},
+                {},
+                recovered,
+                clean,
+                {},
+            )
+
+        failed = {
+            row["name"]
+            for row in report["checks"]
+            if row["required"] and not row["passed"]
+        }
+        self.assertEqual(
+            failed,
+            {
+                "collision_private_plan_supplied",
+                "collision_platform_bridge_runtime_forbidden",
+                "collision_platform_bridge_transport_runtime_forbidden",
+            },
+        )
 
     def test_collision_private_mapping_drift_is_rejected(self):
         release = _release()
