@@ -16058,7 +16058,7 @@ def _normalize_imported_outer_nested_static_fields_shadowed_by_values(
         occurrences: list[dict[str, Any]] = []
         total_source_counts: dict[tuple[str, str], int] = {}
 
-        for simple, imported_owner in sorted(imports.items()):
+        for simple, imported_owner in sorted(all_imports.items()):
             reference_parameter, reference_local_spans = (
                 _same_name_value_shadow_spans(
                     method_match=method_match,
@@ -16883,7 +16883,58 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
             imports[simple] = internal
     for simple in duplicates:
         imports.pop(simple, None)
-    if not imports:
+
+    # Procyon can omit an otherwise-needed import when the current package
+    # already contains a different class with the same simple name. Recover
+    # that owner only from exact invokestatic authority, and only when the
+    # omitted owner is unique across the current class.
+    current_package = current_owner.rpartition("/")[0]
+    owner_token = re.compile(
+        r"(?<![A-Za-z0-9_$.])"
+        r"(?P<owner>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\.(?P<method>[A-Za-z_$][A-Za-z0-9_$]*)\s*\("
+    )
+    source_simples = {
+        match.group("owner")
+        for match in owner_token.finditer(_java_code_mask(text))
+    }
+    exact_omitted_candidates: dict[str, set[str]] = {}
+    for method in profile.get("methods", []):
+        for invocation in method.get("method_invocations", []):
+            if invocation.get("operation") != "invokestatic":
+                continue
+            exact_owner = str(invocation.get("owner", ""))
+            simple = exact_owner.rsplit("/", 1)[-1]
+            if simple not in source_simples:
+                continue
+            if exact_owner.rpartition("/")[0] == current_package:
+                continue
+            sibling_owner = (
+                current_package + "/" + simple
+                if current_package
+                else simple
+            )
+            try:
+                sibling = parse_class(
+                    readable_zip.read(sibling_owner + ".class")
+                )
+            except (KeyError, ClassFormatError):
+                continue
+            if sibling.name != sibling_owner:
+                continue
+            exact_omitted_candidates.setdefault(simple, set()).add(
+                exact_owner
+            )
+
+    inferred_imports: dict[str, str] = {}
+    for simple, owners in sorted(exact_omitted_candidates.items()):
+        if simple in imports or len(owners) != 1:
+            continue
+        inferred_imports[simple] = next(iter(owners))
+
+    all_imports = dict(imports)
+    all_imports.update(inferred_imports)
+    if not all_imports:
         return []
 
     imported_methods: dict[str, tuple[str, set[str]]] = {}
@@ -17096,6 +17147,21 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
                     "method_descriptor": exact_method["descriptor"],
                     "simple_owner": simple,
                     "imported_owner": imported_owner,
+                    "owner_source": (
+                        "explicit_import"
+                        if simple in imports
+                        else "exact_omitted_import"
+                    ),
+                    "same_package_collision_owner": (
+                        current_package + "/" + simple
+                        if (
+                            simple in inferred_imports
+                            and current_package
+                        )
+                        else (
+                            simple if simple in inferred_imports else None
+                        )
+                    ),
                     "hierarchy_shadow_owner": hierarchy_shadow_owner,
                     "hierarchy_primitive_shadow_owner": (
                         hierarchy_primitive_shadow_owner
