@@ -7344,6 +7344,283 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+    def test_methodhandle_invokeexact_result_cast_restores_local_targets(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.lang.invoke.MethodHandle;\n"
+                        "import java.util.function.Consumer;\n"
+                        "public class A {\n"
+                        "    public static Consumer<Object> declared("
+                        "MethodHandle handle) throws Throwable {\n"
+                        "        final Consumer<Object> value = "
+                        "(Consumer<Object>)handle.invokeExact();\n"
+                        "        return value;\n"
+                        "    }\n"
+                        "    public static Consumer<Object> assigned("
+                        "MethodHandle handle) throws Throwable {\n"
+                        "        Consumer<Object> value = null;\n"
+                        "        value = (Consumer<Object>)handle.invokeExact();\n"
+                        "        return value;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.lang.invoke.MethodHandle;\n"
+                "import java.util.function.Consumer;\n"
+                "public class A {\n"
+                "    public static Consumer<Object> declared("
+                "MethodHandle handle) throws Throwable {\n"
+                "        final Consumer<Object> value = "
+                "handle.invokeExact();\n"
+                "        return value;\n"
+                "    }\n"
+                "    public static Consumer<Object> assigned("
+                "MethodHandle handle) throws Throwable {\n"
+                "        Consumer<Object> value = null;\n"
+                "        value = handle.invokeExact();\n"
+                "        return value;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-invokeexact-result-cast"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn(
+                "Object cannot be converted to Consumer<Object>",
+                before.stderr,
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "final Consumer<Object> value = "
+                "(Consumer<Object>)handle.invokeExact();",
+                normalized,
+            )
+            self.assertIn(
+                "value = (Consumer<Object>)handle.invokeExact();",
+                normalized,
+            )
+            actions = [
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "methodhandle_invokeexact_result_cast_reconstruction"
+            ]
+            self.assertEqual(len(actions), 2)
+            self.assertEqual(
+                {row["method_name"] for row in actions},
+                {"declared", "assigned"},
+            )
+            self.assertTrue(
+                all(row["replacement_count"] == 1 for row in actions)
+            )
+            self.assertTrue(
+                all(
+                    row["flows"][0]["return_descriptor"]
+                    == "Ljava/util/function/Consumer;"
+                    for row in actions
+                )
+            )
+            self.assertEqual(
+                report["summary"][
+                    "methodhandle_invokeexact_result_cast_action_count"
+                ],
+                2,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "methodhandle_invokeexact_result_cast_reference_count"
+                ],
+                2,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-invokeexact-result-cast"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_methodhandle_invokeexact_object_descriptor_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.lang.invoke.MethodHandle;\n"
+                        "import java.util.function.Consumer;\n"
+                        "public class A {\n"
+                        "    public static Consumer<Object> read("
+                        "MethodHandle handle) throws Throwable {\n"
+                        "        Object value = handle.invokeExact();\n"
+                        "        return (Consumer<Object>)value;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.lang.invoke.MethodHandle;\n"
+                "import java.util.function.Consumer;\n"
+                "public class A {\n"
+                "    public static Consumer<Object> read("
+                "MethodHandle handle) throws Throwable {\n"
+                "        Consumer<Object> value = handle.invokeExact();\n"
+                "        return value;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "methodhandle_invokeexact_result_cast_reference_count"
+                ],
+                0,
+            )
+
+    def test_methodhandle_invokeexact_target_type_drift_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.lang.invoke.MethodHandle;\n"
+                        "import java.util.function.Consumer;\n"
+                        "public class A {\n"
+                        "    public static Consumer<Object> read("
+                        "MethodHandle handle) throws Throwable {\n"
+                        "        Consumer<Object> value = "
+                        "(Consumer<Object>)handle.invokeExact();\n"
+                        "        return null;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.lang.invoke.MethodHandle;\n"
+                "public class A {\n"
+                "    public static java.util.function.Consumer<Object> read("
+                "MethodHandle handle) throws Throwable {\n"
+                "        Runnable value = handle.invokeExact();\n"
+                "        return null;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "methodhandle_invokeexact_result_cast_reference_count"
+                ],
+                0,
+            )
+
+    def test_methodhandle_invokeexact_multiplicity_drift_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.lang.invoke.MethodHandle;\n"
+                        "import java.util.function.Consumer;\n"
+                        "public class A {\n"
+                        "    public static Consumer<Object> read("
+                        "MethodHandle handle) throws Throwable {\n"
+                        "        Consumer<Object> first = "
+                        "(Consumer<Object>)handle.invokeExact();\n"
+                        "        Consumer<Object> second = "
+                        "(Consumer<Object>)handle.invokeExact();\n"
+                        "        return first;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.lang.invoke.MethodHandle;\n"
+                "import java.util.function.Consumer;\n"
+                "public class A {\n"
+                "    public static Consumer<Object> read("
+                "MethodHandle handle) throws Throwable {\n"
+                "        Consumer<Object> first = handle.invokeExact();\n"
+                "        return first;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "methodhandle_invokeexact_result_cast_reference_count"
+                ],
+                0,
+            )
+
     def test_invokedynamic_helper_return_cast_uses_generated_signature(
         self,
     ):
