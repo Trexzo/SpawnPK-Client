@@ -847,6 +847,7 @@ def profile_class_field_accesses(
         accesses: list[dict[str, str]] = []
         invocations: list[dict[str, Any]] = []
         instructions: list[dict[str, Any]] = []
+        exception_handlers: list[dict[str, Any]] = []
         code_length = None
         signature: str | None = None
         signature_seen = False
@@ -877,6 +878,40 @@ def profile_class_field_accesses(
             invocations = _method_invocations(code, cp)
             instructions = _decoded_instructions(code, cp)
 
+            exception_handlers = []
+            for _ in range(cr.u2()):
+                start_pc = cr.u2()
+                end_pc = cr.u2()
+                handler_pc = cr.u2()
+                catch_type_index = cr.u2()
+                if not (
+                    0 <= start_pc <= end_pc <= code_length
+                    and 0 <= handler_pc < code_length
+                ):
+                    raise BytecodeProfileError(
+                        f"invalid exception handler in {name}{descriptor}"
+                    )
+                exception_handlers.append(
+                    {
+                        "start_pc": start_pc,
+                        "end_pc": end_pc,
+                        "handler_pc": handler_pc,
+                        "catch_type": (
+                            None
+                            if catch_type_index == 0
+                            else _class_name(cp, catch_type_index)
+                        ),
+                    }
+                )
+
+            for _ in range(cr.u2()):
+                cr.u2()
+                cr.take(cr.u4())
+            if cr.offset != len(payload):
+                raise BytecodeProfileError(
+                    f"trailing Code bytes in {name}{descriptor}"
+                )
+
         methods.append(
             {
                 "name": name,
@@ -887,6 +922,7 @@ def profile_class_field_accesses(
                 "field_accesses": accesses,
                 "method_invocations": invocations,
                 "instructions": instructions,
+                "exception_handlers": exception_handlers,
             }
         )
 
