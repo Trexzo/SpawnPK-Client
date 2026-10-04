@@ -18278,6 +18278,383 @@ def _normalize_undeclared_linkedhashmap_cast_placeholders(
 
 
 
+
+def _normalize_linkedhashmap_field_keyset_value_placeholders(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Wildcard impossible field-cast value placeholders used by keySet().
+
+    For a concrete field whose exact class directly extends
+    LinkedHashMap<String,V>, Procyon can emit
+    ((LinkedHashMap<String, X>)this.field).keySet()
+    with undeclared X.  keySet() is independent of the map value type, so an
+    unbounded wildcard is source-safe.  The preserved String key is still
+    required to match the exact direct-super Signature.
+
+    Constructors are included because the measured v308 trigger lives in
+    <init>.  Every source occurrence must map one-for-one to an exact
+    this.field -> keySet() bytecode flow.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        parsed = parse_class(class_bytes)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, ClassFormatError, BytecodeProfileError):
+        return []
+
+    current_owner = class_entry[:-6]
+    if parsed.name != current_owner:
+        return []
+    if str(profile.get("internal_name", "")) != current_owner:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    simple_name = current_owner.rsplit("/", 1)[-1]
+    current_package = current_owner.rpartition("/")[0]
+    declared_type_parameters = _source_class_type_parameters(
+        whole_code,
+        simple_name=simple_name,
+    )
+
+    imported = bool(
+        re.search(
+            r"(?m)^\s*import\s+java\.util\.LinkedHashMap\s*;",
+            whole_code,
+        )
+    )
+    if not imported:
+        return []
+
+    exact_field_rows: dict[str, list[str]] = {}
+    for field in profile.get("fields", []):
+        descriptor = str(field.get("descriptor", ""))
+        if descriptor.startswith("L") and descriptor.endswith(";"):
+            exact_field_rows.setdefault(
+                str(field.get("name", "")),
+                [],
+            ).append(descriptor[1:-1])
+
+    map_fields: dict[str, dict[str, str]] = {}
+    for field_name, owners in exact_field_rows.items():
+        if len(owners) != 1:
+            continue
+        target_owner = owners[0]
+        try:
+            target_bytes = readable_zip.read(target_owner + ".class")
+            target_parsed = parse_class(target_bytes)
+            target_utf8 = set(profile_class_utf8_constants(target_bytes))
+        except (KeyError, ClassFormatError, BytecodeProfileError):
+            continue
+        if (
+            target_parsed.name != target_owner
+            or target_parsed.super_name != "java/util/LinkedHashMap"
+        ):
+            continue
+        signatures = [
+            value
+            for value in target_utf8
+            if re.fullmatch(
+                r"Ljava/util/LinkedHashMap<"
+                r"Ljava/lang/String;"
+                r"L[^;]+;"
+                r">;",
+                value,
+            )
+        ]
+        if len(signatures) != 1:
+            continue
+        map_fields[field_name] = {
+            "owner": target_owner,
+            "descriptor": "L" + target_owner + ";",
+            "signature": signatures[0],
+        }
+    if not map_fields:
+        return []
+
+    constructor_re = re.compile(
+        r"(?m)^(?P<indent>[ \t]*)"
+        r"(?:(?:public|private|protected)\s+)*"
+        + re.escape(simple_name)
+        + r"\s*\((?P<params>[^()\n]*)\)\s*"
+        r"(?:throws\s+[^\{\n]+\s*)?\{"
+    )
+    source_blocks: list[tuple[Any, str]] = [
+        (match, match.group("name"))
+        for match in _METHOD_DECL_RE.finditer(whole_code)
+    ]
+    source_blocks.extend(
+        (match, "<init>")
+        for match in constructor_re.finditer(whole_code)
+    )
+    source_blocks.sort(key=lambda row: row[0].start())
+
+    cast_start = re.compile(
+        r"\(\(\s*(?P<owner>(?:java\.util\.)?LinkedHashMap)\s*<"
+    )
+
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for block_match, exact_name in source_blocks:
+        brace_start = whole_code.find(
+            "{", block_match.start(), block_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        block_start = block_match.start()
+        block_text = text[block_start:body_end]
+        block_code = _java_code_mask(block_text)
+        occurrences: list[dict[str, Any]] = []
+
+        for cast in cast_start.finditer(block_code):
+            owner_spelling = cast.group("owner")
+            if owner_spelling == "LinkedHashMap" and not imported:
+                continue
+
+            angle_start = cast.end() - 1
+            angle_end = _matching_generic_angle_end(
+                block_code,
+                angle_start,
+            )
+            if angle_end is None:
+                continue
+
+            args_start = angle_start + 1
+            args_text = block_text[args_start:angle_end]
+            spans = _top_level_generic_argument_spans(args_text)
+            if spans is None or len(spans) != 2:
+                continue
+
+            key_start, key_end = spans[0]
+            value_start, value_end = spans[1]
+            key_arg = args_text[key_start:key_end].strip()
+            value_raw = args_text[value_start:value_end]
+            placeholder = value_raw.strip()
+
+            if key_arg not in {"String", "java.lang.String"}:
+                continue
+            if not re.fullmatch(r"[A-Z]", placeholder):
+                continue
+            if placeholder in declared_type_parameters:
+                continue
+
+            tail = block_code[angle_end + 1:]
+            use_match = re.match(
+                r"\s*\)\s*this\s*\.\s*"
+                r"(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)"
+                r"\s*\)\s*\.\s*keySet\s*\(",
+                tail,
+            )
+            if use_match is None:
+                continue
+
+            field_name = use_match.group("field")
+            field_proof = map_fields.get(field_name)
+            if field_proof is None:
+                continue
+
+            leading = len(value_raw) - len(value_raw.lstrip())
+            trailing = len(value_raw.rstrip())
+            occurrences.append(
+                {
+                    "start": (
+                        block_start
+                        + args_start
+                        + value_start
+                        + leading
+                    ),
+                    "end": (
+                        block_start
+                        + args_start
+                        + value_start
+                        + trailing
+                    ),
+                    "placeholder": placeholder,
+                    "field_name": field_name,
+                    "field_owner": field_proof["owner"],
+                    "field_descriptor": field_proof["descriptor"],
+                    "field_signature": field_proof["signature"],
+                }
+            )
+
+        if not occurrences:
+            continue
+
+        source_arity = _source_parameter_count(
+            block_match.group("params")
+        )
+        source_static = (
+            exact_name != "<init>"
+            and bool(
+                re.search(
+                    r"\bstatic\b",
+                    whole_code[block_match.start():brace_start],
+                )
+            )
+        )
+
+        exact_candidates: list[dict[str, Any]] = []
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != exact_name:
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if _descriptor_parameter_count(descriptor) != source_arity:
+                continue
+            if exact_name != "<init>" and (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+            if (
+                _source_parameters_match_descriptor(
+                    block_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is False
+            ):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            flows: list[dict[str, Any]] = []
+            for index in range(1, len(instructions) - 1):
+                receiver_load = instructions[index - 1]
+                field_get = instructions[index]
+                call = instructions[index + 1]
+                field_name = str(field_get.get("name", ""))
+                proof = map_fields.get(field_name)
+                if proof is None:
+                    continue
+                if not (
+                    receiver_load.get("mnemonic") == "aload"
+                    and int(receiver_load.get("local_index", -1)) == 0
+                    and field_get.get("mnemonic") == "getfield"
+                    and field_get.get("owner") == current_owner
+                    and field_get.get("descriptor") == proof["descriptor"]
+                    and call.get("mnemonic") == "invokevirtual"
+                    and call.get("owner")
+                    in {proof["owner"], "java/util/LinkedHashMap"}
+                    and call.get("name") == "keySet"
+                    and call.get("descriptor") == "()Ljava/util/Set;"
+                ):
+                    continue
+                flows.append(
+                    {
+                        "field_name": field_name,
+                        "getfield_offset": int(
+                            field_get.get("offset", -1)
+                        ),
+                        "keyset_offset": int(call.get("offset", -1)),
+                    }
+                )
+
+            source_fields = sorted(
+                row["field_name"] for row in occurrences
+            )
+            exact_fields = sorted(row["field_name"] for row in flows)
+            if (
+                len(flows) != len(occurrences)
+                or exact_fields != source_fields
+            ):
+                continue
+
+            exact_candidates.append(
+                {
+                    "method": exact_method,
+                    "flows": flows,
+                }
+            )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        proof = exact_candidates[0]
+        for occurrence in occurrences:
+            edits.append(
+                (
+                    int(occurrence["start"]),
+                    int(occurrence["end"]),
+                    "?",
+                )
+            )
+
+        placeholder_counts: dict[str, int] = {}
+        field_counts: dict[str, int] = {}
+        for occurrence in occurrences:
+            placeholder = str(occurrence["placeholder"])
+            field_name = str(occurrence["field_name"])
+            placeholder_counts[placeholder] = (
+                placeholder_counts.get(placeholder, 0) + 1
+            )
+            field_counts[field_name] = (
+                field_counts.get(field_name, 0) + 1
+            )
+
+        actions.append(
+            {
+                "kind": (
+                    "linkedhashmap_field_keyset_value_placeholder_wildcard"
+                ),
+                "source_path": rel,
+                "method_name": exact_name,
+                "method_descriptor": proof["method"]["descriptor"],
+                "placeholder_counts": dict(
+                    sorted(placeholder_counts.items())
+                ),
+                "field_counts": dict(sorted(field_counts.items())),
+                "field_owners": sorted(
+                    {
+                        str(row["field_owner"])
+                        for row in occurrences
+                    }
+                ),
+                "field_signatures": sorted(
+                    {
+                        str(row["field_signature"])
+                        for row in occurrences
+                    }
+                ),
+                "exact_flows": proof["flows"],
+                "replacement_count": len(occurrences),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_undeclared_linkedhashmap_field_keyset_value_placeholder"
+                    ),
+                    "strategy": (
+                        "exact_string_key_field_signature_plus_keyset_value_wildcard"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping field keySet placeholder edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_linkedhashmap_field_cast_placeholders(
     *,
     source_root: Path,
@@ -19772,6 +20149,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_linkedhashmap_field_keyset_value_placeholders(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_linkedhashmap_field_cast_placeholders(
                         source_root=source_root,
                         path=path,
@@ -20351,6 +20735,17 @@ def normalize_procyon_source(
             int(action.get("replacement_count", 0))
             for action in actions
             if action["kind"] == "invokedynamic_helper_return_cast"
+        ),
+        "linkedhashmap_field_keyset_value_placeholder_action_count": sum(
+            action["kind"]
+            == "linkedhashmap_field_keyset_value_placeholder_wildcard"
+            for action in actions
+        ),
+        "linkedhashmap_field_keyset_value_placeholder_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "linkedhashmap_field_keyset_value_placeholder_wildcard"
         ),
         "linkedhashmap_field_key_reconstruction_method_count": sum(
             action["kind"]
