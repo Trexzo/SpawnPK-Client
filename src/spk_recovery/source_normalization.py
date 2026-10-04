@@ -18781,6 +18781,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_exact_static_call_nested_type_collisions(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_shadowed_nested_static_field_owners(
                         source_root=source_root,
                         path=path,
@@ -19222,6 +19229,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "reference_shadowed_self_static_field_owner_qualification"
+        ),
+        "exact_static_call_nested_type_collision_action_count": sum(
+            action["kind"]
+            == "exact_static_call_nested_type_collision_reconstruction"
+            for action in actions
+        ),
+        "exact_static_call_nested_type_collision_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "exact_static_call_nested_type_collision_reconstruction"
         ),
         "shadowed_nested_static_field_method_count": sum(
             action["kind"]
