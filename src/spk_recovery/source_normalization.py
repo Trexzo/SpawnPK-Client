@@ -2898,18 +2898,72 @@ def _nested_owner_binary_candidates(
     current_package = current_owner.rpartition("/")[0]
     parts = owner.split(".")
     if current_package and len(parts) >= 2:
-        candidate = (
+        java_owner = current_package.replace("/", ".") + "." + owner
+
+        package_candidate = (
+            current_package
+            + "/"
+            + "/".join(parts)
+        )
+        if package_candidate not in seen:
+            seen.add(package_candidate)
+            out.append((package_candidate, java_owner))
+
+        nested_candidate = (
             current_package
             + "/"
             + parts[0]
             + "$"
             + "$".join(parts[1:])
         )
-        if candidate not in seen:
-            java_owner = current_package.replace("/", ".") + "." + owner
-            out.append((candidate, java_owner))
+        if nested_candidate not in seen:
+            seen.add(nested_candidate)
+            out.append((nested_candidate, java_owner))
 
     return out
+
+
+def _package_relative_owner_has_visible_name_shadow(
+    *,
+    owner: str,
+    candidate_internal: str,
+    current_owner: str,
+    readable_zip: zipfile.ZipFile,
+) -> tuple[bool, list[str]]:
+    current_package = current_owner.rpartition("/")[0]
+    parts = owner.split(".")
+    if not current_package or len(parts) < 2:
+        return False, []
+
+    expected = current_package + "/" + "/".join(parts)
+    if candidate_internal != expected:
+        return False, []
+
+    leading = parts[0]
+    if not _is_java_identifier(leading):
+        return False, []
+
+    hierarchy = _read_readable_hierarchy(
+        readable_zip=readable_zip,
+        internal_name=current_owner,
+    )
+    if not hierarchy:
+        return False, []
+
+    shadow_owners: list[str] = []
+    for declaring_owner, parsed in hierarchy:
+        for field in parsed.fields:
+            if str(field.get("name", "")) != leading:
+                continue
+            if not _field_visible_from(
+                declaring_owner=declaring_owner,
+                current_owner=current_owner,
+                access=int(field.get("access", 0)),
+            ):
+                continue
+            shadow_owners.append(declaring_owner)
+
+    return bool(shadow_owners), sorted(set(shadow_owners))
 
 
 def _nested_owner_has_visible_name_shadow(
@@ -2966,8 +3020,6 @@ def _resolve_shadowed_nested_static_field(
         entry = candidate + ".class"
         if entry not in entries:
             continue
-        if "$" not in candidate.rsplit("/", 1)[-1]:
-            continue
 
         parsed = class_cache.get(candidate)
         if parsed is None:
@@ -2977,22 +3029,41 @@ def _resolve_shadowed_nested_static_field(
                 continue
             class_cache[candidate] = parsed
 
+        is_nested = "$" in candidate.rsplit("/", 1)[-1]
         declarations = [
             field
             for field in parsed.fields
             if (
                 str(field.get("name", "")) == field_name
                 and int(field.get("access", 0)) & 0x0008
+                and (
+                    is_nested
+                    or _field_visible_from(
+                        declaring_owner=candidate,
+                        current_owner=current_owner,
+                        access=int(field.get("access", 0)),
+                    )
+                )
             )
         ]
         if len(declarations) != 1:
             continue
 
-        shadowed, shadow_owners = _nested_owner_has_visible_name_shadow(
-            nested_internal=candidate,
-            current_owner=current_owner,
-            readable_zip=readable_zip,
-        )
+        if is_nested:
+            shadowed, shadow_owners = _nested_owner_has_visible_name_shadow(
+                nested_internal=candidate,
+                current_owner=current_owner,
+                readable_zip=readable_zip,
+            )
+        else:
+            shadowed, shadow_owners = (
+                _package_relative_owner_has_visible_name_shadow(
+                    owner=owner,
+                    candidate_internal=candidate,
+                    current_owner=current_owner,
+                    readable_zip=readable_zip,
+                )
+            )
         if not shadowed:
             continue
 
@@ -3094,8 +3165,6 @@ def _resolve_shadowed_nested_static_method(
         entry = candidate + ".class"
         if entry not in entries:
             continue
-        if "$" not in candidate.rsplit("/", 1)[-1]:
-            continue
 
         parsed = class_cache.get(candidate)
         if parsed is None:
@@ -3121,11 +3190,21 @@ def _resolve_shadowed_nested_static_method(
         if not declarations:
             continue
 
-        shadowed, shadow_owners = _nested_owner_has_visible_name_shadow(
-            nested_internal=candidate,
-            current_owner=current_owner,
-            readable_zip=readable_zip,
-        )
+        if "$" in candidate.rsplit("/", 1)[-1]:
+            shadowed, shadow_owners = _nested_owner_has_visible_name_shadow(
+                nested_internal=candidate,
+                current_owner=current_owner,
+                readable_zip=readable_zip,
+            )
+        else:
+            shadowed, shadow_owners = (
+                _package_relative_owner_has_visible_name_shadow(
+                    owner=owner,
+                    candidate_internal=candidate,
+                    current_owner=current_owner,
+                    readable_zip=readable_zip,
+                )
+            )
         if not shadowed:
             continue
 
