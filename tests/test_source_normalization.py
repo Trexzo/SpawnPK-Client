@@ -3561,6 +3561,214 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+    def test_exact_static_nested_owner_pair_without_import_compiles_after(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/r.java": (
+                        "package dep;\n"
+                        "public class r {\n"
+                        "    public static class a {\n"
+                        "        public static final a d = new a();\n"
+                        "    }\n"
+                        "    public static void use(a mode, byte[] x, byte[] y) {}\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "public class Current {\n"
+                        "    public void load(byte[] x, byte[] y) {\n"
+                        "        dep.r.use(dep.r.a.d, x, y);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package use;\n"
+                "public class Current {\n"
+                "    public void load(byte[] x, byte[] y) {\n"
+                "        int r = 0;\n"
+                "        r.use(r.a.d, x, y);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-exact-owner-pair"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("int cannot be dereferenced", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "dep.r.use(((dep.r.a)null).d, x, y);",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "shadowed_exact_static_nested_owner_pair_qualification"
+            )
+            self.assertEqual(action["pair_count"], 1)
+            self.assertEqual(action["replacement_count"], 2)
+            self.assertEqual(action["groups"][0]["exact_outer"], "dep/r")
+            self.assertEqual(
+                action["groups"][0]["nested_owner"],
+                "dep/r$a",
+            )
+            self.assertEqual(action["groups"][0]["field_name"], "d")
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_exact_static_nested_owner_pair_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_exact_static_nested_owner_pair_reference_count"
+                ],
+                2,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-exact-owner-pair"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_exact_static_nested_owner_pair_multiplicity_drift_fails_closed(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/r.java": (
+                        "package dep;\n"
+                        "public class r {\n"
+                        "    public static class a {\n"
+                        "        public static final a d = new a();\n"
+                        "    }\n"
+                        "    public static void use(a mode, byte[] x, byte[] y) {}\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "public class Current {\n"
+                        "    public void load(byte[] x, byte[] y) {\n"
+                        "        dep.r.use(dep.r.a.d, x, y);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package use;\n"
+                "public class Current {\n"
+                "    public void load(byte[] x, byte[] y) {\n"
+                "        int r = 0;\n"
+                "        r.use(r.a.d, x, y);\n"
+                "        r.use(r.a.d, x, y);\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_exact_static_nested_owner_pair_reference_count"
+                ],
+                0,
+            )
+
+    def test_exact_static_nested_owner_pair_owner_drift_fails_closed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "dep/s.java": (
+                        "package dep;\n"
+                        "public class s {\n"
+                        "    public static class a {\n"
+                        "        public static final a d = new a();\n"
+                        "    }\n"
+                        "    public static void use(a mode, byte[] x, byte[] y) {}\n"
+                        "}\n"
+                    ),
+                    "use/Current.java": (
+                        "package use;\n"
+                        "public class Current {\n"
+                        "    public void load(byte[] x, byte[] y) {\n"
+                        "        dep.s.use(dep.s.a.d, x, y);\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package use;\n"
+                "public class Current {\n"
+                "    public void load(byte[] x, byte[] y) {\n"
+                "        int r = 0;\n"
+                "        r.use(r.a.d, x, y);\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "shadowed_exact_static_nested_owner_pair_action_count"
+                ],
+                0,
+            )
+
     def test_imported_outer_nested_static_field_shadow_uses_exact_owner(
         self,
     ):
