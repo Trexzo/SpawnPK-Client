@@ -224,6 +224,10 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 "/normalization_summary/invokedynamic_image_loader_local_action_count",
             "invokedynamic_image_loader_local_reference_count":
                 "/normalization_summary/invokedynamic_image_loader_local_reference_count",
+            "exact_static_nested_owner_pair_action_count":
+                "/normalization_summary/shadowed_exact_static_nested_owner_pair_action_count",
+            "exact_static_nested_owner_pair_reference_count":
+                "/normalization_summary/shadowed_exact_static_nested_owner_pair_reference_count",
             "imported_outer_nested_static_field_action_count":
                 "/normalization_summary/shadowed_imported_outer_nested_static_field_action_count",
             "imported_outer_nested_static_field_reference_count":
@@ -433,6 +437,16 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         self.assertIn(
             'INVOKEDYNAMIC_IMAGE_LOADER_LOCAL_REFERENCES='
             '$($Recovered.invokedynamic_image_loader_local_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'EXACT_STATIC_NESTED_OWNER_PAIR_ACTIONS='
+            '$($Recovered.exact_static_nested_owner_pair_action_count)',
+            script,
+        )
+        self.assertIn(
+            'EXACT_STATIC_NESTED_OWNER_PAIR_REFERENCES='
+            '$($Recovered.exact_static_nested_owner_pair_reference_count)',
             script,
         )
         self.assertIn(
