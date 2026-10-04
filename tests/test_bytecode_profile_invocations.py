@@ -52,6 +52,9 @@ class BytecodeMethodInvocationProfileTests(unittest.TestCase):
                 "    public static String concat(String value) {\n"
                 "        return \"value=\" + value;\n"
                 "    }\n"
+                "    public static void store(int[] values, int index, int value) {\n"
+                "        values[index] = value;\n"
+                "    }\n"
                 "}\n",
                 encoding="utf-8",
             )
@@ -193,6 +196,20 @@ class BytecodeMethodInvocationProfileTests(unittest.TestCase):
             self.assertEqual(
                 dynamic_instructions[0]["descriptor"],
                 "(Ljava/lang/String;)Ljava/lang/String;",
+            )
+
+            store_method = next(
+                row
+                for row in profile["methods"]
+                if row["name"] == "store"
+                and row["descriptor"] == "([III)V"
+            )
+            self.assertTrue(
+                any(
+                    row.get("mnemonic") == "iastore"
+                    and row.get("opcode") == "0x4f"
+                    for row in store_method["instructions"]
+                )
             )
 
 
