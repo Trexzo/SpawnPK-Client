@@ -192,6 +192,10 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 "/normalization_summary/erased_map_mixed_object_local_action_count",
             "erased_map_mixed_object_local_reference_count":
                 "/normalization_summary/erased_map_mixed_object_local_reference_count",
+            "erased_mixed_object_integer_sink_unbox_action_count":
+                "/normalization_summary/erased_mixed_object_integer_sink_unbox_action_count",
+            "erased_mixed_object_integer_sink_unbox_reference_count":
+                "/normalization_summary/erased_mixed_object_integer_sink_unbox_reference_count",
             "erased_map_number_assignment_action_count":
                 "/normalization_summary/erased_map_number_assignment_action_count",
             "erased_map_number_assignment_reference_count":
@@ -414,6 +418,16 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         self.assertIn(
             'ERASED_MAP_MIXED_OBJECT_LOCAL_REFERENCES='
             '$($Recovered.erased_map_mixed_object_local_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'ERASED_MIXED_OBJECT_INTEGER_SINK_UNBOX_ACTIONS='
+            '$($Recovered.erased_mixed_object_integer_sink_unbox_action_count)',
+            script,
+        )
+        self.assertIn(
+            'ERASED_MIXED_OBJECT_INTEGER_SINK_UNBOX_REFERENCES='
+            '$($Recovered.erased_mixed_object_integer_sink_unbox_reference_count)',
             script,
         )
         self.assertIn(
