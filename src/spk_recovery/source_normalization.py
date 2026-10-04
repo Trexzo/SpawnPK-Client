@@ -17881,12 +17881,18 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
                         if simple in imports
                         else "exact_omitted_import"
                     ),
-                    "finally_lowered_duplicate_call_counts": {
-                        f"{name}/{arity}": count
-                        for (name, arity), count in sorted(
-                            finally_duplicate_counts.items()
-                        )
-                    },
+                    **(
+                        {
+                            "finally_lowered_duplicate_call_counts": {
+                                f"{name}/{arity}": count
+                                for (name, arity), count in sorted(
+                                    finally_duplicate_counts.items()
+                                )
+                            }
+                        }
+                        if finally_duplicate_counts
+                        else {}
+                    ),
                     "same_package_collision_owner": (
                         None
                         if simple in imports
