@@ -6298,6 +6298,503 @@ def _signature_list_return_element_owner(
     return owner
 
 
+def _normalize_raw_iterable_map_entry_lambda_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Remove raw Iterable casts that erase exact Map.Entry lambda typing."""
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        profile = profile_class_field_accesses(
+            readable_zip.read(class_entry)
+        )
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    bootstrap_methods = list(profile.get("bootstrap_methods", []))
+    if not bootstrap_methods:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    cast_re = re.compile(
+        r"(?P<cast>\(\s*(?:java\.lang\.)?Iterable\s*\)\s*)"
+        r"(?P<receiver>(?:this\s*\.\s*)?"
+        r"(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\s*\.\s*"
+        r"(?P<getter>[A-Za-z_$][A-Za-z0-9_$]*)\s*\(\s*\))"
+    )
+    lambda_re = re.compile(
+        r"(?P<lambda>[A-Za-z_$][A-Za-z0-9_$]*)\s*->"
+    )
+
+    owner_cache: dict[str, dict[str, Any]] = {}
+
+    def owner_profile(owner: str) -> dict[str, Any] | None:
+        cached = owner_cache.get(owner)
+        if cached is not None:
+            return cached
+        try:
+            parsed = profile_class_field_accesses(
+                readable_zip.read(owner + ".class")
+            )
+        except (KeyError, BytecodeProfileError):
+            return None
+        if str(parsed.get("internal_name", "")) != owner:
+            return None
+        owner_cache[owner] = parsed
+        return parsed
+
+    def generic_entry_getter(
+        *,
+        field_name: str,
+        getter_name: str,
+    ) -> dict[str, Any] | None:
+        fields = [
+            field
+            for field in profile.get("fields", [])
+            if (
+                str(field.get("name", "")) == field_name
+                and str(field.get("descriptor", "")).startswith("L")
+                and str(field.get("descriptor", "")).endswith(";")
+                and isinstance(field.get("signature"), str)
+            )
+        ]
+        if len(fields) != 1:
+            return None
+        field = fields[0]
+        descriptor = str(field["descriptor"])
+        receiver_owner = descriptor[1:-1]
+        field_signature = str(field.get("signature") or "")
+        if not (
+            field_signature.startswith("L" + receiver_owner + "<")
+            and field_signature.endswith(">;")
+        ):
+            return None
+
+        receiver_profile = owner_profile(receiver_owner)
+        if receiver_profile is None:
+            return None
+        getters = [
+            method
+            for method in receiver_profile.get("methods", [])
+            if (
+                str(method.get("name", "")) == getter_name
+                and _descriptor_parameter_count(
+                    str(method.get("descriptor", ""))
+                )
+                == 0
+                and isinstance(method.get("signature"), str)
+            )
+        ]
+        if len(getters) != 1:
+            return None
+        getter = getters[0]
+        getter_descriptor = str(getter.get("descriptor", ""))
+        getter_return = _descriptor_return_descriptor(getter_descriptor)
+        if not (
+            getter_return
+            and getter_return.startswith("L")
+            and getter_return.endswith(";")
+        ):
+            return None
+
+        getter_signature = str(getter.get("signature") or "")
+        signature_match = re.fullmatch(
+            r"\(\)L(?P<container>[^;<]+)"
+            r"<Ljava/util/Map\$Entry<"
+            r"T(?P<key>[A-Za-z_$][A-Za-z0-9_$]*);"
+            r"T(?P<value>[A-Za-z_$][A-Za-z0-9_$]*);"
+            r">;>;",
+            getter_signature,
+        )
+        if signature_match is None:
+            return None
+
+        container_owner = getter_return[1:-1]
+        if signature_match.group("container") != container_owner:
+            return None
+
+        return {
+            "field_name": field_name,
+            "field_descriptor": descriptor,
+            "field_signature": field_signature,
+            "receiver_owner": receiver_owner,
+            "getter_name": getter_name,
+            "getter_descriptor": getter_descriptor,
+            "getter_signature": getter_signature,
+            "container_owner": container_owner,
+            "entry_key_type_variable": signature_match.group("key"),
+            "entry_value_type_variable": signature_match.group("value"),
+        }
+
+    def entry_lambda_bootstraps(
+        exact_method: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        out: list[dict[str, Any]] = []
+        for invocation in exact_method.get("method_invocations", []):
+            if invocation.get("operation") != "invokedynamic":
+                continue
+            bootstrap_index = int(
+                invocation.get("bootstrap_method_attr_index", -1)
+            )
+            if not (0 <= bootstrap_index < len(bootstrap_methods)):
+                continue
+            bootstrap = bootstrap_methods[bootstrap_index]
+            bootstrap_method = bootstrap.get("bootstrap_method", {})
+            if not (
+                bootstrap_method.get("owner")
+                == "java/lang/invoke/LambdaMetafactory"
+                and bootstrap_method.get("name")
+                in {"metafactory", "altMetafactory"}
+            ):
+                continue
+
+            method_types = {
+                str(argument.get("descriptor", ""))
+                for argument in bootstrap.get("arguments", [])
+                if argument.get("kind") == "method_type"
+            }
+            if "(Ljava/util/Map$Entry;)Z" not in method_types:
+                continue
+
+            implementations = [
+                argument.get("method_handle", {})
+                for argument in bootstrap.get("arguments", [])
+                if (
+                    argument.get("kind") == "method_handle"
+                    and argument.get("method_handle", {}).get("owner")
+                    == current_owner
+                )
+            ]
+            if len(implementations) != 1:
+                continue
+            implementation = implementations[0]
+            helper_descriptor = str(
+                implementation.get("descriptor", "")
+            )
+            helper_shapes = _descriptor_parameter_shapes(
+                helper_descriptor
+            )
+            if not (
+                helper_shapes
+                and helper_shapes[-1]
+                == (0, "ref", "java/util/Map$Entry")
+                and _descriptor_return_descriptor(
+                    helper_descriptor
+                )
+                == "Z"
+            ):
+                continue
+
+            helpers = [
+                helper
+                for helper in profile.get("methods", [])
+                if (
+                    helper.get("name")
+                    == implementation.get("name")
+                    and helper.get("descriptor")
+                    == helper_descriptor
+                    and int(helper.get("access", 0)) & 0x1000
+                )
+            ]
+            if len(helpers) != 1:
+                continue
+            helper = helpers[0]
+            get_value_calls = [
+                row
+                for row in helper.get("method_invocations", [])
+                if (
+                    row.get("operation")
+                    in {"invokeinterface", "invokevirtual"}
+                    and row.get("owner") == "java/util/Map$Entry"
+                    and row.get("name") == "getValue"
+                    and row.get("descriptor")
+                    == "()Ljava/lang/Object;"
+                )
+            ]
+            if not get_value_calls:
+                continue
+
+            out.append(
+                {
+                    "offset": int(invocation.get("offset", -1)),
+                    "descriptor": str(
+                        invocation.get("descriptor", "")
+                    ),
+                    "bootstrap_method_attr_index": bootstrap_index,
+                    "helper_name": str(
+                        implementation.get("name", "")
+                    ),
+                    "helper_descriptor": helper_descriptor,
+                    "map_entry_getvalue_count": len(get_value_calls),
+                }
+            )
+        return out
+
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(
+                whole_code,
+                brace_start,
+            )
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        source_casts = list(cast_re.finditer(method_code))
+        if not source_casts:
+            continue
+
+        lambda_getvalue_names: list[str] = []
+        for lambda_match in lambda_re.finditer(method_code):
+            name = lambda_match.group("lambda")
+            get_value_re = re.compile(
+                r"(?<![A-Za-z0-9_$])"
+                + re.escape(name)
+                + r"\s*\.\s*getValue\s*\("
+            )
+            if get_value_re.search(
+                method_code,
+                lambda_match.end(),
+            ):
+                lambda_getvalue_names.append(name)
+        if len(lambda_getvalue_names) != len(source_casts):
+            continue
+
+        proofs: dict[tuple[str, str], dict[str, Any]] = {}
+        source_counts: dict[tuple[str, str], int] = {}
+        source_rows: list[dict[str, Any]] = []
+        source_ok = True
+        for source_cast in source_casts:
+            key = (
+                source_cast.group("field"),
+                source_cast.group("getter"),
+            )
+            receiver_proof = proofs.get(key)
+            if receiver_proof is None:
+                receiver_proof = generic_entry_getter(
+                    field_name=key[0],
+                    getter_name=key[1],
+                )
+                if receiver_proof is None:
+                    source_ok = False
+                    break
+                proofs[key] = receiver_proof
+            source_counts[key] = source_counts.get(key, 0) + 1
+            source_rows.append(
+                {
+                    "key": key,
+                    "cast_start": (
+                        method_start + source_cast.start("cast")
+                    ),
+                    "cast_end": (
+                        method_start + source_cast.end("cast")
+                    ),
+                }
+            )
+        if not source_ok:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[
+                    method_match.start():brace_start
+                ],
+            )
+        )
+        exact_candidates: list[dict[str, Any]] = []
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            exact_descriptor = str(
+                exact_method.get("descriptor", "")
+            )
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    exact_descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            exact_return = _descriptor_return_descriptor(
+                exact_descriptor
+            )
+            source_return = method_match.group("return").strip()
+            if source_return == "void":
+                if exact_return != "V":
+                    continue
+            elif exact_return is None or (
+                _source_parameters_match_descriptor(
+                    source_return + " recoveredReturn",
+                    "(" + exact_return + ")V",
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+
+            instructions = list(
+                exact_method.get("instructions", [])
+            )
+            flow_counts: dict[tuple[str, str], int] = {
+                key: 0 for key in source_counts
+            }
+            flow_offsets: dict[
+                tuple[str, str],
+                list[dict[str, int]],
+            ] = {
+                key: [] for key in source_counts
+            }
+            for index in range(len(instructions) - 1):
+                field_access = instructions[index]
+                getter_call = instructions[index + 1]
+                for key, receiver_proof in proofs.items():
+                    if not (
+                        field_access.get("mnemonic")
+                        in {"getfield", "getstatic"}
+                        and field_access.get("owner")
+                        == current_owner
+                        and field_access.get("name")
+                        == receiver_proof["field_name"]
+                        and field_access.get("descriptor")
+                        == receiver_proof["field_descriptor"]
+                        and getter_call.get("mnemonic")
+                        in {"invokevirtual", "invokeinterface"}
+                        and getter_call.get("owner")
+                        == receiver_proof["receiver_owner"]
+                        and getter_call.get("name")
+                        == receiver_proof["getter_name"]
+                        and getter_call.get("descriptor")
+                        == receiver_proof["getter_descriptor"]
+                    ):
+                        continue
+                    flow_counts[key] += 1
+                    flow_offsets[key].append(
+                        {
+                            "field_offset": int(
+                                field_access.get("offset", -1)
+                            ),
+                            "getter_offset": int(
+                                getter_call.get("offset", -1)
+                            ),
+                        }
+                    )
+
+            if any(
+                flow_counts.get(key, 0) != count
+                for key, count in source_counts.items()
+            ):
+                continue
+
+            lambda_bootstraps = entry_lambda_bootstraps(
+                exact_method
+            )
+            if len(lambda_bootstraps) != len(source_casts):
+                continue
+
+            exact_candidates.append(
+                {
+                    "method": exact_method,
+                    "flow_offsets": flow_offsets,
+                    "lambda_bootstraps": lambda_bootstraps,
+                }
+            )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        exact_proof = exact_candidates[0]
+        for row in source_rows:
+            edits.append(
+                (
+                    int(row["cast_start"]),
+                    int(row["cast_end"]),
+                    "",
+                )
+            )
+
+        actions.append(
+            {
+                "kind": (
+                    "raw_iterable_map_entry_lambda_cast_removal"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": exact_proof["method"]["descriptor"],
+                "raw_iterable_cast_count": len(source_rows),
+                "lambda_parameter_names": sorted(
+                    lambda_getvalue_names
+                ),
+                "receiver_proofs": [
+                    {
+                        **receiver_proof,
+                        "source_count": source_counts[key],
+                        "exact_flow_offsets": exact_proof[
+                            "flow_offsets"
+                        ][key],
+                    }
+                    for key, receiver_proof in sorted(
+                        proofs.items()
+                    )
+                ],
+                "lambda_bootstraps": exact_proof[
+                    "lambda_bootstraps"
+                ],
+                "replacement_count": len(source_rows),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_raw_iterable_cast_erases_map_entry_lambda_type"
+                    ),
+                    "strategy": (
+                        "exact_field_getter_signature_plus_lambda_metafactory_map_entry"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping raw Iterable lambda-cast edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_impossible_collectors_tolist_casts(
     *,
     source_root: Path,
