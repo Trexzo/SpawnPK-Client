@@ -164,6 +164,10 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 "/normalization_summary/reference_shadowed_self_static_field_method_count",
             "reference_shadowed_self_static_field_reference_count":
                 "/normalization_summary/reference_shadowed_self_static_field_reference_count",
+            "methodhandle_invokeexact_result_cast_action_count":
+                "/normalization_summary/methodhandle_invokeexact_result_cast_action_count",
+            "methodhandle_invokeexact_result_cast_reference_count":
+                "/normalization_summary/methodhandle_invokeexact_result_cast_reference_count",
             "missing_synthetic_constructor_accessor_action_count":
                 "/normalization_summary/missing_synthetic_constructor_accessor_action_count",
             "missing_synthetic_constructor_accessor_method_count":
@@ -304,6 +308,16 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         self.assertIn(
             'REFERENCE_SHADOWED_SELF_STATIC_FIELD_REFERENCES='
             '$($Recovered.reference_shadowed_self_static_field_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'METHODHANDLE_INVOKEEXACT_RESULT_CAST_ACTIONS='
+            '$($Recovered.methodhandle_invokeexact_result_cast_action_count)',
+            script,
+        )
+        self.assertIn(
+            'METHODHANDLE_INVOKEEXACT_RESULT_CAST_REFERENCES='
+            '$($Recovered.methodhandle_invokeexact_result_cast_reference_count)',
             script,
         )
         self.assertIn(
