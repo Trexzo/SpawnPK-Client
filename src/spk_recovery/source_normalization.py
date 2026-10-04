@@ -20871,7 +20871,6 @@ def _normalize_missing_synthetic_bridge_forwarders(
         bridge_access = int(bridge.get("access", 0))
         if (
             not (bridge_access & 0x1000)
-            or not (bridge_access & 0x0040)
             or (bridge_access & 0x0008)
         ):
             continue
@@ -21099,6 +21098,8 @@ def _normalize_missing_synthetic_bridge_forwarders(
                 "source_path": rel,
                 "bridge_name": bridge_name,
                 "bridge_descriptor": bridge_descriptor,
+                "bridge_access_flags": bridge_access,
+                "bridge_flag_present": bool(bridge_access & 0x0040),
                 "target_name": target_name,
                 "target_descriptor": target_descriptor,
                 "abstract_super_owner": nearest_super_owner,
