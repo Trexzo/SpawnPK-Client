@@ -20159,6 +20159,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_linkedhashmap_field_get_result_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_linkedhashmap_self_get_result_casts(
                         source_root=source_root,
                         path=path,
@@ -20753,6 +20760,15 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "undeclared_linkedhashmap_cast_placeholder_wildcard"
+        ),
+        "linkedhashmap_field_get_result_cast_method_count": sum(
+            action["kind"] == "linkedhashmap_field_get_result_cast"
+            for action in actions
+        ),
+        "linkedhashmap_field_get_result_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"] == "linkedhashmap_field_get_result_cast"
         ),
         "linkedhashmap_self_get_result_cast_method_count": sum(
             action["kind"] == "linkedhashmap_self_get_result_cast"
