@@ -1103,10 +1103,48 @@ def _exact_finally_handler_duplicate_invocations(
         ):
             continue
 
-        if handler_instructions[-1].get("mnemonic") != "athrow":
+        exception_slot = int(
+            handler_instructions[0].get("local_index", -1)
+        )
+        athrow_indexes = [
+            instruction_index
+            for instruction_index, row in enumerate(handler_instructions)
+            if row.get("mnemonic") == "athrow"
+        ]
+        if not athrow_indexes:
+            continue
+        athrow_index = athrow_indexes[0]
+        if athrow_index < 2:
+            continue
+        exception_reload = handler_instructions[athrow_index - 1]
+        if not (
+            exception_reload.get("mnemonic") == "aload"
+            and int(exception_reload.get("local_index", -1))
+            == exception_slot
+        ):
+            continue
+        handler_block = handler_instructions[: athrow_index + 1]
+        if any(
+            (
+                str(row.get("mnemonic", "")).startswith("if")
+                or row.get("mnemonic") in {
+                    "goto",
+                    "goto_w",
+                    "tableswitch",
+                    "lookupswitch",
+                    "ireturn",
+                    "lreturn",
+                    "freturn",
+                    "dreturn",
+                    "areturn",
+                    "return",
+                }
+            )
+            for row in handler_block[:-1]
+        ):
             continue
         athrow_offset = int(
-            handler_instructions[-1].get("offset", -1)
+            handler_instructions[athrow_index].get("offset", -1)
         )
 
         for invocation in invocations:
