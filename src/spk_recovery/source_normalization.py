@@ -7773,11 +7773,15 @@ def _normalize_cc_generic_value_object_casts(
 
     def resolve_receiver(
         receiver: str,
-    ) -> tuple[str, str, str] | None:
+    ) -> tuple[str, str, str, bool] | None:
         owner_text, dot, field_name = receiver.rpartition(".")
         if not dot or not owner_text or not field_name:
             return None
-        if owner_text in {current_simple, current_dotted}:
+
+        source_instance = owner_text == "this"
+        if source_instance:
+            owner = current_owner
+        elif owner_text in {current_simple, current_dotted}:
             owner = current_owner
         elif owner_text in imports:
             owner = imports[owner_text]
@@ -7801,8 +7805,9 @@ def _normalize_cc_generic_value_object_casts(
             for field in parsed.get("fields", [])
             if (
                 field.get("name") == field_name
-                and int(field.get("access", 0)) & 0x0008
                 and field.get("descriptor") == "Lgnu/trove/f/b/cc;"
+                and bool(int(field.get("access", 0)) & 0x0008)
+                == (not source_instance)
             )
         ]
         if len(fields) != 1:
@@ -7816,7 +7821,7 @@ def _normalize_cc_generic_value_object_casts(
         value_owner = match.group("value")
         if not reference_type_known(value_owner):
             return None
-        return owner, field_name, value_owner
+        return owner, field_name, value_owner, (not source_instance)
 
     def identifier_source_type(
         *,
@@ -7909,9 +7914,12 @@ def _normalize_cc_generic_value_object_casts(
             )
             if resolved_receiver is None:
                 continue
-            field_owner, field_name, generic_value = (
-                resolved_receiver
-            )
+            (
+                field_owner,
+                field_name,
+                generic_value,
+                field_is_static,
+            ) = resolved_receiver
 
             value_kind: str
             if call.group("boolean") is not None:
@@ -7945,6 +7953,7 @@ def _normalize_cc_generic_value_object_casts(
                     "field_owner": field_owner,
                     "field_name": field_name,
                     "generic_value": generic_value,
+                    "field_is_static": field_is_static,
                     "value_kind": value_kind,
                 }
             )
@@ -7965,6 +7974,7 @@ def _normalize_cc_generic_value_object_casts(
                 call["field_owner"],
                 call["field_name"],
                 call["generic_value"],
+                call["field_is_static"],
             )
             for call in calls
         }
@@ -8003,15 +8013,29 @@ def _normalize_cc_generic_value_object_casts(
                 ]
                 if not matching:
                     continue
+                if len(matching) != 1:
+                    continue
+                generic_value = matching[0][2]
+                field_is_static = bool(matching[0][3])
+                expected_field_mnemonic = (
+                    "getstatic" if field_is_static else "getfield"
+                )
                 if not (
-                    field_access.get("mnemonic") == "getstatic"
+                    field_access.get("mnemonic")
+                    == expected_field_mnemonic
                     and field_access.get("descriptor")
                     == "Lgnu/trove/f/b/cc;"
                 ):
                     continue
-                if len(matching) != 1:
-                    continue
-                generic_value = matching[0][2]
+                if not field_is_static:
+                    if index == 0:
+                        continue
+                    receiver_load = instructions[index - 1]
+                    if not (
+                        receiver_load.get("mnemonic") == "aload"
+                        and int(receiver_load.get("local_index", -1)) == 0
+                    ):
+                        continue
 
                 target_index: int | None = None
                 for probe in range(
@@ -8066,6 +8090,7 @@ def _normalize_cc_generic_value_object_casts(
                         ):
                             value_kind = "new"
 
+                identifier_slot: int | None = None
                 if value_kind is None:
                     aloads = [
                         item
@@ -8074,6 +8099,37 @@ def _normalize_cc_generic_value_object_casts(
                     ]
                     if len(aloads) == 1:
                         value_kind = "identifier"
+                        identifier_slot = int(
+                            aloads[0].get("local_index", -1)
+                        )
+                    elif segment and segment[-1].get("mnemonic") == "aload":
+                        candidate_slot = int(
+                            segment[-1].get("local_index", -1)
+                        )
+                        if candidate_slot >= 0:
+                            latest_store: int | None = None
+                            for probe in range(index - 1, -1, -1):
+                                item = instructions[probe]
+                                if (
+                                    item.get("mnemonic") == "astore"
+                                    and int(
+                                        item.get("local_index", -1)
+                                    ) == candidate_slot
+                                ):
+                                    latest_store = probe
+                                    break
+                            if (
+                                latest_store is not None
+                                and latest_store > 0
+                                and instructions[
+                                    latest_store - 1
+                                ].get("mnemonic") == "checkcast"
+                                and instructions[
+                                    latest_store - 1
+                                ].get("type") == generic_value
+                            ):
+                                value_kind = "identifier"
+                                identifier_slot = candidate_slot
 
                 if value_kind is None:
                     continue
@@ -8083,7 +8139,9 @@ def _normalize_cc_generic_value_object_casts(
                         "field_owner": key[0],
                         "field_name": key[1],
                         "generic_value": generic_value,
+                        "field_is_static": field_is_static,
                         "value_kind": value_kind,
+                        "identifier_slot": identifier_slot,
                         "field_offset": int(
                             field_access.get("offset", -1)
                         ),
@@ -8100,6 +8158,7 @@ def _normalize_cc_generic_value_object_casts(
                     call["field_owner"],
                     call["field_name"],
                     call["generic_value"],
+                    call["field_is_static"],
                     call["value_kind"],
                 )
                 for call in calls
@@ -8109,6 +8168,7 @@ def _normalize_cc_generic_value_object_casts(
                     flow["field_owner"],
                     flow["field_name"],
                     flow["generic_value"],
+                    flow["field_is_static"],
                     flow["value_kind"],
                 )
                 for flow in flows
