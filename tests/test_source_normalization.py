@@ -9852,6 +9852,226 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
 
 
 
+class LinkedHashMapFieldGetResultCastTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        map_super: str = "LinkedHashMap<String, ItemList>",
+        duplicate_exact: bool = False,
+    ) -> Path:
+        exact_get = (
+            '((LinkedHashMap)folders).get'
+            if map_super.startswith("LinkedHashMap<")
+            else '(Object)folders.get'
+        )
+        second = (
+            '        store.save("Other", (List<Item>)'
+            + exact_get
+            + '("Other"));\n'
+            if duplicate_exact
+            else ""
+        )
+        return _compile_java_fixture(
+            root,
+            {
+                "p/Item.java": (
+                    "package p;\n"
+                    "public class Item {}\n"
+                ),
+                "p/ItemList.java": (
+                    "package p;\n"
+                    "import java.util.ArrayList;\n"
+                    "public class ItemList extends ArrayList<Item> {}\n"
+                ),
+                "p/FolderMap.java": (
+                    "package p;\n"
+                    "import java.util.LinkedHashMap;\n"
+                    "import java.util.HashMap;\n"
+                    f"public class FolderMap extends {map_super} {{}}\n"
+                ),
+                "p/Store.java": (
+                    "package p;\n"
+                    "import java.util.List;\n"
+                    "public class Store {\n"
+                    "    public void save(String key, List<Item> items) {}\n"
+                    "}\n"
+                ),
+                "p/A.java": (
+                    "package p;\n"
+                    "import java.util.LinkedHashMap;\n"
+                    "import java.util.List;\n"
+                    "public class A {\n"
+                    "    private final FolderMap folders = new FolderMap();\n"
+                    "    private final Store store = new Store();\n"
+                    "    public A() {\n"
+                    '        store.save("Main folder", (List<Item>)'
+                    + exact_get
+                    + '("Main folder"));\n'
+                    + second
+                    + "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def _malformed_source(self, *, duplicate_source: bool = False) -> str:
+        second = (
+            '        store.save("Other", '
+            '((LinkedHashMap<K, List<Item>>)this.folders).get("Other"));\n'
+            if duplicate_source
+            else ""
+        )
+        return (
+            "package p;\n"
+            "import java.util.LinkedHashMap;\n"
+            "import java.util.List;\n"
+            "public class A {\n"
+            "    private final FolderMap folders = new FolderMap();\n"
+            "    private final Store store = new Store();\n"
+            "    public A() {\n"
+            '        store.save("Main folder", '
+            '((LinkedHashMap<K, List<Item>>)this.folders)'
+            '.get("Main folder"));\n'
+            + second
+            + "    }\n"
+            "}\n"
+        )
+
+    def test_constructor_field_get_moves_impossible_receiver_cast_to_result(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                self._malformed_source(),
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-map-field-result"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn(
+                'store.save("Main folder", '
+                '((List<Item>)((LinkedHashMap)this.folders)'
+                '.get("Main folder")));',
+                normalized,
+            )
+            self.assertNotIn("LinkedHashMap<K, List<Item>>", normalized)
+
+            actions = [
+                row
+                for row in report["actions"]
+                if row["kind"] == "linkedhashmap_field_get_result_cast"
+            ]
+            self.assertEqual(len(actions), 1)
+            action = actions[0]
+            self.assertEqual(action["method_name"], "<init>")
+            self.assertEqual(action["method_descriptor"], "()V")
+            self.assertEqual(action["field_names"], ["folders"])
+            self.assertEqual(action["field_owners"], ["p/FolderMap"])
+            self.assertEqual(
+                action["field_signatures"],
+                [
+                    "Ljava/util/LinkedHashMap<"
+                    "Ljava/lang/String;Lp/ItemList;>;"
+                ],
+            )
+            self.assertEqual(action["result_types"], ["List<Item>"])
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(len(action["exact_flows"]), 1)
+            self.assertEqual(
+                report["summary"][
+                    "linkedhashmap_field_get_result_cast_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "linkedhashmap_field_get_result_cast_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-map-field-result"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stdout + after.stderr)
+
+    def test_constructor_field_get_requires_direct_linkedhashmap_signature(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(
+                root,
+                map_super="HashMap<String, ItemList>",
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = self._malformed_source()
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "linkedhashmap_field_get_result_cast_reference_count"
+                ],
+                0,
+            )
+
+    def test_constructor_field_get_fails_closed_on_multiplicity_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = self._malformed_source(duplicate_source=True)
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertEqual(
+                report["summary"][
+                    "linkedhashmap_field_get_result_cast_reference_count"
+                ],
+                0,
+            )
+
+
+
+
 class ErasedHashMapArrayReturnCastTests(unittest.TestCase):
     def _fixture(
         self,
