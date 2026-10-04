@@ -549,7 +549,7 @@ class CollisionDerivedCompileTests(unittest.TestCase):
             "schema_version": 1,
             "kind": "build_authority_manifest",
             "authority_id": "BUILDAUTH_" + "c" * 20,
-            "source_sha256": "a" * 64,
+            "source_sha256": V308_SOURCE_AUTHORITY_SHA256,
             "compiler_runtime": {
                 "javac": _probe_javac("javac"),
             },
