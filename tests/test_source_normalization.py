@@ -13756,7 +13756,12 @@ class CcGenericValueObjectCastTests(unittest.TestCase):
 
 
 class MissingSyntheticConstructorAccessorTests(unittest.TestCase):
-    def _fixture(self, root: Path) -> Path:
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        unrelated_same_simple: bool = False,
+    ) -> Path:
         legal = root / "synthetic-accessor-legal"
         outer = legal / "p" / "Outer.java"
         marker = legal / "p" / "Marker.java"
@@ -13766,6 +13771,16 @@ class MissingSyntheticConstructorAccessorTests(unittest.TestCase):
             "public final class Marker {}\n",
             encoding="utf-8",
         )
+        unrelated = (
+            "    private static class Other {\n"
+            "        private static class Inner {\n"
+            "            private Inner(Object ignored) {}\n"
+            "        }\n"
+            "        private Inner other = new Inner(null);\n"
+            "    }\n"
+            if unrelated_same_simple
+            else ""
+        )
         outer.write_text(
             "package p;\n"
             "public class Outer {\n"
@@ -13773,7 +13788,8 @@ class MissingSyntheticConstructorAccessorTests(unittest.TestCase):
             "        private Inner() {}\n"
             "        Inner(Marker ignored) { this(); }\n"
             "    }\n"
-            "    private Inner value = new Inner(null);\n"
+            + unrelated
+            + "    private Inner value = new Inner(null);\n"
             "    public Object value() { return value; }\n"
             "}\n",
             encoding="utf-8",
@@ -13921,10 +13937,25 @@ class MissingSyntheticConstructorAccessorTests(unittest.TestCase):
         )
         return jar
 
-    def _malformed_source(self, *, duplicate_call: bool = False) -> str:
+    def _malformed_source(
+        self,
+        *,
+        duplicate_call: bool = False,
+        unrelated_same_simple: bool = False,
+    ) -> str:
         second = (
             "    private Inner value2 = new Inner(null);\n"
             if duplicate_call
+            else ""
+        )
+        unrelated = (
+            "    private static class Other {\n"
+            "        private static class Inner {\n"
+            "            private Inner(Object ignored) {}\n"
+            "        }\n"
+            "        private Inner other = new Inner(null);\n"
+            "    }\n"
+            if unrelated_same_simple
             else ""
         )
         return (
@@ -13933,7 +13964,8 @@ class MissingSyntheticConstructorAccessorTests(unittest.TestCase):
             "    private static class Inner {\n"
             "        private Inner() {}\n"
             "    }\n"
-            "    private Inner value = new Inner(null);\n"
+            + unrelated
+            + "    private Inner value = new Inner(null);\n"
             + second
             + "    public Object value() { return value; }\n"
             "}\n"
@@ -14128,6 +14160,82 @@ class MissingSyntheticConstructorAccessorTests(unittest.TestCase):
                     str(jar),
                     "-d",
                     str(root / "after-synthetic-accessor"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_synthetic_constructor_accessor_ignores_nested_same_simple_call(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(
+                root,
+                unrelated_same_simple=True,
+            )
+            source = root / "src" / "p" / "Outer.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                self._malformed_source(
+                    unrelated_same_simple=True,
+                ),
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-owner-scoped-accessor"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "Inner(final p.Marker recoveredSyntheticAccessor)",
+                normalized,
+            )
+            self.assertIn(
+                "private Inner other = new Inner(null);",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "missing_synthetic_constructor_accessor_reconstruction"
+            )
+            self.assertEqual(action["nested_owner"], "p/Outer$Inner")
+            self.assertEqual(action["source_callsite_count"], 1)
+            self.assertEqual(
+                action["excluded_nested_source_callsite_count"],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-owner-scoped-accessor"),
                     str(source),
                 ],
                 stdout=subprocess.PIPE,
