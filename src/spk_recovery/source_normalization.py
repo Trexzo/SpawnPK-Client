@@ -16924,7 +16924,7 @@ def _normalize_imported_static_method_owners_shadowed_by_values(
         return names
 
     imported_methods: dict[str, tuple[str, set[str]]] = {}
-    for simple, imported_owner in sorted(all_imports.items()):
+    for simple, imported_owner in sorted(imports.items()):
         names = visible_static_names(imported_owner)
         if names:
             imported_methods[simple] = (imported_owner, names)
