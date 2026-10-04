@@ -66,6 +66,7 @@ _SIMPLE_INSTRUCTION_NAMES = {
     0x06: "iconst_3",
     0x07: "iconst_4",
     0x08: "iconst_5",
+    0x4F: "iastore",
     0x57: "pop",
     0x58: "pop2",
     0x59: "dup",
