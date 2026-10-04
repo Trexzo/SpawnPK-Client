@@ -13559,6 +13559,166 @@ class MethodHandleInvokeExactResultCastTests(unittest.TestCase):
 
 
 
+
+class ExactStaticCallNestedOwnerTests(unittest.TestCase):
+    def _fixture(self, root: Path, *, owner: str = "r") -> Path:
+        return _compile_java_fixture(
+            root,
+            {
+                f"dep/{owner}.java": (
+                    "package dep;\n"
+                    f"public class {owner} {{\n"
+                    "    public static final int a = 1;\n"
+                    "    public static class a {\n"
+                    "        public static final a d = new a();\n"
+                    "    }\n"
+                    "    public static void use(a mode, byte[] x, byte[] y) {}\n"
+                    "}\n"
+                ),
+                "use/Current.java": (
+                    "package use;\n"
+                    "public class Current {\n"
+                    "    public static void load(byte[] x, byte[] y) {\n"
+                    f"        dep.{owner}.use(((dep.{owner}.a)null).d, x, y);\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def test_infers_nested_owner_from_exact_static_call_without_single_import(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package use;\n"
+                "import dep.*;\n"
+                "public class Current {\n"
+                "    public static void load(byte[] x, byte[] y) {\n"
+                "        r.use(r.a.d, x, y);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-exact-static-call-nested"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("int cannot be dereferenced", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "r.use(((dep.r.a)null).d, x, y);",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if (
+                    row["kind"]
+                    == "shadowed_nested_static_field_owner_type_context"
+                    and row["provenance"]["strategy"]
+                    == "exact_invokestatic_owner_plus_nested_getstatic_collision"
+                )
+            )
+            self.assertEqual(action["nested_owners"], ["dep/r$a"])
+            self.assertEqual(action["shadow_declaring_owners"], ["dep/r"])
+            self.assertEqual(action["replacement_count"], 1)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-exact-static-call-nested"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_exact_static_call_nested_owner_fails_closed_on_owner_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, owner="s")
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package use;\n"
+                "import dep.*;\n"
+                "public class Current {\n"
+                "    public static void load(byte[] x, byte[] y) {\n"
+                "        r.use(r.a.d, x, y);\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertFalse(
+                any(
+                    row.get("provenance", {}).get("strategy")
+                    == "exact_invokestatic_owner_plus_nested_getstatic_collision"
+                    for row in report["actions"]
+                )
+            )
+
+    def test_exact_static_call_nested_owner_fails_closed_on_multiplicity_drift(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package use;\n"
+                "import dep.*;\n"
+                "public class Current {\n"
+                "    public static void load(byte[] x, byte[] y) {\n"
+                "        r.use(r.a.d, x, y);\n"
+                "        r.use(r.a.d, x, y);\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(source.read_text(encoding="utf-8"), original)
+            self.assertFalse(
+                any(
+                    row.get("provenance", {}).get("strategy")
+                    == "exact_invokestatic_owner_plus_nested_getstatic_collision"
+                    for row in report["actions"]
+                )
+            )
+
+
+
 if __name__ == "__main__":
     unittest.main()
 
