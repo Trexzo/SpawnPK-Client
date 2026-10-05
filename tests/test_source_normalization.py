@@ -13720,6 +13720,160 @@ class ErasedIteratorAssignmentCastTests(unittest.TestCase):
             )
 
 
+
+class ExactStaticCallTernaryNestedTypeCollisionTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        false_field: str = "a",
+    ) -> Path:
+        return _compile_java_fixture(
+            root,
+            {
+                "dep/r.java": (
+                    "package dep;\n"
+                    "public class r {\n"
+                    "    public static int a = 7;\n"
+                    "    public static class a {\n"
+                    "        public static final a d = new a();\n"
+                    "        public static final a a = new a();\n"
+                    "    }\n"
+                    "    public static void use(a mode, byte[] x, byte[] y) {}\n"
+                    "}\n"
+                ),
+                "use/Current.java": (
+                    "package use;\n"
+                    "import dep.r;\n"
+                    "import dep.r.a;\n"
+                    "public class Current {\n"
+                    "    public void load(boolean flag, byte[] x, byte[] y) {\n"
+                    "        r.use(flag ? a.d : a."
+                    + false_field
+                    + ", x, y);\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def _malformed(self) -> str:
+        return (
+            "package use;\n"
+            "import dep.r;\n"
+            "public class Current {\n"
+            "    public void load(boolean flag, byte[] x, byte[] y) {\n"
+            "        r.use(flag ? r.a.d : r.a.a, x, y);\n"
+            "    }\n"
+            "}\n"
+        )
+
+    def test_ternary_nested_static_call_owners_are_reconstructed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(self._malformed(), encoding="utf-8")
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-ternary-nested-owner"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("int cannot be dereferenced", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "r.use(flag ? ((dep.r.a)null).d : "
+                "((dep.r.a)null).a, x, y);",
+                normalized,
+            )
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == (
+                    "exact_static_call_ternary_nested_type_"
+                    "collision_reconstruction"
+                )
+            )
+            self.assertEqual(action["ternary_count"], 1)
+            self.assertEqual(action["replacement_count"], 2)
+            flow = action["flows"][0]
+            self.assertEqual(flow["exact_outer"], "dep/r")
+            self.assertEqual(flow["nested_owner"], "dep/r$a")
+            self.assertEqual(flow["true_field"], "d")
+            self.assertEqual(flow["false_field"], "a")
+            self.assertLess(
+                flow["true_field_offset"],
+                flow["false_field_offset"],
+            )
+            self.assertLess(flow["false_field_offset"], flow["invoke_offset"])
+            self.assertEqual(
+                report["summary"][
+                    "exact_static_call_ternary_nested_type_collision_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "exact_static_call_ternary_nested_type_collision_reference_count"
+                ],
+                2,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-ternary-nested-owner"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stdout + after.stderr)
+
+    def test_ternary_nested_static_call_fails_closed_on_false_arm_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, false_field="d")
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == (
+                        "exact_static_call_ternary_nested_type_"
+                        "collision_reconstruction"
+                    )
+                    for row in report["actions"]
+                )
+            )
+
+
+
 class MissingSyntheticBridgeForwarderTests(unittest.TestCase):
     def _malformed_source(self) -> str:
         return (
@@ -16497,6 +16651,238 @@ class GenericKeyObjectCastTests(unittest.TestCase):
         self._assert_no_action("slot_type")
 
 
+class InheritedCcGenericValueObjectCastTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        mode: str = "exact",
+    ) -> Path:
+        mid_extends = "Base<R>"
+        exact_value_call = "this.b(id, map)"
+        if mode == "raw_hierarchy":
+            mid_extends = "Base"
+        elif mode == "method_drift":
+            exact_value_call = "this.c(id, map)"
+        elif mode != "exact":
+            raise AssertionError(mode)
+
+        return _compile_java_fixture(
+            root,
+            {
+                "gnu/trove/f/b/cc.java": (
+                    "package gnu.trove.f.b;\n"
+                    "public class cc<V> {\n"
+                    "    public V a(int key, V value) { return value; }\n"
+                    "}\n"
+                ),
+                "p/R.java": (
+                    "package p;\n"
+                    "public class R {}\n"
+                ),
+                "p/Base.java": (
+                    "package p;\n"
+                    "import gnu.trove.f.b.cc;\n"
+                    "public class Base<T> {\n"
+                    "    public final cc<T> h = new cc<>();\n"
+                    "}\n"
+                ),
+                "p/Mid.java": (
+                    "package p;\n"
+                    "public class Mid extends "
+                    + mid_extends
+                    + " {}\n"
+                ),
+                "p/Current.java": (
+                    "package p;\n"
+                    "import java.util.Map;\n"
+                    "public class Current extends Mid {\n"
+                    "    public R b(int id, Map<String,Object> map) {\n"
+                    "        return new R();\n"
+                    "    }\n"
+                    "    public R c(int id, Map<String,Object> map) {\n"
+                    "        return new R();\n"
+                    "    }\n"
+                    "    public void run(int id, Map<String,Object> map) {\n"
+                    "        this.h.a(id, "
+                    + exact_value_call
+                    + ");\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def _malformed_source(
+        self,
+        *,
+        duplicate: bool = False,
+    ) -> str:
+        call = (
+            "        this.h.a(id, (Object)this.b(id, map));\n"
+        )
+        if duplicate:
+            call += (
+                "        this.h.a(id, (Object)this.b(id, map));\n"
+            )
+        return (
+            "package p;\n"
+            "import java.util.Map;\n"
+            "public class Current extends Mid {\n"
+            "    public R b(int id, Map<String,Object> map) {\n"
+            "        return new R();\n"
+            "    }\n"
+            "    public R c(int id, Map<String,Object> map) {\n"
+            "        return new R();\n"
+            "    }\n"
+            "    public void run(int id, Map<String,Object> map) {\n"
+            + call
+            + "    }\n"
+            "}\n"
+        )
+
+    def _write_source(
+        self,
+        root: Path,
+        *,
+        duplicate: bool = False,
+    ) -> Path:
+        source = root / "src" / "p" / "Current.java"
+        source.parent.mkdir(parents=True)
+        source.write_text(
+            self._malformed_source(duplicate=duplicate),
+            encoding="utf-8",
+        )
+        return source
+
+    def test_inherited_cc_generic_value_cast_is_removed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = self._write_source(root)
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-inherited-cc"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("Object cannot be converted to R", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "this.h.a(id, this.b(id, map));",
+                normalized,
+            )
+            self.assertNotIn(
+                "(Object)this.b",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if (
+                    row["kind"]
+                    == "cc_generic_value_object_cast_removal"
+                    and row.get("receiver_authority")
+                    == "inherited_generic_hierarchy"
+                )
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                action["generic_value_types"],
+                ["p/R"],
+            )
+            self.assertEqual(
+                action["value_kinds"],
+                ["method_call"],
+            )
+            self.assertEqual(
+                action["flows"][0]["field_declaring_owner"],
+                "p/Base",
+            )
+            self.assertEqual(
+                action["flows"][0]["field_signature"],
+                "Lgnu/trove/f/b/cc<TT;>;",
+            )
+            self.assertEqual(
+                action["flows"][0]["substitutions"],
+                {"T": "p/R"},
+            )
+            self.assertEqual(
+                action["flows"][0]["value_invoke_descriptor"],
+                "(ILjava/util/Map;)Lp/R;",
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-inherited-cc"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def _assert_no_inherited_action(
+        self,
+        *,
+        mode: str = "exact",
+        duplicate: bool = False,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, mode=mode)
+            source = self._write_source(
+                root,
+                duplicate=duplicate,
+            )
+            original = source.read_text(encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "cc_generic_value_object_cast_removal"
+                    and row.get("receiver_authority")
+                    == "inherited_generic_hierarchy"
+                    for row in report["actions"]
+                )
+            )
+
+    def test_inherited_cc_fails_closed_on_raw_hierarchy(self):
+        self._assert_no_inherited_action(mode="raw_hierarchy")
+
+    def test_inherited_cc_fails_closed_on_value_method_drift(self):
+        self._assert_no_inherited_action(mode="method_drift")
+
+    def test_inherited_cc_fails_closed_on_multiplicity_drift(self):
+        self._assert_no_inherited_action(duplicate=True)
+
+
 class CcGenericInstanceValueObjectCastTests(unittest.TestCase):
     def _fixture(
         self,
@@ -16711,6 +17097,208 @@ class CcGenericInstanceValueObjectCastTests(unittest.TestCase):
 
     def test_cc_generic_instance_field_fails_on_multiplicity_drift(self):
         self._assert_no_instance_action(mode="multiplicity")
+class GenericBuilderTargetInferenceCastTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        factory_object_bounds: bool = True,
+        generic_terminal: bool = True,
+    ) -> Path:
+        factory_type = (
+            "Builder<Object,Object>"
+            if factory_object_bounds
+            else "Builder<String,Object>"
+        )
+        if generic_terminal:
+            build_method = (
+                "    public <K1 extends K, V1 extends V> "
+                "Box<K1,V1> build() { return new Box<>(); }\n"
+            )
+        else:
+            build_method = (
+                "    public Box<String,Object> build() { return new Box<>(); }\n"
+            )
+
+        return _compile_java_fixture(
+            root,
+            {
+                "p/Box.java": (
+                    "package p;\n"
+                    "public class Box<K,V> {}\n"
+                ),
+                "p/Builder.java": (
+                    "package p;\n"
+                    "public class Builder<K,V> {\n"
+                    "    public static "
+                    + factory_type
+                    + " start() { return new Builder<>(); }\n"
+                    "    public Builder<K,V> size(long value) { return this; }\n"
+                    + build_method
+                    + "}\n"
+                ),
+                "p/Current.java": (
+                    "package p;\n"
+                    "public class Current {\n"
+                    "    private Box<String,Object> box;\n"
+                    "    public Current() {\n"
+                    "        this.box = Builder.start().size(256L).build();\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def _malformed(self) -> str:
+        return (
+            "package p;\n"
+            "public class Current {\n"
+            "    private Box<String,Object> box;\n"
+            "    public Current() {\n"
+            "        this.box = (Box<String,Object>)"
+            "Builder.start().size(256L).build();\n"
+            "    }\n"
+            "}\n"
+        )
+
+    def test_generic_builder_target_inference_cast_is_removed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(self._malformed(), encoding="utf-8")
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-generic-builder-target"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "this.box = Builder.start().size(256L).build();",
+                normalized,
+            )
+            self.assertNotIn("(Box<String,Object>)", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "generic_builder_target_inference_cast_removal"
+            )
+            self.assertEqual(action["field_names"], ["box"])
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                action["field_signatures"],
+                ["Lp/Box<Ljava/lang/String;Ljava/lang/Object;>;"],
+            )
+            self.assertEqual(
+                report["summary"][
+                    "generic_builder_target_inference_cast_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "generic_builder_target_inference_cast_reference_count"
+                ],
+                1,
+            )
+
+            flow = action["exact_flows"][0]
+            self.assertEqual(flow["factory_owner"], "p/Builder")
+            self.assertEqual(flow["factory_name"], "start")
+            self.assertEqual(flow["preserve_name"], "size")
+            self.assertEqual(flow["terminal_name"], "build")
+            self.assertIn(
+                "<K1:TK;V1:TV;>()Lp/Box<TK1;TV1;>;",
+                flow["terminal_signature"],
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-generic-builder-target"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_generic_builder_target_inference_fails_closed_on_factory_bounds(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(
+                root,
+                factory_object_bounds=False,
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "generic_builder_target_inference_cast_removal"
+                    for row in report["actions"]
+                )
+            )
+
+    def test_generic_builder_target_inference_fails_closed_on_terminal_signature(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(
+                root,
+                generic_terminal=False,
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "generic_builder_target_inference_cast_removal"
+                    for row in report["actions"]
+                )
+            )
+
+
 
 if __name__ == "__main__":
     unittest.main()
