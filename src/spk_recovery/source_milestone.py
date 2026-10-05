@@ -1387,6 +1387,25 @@ def verify_source_publication_bundle(
 
     checks: dict[str, bool] = {}
 
+    blockers = milestone.get("blockers")
+    publication_raw = milestone.get("publication")
+    publication = (
+        publication_raw
+        if isinstance(publication_raw, dict)
+        else {}
+    )
+    milestone_material = {
+        "provenance": milestone.get("provenance"),
+        "source_tree": milestone.get("source_tree"),
+        "class_set": milestone.get("class_set"),
+        "publication": publication_raw,
+        "blockers": blockers,
+    }
+    expected_milestone_id = (
+        "SRCMILESTONE_"
+        + _stable_digest(milestone_material)[:20].upper()
+    )
+
     checks["external_manifest_match"] = (
         expected_manifest is None
         or expected_manifest == milestone
@@ -1394,15 +1413,24 @@ def verify_source_publication_bundle(
     checks["milestone_publishable"] = (
         milestone.get("publishable") is True
     )
+    checks["milestone_blockers_empty"] = (
+        isinstance(blockers, list) and not blockers
+    )
+    checks["milestone_publication_allowed"] = (
+        isinstance(publication_raw, dict)
+        and publication_raw.get("allowed") is True
+    )
+    checks["milestone_identity_match"] = (
+        milestone.get("milestone_id")
+        == expected_milestone_id
+    )
     checks["bundle_milestone_match"] = (
         bundle.get("milestone_id")
         == milestone.get("milestone_id")
     )
     checks["publication_repository_match"] = (
         bundle.get("publication_repository")
-        == milestone.get("publication", {}).get(
-            "target_repository"
-        )
+        == publication.get("target_repository")
     )
     checks["contains_binary_artifacts_false"] = (
         bundle.get("contains_binary_artifacts") is False
