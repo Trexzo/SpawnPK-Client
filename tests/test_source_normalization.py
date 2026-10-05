@@ -13589,10 +13589,10 @@ class ExactStaticCallTernaryNestedTypeCollisionTests(unittest.TestCase):
                 "use/Current.java": (
                     "package use;\n"
                     "import dep.r;\n"
+                    "import dep.r.a;\n"
                     "public class Current {\n"
                     "    public void load(boolean flag, byte[] x, byte[] y) {\n"
-                    "        r.use(flag ? ((dep.r.a)null).d : "
-                    "((dep.r.a)null)."
+                    "        r.use(flag ? a.d : a."
                     + false_field
                     + ", x, y);\n"
                     "    }\n"
