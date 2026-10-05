@@ -6,6 +6,7 @@ import re
 from typing import Any
 
 from .semantic_authority import (
+    SEMANTIC_IDENTIFIER_RE,
     SEMANTIC_PROPOSAL_ID_RE,
     SEMANTIC_REVIEW_ID_RE,
     semantic_proposal_id,
@@ -218,6 +219,13 @@ def validate_lineage(doc: dict[str, Any]) -> dict[str, int]:
             semantic_named += 1
         if status == "ACCEPTED":
             accepted_name = str(semantic_name)
+            if not SEMANTIC_IDENTIFIER_RE.fullmatch(
+                accepted_name
+            ):
+                raise LineageValidationError(
+                    f"{label}: accepted semantic name "
+                    f"{accepted_name!r} is not a canonical identifier"
+                )
             prior_logical_id = accepted_semantic_names.get(
                 accepted_name
             )
