@@ -6,6 +6,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
+from spk_recovery.semantic_authority import semantic_proposal_id
 from spk_recovery.source_digest import source_tree_digest
 from spk_recovery.v308_authority import V308_SOURCE_AUTHORITY_SHA256
 from spk_recovery.source_milestone import (
@@ -16,6 +17,9 @@ from spk_recovery.source_milestone import (
     verify_source_milestone_manifest,
     verify_source_publication_bundle as _verify_source_publication_bundle,
 )
+
+_CLASS_REVIEW_ID = "SEMREVIEW_" + "A" * 20
+_MEMBER_REVIEW_ID = "SEMREVIEW_" + "B" * 20
 
 
 def verify_source_publication_bundle(bundle_dir, **kwargs):
@@ -249,7 +253,23 @@ def _fixtures(source_root: Path):
                     }
                 ],
                 "semantic_provenance": [
-                    {"review_id": "SEMREVIEW_CLASS"}
+                    {
+                        "proposal_id": semantic_proposal_id(
+                            authority_sha,
+                            "class",
+                            "CLIENT_CLASS_000001",
+                            "A",
+                        ),
+                        "review_id": _CLASS_REVIEW_ID,
+                        "source_build": "v308",
+                        "source_sha256": authority_sha,
+                        "source_coordinate": {
+                            "owner": "rs/A",
+                            "name": None,
+                            "descriptor": None,
+                        },
+                        "evidence": [],
+                    }
                 ],
             }
         ],
@@ -282,8 +302,23 @@ def _fixtures(source_root: Path):
                     }
                 ],
                 "semantic_provenance": [
-                    {"review_id": "SEMREVIEW_MEMBER"},
-                    {"review_id": "SEMREVIEW_CLASS"},
+                    {
+                        "proposal_id": semantic_proposal_id(
+                            authority_sha,
+                            "field",
+                            "CLIENT_FIELD_000001",
+                            "value",
+                        ),
+                        "review_id": _MEMBER_REVIEW_ID,
+                        "source_build": "v308",
+                        "source_sha256": authority_sha,
+                        "source_coordinate": {
+                            "owner": "rs/A",
+                            "name": "a",
+                            "descriptor": "I",
+                        },
+                        "evidence": [],
+                    }
                 ],
             }
         ],
@@ -565,8 +600,8 @@ class SourceMilestoneTests(unittest.TestCase):
             self.assertEqual(
                 manifest["provenance"]["semantic_review_ids"],
                 [
-                    "SEMREVIEW_CLASS",
-                    "SEMREVIEW_MEMBER",
+                    _CLASS_REVIEW_ID,
+                    _MEMBER_REVIEW_ID,
                 ],
             )
             self.assertEqual(
