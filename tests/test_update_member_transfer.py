@@ -441,6 +441,20 @@ class UpdateMemberTransferTests(unittest.TestCase):
         second["lineage"] = [
             copy.deepcopy(lineage["classes"][0]["lineage"][1])
         ]
+        second_provenance = second["semantic_provenance"][0]
+        second_provenance["source_build"] = "v309"
+        second_provenance["source_sha256"] = "2" * 64
+        second_provenance["source_coordinate"] = {
+            "owner": "rs/b",
+            "name": None,
+            "descriptor": None,
+        }
+        second_provenance["proposal_id"] = semantic_proposal_id(
+            "2" * 64,
+            "class",
+            "CLIENT_CLASS_000002",
+            second["semantic_name"],
+        )
         lineage["classes"][0]["lineage"] = [
             lineage["classes"][0]["lineage"][0]
         ]
