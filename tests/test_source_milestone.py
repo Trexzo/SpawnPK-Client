@@ -770,6 +770,14 @@ class SourceMilestoneTests(unittest.TestCase):
                 ],
                 evidence,
             )
+            self.assertEqual(
+                provenance["semantic_authority"][
+                    "lineage_authority"
+                ],
+                manifest["provenance"][
+                    "semantic_lineage_authority"
+                ],
+            )
 
     def test_release_authority_pins_bind_supplied_documents(self):
         with tempfile.TemporaryDirectory() as td:
