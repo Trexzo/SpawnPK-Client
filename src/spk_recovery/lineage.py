@@ -188,6 +188,7 @@ def validate_lineage(doc: dict[str, Any]) -> dict[str, int]:
     build_paths: set[tuple[str, str]] = set()
     lineage_count = 0
     semantic_named = 0
+    accepted_semantic_names: dict[str, str] = {}
 
     for i, record in enumerate(classes):
         label = f"classes[{i}]"
@@ -215,6 +216,21 @@ def validate_lineage(doc: dict[str, Any]) -> dict[str, int]:
             raise LineageValidationError(f"{label}: unnamed semantic record must have confidence 0.0")
         if semantic_name is not None:
             semantic_named += 1
+        if status == "ACCEPTED":
+            accepted_name = str(semantic_name)
+            prior_logical_id = accepted_semantic_names.get(
+                accepted_name
+            )
+            if (
+                prior_logical_id is not None
+                and prior_logical_id != logical_id
+            ):
+                raise LineageValidationError(
+                    f"{label}: accepted semantic name "
+                    f"{accepted_name!r} already belongs to "
+                    f"{prior_logical_id}"
+                )
+            accepted_semantic_names[accepted_name] = logical_id
 
         lineage = record.get("lineage")
         if not isinstance(lineage, list) or not lineage:
