@@ -14397,6 +14397,223 @@ class CcGenericValueObjectCastTests(unittest.TestCase):
             )
 
 
+class MissingSyntheticPrivateFieldAccessorTests(unittest.TestCase):
+    def _write_malformed_sources(
+        self,
+        root: Path,
+        *,
+        duplicate_private_read: bool = False,
+    ) -> tuple[Path, Path]:
+        owner = root / "src" / "p" / "Owner.java"
+        caller = root / "src" / "p" / "Caller.java"
+        owner.parent.mkdir(parents=True)
+        owner.write_text(
+            "package p;\n"
+            "public class Owner {\n"
+            "    private final String secret;\n"
+            "    public Owner(String secret) {\n"
+            "        this.secret = secret;\n"
+            "    }\n"
+            "}\n",
+            encoding="utf-8",
+        )
+        result = (
+            "this.owner.secret + this.owner.secret"
+            if duplicate_private_read
+            else "this.owner.secret"
+        )
+        caller.write_text(
+            "package p;\n"
+            "public class Caller {\n"
+            "    private final Owner owner;\n"
+            "    public Caller(Owner owner) {\n"
+            "        this.owner = owner;\n"
+            "    }\n"
+            "    public String run() {\n"
+            "        this.owner.toString();\n"
+            "        return "
+            + result
+            + ";\n"
+            "    }\n"
+            "}\n",
+            encoding="utf-8",
+        )
+        return owner, caller
+
+    def test_missing_synthetic_private_field_accessor_is_reconstructed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _synthetic_private_field_accessor_fixture(root)
+            owner, caller = self._write_malformed_sources(root)
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-private-accessor"),
+                    str(owner),
+                    str(caller),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("private access", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            owner_text = owner.read_text(encoding="utf-8")
+            caller_text = caller.read_text(encoding="utf-8")
+
+            self.assertIn(
+                "static java.lang.String a("
+                "final Owner recoveredSyntheticAccessor)",
+                owner_text,
+            )
+            self.assertIn(
+                "return recoveredSyntheticAccessor.secret;",
+                owner_text,
+            )
+            self.assertIn(
+                "return p.Owner.a(this.owner);",
+                caller_text,
+            )
+            self.assertIn(
+                "this.owner.toString();",
+                caller_text,
+            )
+            self.assertNotIn(
+                "return this.owner.secret;",
+                caller_text,
+            )
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "missing_synthetic_private_field_accessor_reconstruction"
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                action["flows"][0]["target_owner"],
+                "p/Owner",
+            )
+            self.assertEqual(
+                action["flows"][0]["private_field"],
+                "secret",
+            )
+            self.assertEqual(
+                action["flows"][0]["accessor_name"],
+                "a",
+            )
+            self.assertEqual(
+                action["flows"][0]["accessor_descriptor"],
+                "(Lp/Owner;)Ljava/lang/String;",
+            )
+            self.assertEqual(
+                action["inserted_accessor_method_count"],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "missing_synthetic_private_field_accessor_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "missing_synthetic_private_field_accessor_reference_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "missing_synthetic_private_field_accessor_method_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-private-accessor"),
+                    str(owner),
+                    str(caller),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_private_field_accessor_requires_synthetic_flag(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _synthetic_private_field_accessor_fixture(
+                root,
+                synthetic=False,
+            )
+            owner, caller = self._write_malformed_sources(root)
+            owner_before = owner.read_text(encoding="utf-8")
+            caller_before = caller.read_text(encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                owner.read_text(encoding="utf-8"),
+                owner_before,
+            )
+            self.assertEqual(
+                caller.read_text(encoding="utf-8"),
+                caller_before,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "missing_synthetic_private_field_accessor_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
+    def test_private_field_accessor_fails_on_source_multiplicity_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _synthetic_private_field_accessor_fixture(root)
+            owner, caller = self._write_malformed_sources(
+                root,
+                duplicate_private_read=True,
+            )
+            owner_before = owner.read_text(encoding="utf-8")
+            caller_before = caller.read_text(encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                owner.read_text(encoding="utf-8"),
+                owner_before,
+            )
+            self.assertEqual(
+                caller.read_text(encoding="utf-8"),
+                caller_before,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "missing_synthetic_private_field_accessor_reconstruction"
+                    for row in report["actions"]
+                )
+            )
+
+
 class MissingSyntheticConstructorAccessorTests(unittest.TestCase):
     def _fixture(
         self,
