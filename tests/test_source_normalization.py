@@ -253,6 +253,109 @@ def _compile_java_fixture(root: Path, files: dict[str, str]) -> Path:
 
 
 
+
+def _patch_method_add_synthetic(
+    class_bytes: bytes,
+    *,
+    method_name: str,
+    method_descriptor: str,
+) -> bytes:
+    data = bytearray(class_bytes)
+
+    def u2_at(offset: int) -> int:
+        return struct.unpack_from(">H", data, offset)[0]
+
+    def u4_at(offset: int) -> int:
+        return struct.unpack_from(">I", data, offset)[0]
+
+    cp_count = u2_at(8)
+    offset = 10
+    utf8: dict[int, str] = {}
+    index = 1
+    while index < cp_count:
+        tag = data[offset]
+        offset += 1
+        if tag == 1:
+            length = u2_at(offset)
+            offset += 2
+            utf8[index] = bytes(
+                data[offset:offset + length]
+            ).decode("utf-8")
+            offset += length
+        elif tag in {3, 4}:
+            offset += 4
+        elif tag in {5, 6}:
+            offset += 8
+            index += 1
+        elif tag in {7, 8, 16, 19, 20}:
+            offset += 2
+        elif tag in {9, 10, 11, 12, 17, 18}:
+            offset += 4
+        elif tag == 15:
+            offset += 3
+        else:
+            raise AssertionError(
+                f"unsupported constant-pool tag {tag}"
+            )
+        index += 1
+
+    cursor = offset
+    cursor += 6
+    interfaces_count = u2_at(cursor)
+    cursor += 2 + 2 * interfaces_count
+
+    fields_count = u2_at(cursor)
+    cursor += 2
+    for _ in range(fields_count):
+        cursor += 6
+        attribute_count = u2_at(cursor)
+        cursor += 2
+        for _ in range(attribute_count):
+            cursor += 2
+            length = u4_at(cursor)
+            cursor += 4 + length
+
+    methods_count = u2_at(cursor)
+    cursor += 2
+    patched = 0
+    for _ in range(methods_count):
+        access_offset = cursor
+        access = u2_at(cursor)
+        name_index = u2_at(cursor + 2)
+        descriptor_index = u2_at(cursor + 4)
+        attribute_count = u2_at(cursor + 6)
+        cursor += 8
+        name = utf8.get(name_index, "")
+        descriptor = utf8.get(descriptor_index, "")
+
+        if (
+            name == method_name
+            and descriptor == method_descriptor
+        ):
+            if access & 0x1000:
+                raise AssertionError(
+                    "fixture method already synthetic"
+                )
+            struct.pack_into(
+                ">H",
+                data,
+                access_offset,
+                access | 0x1000,
+            )
+            patched += 1
+
+        for _ in range(attribute_count):
+            cursor += 2
+            length = u4_at(cursor)
+            cursor += 4 + length
+
+    if patched != 1:
+        raise AssertionError(
+            f"expected one method access patch, got {patched}"
+        )
+    return bytes(data)
+
+
 def _patch_bridge_invoke_methodref(
     class_bytes: bytes,
     *,
@@ -13562,6 +13665,249 @@ class ErasedIteratorAssignmentCastTests(unittest.TestCase):
                     for row in report["actions"]
                 )
             )
+
+
+
+class MissingSyntheticPrivateFieldAccessorTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        synthetic_accessor: bool = True,
+        accessor_body_drift: bool = False,
+    ) -> Path:
+        accessor_body = (
+            "        return owner.a;\n"
+            if not accessor_body_drift
+            else "        return owner.a.trim();\n"
+        )
+        jar = _compile_java_fixture(
+            root,
+            {
+                "p/Owner.java": (
+                    "package p;\n"
+                    "public class Owner {\n"
+                    "    private final String a = \" value \";\n"
+                    "    static String access(Owner owner) {\n"
+                    + accessor_body
+                    + "    }\n"
+                    "}\n"
+                ),
+                "p/Current.java": (
+                    "package p;\n"
+                    "public class Current {\n"
+                    "    private final Owner e;\n"
+                    "    private String value;\n"
+                    "    public Current(Owner e) {\n"
+                    "        this.e = e;\n"
+                    "        this.value = Owner.access(this.e).trim();\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+        if not synthetic_accessor:
+            return jar
+
+        patched = root / "custom-readable-synthetic.jar"
+        with zipfile.ZipFile(jar, "r") as source_zip:
+            infos = source_zip.infolist()
+            payloads = {
+                info.filename: source_zip.read(info.filename)
+                for info in infos
+            }
+        payloads["p/Owner.class"] = _patch_method_add_synthetic(
+            payloads["p/Owner.class"],
+            method_name="access",
+            method_descriptor="(Lp/Owner;)Ljava/lang/String;",
+        )
+        with zipfile.ZipFile(patched, "w") as target_zip:
+            for info in infos:
+                target_zip.writestr(
+                    info,
+                    payloads[info.filename],
+                )
+        return patched
+
+    def _write_malformed_sources(
+        self,
+        root: Path,
+    ) -> tuple[Path, Path]:
+        owner = root / "src" / "p" / "Owner.java"
+        current = root / "src" / "p" / "Current.java"
+        owner.parent.mkdir(parents=True)
+        owner.write_text(
+            "package p;\n"
+            "public class Owner {\n"
+            "    private final String a = \" value \";\n"
+            "}\n",
+            encoding="utf-8",
+        )
+        current.write_text(
+            "package p;\n"
+            "public class Current {\n"
+            "    private final Owner e;\n"
+            "    private String value;\n"
+            "    public Current(Owner e) {\n"
+            "        this.e = e;\n"
+            "        this.value = this.e.a.trim();\n"
+            "    }\n"
+            "}\n",
+            encoding="utf-8",
+        )
+        return owner, current
+
+    def test_private_field_accessor_is_reconstructed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            owner, current = self._write_malformed_sources(root)
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-private-accessor"),
+                    str(owner),
+                    str(current),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("has private access", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            owner_text = owner.read_text(encoding="utf-8")
+            current_text = current.read_text(encoding="utf-8")
+            self.assertIn(
+                "static java.lang.String access("
+                "final p.Owner recoveredSyntheticAccessor)",
+                owner_text,
+            )
+            self.assertIn(
+                "return recoveredSyntheticAccessor.a;",
+                owner_text,
+            )
+            self.assertIn(
+                "this.value = p.Owner.access(this.e).trim();",
+                current_text,
+            )
+            self.assertNotIn("this.e.a", current_text)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == (
+                    "missing_synthetic_private_field_"
+                    "accessor_reconstruction"
+                )
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(action["injected_method_count"], 1)
+            self.assertEqual(
+                action["accessors"][0]["target_owner"],
+                "p/Owner",
+            )
+            self.assertEqual(
+                action["accessors"][0]["accessor_name"],
+                "access",
+            )
+            self.assertTrue(
+                action["accessors"][0]["source_injected"]
+            )
+            self.assertEqual(
+                report["summary"][
+                    "missing_synthetic_private_field_accessor_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "missing_synthetic_private_field_accessor_reference_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "missing_synthetic_private_field_accessor_injected_method_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-private-accessor"),
+                    str(owner),
+                    str(current),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def _assert_no_private_accessor_action(
+        self,
+        *,
+        synthetic_accessor: bool = True,
+        accessor_body_drift: bool = False,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(
+                root,
+                synthetic_accessor=synthetic_accessor,
+                accessor_body_drift=accessor_body_drift,
+            )
+            owner, current = self._write_malformed_sources(root)
+            owner_before = owner.read_text(encoding="utf-8")
+            current_before = current.read_text(encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                owner.read_text(encoding="utf-8"),
+                owner_before,
+            )
+            self.assertEqual(
+                current.read_text(encoding="utf-8"),
+                current_before,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == (
+                        "missing_synthetic_private_field_"
+                        "accessor_reconstruction"
+                    )
+                    for row in report["actions"]
+                )
+            )
+
+    def test_private_field_accessor_requires_synthetic_flag(self):
+        self._assert_no_private_accessor_action(
+            synthetic_accessor=False,
+        )
+
+    def test_private_field_accessor_requires_exact_body(self):
+        self._assert_no_private_accessor_action(
+            accessor_body_drift=True,
+        )
+
 
 
 class MissingSyntheticBridgeForwarderTests(unittest.TestCase):
