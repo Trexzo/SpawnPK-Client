@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -68,6 +69,22 @@ class SourceDigestTests(unittest.TestCase):
             with self.assertRaisesRegex(
                 SourceDigestError,
                 "symbolic link",
+            ):
+                source_tree_digest(source)
+
+    def test_source_tree_rejects_fifo_java_entry(self):
+        if not hasattr(os, "mkfifo"):
+            self.skipTest("FIFO creation unavailable on this platform")
+
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            source.mkdir()
+            fifo = source / "Blocked.java"
+            os.mkfifo(fifo)
+
+            with self.assertRaisesRegex(
+                SourceDigestError,
+                "non-regular file",
             ):
                 source_tree_digest(source)
 
