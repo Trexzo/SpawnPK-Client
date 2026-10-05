@@ -5,6 +5,7 @@ from spk_recovery.member_remap_plan import (
     MemberRemapPlanError,
     build_member_remap_plan,
 )
+from spk_recovery.semantic_authority import semantic_proposal_id
 
 
 SHA = "a" * 64
@@ -64,7 +65,27 @@ def _member(kind, mid, name, desc, semantic=None):
             "provenance": [],
         }],
         "semantic_provenance": (
-            [{"proposal_id": "SEMPROP_TEST"}] if semantic else []
+            [
+                {
+                    "proposal_id": semantic_proposal_id(
+                        SHA,
+                        kind,
+                        mid,
+                        semantic,
+                    ),
+                    "review_id": "SEMREVIEW_" + "4" * 20,
+                    "source_build": "v308",
+                    "source_sha256": SHA,
+                    "source_coordinate": {
+                        "owner": "rs/A",
+                        "name": name,
+                        "descriptor": desc,
+                    },
+                    "evidence": [],
+                }
+            ]
+            if semantic
+            else []
         ),
     }
 
