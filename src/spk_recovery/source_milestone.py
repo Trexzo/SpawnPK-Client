@@ -1440,6 +1440,7 @@ def verify_source_publication_bundle(
         source_root
     )
     source_count = len(source_files)
+    checks["source_tree_nonempty"] = source_count > 0
     checks["source_tree_sha256_match"] = (
         tree_sha
         == bundle.get("source_tree_sha256")
