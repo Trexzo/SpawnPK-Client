@@ -15948,6 +15948,231 @@ class CcGenericInstanceValueObjectCastTests(unittest.TestCase):
     def test_cc_generic_instance_field_fails_on_multiplicity_drift(self):
         self._assert_no_instance_action(mode="multiplicity")
 
+
+class GenericKeyObjectCastTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        key_type: str = "Method",
+        generic_key_method: bool = True,
+        local_loop: bool = False,
+    ) -> Path:
+        method_signature_source = (
+            "    public void a(K key, V value) {}\n"
+            if generic_key_method
+            else "    public void a(Object key, V value) {}\n"
+        )
+        current_body = (
+            "    public void run(Method method, Object value) {\n"
+            "        this.d.a(method, value);\n"
+            "    }\n"
+        )
+        if local_loop:
+            current_body = (
+                "    public void run(java.util.List<Method> methods, Object value) {\n"
+                "        for (Method method : methods) {\n"
+                "            this.d.a(method, value);\n"
+                "        }\n"
+                "    }\n"
+            )
+        return _compile_java_fixture(
+            root,
+            {
+                "p/Generic.java": (
+                    "package p;\n"
+                    "public class Generic<K,V> {\n"
+                    + method_signature_source
+                    + "}\n"
+                ),
+                "p/Current.java": (
+                    "package p;\n"
+                    "import java.lang.reflect.Method;\n"
+                    "public class Current {\n"
+                    "    private final Generic<"
+                    + key_type
+                    + ",Object> d = new Generic<>();\n"
+                    + current_body
+                    + "}\n"
+                ),
+            },
+        )
+
+    def _malformed(self, *, local_loop: bool = False) -> str:
+        body = (
+            "    public void run(Method method, Object value) {\n"
+            "        this.d.a((Object)method, value);\n"
+            "    }\n"
+        )
+        if local_loop:
+            body = (
+                "    public void run(java.util.List<Method> methods, Object value) {\n"
+                "        for (Method method : methods) {\n"
+                "            this.d.a((Object)method, value);\n"
+                "        }\n"
+                "    }\n"
+            )
+        return (
+            "package p;\n"
+            "import java.lang.reflect.Method;\n"
+            "public class Current {\n"
+            "    private final Generic<Method,Object> d = new Generic<>();\n"
+            + body
+            + "}\n"
+        )
+
+    def test_generic_key_object_cast_parameter_is_removed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(self._malformed(), encoding="utf-8")
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-generic-key-param"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn("this.d.a(method, value);", normalized)
+            self.assertNotIn("(Object)method", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"] == "generic_key_object_cast_removal"
+            )
+            self.assertEqual(action["field_names"], ["d"])
+            self.assertEqual(action["key_owners"], ["java/lang/reflect/Method"])
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(action["exact_flows"][0]["key_slot"], 1)
+            self.assertEqual(
+                report["summary"]["generic_key_object_cast_action_count"],
+                1,
+            )
+            self.assertEqual(
+                report["summary"]["generic_key_object_cast_reference_count"],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-generic-key-param"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stdout + after.stderr)
+
+    def test_generic_key_object_cast_enhanced_for_local_is_removed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, local_loop=True)
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                self._malformed(local_loop=True),
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-generic-key-local"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn("this.d.a(method, value);", normalized)
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"] == "generic_key_object_cast_removal"
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertGreater(action["exact_flows"][0]["key_slot"], 0)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-generic-key-local"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stdout + after.stderr)
+
+    def test_generic_key_object_cast_fails_closed_on_field_key_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, key_type="Object")
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"] == "generic_key_object_cast_removal"
+                    for row in report["actions"]
+                )
+            )
+
+    def test_generic_key_object_cast_fails_closed_on_method_signature_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, generic_key_method=False)
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"] == "generic_key_object_cast_removal"
+                    for row in report["actions"]
+                )
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
 
