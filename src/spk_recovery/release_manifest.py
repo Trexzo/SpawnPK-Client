@@ -237,6 +237,65 @@ def build_recovery_release_manifest(
         roundtrip_report.get("workspace_id"),
     )
 
+    collision_keys = (
+        "collision_transform_id",
+        "collision_plan_id",
+        "collision_report_id",
+        "collision_mapping_sha256",
+        "base_readable_jar_sha256",
+    )
+    recovered_collision = any(
+        recovered_source_manifest.get(key) is not None
+        for key in collision_keys
+    )
+    compile_transport = clean_rebuild_report.get("compile_transport")
+    collision_transport = (
+        isinstance(compile_transport, dict)
+        and compile_transport.get("mode") == "collision_derived_remap"
+    )
+
+    if recovered_collision != collision_transport:
+        raise RecoveryReleaseError(
+            "collision-derived source/rebuild authority mode mismatch"
+        )
+
+    if collision_transport:
+        missing = [
+            key
+            for key in collision_keys
+            if not recovered_source_manifest.get(key)
+        ]
+        if missing:
+            raise RecoveryReleaseError(
+                "collision-derived recovered source authority is incomplete: "
+                + ", ".join(sorted(missing))
+            )
+        mapping_sha = str(
+            recovered_source_manifest.get("collision_mapping_sha256") or ""
+        ).lower()
+        if (
+            len(mapping_sha) != 64
+            or any(ch not in "0123456789abcdef" for ch in mapping_sha)
+        ):
+            raise RecoveryReleaseError(
+                "collision-derived recovered source mapping authority is invalid"
+            )
+        _eq(
+            "collision transform ID",
+            recovered_source_manifest.get("collision_transform_id"),
+            compile_transport.get("collision_transform_id"),
+        )
+        _eq(
+            "collision plan ID",
+            recovered_source_manifest.get("collision_plan_id"),
+            compile_transport.get("collision_plan_id"),
+        )
+        _eq(
+            "collision report ID",
+            recovered_source_manifest.get("collision_report_id"),
+            compile_transport.get("collision_report_id"),
+        )
+
     build_hits = [
         row
         for row in class_lineage.get("builds", [])
