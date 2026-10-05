@@ -363,6 +363,49 @@ class SourceMilestoneTests(unittest.TestCase):
             "restored_project_bytecode_ready_for_runtime_assembly": True,
         }
 
+    def test_empty_java_source_tree_blocks_publication(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            (source / "rs" / "A.java").unlink()
+
+            tree_sha, files, source_bytes = source_tree_digest(
+                source
+            )
+            self.assertEqual(files, [])
+            fixture["recovered_source_manifest"][
+                "source_tree_sha256"
+            ] = tree_sha
+            fixture["clean_rebuild_report"]["project_classes"].update(
+                {
+                    "expected_count": 0,
+                    "generated_count": 0,
+                }
+            )
+            fixture["release_manifest"][
+                "final_source_tree_sha256"
+            ] = tree_sha
+            fixture["source_tree_sha256"] = tree_sha
+            fixture["source_files"] = files
+            fixture["source_bytes"] = source_bytes
+            _refresh_release_pins(fixture)
+            _refresh_release_verification(fixture)
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertEqual(
+                manifest["source_tree"]["java_file_count"],
+                0,
+            )
+            self.assertIn(
+                {
+                    "gate": "source_tree",
+                    "reason": "source_tree_empty",
+                },
+                manifest["blockers"],
+            )
+
     def test_publishable_manifest_binds_all_hard_gates(self):
         with tempfile.TemporaryDirectory() as td:
             source = Path(td) / "source"
@@ -939,6 +982,72 @@ class SourceMilestoneTests(unittest.TestCase):
                     provenance_documents={},
                 )
 
+    def test_flipped_publishable_blocked_manifest_refuses_bundle(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            fixture["clean_rebuild_report"][
+                "project_classes"
+            ]["binary_fallback_count"] = 1
+            manifest = self._build(source, fixture)
+            self.assertFalse(manifest["publishable"])
+            self.assertTrue(manifest["blockers"])
+
+            manifest["publishable"] = True
+
+            with self.assertRaisesRegex(
+                SourceMilestoneError,
+                "publication state is inconsistent",
+            ):
+                build_source_publication_bundle(
+                    manifest,
+                    source,
+                    Path(td) / "bundle",
+                    provenance_documents={},
+                )
+
+    def test_publication_allowed_must_match_publishable_manifest(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            self.assertTrue(manifest["publishable"])
+
+            manifest["publication"]["allowed"] = False
+
+            with self.assertRaisesRegex(
+                SourceMilestoneError,
+                "publication state is inconsistent",
+            ):
+                build_source_publication_bundle(
+                    manifest,
+                    source,
+                    Path(td) / "bundle",
+                    provenance_documents={},
+                )
+
+    def test_publication_bundle_rejects_milestone_identity_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            self.assertTrue(manifest["publishable"])
+
+            manifest["milestone_id"] = (
+                "SRCMILESTONE_" + "0" * 20
+            )
+
+            with self.assertRaisesRegex(
+                SourceMilestoneError,
+                "source milestone identity mismatch",
+            ):
+                build_source_publication_bundle(
+                    manifest,
+                    source,
+                    Path(td) / "bundle",
+                    provenance_documents={},
+                )
+
     def test_provenance_document_is_deterministic_and_explicit(self):
         with tempfile.TemporaryDirectory() as td:
             source = Path(td) / "source"
@@ -1100,6 +1209,145 @@ class SourceMilestoneTests(unittest.TestCase):
             self.assertTrue(
                 all(report["checks"].values())
             )
+
+    def test_bundle_verifier_rejects_embedded_milestone_blockers(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={},
+            )
+            milestone_path = bundle_root / "SOURCE-MILESTONE.json"
+            milestone = json.loads(
+                milestone_path.read_text(encoding="utf-8")
+            )
+            milestone["blockers"] = [
+                {
+                    "gate": "tamper",
+                    "reason": "injected",
+                }
+            ]
+            milestone_path.write_text(
+                json.dumps(
+                    milestone,
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            report = verify_source_publication_bundle(bundle_root)
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["milestone_blockers_empty"]
+            )
+
+    def test_bundle_verifier_rejects_publication_allowed_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={},
+            )
+            milestone_path = bundle_root / "SOURCE-MILESTONE.json"
+            milestone = json.loads(
+                milestone_path.read_text(encoding="utf-8")
+            )
+            milestone["publication"]["allowed"] = False
+            milestone_path.write_text(
+                json.dumps(
+                    milestone,
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            report = verify_source_publication_bundle(bundle_root)
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["milestone_publication_allowed"]
+            )
+
+    def test_bundle_verifier_rejects_milestone_identity_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={},
+            )
+            milestone_path = bundle_root / "SOURCE-MILESTONE.json"
+            milestone = json.loads(
+                milestone_path.read_text(encoding="utf-8")
+            )
+            milestone["milestone_id"] = (
+                "SRCMILESTONE_" + "0" * 20
+            )
+            milestone_path.write_text(
+                json.dumps(
+                    milestone,
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            report = verify_source_publication_bundle(bundle_root)
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["milestone_identity_match"]
+            )
+
+    def test_bundle_verifier_rejects_empty_java_tree(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={},
+            )
+            (bundle_root / "src" / "rs" / "A.java").unlink()
+
+            report = verify_source_publication_bundle(bundle_root)
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["source_tree_nonempty"]
+            )
+            self.assertEqual(report["source_file_count"], 0)
 
     def test_publication_bundle_verifier_rejects_source_tamper(self):
         with tempfile.TemporaryDirectory() as td:
