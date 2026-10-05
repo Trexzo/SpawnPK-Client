@@ -305,14 +305,17 @@ jobs:
         shell: bash
         env:
           AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+          SOURCE_AUTHORITY_DIR: ${{ runner.temp }}/source-m1-authority
         run: |
           set -euo pipefail
-          python -m spk_recovery.source_authority_artifact_cli build             --authority-commit "$AUTHORITY_COMMIT"             --class-lineage workspace/class-lineage.json             --member-lineage workspace/member-lineage.json             --readable-manifest workspace/readable-client-manifest.json             --recovered-manifest workspace/recovered-source-manifest.json             --clean-rebuild workspace/clean-rebuild.json             --release-manifest workspace/recovery-release.json             --release-verification workspace/release-verification.json             --source-root workspace/src             --out-dir authority
+          test ! -e "$SOURCE_AUTHORITY_DIR"
+          python -m spk_recovery.source_authority_artifact_cli build             --authority-commit "$AUTHORITY_COMMIT"             --class-lineage workspace/class-lineage.json             --member-lineage workspace/member-lineage.json             --readable-manifest workspace/readable-client-manifest.json             --recovered-manifest workspace/recovered-source-manifest.json             --clean-rebuild workspace/clean-rebuild.json             --release-manifest workspace/recovery-release.json             --release-verification workspace/release-verification.json             --source-root workspace/src             --out-dir "$SOURCE_AUTHORITY_DIR"
 
       - name: Independently verify Source M1 authority artifact
         shell: bash
         env:
           AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+          SOURCE_AUTHORITY_DIR: ${{ runner.temp }}/source-m1-authority
         run: |
           set -euo pipefail
           EXPECTED_MILESTONE_ID="$(
@@ -331,7 +334,7 @@ jobs:
           test -n "$EXPECTED_MILESTONE_ID"
 
           python -m spk_recovery.source_authority_artifact_cli verify \
-            --artifact-dir authority \
+            --artifact-dir "$SOURCE_AUTHORITY_DIR" \
             --expected-authority-commit "$AUTHORITY_COMMIT" \
             --expected-milestone-id "$EXPECTED_MILESTONE_ID" \
             --out verification/SOURCE-AUTHORITY-VERIFICATION.json
@@ -341,6 +344,7 @@ jobs:
         shell: bash
         env:
           AUTHORITY_ARTIFACT_NAME: ${{ inputs.authority_artifact_name }}
+          SOURCE_AUTHORITY_DIR: ${{ runner.temp }}/source-m1-authority
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -349,8 +353,9 @@ jobs:
           from pathlib import Path
 
           manifest = json.loads(
-              Path(
-                  "authority/SOURCE-AUTHORITY-ARTIFACT.json"
+              (
+                  Path(os.environ["SOURCE_AUTHORITY_DIR"])
+                  / "SOURCE-AUTHORITY-ARTIFACT.json"
               ).read_text(encoding="utf-8")
           )
           verification = json.loads(
@@ -405,6 +410,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.authority_artifact_name }}
-          path: authority
+          path: ${{ runner.temp }}/source-m1-authority
           if-no-files-found: error
           retention-days: 30
