@@ -1216,6 +1216,30 @@ class SourceMilestoneTests(unittest.TestCase):
                 report["checks"]["milestone_identity_match"]
             )
 
+    def test_bundle_verifier_rejects_empty_java_tree(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={},
+            )
+            (bundle_root / "src" / "rs" / "A.java").unlink()
+
+            report = verify_source_publication_bundle(bundle_root)
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["source_tree_nonempty"]
+            )
+            self.assertEqual(report["source_file_count"], 0)
+
     def test_publication_bundle_verifier_rejects_source_tamper(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
