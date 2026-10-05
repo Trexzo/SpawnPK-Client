@@ -3349,47 +3349,6 @@ def _normalize_exact_static_call_nested_type_collisions(
             )
             source_counts[key] = source_counts.get(key, 0) + 1
 
-        field_identity_keys: dict[
-            tuple[str, str, str],
-            set[tuple[str, str, str, str]],
-        ] = {}
-        for key in source_counts:
-            field_identity = (key[0], key[2], key[3])
-            field_identity_keys.setdefault(field_identity, set()).add(key)
-        if any(len(keys) != 1 for keys in field_identity_keys.values()):
-            continue
-
-        source_field_occurrences: dict[
-            tuple[str, str, str, str],
-            list[dict[str, Any]],
-        ] = {}
-        for key in source_counts:
-            outer, _static_name, nested_simple, field_name = key
-            field_re = re.compile(
-                r"(?<![A-Za-z0-9_$.])"
-                + re.escape(outer)
-                + r"\."
-                + re.escape(nested_simple)
-                + r"\."
-                + re.escape(field_name)
-                + r"(?![A-Za-z0-9_$])"
-            )
-            source_field_occurrences[key] = [
-                {
-                    "start": method_start + match.start(),
-                    "end": method_start + match.end(),
-                }
-                for match in field_re.finditer(method_code)
-            ]
-            if (
-                len(source_field_occurrences[key])
-                < source_counts[key]
-            ):
-                source_field_occurrences = {}
-                break
-        if not source_field_occurrences:
-            continue
-
         source_static = bool(
             re.search(
                 r"\bstatic\b",
@@ -3437,12 +3396,6 @@ def _normalize_exact_static_call_nested_type_collisions(
 
             for key, source_count in sorted(source_counts.items()):
                 outer, static_name, nested_simple, field_name = key
-                source_field_count = len(
-                    source_field_occurrences.get(key, [])
-                )
-                if source_field_count < source_count:
-                    exact_ok = False
-                    break
 
                 invocation_rows = [
                     row
@@ -3525,7 +3478,7 @@ def _normalize_exact_static_call_nested_type_collisions(
                             == field_descriptor
                         )
                     ]
-                    if len(field_rows) != source_field_count:
+                    if len(field_rows) != source_count:
                         continue
 
                     field_shapes = _descriptor_parameter_shapes(
@@ -3562,8 +3515,6 @@ def _normalize_exact_static_call_nested_type_collisions(
                             "nested_owner": nested_owner,
                             "field_descriptor": field_descriptor,
                             "shadow_declaring_owners": shadow_owners,
-                            "source_call_count": source_count,
-                            "source_field_count": source_field_count,
                             "invocation_descriptors": sorted(
                                 invocation_descriptors
                             ),
@@ -3596,25 +3547,26 @@ def _normalize_exact_static_call_nested_type_collisions(
             continue
 
         proof = exact_candidates[0]
-        replacement_count = 0
-        for key, field_occurrences in sorted(
-            source_field_occurrences.items()
-        ):
+        for row in occurrences:
+            key = (
+                str(row["outer"]),
+                str(row["method"]),
+                str(row["nested"]),
+                str(row["field"]),
+            )
             group = proof["groups"][key]
             java_nested = (
                 str(group["nested_owner"])
                 .replace("$", ".")
                 .replace("/", ".")
             )
-            for row in field_occurrences:
-                edits.append(
-                    (
-                        int(row["start"]),
-                        int(row["end"]),
-                        "((" + java_nested + ")null)." + key[3],
-                    )
+            edits.append(
+                (
+                    int(row["start"]),
+                    int(row["end"]),
+                    "((" + java_nested + ")null)." + str(row["field"]),
                 )
-                replacement_count += 1
+            )
 
         actions.append(
             {
@@ -3625,7 +3577,7 @@ def _normalize_exact_static_call_nested_type_collisions(
                 "method_name": method_match.group("name"),
                 "method_descriptor": proof["method"]["descriptor"],
                 "pair_count": len(occurrences),
-                "replacement_count": replacement_count,
+                "replacement_count": len(occurrences),
                 "groups": [
                     {
                         "source_outer": key[0],
@@ -7982,6 +7934,508 @@ def _normalize_collectors_to_list_wildcard_sink_casts(
         if left[1] > right[0]:
             raise SourceNormalizationError(
                 f"{rel}: overlapping wildcard collector-cast edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
+
+def _normalize_generic_builder_target_inference_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Remove source-only parameterized casts that block target inference.
+
+    Some decompiler output wraps a generic terminal builder invocation in an
+    explicit parameterized cast.  That cast removes assignment-context target
+    typing, causing javac to infer the terminal method at its broad receiver
+    bounds and then reject the cast.  Remove only the outer cast when exact
+    field Signature authority and exact invoke->putfield bytecode prove the
+    assignment target, while the builder chain proves Object/Object receiver
+    bounds flowing through a preserving method into a two-variable generic
+    terminal method.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    current_simple = current_owner.rsplit("/", 1)[-1]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+
+    imports: dict[str, str] = {}
+    duplicate_imports: set[str] = set()
+    for import_match in _SINGLE_TYPE_IMPORT_RE.finditer(text):
+        dotted = import_match.group("name")
+        simple = dotted.rsplit(".", 1)[-1]
+        internal = dotted.replace(".", "/")
+        previous = imports.get(simple)
+        if previous is not None and previous != internal:
+            duplicate_imports.add(simple)
+        else:
+            imports[simple] = internal
+    for simple in duplicate_imports:
+        imports.pop(simple, None)
+
+    def class_exists(internal: str) -> bool:
+        if internal.startswith("java/"):
+            return True
+        try:
+            readable_zip.getinfo(internal + ".class")
+            return True
+        except KeyError:
+            return False
+
+    def resolve_source_ref(value: str) -> str | None:
+        name = value.strip()
+        if not re.fullmatch(
+            r"[A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)*",
+            name,
+        ):
+            return None
+        if name == "Object":
+            return "java/lang/Object"
+        if name in imports:
+            return imports[name]
+        if "." in name:
+            internal = name.replace(".", "/")
+            return internal if class_exists(internal) else None
+        same_package = current_package + "/" + name if current_package else name
+        if class_exists(same_package):
+            return same_package
+        java_lang = "java/lang/" + name
+        if class_exists(java_lang):
+            return java_lang
+        return None
+
+    field_proofs: dict[str, dict[str, Any]] = {}
+    field_sig_re = re.compile(
+        r"^L(?P<raw>[^;<]+)<"
+        r"L(?P<arg1>[^;<]+);"
+        r"L(?P<arg2>[^;<]+);"
+        r">;$"
+    )
+    for field in profile.get("fields", []):
+        if int(field.get("access", 0)) & 0x0008:
+            continue
+        signature = field.get("signature")
+        descriptor = str(field.get("descriptor", ""))
+        if not isinstance(signature, str):
+            continue
+        match = field_sig_re.fullmatch(signature)
+        if match is None:
+            continue
+        raw = match.group("raw")
+        if descriptor != "L" + raw + ";":
+            continue
+        if not all(
+            class_exists(owner)
+            for owner in (raw, match.group("arg1"), match.group("arg2"))
+        ):
+            continue
+        field_proofs[str(field.get("name", ""))] = {
+            "raw": raw,
+            "arg1": match.group("arg1"),
+            "arg2": match.group("arg2"),
+            "descriptor": descriptor,
+            "signature": signature,
+        }
+    if not field_proofs:
+        return []
+
+    owner_profiles: dict[str, dict[str, Any]] = {}
+
+    def owner_profile(owner: str) -> dict[str, Any] | None:
+        cached = owner_profiles.get(owner)
+        if cached is not None:
+            return cached
+        try:
+            parsed = profile_class_field_accesses(
+                readable_zip.read(owner + ".class")
+            )
+        except (KeyError, BytecodeProfileError):
+            return None
+        if str(parsed.get("internal_name", "")) != owner:
+            return None
+        owner_profiles[owner] = parsed
+        return parsed
+
+    def exact_method_row(
+        owner: str,
+        name: str,
+        descriptor: str,
+    ) -> dict[str, Any] | None:
+        parsed = owner_profile(owner)
+        if parsed is None:
+            return None
+        rows = [
+            row
+            for row in parsed.get("methods", [])
+            if (
+                row.get("name") == name
+                and row.get("descriptor") == descriptor
+            )
+        ]
+        return rows[0] if len(rows) == 1 else None
+
+    assignment_re = re.compile(
+        r"this\s*\.\s*(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*=\s*"
+        r"(?P<cast>\(\s*"
+        r"(?P<raw>[A-Za-z_$][A-Za-z0-9_$.]*)\s*<\s*"
+        r"(?P<arg1>[A-Za-z_$][A-Za-z0-9_$.]*)\s*,\s*"
+        r"(?P<arg2>[A-Za-z_$][A-Za-z0-9_$.]*)\s*>\s*\))"
+        r"\s*(?P<chain>"
+        r"(?P<factory_owner>[A-Za-z_$][A-Za-z0-9_$.]*)"
+        r"\s*\.\s*(?P<factory_name>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\(\s*\)"
+        r"[^;\n]*?"
+        r"\.\s*(?P<terminal>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\(\s*\)"
+        r")\s*;"
+    )
+
+    constructor_re = re.compile(
+        r"(?m)^(?P<indent>[ \t]*)"
+        r"(?:(?:public|private|protected)\s+)*"
+        + re.escape(current_simple)
+        + r"\s*\((?P<params>[^()\n]*)\)\s*"
+        r"(?:throws\s+[^\{\n]+\s*)?\{"
+    )
+    source_blocks: list[tuple[re.Match[str], str]] = [
+        (match, match.group("name"))
+        for match in _METHOD_DECL_RE.finditer(whole_code)
+    ]
+    source_blocks.extend(
+        (match, "<init>")
+        for match in constructor_re.finditer(whole_code)
+    )
+    source_blocks.sort(key=lambda row: row[0].start())
+
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for block_match, exact_name in source_blocks:
+        brace_start = whole_code.find(
+            "{", block_match.start(), block_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        block_start = block_match.start()
+        method_text = text[block_start:body_end]
+        method_code = whole_code[block_start:body_end]
+        occurrences: list[dict[str, Any]] = []
+
+        for match in assignment_re.finditer(method_code):
+            field_name = match.group("field")
+            field = field_proofs.get(field_name)
+            if field is None:
+                continue
+            raw = resolve_source_ref(match.group("raw"))
+            arg1 = resolve_source_ref(match.group("arg1"))
+            arg2 = resolve_source_ref(match.group("arg2"))
+            factory_owner = resolve_source_ref(match.group("factory_owner"))
+            if (
+                raw != field["raw"]
+                or arg1 != field["arg1"]
+                or arg2 != field["arg2"]
+                or factory_owner is None
+            ):
+                continue
+
+            chain = method_text[match.start("chain"):match.end("chain")]
+            source_method_names = re.findall(
+                r"\.\s*([A-Za-z_$][A-Za-z0-9_$]*)\s*\(",
+                chain,
+            )
+            if len(source_method_names) < 2:
+                continue
+            occurrences.append(
+                {
+                    "field_name": field_name,
+                    "field": field,
+                    "factory_owner": factory_owner,
+                    "factory_name": match.group("factory_name"),
+                    "terminal_name": match.group("terminal"),
+                    "source_method_names": source_method_names,
+                    "cast_start": block_start + match.start("cast"),
+                    "cast_end": block_start + match.end("cast"),
+                }
+            )
+
+        if not occurrences:
+            continue
+
+        source_static = (
+            exact_name != "<init>"
+            and bool(
+                re.search(
+                    r"\bstatic\b",
+                    whole_code[block_match.start():brace_start],
+                )
+            )
+        )
+        exact_candidates: list[dict[str, Any]] = []
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != exact_name:
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    block_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if exact_name != "<init>" and (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            flows: list[dict[str, Any]] = []
+            used_store_offsets: set[int] = set()
+
+            for occurrence in occurrences:
+                field = occurrence["field"]
+                matches: list[dict[str, Any]] = []
+
+                for store_index, store in enumerate(instructions):
+                    if not (
+                        store.get("mnemonic") == "putfield"
+                        and store.get("owner") == current_owner
+                        and store.get("name") == occurrence["field_name"]
+                        and store.get("descriptor") == field["descriptor"]
+                        and store_index > 0
+                    ):
+                        continue
+                    terminal_index = store_index - 1
+                    terminal = instructions[terminal_index]
+                    if not (
+                        terminal.get("mnemonic")
+                        in {"invokevirtual", "invokeinterface"}
+                        and terminal.get("name")
+                        == occurrence["terminal_name"]
+                        and terminal.get("descriptor")
+                        == "()" + field["descriptor"]
+                    ):
+                        continue
+                    terminal_owner = str(terminal.get("owner", ""))
+                    terminal_method = exact_method_row(
+                        terminal_owner,
+                        occurrence["terminal_name"],
+                        "()" + field["descriptor"],
+                    )
+                    if terminal_method is None:
+                        continue
+                    terminal_signature = str(
+                        terminal_method.get("signature") or ""
+                    )
+                    generic_match = re.fullmatch(
+                        r"<(?P<t1>[A-Za-z_$][A-Za-z0-9_$]*):"
+                        r"T(?P<b1>[A-Za-z_$][A-Za-z0-9_$]*);"
+                        r"(?P<t2>[A-Za-z_$][A-Za-z0-9_$]*):"
+                        r"T(?P<b2>[A-Za-z_$][A-Za-z0-9_$]*);>"
+                        r"\(\)L"
+                        + re.escape(field["raw"])
+                        + r"<T(?P=t1);T(?P=t2);>;",
+                        terminal_signature,
+                    )
+                    if generic_match is None:
+                        continue
+
+                    preserve_index: int | None = None
+                    for probe in range(terminal_index - 1, -1, -1):
+                        item = instructions[probe]
+                        if (
+                            item.get("mnemonic")
+                            in {"invokevirtual", "invokeinterface"}
+                            and item.get("owner") == terminal_owner
+                            and str(item.get("descriptor", "")).endswith(
+                                "L" + terminal_owner + ";"
+                            )
+                        ):
+                            preserve_index = probe
+                            break
+                    if preserve_index is None:
+                        continue
+                    preserve = instructions[preserve_index]
+                    preserve_method = exact_method_row(
+                        terminal_owner,
+                        str(preserve.get("name", "")),
+                        str(preserve.get("descriptor", "")),
+                    )
+                    if preserve_method is None:
+                        continue
+                    preserve_signature = str(
+                        preserve_method.get("signature") or ""
+                    )
+                    expected_preserve_return = (
+                        "L"
+                        + terminal_owner
+                        + "<T"
+                        + generic_match.group("b1")
+                        + ";T"
+                        + generic_match.group("b2")
+                        + ";>;"
+                    )
+                    if not preserve_signature.endswith(
+                        ")" + expected_preserve_return
+                    ):
+                        continue
+
+                    factory_index: int | None = None
+                    for probe in range(preserve_index - 1, -1, -1):
+                        item = instructions[probe]
+                        if (
+                            item.get("mnemonic") == "invokestatic"
+                            and item.get("owner") == terminal_owner
+                            and str(item.get("descriptor", "")).endswith(
+                                "L" + terminal_owner + ";"
+                            )
+                        ):
+                            factory_index = probe
+                            break
+                    if factory_index is None:
+                        continue
+                    factory = instructions[factory_index]
+                    if (
+                        terminal_owner != occurrence["factory_owner"]
+                        or str(factory.get("name", ""))
+                        != occurrence["factory_name"]
+                    ):
+                        continue
+                    factory_method = exact_method_row(
+                        terminal_owner,
+                        str(factory.get("name", "")),
+                        str(factory.get("descriptor", "")),
+                    )
+                    if factory_method is None:
+                        continue
+                    factory_signature = str(
+                        factory_method.get("signature") or ""
+                    )
+                    expected_factory_return = (
+                        "L"
+                        + terminal_owner
+                        + "<Ljava/lang/Object;Ljava/lang/Object;>;"
+                    )
+                    if not factory_signature.endswith(
+                        ")" + expected_factory_return
+                    ):
+                        continue
+
+                    exact_names = [
+                        str(factory.get("name", "")),
+                        str(preserve.get("name", "")),
+                        str(terminal.get("name", "")),
+                    ]
+                    if occurrence["source_method_names"][-3:] != exact_names:
+                        continue
+
+                    matches.append(
+                        {
+                            "store_offset": int(store.get("offset", -1)),
+                            "factory_owner": terminal_owner,
+                            "factory_name": exact_names[0],
+                            "factory_descriptor": factory.get("descriptor"),
+                            "factory_signature": factory_signature,
+                            "preserve_name": exact_names[1],
+                            "preserve_descriptor": preserve.get("descriptor"),
+                            "preserve_signature": preserve_signature,
+                            "terminal_name": exact_names[2],
+                            "terminal_descriptor": terminal.get("descriptor"),
+                            "terminal_signature": terminal_signature,
+                        }
+                    )
+
+                if len(matches) != 1:
+                    flows = []
+                    break
+                if matches[0]["store_offset"] in used_store_offsets:
+                    flows = []
+                    break
+                used_store_offsets.add(matches[0]["store_offset"])
+                flows.append(matches[0])
+
+            if len(flows) == len(occurrences):
+                exact_candidates.append(
+                    {
+                        "method": exact_method,
+                        "flows": flows,
+                    }
+                )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        proof = exact_candidates[0]
+        for occurrence in occurrences:
+            edits.append(
+                (
+                    int(occurrence["cast_start"]),
+                    int(occurrence["cast_end"]),
+                    "",
+                )
+            )
+
+        actions.append(
+            {
+                "kind": "generic_builder_target_inference_cast_removal",
+                "source_path": rel,
+                "method_name": exact_name,
+                "method_descriptor": proof["method"]["descriptor"],
+                "field_names": sorted(
+                    {str(row["field_name"]) for row in occurrences}
+                ),
+                "field_signatures": sorted(
+                    {str(row["field"]["signature"]) for row in occurrences}
+                ),
+                "exact_flows": proof["flows"],
+                "replacement_count": len(occurrences),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_parameterized_cast_blocks_generic_target_inference"
+                    ),
+                    "strategy": (
+                        "exact_generic_field_signature_plus_builder_invoke_store_flow"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping generic builder target-inference edits"
             )
     for start, end, replacement in reversed(edits):
         text = text[:start] + replacement + text[end:]
@@ -21330,6 +21784,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_generic_builder_target_inference_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_cc_generic_value_object_casts(
                         source_root=source_root,
                         path=path,
@@ -21847,6 +22308,15 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "collectors_to_list_wildcard_sink_cast_removal"
+        ),
+        "generic_builder_target_inference_cast_action_count": sum(
+            action["kind"] == "generic_builder_target_inference_cast_removal"
+            for action in actions
+        ),
+        "generic_builder_target_inference_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"] == "generic_builder_target_inference_cast_removal"
         ),
         "cc_generic_value_object_cast_action_count": sum(
             action["kind"] == "cc_generic_value_object_cast_removal"
