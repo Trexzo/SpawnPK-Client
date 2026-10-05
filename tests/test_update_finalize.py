@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import unittest
 
+from spk_recovery.semantic_authority import semantic_proposal_id
 from spk_recovery.update_finalize import (
     UpdateFinalizeError,
     build_authority_candidate_report,
@@ -59,7 +60,25 @@ def _class_lineage():
                         "provenance": [],
                     },
                 ],
-                "semantic_provenance": [],
+                "semantic_provenance": [
+                    {
+                        "proposal_id": semantic_proposal_id(
+                            "1" * 64,
+                            "class",
+                            "CLIENT_CLASS_000001",
+                            "ExampleController",
+                        ),
+                        "review_id": "SEMREVIEW_" + "7" * 20,
+                        "source_build": "v308",
+                        "source_sha256": "1" * 64,
+                        "source_coordinate": {
+                            "owner": "rs/a",
+                            "name": None,
+                            "descriptor": None,
+                        },
+                        "evidence": [],
+                    }
+                ],
             }
         ],
         "unresolved": [],
@@ -103,7 +122,25 @@ def _member_lineage():
                         "provenance": [],
                     },
                 ],
-                "semantic_provenance": [],
+                "semantic_provenance": [
+                    {
+                        "proposal_id": semantic_proposal_id(
+                            "1" * 64,
+                            "field",
+                            "CLIENT_FIELD_000001",
+                            "value",
+                        ),
+                        "review_id": "SEMREVIEW_" + "8" * 20,
+                        "source_build": "v308",
+                        "source_sha256": "1" * 64,
+                        "source_coordinate": {
+                            "owner": "rs/a",
+                            "name": "x",
+                            "descriptor": "I",
+                        },
+                        "evidence": [],
+                    }
+                ],
             },
             {
                 "member_id": "CLIENT_METHOD_000001",
