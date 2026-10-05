@@ -15,6 +15,9 @@ from .release_manifest import (
     RecoveryReleaseError,
     build_recovery_release_manifest,
 )
+from .source_digest import (
+    source_tree_digest as canonical_source_tree_digest,
+)
 
 
 class RecoveryReleaseVerificationError(ValueError):
@@ -45,20 +48,14 @@ def _source_tree_digest(root: Path) -> str:
         raise RecoveryReleaseVerificationError(
             f"source root does not exist: {root}"
         )
-    files = sorted(root.rglob("*.java"))
+    digest, files, _source_bytes = canonical_source_tree_digest(
+        root
+    )
     if not files:
         raise RecoveryReleaseVerificationError(
             "source root contains no Java files"
         )
-    h = hashlib.sha256()
-    for path in files:
-        rel = path.relative_to(root).as_posix().encode("utf-8")
-        data = path.read_bytes()
-        h.update(len(rel).to_bytes(4, "big"))
-        h.update(rel)
-        h.update(len(data).to_bytes(8, "big"))
-        h.update(data)
-    return h.hexdigest()
+    return digest
 
 
 def _probe_version(command: str) -> dict[str, Any]:
