@@ -26,6 +26,80 @@ def _document_digest(value) -> str:
 
 
 
+def _release_verification_id(report: dict) -> str:
+    material = {
+        "release_id": report["release_id"],
+        "checks": [
+            (
+                row["name"],
+                row["required"],
+                row["passed"],
+                row.get("expected"),
+                row.get("actual"),
+            )
+            for row in report["checks"]
+        ],
+    }
+    raw = json.dumps(
+        material,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
+    return "REPRO_" + hashlib.sha256(raw).hexdigest()[:20].upper()
+
+
+def _refresh_release_verification(fixture: dict) -> None:
+    release = fixture["release_manifest"]
+    names = [
+        "release_manifest_exact_reproduction",
+        "collision_private_plan_supplied",
+        "collision_plan_id_authority",
+        "collision_report_id_authority",
+        "collision_transform_id_authority",
+        "collision_base_readable_authority",
+        "collision_private_plan_kind",
+        "collision_private_plan_id",
+        "collision_private_plan_report_id",
+        "collision_private_plan_readable_sha256",
+        "collision_private_plan_sha256",
+        "collision_private_mapping_sha256",
+    ]
+    checks = []
+    for name in names:
+        if name == "release_manifest_exact_reproduction":
+            expected = release
+            actual = release
+        else:
+            expected = True
+            actual = True
+        checks.append(
+            {
+                "name": name,
+                "required": True,
+                "passed": True,
+                "expected": expected,
+                "actual": actual,
+            }
+        )
+    report = {
+        "schema_version": 1,
+        "kind": "recovery_release_verification",
+        "verification_id": "",
+        "release_id": release["release_id"],
+        "release_ready": True,
+        "verified": True,
+        "required_check_count": len(checks),
+        "failed_required_check_count": 0,
+        "checks": checks,
+        "toolchain_probe": None,
+    }
+    report["verification_id"] = _release_verification_id(
+        report
+    )
+    fixture["release_verification"] = report
+
+
 def _fixture(source_root: Path) -> dict:
     source_root.mkdir(parents=True)
     rs = source_root / "rs"
@@ -155,6 +229,7 @@ def _fixture(source_root: Path) -> dict:
             fixture["clean_rebuild_report"]
         ),
     }
+    _refresh_release_verification(fixture)
     return fixture
 
 
