@@ -326,6 +326,39 @@ def verify_source_authority_artifact(
         manifest.get("contains_binary_artifacts") is False
     )
 
+    artifact_material = {
+        "authority_repository": manifest.get(
+            "authority_repository"
+        ),
+        "authority_commit": authority_commit,
+        "publication_repository": manifest.get(
+            "publication_repository"
+        ),
+        "preflight_milestone_id": manifest.get(
+            "preflight_milestone_id"
+        ),
+        "build_id": manifest.get("build_id"),
+        "client_sha256": manifest.get("client_sha256"),
+        "source_tree_sha256": manifest.get(
+            "source_tree_sha256"
+        ),
+        "source_file_count": manifest.get(
+            "source_file_count"
+        ),
+        "source_bytes": manifest.get("source_bytes"),
+        "document_sha256": manifest.get("document_sha256"),
+        "payload_file_sha256": manifest.get(
+            "payload_file_sha256"
+        ),
+    }
+    expected_artifact_id = (
+        "SRCAUTHART_"
+        + _stable_digest(artifact_material)[:20].upper()
+    )
+    checks["artifact_id_match"] = (
+        manifest.get("artifact_id") == expected_artifact_id
+    )
+
     expected_payload = manifest.get("payload_file_sha256")
     if not isinstance(expected_payload, dict):
         expected_payload = {}
@@ -376,6 +409,7 @@ def verify_source_authority_artifact(
     tree_sha, source_files, source_bytes = source_tree_digest(
         source_root
     )
+    checks["source_tree_nonempty"] = bool(source_files)
     checks["source_tree_sha256_match"] = (
         tree_sha == manifest.get("source_tree_sha256")
     )
