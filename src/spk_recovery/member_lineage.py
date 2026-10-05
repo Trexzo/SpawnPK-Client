@@ -193,10 +193,24 @@ def validate_member_lineage(
 
     known_classes: set[str] | None = None
     known_builds: set[str] | None = None
+    known_owner_names: dict[tuple[str, str], str] | None = None
     if class_lineage is not None:
         validate_lineage(class_lineage)
-        known_classes = {r["logical_id"] for r in class_lineage.get("classes", [])}
-        known_builds = {b["build_id"] for b in class_lineage.get("builds", [])}
+        known_classes = {
+            r["logical_id"]
+            for r in class_lineage.get("classes", [])
+        }
+        known_builds = {
+            b["build_id"]
+            for b in class_lineage.get("builds", [])
+        }
+        known_owner_names = {}
+        for record in class_lineage.get("classes", []):
+            logical_id = record["logical_id"]
+            for entry in record.get("lineage", []):
+                known_owner_names[
+                    (logical_id, entry["build_id"])
+                ] = entry["internal_name"]
         baseline = _class_build(class_lineage, doc.get("baseline_build_id"))
         if str(doc.get("source_sha256", "")).lower() != str(baseline["sha256"]).lower():
             raise MemberLineageError(
@@ -266,6 +280,21 @@ def validate_member_lineage(
             desc = entry.get("descriptor")
             if not all(isinstance(x, str) and x for x in (owner, name, desc)):
                 raise MemberLineageError(f"{elabel}: owner/name/descriptor must be non-empty strings")
+            if known_owner_names is not None:
+                expected_owner = known_owner_names.get(
+                    (owner_id, build_id)
+                )
+                if expected_owner is None:
+                    raise MemberLineageError(
+                        f"{elabel}: owner logical class {owner_id!r} "
+                        f"has no lineage entry for build {build_id!r}"
+                    )
+                if owner != expected_owner:
+                    raise MemberLineageError(
+                        f"{elabel}: owner_internal_name {owner!r} "
+                        f"does not match logical class {owner_id!r} "
+                        f"owner {expected_owner!r} in build {build_id!r}"
+                    )
             if kind == "method" and name in {"<init>", "<clinit>"}:
                 raise MemberLineageError(f"{elabel}: constructors are not canonical renamable members")
             relation = entry.get("relation")
