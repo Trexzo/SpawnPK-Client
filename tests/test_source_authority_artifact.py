@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -10,6 +12,18 @@ from spk_recovery.source_authority_artifact import (
     verify_source_authority_artifact,
 )
 from spk_recovery.source_digest import source_tree_digest
+
+
+def _document_digest(value) -> str:
+    raw = json.dumps(
+        value,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()
+
+
 
 
 def _fixture(source_root: Path) -> dict:
@@ -29,7 +43,7 @@ def _fixture(source_root: Path) -> dict:
     class_digest = "c" * 64
     member_digest = "d" * 64
 
-    return {
+    fixture = {
         "class_lineage": {
             "classes": [
                 {
@@ -124,6 +138,24 @@ def _fixture(source_root: Path) -> dict:
             "verified": True,
         },
     }
+    fixture["release_manifest"]["authority_pins"] = {
+        "class_lineage_sha256": _document_digest(
+            fixture["class_lineage"]
+        ),
+        "member_lineage_sha256": _document_digest(
+            fixture["member_lineage"]
+        ),
+        "readable_manifest_sha256": _document_digest(
+            fixture["readable_manifest"]
+        ),
+        "recovered_source_manifest_sha256": _document_digest(
+            fixture["recovered_source_manifest"]
+        ),
+        "clean_rebuild_report_sha256": _document_digest(
+            fixture["clean_rebuild_report"]
+        ),
+    }
+    return fixture
 
 
 class SourceAuthorityArtifactTests(unittest.TestCase):
