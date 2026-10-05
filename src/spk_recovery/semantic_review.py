@@ -12,14 +12,14 @@ from .member_lineage import (
     MemberLineageError,
     validate_member_lineage,
 )
-from .semantic_authority import semantic_proposal_id
+from .semantic_authority import (
+    SEMANTIC_IDENTIFIER_RE,
+    semantic_proposal_id,
+)
 
 
 class SemanticReviewError(ValueError):
     pass
-
-
-_IDENTIFIER = re.compile(r"^[A-Za-z_$][A-Za-z0-9_$]*$")
 
 
 def _stable_json(value: Any) -> bytes:
@@ -60,7 +60,10 @@ def _review_id(proposals: list[dict[str, Any]]) -> str:
 
 
 def _validate_name(name: Any) -> str:
-    if not isinstance(name, str) or not _IDENTIFIER.fullmatch(name):
+    if (
+        not isinstance(name, str)
+        or not SEMANTIC_IDENTIFIER_RE.fullmatch(name)
+    ):
         raise SemanticReviewError(
             f"semantic name must be one Java identifier, got {name!r}"
         )
