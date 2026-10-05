@@ -10,6 +10,16 @@ SEMANTIC_PROPOSAL_ID_RE = re.compile(
 SEMANTIC_REVIEW_ID_RE = re.compile(
     r"^SEMREVIEW_[0-9A-F]{20}$"
 )
+SEMANTIC_IDENTIFIER_RE = re.compile(
+    r"^[A-Za-z_$][A-Za-z0-9_$]*$"
+)
+
+
+def is_semantic_identifier(value: object) -> bool:
+    return (
+        isinstance(value, str)
+        and SEMANTIC_IDENTIFIER_RE.fullmatch(value) is not None
+    )
 
 
 def semantic_proposal_id(
