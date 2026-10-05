@@ -1418,6 +1418,31 @@ class SourceMilestoneTests(unittest.TestCase):
                     },
                 )
 
+    def test_publication_bundle_output_must_be_outside_source_root(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            before = source_tree_digest(source)[0]
+
+            nested_output = source / "bundle"
+            nested_output.mkdir()
+
+            with self.assertRaisesRegex(
+                SourceMilestoneError,
+                "outside source root",
+            ):
+                build_source_publication_bundle(
+                    manifest,
+                    source,
+                    nested_output,
+                    provenance_documents={},
+                )
+
+            self.assertEqual(source_tree_digest(source)[0], before)
+            self.assertEqual(list(nested_output.iterdir()), [])
+
     def test_source_only_bundle_is_deterministic_and_excludes_binary(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
