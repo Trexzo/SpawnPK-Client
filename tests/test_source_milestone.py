@@ -1239,8 +1239,8 @@ class SourceMilestoneTests(unittest.TestCase):
             self.assertEqual(
                 first["semantic_authority"]["review_ids"],
                 [
-                    "SEMREVIEW_CLASS",
-                    "SEMREVIEW_MEMBER",
+                    _CLASS_REVIEW_ID,
+                    _MEMBER_REVIEW_ID,
                 ],
             )
             self.assertEqual(
