@@ -1,7 +1,33 @@
 from __future__ import annotations
 
 import hashlib
+import os
 from pathlib import Path
+
+
+class SourceDigestError(ValueError):
+    pass
+
+
+def _reject_symlinks(root: Path) -> None:
+    if root.is_symlink():
+        raise SourceDigestError(
+            "source tree root must not be a symbolic link"
+        )
+
+    for dirpath, dirnames, filenames in os.walk(
+        root,
+        followlinks=False,
+    ):
+        base = Path(dirpath)
+        for name in sorted([*dirnames, *filenames]):
+            path = base / name
+            if not path.is_symlink():
+                continue
+            rel = path.relative_to(root).as_posix()
+            raise SourceDigestError(
+                f"source tree contains symbolic link: {rel}"
+            )
 
 
 def canonical_source_bytes(data: bytes) -> bytes:
@@ -15,6 +41,7 @@ def canonical_source_bytes(data: bytes) -> bytes:
 
 
 def sorted_java_files(root: Path) -> list[Path]:
+    _reject_symlinks(root)
     return sorted(
         root.rglob("*.java"),
         key=lambda path: path.relative_to(root).as_posix(),
