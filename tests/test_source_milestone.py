@@ -81,6 +81,11 @@ def _fixtures(source_root: Path):
         "class_plan_digest": class_digest,
         "member_plan_digest": member_digest,
         "source_tree_sha256": tree_sha,
+        "collision_transform_id": "COLLTRANS_TEST",
+        "collision_plan_id": "JNSPLAN_TEST",
+        "collision_report_id": "JNSCOLLISION_TEST",
+        "collision_mapping_sha256": "f" * 64,
+        "base_readable_jar_sha256": "b" * 64,
     }
     clean = {
         "schema_version": 1,
@@ -229,11 +234,101 @@ class SourceMilestoneTests(unittest.TestCase):
                 "Trexzo/SpawnPK-Client-Source",
             )
 
+    def test_collision_provenance_binds_recovered_source_authority(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+
+            manifest = self._build(source, fixture)
+
+            self.assertTrue(manifest["publishable"])
+            collision = manifest["provenance"]["collision_provenance"]
+            self.assertEqual(
+                collision["collision_transform_id"],
+                fixture["recovered_source_manifest"][
+                    "collision_transform_id"
+                ],
+            )
+            self.assertEqual(
+                collision["collision_plan_id"],
+                fixture["recovered_source_manifest"]["collision_plan_id"],
+            )
+            self.assertEqual(
+                collision["collision_report_id"],
+                fixture["recovered_source_manifest"][
+                    "collision_report_id"
+                ],
+            )
+            self.assertEqual(
+                collision["collision_mapping_sha256"],
+                fixture["recovered_source_manifest"][
+                    "collision_mapping_sha256"
+                ],
+            )
+            self.assertEqual(
+                collision["base_readable_jar_sha256"],
+                fixture["recovered_source_manifest"][
+                    "base_readable_jar_sha256"
+                ],
+            )
+
+    def test_collision_authority_mismatch_blocks_publication(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            fixture["recovered_source_manifest"][
+                "collision_report_id"
+            ] = "JNSCOLLISION_OTHER"
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "collision_compile_transport",
+                    "reason": "collision_stage_authority_mismatch",
+                },
+                manifest["blockers"],
+            )
+
+    def test_missing_collision_mapping_commitment_blocks_publication(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            fixture["recovered_source_manifest"].pop(
+                "collision_mapping_sha256"
+            )
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            reasons = {
+                row["reason"]
+                for row in manifest["blockers"]
+                if row["gate"] == "collision_compile_transport"
+            }
+            self.assertIn(
+                "collision_source_authority_incomplete",
+                reasons,
+            )
+            self.assertIn(
+                "collision_mapping_commitment_invalid",
+                reasons,
+            )
+
     def test_official_first_dependency_provenance_is_bound(self):
         with tempfile.TemporaryDirectory() as td:
             source = Path(td) / "source"
             fixture = _fixtures(source)
             transport = self._official_transport()
+            for key in (
+                "collision_transform_id",
+                "collision_plan_id",
+                "collision_report_id",
+                "collision_mapping_sha256",
+                "base_readable_jar_sha256",
+            ):
+                fixture["recovered_source_manifest"].pop(key, None)
             fixture["clean_rebuild_report"][
                 "compile_transport"
             ] = transport
@@ -282,6 +377,14 @@ class SourceMilestoneTests(unittest.TestCase):
             fixture = _fixtures(source)
             transport = self._official_transport()
             transport["reverse_plan_id"] = None
+            for key in (
+                "collision_transform_id",
+                "collision_plan_id",
+                "collision_report_id",
+                "collision_mapping_sha256",
+                "base_readable_jar_sha256",
+            ):
+                fixture["recovered_source_manifest"].pop(key, None)
             fixture["clean_rebuild_report"][
                 "compile_transport"
             ] = transport
@@ -305,6 +408,14 @@ class SourceMilestoneTests(unittest.TestCase):
             fixture = _fixtures(source)
             transport = self._official_transport()
             transport["runtime_official_dependencies_allowed"] = True
+            for key in (
+                "collision_transform_id",
+                "collision_plan_id",
+                "collision_report_id",
+                "collision_mapping_sha256",
+                "base_readable_jar_sha256",
+            ):
+                fixture["recovered_source_manifest"].pop(key, None)
             fixture["clean_rebuild_report"][
                 "compile_transport"
             ] = transport
