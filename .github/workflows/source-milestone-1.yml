@@ -307,12 +307,15 @@ jobs:
 
       - name: Verify publication bundle
         shell: bash
+        env:
+          AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
         run: |
           set -euo pipefail
 
           python -m spk_recovery.source_milestone_cli verify-bundle \
             --bundle-dir source-m1/publication \
             --manifest source-m1/SOURCE-MILESTONE.json \
+            --expected-authority-commit "$AUTHORITY_COMMIT" \
             --out source-m1/verification/SOURCE-BUNDLE-VERIFICATION.json
 
       - name: Reject binaries outside verifier contract
