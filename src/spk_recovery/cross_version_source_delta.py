@@ -249,6 +249,15 @@ def _index_source_units(
         raise CrossVersionSourceDeltaError(
             f"{label}_release: source comparison requires ready_for_release=true"
         )
+    release_blockers = release.get("blockers")
+    if not isinstance(release_blockers, list):
+        raise CrossVersionSourceDeltaError(
+            f"{label}_release: blockers must be a list"
+        )
+    if release_blockers:
+        raise CrossVersionSourceDeltaError(
+            f"{label}_release: ready release retains blockers"
+        )
     _require_doc(
         recovered_manifest,
         kind="recovered_source_workspace_manifest",
