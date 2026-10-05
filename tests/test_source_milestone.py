@@ -708,7 +708,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 "compile_transport"
             ] = transport
             _refresh_release_pins(fixture)
-    _refresh_release_verification(fixture)
+            _refresh_release_verification(fixture)
 
             manifest = self._build(source, fixture)
 
@@ -766,7 +766,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 "compile_transport"
             ] = transport
             _refresh_release_pins(fixture)
-    _refresh_release_verification(fixture)
+            _refresh_release_verification(fixture)
 
             manifest = self._build(source, fixture)
 
@@ -799,7 +799,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 "compile_transport"
             ] = transport
             _refresh_release_pins(fixture)
-    _refresh_release_verification(fixture)
+            _refresh_release_verification(fixture)
 
             manifest = self._build(source, fixture)
 
