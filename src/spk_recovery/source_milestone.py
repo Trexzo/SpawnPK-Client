@@ -1181,6 +1181,34 @@ def build_source_publication_bundle(
             "source milestone is not publishable"
         )
 
+    blockers = manifest.get("blockers")
+    publication = manifest.get("publication")
+    if (
+        not isinstance(blockers, list)
+        or blockers
+        or not isinstance(publication, dict)
+        or publication.get("allowed") is not True
+    ):
+        raise SourceMilestoneError(
+            "source milestone publication state is inconsistent"
+        )
+
+    milestone_material = {
+        "provenance": manifest.get("provenance"),
+        "source_tree": manifest.get("source_tree"),
+        "class_set": manifest.get("class_set"),
+        "publication": publication,
+        "blockers": blockers,
+    }
+    expected_milestone_id = (
+        "SRCMILESTONE_"
+        + _stable_digest(milestone_material)[:20].upper()
+    )
+    if manifest.get("milestone_id") != expected_milestone_id:
+        raise SourceMilestoneError(
+            "source milestone identity mismatch"
+        )
+
     source_root = source_root.resolve()
     out_dir = out_dir.resolve()
 
