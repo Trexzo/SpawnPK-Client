@@ -5,6 +5,12 @@ from pathlib import Path
 import re
 from typing import Any
 
+from .semantic_authority import (
+    SEMANTIC_PROPOSAL_ID_RE,
+    SEMANTIC_REVIEW_ID_RE,
+    semantic_proposal_id,
+)
+
 SCHEMA_VERSION = 1
 NAMESPACE = "spawnpk-client"
 LOGICAL_ID_RE = re.compile(r"^CLIENT_CLASS_(\d{6})$")
@@ -148,6 +154,7 @@ def validate_lineage(doc: dict[str, Any]) -> dict[str, int]:
     if not isinstance(builds, list) or not builds:
         raise LineageValidationError("builds must be a non-empty array")
     build_ids: set[str] = set()
+    build_sha_by_id: dict[str, str] = {}
     for i, build in enumerate(builds):
         label = f"builds[{i}]"
         if not isinstance(build, dict):
@@ -158,7 +165,10 @@ def validate_lineage(doc: dict[str, Any]) -> dict[str, int]:
         if build_id in build_ids:
             raise LineageValidationError(f"duplicate build_id {build_id!r}")
         build_ids.add(build_id)
-        _sha(str(build.get("sha256", "")), label=f"{label}.sha256")
+        build_sha_by_id[build_id] = _sha(
+            str(build.get("sha256", "")),
+            label=f"{label}.sha256",
+        )
         if build.get("authority") not in ALLOWED_AUTHORITIES:
             raise LineageValidationError(f"{label}.authority is unsupported")
         number = build.get("build_number")
@@ -254,7 +264,105 @@ def validate_lineage(doc: dict[str, Any]) -> dict[str, int]:
 
         semantic_provenance = record.get("semantic_provenance")
         if not isinstance(semantic_provenance, list):
-            raise LineageValidationError(f"{label}.semantic_provenance must be an array")
+            raise LineageValidationError(
+                f"{label}.semantic_provenance must be an array"
+            )
+        if status == "ACCEPTED":
+            if not semantic_provenance:
+                raise LineageValidationError(
+                    f"{label}: ACCEPTED semantic state requires provenance"
+                )
+            lineage_by_build = {
+                entry["build_id"]: entry
+                for entry in lineage
+            }
+            seen_proposal_ids: set[str] = set()
+            for k, provenance_row in enumerate(
+                semantic_provenance
+            ):
+                plabel = f"{label}.semantic_provenance[{k}]"
+                if not isinstance(provenance_row, dict):
+                    raise LineageValidationError(
+                        f"{plabel} must be an object"
+                    )
+                proposal_id = provenance_row.get("proposal_id")
+                review_id = provenance_row.get("review_id")
+                source_build = provenance_row.get("source_build")
+                source_sha = provenance_row.get("source_sha256")
+                source_coordinate = provenance_row.get(
+                    "source_coordinate"
+                )
+                evidence = provenance_row.get("evidence")
+                if (
+                    not isinstance(proposal_id, str)
+                    or not SEMANTIC_PROPOSAL_ID_RE.fullmatch(
+                        proposal_id
+                    )
+                ):
+                    raise LineageValidationError(
+                        f"{plabel}.proposal_id is invalid"
+                    )
+                if proposal_id in seen_proposal_ids:
+                    raise LineageValidationError(
+                        f"{label}: duplicate semantic proposal provenance "
+                        f"{proposal_id}"
+                    )
+                seen_proposal_ids.add(proposal_id)
+                if (
+                    not isinstance(review_id, str)
+                    or not SEMANTIC_REVIEW_ID_RE.fullmatch(review_id)
+                ):
+                    raise LineageValidationError(
+                        f"{plabel}.review_id is invalid"
+                    )
+                if (
+                    not isinstance(source_build, str)
+                    or source_build not in build_sha_by_id
+                ):
+                    raise LineageValidationError(
+                        f"{plabel}.source_build is not canonical"
+                    )
+                source_sha = _sha(
+                    str(source_sha or ""),
+                    label=f"{plabel}.source_sha256",
+                )
+                if source_sha != build_sha_by_id[source_build]:
+                    raise LineageValidationError(
+                        f"{plabel}.source_sha256 does not match build"
+                    )
+                source_entry = lineage_by_build.get(source_build)
+                if source_entry is None:
+                    raise LineageValidationError(
+                        f"{plabel}.source_build has no class lineage"
+                    )
+                if not isinstance(source_coordinate, dict):
+                    raise LineageValidationError(
+                        f"{plabel}.source_coordinate must be an object"
+                    )
+                if (
+                    source_coordinate.get("owner")
+                    != source_entry["internal_name"]
+                    or source_coordinate.get("name") is not None
+                    or source_coordinate.get("descriptor") is not None
+                ):
+                    raise LineageValidationError(
+                        f"{plabel}.source_coordinate does not match class"
+                    )
+                expected_proposal_id = semantic_proposal_id(
+                    source_sha,
+                    "class",
+                    logical_id,
+                    str(semantic_name),
+                )
+                if proposal_id != expected_proposal_id:
+                    raise LineageValidationError(
+                        f"{plabel}.proposal_id does not match semantic "
+                        "acceptance material"
+                    )
+                if not isinstance(evidence, list):
+                    raise LineageValidationError(
+                        f"{plabel}.evidence must be an array"
+                    )
 
     unresolved = doc.get("unresolved")
     if not isinstance(unresolved, list):
