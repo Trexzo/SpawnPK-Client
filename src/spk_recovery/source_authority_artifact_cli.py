@@ -103,6 +103,10 @@ def main(argv: list[str] | None = None) -> int:
         required=True,
     )
     verify.add_argument(
+        "--expected-milestone-id",
+        required=True,
+    )
+    verify.add_argument(
         "--out",
         type=Path,
         required=True,
@@ -157,6 +161,7 @@ def main(argv: list[str] | None = None) -> int:
             expected_authority_commit=(
                 args.expected_authority_commit
             ),
+            expected_milestone_id=args.expected_milestone_id,
         )
         _write_json(report, args.out)
         print(

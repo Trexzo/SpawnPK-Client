@@ -8,6 +8,7 @@ import subprocess
 from typing import Any
 
 from .classfile import ClassFormatError, parse_class
+from .v308_authority import V308_SOURCE_AUTHORITY_SHA256
 
 
 class Java9MacosEawtBridgeError(ValueError):
@@ -15,10 +16,6 @@ class Java9MacosEawtBridgeError(ValueError):
 
 
 BRIDGE_NAME = "java9_macos_eawt_v308_required_surface"
-V308_SOURCE_AUTHORITY_SHA256 = (
-    "854f26ff9f134b0317572e7ac1688e6f"
-    "40a231d5a4c66f8db5d655b7f45ce7c6"
-)
 
 V308_AUTHORITY = {
     "source_authority_sha256": V308_SOURCE_AUTHORITY_SHA256,
