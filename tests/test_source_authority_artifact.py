@@ -72,6 +72,11 @@ def _fixture(source_root: Path) -> dict:
             "class_plan_digest": class_digest,
             "member_plan_digest": member_digest,
             "source_tree_sha256": tree_sha,
+            "collision_transform_id": "COLLTRANS_TEST",
+            "collision_plan_id": "JNSPLAN_TEST",
+            "collision_report_id": "JNSCOLLISION_TEST",
+            "collision_mapping_sha256": "f" * 64,
+            "base_readable_jar_sha256": "b" * 64,
         },
         "clean_rebuild_report": {
             "schema_version": 1,
