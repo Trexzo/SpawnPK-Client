@@ -1129,6 +1129,9 @@ def build_source_provenance_document(
             "release_verification_id": provenance.get(
                 "release_verification_id"
             ),
+            "release_verification_evidence": provenance.get(
+                "release_verification_evidence"
+            ),
             "collision_provenance": provenance.get(
                 "collision_provenance"
             ),
