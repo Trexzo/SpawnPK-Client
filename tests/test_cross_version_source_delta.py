@@ -375,6 +375,35 @@ class CrossVersionSourceDeltaTests(unittest.TestCase):
                 [row["logical_id"] for row in report["unchanged"]],
             )
 
+    def test_ready_release_with_blockers_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            old, new = self._roots(Path(tmp))
+            args = list(self._args(old, new))
+            args[0]["blockers"] = [
+                {
+                    "gate": "clean_compile",
+                    "reason": "synthetic_blocker",
+                }
+            ]
+
+            with self.assertRaisesRegex(
+                CrossVersionSourceDeltaError,
+                "ready release retains blockers",
+            ):
+                build_cross_version_source_delta(*args)
+
+    def test_ready_release_requires_blocker_list(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            old, new = self._roots(Path(tmp))
+            args = list(self._args(old, new))
+            args[1].pop("blockers")
+
+            with self.assertRaisesRegex(
+                CrossVersionSourceDeltaError,
+                "blockers must be a list",
+            ):
+                build_cross_version_source_delta(*args)
+
     def test_release_tree_hash_drift_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             old, new = self._roots(Path(tmp))
