@@ -100,6 +100,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     verify.add_argument(
         "--expected-authority-commit",
+        required=True,
     )
     verify.add_argument(
         "--out",
