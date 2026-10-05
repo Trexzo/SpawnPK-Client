@@ -377,6 +377,40 @@ class ReleaseVerificationTests(unittest.TestCase):
                 names,
             )
 
+    def test_collision_private_plan_rejects_non_object_json(self):
+        release = _release()
+        with tempfile.TemporaryDirectory() as td:
+            plan_path = Path(td) / "collision-plan.json"
+            plan_path.write_text(
+                '["not","an","object"]\n',
+                encoding="utf-8",
+            )
+            clean = {
+                "compile_transport": {
+                    "mode": "collision_derived_remap",
+                },
+            }
+
+            with patch(
+                "spk_recovery.release_verify.build_recovery_release_manifest",
+                return_value=release.copy(),
+            ):
+                with self.assertRaisesRegex(
+                    RecoveryReleaseVerificationError,
+                    "private collision plan must be a JSON object",
+                ):
+                    verify_recovery_release(
+                        release,
+                        {},
+                        {},
+                        {},
+                        {},
+                        {},
+                        clean,
+                        {},
+                        private_collision_plan_path=plan_path,
+                    )
+
     def test_collision_platform_bridge_provenance_passes(self):
         release = _release()
         with tempfile.TemporaryDirectory() as td:
