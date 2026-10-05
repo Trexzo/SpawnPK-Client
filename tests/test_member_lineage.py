@@ -167,6 +167,28 @@ class MemberLineageTests(unittest.TestCase):
                 class_lineage=class_lineage,
             )
 
+    def test_accepted_member_name_must_be_canonical_identifier(self):
+        class_lineage, doc = self._accepted()
+        record = doc["members"][0]
+        record["semantic_name"] = "bad-name"
+        record["semantic_provenance"][0]["proposal_id"] = (
+            semantic_proposal_id(
+                "a" * 64,
+                record["kind"],
+                record["member_id"],
+                "bad-name",
+            )
+        )
+
+        with self.assertRaisesRegex(
+            MemberLineageError,
+            "canonical identifier",
+        ):
+            validate_member_lineage(
+                doc,
+                class_lineage=class_lineage,
+            )
+
     def test_duplicate_accepted_field_semantic_name_is_rejected(self):
         class_lineage, doc = self._accepted()
         record = doc["members"][1]
