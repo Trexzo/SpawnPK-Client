@@ -202,6 +202,55 @@ class SourceM1AuthorityWorkflowContractTests(unittest.TestCase):
             validate,
         )
 
+    def test_trusted_preflight_milestone_anchors_artifact_verification(self):
+        preflight_start = self.text.index(
+            "- name: Build trusted preflight Source Milestone manifest"
+        )
+        build_start = self.text.index(
+            "- name: Build Source M1 authority artifact"
+        )
+        verify_start = self.text.index(
+            "- name: Independently verify Source M1 authority artifact"
+        )
+        export_start = self.text.index(
+            "- name: Export verified authority outputs"
+        )
+
+        self.assertLess(preflight_start, build_start)
+        self.assertLess(build_start, verify_start)
+
+        preflight = self.text[preflight_start:build_start]
+        verify = self.text[verify_start:export_start]
+
+        self.assertIn(
+            "spk_recovery.source_milestone_cli build",
+            preflight,
+        )
+        self.assertIn(
+            "--out verification/PREFLIGHT-SOURCE-MILESTONE.json",
+            preflight,
+        )
+        self.assertIn(
+            "--source-root workspace/src",
+            preflight,
+        )
+        self.assertIn(
+            "verification/PREFLIGHT-SOURCE-MILESTONE.json",
+            verify,
+        )
+        self.assertIn(
+            'EXPECTED_MILESTONE_ID="$(',
+            verify,
+        )
+        self.assertIn(
+            '--expected-authority-commit "$AUTHORITY_COMMIT"',
+            verify,
+        )
+        self.assertIn(
+            '--expected-milestone-id "$EXPECTED_MILESTONE_ID"',
+            verify,
+        )
+
     def test_authority_is_built_then_independently_verified(self):
         build_start = self.text.index(
             "- name: Build Source M1 authority artifact"
