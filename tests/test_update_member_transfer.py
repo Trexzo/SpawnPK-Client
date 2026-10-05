@@ -438,6 +438,10 @@ class UpdateMemberTransferTests(unittest.TestCase):
         lineage = _class_lineage()
         second = copy.deepcopy(lineage["classes"][0])
         second["logical_id"] = "CLIENT_CLASS_000002"
+        second["semantic_name"] = None
+        second["semantic_status"] = "UNKNOWN"
+        second["semantic_confidence"] = 0.0
+        second["semantic_provenance"] = []
         second["lineage"] = [
             copy.deepcopy(lineage["classes"][0]["lineage"][1])
         ]
