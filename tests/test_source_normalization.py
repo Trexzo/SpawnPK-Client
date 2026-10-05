@@ -261,6 +261,7 @@ def _patch_bridge_invoke_methodref(
     target_owner: str,
     target_name: str,
     target_descriptor: str,
+    clear_bridge_flag: bool = False,
 ) -> bytes:
     data = bytearray(class_bytes)
 
@@ -364,6 +365,7 @@ def _patch_bridge_invoke_methodref(
     cursor += 2
     patched = 0
     for _ in range(methods_count):
+        method_access_offset = cursor
         access = u2_at(cursor)
         name_index = u2_at(cursor + 2)
         descriptor_index = u2_at(cursor + 4)
@@ -371,6 +373,11 @@ def _patch_bridge_invoke_methodref(
         cursor += 8
         name = utf8.get(name_index, "")
         descriptor = utf8.get(descriptor_index, "")
+        clear_this_bridge_flag = (
+            clear_bridge_flag
+            and name == bridge_name
+            and descriptor == bridge_descriptor
+        )
 
         for _ in range(attribute_count):
             attribute_name_index = u2_at(cursor)
@@ -401,6 +408,18 @@ def _patch_bridge_invoke_methodref(
                 patched += 1
             cursor = payload + length
 
+        if clear_this_bridge_flag:
+            if not (access & 0x1000) or not (access & 0x0040):
+                raise AssertionError(
+                    "expected synthetic bridge flags before clearing ACC_BRIDGE"
+                )
+            struct.pack_into(
+                ">H",
+                data,
+                method_access_offset,
+                access & ~0x0040,
+            )
+
     if patched != 1:
         raise AssertionError(f"expected one patched bridge, got {patched}")
     return bytes(data)
@@ -410,6 +429,7 @@ def _synthetic_bridge_forwarder_fixture(
     root: Path,
     *,
     retarget_bridge: bool,
+    clear_bridge_flag: bool = False,
 ) -> Path:
     jar = _compile_java_fixture(
         root,
@@ -458,6 +478,7 @@ def _synthetic_bridge_forwarder_fixture(
                     target_owner="p/F",
                     target_name="b",
                     target_descriptor=target_descriptor,
+                    clear_bridge_flag=clear_bridge_flag,
                 )
             target_zip.writestr(info, payload)
     return patched
@@ -13386,6 +13407,7 @@ class MissingSyntheticBridgeForwarderTests(unittest.TestCase):
             jar = _synthetic_bridge_forwarder_fixture(
                 root,
                 retarget_bridge=True,
+                clear_bridge_flag=True,
             )
 
             with zipfile.ZipFile(jar) as z:
@@ -13400,7 +13422,6 @@ class MissingSyntheticBridgeForwarderTests(unittest.TestCase):
                     and method["descriptor"]
                     == "(ILjava/util/Map;)Ljava/lang/Object;"
                     and int(method["access"]) & 0x1000
-                    and int(method["access"]) & 0x0040
                 )
             )
             bridge_calls = [
@@ -13408,6 +13429,8 @@ class MissingSyntheticBridgeForwarderTests(unittest.TestCase):
                 for row in bridge["instructions"]
                 if row.get("mnemonic") == "invokevirtual"
             ]
+            self.assertTrue(int(bridge["access"]) & 0x1000)
+            self.assertFalse(int(bridge["access"]) & 0x0040)
             self.assertEqual(len(bridge_calls), 1)
             self.assertEqual(bridge_calls[0]["owner"], "p/F")
             self.assertEqual(bridge_calls[0]["name"], "b")
@@ -13455,6 +13478,8 @@ class MissingSyntheticBridgeForwarderTests(unittest.TestCase):
                 == "missing_synthetic_bridge_forwarder_reconstruction"
             )
             self.assertEqual(action["bridge_name"], "a")
+            self.assertTrue(action["bridge_access_flags"] & 0x1000)
+            self.assertFalse(action["bridge_flag_present"])
             self.assertEqual(action["target_name"], "b")
             self.assertEqual(action["abstract_super_owner"], "p/Base")
             self.assertEqual(action["source_return_type"], "R")
