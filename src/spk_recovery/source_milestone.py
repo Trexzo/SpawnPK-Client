@@ -7,6 +7,8 @@ import re
 import shutil
 from typing import Any
 
+from .lineage import LineageValidationError, validate_lineage
+from .member_lineage import validate_member_lineage
 from .source_digest import (
     canonical_source_bytes,
     source_tree_digest,
@@ -633,6 +635,17 @@ def build_source_milestone_manifest(
         raise SourceMilestoneError("authority repository is required")
     if not publication_repository:
         raise SourceMilestoneError("publication repository is required")
+
+    try:
+        validate_lineage(class_lineage)
+        validate_member_lineage(
+            member_lineage,
+            class_lineage=class_lineage,
+        )
+    except LineageValidationError as exc:
+        raise SourceMilestoneError(
+            f"invalid semantic lineage authority: {exc}"
+        ) from exc
 
     _require_doc(
         readable_manifest,
