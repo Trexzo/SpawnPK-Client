@@ -6,6 +6,7 @@ from spk_recovery.member_lineage import (
     seed_member_lineage,
     validate_member_lineage,
 )
+from spk_recovery.semantic_authority import semantic_proposal_id
 
 
 def _class_lineage():
@@ -84,6 +85,87 @@ class MemberLineageTests(unittest.TestCase):
         summary = validate_member_lineage(a, class_lineage=_class_lineage())
         self.assertEqual(summary["fields"], 2)
         self.assertEqual(summary["methods"], 2)
+
+    def _accepted(self):
+        class_lineage = _class_lineage()
+        doc = seed_member_lineage(
+            class_lineage,
+            _index(),
+            build_id="v308",
+        )
+        record = doc["members"][0]
+        entry = record["lineage"][0]
+        record["semantic_name"] = "readableField"
+        record["semantic_status"] = "ACCEPTED"
+        record["semantic_confidence"] = 0.9
+        record["semantic_provenance"] = [
+            {
+                "proposal_id": semantic_proposal_id(
+                    "a" * 64,
+                    record["kind"],
+                    record["member_id"],
+                    "readableField",
+                ),
+                "review_id": "SEMREVIEW_" + "B" * 20,
+                "source_build": "v308",
+                "source_sha256": "a" * 64,
+                "source_coordinate": {
+                    "owner": entry["owner_internal_name"],
+                    "name": entry["name"],
+                    "descriptor": entry["descriptor"],
+                },
+                "evidence": [],
+            }
+        ]
+        return class_lineage, doc
+
+    def test_accepted_member_requires_canonical_provenance(self):
+        class_lineage, doc = self._accepted()
+        summary = validate_member_lineage(
+            doc,
+            class_lineage=class_lineage,
+        )
+        self.assertEqual(summary["members"], 4)
+
+    def test_accepted_member_rejects_empty_provenance(self):
+        class_lineage, doc = self._accepted()
+        doc["members"][0]["semantic_provenance"] = []
+        with self.assertRaisesRegex(
+            MemberLineageError,
+            "requires provenance",
+        ):
+            validate_member_lineage(
+                doc,
+                class_lineage=class_lineage,
+            )
+
+    def test_accepted_member_rejects_cross_target_provenance(self):
+        class_lineage, doc = self._accepted()
+        doc["members"][0]["semantic_provenance"][0][
+            "source_coordinate"
+        ]["name"] = "forged"
+        with self.assertRaisesRegex(
+            MemberLineageError,
+            "source_coordinate does not match member",
+        ):
+            validate_member_lineage(
+                doc,
+                class_lineage=class_lineage,
+            )
+
+    def test_accepted_member_rejects_forged_proposal_id(self):
+        class_lineage, doc = self._accepted()
+        doc["members"][0]["semantic_provenance"][0][
+            "proposal_id"
+        ] = "SEMPROP_" + "0" * 20
+        with self.assertRaisesRegex(
+            MemberLineageError,
+            "proposal_id does not match",
+        ):
+            validate_member_lineage(
+                doc,
+                class_lineage=class_lineage,
+            )
 
     def test_wrong_index_sha_is_rejected(self):
         index = _index()
