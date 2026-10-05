@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import stat
 from typing import Any
 
 from .lineage import LineageValidationError, validate_lineage
@@ -26,7 +27,7 @@ _DEFAULT_AUTHORITY_REPOSITORY = "Trexzo/SpawnPK-Client"
 _DEFAULT_PUBLICATION_REPOSITORY = "Trexzo/SpawnPK-Client-Source"
 
 
-def _reject_tree_symlinks(
+def _validate_tree_entries(
     root: Path,
     *,
     label: str,
@@ -40,20 +41,41 @@ def _reject_tree_symlinks(
         if allow_missing:
             return
         raise SourceMilestoneError(f"{label} does not exist")
+    if not stat.S_ISDIR(root.lstat().st_mode):
+        raise SourceMilestoneError(
+            f"{label} root must be an ordinary directory"
+        )
 
     for dirpath, dirnames, filenames in os.walk(
         root,
         followlinks=False,
     ):
         base = Path(dirpath)
-        for name in sorted([*dirnames, *filenames]):
+        for name in sorted(dirnames):
             path = base / name
-            if not path.is_symlink():
-                continue
+            mode = path.lstat().st_mode
             rel = path.relative_to(root).as_posix()
-            raise SourceMilestoneError(
-                f"{label} contains symbolic link: {rel}"
-            )
+            if stat.S_ISLNK(mode):
+                raise SourceMilestoneError(
+                    f"{label} contains symbolic link: {rel}"
+                )
+            if not stat.S_ISDIR(mode):
+                raise SourceMilestoneError(
+                    f"{label} contains non-directory entry: {rel}"
+                )
+
+        for name in sorted(filenames):
+            path = base / name
+            mode = path.lstat().st_mode
+            rel = path.relative_to(root).as_posix()
+            if stat.S_ISLNK(mode):
+                raise SourceMilestoneError(
+                    f"{label} contains symbolic link: {rel}"
+                )
+            if not stat.S_ISREG(mode):
+                raise SourceMilestoneError(
+                    f"{label} contains non-regular file: {rel}"
+                )
 
 
 def _exact_json_object(pairs):
@@ -704,7 +726,7 @@ def build_source_milestone_manifest(
         label="release_verification",
     )
 
-    _reject_tree_symlinks(
+    _validate_tree_entries(
         source_root,
         label="source root",
     )
@@ -1342,11 +1364,11 @@ def build_source_publication_bundle(
             "source milestone identity mismatch"
         )
 
-    _reject_tree_symlinks(
+    _validate_tree_entries(
         source_root,
         label="source root",
     )
-    _reject_tree_symlinks(
+    _validate_tree_entries(
         out_dir,
         label="publication bundle output",
         allow_missing=True,
@@ -1516,7 +1538,7 @@ def verify_source_publication_bundle(
         _DEFAULT_PUBLICATION_REPOSITORY
     ),
 ) -> dict[str, Any]:
-    _reject_tree_symlinks(
+    _validate_tree_entries(
         bundle_dir,
         label="publication bundle",
     )
