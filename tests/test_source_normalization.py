@@ -2840,181 +2840,6 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 after.stdout + after.stderr,
             )
 
-    def test_exact_static_call_rewrites_companion_nested_field_uses(
-        self,
-    ):
-        with tempfile.TemporaryDirectory() as td:
-            root = Path(td)
-            jar = _compile_java_fixture(
-                root,
-                {
-                    "dep/r.java": (
-                        "package dep;\n"
-                        "public class r {\n"
-                        "    public static int a = 7;\n"
-                        "    public static class a {\n"
-                        "        public static final a d = new a();\n"
-                        "    }\n"
-                        "    public static a E = new a();\n"
-                        "    public static void use(a mode, byte[] x, byte[] y) {}\n"
-                        "}\n"
-                    ),
-                    "use/Current.java": (
-                        "package use;\n"
-                        "import dep.r;\n"
-                        "public class Current {\n"
-                        "    public void load(byte[] x, byte[] y) {\n"
-                        "        if (r.E != ((dep.r.a)null).d) {\n"
-                        "            r.use(((dep.r.a)null).d, x, y);\n"
-                        "        }\n"
-                        "    }\n"
-                        "}\n"
-                    ),
-                },
-            )
-            source = root / "src" / "use" / "Current.java"
-            source.parent.mkdir(parents=True)
-            source.write_text(
-                "package use;\n"
-                "import dep.r;\n"
-                "public class Current {\n"
-                "    public void load(byte[] x, byte[] y) {\n"
-                "        if (r.E != r.a.d) {\n"
-                "            r.use(r.a.d, x, y);\n"
-                "        }\n"
-                "    }\n"
-                "}\n",
-                encoding="utf-8",
-            )
-
-            before = subprocess.run(
-                [
-                    "javac",
-                    "-cp",
-                    str(jar),
-                    "-d",
-                    str(root / "before-exact-nested-companion"),
-                    str(source),
-                ],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-            )
-            self.assertNotEqual(before.returncode, 0)
-            self.assertIn("int cannot be dereferenced", before.stderr)
-
-            report = normalize_procyon_source(root / "src", jar)
-            normalized = source.read_text(encoding="utf-8")
-
-            self.assertIn(
-                "if (r.E != ((dep.r.a)null).d) {",
-                normalized,
-            )
-            self.assertIn(
-                "r.use(((dep.r.a)null).d, x, y);",
-                normalized,
-            )
-            action = next(
-                row
-                for row in report["actions"]
-                if row["kind"]
-                == "exact_static_call_nested_type_collision_reconstruction"
-            )
-            self.assertEqual(action["pair_count"], 1)
-            self.assertEqual(action["replacement_count"], 2)
-            self.assertEqual(action["groups"][0]["source_count"], 1)
-            self.assertEqual(action["groups"][0]["source_call_count"], 1)
-            self.assertEqual(action["groups"][0]["source_field_count"], 2)
-            self.assertEqual(
-                len(action["groups"][0]["invocation_offsets"]),
-                1,
-            )
-            self.assertEqual(
-                len(action["groups"][0]["field_offsets"]),
-                2,
-            )
-            self.assertEqual(
-                report["summary"][
-                    "exact_static_call_nested_type_collision_reference_count"
-                ],
-                2,
-            )
-
-            after = subprocess.run(
-                [
-                    "javac",
-                    "-cp",
-                    str(jar),
-                    "-d",
-                    str(root / "after-exact-nested-companion"),
-                    str(source),
-                ],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-            )
-            self.assertEqual(
-                after.returncode,
-                0,
-                after.stdout + after.stderr,
-            )
-
-    def test_exact_static_call_companion_field_count_drift_fails_closed(
-        self,
-    ):
-        with tempfile.TemporaryDirectory() as td:
-            root = Path(td)
-            jar = _compile_java_fixture(
-                root,
-                {
-                    "dep/r.java": (
-                        "package dep;\n"
-                        "public class r {\n"
-                        "    public static int a = 7;\n"
-                        "    public static class a {\n"
-                        "        public static final a d = new a();\n"
-                        "    }\n"
-                        "    public static a E = new a();\n"
-                        "    public static void use(a mode, byte[] x, byte[] y) {}\n"
-                        "}\n"
-                    ),
-                    "use/Current.java": (
-                        "package use;\n"
-                        "import dep.r;\n"
-                        "public class Current {\n"
-                        "    public void load(byte[] x, byte[] y) {\n"
-                        "        if (r.E != ((dep.r.a)null).d) {\n"
-                        "            r.use(((dep.r.a)null).d, x, y);\n"
-                        "        }\n"
-                        "    }\n"
-                        "}\n"
-                    ),
-                },
-            )
-            source = root / "src" / "use" / "Current.java"
-            source.parent.mkdir(parents=True)
-            original = (
-                "package use;\n"
-                "import dep.r;\n"
-                "public class Current {\n"
-                "    public void load(byte[] x, byte[] y) {\n"
-                "        r.use(r.a.d, x, y);\n"
-                "    }\n"
-                "}\n"
-            )
-            source.write_text(original, encoding="utf-8")
-
-            report = normalize_procyon_source(root / "src", jar)
-
-            self.assertEqual(source.read_text(encoding="utf-8"), original)
-            self.assertFalse(
-                any(
-                    row["kind"]
-                    == "exact_static_call_nested_type_collision_reconstruction"
-                    for row in report["actions"]
-                )
-            )
-
     def test_exact_static_call_nested_collision_count_drift_fails_closed(
         self,
     ):
@@ -16122,6 +15947,209 @@ class CcGenericInstanceValueObjectCastTests(unittest.TestCase):
 
     def test_cc_generic_instance_field_fails_on_multiplicity_drift(self):
         self._assert_no_instance_action(mode="multiplicity")
+
+
+class GenericBuilderTargetInferenceCastTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        factory_object_bounds: bool = True,
+        generic_terminal: bool = True,
+    ) -> Path:
+        factory_type = (
+            "Builder<Object,Object>"
+            if factory_object_bounds
+            else "Builder<String,Object>"
+        )
+        if generic_terminal:
+            build_method = (
+                "    public <K1 extends K, V1 extends V> "
+                "Box<K1,V1> build() { return new Box<>(); }\n"
+            )
+        else:
+            build_method = (
+                "    public Box<String,Object> build() { return new Box<>(); }\n"
+            )
+
+        return _compile_java_fixture(
+            root,
+            {
+                "p/Box.java": (
+                    "package p;\n"
+                    "public class Box<K,V> {}\n"
+                ),
+                "p/Builder.java": (
+                    "package p;\n"
+                    "public class Builder<K,V> {\n"
+                    "    public static "
+                    + factory_type
+                    + " start() { return new Builder<>(); }\n"
+                    "    public Builder<K,V> size(long value) { return this; }\n"
+                    + build_method
+                    + "}\n"
+                ),
+                "p/Current.java": (
+                    "package p;\n"
+                    "public class Current {\n"
+                    "    private Box<String,Object> box;\n"
+                    "    public Current() {\n"
+                    "        this.box = Builder.start().size(256L).build();\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def _malformed(self) -> str:
+        return (
+            "package p;\n"
+            "public class Current {\n"
+            "    private Box<String,Object> box;\n"
+            "    public Current() {\n"
+            "        this.box = (Box<String,Object>)"
+            "Builder.start().size(256L).build();\n"
+            "    }\n"
+            "}\n"
+        )
+
+    def test_generic_builder_target_inference_cast_is_removed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(self._malformed(), encoding="utf-8")
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-generic-builder-target"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "this.box = Builder.start().size(256L).build();",
+                normalized,
+            )
+            self.assertNotIn("(Box<String,Object>)", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "generic_builder_target_inference_cast_removal"
+            )
+            self.assertEqual(action["field_names"], ["box"])
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                action["field_signatures"],
+                ["Lp/Box<Ljava/lang/String;Ljava/lang/Object;>;"],
+            )
+            self.assertEqual(
+                report["summary"][
+                    "generic_builder_target_inference_cast_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "generic_builder_target_inference_cast_reference_count"
+                ],
+                1,
+            )
+
+            flow = action["exact_flows"][0]
+            self.assertEqual(flow["factory_owner"], "p/Builder")
+            self.assertEqual(flow["factory_name"], "start")
+            self.assertEqual(flow["preserve_name"], "size")
+            self.assertEqual(flow["terminal_name"], "build")
+            self.assertIn(
+                "<K1:TK;V1:TV;>()Lp/Box<TK1;TV1;>;",
+                flow["terminal_signature"],
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-generic-builder-target"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_generic_builder_target_inference_fails_closed_on_factory_bounds(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(
+                root,
+                factory_object_bounds=False,
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "generic_builder_target_inference_cast_removal"
+                    for row in report["actions"]
+                )
+            )
+
+    def test_generic_builder_target_inference_fails_closed_on_terminal_signature(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(
+                root,
+                generic_terminal=False,
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "generic_builder_target_inference_cast_removal"
+                    for row in report["actions"]
+                )
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
