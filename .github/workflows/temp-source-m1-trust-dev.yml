@@ -1,0 +1,29 @@
+name: Temporary Source M1 trust-anchor dev CI
+
+on:
+  push:
+    branches:
+      - chat1/source-m1-trust-anchor-cumulative-dev-after708
+
+permissions:
+  contents: read
+
+jobs:
+  targeted:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Targeted Source M1 tests
+        run: |
+          python -m unittest -v \
+            tests.test_source_milestone \
+            tests.test_source_authority_artifact \
+            tests.test_source_m1_authority_workflow_contract \
+            tests.test_source_milestone_workflow_contract
+      - name: Compile Python sources
+        run: python -m compileall -q src tests
