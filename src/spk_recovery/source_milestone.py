@@ -1572,6 +1572,22 @@ def verify_source_publication_bundle(
         stored_provenance == recomputed_provenance
     )
 
+    bundle_material = {
+        "milestone_id": milestone.get("milestone_id"),
+        "source_tree_sha256": tree_sha,
+        "source_file_count": source_count,
+        "source_bytes": source_bytes,
+        "provenance_index": actual_provenance_index,
+        "files": actual_indexed_files,
+    }
+    expected_bundle_id = (
+        "SRCBUNDLE_"
+        + _stable_digest(bundle_material)[:20].upper()
+    )
+    checks["bundle_id_match"] = (
+        bundle.get("bundle_id") == expected_bundle_id
+    )
+
     verified = all(checks.values())
 
     material = {
