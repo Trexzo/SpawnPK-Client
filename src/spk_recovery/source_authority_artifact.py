@@ -331,8 +331,10 @@ def verify_source_authority_artifact(
 
     checks: dict[str, bool] = {}
     checks["expected_authority_commit"] = (
-        expected_authority_commit is None
-        or expected_authority_commit == authority_commit
+        isinstance(expected_authority_commit, str)
+        and _COMMIT_RE.fullmatch(expected_authority_commit)
+        is not None
+        and expected_authority_commit == authority_commit
     )
     checks["expected_authority_repository"] = (
         authority_repository == expected_authority_repository
