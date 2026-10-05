@@ -157,9 +157,18 @@ class SourceMilestoneWorkflowContractTests(unittest.TestCase):
         self.assertNotIn("path: authority", prior)
 
     def test_authority_input_is_runner_isolated_from_checkout(self):
-        self.assertIn(
-            "SOURCE_AUTHORITY_DIR: ${{ runner.temp }}/source-m1-authority",
-            self.text,
+        self.assertEqual(
+            self.text.count(
+                "SOURCE_AUTHORITY_DIR: "
+                "${{ runner.temp }}/source-m1-authority"
+            ),
+            6,
+        )
+        job_start = self.text.index("  verify-source-milestone:")
+        steps_start = self.text.index("    steps:", job_start)
+        self.assertNotIn(
+            "SOURCE_AUTHORITY_DIR:",
+            self.text[job_start:steps_start],
         )
 
         validate_start = self.text.index(
