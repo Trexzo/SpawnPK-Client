@@ -300,6 +300,64 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
                 all(report["checks"].values())
             )
 
+    def test_artifact_id_drift_is_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            out = root / "artifact"
+
+            self._build(source, out, fixture)
+            manifest_path = (
+                out / "SOURCE-AUTHORITY-ARTIFACT.json"
+            )
+            manifest = json.loads(
+                manifest_path.read_text(encoding="utf-8")
+            )
+            manifest["artifact_id"] = (
+                "SRCAUTHART_" + "0" * 20
+            )
+            manifest_path.write_text(
+                json.dumps(
+                    manifest,
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            report = verify_source_authority_artifact(
+                out,
+                expected_authority_commit="f" * 40,
+            )
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["artifact_id_match"]
+            )
+
+    def test_empty_artifact_source_tree_is_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            out = root / "artifact"
+
+            self._build(source, out, fixture)
+            (out / "src" / "rs" / "A.java").unlink()
+
+            report = verify_source_authority_artifact(
+                out,
+                expected_authority_commit="f" * 40,
+            )
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["source_tree_nonempty"]
+            )
+            self.assertEqual(report["source_file_count"], 0)
+
     def test_source_tamper_is_rejected(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
