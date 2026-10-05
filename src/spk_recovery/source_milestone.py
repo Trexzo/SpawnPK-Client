@@ -81,6 +81,65 @@ def _block(
     )
 
 
+
+def _release_authority_pin_provenance(
+    release_manifest: dict[str, Any],
+    *,
+    class_lineage: dict[str, Any],
+    member_lineage: dict[str, Any],
+    readable_manifest: dict[str, Any],
+    recovered_source_manifest: dict[str, Any],
+    clean_rebuild_report: dict[str, Any],
+    blockers: list[dict[str, str]],
+) -> dict[str, str] | None:
+    pins = release_manifest.get("authority_pins")
+    gate = "release_authority_pins"
+    if not isinstance(pins, dict):
+        _block(
+            blockers,
+            gate=gate,
+            reason="release_authority_pins_missing",
+        )
+        return None
+
+    documents = {
+        "class_lineage_sha256": class_lineage,
+        "member_lineage_sha256": member_lineage,
+        "readable_manifest_sha256": readable_manifest,
+        "recovered_source_manifest_sha256": recovered_source_manifest,
+        "clean_rebuild_report_sha256": clean_rebuild_report,
+    }
+    linked: dict[str, str] = {}
+    missing_or_invalid = False
+    mismatch = False
+    for key, document in documents.items():
+        expected = pins.get(key)
+        actual = _stable_digest(document)
+        linked[key] = actual
+        if (
+            not isinstance(expected, str)
+            or re.fullmatch(r"[0-9a-fA-F]{64}", expected) is None
+        ):
+            missing_or_invalid = True
+            continue
+        if expected.lower() != actual:
+            mismatch = True
+
+    if missing_or_invalid:
+        _block(
+            blockers,
+            gate=gate,
+            reason="release_authority_pins_incomplete",
+        )
+    if mismatch:
+        _block(
+            blockers,
+            gate=gate,
+            reason="release_authority_pin_mismatch",
+        )
+    return linked
+
+
 def _official_first_dependency_provenance(
     compile_transport: dict[str, Any] | None,
     blockers: list[dict[str, str]],
@@ -551,6 +610,16 @@ def build_source_milestone_manifest(
             reason="project_binary_fallback_present",
         )
 
+    release_authority_pins = _release_authority_pin_provenance(
+        release_manifest,
+        class_lineage=class_lineage,
+        member_lineage=member_lineage,
+        readable_manifest=readable_manifest,
+        recovered_source_manifest=recovered_source_manifest,
+        clean_rebuild_report=clean_rebuild_report,
+        blockers=blockers,
+    )
+
     review_ids = _semantic_review_ids(
         class_lineage,
         member_lineage,
@@ -605,6 +674,7 @@ def build_source_milestone_manifest(
         "release_verification_id": release_verification.get(
             "verification_id"
         ),
+        "release_authority_pins": release_authority_pins,
         "collision_provenance": collision_provenance,
         "dependency_transport_provenance": (
             dependency_transport_provenance
