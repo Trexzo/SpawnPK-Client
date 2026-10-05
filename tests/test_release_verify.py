@@ -153,6 +153,21 @@ class ReleaseVerificationTests(unittest.TestCase):
                     kind="recovery_release_manifest",
                 )
 
+            non_object = root / "non-object.json"
+            non_object.write_text(
+                '["not","an","object"]\n',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                RecoveryReleaseVerificationError,
+                "release must be a JSON object",
+            ):
+                _load_json_authority(
+                    non_object,
+                    label="release",
+                    kind="recovery_release_manifest",
+                )
+
             top = root / "top.json"
             top.write_text(
                 '{"kind":"a","kind":"b"}\n',
