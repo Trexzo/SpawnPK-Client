@@ -1101,6 +1101,121 @@ class SourceMilestoneTests(unittest.TestCase):
                 all(report["checks"].values())
             )
 
+    def test_bundle_verifier_rejects_embedded_milestone_blockers(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={},
+            )
+            milestone_path = bundle_root / "SOURCE-MILESTONE.json"
+            milestone = json.loads(
+                milestone_path.read_text(encoding="utf-8")
+            )
+            milestone["blockers"] = [
+                {
+                    "gate": "tamper",
+                    "reason": "injected",
+                }
+            ]
+            milestone_path.write_text(
+                json.dumps(
+                    milestone,
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            report = verify_source_publication_bundle(bundle_root)
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["milestone_blockers_empty"]
+            )
+
+    def test_bundle_verifier_rejects_publication_allowed_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={},
+            )
+            milestone_path = bundle_root / "SOURCE-MILESTONE.json"
+            milestone = json.loads(
+                milestone_path.read_text(encoding="utf-8")
+            )
+            milestone["publication"]["allowed"] = False
+            milestone_path.write_text(
+                json.dumps(
+                    milestone,
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            report = verify_source_publication_bundle(bundle_root)
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["milestone_publication_allowed"]
+            )
+
+    def test_bundle_verifier_rejects_milestone_identity_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={},
+            )
+            milestone_path = bundle_root / "SOURCE-MILESTONE.json"
+            milestone = json.loads(
+                milestone_path.read_text(encoding="utf-8")
+            )
+            milestone["milestone_id"] = (
+                "SRCMILESTONE_" + "0" * 20
+            )
+            milestone_path.write_text(
+                json.dumps(
+                    milestone,
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            report = verify_source_publication_bundle(bundle_root)
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["milestone_identity_match"]
+            )
+
     def test_publication_bundle_verifier_rejects_source_tamper(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
