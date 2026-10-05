@@ -59,9 +59,23 @@ def _sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def _exact_object(pairs):
+    out = {}
+    for key, value in pairs:
+        if key in out:
+            raise SourceAuthorityArtifactError(
+                f"duplicate JSON key: {key!r}"
+            )
+        out[key] = value
+    return out
+
+
 def _read_json(path: Path) -> dict[str, Any]:
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
+        value = json.loads(
+            path.read_text(encoding="utf-8"),
+            object_pairs_hook=_exact_object,
+        )
     except (OSError, json.JSONDecodeError) as exc:
         raise SourceAuthorityArtifactError(
             f"invalid JSON document: {path}"
