@@ -8168,6 +8168,18 @@ def _normalize_generic_key_object_casts(
                 for resolved in [resolve_source_type(local.group("type"))]
                 if resolved is not None
             }
+            foreach_re = re.compile(
+                r"\bfor\s*\(\s*(?:(?:final)\s+)?"
+                r"(?P<type>[A-Za-z_$][A-Za-z0-9_$.]*)\s+"
+                + re.escape(key_name)
+                + r"\s*:"
+            )
+            local_types.update(
+                resolved
+                for local in foreach_re.finditer(prefix)
+                for resolved in [resolve_source_type(local.group("type"))]
+                if resolved is not None
+            )
             if local_types:
                 if len(local_types) != 1:
                     continue
