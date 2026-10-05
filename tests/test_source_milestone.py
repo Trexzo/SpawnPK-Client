@@ -1640,6 +1640,46 @@ class SourceMilestoneTests(unittest.TestCase):
                 )
             )
 
+    def test_bundle_verifier_rejects_byte_identical_symlink_escape(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={},
+            )
+
+            stored = (
+                bundle_root
+                / "provenance"
+                / "SOURCE-PROVENANCE.json"
+            )
+            outside = root / "outside-provenance.json"
+            outside.write_bytes(stored.read_bytes())
+            stored.unlink()
+            try:
+                stored.symlink_to(outside)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(
+                    f"symbolic links unavailable on this runner: {exc}"
+                )
+
+            with self.assertRaisesRegex(
+                SourceMilestoneError,
+                "symbolic link",
+            ):
+                _verify_source_publication_bundle(
+                    bundle_root,
+                    expected_manifest=manifest,
+                    expected_authority_commit="f" * 40,
+                )
+
     def test_publication_bundle_verifier_accepts_exact_bundle(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
