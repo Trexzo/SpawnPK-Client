@@ -1354,6 +1354,15 @@ def build_source_publication_bundle(
     source_root = source_root.resolve()
     out_dir = out_dir.resolve()
 
+    try:
+        out_dir.relative_to(source_root)
+    except ValueError:
+        pass
+    else:
+        raise SourceMilestoneError(
+            "publication bundle directory must be outside source root"
+        )
+
     if not source_root.is_dir():
         raise SourceMilestoneError(
             "source root does not exist"
