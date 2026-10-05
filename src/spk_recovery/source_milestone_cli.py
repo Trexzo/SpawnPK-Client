@@ -61,8 +61,8 @@ def _common_inputs(p: argparse.ArgumentParser) -> None:
 
 
 def _kwargs(args: argparse.Namespace) -> dict:
-    # The lineage-specific loaders validate their semantic schemas, while
-    # this preflight enforces the publication boundary's exact JSON syntax.
+    # Reject duplicate JSON keys here. Full class/member lineage schema and
+    # cross-link validation is enforced by the final Source-Milestone builder.
     _load(args.class_lineage)
     _load(args.member_lineage)
     return {
