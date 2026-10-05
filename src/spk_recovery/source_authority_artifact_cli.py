@@ -13,6 +13,21 @@ from .source_authority_artifact import (
 )
 
 
+def _reject_output_inside_artifact(
+    out: Path,
+    artifact_dir: Path,
+) -> None:
+    resolved_out = out.resolve()
+    resolved_artifact = artifact_dir.resolve()
+    try:
+        resolved_out.relative_to(resolved_artifact)
+    except ValueError:
+        return
+    raise SourceAuthorityArtifactError(
+        "verification output must be outside authority artifact"
+    )
+
+
 def _write_json(doc: dict, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(
@@ -156,6 +171,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"out_dir={args.out_dir}")
             return 0
 
+        _reject_output_inside_artifact(
+            args.out,
+            args.artifact_dir,
+        )
         report = verify_source_authority_artifact(
             args.artifact_dir,
             expected_authority_commit=(
