@@ -12,6 +12,7 @@ from .member_lineage import (
     MemberLineageError,
     validate_member_lineage,
 )
+from .semantic_authority import semantic_proposal_id
 
 
 class SemanticReviewError(ValueError):
@@ -36,16 +37,12 @@ def _proposal_id(
     stable_id: str,
     proposed_name: str,
 ) -> str:
-    raw = (
-        source_sha256.lower()
-        + "|"
-        + kind
-        + "|"
-        + stable_id
-        + "|"
-        + proposed_name
-    ).encode("utf-8")
-    return "SEMPROP_" + hashlib.sha256(raw).hexdigest()[:20].upper()
+    return semantic_proposal_id(
+        source_sha256,
+        kind,
+        stable_id,
+        proposed_name,
+    )
 
 
 def _review_id(proposals: list[dict[str, Any]]) -> str:

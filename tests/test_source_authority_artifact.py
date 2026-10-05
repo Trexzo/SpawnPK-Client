@@ -6,6 +6,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
+from spk_recovery.semantic_authority import semantic_proposal_id
 from spk_recovery.source_authority_artifact import (
     SourceAuthorityArtifactError,
     build_source_authority_artifact,
@@ -13,6 +14,9 @@ from spk_recovery.source_authority_artifact import (
 )
 from spk_recovery.source_digest import source_tree_digest
 from spk_recovery.v308_authority import V308_SOURCE_AUTHORITY_SHA256
+
+_CLASS_REVIEW_ID = "SEMREVIEW_" + "A" * 20
+_MEMBER_REVIEW_ID = "SEMREVIEW_" + "B" * 20
 
 
 def _artifact_milestone_id(artifact_dir: Path) -> str:
@@ -179,7 +183,23 @@ def _fixture(source_root: Path) -> dict:
                         }
                     ],
                     "semantic_provenance": [
-                        {"review_id": "SEMREVIEW_CLASS"}
+                        {
+                            "proposal_id": semantic_proposal_id(
+                                authority_sha,
+                                "class",
+                                "CLIENT_CLASS_000001",
+                                "A",
+                            ),
+                            "review_id": _CLASS_REVIEW_ID,
+                            "source_build": "v308",
+                            "source_sha256": authority_sha,
+                            "source_coordinate": {
+                                "owner": "rs/A",
+                                "name": None,
+                                "descriptor": None,
+                            },
+                            "evidence": [],
+                        }
                     ],
                 }
             ],
@@ -212,7 +232,23 @@ def _fixture(source_root: Path) -> dict:
                         }
                     ],
                     "semantic_provenance": [
-                        {"review_id": "SEMREVIEW_MEMBER"}
+                        {
+                            "proposal_id": semantic_proposal_id(
+                                authority_sha,
+                                "field",
+                                "CLIENT_FIELD_000001",
+                                "value",
+                            ),
+                            "review_id": _MEMBER_REVIEW_ID,
+                            "source_build": "v308",
+                            "source_sha256": authority_sha,
+                            "source_coordinate": {
+                                "owner": "rs/A",
+                                "name": "a",
+                                "descriptor": "I",
+                            },
+                            "evidence": [],
+                        }
                     ],
                 }
             ],

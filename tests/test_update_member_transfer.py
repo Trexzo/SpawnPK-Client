@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import unittest
 
+from spk_recovery.semantic_authority import semantic_proposal_id
 from spk_recovery.update_member_transfer import (
     UpdateMemberTransferError,
     transfer_member_identity_candidates,
@@ -59,7 +60,25 @@ def _class_lineage():
                         "provenance": [],
                     },
                 ],
-                "semantic_provenance": [],
+                "semantic_provenance": [
+                    {
+                        "proposal_id": semantic_proposal_id(
+                            "1" * 64,
+                            "class",
+                            "CLIENT_CLASS_000001",
+                            "ExampleController",
+                        ),
+                        "review_id": "SEMREVIEW_" + "9" * 20,
+                        "source_build": "v308",
+                        "source_sha256": "1" * 64,
+                        "source_coordinate": {
+                            "owner": "rs/a",
+                            "name": None,
+                            "descriptor": None,
+                        },
+                        "evidence": [],
+                    }
+                ],
             }
         ],
         "unresolved": [],
@@ -93,7 +112,25 @@ def _member_lineage():
                         "provenance": [],
                     }
                 ],
-                "semantic_provenance": [],
+                "semantic_provenance": [
+                    {
+                        "proposal_id": semantic_proposal_id(
+                            "1" * 64,
+                            "field",
+                            "CLIENT_FIELD_000001",
+                            "value",
+                        ),
+                        "review_id": "SEMREVIEW_" + "A" * 20,
+                        "source_build": "v308",
+                        "source_sha256": "1" * 64,
+                        "source_coordinate": {
+                            "owner": "rs/a",
+                            "name": "x",
+                            "descriptor": "I",
+                        },
+                        "evidence": [],
+                    }
+                ],
             },
             {
                 "member_id": "CLIENT_METHOD_000001",
@@ -115,7 +152,25 @@ def _member_lineage():
                         "provenance": [],
                     }
                 ],
-                "semantic_provenance": [],
+                "semantic_provenance": [
+                    {
+                        "proposal_id": semantic_proposal_id(
+                            "1" * 64,
+                            "method",
+                            "CLIENT_METHOD_000001",
+                            "runTask",
+                        ),
+                        "review_id": "SEMREVIEW_" + "B" * 20,
+                        "source_build": "v308",
+                        "source_sha256": "1" * 64,
+                        "source_coordinate": {
+                            "owner": "rs/a",
+                            "name": "a",
+                            "descriptor": "()V",
+                        },
+                        "evidence": [],
+                    }
+                ],
             },
         ],
         "unresolved": [],
@@ -383,6 +438,10 @@ class UpdateMemberTransferTests(unittest.TestCase):
         lineage = _class_lineage()
         second = copy.deepcopy(lineage["classes"][0])
         second["logical_id"] = "CLIENT_CLASS_000002"
+        second["semantic_name"] = None
+        second["semantic_status"] = "UNKNOWN"
+        second["semantic_confidence"] = 0.0
+        second["semantic_provenance"] = []
         second["lineage"] = [
             copy.deepcopy(lineage["classes"][0]["lineage"][1])
         ]

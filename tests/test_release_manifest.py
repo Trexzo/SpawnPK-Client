@@ -8,6 +8,7 @@ from spk_recovery.release_manifest import (
     build_recovery_release_manifest,
 )
 from spk_recovery.release_manifest_cli import _load as _manifest_cli_load
+from spk_recovery.semantic_authority import semantic_proposal_id
 
 
 AUTH = "a" * 64
@@ -49,7 +50,25 @@ def _class_lineage():
                         "provenance": [],
                     }
                 ],
-                "semantic_provenance": [],
+                "semantic_provenance": [
+                    {
+                        "proposal_id": semantic_proposal_id(
+                            AUTH,
+                            "class",
+                            "CLIENT_CLASS_000001",
+                            "Example",
+                        ),
+                        "review_id": "SEMREVIEW_" + "5" * 20,
+                        "source_build": "v308",
+                        "source_sha256": AUTH,
+                        "source_coordinate": {
+                            "owner": "rs/A",
+                            "name": None,
+                            "descriptor": None,
+                        },
+                        "evidence": [],
+                    }
+                ],
             }
         ],
         "unresolved": [],
@@ -84,7 +103,25 @@ def _member_lineage():
                         "provenance": [],
                     }
                 ],
-                "semantic_provenance": [],
+                "semantic_provenance": [
+                    {
+                        "proposal_id": semantic_proposal_id(
+                            AUTH,
+                            "method",
+                            "CLIENT_METHOD_000001",
+                            "work",
+                        ),
+                        "review_id": "SEMREVIEW_" + "6" * 20,
+                        "source_build": "v308",
+                        "source_sha256": AUTH,
+                        "source_coordinate": {
+                            "owner": "rs/A",
+                            "name": "a",
+                            "descriptor": "()V",
+                        },
+                        "evidence": [],
+                    }
+                ],
             }
         ],
         "unresolved": [],

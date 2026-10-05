@@ -1,6 +1,7 @@
 import copy
 import unittest
 
+from spk_recovery.semantic_authority import semantic_proposal_id
 from spk_recovery.semantic_namespace import (
     SemanticNamespaceError,
     build_semantic_namespace,
@@ -41,7 +42,23 @@ def _fixture():
                     }
                 ],
                 "semantic_provenance": [
-                    {"proposal_id": "SEMPROP_CLASS"}
+                    {
+                        "proposal_id": semantic_proposal_id(
+                            "a" * 64,
+                            "class",
+                            "CLIENT_CLASS_000001",
+                            "ExampleController",
+                        ),
+                        "review_id": "SEMREVIEW_" + "D" * 20,
+                        "source_build": "v308",
+                        "source_sha256": "a" * 64,
+                        "source_coordinate": {
+                            "owner": "rs/a",
+                            "name": None,
+                            "descriptor": None,
+                        },
+                        "evidence": [],
+                    }
                 ],
             },
             {
@@ -93,7 +110,23 @@ def _fixture():
                     }
                 ],
                 "semantic_provenance": [
-                    {"proposal_id": "SEMPROP_FIELD"}
+                    {
+                        "proposal_id": semantic_proposal_id(
+                            "a" * 64,
+                            "field",
+                            "CLIENT_FIELD_000001",
+                            "value",
+                        ),
+                        "review_id": "SEMREVIEW_" + "E" * 20,
+                        "source_build": "v308",
+                        "source_sha256": "a" * 64,
+                        "source_coordinate": {
+                            "owner": "rs/a",
+                            "name": "x",
+                            "descriptor": "I",
+                        },
+                        "evidence": [],
+                    }
                 ],
             },
             {
@@ -117,7 +150,23 @@ def _fixture():
                     }
                 ],
                 "semantic_provenance": [
-                    {"proposal_id": "SEMPROP_METHOD"}
+                    {
+                        "proposal_id": semantic_proposal_id(
+                            "a" * 64,
+                            "method",
+                            "CLIENT_METHOD_000001",
+                            "runTask",
+                        ),
+                        "review_id": "SEMREVIEW_" + "F" * 20,
+                        "source_build": "v308",
+                        "source_sha256": "a" * 64,
+                        "source_coordinate": {
+                            "owner": "rs/a",
+                            "name": "a",
+                            "descriptor": "()V",
+                        },
+                        "evidence": [],
+                    }
                 ],
             },
             {
@@ -231,7 +280,23 @@ class SemanticNamespaceTests(unittest.TestCase):
         duplicate["semantic_status"] = "ACCEPTED"
         duplicate["semantic_confidence"] = 0.95
         duplicate["semantic_provenance"] = [
-            {"proposal_id": "SEMPROP_DUP"}
+            {
+                "proposal_id": semantic_proposal_id(
+                    "a" * 64,
+                    "class",
+                    "CLIENT_CLASS_000002",
+                    "ExampleController",
+                ),
+                "review_id": "SEMREVIEW_" + "1" * 20,
+                "source_build": "v308",
+                "source_sha256": "a" * 64,
+                "source_coordinate": {
+                    "owner": "rs/b",
+                    "name": None,
+                    "descriptor": None,
+                },
+                "evidence": [],
+            }
         ]
         classes["classes"][1] = duplicate
 
@@ -553,7 +618,23 @@ class SemanticNamespaceTests(unittest.TestCase):
                     }
                 ],
                 "semantic_provenance": [
-                    {"proposal_id": "SEMPROP_NESTED"}
+                    {
+                        "proposal_id": semantic_proposal_id(
+                            "a" * 64,
+                            "class",
+                            "CLIENT_CLASS_000003",
+                            "IndependentNested",
+                        ),
+                        "review_id": "SEMREVIEW_" + "2" * 20,
+                        "source_build": "v308",
+                        "source_sha256": "a" * 64,
+                        "source_coordinate": {
+                            "owner": "rs/a$Inner",
+                            "name": None,
+                            "descriptor": None,
+                        },
+                        "evidence": [],
+                    }
                 ],
             }
         )
@@ -725,7 +806,23 @@ class SemanticNamespaceTests(unittest.TestCase):
                     }
                 ],
                 "semantic_provenance": [
-                    {"proposal_id": "SEMPROP_NESTED_SAFE"}
+                    {
+                        "proposal_id": semantic_proposal_id(
+                            "a" * 64,
+                            "class",
+                            "CLIENT_CLASS_000003",
+                            "ReadableNested",
+                        ),
+                        "review_id": "SEMREVIEW_" + "3" * 20,
+                        "source_build": "v308",
+                        "source_sha256": "a" * 64,
+                        "source_coordinate": {
+                            "owner": "rs/b$b",
+                            "name": None,
+                            "descriptor": None,
+                        },
+                        "evidence": [],
+                    }
                 ],
             }
         )

@@ -6,6 +6,11 @@ import re
 from typing import Any
 
 from .lineage import LineageValidationError, validate_lineage
+from .semantic_authority import (
+    SEMANTIC_PROPOSAL_ID_RE,
+    SEMANTIC_REVIEW_ID_RE,
+    semantic_proposal_id,
+)
 
 MEMBER_SCHEMA_VERSION = 1
 MEMBER_KIND = "member_lineage"
@@ -194,6 +199,7 @@ def validate_member_lineage(
     known_classes: set[str] | None = None
     known_builds: set[str] | None = None
     known_owner_names: dict[tuple[str, str], str] | None = None
+    known_build_sha: dict[str, str] | None = None
     if class_lineage is not None:
         validate_lineage(class_lineage)
         known_classes = {
@@ -202,6 +208,10 @@ def validate_member_lineage(
         }
         known_builds = {
             b["build_id"]
+            for b in class_lineage.get("builds", [])
+        }
+        known_build_sha = {
+            b["build_id"]: str(b["sha256"]).lower()
             for b in class_lineage.get("builds", [])
         }
         known_owner_names = {}
@@ -315,8 +325,130 @@ def validate_member_lineage(
             coordinates.add(coord)
             lineage_entries += 1
 
-        if not isinstance(record.get("semantic_provenance"), list):
-            raise MemberLineageError(f"{label}.semantic_provenance must be an array")
+        semantic_provenance = record.get("semantic_provenance")
+        if not isinstance(semantic_provenance, list):
+            raise MemberLineageError(
+                f"{label}.semantic_provenance must be an array"
+            )
+        if status == "ACCEPTED":
+            if not semantic_provenance:
+                raise MemberLineageError(
+                    f"{label}: ACCEPTED semantic state requires provenance"
+                )
+            lineage_by_build = {
+                entry["build_id"]: entry
+                for entry in lineage
+            }
+            seen_proposal_ids: set[str] = set()
+            for k, provenance_row in enumerate(
+                semantic_provenance
+            ):
+                plabel = f"{label}.semantic_provenance[{k}]"
+                if not isinstance(provenance_row, dict):
+                    raise MemberLineageError(
+                        f"{plabel} must be an object"
+                    )
+                proposal_id = provenance_row.get("proposal_id")
+                review_id = provenance_row.get("review_id")
+                source_build = provenance_row.get("source_build")
+                source_sha = provenance_row.get("source_sha256")
+                source_coordinate = provenance_row.get(
+                    "source_coordinate"
+                )
+                evidence = provenance_row.get("evidence")
+                if (
+                    not isinstance(proposal_id, str)
+                    or not SEMANTIC_PROPOSAL_ID_RE.fullmatch(
+                        proposal_id
+                    )
+                ):
+                    raise MemberLineageError(
+                        f"{plabel}.proposal_id is invalid"
+                    )
+                if proposal_id in seen_proposal_ids:
+                    raise MemberLineageError(
+                        f"{label}: duplicate semantic proposal provenance "
+                        f"{proposal_id}"
+                    )
+                seen_proposal_ids.add(proposal_id)
+                if (
+                    not isinstance(review_id, str)
+                    or not SEMANTIC_REVIEW_ID_RE.fullmatch(review_id)
+                ):
+                    raise MemberLineageError(
+                        f"{plabel}.review_id is invalid"
+                    )
+                if not isinstance(source_build, str):
+                    raise MemberLineageError(
+                        f"{plabel}.source_build is invalid"
+                    )
+                source_entry = lineage_by_build.get(source_build)
+                if source_entry is None:
+                    raise MemberLineageError(
+                        f"{plabel}.source_build has no member lineage"
+                    )
+                source_sha_text = str(source_sha or "").lower()
+                if (
+                    re.fullmatch(
+                        r"[0-9a-f]{64}",
+                        source_sha_text,
+                    )
+                    is None
+                ):
+                    raise MemberLineageError(
+                        f"{plabel}.source_sha256 is invalid"
+                    )
+                if known_build_sha is not None:
+                    if source_build not in known_build_sha:
+                        raise MemberLineageError(
+                            f"{plabel}.source_build is not canonical"
+                        )
+                    if (
+                        source_sha_text
+                        != known_build_sha[source_build]
+                    ):
+                        raise MemberLineageError(
+                            f"{plabel}.source_sha256 does not match build"
+                        )
+                elif source_build == doc.get("baseline_build_id"):
+                    if (
+                        source_sha_text
+                        != str(doc.get("source_sha256", "")).lower()
+                    ):
+                        raise MemberLineageError(
+                            f"{plabel}.source_sha256 does not match "
+                            "member baseline"
+                        )
+                if not isinstance(source_coordinate, dict):
+                    raise MemberLineageError(
+                        f"{plabel}.source_coordinate must be an object"
+                    )
+                if (
+                    source_coordinate.get("owner")
+                    != source_entry["owner_internal_name"]
+                    or source_coordinate.get("name")
+                    != source_entry["name"]
+                    or source_coordinate.get("descriptor")
+                    != source_entry["descriptor"]
+                ):
+                    raise MemberLineageError(
+                        f"{plabel}.source_coordinate does not match member"
+                    )
+                expected_proposal_id = semantic_proposal_id(
+                    source_sha_text,
+                    str(kind),
+                    str(member_id),
+                    str(semantic_name),
+                )
+                if proposal_id != expected_proposal_id:
+                    raise MemberLineageError(
+                        f"{plabel}.proposal_id does not match semantic "
+                        "acceptance material"
+                    )
+                if not isinstance(evidence, list):
+                    raise MemberLineageError(
+                        f"{plabel}.evidence must be an array"
+                    )
 
         if kind == "field":
             field_count += 1
