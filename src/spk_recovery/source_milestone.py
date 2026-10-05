@@ -20,6 +20,17 @@ class SourceMilestoneError(ValueError):
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
+def _exact_json_object(pairs):
+    out = {}
+    for key, value in pairs:
+        if key in out:
+            raise SourceMilestoneError(
+                f"duplicate JSON key: {key!r}"
+            )
+        out[key] = value
+    return out
+
+
 def _stable_digest(value: Any) -> str:
     raw = json.dumps(
         value,
@@ -1103,15 +1114,18 @@ def verify_source_publication_bundle(
 
     try:
         bundle = json.loads(
-            bundle_path.read_text(encoding="utf-8")
+            bundle_path.read_text(encoding="utf-8"),
+            object_pairs_hook=_exact_json_object,
         )
         milestone = json.loads(
-            milestone_path.read_text(encoding="utf-8")
+            milestone_path.read_text(encoding="utf-8"),
+            object_pairs_hook=_exact_json_object,
         )
         stored_provenance = json.loads(
             (
                 provenance_dir / "SOURCE-PROVENANCE.json"
-            ).read_text(encoding="utf-8")
+            ).read_text(encoding="utf-8"),
+            object_pairs_hook=_exact_json_object,
         )
     except json.JSONDecodeError as exc:
         raise SourceMilestoneError(
