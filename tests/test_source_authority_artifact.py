@@ -9,9 +9,28 @@ import unittest
 from spk_recovery.source_authority_artifact import (
     SourceAuthorityArtifactError,
     build_source_authority_artifact,
-    verify_source_authority_artifact,
+    verify_source_authority_artifact as _verify_source_authority_artifact,
 )
 from spk_recovery.source_digest import source_tree_digest
+from spk_recovery.source_milestone import V308_SOURCE_AUTHORITY_SHA256
+
+
+def verify_source_authority_artifact(artifact_dir, **kwargs):
+    kwargs.setdefault("expected_authority_commit", "f" * 40)
+    if "expected_milestone_id" not in kwargs:
+        manifest = json.loads(
+            (
+                Path(artifact_dir)
+                / "SOURCE-AUTHORITY-ARTIFACT.json"
+            ).read_text(encoding="utf-8")
+        )
+        kwargs["expected_milestone_id"] = manifest[
+            "preflight_milestone_id"
+        ]
+    return _verify_source_authority_artifact(
+        artifact_dir,
+        **kwargs,
+    )
 
 
 def _document_digest(value) -> str:
@@ -112,7 +131,7 @@ def _fixture(source_root: Path) -> dict:
         source_root
     )
 
-    authority_sha = "a" * 64
+    authority_sha = V308_SOURCE_AUTHORITY_SHA256
     namespace_id = "SEMNS_" + "B" * 20
     class_digest = "c" * 64
     member_digest = "d" * 64
@@ -249,6 +268,58 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
             **build_kwargs,
         )
 
+    def test_verifier_requires_external_milestone_id(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            out = root / "artifact"
+
+            self._build(source, out, fixture)
+            report = _verify_source_authority_artifact(
+                out,
+                expected_authority_commit="f" * 40,
+            )
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["expected_milestone_id"]
+            )
+            self.assertTrue(
+                all(
+                    value
+                    for key, value in report["checks"].items()
+                    if key != "expected_milestone_id"
+                )
+            )
+
+    def test_verifier_rejects_wrong_external_milestone_id(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            out = root / "artifact"
+
+            self._build(source, out, fixture)
+            report = verify_source_authority_artifact(
+                out,
+                expected_milestone_id=(
+                    "SRCMILESTONE_" + "0" * 20
+                ),
+            )
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["expected_milestone_id"]
+            )
+            self.assertTrue(
+                all(
+                    value
+                    for key, value in report["checks"].items()
+                    if key != "expected_milestone_id"
+                )
+            )
+
     def test_verifier_requires_external_authority_commit(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -257,7 +328,17 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
             out = root / "artifact"
 
             self._build(source, out, fixture)
-            report = verify_source_authority_artifact(out)
+            manifest = json.loads(
+                (
+                    out / "SOURCE-AUTHORITY-ARTIFACT.json"
+                ).read_text(encoding="utf-8")
+            )
+            report = _verify_source_authority_artifact(
+                out,
+                expected_milestone_id=manifest[
+                    "preflight_milestone_id"
+                ],
+            )
 
             self.assertFalse(report["verified"])
             self.assertFalse(
