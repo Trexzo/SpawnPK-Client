@@ -15969,7 +15969,7 @@ class GenericBuilderTargetInferenceCastTests(unittest.TestCase):
             )
         else:
             build_method = (
-                "    public Box<K,V> build() { return new Box<>(); }\n"
+                "    public Box<String,Object> build() { return new Box<>(); }\n"
             )
 
         return _compile_java_fixture(
