@@ -11,6 +11,7 @@ from .source_digest import (
     canonical_source_bytes,
     source_tree_digest,
 )
+from .v308_authority import V308_SOURCE_AUTHORITY_SHA256
 
 
 class SourceMilestoneError(ValueError):
@@ -710,6 +711,12 @@ def build_source_milestone_manifest(
             blockers,
             gate="exact_authority",
             reason="authority_sha_linkage_mismatch",
+        )
+    if authority_sha != V308_SOURCE_AUTHORITY_SHA256:
+        _block(
+            blockers,
+            gate="exact_authority",
+            reason="authority_sha_not_exact_v308",
         )
 
     namespace_id = str(
@@ -1457,8 +1464,8 @@ def verify_source_publication_bundle(
     )
 
     checks["external_manifest_match"] = (
-        expected_manifest is None
-        or expected_manifest == milestone
+        isinstance(expected_manifest, dict)
+        and expected_manifest == milestone
     )
     checks["expected_authority_commit"] = (
         isinstance(expected_authority_commit, str)

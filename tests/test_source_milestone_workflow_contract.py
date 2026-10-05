@@ -146,6 +146,48 @@ class SourceMilestoneWorkflowContractTests(unittest.TestCase):
             prior,
         )
 
+    def test_authority_artifact_verification_uses_independent_preflight(self):
+        preflight_start = self.text.index(
+            "- name: Independently rebuild authority preflight milestone"
+        )
+        verify_start = self.text.index(
+            "- name: Verify Source M1 authority artifact"
+        )
+        final_build_start = self.text.index(
+            "- name: Build Source Milestone 1 manifest"
+        )
+
+        self.assertLess(preflight_start, verify_start)
+        self.assertLess(verify_start, final_build_start)
+
+        preflight = self.text[preflight_start:verify_start]
+        verify = self.text[verify_start:final_build_start]
+
+        self.assertIn(
+            "spk_recovery.source_milestone_cli build",
+            preflight,
+        )
+        self.assertIn(
+            "--out source-m1/verification/PREFLIGHT-SOURCE-MILESTONE.json",
+            preflight,
+        )
+        self.assertIn(
+            "source-m1/verification/PREFLIGHT-SOURCE-MILESTONE.json",
+            verify,
+        )
+        self.assertIn(
+            'EXPECTED_MILESTONE_ID="$(',
+            verify,
+        )
+        self.assertIn(
+            '--expected-authority-commit "$AUTHORITY_COMMIT"',
+            verify,
+        )
+        self.assertIn(
+            '--expected-milestone-id "$EXPECTED_MILESTONE_ID"',
+            verify,
+        )
+
     def test_bundle_verification_is_bound_to_exact_authority_commit(self):
         start = self.text.index(
             "- name: Verify publication bundle"

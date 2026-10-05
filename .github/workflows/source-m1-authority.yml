@@ -282,6 +282,25 @@ jobs:
               )
           PY
 
+      - name: Build trusted preflight Source Milestone manifest
+        shell: bash
+        env:
+          AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+        run: |
+          set -euo pipefail
+          mkdir -p verification
+          python -m spk_recovery.source_milestone_cli build \
+            --authority-commit "$AUTHORITY_COMMIT" \
+            --class-lineage workspace/class-lineage.json \
+            --member-lineage workspace/member-lineage.json \
+            --readable-manifest workspace/readable-client-manifest.json \
+            --recovered-manifest workspace/recovered-source-manifest.json \
+            --clean-rebuild workspace/clean-rebuild.json \
+            --release-manifest workspace/recovery-release.json \
+            --release-verification workspace/release-verification.json \
+            --source-root workspace/src \
+            --out verification/PREFLIGHT-SOURCE-MILESTONE.json
+
       - name: Build Source M1 authority artifact
         shell: bash
         env:
@@ -296,8 +315,26 @@ jobs:
           AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
         run: |
           set -euo pipefail
-          mkdir -p verification
-          python -m spk_recovery.source_authority_artifact_cli verify             --artifact-dir authority             --expected-authority-commit "$AUTHORITY_COMMIT"             --out verification/SOURCE-AUTHORITY-VERIFICATION.json
+          EXPECTED_MILESTONE_ID="$(
+            python - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest = json.loads(
+              Path(
+                  "verification/PREFLIGHT-SOURCE-MILESTONE.json"
+              ).read_text(encoding="utf-8")
+          )
+          print(manifest["milestone_id"])
+          PY
+          )"
+          test -n "$EXPECTED_MILESTONE_ID"
+
+          python -m spk_recovery.source_authority_artifact_cli verify \
+            --artifact-dir authority \
+            --expected-authority-commit "$AUTHORITY_COMMIT" \
+            --expected-milestone-id "$EXPECTED_MILESTONE_ID" \
+            --out verification/SOURCE-AUTHORITY-VERIFICATION.json
 
       - name: Export verified authority outputs
         id: result

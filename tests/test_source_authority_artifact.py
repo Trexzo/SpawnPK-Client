@@ -9,9 +9,32 @@ import unittest
 from spk_recovery.source_authority_artifact import (
     SourceAuthorityArtifactError,
     build_source_authority_artifact,
-    verify_source_authority_artifact,
+    verify_source_authority_artifact as _verify_source_authority_artifact,
 )
 from spk_recovery.source_digest import source_tree_digest
+from spk_recovery.v308_authority import V308_SOURCE_AUTHORITY_SHA256
+
+
+def _artifact_milestone_id(artifact_dir: Path) -> str:
+    manifest = json.loads(
+        (
+            Path(artifact_dir)
+            / "SOURCE-AUTHORITY-ARTIFACT.json"
+        ).read_text(encoding="utf-8")
+    )
+    return str(manifest["preflight_milestone_id"])
+
+
+def verify_source_authority_artifact(artifact_dir, **kwargs):
+    kwargs.setdefault("expected_authority_commit", "f" * 40)
+    kwargs.setdefault(
+        "expected_milestone_id",
+        _artifact_milestone_id(Path(artifact_dir)),
+    )
+    return _verify_source_authority_artifact(
+        artifact_dir,
+        **kwargs,
+    )
 
 
 def _document_digest(value) -> str:
@@ -112,7 +135,7 @@ def _fixture(source_root: Path) -> dict:
         source_root
     )
 
-    authority_sha = "a" * 64
+    authority_sha = V308_SOURCE_AUTHORITY_SHA256
     namespace_id = "SEMNS_" + "B" * 20
     class_digest = "c" * 64
     member_digest = "d" * 64
@@ -257,7 +280,10 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
             out = root / "artifact"
 
             self._build(source, out, fixture)
-            report = verify_source_authority_artifact(out)
+            report = _verify_source_authority_artifact(
+                out,
+                expected_milestone_id=_artifact_milestone_id(out),
+            )
 
             self.assertFalse(report["verified"])
             self.assertFalse(
@@ -279,9 +305,10 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
             out = root / "artifact"
 
             self._build(source, out, fixture)
-            report = verify_source_authority_artifact(
+            report = _verify_source_authority_artifact(
                 out,
                 expected_authority_commit="e" * 40,
+                expected_milestone_id=_artifact_milestone_id(out),
             )
 
             self.assertFalse(report["verified"])
@@ -293,6 +320,59 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
                     value
                     for key, value in report["checks"].items()
                     if key != "expected_authority_commit"
+                )
+            )
+
+    def test_verifier_requires_external_milestone_id(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            out = root / "artifact"
+
+            self._build(source, out, fixture)
+            report = _verify_source_authority_artifact(
+                out,
+                expected_authority_commit="f" * 40,
+            )
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["expected_preflight_milestone_id"]
+            )
+            self.assertTrue(
+                all(
+                    value
+                    for key, value in report["checks"].items()
+                    if key != "expected_preflight_milestone_id"
+                )
+            )
+
+    def test_verifier_rejects_wrong_external_milestone_id(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            out = root / "artifact"
+
+            self._build(source, out, fixture)
+            report = _verify_source_authority_artifact(
+                out,
+                expected_authority_commit="f" * 40,
+                expected_milestone_id=(
+                    "SRCMILESTONE_" + "0" * 20
+                ),
+            )
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["expected_preflight_milestone_id"]
+            )
+            self.assertTrue(
+                all(
+                    value
+                    for key, value in report["checks"].items()
+                    if key != "expected_preflight_milestone_id"
                 )
             )
 
