@@ -212,29 +212,82 @@ def _fixtures(source_root: Path):
     member_digest = "d" * 64
 
     classes = {
+        "schema_version": 1,
+        "namespace": "spawnpk-client",
+        "id_format": "CLIENT_CLASS_%06d",
+        "baseline_build_id": "v308",
+        "builds": [
+            {
+                "build_id": "v308",
+                "build_number": 308,
+                "sha256": authority_sha,
+                "source_name": "client.jar",
+                "authority": "EXACT_CURRENT_CLIENT",
+            }
+        ],
         "classes": [
             {
+                "logical_id": "CLIENT_CLASS_000001",
+                "semantic_name": "A",
                 "semantic_status": "ACCEPTED",
+                "semantic_confidence": 1.0,
+                "lineage": [
+                    {
+                        "build_id": "v308",
+                        "internal_name": "rs/A",
+                        "entry_path": "rs/A.class",
+                        "entry_sha256": "1" * 64,
+                        "structural_sha256": "2" * 64,
+                        "relation": "BASELINE",
+                        "confidence": 1.0,
+                        "provenance": [
+                            {
+                                "authority": "EXACT_CURRENT_CLIENT",
+                                "source": "test-fixture",
+                            }
+                        ],
+                    }
+                ],
                 "semantic_provenance": [
                     {"review_id": "SEMREVIEW_CLASS"}
                 ],
-            },
-            {
-                "semantic_status": "UNREVIEWED",
-                "semantic_provenance": [],
-            },
+            }
         ],
+        "unresolved": [],
     }
     members = {
+        "schema_version": 1,
+        "kind": "member_lineage",
+        "class_namespace": "spawnpk-client",
+        "baseline_build_id": "v308",
+        "source_sha256": authority_sha,
         "members": [
             {
+                "member_id": "CLIENT_FIELD_000001",
+                "owner_logical_id": "CLIENT_CLASS_000001",
+                "kind": "field",
+                "semantic_name": "value",
                 "semantic_status": "ACCEPTED",
+                "semantic_confidence": 1.0,
+                "lineage": [
+                    {
+                        "build_id": "v308",
+                        "owner_internal_name": "rs/A",
+                        "name": "a",
+                        "descriptor": "I",
+                        "access": 1,
+                        "relation": "BASELINE",
+                        "confidence": 1.0,
+                        "provenance": [],
+                    }
+                ],
                 "semantic_provenance": [
                     {"review_id": "SEMREVIEW_MEMBER"},
                     {"review_id": "SEMREVIEW_CLASS"},
                 ],
             }
         ],
+        "unresolved": [],
     }
 
     readable = {
