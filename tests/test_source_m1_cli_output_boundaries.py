@@ -60,6 +60,30 @@ class SourceM1CliOutputBoundaryTests(unittest.TestCase):
             core.assert_not_called()
             self.assertFalse(out.exists())
 
+    def test_milestone_build_refuses_overwriting_input_before_build(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            source.mkdir()
+            input_path = root / "class-lineage.json"
+
+            args = self._common_build_args(
+                root,
+                source,
+                input_path,
+            )
+
+            with mock.patch.object(
+                source_milestone_cli,
+                "build_source_milestone_manifest",
+                side_effect=AssertionError("core build must not run"),
+            ) as core:
+                code = source_milestone_cli.main(args)
+
+            self.assertEqual(code, 2)
+            core.assert_not_called()
+            self.assertFalse(input_path.exists())
+
     def test_milestone_verify_refuses_overwriting_manifest_before_verify(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -117,6 +141,36 @@ class SourceM1CliOutputBoundaryTests(unittest.TestCase):
             self.assertEqual(code, 2)
             core.assert_not_called()
             self.assertFalse(out.exists())
+
+    def test_bundle_verify_refuses_overwriting_manifest_before_verify(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            bundle = root / "bundle"
+            bundle.mkdir()
+            manifest = root / "manifest.json"
+
+            with mock.patch.object(
+                source_milestone_cli,
+                "verify_source_publication_bundle",
+                side_effect=AssertionError("bundle verify must not run"),
+            ) as core:
+                code = source_milestone_cli.main(
+                    [
+                        "verify-bundle",
+                        "--bundle-dir",
+                        str(bundle),
+                        "--manifest",
+                        str(manifest),
+                        "--expected-authority-commit",
+                        "f" * 40,
+                        "--out",
+                        str(manifest),
+                    ]
+                )
+
+            self.assertEqual(code, 2)
+            core.assert_not_called()
+            self.assertFalse(manifest.exists())
 
     def test_artifact_verify_refuses_output_inside_artifact_before_verify(self):
         with tempfile.TemporaryDirectory() as td:
