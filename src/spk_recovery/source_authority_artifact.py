@@ -21,6 +21,8 @@ class SourceAuthorityArtifactError(ValueError):
 
 
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
+_DEFAULT_AUTHORITY_REPOSITORY = "Trexzo/SpawnPK-Client"
+_DEFAULT_PUBLICATION_REPOSITORY = "Trexzo/SpawnPK-Client-Source"
 
 _DOCUMENT_NAMES = {
     "class-lineage.json": "class_lineage",
@@ -131,8 +133,8 @@ def build_source_authority_artifact(
     release_verification: dict[str, Any],
     source_root: Path,
     out_dir: Path,
-    authority_repository: str = "Trexzo/SpawnPK-Client",
-    publication_repository: str = "Trexzo/SpawnPK-Client-Source",
+    authority_repository: str = _DEFAULT_AUTHORITY_REPOSITORY,
+    publication_repository: str = _DEFAULT_PUBLICATION_REPOSITORY,
 ) -> dict[str, Any]:
     authority_commit = authority_commit.strip().lower()
     if not _COMMIT_RE.fullmatch(authority_commit):
@@ -276,6 +278,12 @@ def verify_source_authority_artifact(
     artifact_dir: Path,
     *,
     expected_authority_commit: str | None = None,
+    expected_authority_repository: str = (
+        _DEFAULT_AUTHORITY_REPOSITORY
+    ),
+    expected_publication_repository: str = (
+        _DEFAULT_PUBLICATION_REPOSITORY
+    ),
 ) -> dict[str, Any]:
     artifact_dir = artifact_dir.resolve()
     manifest_path = (
@@ -314,10 +322,23 @@ def verify_source_authority_artifact(
             "artifact authority commit is invalid"
         )
 
+    authority_repository = str(
+        manifest.get("authority_repository") or ""
+    )
+    publication_repository = str(
+        manifest.get("publication_repository") or ""
+    )
+
     checks: dict[str, bool] = {}
     checks["expected_authority_commit"] = (
         expected_authority_commit is None
         or expected_authority_commit == authority_commit
+    )
+    checks["expected_authority_repository"] = (
+        authority_repository == expected_authority_repository
+    )
+    checks["expected_publication_repository"] = (
+        publication_repository == expected_publication_repository
     )
     checks["preflight_publishable"] = (
         manifest.get("preflight_publishable") is True
@@ -327,13 +348,9 @@ def verify_source_authority_artifact(
     )
 
     artifact_material = {
-        "authority_repository": manifest.get(
-            "authority_repository"
-        ),
+        "authority_repository": authority_repository,
         "authority_commit": authority_commit,
-        "publication_repository": manifest.get(
-            "publication_repository"
-        ),
+        "publication_repository": publication_repository,
         "preflight_milestone_id": manifest.get(
             "preflight_milestone_id"
         ),
@@ -436,12 +453,8 @@ def verify_source_authority_artifact(
             authority_commit=authority_commit,
             documents=docs_by_key,
             source_root=source_root,
-            authority_repository=str(
-                manifest.get("authority_repository") or ""
-            ),
-            publication_repository=str(
-                manifest.get("publication_repository") or ""
-            ),
+            authority_repository=authority_repository,
+            publication_repository=publication_repository,
         )
     except SourceAuthorityArtifactError as exc:
         milestone_error = str(exc)
