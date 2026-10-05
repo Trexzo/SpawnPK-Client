@@ -135,6 +135,58 @@ class LineageTest(unittest.TestCase):
         ):
             validate_lineage(doc)
 
+    def test_accepted_semantic_name_must_be_canonical_identifier(self):
+        doc = self._accepted()
+        record = doc["classes"][0]
+        record["semantic_name"] = "bad-name"
+        record["semantic_provenance"][0]["proposal_id"] = (
+            semantic_proposal_id(
+                "a" * 64,
+                "class",
+                record["logical_id"],
+                "bad-name",
+            )
+        )
+
+        with self.assertRaisesRegex(
+            LineageValidationError,
+            "canonical identifier",
+        ):
+            validate_lineage(doc)
+
+    def test_duplicate_accepted_semantic_name_is_rejected(self):
+        doc = self._accepted()
+        record = doc["classes"][1]
+        entry = record["lineage"][0]
+        record["semantic_name"] = "ReadableClass"
+        record["semantic_status"] = "ACCEPTED"
+        record["semantic_confidence"] = 0.8
+        record["semantic_provenance"] = [
+            {
+                "proposal_id": semantic_proposal_id(
+                    "a" * 64,
+                    "class",
+                    record["logical_id"],
+                    "ReadableClass",
+                ),
+                "review_id": "SEMREVIEW_" + "C" * 20,
+                "source_build": "v308",
+                "source_sha256": "a" * 64,
+                "source_coordinate": {
+                    "owner": entry["internal_name"],
+                    "name": None,
+                    "descriptor": None,
+                },
+                "evidence": [],
+            }
+        ]
+
+        with self.assertRaisesRegex(
+            LineageValidationError,
+            "already belongs",
+        ):
+            validate_lineage(doc)
+
     def test_confidence_range_is_enforced(self):
         doc = seed_lineage(
             _index(),
