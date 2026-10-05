@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -1418,6 +1419,31 @@ class SourceMilestoneTests(unittest.TestCase):
                     },
                 )
 
+    def test_publication_bundle_output_must_be_outside_source_root(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            before = source_tree_digest(source)[0]
+
+            nested_output = source / "bundle"
+            nested_output.mkdir()
+
+            with self.assertRaisesRegex(
+                SourceMilestoneError,
+                "outside source root",
+            ):
+                build_source_publication_bundle(
+                    manifest,
+                    source,
+                    nested_output,
+                    provenance_documents={},
+                )
+
+            self.assertEqual(source_tree_digest(source)[0], before)
+            self.assertEqual(list(nested_output.iterdir()), [])
+
     def test_source_only_bundle_is_deterministic_and_excludes_binary(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -1639,6 +1665,82 @@ class SourceMilestoneTests(unittest.TestCase):
                     if key != "expected_authority_commit"
                 )
             )
+
+    def test_bundle_verifier_rejects_byte_identical_symlink_escape(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={},
+            )
+
+            stored = (
+                bundle_root
+                / "provenance"
+                / "SOURCE-PROVENANCE.json"
+            )
+            outside = root / "outside-provenance.json"
+            outside.write_bytes(stored.read_bytes())
+            stored.unlink()
+            try:
+                stored.symlink_to(outside)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(
+                    f"symbolic links unavailable on this runner: {exc}"
+                )
+
+            with self.assertRaisesRegex(
+                SourceMilestoneError,
+                "symbolic link",
+            ):
+                _verify_source_publication_bundle(
+                    bundle_root,
+                    expected_manifest=manifest,
+                    expected_authority_commit="f" * 40,
+                )
+
+    def test_bundle_verifier_rejects_extra_fifo_entry(self):
+        if not hasattr(os, "mkfifo"):
+            self.skipTest("FIFO creation is unavailable on this platform")
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={},
+            )
+
+            fifo = bundle_root / "ignored.fifo"
+            try:
+                os.mkfifo(fifo)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(
+                    f"FIFO creation unavailable on this runner: {exc}"
+                )
+
+            with self.assertRaisesRegex(
+                SourceMilestoneError,
+                "non-regular file",
+            ):
+                _verify_source_publication_bundle(
+                    bundle_root,
+                    expected_manifest=manifest,
+                    expected_authority_commit="f" * 40,
+                )
 
     def test_publication_bundle_verifier_accepts_exact_bundle(self):
         with tempfile.TemporaryDirectory() as td:
