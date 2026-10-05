@@ -532,6 +532,28 @@ class SourceMilestoneTests(unittest.TestCase):
                 manifest["blockers"],
             )
 
+    def test_release_verification_passed_flag_must_match_values(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            report = fixture["release_verification"]
+            report["checks"][1]["actual"] = "drift"
+            report["checks"][1]["passed"] = True
+            report["verification_id"] = _release_verification_id(
+                report
+            )
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "release_authority",
+                    "reason": "release_verification_structure_invalid",
+                },
+                manifest["blockers"],
+            )
+
     def test_failed_required_release_check_blocks_publication(self):
         with tempfile.TemporaryDirectory() as td:
             source = Path(td) / "source"
