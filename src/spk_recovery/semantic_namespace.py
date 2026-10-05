@@ -6,8 +6,8 @@ from pathlib import Path
 import re
 from typing import Any
 
-from .lineage import validate_lineage
-from .member_lineage import validate_member_lineage
+from .lineage import LineageValidationError, validate_lineage
+from .member_lineage import MemberLineageError, validate_member_lineage
 from .member_remap_plan import (
     MemberRemapPlanError,
     build_member_remap_plan,
@@ -473,11 +473,14 @@ def build_semantic_namespace(
     fallback_name_prefix: str = "Recovered_",
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     """Build semantic remaps plus optional non-semantic Java source-safety remaps."""
-    validate_lineage(class_lineage)
-    validate_member_lineage(
-        member_lineage,
-        class_lineage=class_lineage,
-    )
+    try:
+        validate_lineage(class_lineage)
+        validate_member_lineage(
+            member_lineage,
+            class_lineage=class_lineage,
+        )
+    except (LineageValidationError, MemberLineageError) as exc:
+        raise SemanticNamespaceError(str(exc)) from exc
     build = _build(class_lineage, build_id)
     source_sha = str(build.get("sha256", "")).lower()
     if str(index.get("sha256", "")).lower() != source_sha:
