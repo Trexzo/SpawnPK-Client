@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -688,6 +689,107 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
             self.assertFalse(
                 report["checks"]["payload_file_set_match"]
             )
+
+    def test_builder_rejects_symbolic_link_source_root(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            link = root / "source-link"
+            try:
+                link.symlink_to(source, target_is_directory=True)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(
+                    f"symbolic links unavailable on this runner: {exc}"
+                )
+
+            with self.assertRaisesRegex(
+                SourceAuthorityArtifactError,
+                "symbolic link",
+            ):
+                self._build(
+                    link,
+                    root / "artifact",
+                    fixture,
+                )
+
+    def test_builder_output_must_be_outside_source_root(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            before = source_tree_digest(source)[0]
+            nested = source / "artifact"
+            nested.mkdir()
+
+            with self.assertRaisesRegex(
+                SourceAuthorityArtifactError,
+                "outside source root",
+            ):
+                self._build(source, nested, fixture)
+
+            self.assertEqual(source_tree_digest(source)[0], before)
+            self.assertEqual(list(nested.iterdir()), [])
+
+    def test_verifier_rejects_byte_identical_symlink_payload(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            out = root / "artifact"
+
+            self._build(source, out, fixture)
+            milestone_id = _artifact_milestone_id(out)
+            stored = out / "class-lineage.json"
+            outside = root / "outside-class-lineage.json"
+            outside.write_bytes(stored.read_bytes())
+            stored.unlink()
+            try:
+                stored.symlink_to(outside)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(
+                    f"symbolic links unavailable on this runner: {exc}"
+                )
+
+            with self.assertRaisesRegex(
+                SourceAuthorityArtifactError,
+                "symbolic link",
+            ):
+                _verify_source_authority_artifact(
+                    out,
+                    expected_authority_commit="f" * 40,
+                    expected_milestone_id=milestone_id,
+                )
+
+    def test_verifier_rejects_extra_fifo_entry(self):
+        if not hasattr(os, "mkfifo"):
+            self.skipTest("FIFO creation is unavailable on this platform")
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            out = root / "artifact"
+
+            self._build(source, out, fixture)
+            milestone_id = _artifact_milestone_id(out)
+            fifo = out / "ignored.fifo"
+            try:
+                os.mkfifo(fifo)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(
+                    f"FIFO creation unavailable on this runner: {exc}"
+                )
+
+            with self.assertRaisesRegex(
+                SourceAuthorityArtifactError,
+                "non-regular file",
+            ):
+                _verify_source_authority_artifact(
+                    out,
+                    expected_authority_commit="f" * 40,
+                    expected_milestone_id=milestone_id,
+                )
 
     def test_blocked_source_milestone_cannot_be_packaged(self):
         with tempfile.TemporaryDirectory() as td:
