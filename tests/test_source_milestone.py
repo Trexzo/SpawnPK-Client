@@ -422,6 +422,49 @@ class SourceMilestoneTests(unittest.TestCase):
                 evidence,
             )
 
+    def test_empty_java_source_tree_blocks_publication(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            (source / "rs" / "A.java").unlink()
+
+            tree_sha, files, source_bytes = source_tree_digest(
+                source
+            )
+            self.assertEqual(files, [])
+            self.assertEqual(source_bytes, 0)
+
+            fixture["recovered_source_manifest"][
+                "source_tree_sha256"
+            ] = tree_sha
+            fixture["release_manifest"][
+                "final_source_tree_sha256"
+            ] = tree_sha
+            fixture["clean_rebuild_report"][
+                "project_classes"
+            ]["expected_count"] = 0
+            fixture["clean_rebuild_report"][
+                "project_classes"
+            ]["generated_count"] = 0
+            _refresh_release_pins(fixture)
+            _refresh_release_verification(fixture)
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertEqual(
+                manifest["source_tree"]["java_file_count"],
+                0,
+            )
+            self.assertTrue(manifest["class_set"]["exact_match"])
+            self.assertIn(
+                {
+                    "gate": "source_tree",
+                    "reason": "source_tree_contains_no_java_files",
+                },
+                manifest["blockers"],
+            )
+
     def test_release_authority_pins_bind_supplied_documents(self):
         with tempfile.TemporaryDirectory() as td:
             source = Path(td) / "source"
