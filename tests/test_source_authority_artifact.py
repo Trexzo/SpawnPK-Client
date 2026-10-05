@@ -24,6 +24,27 @@ def _document_digest(value) -> str:
     return hashlib.sha256(raw).hexdigest()
 
 
+def _artifact_id(report: dict) -> str:
+    material = {
+        "authority_repository": report["authority_repository"],
+        "authority_commit": report["authority_commit"],
+        "publication_repository": report[
+            "publication_repository"
+        ],
+        "preflight_milestone_id": report[
+            "preflight_milestone_id"
+        ],
+        "build_id": report["build_id"],
+        "client_sha256": report["client_sha256"],
+        "source_tree_sha256": report["source_tree_sha256"],
+        "source_file_count": report["source_file_count"],
+        "source_bytes": report["source_bytes"],
+        "document_sha256": report["document_sha256"],
+        "payload_file_sha256": report[
+            "payload_file_sha256"
+        ],
+    }
+    return "SRCAUTHART_" + _document_digest(material)[:20].upper()
 
 
 def _release_verification_id(report: dict) -> str:
@@ -298,6 +319,114 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
             )
             self.assertTrue(
                 all(report["checks"].values())
+            )
+
+    def test_artifact_id_drift_is_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            out = root / "artifact"
+
+            built = self._build(source, out, fixture)
+            manifest_path = (
+                out / "SOURCE-AUTHORITY-ARTIFACT.json"
+            )
+            manifest = json.loads(
+                manifest_path.read_text(encoding="utf-8")
+            )
+            manifest["artifact_id"] = (
+                "SRCAUTHART_" + "0" * 20
+            )
+            manifest_path.write_text(
+                json.dumps(
+                    manifest,
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            report = verify_source_authority_artifact(
+                out,
+                expected_authority_commit="f" * 40,
+            )
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["artifact_id_match"]
+            )
+            self.assertEqual(
+                report["recomputed_artifact_id"],
+                built["artifact_id"],
+            )
+
+    def test_empty_java_payload_is_explicitly_rejected(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            out = root / "artifact"
+
+            self._build(source, out, fixture)
+            exported = out / "src" / "rs" / "A.java"
+            exported.unlink()
+
+            tree_sha, source_files, source_bytes = (
+                source_tree_digest(out / "src")
+            )
+            self.assertEqual(source_files, [])
+
+            manifest_path = (
+                out / "SOURCE-AUTHORITY-ARTIFACT.json"
+            )
+            manifest = json.loads(
+                manifest_path.read_text(encoding="utf-8")
+            )
+            manifest["source_tree_sha256"] = tree_sha
+            manifest["source_file_count"] = 0
+            manifest["source_bytes"] = source_bytes
+            manifest["payload_file_sha256"].pop(
+                "src/rs/A.java"
+            )
+            manifest["artifact_id"] = _artifact_id(manifest)
+            manifest_path.write_text(
+                json.dumps(
+                    manifest,
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            report = verify_source_authority_artifact(
+                out,
+                expected_authority_commit="f" * 40,
+            )
+
+            self.assertFalse(report["verified"])
+            self.assertTrue(
+                report["checks"]["payload_file_set_match"]
+            )
+            self.assertTrue(
+                report["checks"]["payload_file_hashes_match"]
+            )
+            self.assertTrue(
+                report["checks"]["source_tree_sha256_match"]
+            )
+            self.assertTrue(
+                report["checks"]["source_file_count_match"]
+            )
+            self.assertTrue(
+                report["checks"]["source_bytes_match"]
+            )
+            self.assertTrue(
+                report["checks"]["artifact_id_match"]
+            )
+            self.assertFalse(
+                report["checks"]["source_payload_non_empty"]
             )
 
     def test_source_tamper_is_rejected(self):
