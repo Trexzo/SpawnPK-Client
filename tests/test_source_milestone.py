@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
@@ -1698,6 +1699,35 @@ class SourceMilestoneTests(unittest.TestCase):
             with self.assertRaisesRegex(
                 SourceMilestoneError,
                 "symbolic link",
+            ):
+                _verify_source_publication_bundle(
+                    bundle_root,
+                    expected_manifest=manifest,
+                    expected_authority_commit="f" * 40,
+                )
+
+    def test_bundle_verifier_rejects_extra_fifo_entry(self):
+        if not hasattr(os, "mkfifo"):
+            self.skipTest("FIFO creation unavailable on this platform")
+
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={},
+            )
+            os.mkfifo(bundle_root / "extra.pipe")
+
+            with self.assertRaisesRegex(
+                SourceMilestoneError,
+                "non-regular file",
             ):
                 _verify_source_publication_bundle(
                     bundle_root,
