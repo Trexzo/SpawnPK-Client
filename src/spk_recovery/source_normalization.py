@@ -21248,11 +21248,22 @@ def _normalize_missing_synthetic_private_field_accessors(
         if value != original_texts[path]:
             path.write_text(value, encoding="utf-8")
 
+    credited_insertions: set[tuple[str, str, str]] = set()
     for action in actions:
-        action["inserted_accessor_method_count"] = sum(
-            int(row.get("accessor_inserted", False))
-            for row in action.get("accessors", [])
-        )
+        inserted_count = 0
+        for row in action.get("accessors", []):
+            accessor_key = (
+                str(row.get("target_owner", "")),
+                str(row.get("accessor_name", "")),
+                str(row.get("accessor_descriptor", "")),
+            )
+            if (
+                row.get("accessor_inserted", False)
+                and accessor_key not in credited_insertions
+            ):
+                credited_insertions.add(accessor_key)
+                inserted_count += 1
+        action["inserted_accessor_method_count"] = inserted_count
 
     if inserted_methods != sum(
         int(requirement.get("accessor_inserted", False))
