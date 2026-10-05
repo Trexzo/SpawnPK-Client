@@ -20,6 +20,10 @@ class SourceMilestoneError(ValueError):
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 _DEFAULT_AUTHORITY_REPOSITORY = "Trexzo/SpawnPK-Client"
 _DEFAULT_PUBLICATION_REPOSITORY = "Trexzo/SpawnPK-Client-Source"
+V308_SOURCE_AUTHORITY_SHA256 = (
+    "854f26ff9f134b0317572e7ac1688e6f"
+    "40a231d5a4c66f8db5d655b7f45ce7c6"
+)
 
 
 def _exact_json_object(pairs):
@@ -710,6 +714,12 @@ def build_source_milestone_manifest(
             blockers,
             gate="exact_authority",
             reason="authority_sha_linkage_mismatch",
+        )
+    if authority_sha != V308_SOURCE_AUTHORITY_SHA256:
+        _block(
+            blockers,
+            gate="exact_authority",
+            reason="source_milestone_authority_sha_not_exact_v308",
         )
 
     namespace_id = str(
@@ -1457,8 +1467,8 @@ def verify_source_publication_bundle(
     )
 
     checks["external_manifest_match"] = (
-        expected_manifest is None
-        or expected_manifest == milestone
+        isinstance(expected_manifest, dict)
+        and expected_manifest == milestone
     )
     checks["expected_authority_commit"] = (
         isinstance(expected_authority_commit, str)
