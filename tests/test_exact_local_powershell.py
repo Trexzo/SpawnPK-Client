@@ -168,6 +168,12 @@ class ExactLocalPowerShellTests(unittest.TestCase):
                 "/normalization_summary/reference_shadowed_self_static_field_method_count",
             "reference_shadowed_self_static_field_reference_count":
                 "/normalization_summary/reference_shadowed_self_static_field_reference_count",
+            "missing_synthetic_private_field_accessor_action_count":
+                "/normalization_summary/missing_synthetic_private_field_accessor_action_count",
+            "missing_synthetic_private_field_accessor_reference_count":
+                "/normalization_summary/missing_synthetic_private_field_accessor_reference_count",
+            "missing_synthetic_private_field_accessor_method_count":
+                "/normalization_summary/missing_synthetic_private_field_accessor_method_count",
             "missing_synthetic_constructor_accessor_action_count":
                 "/normalization_summary/missing_synthetic_constructor_accessor_action_count",
             "missing_synthetic_constructor_accessor_method_count":
@@ -477,6 +483,21 @@ class ExactLocalPowerShellTests(unittest.TestCase):
         self.assertIn(
             'ERASED_ITERATOR_ASSIGNMENT_CAST_REFERENCES='
             '$($Recovered.erased_iterator_assignment_cast_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'MISSING_SYNTHETIC_PRIVATE_FIELD_ACCESSOR_ACTIONS='
+            '$($Recovered.missing_synthetic_private_field_accessor_action_count)',
+            script,
+        )
+        self.assertIn(
+            'MISSING_SYNTHETIC_PRIVATE_FIELD_ACCESSOR_REFERENCES='
+            '$($Recovered.missing_synthetic_private_field_accessor_reference_count)',
+            script,
+        )
+        self.assertIn(
+            'MISSING_SYNTHETIC_PRIVATE_FIELD_ACCESSOR_METHODS='
+            '$($Recovered.missing_synthetic_private_field_accessor_method_count)',
             script,
         )
         self.assertIn(
