@@ -17,6 +17,38 @@ from spk_recovery.source_milestone import (
 )
 
 
+def _document_digest(value) -> str:
+    raw = json.dumps(
+        value,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()
+
+
+def _refresh_release_pins(fixture: dict) -> None:
+    fixture["release_manifest"]["authority_pins"] = {
+        "class_lineage_sha256": _document_digest(
+            fixture["class_lineage"]
+        ),
+        "member_lineage_sha256": _document_digest(
+            fixture["member_lineage"]
+        ),
+        "readable_manifest_sha256": _document_digest(
+            fixture["readable_manifest"]
+        ),
+        "recovered_source_manifest_sha256": _document_digest(
+            fixture["recovered_source_manifest"]
+        ),
+        "clean_rebuild_report_sha256": _document_digest(
+            fixture["clean_rebuild_report"]
+        ),
+    }
+
+
+
+
 def _fixtures(source_root: Path):
     source_root.mkdir(parents=True)
     (source_root / "rs").mkdir()
@@ -131,7 +163,7 @@ def _fixtures(source_root: Path):
         "verified": True,
     }
 
-    return {
+    fixture = {
         "class_lineage": classes,
         "member_lineage": members,
         "readable_manifest": readable,
@@ -143,6 +175,8 @@ def _fixtures(source_root: Path):
         "source_files": files,
         "source_bytes": source_bytes,
     }
+    _refresh_release_pins(fixture)
+    return fixture
 
 
 class SourceMilestoneTests(unittest.TestCase):
@@ -232,6 +266,93 @@ class SourceMilestoneTests(unittest.TestCase):
             self.assertEqual(
                 manifest["publication"]["target_repository"],
                 "Trexzo/SpawnPK-Client-Source",
+            )
+
+    def test_release_authority_pins_bind_supplied_documents(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+
+            manifest = self._build(source, fixture)
+
+            self.assertTrue(manifest["publishable"])
+            linked = manifest["provenance"]["release_authority_pins"]
+            expected = fixture["release_manifest"]["authority_pins"]
+            for key in (
+                "class_lineage_sha256",
+                "member_lineage_sha256",
+                "readable_manifest_sha256",
+                "recovered_source_manifest_sha256",
+                "clean_rebuild_report_sha256",
+            ):
+                self.assertEqual(linked[key], expected[key])
+
+    def test_class_lineage_pin_drift_blocks_publication(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            fixture["class_lineage"]["pin_drift"] = True
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "release_authority_pins",
+                    "reason": "release_authority_pin_mismatch",
+                },
+                manifest["blockers"],
+            )
+
+    def test_readable_manifest_pin_drift_blocks_publication(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            fixture["readable_manifest"]["pin_drift"] = True
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "release_authority_pins",
+                    "reason": "release_authority_pin_mismatch",
+                },
+                manifest["blockers"],
+            )
+
+    def test_clean_rebuild_pin_drift_blocks_publication(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            fixture["clean_rebuild_report"]["pin_drift"] = True
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "release_authority_pins",
+                    "reason": "release_authority_pin_mismatch",
+                },
+                manifest["blockers"],
+            )
+
+    def test_missing_release_authority_pins_blocks_publication(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            fixture["release_manifest"].pop("authority_pins")
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "release_authority_pins",
+                    "reason": "release_authority_pins_missing",
+                },
+                manifest["blockers"],
             )
 
     def test_collision_provenance_binds_recovered_source_authority(self):
@@ -332,6 +453,7 @@ class SourceMilestoneTests(unittest.TestCase):
             fixture["clean_rebuild_report"][
                 "compile_transport"
             ] = transport
+            _refresh_release_pins(fixture)
 
             manifest = self._build(source, fixture)
 
@@ -388,6 +510,7 @@ class SourceMilestoneTests(unittest.TestCase):
             fixture["clean_rebuild_report"][
                 "compile_transport"
             ] = transport
+            _refresh_release_pins(fixture)
 
             manifest = self._build(source, fixture)
 
@@ -419,6 +542,7 @@ class SourceMilestoneTests(unittest.TestCase):
             fixture["clean_rebuild_report"][
                 "compile_transport"
             ] = transport
+            _refresh_release_pins(fixture)
 
             manifest = self._build(source, fixture)
 
