@@ -1,0 +1,23 @@
+name: Fetch Pinned Procyon 0.6.0
+
+on:
+  pull_request:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download pinned public Procyon release
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 \
+            -o /tmp/procyon-decompiler-0.6.0.jar \
+            https://github.com/mstrobel/procyon/releases/download/v0.6.0/procyon-decompiler-0.6.0.jar
+          echo "821da96012fc69244fa1ea298c90455ee4e021434bc796d3b9546ab24601b779  /tmp/procyon-decompiler-0.6.0.jar" | sha256sum -c -
+      - name: Upload pinned public Procyon
+        uses: actions/upload-artifact@v4
+        with:
+          name: procyon-decompiler-0.6.0
+          path: /tmp/procyon-decompiler-0.6.0.jar
+          retention-days: 1
