@@ -168,6 +168,9 @@ def _release_verification_evidence(
             and bool(row.get("name"))
             and isinstance(row.get("required"), bool)
             and isinstance(row.get("passed"), bool)
+            and "expected" in row
+            and "actual" in row
+            and row["passed"] == (row["expected"] == row["actual"])
             for row in checks
         )
     )
