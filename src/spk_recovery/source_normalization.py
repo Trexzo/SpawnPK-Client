@@ -8607,6 +8607,682 @@ def _normalize_generic_key_object_casts(
     return actions
 
 
+
+def _normalize_inherited_cc_generic_value_object_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Remove Object casts from inherited cc<T> value call expressions.
+
+    The direct cc<T> normalizer intentionally binds only fields declared on
+    the selected owner.  This companion handles current-instance fields that
+    are inherited through a uniquely substitutable generic superclass chain,
+    e.g. Base<T>.h : cc<T>, Mid extends Base<Value>, Current extends Mid.
+
+    The cast is removed only for a source value shaped as this.method(...)
+    when source return type and exact invocation return descriptor both equal
+    the substituted concrete T.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+        cc_profile = profile_class_field_accesses(
+            readable_zip.read("gnu/trove/f/b/cc.class")
+        )
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    current_simple = _source_simple_type_name(current_owner)
+    current_dotted = current_owner.replace("/", ".")
+
+    cc_methods = [
+        method
+        for method in cc_profile.get("methods", [])
+        if (
+            method.get("name") == "a"
+            and method.get("descriptor")
+            == "(ILjava/lang/Object;)Ljava/lang/Object;"
+            and method.get("signature") == "(ITV;)TV;"
+        )
+    ]
+    if len(cc_methods) != 1:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+
+    imports: dict[str, str] = {}
+    duplicate_imports: set[str] = set()
+    for import_match in _SINGLE_TYPE_IMPORT_RE.finditer(text):
+        dotted = import_match.group("name")
+        simple = dotted.rsplit(".", 1)[-1]
+        internal = dotted.replace(".", "/")
+        previous = imports.get(simple)
+        if previous is not None and previous != internal:
+            duplicate_imports.add(simple)
+        else:
+            imports[simple] = internal
+    for simple in duplicate_imports:
+        imports.pop(simple, None)
+
+    def class_exists(internal: str) -> bool:
+        if internal.startswith("java/"):
+            return True
+        try:
+            readable_zip.getinfo(internal + ".class")
+            return True
+        except KeyError:
+            return False
+
+    def resolve_source_type(type_text: str) -> str | None:
+        value = type_text.strip()
+        value = re.sub(r"<.*>$", "", value).strip()
+        while value.endswith("[]"):
+            value = value[:-2].strip()
+        if not re.fullmatch(
+            r"[A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)*",
+            value,
+        ):
+            return None
+        if value == current_simple or value == current_dotted:
+            return current_owner
+        if value in imports:
+            return imports[value]
+        if "." in value:
+            candidate = value.replace(".", "/")
+            return candidate if class_exists(candidate) else None
+        same_package = (
+            current_package + "/" + value
+            if current_package
+            else value
+        )
+        if class_exists(same_package):
+            return same_package
+        java_lang = "java/lang/" + value
+        return java_lang if class_exists(java_lang) else None
+
+    profile_cache: dict[str, dict[str, Any]] = {
+        current_owner: profile,
+        "gnu/trove/f/b/cc": cc_profile,
+    }
+    parsed_cache: dict[str, Any] = {}
+
+    def owner_profile(owner: str) -> dict[str, Any] | None:
+        cached = profile_cache.get(owner)
+        if cached is not None:
+            return cached
+        try:
+            parsed = profile_class_field_accesses(
+                readable_zip.read(owner + ".class")
+            )
+        except (KeyError, BytecodeProfileError):
+            return None
+        if str(parsed.get("internal_name", "")) != owner:
+            return None
+        profile_cache[owner] = parsed
+        return parsed
+
+    def owner_parsed(owner: str) -> Any | None:
+        cached = parsed_cache.get(owner)
+        if cached is not None:
+            return cached
+        try:
+            parsed = parse_class(readable_zip.read(owner + ".class"))
+        except (KeyError, ClassFormatError):
+            return None
+        if parsed.name != owner:
+            return None
+        parsed_cache[owner] = parsed
+        return parsed
+
+    def class_type_parameters(signature: str) -> list[str] | None:
+        if not signature.startswith("<"):
+            return []
+        out: list[str] = []
+        index = 1
+
+        def skip_field_type(pos: int) -> int | None:
+            if pos >= len(signature):
+                return None
+            token = signature[pos]
+            if token == "T":
+                end = signature.find(";", pos + 1)
+                return None if end < 0 else end + 1
+            if token == "[":
+                return skip_field_type(pos + 1)
+            if token != "L":
+                return None
+            depth = 0
+            pos += 1
+            while pos < len(signature):
+                ch = signature[pos]
+                if ch == "<":
+                    depth += 1
+                elif ch == ">":
+                    if depth == 0:
+                        return None
+                    depth -= 1
+                elif ch == ";" and depth == 0:
+                    return pos + 1
+                pos += 1
+            return None
+
+        while index < len(signature) and signature[index] != ">":
+            start = index
+            while (
+                index < len(signature)
+                and (
+                    signature[index].isalnum()
+                    or signature[index] in "_$"
+                )
+            ):
+                index += 1
+            if start == index or index >= len(signature):
+                return None
+            name = signature[start:index]
+            if signature[index] != ":":
+                return None
+            out.append(name)
+            while index < len(signature) and signature[index] == ":":
+                index += 1
+                if index >= len(signature):
+                    return None
+                if signature[index] == ":":
+                    continue
+                next_index = skip_field_type(index)
+                if next_index is None:
+                    return None
+                index = next_index
+        if index >= len(signature) or signature[index] != ">":
+            return None
+        return out
+
+    def signature_after_type_parameters(signature: str) -> str | None:
+        if not signature.startswith("<"):
+            return signature
+        depth = 0
+        for index, ch in enumerate(signature):
+            if ch == "<":
+                depth += 1
+            elif ch == ">":
+                depth -= 1
+                if depth == 0:
+                    return signature[index + 1:]
+        return None
+
+    def direct_super_arguments(
+        *,
+        owner: str,
+        super_owner: str,
+        substitutions: dict[str, str],
+    ) -> dict[str, str] | None:
+        owner_prof = owner_profile(owner)
+        super_prof = owner_profile(super_owner)
+        if owner_prof is None or super_prof is None:
+            return None
+
+        super_params = class_type_parameters(
+            str(super_prof.get("signature") or "")
+        )
+        if super_params is None:
+            return None
+        if not super_params:
+            return {}
+
+        owner_signature = str(owner_prof.get("signature") or "")
+        if not owner_signature:
+            return None
+        tail = signature_after_type_parameters(owner_signature)
+        if tail is None:
+            return None
+
+        prefix = "L" + super_owner
+        if not tail.startswith(prefix):
+            return None
+        index = len(prefix)
+        if index >= len(tail) or tail[index] != "<":
+            return None
+        index += 1
+        args: list[str] = []
+        while index < len(tail) and tail[index] != ">":
+            token = tail[index]
+            if token == "L":
+                end = tail.find(";", index + 1)
+                if end < 0 or "<" in tail[index:end]:
+                    return None
+                args.append(tail[index + 1:end])
+                index = end + 1
+            elif token == "T":
+                end = tail.find(";", index + 1)
+                if end < 0:
+                    return None
+                variable = tail[index + 1:end]
+                resolved = substitutions.get(variable)
+                if resolved is None:
+                    return None
+                args.append(resolved)
+                index = end + 1
+            else:
+                return None
+        if index >= len(tail) or tail[index] != ">":
+            return None
+        index += 1
+        if index >= len(tail) or tail[index] != ";":
+            return None
+        if len(args) != len(super_params):
+            return None
+        return dict(zip(super_params, args))
+
+    field_concrete_re = re.compile(
+        r"^Lgnu/trove/f/b/cc<L(?P<value>[^;<>]+);>;$"
+    )
+    field_variable_re = re.compile(
+        r"^Lgnu/trove/f/b/cc<T(?P<value>[A-Za-z_$][A-Za-z0-9_$]*);>;$"
+    )
+
+    def inherited_field_binding(
+        field_name: str,
+    ) -> dict[str, Any] | None:
+        owner = current_owner
+        substitutions: dict[str, str] = {}
+        hierarchy_path: list[str] = []
+        seen: set[str] = set()
+
+        while owner and owner != "java/lang/Object":
+            if owner in seen:
+                return None
+            seen.add(owner)
+            hierarchy_path.append(owner)
+
+            prof = owner_profile(owner)
+            parsed = owner_parsed(owner)
+            if prof is None or parsed is None:
+                return None
+
+            named_fields = [
+                field
+                for field in prof.get("fields", [])
+                if (
+                    field.get("name") == field_name
+                    and _field_visible_from(
+                        declaring_owner=owner,
+                        current_owner=current_owner,
+                        access=int(field.get("access", 0)),
+                    )
+                )
+            ]
+            if named_fields:
+                if len(named_fields) != 1:
+                    return None
+                field = named_fields[0]
+                if (
+                    int(field.get("access", 0)) & 0x0008
+                    or field.get("descriptor")
+                    != "Lgnu/trove/f/b/cc;"
+                ):
+                    return None
+                signature = str(field.get("signature") or "")
+                concrete = field_concrete_re.fullmatch(signature)
+                variable = field_variable_re.fullmatch(signature)
+                if concrete is not None:
+                    value_owner = concrete.group("value")
+                elif variable is not None:
+                    value_owner = substitutions.get(
+                        variable.group("value")
+                    )
+                    if value_owner is None:
+                        return None
+                else:
+                    return None
+                if not class_exists(value_owner):
+                    return None
+                if owner == current_owner:
+                    return None
+                return {
+                    "declaring_owner": owner,
+                    "field_name": field_name,
+                    "field_signature": signature,
+                    "value_owner": value_owner,
+                    "hierarchy_path": tuple(hierarchy_path),
+                    "substitutions": dict(sorted(substitutions.items())),
+                }
+
+            super_owner = parsed.super_name
+            if not super_owner or super_owner == "java/lang/Object":
+                return None
+            next_substitutions = direct_super_arguments(
+                owner=owner,
+                super_owner=super_owner,
+                substitutions=substitutions,
+            )
+            if next_substitutions is None:
+                return None
+            substitutions = next_substitutions
+            owner = super_owner
+        return None
+
+    source_return_by_name: dict[str, str] = {}
+    duplicate_source_methods: set[str] = set()
+    for declaration in _METHOD_DECL_RE.finditer(whole_code):
+        method_name = declaration.group("name")
+        resolved_return = resolve_source_type(
+            declaration.group("return")
+        )
+        if resolved_return is None:
+            continue
+        previous = source_return_by_name.get(method_name)
+        if previous is not None and previous != resolved_return:
+            duplicate_source_methods.add(method_name)
+        else:
+            source_return_by_name[method_name] = resolved_return
+    for method_name in duplicate_source_methods:
+        source_return_by_name.pop(method_name, None)
+
+    call_re = re.compile(
+        r"this\.(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\.\s*a\s*\(\s*"
+        r"(?P<first>[^,\n]+)\s*,\s*"
+        r"(?P<cast>\(\s*Object\s*\)\s*)"
+        r"(?P<value_call>"
+        r"this\.(?P<value_method>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\([^()\n]*\)"
+        r")\s*\)"
+    )
+
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+        if re.search(
+            r"\bstatic\b",
+            whole_code[method_match.start():brace_start],
+        ):
+            continue
+
+        method_start = method_match.start()
+        method_text = text[method_start:body_end]
+        method_code = whole_code[method_start:body_end]
+        calls: list[dict[str, Any]] = []
+
+        for call in call_re.finditer(method_text):
+            if (
+                call.start() >= len(method_code)
+                or method_code[call.start()].isspace()
+            ):
+                continue
+            binding = inherited_field_binding(
+                call.group("field")
+            )
+            if binding is None:
+                continue
+            value_method = call.group("value_method")
+            if (
+                source_return_by_name.get(value_method)
+                != binding["value_owner"]
+            ):
+                continue
+            calls.append(
+                {
+                    "match": call,
+                    "value_method": value_method,
+                    **binding,
+                }
+            )
+
+        if not calls:
+            continue
+
+        exact_candidates: list[dict[str, Any]] = []
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if int(exact_method.get("access", 0)) & 0x0008:
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            flows: list[dict[str, Any]] = []
+            used_invokes: set[int] = set()
+
+            for call in calls:
+                matches: list[dict[str, Any]] = []
+                allowed_field_owners = set(call["hierarchy_path"])
+                allowed_value_owners = set(call["hierarchy_path"])
+
+                for index, field_access in enumerate(instructions):
+                    if not (
+                        field_access.get("mnemonic") == "getfield"
+                        and field_access.get("name")
+                        == call["field_name"]
+                        and field_access.get("descriptor")
+                        == "Lgnu/trove/f/b/cc;"
+                        and field_access.get("owner")
+                        in allowed_field_owners
+                        and index > 0
+                        and instructions[index - 1].get("mnemonic")
+                        == "aload"
+                        and int(
+                            instructions[index - 1].get(
+                                "local_index", -1
+                            )
+                        ) == 0
+                    ):
+                        continue
+
+                    target_index: int | None = None
+                    for probe in range(
+                        index + 1,
+                        min(len(instructions), index + 48),
+                    ):
+                        item = instructions[probe]
+                        if (
+                            item.get("mnemonic")
+                            in {"invokevirtual", "invokeinterface"}
+                            and item.get("owner")
+                            == "gnu/trove/f/b/cc"
+                            and item.get("name") == "a"
+                            and item.get("descriptor")
+                            == "(ILjava/lang/Object;)Ljava/lang/Object;"
+                        ):
+                            target_index = probe
+                            break
+                    if target_index is None:
+                        continue
+                    target_offset = int(
+                        instructions[target_index].get("offset", -1)
+                    )
+                    if target_offset in used_invokes:
+                        continue
+
+                    value_invocations = []
+                    for probe in range(index + 1, target_index):
+                        item = instructions[probe]
+                        if (
+                            item.get("mnemonic")
+                            in {
+                                "invokevirtual",
+                                "invokeinterface",
+                                "invokespecial",
+                            }
+                            and item.get("name")
+                            == call["value_method"]
+                        ):
+                            return_descriptor = (
+                                _descriptor_return_descriptor(
+                                    str(item.get("descriptor", ""))
+                                )
+                            )
+                            if (
+                                return_descriptor
+                                == "L"
+                                + call["value_owner"]
+                                + ";"
+                                and item.get("owner")
+                                in allowed_value_owners
+                            ):
+                                value_invocations.append(
+                                    (probe, item)
+                                )
+                    if len(value_invocations) != 1:
+                        continue
+                    value_index, value_invoke = value_invocations[0]
+                    if any(
+                        item.get("mnemonic") == "checkcast"
+                        and item.get("type")
+                        == call["value_owner"]
+                        for item in instructions[
+                            value_index + 1:target_index
+                        ]
+                    ):
+                        continue
+
+                    matches.append(
+                        {
+                            "declaring_owner":
+                                call["declaring_owner"],
+                            "field_bytecode_owner": str(
+                                field_access.get("owner", "")
+                            ),
+                            "field_name": call["field_name"],
+                            "field_signature":
+                                call["field_signature"],
+                            "generic_value":
+                                call["value_owner"],
+                            "hierarchy_path": list(
+                                call["hierarchy_path"]
+                            ),
+                            "substitutions":
+                                call["substitutions"],
+                            "field_offset": int(
+                                field_access.get("offset", -1)
+                            ),
+                            "value_method":
+                                call["value_method"],
+                            "value_owner": str(
+                                value_invoke.get("owner", "")
+                            ),
+                            "value_descriptor": str(
+                                value_invoke.get("descriptor", "")
+                            ),
+                            "value_invoke_offset": int(
+                                value_invoke.get("offset", -1)
+                            ),
+                            "target_invoke_offset":
+                                target_offset,
+                        }
+                    )
+
+                if len(matches) != 1:
+                    flows = []
+                    break
+                used_invokes.add(
+                    int(matches[0]["target_invoke_offset"])
+                )
+                flows.append(matches[0])
+
+            if len(flows) == len(calls):
+                exact_candidates.append(
+                    {
+                        "method": exact_method,
+                        "flows": flows,
+                    }
+                )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        proof = exact_candidates[0]
+        for call in calls:
+            match = call["match"]
+            edits.append(
+                (
+                    method_start + match.start("cast"),
+                    method_start + match.end("cast"),
+                    "",
+                )
+            )
+
+        actions.append(
+            {
+                "kind": (
+                    "inherited_cc_generic_value_object_cast_removal"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor":
+                    proof["method"]["descriptor"],
+                "declaring_owners": sorted(
+                    {
+                        str(call["declaring_owner"])
+                        for call in calls
+                    }
+                ),
+                "field_names": [
+                    str(call["field_name"])
+                    for call in calls
+                ],
+                "generic_value_types": sorted(
+                    {
+                        str(call["value_owner"])
+                        for call in calls
+                    }
+                ),
+                "exact_flows": proof["flows"],
+                "replacement_count": len(calls),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_object_cast_on_inherited_generic_cc_value"
+                    ),
+                    "strategy": (
+                        "exact_superclass_signature_substitution_plus_value_method_flow"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping inherited cc Object-cast edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_cc_generic_value_object_casts(
     *,
     source_root: Path,
@@ -21955,6 +22631,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_inherited_cc_generic_value_object_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_cc_generic_value_object_casts(
                         source_root=source_root,
                         path=path,
@@ -22481,6 +23164,17 @@ def normalize_procyon_source(
             int(action.get("replacement_count", 0))
             for action in actions
             if action["kind"] == "generic_key_object_cast_removal"
+        ),
+        "inherited_cc_generic_value_object_cast_action_count": sum(
+            action["kind"]
+            == "inherited_cc_generic_value_object_cast_removal"
+            for action in actions
+        ),
+        "inherited_cc_generic_value_object_cast_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "inherited_cc_generic_value_object_cast_removal"
         ),
         "cc_generic_value_object_cast_action_count": sum(
             action["kind"] == "cc_generic_value_object_cast_removal"
