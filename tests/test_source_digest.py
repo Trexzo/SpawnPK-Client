@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 from spk_recovery.source_digest import (
     SourceDigestError,
@@ -70,6 +72,32 @@ class SourceDigestTests(unittest.TestCase):
                 "symbolic link",
             ):
                 source_tree_digest(source)
+
+    def test_source_tree_rejects_java_fifo_without_reading_it(self):
+        if not hasattr(os, "mkfifo"):
+            self.skipTest("FIFO creation is unavailable on this platform")
+
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            source.mkdir()
+            fifo = source / "A.java"
+            try:
+                os.mkfifo(fifo)
+            except (OSError, NotImplementedError) as exc:
+                self.skipTest(
+                    f"FIFO creation unavailable on this runner: {exc}"
+                )
+
+            with mock.patch.object(
+                Path,
+                "read_bytes",
+                side_effect=AssertionError("FIFO must not be read"),
+            ):
+                with self.assertRaisesRegex(
+                    SourceDigestError,
+                    "non-regular file",
+                ):
+                    source_tree_digest(source)
 
     def test_relative_path_spelling_is_still_authority_bound(self):
         with tempfile.TemporaryDirectory() as td:
