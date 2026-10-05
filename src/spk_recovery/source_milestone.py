@@ -151,6 +151,234 @@ def _release_authority_pin_provenance(
     return linked
 
 
+def _release_verification_evidence(
+    release_manifest: dict[str, Any],
+    release_verification: dict[str, Any],
+    clean_rebuild_report: dict[str, Any],
+    blockers: list[dict[str, str]],
+) -> dict[str, Any] | None:
+    gate = "release_authority"
+    checks = release_verification.get("checks")
+    rows_valid = (
+        isinstance(checks, list)
+        and bool(checks)
+        and all(
+            isinstance(row, dict)
+            and isinstance(row.get("name"), str)
+            and bool(row.get("name"))
+            and isinstance(row.get("required"), bool)
+            and isinstance(row.get("passed"), bool)
+            for row in checks
+        )
+    )
+    if not rows_valid:
+        _block(
+            blockers,
+            gate=gate,
+            reason="release_verification_structure_invalid",
+        )
+        return None
+
+    names = [str(row["name"]) for row in checks]
+    if len(set(names)) != len(names):
+        _block(
+            blockers,
+            gate=gate,
+            reason="release_verification_structure_invalid",
+        )
+
+    required_rows = [
+        row for row in checks if row["required"]
+    ]
+    failed_required = [
+        row for row in required_rows if not row["passed"]
+    ]
+    required_count = release_verification.get(
+        "required_check_count"
+    )
+    failed_count = release_verification.get(
+        "failed_required_check_count"
+    )
+    count_shape_valid = (
+        isinstance(required_count, int)
+        and not isinstance(required_count, bool)
+        and required_count > 0
+        and required_count == len(required_rows)
+        and isinstance(failed_count, int)
+        and not isinstance(failed_count, bool)
+        and failed_count == len(failed_required)
+    )
+    if not count_shape_valid:
+        _block(
+            blockers,
+            gate=gate,
+            reason="release_verification_structure_invalid",
+        )
+    if failed_required or failed_count != 0:
+        _block(
+            blockers,
+            gate=gate,
+            reason="release_verification_required_checks_failed",
+        )
+
+    release_ready = release_verification.get("release_ready")
+    if (
+        release_ready is not True
+        or release_ready
+        != release_manifest.get("ready_for_release")
+    ):
+        _block(
+            blockers,
+            gate=gate,
+            reason="release_verification_release_ready_mismatch",
+        )
+
+    reproduction_rows = [
+        row
+        for row in checks
+        if row["name"] == "release_manifest_exact_reproduction"
+    ]
+    reproduction_valid = (
+        len(reproduction_rows) == 1
+        and reproduction_rows[0]["required"] is True
+        and reproduction_rows[0]["passed"] is True
+        and reproduction_rows[0].get("expected") == release_manifest
+        and reproduction_rows[0].get("actual") == release_manifest
+    )
+    if not reproduction_valid:
+        _block(
+            blockers,
+            gate=gate,
+            reason="release_verification_manifest_reproduction_invalid",
+        )
+
+    compile_transport = clean_rebuild_report.get(
+        "compile_transport"
+    )
+    mode = (
+        compile_transport.get("mode")
+        if isinstance(compile_transport, dict)
+        else None
+    )
+    required_names = {
+        "release_manifest_exact_reproduction",
+    }
+    if mode == "collision_derived_remap":
+        required_names.update(
+            {
+                "collision_private_plan_supplied",
+                "collision_plan_id_authority",
+                "collision_report_id_authority",
+                "collision_transform_id_authority",
+                "collision_base_readable_authority",
+                "collision_private_plan_kind",
+                "collision_private_plan_id",
+                "collision_private_plan_report_id",
+                "collision_private_plan_readable_sha256",
+                "collision_private_plan_sha256",
+                "collision_private_mapping_sha256",
+            }
+        )
+        platform_bridges = compile_transport.get(
+            "compile_only_platform_bridges",
+            [],
+        )
+        if platform_bridges:
+            required_names.update(
+                {
+                    "collision_platform_bridge_count",
+                    "collision_platform_bridge_id",
+                    "collision_platform_bridge_release",
+                    "collision_platform_bridge_runtime_forbidden",
+                    "collision_platform_bridge_transport_runtime_forbidden",
+                    "collision_platform_bridge_v308_authority",
+                    "collision_platform_bridge_source_authority",
+                }
+            )
+    elif mode == "official_first_restored":
+        required_names.update(
+            {
+                "official_overlay_manifest_supplied",
+                "official_overlay_source_root_supplied",
+                "official_private_replacement_plan_supplied",
+                "official_private_reverse_plan_supplied",
+                "official_artifacts_supplied",
+                "official_overlay_id",
+                "official_overlay_replacement_plan_id",
+                "official_overlay_canonical_source_tree_sha256",
+                "official_overlay_bundled_readable_sha256",
+                "official_overlay_artifact_sha256",
+                "official_overlay_source_tree_sha256",
+                "official_private_replacement_identifiers",
+                "official_private_replacement_plan_id",
+                "official_private_replacement_bundled_readable_sha256",
+                "official_private_replacement_artifact_sha256",
+                "official_private_reverse_identifiers",
+                "official_private_reverse_plan_id",
+                "official_private_reverse_replacement_plan_id",
+                "official_private_reverse_bundled_readable_sha256",
+                "official_private_reverse_bytecode_restore_ready",
+                "official_artifact_file_sha256",
+            }
+        )
+
+    passed_required_names = {
+        str(row["name"])
+        for row in required_rows
+        if row["passed"] is True
+    }
+    if not required_names.issubset(passed_required_names):
+        _block(
+            blockers,
+            gate=gate,
+            reason="release_verification_mode_evidence_incomplete",
+        )
+
+    material = {
+        "release_id": release_manifest.get("release_id"),
+        "checks": [
+            (
+                row["name"],
+                row["required"],
+                row["passed"],
+                row.get("expected"),
+                row.get("actual"),
+            )
+            for row in checks
+        ],
+    }
+    expected_verification_id = (
+        "REPRO_"
+        + hashlib.sha256(
+            json.dumps(
+                material,
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=False,
+            ).encode("utf-8")
+        ).hexdigest()[:20].upper()
+    )
+    if release_verification.get(
+        "verification_id"
+    ) != expected_verification_id:
+        _block(
+            blockers,
+            gate=gate,
+            reason="release_verification_id_mismatch",
+        )
+
+    return {
+        "verification_id": release_verification.get(
+            "verification_id"
+        ),
+        "release_ready": release_ready,
+        "required_check_count": required_count,
+        "failed_required_check_count": failed_count,
+        "exact_release_manifest_reproduction": reproduction_valid,
+        "required_check_names": sorted(passed_required_names),
+    }
+
+
 def _official_first_dependency_provenance(
     compile_transport: dict[str, Any] | None,
     blockers: list[dict[str, str]],
@@ -560,6 +788,13 @@ def build_source_milestone_manifest(
             reason="release_verification_id_linkage_mismatch",
         )
 
+    release_verification_evidence = _release_verification_evidence(
+        release_manifest,
+        release_verification,
+        clean_rebuild_report,
+        blockers,
+    )
+
     if source_tree_sha != str(
         release_manifest.get("final_source_tree_sha256") or ""
     ).lower():
@@ -685,6 +920,7 @@ def build_source_milestone_manifest(
         "release_verification_id": release_verification.get(
             "verification_id"
         ),
+        "release_verification_evidence": release_verification_evidence,
         "release_authority_pins": release_authority_pins,
         "collision_provenance": collision_provenance,
         "dependency_transport_provenance": (
@@ -892,6 +1128,9 @@ def build_source_provenance_document(
             ),
             "release_verification_id": provenance.get(
                 "release_verification_id"
+            ),
+            "release_verification_evidence": provenance.get(
+                "release_verification_evidence"
             ),
             "collision_provenance": provenance.get(
                 "collision_provenance"
