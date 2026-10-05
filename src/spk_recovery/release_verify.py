@@ -137,6 +137,10 @@ def _load_json_authority(
         raise RecoveryReleaseVerificationError(
             f"{label} is not valid JSON"
         ) from exc
+    if not isinstance(data, dict):
+        raise RecoveryReleaseVerificationError(
+            f"{label} must be a JSON object"
+        )
     if data.get("kind") != kind:
         raise RecoveryReleaseVerificationError(
             f"{label} has unexpected kind: {data.get('kind')!r}"
