@@ -732,6 +732,71 @@ def build_source_milestone_manifest(
             reason="authority_sha_not_exact_v308",
         )
 
+    class_baseline_build_id = str(
+        class_lineage.get("baseline_build_id") or ""
+    )
+    class_builds = {
+        str(row.get("build_id")): row
+        for row in class_lineage.get("builds", [])
+        if isinstance(row, dict)
+    }
+    class_v308 = class_builds.get("v308", {})
+    class_v308_sha = str(
+        class_v308.get("sha256") or ""
+    ).lower()
+    member_baseline_build_id = str(
+        member_lineage.get("baseline_build_id") or ""
+    )
+    member_source_sha = str(
+        member_lineage.get("source_sha256") or ""
+    ).lower()
+    class_lineage_namespace = str(
+        class_lineage.get("namespace") or ""
+    )
+    member_class_namespace = str(
+        member_lineage.get("class_namespace") or ""
+    )
+
+    if class_baseline_build_id != "v308":
+        _block(
+            blockers,
+            gate="semantic_authority",
+            reason="class_lineage_baseline_not_exact_v308",
+        )
+    if class_v308_sha != authority_sha:
+        _block(
+            blockers,
+            gate="semantic_authority",
+            reason="class_lineage_authority_sha_mismatch",
+        )
+    if member_baseline_build_id != "v308":
+        _block(
+            blockers,
+            gate="semantic_authority",
+            reason="member_lineage_baseline_not_exact_v308",
+        )
+    if member_source_sha != authority_sha:
+        _block(
+            blockers,
+            gate="semantic_authority",
+            reason="member_lineage_authority_sha_mismatch",
+        )
+    if member_class_namespace != class_lineage_namespace:
+        _block(
+            blockers,
+            gate="semantic_authority",
+            reason="member_class_namespace_mismatch",
+        )
+
+    semantic_lineage_authority = {
+        "class_baseline_build_id": class_baseline_build_id,
+        "class_v308_sha256": class_v308_sha,
+        "member_baseline_build_id": member_baseline_build_id,
+        "member_source_sha256": member_source_sha,
+        "class_namespace": class_lineage_namespace,
+        "member_class_namespace": member_class_namespace,
+    }
+
     namespace_id = str(
         readable_manifest.get("namespace_id") or ""
     )
@@ -932,6 +997,7 @@ def build_source_milestone_manifest(
         "class_plan_digest": class_plan_digest,
         "member_plan_digest": member_plan_digest,
         "semantic_review_ids": review_ids,
+        "semantic_lineage_authority": semantic_lineage_authority,
         "fallback_policy": {
             "source_safe_fallback": source_safe_fallback,
             "fallback_name_prefix": fallback_prefix,
