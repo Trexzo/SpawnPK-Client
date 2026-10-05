@@ -541,6 +541,128 @@ class SourceMilestoneTests(unittest.TestCase):
                 manifest["blockers"],
             )
 
+    def test_self_consistent_lineage_authority_sha_drift_is_blocked(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            wrong_sha = "a" * 64
+
+            fixture["class_lineage"]["builds"][0][
+                "sha256"
+            ] = wrong_sha
+            fixture["member_lineage"]["source_sha256"] = wrong_sha
+
+            class_record = fixture["class_lineage"]["classes"][0]
+            class_provenance = class_record[
+                "semantic_provenance"
+            ][0]
+            class_provenance["source_sha256"] = wrong_sha
+            class_provenance["proposal_id"] = semantic_proposal_id(
+                wrong_sha,
+                "class",
+                class_record["logical_id"],
+                class_record["semantic_name"],
+            )
+
+            member_record = fixture["member_lineage"]["members"][0]
+            member_provenance = member_record[
+                "semantic_provenance"
+            ][0]
+            member_provenance["source_sha256"] = wrong_sha
+            member_provenance["proposal_id"] = semantic_proposal_id(
+                wrong_sha,
+                member_record["kind"],
+                member_record["member_id"],
+                member_record["semantic_name"],
+            )
+
+            _refresh_release_pins(fixture)
+            _refresh_release_verification(fixture)
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "semantic_authority",
+                    "reason": "class_lineage_authority_sha_mismatch",
+                },
+                manifest["blockers"],
+            )
+            self.assertIn(
+                {
+                    "gate": "semantic_authority",
+                    "reason": "member_lineage_authority_sha_mismatch",
+                },
+                manifest["blockers"],
+            )
+
+    def test_alternate_lineage_baseline_build_is_blocked(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+
+            fixture["class_lineage"]["baseline_build_id"] = "v309"
+            fixture["class_lineage"]["builds"][0]["build_id"] = "v309"
+            fixture["class_lineage"]["builds"][0]["build_number"] = 309
+            fixture["class_lineage"]["classes"][0]["lineage"][0][
+                "build_id"
+            ] = "v309"
+            fixture["class_lineage"]["classes"][0][
+                "semantic_provenance"
+            ][0]["source_build"] = "v309"
+
+            fixture["member_lineage"]["baseline_build_id"] = "v309"
+            fixture["member_lineage"]["members"][0]["lineage"][0][
+                "build_id"
+            ] = "v309"
+            fixture["member_lineage"]["members"][0][
+                "semantic_provenance"
+            ][0]["source_build"] = "v309"
+
+            _refresh_release_pins(fixture)
+            _refresh_release_verification(fixture)
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "semantic_authority",
+                    "reason": "class_lineage_baseline_not_exact_v308",
+                },
+                manifest["blockers"],
+            )
+            self.assertIn(
+                {
+                    "gate": "semantic_authority",
+                    "reason": "member_lineage_baseline_not_exact_v308",
+                },
+                manifest["blockers"],
+            )
+
+    def test_member_class_namespace_drift_is_blocked(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            fixture["member_lineage"][
+                "class_namespace"
+            ] = "forged-namespace"
+
+            _refresh_release_pins(fixture)
+            _refresh_release_verification(fixture)
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "semantic_authority",
+                    "reason": "member_class_namespace_mismatch",
+                },
+                manifest["blockers"],
+            )
+
     def test_invalid_class_lineage_fails_before_publication(self):
         with tempfile.TemporaryDirectory() as td:
             source = Path(td) / "source"
@@ -603,6 +725,23 @@ class SourceMilestoneTests(unittest.TestCase):
                     _CLASS_REVIEW_ID,
                     _MEMBER_REVIEW_ID,
                 ],
+            )
+            self.assertEqual(
+                manifest["provenance"][
+                    "semantic_lineage_authority"
+                ],
+                {
+                    "class_baseline_build_id": "v308",
+                    "class_v308_sha256": (
+                        V308_SOURCE_AUTHORITY_SHA256
+                    ),
+                    "member_baseline_build_id": "v308",
+                    "member_source_sha256": (
+                        V308_SOURCE_AUTHORITY_SHA256
+                    ),
+                    "class_namespace": "spawnpk-client",
+                    "member_class_namespace": "spawnpk-client",
+                },
             )
             self.assertEqual(
                 manifest["provenance"]["authority_commit"],
