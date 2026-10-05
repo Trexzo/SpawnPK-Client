@@ -1,5 +1,6 @@
 import unittest
 
+from spk_recovery.semantic_authority import semantic_proposal_id
 from spk_recovery.semantic_carryforward import (
     _sha256_json,
     build_semantic_carryforward,
@@ -7,13 +8,38 @@ from spk_recovery.semantic_carryforward import (
 
 
 def _class_record(logical_id, name, entries):
+    source_entry = entries[0]
+    source_build = source_entry["build_id"]
+    source_sha = (
+        "a" * 64
+        if source_build == "v308"
+        else "b" * 64
+    )
     return {
         "logical_id": logical_id,
         "semantic_name": name,
         "semantic_status": "ACCEPTED",
         "semantic_confidence": 0.95,
         "lineage": entries,
-        "semantic_provenance": [{"source": "test"}],
+        "semantic_provenance": [
+            {
+                "proposal_id": semantic_proposal_id(
+                    source_sha,
+                    "class",
+                    logical_id,
+                    name,
+                ),
+                "review_id": "SEMREVIEW_" + "C" * 20,
+                "source_build": source_build,
+                "source_sha256": source_sha,
+                "source_coordinate": {
+                    "owner": source_entry["internal_name"],
+                    "name": None,
+                    "descriptor": None,
+                },
+                "evidence": [],
+            }
+        ],
     }
 
 
