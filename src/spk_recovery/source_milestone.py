@@ -669,6 +669,13 @@ def build_source_milestone_manifest(
 
     blockers: list[dict[str, str]] = []
 
+    if not source_files:
+        _block(
+            blockers,
+            gate="source_tree",
+            reason="source_tree_contains_no_java_files",
+        )
+
     build_id = str(
         release_manifest.get("build_id") or ""
     )
