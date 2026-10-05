@@ -3349,6 +3349,47 @@ def _normalize_exact_static_call_nested_type_collisions(
             )
             source_counts[key] = source_counts.get(key, 0) + 1
 
+        field_identity_keys: dict[
+            tuple[str, str, str],
+            set[tuple[str, str, str, str]],
+        ] = {}
+        for key in source_counts:
+            field_identity = (key[0], key[2], key[3])
+            field_identity_keys.setdefault(field_identity, set()).add(key)
+        if any(len(keys) != 1 for keys in field_identity_keys.values()):
+            continue
+
+        source_field_occurrences: dict[
+            tuple[str, str, str, str],
+            list[dict[str, Any]],
+        ] = {}
+        for key in source_counts:
+            outer, _static_name, nested_simple, field_name = key
+            field_re = re.compile(
+                r"(?<![A-Za-z0-9_$.])"
+                + re.escape(outer)
+                + r"\."
+                + re.escape(nested_simple)
+                + r"\."
+                + re.escape(field_name)
+                + r"(?![A-Za-z0-9_$])"
+            )
+            source_field_occurrences[key] = [
+                {
+                    "start": method_start + match.start(),
+                    "end": method_start + match.end(),
+                }
+                for match in field_re.finditer(method_code)
+            ]
+            if (
+                len(source_field_occurrences[key])
+                < source_counts[key]
+            ):
+                source_field_occurrences = {}
+                break
+        if not source_field_occurrences:
+            continue
+
         source_static = bool(
             re.search(
                 r"\bstatic\b",
@@ -3396,6 +3437,12 @@ def _normalize_exact_static_call_nested_type_collisions(
 
             for key, source_count in sorted(source_counts.items()):
                 outer, static_name, nested_simple, field_name = key
+                source_field_count = len(
+                    source_field_occurrences.get(key, [])
+                )
+                if source_field_count < source_count:
+                    exact_ok = False
+                    break
 
                 invocation_rows = [
                     row
@@ -3478,7 +3525,7 @@ def _normalize_exact_static_call_nested_type_collisions(
                             == field_descriptor
                         )
                     ]
-                    if len(field_rows) != source_count:
+                    if len(field_rows) != source_field_count:
                         continue
 
                     field_shapes = _descriptor_parameter_shapes(
@@ -3515,6 +3562,8 @@ def _normalize_exact_static_call_nested_type_collisions(
                             "nested_owner": nested_owner,
                             "field_descriptor": field_descriptor,
                             "shadow_declaring_owners": shadow_owners,
+                            "source_call_count": source_count,
+                            "source_field_count": source_field_count,
                             "invocation_descriptors": sorted(
                                 invocation_descriptors
                             ),
@@ -3547,26 +3596,25 @@ def _normalize_exact_static_call_nested_type_collisions(
             continue
 
         proof = exact_candidates[0]
-        for row in occurrences:
-            key = (
-                str(row["outer"]),
-                str(row["method"]),
-                str(row["nested"]),
-                str(row["field"]),
-            )
+        replacement_count = 0
+        for key, field_occurrences in sorted(
+            source_field_occurrences.items()
+        ):
             group = proof["groups"][key]
             java_nested = (
                 str(group["nested_owner"])
                 .replace("$", ".")
                 .replace("/", ".")
             )
-            edits.append(
-                (
-                    int(row["start"]),
-                    int(row["end"]),
-                    "((" + java_nested + ")null)." + str(row["field"]),
+            for row in field_occurrences:
+                edits.append(
+                    (
+                        int(row["start"]),
+                        int(row["end"]),
+                        "((" + java_nested + ")null)." + key[3],
+                    )
                 )
-            )
+                replacement_count += 1
 
         actions.append(
             {
@@ -3577,7 +3625,7 @@ def _normalize_exact_static_call_nested_type_collisions(
                 "method_name": method_match.group("name"),
                 "method_descriptor": proof["method"]["descriptor"],
                 "pair_count": len(occurrences),
-                "replacement_count": len(occurrences),
+                "replacement_count": replacement_count,
                 "groups": [
                     {
                         "source_outer": key[0],
