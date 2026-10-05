@@ -168,6 +168,25 @@ class LineageTest(unittest.TestCase):
         ):
             validate_lineage(doc)
 
+    def test_accepted_semantic_rejects_non_identifier_name(self):
+        doc = self._accepted()
+        record = doc["classes"][0]
+        record["semantic_name"] = "bad-name"
+        record["semantic_provenance"][0][
+            "proposal_id"
+        ] = semantic_proposal_id(
+            "a" * 64,
+            "class",
+            record["logical_id"],
+            "bad-name",
+        )
+
+        with self.assertRaisesRegex(
+            LineageValidationError,
+            "not a canonical identifier",
+        ):
+            validate_lineage(doc)
+
     def test_confidence_range_is_enforced(self):
         doc = seed_lineage(
             _index(),
