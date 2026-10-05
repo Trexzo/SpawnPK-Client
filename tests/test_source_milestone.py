@@ -321,6 +321,14 @@ class SourceMilestoneTests(unittest.TestCase):
             source = Path(td) / "source"
             fixture = _fixtures(source)
             transport = self._official_transport()
+            for key in (
+                "collision_transform_id",
+                "collision_plan_id",
+                "collision_report_id",
+                "collision_mapping_sha256",
+                "base_readable_jar_sha256",
+            ):
+                fixture["recovered_source_manifest"].pop(key, None)
             fixture["clean_rebuild_report"][
                 "compile_transport"
             ] = transport
@@ -369,6 +377,14 @@ class SourceMilestoneTests(unittest.TestCase):
             fixture = _fixtures(source)
             transport = self._official_transport()
             transport["reverse_plan_id"] = None
+            for key in (
+                "collision_transform_id",
+                "collision_plan_id",
+                "collision_report_id",
+                "collision_mapping_sha256",
+                "base_readable_jar_sha256",
+            ):
+                fixture["recovered_source_manifest"].pop(key, None)
             fixture["clean_rebuild_report"][
                 "compile_transport"
             ] = transport
@@ -392,6 +408,14 @@ class SourceMilestoneTests(unittest.TestCase):
             fixture = _fixtures(source)
             transport = self._official_transport()
             transport["runtime_official_dependencies_allowed"] = True
+            for key in (
+                "collision_transform_id",
+                "collision_plan_id",
+                "collision_report_id",
+                "collision_mapping_sha256",
+                "base_readable_jar_sha256",
+            ):
+                fixture["recovered_source_manifest"].pop(key, None)
             fixture["clean_rebuild_report"][
                 "compile_transport"
             ] = transport
