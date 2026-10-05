@@ -278,6 +278,15 @@ def _index_source_units(
         raise CrossVersionSourceDeltaError(
             f"{label}_release: missing authority_pins"
         )
+    expected_lineage_digest = str(
+        pins.get("class_lineage_sha256") or ""
+    ).lower()
+    actual_lineage_digest = _json_digest(class_lineage)
+    if expected_lineage_digest != actual_lineage_digest:
+        raise CrossVersionSourceDeltaError(
+            f"{label}: class lineage digest does not match release pin"
+        )
+
     expected_recovered_digest = str(
         pins.get("recovered_source_manifest_sha256") or ""
     ).lower()
