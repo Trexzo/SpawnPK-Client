@@ -29,6 +29,23 @@ def _json_digest(value: Any) -> str:
     return hashlib.sha256(_stable_json(value)).hexdigest()
 
 
+def _expected_release_id(release: dict[str, Any]) -> str:
+    material = {
+        "build_id": release.get("build_id"),
+        "authority_sha256": release.get("authority_sha256"),
+        "namespace_id": release.get("namespace_id"),
+        "readable_jar_sha256": release.get("readable_jar_sha256"),
+        "final_workspace_id": release.get("final_workspace_id"),
+        "final_source_tree_sha256": release.get(
+            "final_source_tree_sha256"
+        ),
+        "source_state": release.get("source_state"),
+        "pins": release.get("authority_pins"),
+        "blockers": release.get("blockers"),
+    }
+    return "RECOVERY_" + _json_digest(material)[:20].upper()
+
+
 def _require_doc(
     doc: dict[str, Any],
     *,
@@ -248,6 +265,20 @@ def _index_source_units(
     if release.get("ready_for_release") is not True:
         raise CrossVersionSourceDeltaError(
             f"{label}_release: source comparison requires ready_for_release=true"
+        )
+    release_blockers = release.get("blockers")
+    if not isinstance(release_blockers, list):
+        raise CrossVersionSourceDeltaError(
+            f"{label}_release: blockers must be a list"
+        )
+    if release_blockers:
+        raise CrossVersionSourceDeltaError(
+            f"{label}_release: ready release retains blockers"
+        )
+    expected_release_id = _expected_release_id(release)
+    if release.get("release_id") != expected_release_id:
+        raise CrossVersionSourceDeltaError(
+            f"{label}_release: release_id is not deterministic"
         )
     _require_doc(
         recovered_manifest,
