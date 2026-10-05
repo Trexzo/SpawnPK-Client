@@ -16124,6 +16124,238 @@ class GenericKeyObjectCastTests(unittest.TestCase):
         self._assert_no_action("slot_type")
 
 
+class InheritedCcGenericValueObjectCastTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        mode: str = "exact",
+    ) -> Path:
+        mid_extends = "Base<R>"
+        exact_value_call = "this.b(id, map)"
+        if mode == "raw_hierarchy":
+            mid_extends = "Base"
+        elif mode == "method_drift":
+            exact_value_call = "this.c(id, map)"
+        elif mode != "exact":
+            raise AssertionError(mode)
+
+        return _compile_java_fixture(
+            root,
+            {
+                "gnu/trove/f/b/cc.java": (
+                    "package gnu.trove.f.b;\n"
+                    "public class cc<V> {\n"
+                    "    public V a(int key, V value) { return value; }\n"
+                    "}\n"
+                ),
+                "p/R.java": (
+                    "package p;\n"
+                    "public class R {}\n"
+                ),
+                "p/Base.java": (
+                    "package p;\n"
+                    "import gnu.trove.f.b.cc;\n"
+                    "public class Base<T> {\n"
+                    "    public final cc<T> h = new cc<>();\n"
+                    "}\n"
+                ),
+                "p/Mid.java": (
+                    "package p;\n"
+                    "public class Mid extends "
+                    + mid_extends
+                    + " {}\n"
+                ),
+                "p/Current.java": (
+                    "package p;\n"
+                    "import java.util.Map;\n"
+                    "public class Current extends Mid {\n"
+                    "    public R b(int id, Map<String,Object> map) {\n"
+                    "        return new R();\n"
+                    "    }\n"
+                    "    public R c(int id, Map<String,Object> map) {\n"
+                    "        return new R();\n"
+                    "    }\n"
+                    "    public void run(int id, Map<String,Object> map) {\n"
+                    "        this.h.a(id, "
+                    + exact_value_call
+                    + ");\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def _malformed_source(
+        self,
+        *,
+        duplicate: bool = False,
+    ) -> str:
+        call = (
+            "        this.h.a(id, (Object)this.b(id, map));\n"
+        )
+        if duplicate:
+            call += (
+                "        this.h.a(id, (Object)this.b(id, map));\n"
+            )
+        return (
+            "package p;\n"
+            "import java.util.Map;\n"
+            "public class Current extends Mid {\n"
+            "    public R b(int id, Map<String,Object> map) {\n"
+            "        return new R();\n"
+            "    }\n"
+            "    public R c(int id, Map<String,Object> map) {\n"
+            "        return new R();\n"
+            "    }\n"
+            "    public void run(int id, Map<String,Object> map) {\n"
+            + call
+            + "    }\n"
+            "}\n"
+        )
+
+    def _write_source(
+        self,
+        root: Path,
+        *,
+        duplicate: bool = False,
+    ) -> Path:
+        source = root / "src" / "p" / "Current.java"
+        source.parent.mkdir(parents=True)
+        source.write_text(
+            self._malformed_source(duplicate=duplicate),
+            encoding="utf-8",
+        )
+        return source
+
+    def test_inherited_cc_generic_value_cast_is_removed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = self._write_source(root)
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-inherited-cc"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("no suitable method", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "this.h.a(id, this.b(id, map));",
+                normalized,
+            )
+            self.assertNotIn(
+                "(Object)this.b",
+                normalized,
+            )
+            action = next(
+                row
+                for row in report["actions"]
+                if (
+                    row["kind"]
+                    == "cc_generic_value_object_cast_removal"
+                    and row.get("receiver_authority")
+                    == "inherited_generic_hierarchy"
+                )
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                action["generic_value_types"],
+                ["p/R"],
+            )
+            self.assertEqual(
+                action["value_kinds"],
+                ["method_call"],
+            )
+            self.assertEqual(
+                action["flows"][0]["field_declaring_owner"],
+                "p/Base",
+            )
+            self.assertEqual(
+                action["flows"][0]["field_signature"],
+                "Lgnu/trove/f/b/cc<TT;>;",
+            )
+            self.assertEqual(
+                action["flows"][0]["substitutions"],
+                {"T": "p/R"},
+            )
+            self.assertEqual(
+                action["flows"][0]["value_invoke_descriptor"],
+                "(ILjava/util/Map;)Lp/R;",
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-inherited-cc"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def _assert_no_inherited_action(
+        self,
+        *,
+        mode: str = "exact",
+        duplicate: bool = False,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, mode=mode)
+            source = self._write_source(
+                root,
+                duplicate=duplicate,
+            )
+            original = source.read_text(encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "cc_generic_value_object_cast_removal"
+                    and row.get("receiver_authority")
+                    == "inherited_generic_hierarchy"
+                    for row in report["actions"]
+                )
+            )
+
+    def test_inherited_cc_fails_closed_on_raw_hierarchy(self):
+        self._assert_no_inherited_action(mode="raw_hierarchy")
+
+    def test_inherited_cc_fails_closed_on_value_method_drift(self):
+        self._assert_no_inherited_action(mode="method_drift")
+
+    def test_inherited_cc_fails_closed_on_multiplicity_drift(self):
+        self._assert_no_inherited_action(duplicate=True)
+
+
 class CcGenericInstanceValueObjectCastTests(unittest.TestCase):
     def _fixture(
         self,
