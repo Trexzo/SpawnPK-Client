@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import shutil
+import stat
 from typing import Any
 
 from .lineage import LineageValidationError, validate_lineage
@@ -23,6 +25,50 @@ class SourceMilestoneError(ValueError):
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 _DEFAULT_AUTHORITY_REPOSITORY = "Trexzo/SpawnPK-Client"
 _DEFAULT_PUBLICATION_REPOSITORY = "Trexzo/SpawnPK-Client-Source"
+
+
+def _reject_unsafe_tree_entries(
+    root: Path,
+    *,
+    label: str,
+    allow_missing: bool = False,
+) -> None:
+    if root.is_symlink():
+        raise SourceMilestoneError(
+            f"{label} root must not be a symbolic link"
+        )
+    if not root.exists():
+        if allow_missing:
+            return
+        raise SourceMilestoneError(f"{label} does not exist")
+    if not stat.S_ISDIR(root.lstat().st_mode):
+        raise SourceMilestoneError(
+            f"{label} root must be an ordinary directory"
+        )
+
+    for dirpath, dirnames, filenames in os.walk(
+        root,
+        followlinks=False,
+    ):
+        base = Path(dirpath)
+        for name in sorted([*dirnames, *filenames]):
+            path = base / name
+            rel = path.relative_to(root).as_posix()
+            mode = path.lstat().st_mode
+            if stat.S_ISLNK(mode):
+                raise SourceMilestoneError(
+                    f"{label} contains symbolic link: {rel}"
+                )
+            if name in dirnames:
+                if not stat.S_ISDIR(mode):
+                    raise SourceMilestoneError(
+                        f"{label} contains non-directory entry: {rel}"
+                    )
+                continue
+            if not stat.S_ISREG(mode):
+                raise SourceMilestoneError(
+                    f"{label} contains non-regular file: {rel}"
+                )
 
 
 def _exact_json_object(pairs):
@@ -673,6 +719,10 @@ def build_source_milestone_manifest(
         label="release_verification",
     )
 
+    _reject_unsafe_tree_entries(
+        source_root,
+        label="source root",
+    )
     source_root = source_root.resolve()
     if not source_root.is_dir():
         raise SourceMilestoneError(
@@ -1307,8 +1357,26 @@ def build_source_publication_bundle(
             "source milestone identity mismatch"
         )
 
+    _reject_unsafe_tree_entries(
+        source_root,
+        label="source root",
+    )
+    _reject_unsafe_tree_entries(
+        out_dir,
+        label="publication bundle output",
+        allow_missing=True,
+    )
     source_root = source_root.resolve()
     out_dir = out_dir.resolve()
+
+    try:
+        out_dir.relative_to(source_root)
+    except ValueError:
+        pass
+    else:
+        raise SourceMilestoneError(
+            "publication bundle directory must be outside source root"
+        )
 
     if not source_root.is_dir():
         raise SourceMilestoneError(
@@ -1463,6 +1531,10 @@ def verify_source_publication_bundle(
         _DEFAULT_PUBLICATION_REPOSITORY
     ),
 ) -> dict[str, Any]:
+    _reject_unsafe_tree_entries(
+        bundle_dir,
+        label="publication bundle",
+    )
     bundle_dir = bundle_dir.resolve()
     if not bundle_dir.is_dir():
         raise SourceMilestoneError(
