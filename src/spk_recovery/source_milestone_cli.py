@@ -61,6 +61,10 @@ def _common_inputs(p: argparse.ArgumentParser) -> None:
 
 
 def _kwargs(args: argparse.Namespace) -> dict:
+    # The lineage-specific loaders validate their semantic schemas, while
+    # this preflight enforces the publication boundary's exact JSON syntax.
+    _load(args.class_lineage)
+    _load(args.member_lineage)
     return {
         "authority_commit": args.authority_commit,
         "class_lineage": load_lineage(args.class_lineage),
