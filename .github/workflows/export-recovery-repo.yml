@@ -1,0 +1,21 @@
+name: Export Recovery Repo
+
+on:
+  push:
+    branches:
+      - chat1/export-recovery-repo-r1
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package tracked recovery repository
+        shell: bash
+        run: tar --exclude=.git -czf /tmp/spawnpk-recovery-repo.tgz .
+      - name: Upload recovery repository artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: spawnpk-recovery-repo
+          path: /tmp/spawnpk-recovery-repo.tgz
+          retention-days: 1
