@@ -156,7 +156,16 @@ class MemberRemapPlanTests(unittest.TestCase):
 
     def test_field_collision_with_unmapped_member_is_rejected(self):
         members = _member_lineage()
-        members["members"][0]["semantic_name"] = "y"
+        record = members["members"][0]
+        record["semantic_name"] = "y"
+        record["semantic_provenance"][0]["proposal_id"] = (
+            semantic_proposal_id(
+                SHA,
+                record["kind"],
+                record["member_id"],
+                "y",
+            )
+        )
         with self.assertRaises(MemberRemapPlanError):
             build_member_remap_plan(
                 _class_lineage(),
@@ -167,7 +176,16 @@ class MemberRemapPlanTests(unittest.TestCase):
 
     def test_method_collision_same_descriptor_is_rejected(self):
         members = _member_lineage()
-        members["members"][2]["semantic_name"] = "b"
+        record = members["members"][2]
+        record["semantic_name"] = "b"
+        record["semantic_provenance"][0]["proposal_id"] = (
+            semantic_proposal_id(
+                SHA,
+                record["kind"],
+                record["member_id"],
+                "b",
+            )
+        )
         members["members"][3]["lineage"][0]["descriptor"] = "(J)V"
         index = _index()
         index["classes"]["rs/A.class"]["methods"][2]["descriptor"] = "(J)V"
@@ -261,7 +279,16 @@ class MemberRemapPlanTests(unittest.TestCase):
 
     def test_accepted_keyword_semantic_target_fails_closed(self):
         members = _member_lineage()
-        members["members"][0]["semantic_name"] = "if"
+        record = members["members"][0]
+        record["semantic_name"] = "if"
+        record["semantic_provenance"][0]["proposal_id"] = (
+            semantic_proposal_id(
+                SHA,
+                record["kind"],
+                record["member_id"],
+                "if",
+            )
+        )
         with self.assertRaises(MemberRemapPlanError):
             build_member_remap_plan(
                 _class_lineage(),
