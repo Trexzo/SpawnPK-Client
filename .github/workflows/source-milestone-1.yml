@@ -234,17 +234,50 @@ jobs:
           test -f authority/release-verification.json
           test -d authority/src
 
-      - name: Verify Source M1 authority artifact
+      - name: Independently rebuild authority preflight milestone
         shell: bash
         env:
           AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
         run: |
           set -euo pipefail
           mkdir -p source-m1/verification
+          python -m spk_recovery.source_milestone_cli build \
+            --authority-commit "$AUTHORITY_COMMIT" \
+            --class-lineage authority/class-lineage.json \
+            --member-lineage authority/member-lineage.json \
+            --readable-manifest authority/readable-client-manifest.json \
+            --recovered-manifest authority/recovered-source-manifest.json \
+            --clean-rebuild authority/clean-rebuild.json \
+            --release-manifest authority/recovery-release.json \
+            --release-verification authority/release-verification.json \
+            --source-root authority/src \
+            --out source-m1/verification/PREFLIGHT-SOURCE-MILESTONE.json
+
+      - name: Verify Source M1 authority artifact
+        shell: bash
+        env:
+          AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+        run: |
+          set -euo pipefail
+          EXPECTED_MILESTONE_ID="$(
+            python - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest = json.loads(
+              Path(
+                  "source-m1/verification/PREFLIGHT-SOURCE-MILESTONE.json"
+              ).read_text(encoding="utf-8")
+          )
+          print(manifest["milestone_id"])
+          PY
+          )"
+          test -n "$EXPECTED_MILESTONE_ID"
 
           python -m spk_recovery.source_authority_artifact_cli verify \
             --artifact-dir authority \
             --expected-authority-commit "$AUTHORITY_COMMIT" \
+            --expected-milestone-id "$EXPECTED_MILESTONE_ID" \
             --out source-m1/verification/SOURCE-AUTHORITY-VERIFICATION.json
 
       - name: Build Source Milestone 1 manifest
@@ -307,12 +340,15 @@ jobs:
 
       - name: Verify publication bundle
         shell: bash
+        env:
+          AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
         run: |
           set -euo pipefail
 
           python -m spk_recovery.source_milestone_cli verify-bundle \
             --bundle-dir source-m1/publication \
             --manifest source-m1/SOURCE-MILESTONE.json \
+            --expected-authority-commit "$AUTHORITY_COMMIT" \
             --out source-m1/verification/SOURCE-BUNDLE-VERIFICATION.json
 
       - name: Reject binaries outside verifier contract
