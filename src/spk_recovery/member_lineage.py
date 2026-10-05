@@ -9,6 +9,7 @@ from .lineage import LineageValidationError, validate_lineage
 from .semantic_authority import (
     SEMANTIC_PROPOSAL_ID_RE,
     SEMANTIC_REVIEW_ID_RE,
+    is_semantic_identifier,
     semantic_proposal_id,
 )
 
@@ -330,6 +331,11 @@ def validate_member_lineage(
             lineage_entries += 1
 
         if status == "ACCEPTED":
+            if not is_semantic_identifier(semantic_name):
+                raise MemberLineageError(
+                    f"{label}: accepted semantic name must be one "
+                    f"canonical identifier, got {semantic_name!r}"
+                )
             accepted_name = str(semantic_name)
             if kind == "field":
                 collision_key = (str(owner_id), accepted_name)
