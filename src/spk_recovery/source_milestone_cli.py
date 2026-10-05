@@ -110,6 +110,10 @@ def main(argv: list[str] | None = None) -> int:
         type=Path,
     )
     verify_bundle.add_argument(
+        "--expected-authority-commit",
+        required=True,
+    )
+    verify_bundle.add_argument(
         "--out",
         type=Path,
         required=True,
@@ -178,6 +182,9 @@ def main(argv: list[str] | None = None) -> int:
             report = verify_source_publication_bundle(
                 args.bundle_dir,
                 expected_manifest=expected_manifest,
+                expected_authority_commit=(
+                    args.expected_authority_commit
+                ),
             )
             write_json(report, args.out)
             print(

@@ -13,8 +13,13 @@ from spk_recovery.source_milestone import (
     build_source_provenance_document,
     build_source_publication_bundle,
     verify_source_milestone_manifest,
-    verify_source_publication_bundle,
+    verify_source_publication_bundle as _verify_source_publication_bundle,
 )
+
+
+def verify_source_publication_bundle(bundle_dir, **kwargs):
+    kwargs.setdefault("expected_authority_commit", "f" * 40)
+    return _verify_source_publication_bundle(bundle_dir, **kwargs)
 
 
 def _document_digest(value) -> str:
@@ -1167,6 +1172,67 @@ class SourceMilestoneTests(unittest.TestCase):
             self.assertIn(
                 "SOURCE-PROVENANCE.json",
                 bundle["provenance_documents"],
+            )
+
+    def test_bundle_verifier_requires_external_authority_commit(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={},
+            )
+
+            report = _verify_source_publication_bundle(bundle_root)
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["expected_authority_commit"]
+            )
+            self.assertTrue(
+                all(
+                    value
+                    for key, value in report["checks"].items()
+                    if key != "expected_authority_commit"
+                )
+            )
+
+    def test_bundle_verifier_rejects_wrong_external_authority_commit(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={},
+            )
+
+            report = _verify_source_publication_bundle(
+                bundle_root,
+                expected_authority_commit="e" * 40,
+            )
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["expected_authority_commit"]
+            )
+            self.assertTrue(
+                all(
+                    value
+                    for key, value in report["checks"].items()
+                    if key != "expected_authority_commit"
+                )
             )
 
     def test_publication_bundle_verifier_accepts_exact_bundle(self):

@@ -1366,6 +1366,7 @@ def verify_source_publication_bundle(
     bundle_dir: Path,
     *,
     expected_manifest: dict[str, Any] | None = None,
+    expected_authority_commit: str | None = None,
     expected_authority_repository: str = (
         _DEFAULT_AUTHORITY_REPOSITORY
     ),
@@ -1458,6 +1459,13 @@ def verify_source_publication_bundle(
     checks["external_manifest_match"] = (
         expected_manifest is None
         or expected_manifest == milestone
+    )
+    checks["expected_authority_commit"] = (
+        isinstance(expected_authority_commit, str)
+        and _COMMIT_RE.fullmatch(expected_authority_commit)
+        is not None
+        and provenance.get("authority_commit")
+        == expected_authority_commit
     )
     checks["expected_authority_repository"] = (
         provenance.get("authority_repository")

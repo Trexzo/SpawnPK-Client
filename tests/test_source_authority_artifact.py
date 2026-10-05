@@ -249,6 +249,53 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
             **build_kwargs,
         )
 
+    def test_verifier_requires_external_authority_commit(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            out = root / "artifact"
+
+            self._build(source, out, fixture)
+            report = verify_source_authority_artifact(out)
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["expected_authority_commit"]
+            )
+            self.assertTrue(
+                all(
+                    value
+                    for key, value in report["checks"].items()
+                    if key != "expected_authority_commit"
+                )
+            )
+
+    def test_verifier_rejects_wrong_external_authority_commit(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            out = root / "artifact"
+
+            self._build(source, out, fixture)
+            report = verify_source_authority_artifact(
+                out,
+                expected_authority_commit="e" * 40,
+            )
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["expected_authority_commit"]
+            )
+            self.assertTrue(
+                all(
+                    value
+                    for key, value in report["checks"].items()
+                    if key != "expected_authority_commit"
+                )
+            )
+
     def test_exact_artifact_is_deterministic_and_verifies(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
