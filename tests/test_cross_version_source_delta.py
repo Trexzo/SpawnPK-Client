@@ -271,6 +271,7 @@ def _authority_bundle(
         "ready_for_release": True,
         "blockers": [],
         "authority_pins": {
+            "class_lineage_sha256": _digest(_lineage()),
             "recovered_source_manifest_sha256": _digest(recovered),
         },
     }
@@ -380,6 +381,20 @@ class CrossVersionSourceDeltaTests(unittest.TestCase):
             args = list(self._args(old, new))
             args[0]["final_source_tree_sha256"] = "0" * 64
             with self.assertRaises(CrossVersionSourceDeltaError):
+                build_cross_version_source_delta(*args)
+
+    def test_release_pinned_class_lineage_drift_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            old, new = self._roots(Path(tmp))
+            args = list(self._args(old, new))
+            lineage = copy.deepcopy(args[4])
+            lineage["builds"][0]["source_name"] = "drifted-old.jar"
+            args[4] = lineage
+
+            with self.assertRaisesRegex(
+                CrossVersionSourceDeltaError,
+                "class lineage digest does not match release pin",
+            ):
                 build_cross_version_source_delta(*args)
 
     def test_recovered_manifest_release_pin_drift_is_rejected(self):
