@@ -8160,7 +8160,7 @@ def _normalize_generic_key_object_casts(
                 r"(?:(?:final)\s+)?"
                 r"(?P<type>[A-Za-z_$][A-Za-z0-9_$.]*)\s+"
                 + re.escape(key_name)
-                + r"\b\s*(?:=|;)"
+                + r"\b\s*(?:=|;|:)"
             )
             local_types = {
                 resolved
