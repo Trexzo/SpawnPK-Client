@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
+import stat
 from typing import Any
 
 from .source_digest import (
@@ -34,6 +36,52 @@ _DOCUMENT_NAMES = {
     "recovery-release.json": "release_manifest",
     "release-verification.json": "release_verification",
 }
+
+
+def _reject_unsafe_tree_entries(
+    root: Path,
+    *,
+    label: str,
+    allow_missing: bool = False,
+) -> None:
+    if root.is_symlink():
+        raise SourceAuthorityArtifactError(
+            f"{label} root must not be a symbolic link"
+        )
+    if not root.exists():
+        if allow_missing:
+            return
+        raise SourceAuthorityArtifactError(
+            f"{label} does not exist"
+        )
+    if not stat.S_ISDIR(root.lstat().st_mode):
+        raise SourceAuthorityArtifactError(
+            f"{label} root must be an ordinary directory"
+        )
+
+    for dirpath, dirnames, filenames in os.walk(
+        root,
+        followlinks=False,
+    ):
+        base = Path(dirpath)
+        for name in sorted([*dirnames, *filenames]):
+            path = base / name
+            rel = path.relative_to(root).as_posix()
+            mode = path.lstat().st_mode
+            if stat.S_ISLNK(mode):
+                raise SourceAuthorityArtifactError(
+                    f"{label} contains symbolic link: {rel}"
+                )
+            if name in dirnames:
+                if not stat.S_ISDIR(mode):
+                    raise SourceAuthorityArtifactError(
+                        f"{label} contains non-directory entry: {rel}"
+                    )
+                continue
+            if not stat.S_ISREG(mode):
+                raise SourceAuthorityArtifactError(
+                    f"{label} contains non-regular file: {rel}"
+                )
 
 
 def _stable_digest(value: Any) -> str:
@@ -143,8 +191,26 @@ def build_source_authority_artifact(
             "authority commit must be exact lowercase 40-hex"
         )
 
+    _reject_unsafe_tree_entries(
+        source_root,
+        label="source root",
+    )
+    _reject_unsafe_tree_entries(
+        out_dir,
+        label="authority artifact output",
+        allow_missing=True,
+    )
     source_root = source_root.resolve()
     out_dir = out_dir.resolve()
+
+    try:
+        out_dir.relative_to(source_root)
+    except ValueError:
+        pass
+    else:
+        raise SourceAuthorityArtifactError(
+            "authority artifact output must be outside source root"
+        )
 
     if not source_root.is_dir():
         raise SourceAuthorityArtifactError(
@@ -287,6 +353,10 @@ def verify_source_authority_artifact(
         _DEFAULT_PUBLICATION_REPOSITORY
     ),
 ) -> dict[str, Any]:
+    _reject_unsafe_tree_entries(
+        artifact_dir,
+        label="authority artifact",
+    )
     artifact_dir = artifact_dir.resolve()
     manifest_path = (
         artifact_dir / "SOURCE-AUTHORITY-ARTIFACT.json"
