@@ -669,6 +669,13 @@ def build_source_milestone_manifest(
 
     blockers: list[dict[str, str]] = []
 
+    if not source_files:
+        _block(
+            blockers,
+            gate="source_tree",
+            reason="source_tree_empty",
+        )
+
     build_id = str(
         release_manifest.get("build_id") or ""
     )
@@ -1181,6 +1188,34 @@ def build_source_publication_bundle(
             "source milestone is not publishable"
         )
 
+    blockers = manifest.get("blockers")
+    publication = manifest.get("publication")
+    if (
+        not isinstance(blockers, list)
+        or blockers
+        or not isinstance(publication, dict)
+        or publication.get("allowed") is not True
+    ):
+        raise SourceMilestoneError(
+            "source milestone publication state is inconsistent"
+        )
+
+    milestone_material = {
+        "provenance": manifest.get("provenance"),
+        "source_tree": manifest.get("source_tree"),
+        "class_set": manifest.get("class_set"),
+        "publication": publication,
+        "blockers": blockers,
+    }
+    expected_milestone_id = (
+        "SRCMILESTONE_"
+        + _stable_digest(milestone_material)[:20].upper()
+    )
+    if manifest.get("milestone_id") != expected_milestone_id:
+        raise SourceMilestoneError(
+            "source milestone identity mismatch"
+        )
+
     source_root = source_root.resolve()
     out_dir = out_dir.resolve()
 
@@ -1387,6 +1422,25 @@ def verify_source_publication_bundle(
 
     checks: dict[str, bool] = {}
 
+    blockers = milestone.get("blockers")
+    publication_raw = milestone.get("publication")
+    publication = (
+        publication_raw
+        if isinstance(publication_raw, dict)
+        else {}
+    )
+    milestone_material = {
+        "provenance": milestone.get("provenance"),
+        "source_tree": milestone.get("source_tree"),
+        "class_set": milestone.get("class_set"),
+        "publication": publication_raw,
+        "blockers": blockers,
+    }
+    expected_milestone_id = (
+        "SRCMILESTONE_"
+        + _stable_digest(milestone_material)[:20].upper()
+    )
+
     checks["external_manifest_match"] = (
         expected_manifest is None
         or expected_manifest == milestone
@@ -1394,15 +1448,24 @@ def verify_source_publication_bundle(
     checks["milestone_publishable"] = (
         milestone.get("publishable") is True
     )
+    checks["milestone_blockers_empty"] = (
+        isinstance(blockers, list) and not blockers
+    )
+    checks["milestone_publication_allowed"] = (
+        isinstance(publication_raw, dict)
+        and publication_raw.get("allowed") is True
+    )
+    checks["milestone_identity_match"] = (
+        milestone.get("milestone_id")
+        == expected_milestone_id
+    )
     checks["bundle_milestone_match"] = (
         bundle.get("milestone_id")
         == milestone.get("milestone_id")
     )
     checks["publication_repository_match"] = (
         bundle.get("publication_repository")
-        == milestone.get("publication", {}).get(
-            "target_repository"
-        )
+        == publication.get("target_repository")
     )
     checks["contains_binary_artifacts_false"] = (
         bundle.get("contains_binary_artifacts") is False
@@ -1412,6 +1475,7 @@ def verify_source_publication_bundle(
         source_root
     )
     source_count = len(source_files)
+    checks["source_tree_nonempty"] = source_count > 0
     checks["source_tree_sha256_match"] = (
         tree_sha
         == bundle.get("source_tree_sha256")
