@@ -1,6 +1,7 @@
 import unittest
 
 from spk_recovery.coverage import build_coverage_report
+from spk_recovery.semantic_authority import semantic_proposal_id
 
 
 def class_lineage():
@@ -20,7 +21,29 @@ def class_lineage():
                 "confidence": 1.0,
                 "provenance": [],
             }],
-            "semantic_provenance": [] if status == "UNKNOWN" else [{"source": "test"}],
+            "semantic_provenance": (
+                [
+                    {
+                        "proposal_id": semantic_proposal_id(
+                            "a" * 64,
+                            "class",
+                            f"CLIENT_CLASS_{i:06d}",
+                            f"Name{i}",
+                        ),
+                        "review_id": "SEMREVIEW_" + "2" * 20,
+                        "source_build": "v308",
+                        "source_sha256": "a" * 64,
+                        "source_coordinate": {
+                            "owner": f"rs/{i}",
+                            "name": None,
+                            "descriptor": None,
+                        },
+                        "evidence": [],
+                    }
+                ]
+                if status == "ACCEPTED"
+                else []
+            ),
         }
     return {
         "schema_version": 1,
@@ -58,7 +81,29 @@ def member_lineage():
                 "confidence": 1.0,
                 "provenance": [],
             }],
-            "semantic_provenance": [] if status == "UNKNOWN" else [{"source": "test"}],
+            "semantic_provenance": (
+                [
+                    {
+                        "proposal_id": semantic_proposal_id(
+                            "a" * 64,
+                            kind,
+                            mid,
+                            "Readable" + mid[-1],
+                        ),
+                        "review_id": "SEMREVIEW_" + "3" * 20,
+                        "source_build": "v308",
+                        "source_sha256": "a" * 64,
+                        "source_coordinate": {
+                            "owner": "rs/1",
+                            "name": name,
+                            "descriptor": desc,
+                        },
+                        "evidence": [],
+                    }
+                ]
+                if status == "ACCEPTED"
+                else []
+            ),
         }
     return {
         "schema_version": 1,
