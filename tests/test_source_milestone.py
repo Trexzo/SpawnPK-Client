@@ -402,6 +402,25 @@ class SourceMilestoneTests(unittest.TestCase):
                 manifest["publication"]["target_repository"],
                 "Trexzo/SpawnPK-Client-Source",
             )
+            evidence = manifest["provenance"][
+                "release_verification_evidence"
+            ]
+            self.assertTrue(
+                evidence["exact_release_manifest_reproduction"]
+            )
+            self.assertEqual(
+                evidence["failed_required_check_count"],
+                0,
+            )
+            provenance = build_source_provenance_document(
+                manifest
+            )
+            self.assertEqual(
+                provenance["recovery_authority"][
+                    "release_verification_evidence"
+                ],
+                evidence,
+            )
 
     def test_release_authority_pins_bind_supplied_documents(self):
         with tempfile.TemporaryDirectory() as td:
