@@ -3664,6 +3664,408 @@ def _normalize_exact_static_call_nested_type_collisions(
     return actions
 
 
+
+def _normalize_exact_static_call_ternary_nested_type_collisions(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Force nested type context inside ternary static-call arguments.
+
+    This is the conditional-expression companion to the direct
+    X.method(X.Nested.FIELD, ...) repair.  The source shape is admitted only
+    when exact bytecode proves the two getstatic arms form one branch diamond
+    that converges before the uniquely correlated outer invokestatic.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    ternary_re = re.compile(
+        r"(?<![A-Za-z0-9_$.])"
+        r"(?P<outer>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\.(?P<method>[A-Za-z_$][A-Za-z0-9_$]*)\s*"
+        r"\(\s*"
+        r"(?P<condition>[^?,\n]+?)\s*\?\s*"
+        r"(?P<true_expr>"
+        r"(?P=outer)"
+        r"\.(?P<nested>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\.(?P<true_field>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r")\s*:\s*"
+        r"(?P<false_expr>"
+        r"(?P=outer)"
+        r"\.(?P=nested)"
+        r"\.(?P<false_field>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r")\s*,"
+    )
+
+    class_cache: dict[str, Any] = {}
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        occurrences = [
+            {
+                "outer": match.group("outer"),
+                "method": match.group("method"),
+                "nested": match.group("nested"),
+                "true_field": match.group("true_field"),
+                "false_field": match.group("false_field"),
+                "true_start": method_start + match.start("true_expr"),
+                "true_end": method_start + match.end("true_expr"),
+                "false_start": method_start + match.start("false_expr"),
+                "false_end": method_start + match.end("false_expr"),
+            }
+            for match in ternary_re.finditer(method_code)
+        ]
+        if not occurrences:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        exact_candidates: list[dict[str, Any]] = []
+
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if (
+                bool(int(exact_method.get("access", 0)) & 0x0008)
+                != source_static
+            ):
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            by_offset = {
+                int(row.get("offset", -1)): index
+                for index, row in enumerate(instructions)
+                if int(row.get("offset", -1)) >= 0
+            }
+            used_invokes: set[int] = set()
+            flows: list[dict[str, Any]] = []
+            exact_ok = True
+
+            for occurrence in occurrences:
+                outer = str(occurrence["outer"])
+                static_name = str(occurrence["method"])
+                nested_simple = str(occurrence["nested"])
+                true_field = str(occurrence["true_field"])
+                false_field = str(occurrence["false_field"])
+
+                invocation_rows = [
+                    row
+                    for row in exact_method.get("method_invocations", [])
+                    if (
+                        row.get("operation") == "invokestatic"
+                        and row.get("name") == static_name
+                        and str(row.get("owner", "")).rsplit("/", 1)[-1]
+                        == outer
+                    )
+                ]
+                owner_candidates = sorted(
+                    {
+                        str(row.get("owner", ""))
+                        for row in invocation_rows
+                        if str(row.get("owner", ""))
+                    }
+                )
+                valid: list[dict[str, Any]] = []
+
+                for exact_outer in owner_candidates:
+                    nested_owner = exact_outer + "$" + nested_simple
+                    parsed = class_cache.get(nested_owner)
+                    if parsed is None:
+                        try:
+                            parsed = parse_class(
+                                readable_zip.read(nested_owner + ".class")
+                            )
+                        except (KeyError, ClassFormatError):
+                            continue
+                        class_cache[nested_owner] = parsed
+                    if parsed.name != nested_owner:
+                        continue
+
+                    field_rows: dict[str, dict[str, Any]] = {}
+                    for field_name in (true_field, false_field):
+                        declarations = [
+                            field
+                            for field in parsed.fields
+                            if (
+                                str(field.get("name", "")) == field_name
+                                and int(field.get("access", 0)) & 0x0008
+                                and _field_visible_from(
+                                    declaring_owner=nested_owner,
+                                    current_owner=current_owner,
+                                    access=int(field.get("access", 0)),
+                                )
+                            )
+                        ]
+                        if len(declarations) != 1:
+                            field_rows = {}
+                            break
+                        field_rows[field_name] = declarations[0]
+                    if len(field_rows) != 2:
+                        continue
+
+                    true_descriptor = str(
+                        field_rows[true_field].get("descriptor", "")
+                    )
+                    false_descriptor = str(
+                        field_rows[false_field].get("descriptor", "")
+                    )
+                    if (
+                        not true_descriptor
+                        or true_descriptor != false_descriptor
+                    ):
+                        continue
+
+                    shadowed, shadow_owners = (
+                        _nested_owner_has_visible_name_shadow(
+                            nested_internal=nested_owner,
+                            current_owner=current_owner,
+                            readable_zip=readable_zip,
+                        )
+                    )
+                    if not shadowed:
+                        continue
+
+                    field_shape = _descriptor_parameter_shapes(
+                        "(" + true_descriptor + ")V"
+                    )
+                    if field_shape is None or len(field_shape) != 1:
+                        continue
+
+                    exact_invocations = [
+                        row
+                        for row in invocation_rows
+                        if (
+                            row.get("owner") == exact_outer
+                            and int(row.get("offset", -1)) not in used_invokes
+                        )
+                    ]
+                    matching_flows: list[dict[str, Any]] = []
+
+                    for invocation in exact_invocations:
+                        invocation_descriptor = str(
+                            invocation.get("descriptor", "")
+                        )
+                        invocation_shapes = _descriptor_parameter_shapes(
+                            invocation_descriptor
+                        )
+                        if (
+                            invocation_shapes is None
+                            or not invocation_shapes
+                            or invocation_shapes[0] != field_shape[0]
+                        ):
+                            continue
+                        invocation_offset = int(
+                            invocation.get("offset", -1)
+                        )
+                        invocation_index = by_offset.get(invocation_offset)
+                        if invocation_index is None:
+                            continue
+
+                        lower = max(0, invocation_index - 40)
+                        for selector_index in range(lower, invocation_index):
+                            selector = instructions[selector_index]
+                            if not (
+                                selector.get("opcode") == "0x99"
+                                and "branch_target_offset" in selector
+                            ):
+                                continue
+
+                            true_index = selector_index + 1
+                            if true_index + 1 >= invocation_index:
+                                continue
+                            true_get = instructions[true_index]
+                            goto = instructions[true_index + 1]
+                            if not (
+                                true_get.get("mnemonic") == "getstatic"
+                                and true_get.get("owner") == nested_owner
+                                and true_get.get("name") == true_field
+                                and true_get.get("descriptor")
+                                == true_descriptor
+                                and goto.get("opcode") in {"0xa7", "0xc8"}
+                                and "branch_target_offset" in goto
+                            ):
+                                continue
+
+                            false_offset = int(
+                                selector["branch_target_offset"]
+                            )
+                            false_index = by_offset.get(false_offset)
+                            if false_index is None:
+                                continue
+                            false_get = instructions[false_index]
+                            if not (
+                                false_get.get("mnemonic") == "getstatic"
+                                and false_get.get("owner") == nested_owner
+                                and false_get.get("name") == false_field
+                                and false_get.get("descriptor")
+                                == true_descriptor
+                            ):
+                                continue
+
+                            merge_offset = int(
+                                goto["branch_target_offset"]
+                            )
+                            merge_index = by_offset.get(merge_offset)
+                            if (
+                                merge_index is None
+                                or false_index + 1 != merge_index
+                                or not (
+                                    merge_index < invocation_index
+                                )
+                            ):
+                                continue
+
+                            matching_flows.append(
+                                {
+                                    "exact_outer": exact_outer,
+                                    "nested_owner": nested_owner,
+                                    "true_field": true_field,
+                                    "false_field": false_field,
+                                    "field_descriptor": true_descriptor,
+                                    "shadow_declaring_owners": shadow_owners,
+                                    "selector_offset": int(
+                                        selector.get("offset", -1)
+                                    ),
+                                    "true_field_offset": int(
+                                        true_get.get("offset", -1)
+                                    ),
+                                    "goto_offset": int(
+                                        goto.get("offset", -1)
+                                    ),
+                                    "false_field_offset": int(
+                                        false_get.get("offset", -1)
+                                    ),
+                                    "merge_offset": merge_offset,
+                                    "invoke_offset": invocation_offset,
+                                    "invocation_descriptor":
+                                        invocation_descriptor,
+                                }
+                            )
+
+                    if len(matching_flows) == 1:
+                        valid.append(matching_flows[0])
+
+                if len(valid) != 1:
+                    exact_ok = False
+                    break
+                used_invokes.add(int(valid[0]["invoke_offset"]))
+                flows.append(valid[0])
+
+            if exact_ok and len(flows) == len(occurrences):
+                exact_candidates.append(
+                    {
+                        "method": exact_method,
+                        "flows": flows,
+                    }
+                )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        proof = exact_candidates[0]
+        for occurrence, flow in zip(occurrences, proof["flows"]):
+            java_nested = (
+                str(flow["nested_owner"])
+                .replace("$", ".")
+                .replace("/", ".")
+            )
+            edits.append(
+                (
+                    int(occurrence["true_start"]),
+                    int(occurrence["true_end"]),
+                    "((" + java_nested + ")null)."
+                    + str(occurrence["true_field"]),
+                )
+            )
+            edits.append(
+                (
+                    int(occurrence["false_start"]),
+                    int(occurrence["false_end"]),
+                    "((" + java_nested + ")null)."
+                    + str(occurrence["false_field"]),
+                )
+            )
+
+        actions.append(
+            {
+                "kind": (
+                    "exact_static_call_ternary_nested_type_collision_reconstruction"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "ternary_count": len(occurrences),
+                "replacement_count": len(occurrences) * 2,
+                "flows": proof["flows"],
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_nested_type_hidden_in_ternary_static_call_argument"
+                    ),
+                    "strategy": (
+                        "exact_branch_diamond_getstatic_to_invokestatic_proof"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping ternary nested-type collision edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_shadowed_nested_static_field_owners(
     *,
     source_root: Path,
@@ -21253,6 +21655,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_exact_static_call_ternary_nested_type_collisions(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_shadowed_nested_static_field_owners(
                         source_root=source_root,
                         path=path,
@@ -21722,6 +22131,17 @@ def normalize_procyon_source(
             for action in actions
             if action["kind"]
             == "reference_shadowed_self_static_field_owner_qualification"
+        ),
+        "exact_static_call_ternary_nested_type_collision_action_count": sum(
+            action["kind"]
+            == "exact_static_call_ternary_nested_type_collision_reconstruction"
+            for action in actions
+        ),
+        "exact_static_call_ternary_nested_type_collision_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "exact_static_call_ternary_nested_type_collision_reconstruction"
         ),
         "exact_static_call_nested_type_collision_action_count": sum(
             action["kind"]
