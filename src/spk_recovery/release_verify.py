@@ -568,6 +568,10 @@ def verify_recovery_release(
                 raise RecoveryReleaseVerificationError(
                     "private collision plan is not valid JSON"
                 ) from exc
+            if not isinstance(private_plan, dict):
+                raise RecoveryReleaseVerificationError(
+                    "private collision plan must be a JSON object"
+                )
 
             _check(
                 checks,
