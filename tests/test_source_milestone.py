@@ -7,6 +7,7 @@ import tempfile
 import unittest
 
 from spk_recovery.source_digest import source_tree_digest
+from spk_recovery.v308_authority import V308_SOURCE_AUTHORITY_SHA256
 from spk_recovery.source_milestone import (
     SourceMilestoneError,
     build_source_milestone_manifest,
@@ -19,6 +20,12 @@ from spk_recovery.source_milestone import (
 
 def verify_source_publication_bundle(bundle_dir, **kwargs):
     kwargs.setdefault("expected_authority_commit", "f" * 40)
+    if "expected_manifest" not in kwargs:
+        kwargs["expected_manifest"] = json.loads(
+            (Path(bundle_dir) / "SOURCE-MILESTONE.json").read_text(
+                encoding="utf-8"
+            )
+        )
     return _verify_source_publication_bundle(bundle_dir, **kwargs)
 
 
@@ -199,7 +206,7 @@ def _fixtures(source_root: Path):
         source_root
     )
 
-    authority_sha = "a" * 64
+    authority_sha = V308_SOURCE_AUTHORITY_SHA256
     namespace_id = "SEMNS_" + "B" * 20
     class_digest = "c" * 64
     member_digest = "d" * 64
@@ -408,6 +415,40 @@ class SourceMilestoneTests(unittest.TestCase):
                 {
                     "gate": "source_tree",
                     "reason": "source_tree_empty",
+                },
+                manifest["blockers"],
+            )
+
+    def test_self_consistent_wrong_v308_authority_sha_is_blocked(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            wrong_sha = "a" * 64
+            fixture["readable_manifest"]["source_sha256"] = wrong_sha
+            fixture["recovered_source_manifest"][
+                "source_authority_sha256"
+            ] = wrong_sha
+            fixture["clean_rebuild_report"][
+                "source_authority_sha256"
+            ] = wrong_sha
+            fixture["release_manifest"]["authority_sha256"] = wrong_sha
+            _refresh_release_pins(fixture)
+            _refresh_release_verification(fixture)
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "exact_authority",
+                    "reason": "authority_sha_not_exact_v308",
+                },
+                manifest["blockers"],
+            )
+            self.assertNotIn(
+                {
+                    "gate": "exact_authority",
+                    "reason": "authority_sha_linkage_mismatch",
                 },
                 manifest["blockers"],
             )
@@ -1174,6 +1215,99 @@ class SourceMilestoneTests(unittest.TestCase):
                 bundle["provenance_documents"],
             )
 
+    def test_bundle_verifier_requires_external_manifest(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={},
+            )
+            report = _verify_source_publication_bundle(
+                bundle_root,
+                expected_authority_commit="f" * 40,
+            )
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["external_manifest_match"]
+            )
+            self.assertTrue(
+                all(
+                    value
+                    for key, value in report["checks"].items()
+                    if key != "external_manifest_match"
+                )
+            )
+
+    def test_bundle_verifier_rejects_different_valid_manifest(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+
+            trusted_source = root / "trusted-source"
+            trusted_fixture = _fixtures(trusted_source)
+            trusted_manifest = self._build(
+                trusted_source,
+                trusted_fixture,
+            )
+
+            bundled_source = root / "bundled-source"
+            bundled_fixture = _fixtures(bundled_source)
+            (bundled_source / "rs" / "A.java").write_text(
+                "package rs; public class A { int alternate; }\n",
+                encoding="utf-8",
+            )
+            tree_sha, files, source_bytes = source_tree_digest(
+                bundled_source
+            )
+            bundled_fixture["recovered_source_manifest"][
+                "source_tree_sha256"
+            ] = tree_sha
+            bundled_fixture["release_manifest"][
+                "final_source_tree_sha256"
+            ] = tree_sha
+            bundled_fixture["source_tree_sha256"] = tree_sha
+            bundled_fixture["source_files"] = files
+            bundled_fixture["source_bytes"] = source_bytes
+            _refresh_release_pins(bundled_fixture)
+            _refresh_release_verification(bundled_fixture)
+            bundled_manifest = self._build(
+                bundled_source,
+                bundled_fixture,
+            )
+            self.assertTrue(bundled_manifest["publishable"])
+
+            bundle_root = root / "bundle"
+            build_source_publication_bundle(
+                bundled_manifest,
+                bundled_source,
+                bundle_root,
+                provenance_documents={},
+            )
+            report = _verify_source_publication_bundle(
+                bundle_root,
+                expected_manifest=trusted_manifest,
+                expected_authority_commit="f" * 40,
+            )
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["external_manifest_match"]
+            )
+            self.assertTrue(
+                all(
+                    value
+                    for key, value in report["checks"].items()
+                    if key != "external_manifest_match"
+                )
+            )
+
     def test_bundle_verifier_requires_external_authority_commit(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -1189,7 +1323,10 @@ class SourceMilestoneTests(unittest.TestCase):
                 provenance_documents={},
             )
 
-            report = _verify_source_publication_bundle(bundle_root)
+            report = _verify_source_publication_bundle(
+                bundle_root,
+                expected_manifest=manifest,
+            )
 
             self.assertFalse(report["verified"])
             self.assertFalse(
@@ -1220,6 +1357,7 @@ class SourceMilestoneTests(unittest.TestCase):
 
             report = _verify_source_publication_bundle(
                 bundle_root,
+                expected_manifest=manifest,
                 expected_authority_commit="e" * 40,
             )
 
