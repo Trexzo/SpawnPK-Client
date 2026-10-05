@@ -20625,10 +20625,14 @@ def _normalize_missing_synthetic_private_field_accessors(
             if proof is None:
                 return None
             access = int(proof["access"])
-            if not _field_visible_from(
-                declaring_owner=owner,
-                current_owner=caller_owner,
-                access=access,
+            owner_package = owner.rpartition("/")[0]
+            caller_package = caller_owner.rpartition("/")[0]
+            if (
+                access & 0x0002
+                or (
+                    not (access & 0x0001)
+                    and owner_package != caller_package
+                )
             ):
                 return None
             return proof
@@ -20715,10 +20719,14 @@ def _normalize_missing_synthetic_private_field_accessors(
             ),
         }
         accessor_cache[key] = proof
-        if not _field_visible_from(
-            declaring_owner=owner,
-            current_owner=caller_owner,
-            access=access,
+        owner_package = owner.rpartition("/")[0]
+        caller_package = caller_owner.rpartition("/")[0]
+        if (
+            access & 0x0002
+            or (
+                not (access & 0x0001)
+                and owner_package != caller_package
+            )
         ):
             return None
         return proof
