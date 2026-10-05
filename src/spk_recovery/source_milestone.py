@@ -18,6 +18,8 @@ class SourceMilestoneError(ValueError):
 
 
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
+_DEFAULT_AUTHORITY_REPOSITORY = "Trexzo/SpawnPK-Client"
+_DEFAULT_PUBLICATION_REPOSITORY = "Trexzo/SpawnPK-Client-Source"
 
 
 def _exact_json_object(pairs):
@@ -617,8 +619,8 @@ def build_source_milestone_manifest(
     release_manifest: dict[str, Any],
     release_verification: dict[str, Any],
     source_root: Path,
-    authority_repository: str = "Trexzo/SpawnPK-Client",
-    publication_repository: str = "Trexzo/SpawnPK-Client-Source",
+    authority_repository: str = _DEFAULT_AUTHORITY_REPOSITORY,
+    publication_repository: str = _DEFAULT_PUBLICATION_REPOSITORY,
 ) -> dict[str, Any]:
     authority_commit = authority_commit.strip().lower()
     if not _COMMIT_RE.fullmatch(authority_commit):
@@ -1364,6 +1366,12 @@ def verify_source_publication_bundle(
     bundle_dir: Path,
     *,
     expected_manifest: dict[str, Any] | None = None,
+    expected_authority_repository: str = (
+        _DEFAULT_AUTHORITY_REPOSITORY
+    ),
+    expected_publication_repository: str = (
+        _DEFAULT_PUBLICATION_REPOSITORY
+    ),
 ) -> dict[str, Any]:
     bundle_dir = bundle_dir.resolve()
     if not bundle_dir.is_dir():
@@ -1429,6 +1437,12 @@ def verify_source_publication_bundle(
         if isinstance(publication_raw, dict)
         else {}
     )
+    provenance_raw = milestone.get("provenance")
+    provenance = (
+        provenance_raw
+        if isinstance(provenance_raw, dict)
+        else {}
+    )
     milestone_material = {
         "provenance": milestone.get("provenance"),
         "source_tree": milestone.get("source_tree"),
@@ -1444,6 +1458,14 @@ def verify_source_publication_bundle(
     checks["external_manifest_match"] = (
         expected_manifest is None
         or expected_manifest == milestone
+    )
+    checks["expected_authority_repository"] = (
+        provenance.get("authority_repository")
+        == expected_authority_repository
+    )
+    checks["expected_publication_repository"] = (
+        publication.get("target_repository")
+        == expected_publication_repository
     )
     checks["milestone_publishable"] = (
         milestone.get("publishable") is True

@@ -239,12 +239,14 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
         source: Path,
         out: Path,
         fixture: dict,
+        **build_kwargs,
     ) -> dict:
         return build_source_authority_artifact(
             authority_commit="f" * 40,
             source_root=source,
             out_dir=out,
             **fixture,
+            **build_kwargs,
         )
 
     def test_exact_artifact_is_deterministic_and_verifies(self):
@@ -298,6 +300,66 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
             )
             self.assertTrue(
                 all(report["checks"].values())
+            )
+
+    def test_verifier_rejects_noncanonical_authority_repository(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            out = root / "artifact"
+
+            self._build(
+                source,
+                out,
+                fixture,
+                authority_repository="Trexzo/Forged-Authority",
+            )
+            report = verify_source_authority_artifact(
+                out,
+                expected_authority_commit="f" * 40,
+            )
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["expected_authority_repository"]
+            )
+            self.assertTrue(
+                all(
+                    value
+                    for key, value in report["checks"].items()
+                    if key != "expected_authority_repository"
+                )
+            )
+
+    def test_verifier_rejects_noncanonical_publication_repository(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            out = root / "artifact"
+
+            self._build(
+                source,
+                out,
+                fixture,
+                publication_repository="Trexzo/Forged-Publication",
+            )
+            report = verify_source_authority_artifact(
+                out,
+                expected_authority_commit="f" * 40,
+            )
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["expected_publication_repository"]
+            )
+            self.assertTrue(
+                all(
+                    value
+                    for key, value in report["checks"].items()
+                    if key != "expected_publication_repository"
+                )
             )
 
     def test_artifact_id_drift_is_rejected(self):

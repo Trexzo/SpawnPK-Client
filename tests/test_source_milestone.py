@@ -315,7 +315,7 @@ def _fixtures(source_root: Path):
 
 
 class SourceMilestoneTests(unittest.TestCase):
-    def _build(self, root: Path, fixture: dict):
+    def _build(self, root: Path, fixture: dict, **build_kwargs):
         return build_source_milestone_manifest(
             authority_commit="f" * 40,
             class_lineage=fixture["class_lineage"],
@@ -332,6 +332,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 "release_verification"
             ],
             source_root=root,
+            **build_kwargs,
         )
 
     def _official_transport(self) -> dict:
@@ -1208,6 +1209,70 @@ class SourceMilestoneTests(unittest.TestCase):
             )
             self.assertTrue(
                 all(report["checks"].values())
+            )
+
+    def test_bundle_verifier_rejects_noncanonical_authority_repository(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(
+                source,
+                fixture,
+                authority_repository="Trexzo/Forged-Authority",
+            )
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={},
+            )
+            report = verify_source_publication_bundle(bundle_root)
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["expected_authority_repository"]
+            )
+            self.assertTrue(
+                all(
+                    value
+                    for key, value in report["checks"].items()
+                    if key != "expected_authority_repository"
+                )
+            )
+
+    def test_bundle_verifier_rejects_noncanonical_publication_repository(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(
+                source,
+                fixture,
+                publication_repository="Trexzo/Forged-Publication",
+            )
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={},
+            )
+            report = verify_source_publication_bundle(bundle_root)
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["expected_publication_repository"]
+            )
+            self.assertTrue(
+                all(
+                    value
+                    for key, value in report["checks"].items()
+                    if key != "expected_publication_repository"
+                )
             )
 
     def test_bundle_verifier_rejects_bundle_id_drift(self):
