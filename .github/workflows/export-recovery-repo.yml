@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - chat1/export-recovery-repo-r1
+  pull_request:
 
 jobs:
   export:
