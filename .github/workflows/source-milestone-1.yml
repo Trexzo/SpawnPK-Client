@@ -59,8 +59,6 @@ permissions:
 jobs:
   verify-source-milestone:
     runs-on: ubuntu-latest
-    env:
-      SOURCE_AUTHORITY_DIR: ${{ runner.temp }}/source-m1-authority
     outputs:
       milestone_id: ${{ steps.result.outputs.milestone_id }}
       bundle_id: ${{ steps.result.outputs.bundle_id }}
@@ -224,6 +222,8 @@ jobs:
 
       - name: Validate authority artifact contract
         shell: bash
+        env:
+          SOURCE_AUTHORITY_DIR: ${{ runner.temp }}/source-m1-authority
         run: |
           set -euo pipefail
           test -f "$SOURCE_AUTHORITY_DIR/SOURCE-AUTHORITY-ARTIFACT.json"
@@ -240,6 +240,7 @@ jobs:
         shell: bash
         env:
           AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+          SOURCE_AUTHORITY_DIR: ${{ runner.temp }}/source-m1-authority
         run: |
           set -euo pipefail
           mkdir -p source-m1/verification
@@ -259,6 +260,7 @@ jobs:
         shell: bash
         env:
           AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+          SOURCE_AUTHORITY_DIR: ${{ runner.temp }}/source-m1-authority
         run: |
           set -euo pipefail
           EXPECTED_MILESTONE_ID="$(
@@ -286,6 +288,7 @@ jobs:
         shell: bash
         env:
           AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+          SOURCE_AUTHORITY_DIR: ${{ runner.temp }}/source-m1-authority
         run: |
           set -euo pipefail
           python -m spk_recovery.source_milestone_cli build \
@@ -304,6 +307,7 @@ jobs:
         shell: bash
         env:
           AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+          SOURCE_AUTHORITY_DIR: ${{ runner.temp }}/source-m1-authority
         run: |
           set -euo pipefail
 
@@ -322,6 +326,8 @@ jobs:
 
       - name: Build source-only publication bundle
         shell: bash
+        env:
+          SOURCE_AUTHORITY_DIR: ${{ runner.temp }}/source-m1-authority
         run: |
           set -euo pipefail
 
