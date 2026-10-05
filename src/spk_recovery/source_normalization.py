@@ -21184,6 +21184,724 @@ def _normalize_linkedhashmap_self_get_result_casts(
     return actions
 
 
+def _normalize_missing_synthetic_private_field_accessors(
+    *,
+    source_root: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore omitted synthetic accessors for exact private reference fields.
+
+    Procyon can inline a compiler-generated accessor as a source-illegal direct
+    private field expression in another class. Repair both sides together only
+    when exact bytecode proves a static synthetic accessor whose complete body
+    is receiver load -> private getfield -> reference return, and the exact
+    caller invokes that accessor immediately after loading the source receiver.
+    """
+
+    source_paths = sorted(
+        source_root.rglob("*.java"),
+        key=lambda candidate: candidate.relative_to(
+            source_root
+        ).as_posix(),
+    )
+    if not source_paths:
+        return []
+
+    profile_cache: dict[str, dict[str, Any] | None] = {}
+
+    def owner_profile(owner: str) -> dict[str, Any] | None:
+        if owner in profile_cache:
+            return profile_cache[owner]
+        try:
+            parsed = profile_class_field_accesses(
+                readable_zip.read(owner + ".class")
+            )
+        except (KeyError, BytecodeProfileError):
+            profile_cache[owner] = None
+            return None
+        if str(parsed.get("internal_name", "")) != owner:
+            profile_cache[owner] = None
+            return None
+        profile_cache[owner] = parsed
+        return parsed
+
+    accessor_cache: dict[
+        tuple[str, str, str],
+        dict[str, Any] | None,
+    ] = {}
+
+    def accessor_proof(
+        *,
+        owner: str,
+        name: str,
+        descriptor: str,
+        caller_owner: str,
+    ) -> dict[str, Any] | None:
+        key = (owner, name, descriptor)
+        if key in accessor_cache:
+            proof = accessor_cache[key]
+            if proof is None:
+                return None
+            access = int(proof["access"])
+            owner_package = owner.rpartition("/")[0]
+            caller_package = caller_owner.rpartition("/")[0]
+            if (
+                access & 0x0002
+                or (
+                    not (access & 0x0001)
+                    and owner_package != caller_package
+                )
+            ):
+                return None
+            return proof
+
+        parsed = owner_profile(owner)
+        if parsed is None:
+            accessor_cache[key] = None
+            return None
+        accessors = [
+            method
+            for method in parsed.get("methods", [])
+            if (
+                method.get("name") == name
+                and method.get("descriptor") == descriptor
+            )
+        ]
+        if len(accessors) != 1:
+            accessor_cache[key] = None
+            return None
+        accessor = accessors[0]
+        access = int(accessor.get("access", 0))
+        if not (
+            (access & 0x0008)
+            and (access & 0x1000)
+            and not (access & 0x0002)
+        ):
+            accessor_cache[key] = None
+            return None
+
+        shapes = _descriptor_parameter_shapes(descriptor)
+        return_descriptor = _descriptor_return_descriptor(descriptor)
+        if not (
+            shapes is not None
+            and len(shapes) == 1
+            and shapes[0] == (0, "ref", owner)
+            and return_descriptor is not None
+            and return_descriptor.startswith("L")
+            and return_descriptor.endswith(";")
+        ):
+            accessor_cache[key] = None
+            return None
+
+        instructions = list(accessor.get("instructions", []))
+        if len(instructions) != 3:
+            accessor_cache[key] = None
+            return None
+        receiver, field_access, result = instructions
+        if not (
+            receiver.get("mnemonic") == "aload"
+            and int(receiver.get("local_index", -1)) == 0
+            and field_access.get("mnemonic") == "getfield"
+            and field_access.get("owner") == owner
+            and field_access.get("descriptor") == return_descriptor
+            and result.get("mnemonic") == "areturn"
+        ):
+            accessor_cache[key] = None
+            return None
+
+        field_name = str(field_access.get("name", ""))
+        private_fields = [
+            field
+            for field in parsed.get("fields", [])
+            if (
+                field.get("name") == field_name
+                and field.get("descriptor") == return_descriptor
+                and (int(field.get("access", 0)) & 0x0002)
+                and not (int(field.get("access", 0)) & 0x0008)
+            )
+        ]
+        if len(private_fields) != 1:
+            accessor_cache[key] = None
+            return None
+
+        proof = {
+            "owner": owner,
+            "name": name,
+            "descriptor": descriptor,
+            "access": access,
+            "field_name": field_name,
+            "field_descriptor": return_descriptor,
+            "field_access": int(private_fields[0].get("access", 0)),
+            "getfield_offset": int(
+                field_access.get("offset", -1)
+            ),
+        }
+        accessor_cache[key] = proof
+        owner_package = owner.rpartition("/")[0]
+        caller_package = caller_owner.rpartition("/")[0]
+        if (
+            access & 0x0002
+            or (
+                not (access & 0x0001)
+                and owner_package != caller_package
+            )
+        ):
+            return None
+        return proof
+
+    original_texts = {
+        path: path.read_text(encoding="utf-8")
+        for path in source_paths
+    }
+    caller_edits: dict[
+        Path,
+        list[tuple[int, int, str]],
+    ] = {}
+    required_accessors: dict[
+        tuple[str, str, str],
+        dict[str, Any],
+    ] = {}
+    actions: list[dict[str, Any]] = []
+
+    direct_field_re = re.compile(
+        r"this\.(?P<receiver>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\.\s*(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)\b"
+    )
+
+    for path in source_paths:
+        rel = path.relative_to(source_root).as_posix()
+        class_entry = Path(rel).with_suffix(".class").as_posix()
+        caller_owner = class_entry[:-6]
+        caller_profile = owner_profile(caller_owner)
+        if caller_profile is None:
+            continue
+
+        text = original_texts[path]
+        whole_code = _java_code_mask(text)
+        current_package = caller_owner.rpartition("/")[0]
+
+        for method_match in _METHOD_DECL_RE.finditer(whole_code):
+            brace_start = whole_code.find(
+                "{", method_match.start(), method_match.end()
+            )
+            if brace_start < 0:
+                continue
+            try:
+                body_end = _matching_brace_end(
+                    whole_code,
+                    brace_start,
+                )
+            except SourceNormalizationError:
+                continue
+
+            method_start = method_match.start()
+            method_text = text[method_start:body_end]
+            method_code = whole_code[method_start:body_end]
+            source_occurrences = list(
+                direct_field_re.finditer(method_code)
+            )
+            if not source_occurrences:
+                continue
+
+            source_static = bool(
+                re.search(
+                    r"\bstatic\b",
+                    whole_code[
+                        method_match.start():brace_start
+                    ],
+                )
+            )
+            exact_candidates: list[dict[str, Any]] = []
+
+            for exact_method in caller_profile.get("methods", []):
+                if exact_method.get("name") != method_match.group("name"):
+                    continue
+                descriptor = str(
+                    exact_method.get("descriptor", "")
+                )
+                if (
+                    _source_parameters_match_descriptor(
+                        method_match.group("params"),
+                        descriptor,
+                        current_package=current_package,
+                    )
+                    is not True
+                ):
+                    continue
+                if (
+                    bool(
+                        int(exact_method.get("access", 0))
+                        & 0x0008
+                    )
+                    != source_static
+                ):
+                    continue
+
+                instructions = list(
+                    exact_method.get("instructions", [])
+                )
+                exact_flows: list[dict[str, Any]] = []
+
+                for index in range(len(instructions) - 2):
+                    load_this = instructions[index]
+                    load_receiver = instructions[index + 1]
+                    invoke = instructions[index + 2]
+                    if not (
+                        load_this.get("mnemonic") == "aload"
+                        and int(
+                            load_this.get("local_index", -1)
+                        ) == 0
+                        and load_receiver.get("mnemonic")
+                        == "getfield"
+                        and str(
+                            load_receiver.get("descriptor", "")
+                        ).startswith("L")
+                        and str(
+                            load_receiver.get("descriptor", "")
+                        ).endswith(";")
+                        and invoke.get("mnemonic")
+                        == "invokestatic"
+                    ):
+                        continue
+
+                    target_owner = str(
+                        invoke.get("owner", "")
+                    )
+                    receiver_descriptor = str(
+                        load_receiver.get("descriptor", "")
+                    )
+                    if (
+                        not target_owner
+                        or receiver_descriptor
+                        != "L" + target_owner + ";"
+                    ):
+                        continue
+
+                    accessor = accessor_proof(
+                        owner=target_owner,
+                        name=str(invoke.get("name", "")),
+                        descriptor=str(
+                            invoke.get("descriptor", "")
+                        ),
+                        caller_owner=caller_owner,
+                    )
+                    if accessor is None:
+                        continue
+
+                    exact_flows.append(
+                        {
+                            "receiver_field": str(
+                                load_receiver.get("name", "")
+                            ),
+                            "target_owner": target_owner,
+                            "private_field": accessor[
+                                "field_name"
+                            ],
+                            "accessor_name": accessor["name"],
+                            "accessor_descriptor": accessor[
+                                "descriptor"
+                            ],
+                            "accessor_access": accessor["access"],
+                            "field_descriptor": accessor[
+                                "field_descriptor"
+                            ],
+                            "receiver_field_owner": str(
+                                load_receiver.get("owner", "")
+                            ),
+                            "receiver_field_offset": int(
+                                load_receiver.get("offset", -1)
+                            ),
+                            "accessor_invoke_offset": int(
+                                invoke.get("offset", -1)
+                            ),
+                        }
+                    )
+
+                if not exact_flows:
+                    continue
+
+                exact_keys = [
+                    (
+                        flow["receiver_field"],
+                        flow["private_field"],
+                    )
+                    for flow in exact_flows
+                ]
+                exact_key_set = set(exact_keys)
+                matching_source_occurrences = [
+                    match
+                    for match in source_occurrences
+                    if (
+                        match.group("receiver"),
+                        match.group("field"),
+                    )
+                    in exact_key_set
+                ]
+                source_keys = [
+                    (
+                        match.group("receiver"),
+                        match.group("field"),
+                    )
+                    for match in matching_source_occurrences
+                ]
+                if exact_keys != source_keys:
+                    continue
+
+                exact_candidates.append(
+                    {
+                        "method": exact_method,
+                        "flows": exact_flows,
+                        "source_occurrences": (
+                            matching_source_occurrences
+                        ),
+                    }
+                )
+
+            if len(exact_candidates) != 1:
+                continue
+            proof = exact_candidates[0]
+
+            method_edits: list[tuple[int, int, str]] = []
+            for source_match, flow in zip(
+                proof["source_occurrences"],
+                proof["flows"],
+            ):
+                owner_dotted = flow["target_owner"].replace(
+                    "/", "."
+                ).replace("$", ".")
+                replacement = (
+                    owner_dotted
+                    + "."
+                    + flow["accessor_name"]
+                    + "(this."
+                    + source_match.group("receiver")
+                    + ")"
+                )
+                method_edits.append(
+                    (
+                        method_start + source_match.start(),
+                        method_start + source_match.end(),
+                        replacement,
+                    )
+                )
+                accessor_key = (
+                    flow["target_owner"],
+                    flow["accessor_name"],
+                    flow["accessor_descriptor"],
+                )
+                required_accessors.setdefault(
+                    accessor_key,
+                    {
+                        **flow,
+                        "callers": [],
+                    },
+                )
+                required_accessors[accessor_key][
+                    "callers"
+                ].append(
+                    {
+                        "source_path": rel,
+                        "method_name": method_match.group(
+                            "name"
+                        ),
+                        "method_descriptor": proof[
+                            "method"
+                        ]["descriptor"],
+                        "receiver_field": flow[
+                            "receiver_field"
+                        ],
+                        "receiver_field_owner": flow[
+                            "receiver_field_owner"
+                        ],
+                        "receiver_field_offset": flow[
+                            "receiver_field_offset"
+                        ],
+                        "accessor_invoke_offset": flow[
+                            "accessor_invoke_offset"
+                        ],
+                    }
+                )
+
+            caller_edits.setdefault(path, []).extend(
+                method_edits
+            )
+            actions.append(
+                {
+                    "kind": (
+                        "missing_synthetic_private_field_accessor_reconstruction"
+                    ),
+                    "source_path": rel,
+                    "method_name": method_match.group("name"),
+                    "method_descriptor": proof["method"][
+                        "descriptor"
+                    ],
+                    "flows": proof["flows"],
+                    "replacement_count": len(
+                        method_edits
+                    ),
+                    "provenance": {
+                        "kind": "source_safety",
+                        "reason": (
+                            "procyon_inlined_synthetic_private_field_accessor"
+                        ),
+                        "strategy": (
+                            "exact_synthetic_accessor_full_body_plus_exact_caller_invocation"
+                        ),
+                    },
+                }
+            )
+
+    if not actions:
+        return []
+
+    accessor_insertions: dict[
+        Path,
+        list[dict[str, Any]],
+    ] = {}
+    for key, requirement in sorted(
+        required_accessors.items()
+    ):
+        owner, accessor_name, accessor_descriptor = key
+        target_path = source_root / (owner + ".java")
+        if target_path not in original_texts:
+            return []
+
+        target_text = original_texts[target_path]
+        target_code = _java_code_mask(target_text)
+        current_package = owner.rpartition("/")[0]
+
+        existing_source = [
+            method
+            for method in _METHOD_DECL_RE.finditer(
+                target_code
+            )
+            if (
+                method.group("name") == accessor_name
+                and _source_parameters_match_descriptor(
+                    method.group("params"),
+                    accessor_descriptor,
+                    current_package=current_package,
+                )
+                is True
+            )
+        ]
+        if existing_source:
+            requirement["accessor_inserted"] = False
+            continue
+
+        simple_name = owner.rsplit("/", 1)[-1]
+        if "$" in simple_name or not _is_java_identifier(
+            simple_name
+        ):
+            return []
+        class_re = re.compile(
+            r"\bclass\s+"
+            + re.escape(simple_name)
+            + r"\b[^\{]*\{"
+        )
+        class_matches = list(class_re.finditer(target_code))
+        if len(class_matches) != 1:
+            return []
+        class_brace = target_code.find(
+            "{",
+            class_matches[0].start(),
+            class_matches[0].end(),
+        )
+        if class_brace < 0:
+            return []
+        try:
+            class_end = _matching_brace_end(
+                target_code,
+                class_brace,
+            )
+        except SourceNormalizationError:
+            return []
+        if class_end <= 0 or target_text[class_end - 1] != "}":
+            return []
+
+        return_type = _java_cast_type_from_reference_descriptor(
+            requirement["field_descriptor"]
+        )
+        if return_type is None:
+            return []
+
+        access = int(requirement["accessor_access"])
+        if access & 0x0001:
+            visibility = "public "
+        elif access & 0x0004:
+            visibility = "protected "
+        elif access & 0x0002:
+            return []
+        else:
+            visibility = ""
+
+        source = (
+            "\n"
+            "    "
+            + visibility
+            + "static "
+            + return_type
+            + " "
+            + accessor_name
+            + "(final "
+            + simple_name
+            + " recoveredSyntheticAccessor) {\n"
+            "        return recoveredSyntheticAccessor."
+            + requirement["private_field"]
+            + ";\n"
+            "    }\n"
+        )
+        accessor_insertions.setdefault(
+            target_path,
+            [],
+        ).append(
+            {
+                "source": source,
+                "owner": owner,
+                "accessor_name": accessor_name,
+                "accessor_descriptor": accessor_descriptor,
+                "private_field": requirement[
+                    "private_field"
+                ],
+                "field_descriptor": requirement[
+                    "field_descriptor"
+                ],
+            }
+        )
+        requirement["accessor_inserted"] = True
+
+    final_texts = dict(original_texts)
+
+    for path, edits in caller_edits.items():
+        edits.sort(key=lambda row: row[0])
+        for left, right in zip(edits, edits[1:]):
+            if left[1] > right[0]:
+                raise SourceNormalizationError(
+                    f"{path.relative_to(source_root).as_posix()}: "
+                    "overlapping synthetic private-field accessor edits"
+                )
+        value = final_texts[path]
+        for start, end, replacement in reversed(edits):
+            value = value[:start] + replacement + value[end:]
+        final_texts[path] = value
+
+    inserted_methods = 0
+    for path, insertions in accessor_insertions.items():
+        value = final_texts[path]
+        code = _java_code_mask(value)
+        simple_name = path.stem
+        class_re = re.compile(
+            r"\bclass\s+"
+            + re.escape(simple_name)
+            + r"\b[^\{]*\{"
+        )
+        class_matches = list(class_re.finditer(code))
+        if len(class_matches) != 1:
+            return []
+        class_brace = code.find(
+            "{",
+            class_matches[0].start(),
+            class_matches[0].end(),
+        )
+        if class_brace < 0:
+            return []
+        try:
+            class_end = _matching_brace_end(
+                code,
+                class_brace,
+            )
+        except SourceNormalizationError:
+            return []
+        insertion_source = "".join(
+            row["source"] for row in insertions
+        )
+        value = (
+            value[: class_end - 1]
+            + insertion_source
+            + value[class_end - 1:]
+        )
+        final_texts[path] = value
+        inserted_methods += len(insertions)
+
+    for requirement in required_accessors.values():
+        for action in actions:
+            matching_flows = [
+                flow
+                for flow in action["flows"]
+                if (
+                    flow["target_owner"]
+                    == requirement["target_owner"]
+                    and flow["accessor_name"]
+                    == requirement["accessor_name"]
+                    and flow["accessor_descriptor"]
+                    == requirement["accessor_descriptor"]
+                )
+            ]
+            if matching_flows:
+                action.setdefault(
+                    "accessors",
+                    [],
+                ).append(
+                    {
+                        "target_owner": requirement[
+                            "target_owner"
+                        ],
+                        "accessor_name": requirement[
+                            "accessor_name"
+                        ],
+                        "accessor_descriptor": requirement[
+                            "accessor_descriptor"
+                        ],
+                        "accessor_access": requirement[
+                            "accessor_access"
+                        ],
+                        "private_field": requirement[
+                            "private_field"
+                        ],
+                        "field_descriptor": requirement[
+                            "field_descriptor"
+                        ],
+                        "accessor_inserted": bool(
+                            requirement.get(
+                                "accessor_inserted",
+                                False,
+                            )
+                        ),
+                    }
+                )
+
+    for path, value in final_texts.items():
+        if value != original_texts[path]:
+            path.write_text(value, encoding="utf-8")
+
+    credited_insertions: set[tuple[str, str, str]] = set()
+    for action in actions:
+        inserted_count = 0
+        for row in action.get("accessors", []):
+            accessor_key = (
+                str(row.get("target_owner", "")),
+                str(row.get("accessor_name", "")),
+                str(row.get("accessor_descriptor", "")),
+            )
+            if (
+                row.get("accessor_inserted", False)
+                and accessor_key not in credited_insertions
+            ):
+                credited_insertions.add(accessor_key)
+                inserted_count += 1
+        action["inserted_accessor_method_count"] = inserted_count
+
+    if inserted_methods != sum(
+        int(requirement.get("accessor_inserted", False))
+        for requirement in required_accessors.values()
+    ):
+        raise SourceNormalizationError(
+            "synthetic private-field accessor insertion count drift"
+        )
+
+    return actions
+
+
 def _normalize_missing_synthetic_constructor_accessors(
     *,
     source_root: Path,
@@ -22234,6 +22952,12 @@ def normalize_procyon_source(
                         readable_zip=z,
                     )
                 )
+            actions.extend(
+                _normalize_missing_synthetic_private_field_accessors(
+                    source_root=source_root,
+                    readable_zip=z,
+                )
+            )
     except zipfile.BadZipFile as exc:
         raise SourceNormalizationError(
             f"readable JAR is invalid: {readable_jar}"
@@ -22266,6 +22990,23 @@ def normalize_procyon_source(
             len(action.get("inserted_fields", []))
             for action in actions
             if action["kind"] == "synthetic_class_reconstruction"
+        ),
+        "missing_synthetic_private_field_accessor_action_count": sum(
+            action["kind"]
+            == "missing_synthetic_private_field_accessor_reconstruction"
+            for action in actions
+        ),
+        "missing_synthetic_private_field_accessor_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "missing_synthetic_private_field_accessor_reconstruction"
+        ),
+        "missing_synthetic_private_field_accessor_method_count": sum(
+            int(action.get("inserted_accessor_method_count", 0))
+            for action in actions
+            if action["kind"]
+            == "missing_synthetic_private_field_accessor_reconstruction"
         ),
         "missing_synthetic_constructor_accessor_action_count": sum(
             action["kind"]
