@@ -9,6 +9,7 @@ from .lineage import LineageValidationError, validate_lineage
 from .semantic_authority import (
     SEMANTIC_PROPOSAL_ID_RE,
     SEMANTIC_REVIEW_ID_RE,
+    is_semantic_identifier,
     semantic_proposal_id,
 )
 
@@ -236,6 +237,10 @@ def validate_member_lineage(
     field_count = 0
     method_count = 0
     lineage_entries = 0
+    accepted_field_names: dict[tuple[str, str], str] = {}
+    accepted_method_signatures: dict[
+        tuple[str, str, str, str], str
+    ] = {}
 
     for i, record in enumerate(members):
         label = f"members[{i}]"
@@ -324,6 +329,59 @@ def validate_member_lineage(
                 raise MemberLineageError(f"duplicate build member coordinate {coord!r}")
             coordinates.add(coord)
             lineage_entries += 1
+
+        if status == "ACCEPTED":
+            if not is_semantic_identifier(semantic_name):
+                raise MemberLineageError(
+                    f"{label}: accepted semantic name must be one "
+                    f"canonical identifier, got {semantic_name!r}"
+                )
+            accepted_name = str(semantic_name)
+            if kind == "field":
+                collision_key = (str(owner_id), accepted_name)
+                prior_member_id = accepted_field_names.get(
+                    collision_key
+                )
+                if (
+                    prior_member_id is not None
+                    and prior_member_id != member_id
+                ):
+                    raise MemberLineageError(
+                        f"{label}: accepted field semantic name "
+                        f"{accepted_name!r} already belongs to "
+                        f"{prior_member_id} inside owner {owner_id}"
+                    )
+                accepted_field_names[collision_key] = str(
+                    member_id
+                )
+            else:
+                for entry in lineage:
+                    collision_key = (
+                        str(owner_id),
+                        accepted_name,
+                        str(entry["descriptor"]),
+                        str(entry["build_id"]),
+                    )
+                    prior_member_id = (
+                        accepted_method_signatures.get(
+                            collision_key
+                        )
+                    )
+                    if (
+                        prior_member_id is not None
+                        and prior_member_id != member_id
+                    ):
+                        raise MemberLineageError(
+                            f"{label}: accepted method semantic "
+                            f"signature {accepted_name}"
+                            f"{entry['descriptor']} already belongs "
+                            f"to {prior_member_id} inside owner "
+                            f"{owner_id} for build "
+                            f"{entry['build_id']}"
+                        )
+                    accepted_method_signatures[
+                        collision_key
+                    ] = str(member_id)
 
         semantic_provenance = record.get("semantic_provenance")
         if not isinstance(semantic_provenance, list):
