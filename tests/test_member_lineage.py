@@ -167,6 +167,115 @@ class MemberLineageTests(unittest.TestCase):
                 class_lineage=class_lineage,
             )
 
+    def test_accepted_member_name_must_be_canonical_identifier(self):
+        class_lineage, doc = self._accepted()
+        record = doc["members"][0]
+        record["semantic_name"] = "bad-name"
+        record["semantic_provenance"][0]["proposal_id"] = (
+            semantic_proposal_id(
+                "a" * 64,
+                record["kind"],
+                record["member_id"],
+                "bad-name",
+            )
+        )
+
+        with self.assertRaisesRegex(
+            MemberLineageError,
+            "canonical identifier",
+        ):
+            validate_member_lineage(
+                doc,
+                class_lineage=class_lineage,
+            )
+
+    def test_duplicate_accepted_field_semantic_name_is_rejected(self):
+        class_lineage, doc = self._accepted()
+        record = doc["members"][1]
+        entry = record["lineage"][0]
+        record["semantic_name"] = "readableField"
+        record["semantic_status"] = "ACCEPTED"
+        record["semantic_confidence"] = 0.8
+        record["semantic_provenance"] = [
+            {
+                "proposal_id": semantic_proposal_id(
+                    "a" * 64,
+                    "field",
+                    record["member_id"],
+                    "readableField",
+                ),
+                "review_id": "SEMREVIEW_" + "C" * 20,
+                "source_build": "v308",
+                "source_sha256": "a" * 64,
+                "source_coordinate": {
+                    "owner": entry["owner_internal_name"],
+                    "name": entry["name"],
+                    "descriptor": entry["descriptor"],
+                },
+                "evidence": [],
+            }
+        ]
+        with self.assertRaisesRegex(
+            MemberLineageError,
+            "accepted field semantic name",
+        ):
+            validate_member_lineage(
+                doc,
+                class_lineage=class_lineage,
+            )
+
+    def test_duplicate_accepted_method_signature_is_rejected(self):
+        class_lineage = _class_lineage()
+        doc = seed_member_lineage(
+            class_lineage,
+            _index(),
+            build_id="v308",
+        )
+        first = doc["members"][2]
+        second = doc["members"][3]
+        second["lineage"][0]["descriptor"] = (
+            first["lineage"][0]["descriptor"]
+        )
+
+        for record, review_digit in (
+            (first, "D"),
+            (second, "E"),
+        ):
+            entry = record["lineage"][0]
+            record["semantic_name"] = "runTask"
+            record["semantic_status"] = "ACCEPTED"
+            record["semantic_confidence"] = 0.8
+            record["semantic_provenance"] = [
+                {
+                    "proposal_id": semantic_proposal_id(
+                        "a" * 64,
+                        "method",
+                        record["member_id"],
+                        "runTask",
+                    ),
+                    "review_id": (
+                        "SEMREVIEW_" + review_digit * 20
+                    ),
+                    "source_build": "v308",
+                    "source_sha256": "a" * 64,
+                    "source_coordinate": {
+                        "owner": entry["owner_internal_name"],
+                        "name": entry["name"],
+                        "descriptor": entry["descriptor"],
+                    },
+                    "evidence": [],
+                }
+            ]
+
+        with self.assertRaisesRegex(
+            MemberLineageError,
+            "accepted method semantic signature",
+        ):
+            validate_member_lineage(
+                doc,
+                class_lineage=class_lineage,
+            )
+
     def test_wrong_index_sha_is_rejected(self):
         index = _index()
         index["sha256"] = "d" * 64
