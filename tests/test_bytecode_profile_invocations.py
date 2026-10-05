@@ -213,6 +213,58 @@ class BytecodeMethodInvocationProfileTests(unittest.TestCase):
             )
 
 
+    def test_profiles_exact_class_generic_signature(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "src" / "p"
+            classes = root / "classes"
+            source.mkdir(parents=True)
+            classes.mkdir(parents=True)
+
+            generic = source / "C.java"
+            generic.write_text(
+                "package p;\n"
+                "public class C<K, V> {\n"
+                "    public void a(K key, V value) {}\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            compiled = subprocess.run(
+                [
+                    "javac",
+                    "-d",
+                    str(classes),
+                    str(generic),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                compiled.returncode,
+                0,
+                compiled.stdout + compiled.stderr,
+            )
+
+            profile = profile_class_field_accesses(
+                (classes / "p" / "C.class").read_bytes()
+            )
+            self.assertEqual(
+                profile["signature"],
+                "<K:Ljava/lang/Object;V:Ljava/lang/Object;>"
+                "Ljava/lang/Object;",
+            )
+            method = next(
+                row
+                for row in profile["methods"]
+                if row["name"] == "a"
+            )
+            self.assertEqual(method["descriptor"], (
+                "(Ljava/lang/Object;Ljava/lang/Object;)V"
+            ))
+            self.assertEqual(method["signature"], "(TK;TV;)V")
+
+
     def test_bootstrap_profile_rejects_out_of_range_constant_pool_indices(self):
         method_handle_cp = [
             None,

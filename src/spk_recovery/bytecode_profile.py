@@ -928,10 +928,24 @@ def profile_class_field_accesses(
 
     bootstrap_methods: list[dict[str, Any]] = []
     bootstrap_seen = False
+    class_signature: str | None = None
+    class_signature_seen = False
     for _ in range(r.u2()):
         attr_name = _utf8(cp, r.u2())
         attr_length = r.u4()
         payload = r.take(attr_length)
+        if attr_name == "Signature":
+            if class_signature_seen:
+                raise BytecodeProfileError(
+                    "duplicate class Signature attribute"
+                )
+            class_signature_seen = True
+            class_signature = _signature_attribute_value(
+                payload,
+                cp,
+                role=f"class {internal_name}",
+            )
+            continue
         if attr_name != "BootstrapMethods":
             continue
         if bootstrap_seen:
@@ -951,6 +965,7 @@ def profile_class_field_accesses(
 
     return {
         "internal_name": internal_name,
+        "signature": class_signature,
         "fields": fields,
         "methods": methods,
         "bootstrap_methods": bootstrap_methods,
