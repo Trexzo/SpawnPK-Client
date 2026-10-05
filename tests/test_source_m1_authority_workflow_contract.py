@@ -269,18 +269,61 @@ class SourceM1AuthorityWorkflowContractTests(unittest.TestCase):
             "spk_recovery.source_authority_artifact_cli build",
             build,
         )
-        self.assertIn("--out-dir authority", build)
+        self.assertIn(
+            "SOURCE_AUTHORITY_DIR: ${{ runner.temp }}/source-m1-authority",
+            build,
+        )
+        self.assertIn(
+            '--out-dir "$SOURCE_AUTHORITY_DIR"',
+            build,
+        )
+        self.assertNotIn("--out-dir authority", build)
         self.assertIn(
             "spk_recovery.source_authority_artifact_cli verify",
             verify,
         )
         self.assertIn(
-            "--artifact-dir authority",
+            "SOURCE_AUTHORITY_DIR: ${{ runner.temp }}/source-m1-authority",
             verify,
         )
         self.assertIn(
+            '--artifact-dir "$SOURCE_AUTHORITY_DIR"',
+            verify,
+        )
+        self.assertNotIn("--artifact-dir authority", verify)
+        self.assertIn(
             "--out verification/SOURCE-AUTHORITY-VERIFICATION.json",
             verify,
+        )
+
+    def test_authority_output_is_runner_isolated_from_checkout(self):
+        build_start = self.text.index(
+            "- name: Build Source M1 authority artifact"
+        )
+        upload_start = self.text.index(
+            "- name: Upload verified Source M1 authority artifact"
+        )
+        section = self.text[build_start:]
+        export = self.text[
+            self.text.index("- name: Export verified authority outputs"):
+            upload_start
+        ]
+
+        self.assertEqual(
+            section.count(
+                "SOURCE_AUTHORITY_DIR: "
+                "${{ runner.temp }}/source-m1-authority"
+            ),
+            3,
+        )
+        self.assertIn('test ! -e "$SOURCE_AUTHORITY_DIR"', section)
+        self.assertIn(
+            'Path(os.environ["SOURCE_AUTHORITY_DIR"])',
+            export,
+        )
+        self.assertNotIn(
+            '"authority/SOURCE-AUTHORITY-ARTIFACT.json"',
+            export,
         )
 
     def test_outputs_require_verified_matching_authority(self):
@@ -337,7 +380,11 @@ class SourceM1AuthorityWorkflowContractTests(unittest.TestCase):
         )
         upload = self.text[upload_start:]
 
-        self.assertIn("path: authority", upload)
+        self.assertIn(
+            "path: ${{ runner.temp }}/source-m1-authority",
+            upload,
+        )
+        self.assertNotIn("path: authority", upload)
         self.assertNotIn("verification/", upload)
         self.assertNotIn("git push", self.text.lower())
         self.assertNotIn("gh repo create", self.text.lower())
