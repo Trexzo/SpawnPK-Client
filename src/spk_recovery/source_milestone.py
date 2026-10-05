@@ -1204,6 +1204,9 @@ def build_source_provenance_document(
                     [],
                 )
             ),
+            "lineage_authority": provenance.get(
+                "semantic_lineage_authority"
+            ),
             "fallback_policy": provenance.get(
                 "fallback_policy"
             ),
