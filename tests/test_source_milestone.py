@@ -1210,6 +1210,44 @@ class SourceMilestoneTests(unittest.TestCase):
                 all(report["checks"].values())
             )
 
+    def test_bundle_verifier_rejects_bundle_id_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            bundle_root = root / "bundle"
+
+            build_source_publication_bundle(
+                manifest,
+                source,
+                bundle_root,
+                provenance_documents={},
+            )
+            bundle_path = bundle_root / "BUNDLE.json"
+            bundle = json.loads(
+                bundle_path.read_text(encoding="utf-8")
+            )
+            bundle["bundle_id"] = (
+                "SRCBUNDLE_" + "0" * 20
+            )
+            bundle_path.write_text(
+                json.dumps(
+                    bundle,
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            report = verify_source_publication_bundle(bundle_root)
+
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["bundle_id_match"]
+            )
+
     def test_bundle_verifier_rejects_embedded_milestone_blockers(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
