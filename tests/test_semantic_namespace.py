@@ -618,7 +618,23 @@ class SemanticNamespaceTests(unittest.TestCase):
                     }
                 ],
                 "semantic_provenance": [
-                    {"proposal_id": "SEMPROP_NESTED"}
+                    {
+                        "proposal_id": semantic_proposal_id(
+                            "a" * 64,
+                            "class",
+                            "CLIENT_CLASS_000003",
+                            "IndependentNested",
+                        ),
+                        "review_id": "SEMREVIEW_" + "2" * 20,
+                        "source_build": "v308",
+                        "source_sha256": "a" * 64,
+                        "source_coordinate": {
+                            "owner": "rs/a$Inner",
+                            "name": None,
+                            "descriptor": None,
+                        },
+                        "evidence": [],
+                    }
                 ],
             }
         )
@@ -790,7 +806,23 @@ class SemanticNamespaceTests(unittest.TestCase):
                     }
                 ],
                 "semantic_provenance": [
-                    {"proposal_id": "SEMPROP_NESTED_SAFE"}
+                    {
+                        "proposal_id": semantic_proposal_id(
+                            "a" * 64,
+                            "class",
+                            "CLIENT_CLASS_000003",
+                            "ReadableNested",
+                        ),
+                        "review_id": "SEMREVIEW_" + "3" * 20,
+                        "source_build": "v308",
+                        "source_sha256": "a" * 64,
+                        "source_coordinate": {
+                            "owner": "rs/b$b",
+                            "name": None,
+                            "descriptor": None,
+                        },
+                        "evidence": [],
+                    }
                 ],
             }
         )
