@@ -506,6 +506,38 @@ class SourceMilestoneTests(unittest.TestCase):
                 manifest["blockers"],
             )
 
+    def test_invalid_class_lineage_fails_before_publication(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            fixture["class_lineage"]["classes"][0][
+                "semantic_status"
+            ] = "FABRICATED"
+            _refresh_release_pins(fixture)
+            _refresh_release_verification(fixture)
+
+            with self.assertRaisesRegex(
+                SourceMilestoneError,
+                "invalid semantic lineage authority",
+            ):
+                self._build(source, fixture)
+
+    def test_member_owner_cross_link_drift_fails_before_publication(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            fixture["member_lineage"]["members"][0]["lineage"][0][
+                "owner_internal_name"
+            ] = "rs/ForgedOwner"
+            _refresh_release_pins(fixture)
+            _refresh_release_verification(fixture)
+
+            with self.assertRaisesRegex(
+                SourceMilestoneError,
+                "owner_internal_name",
+            ):
+                self._build(source, fixture)
+
     def test_publishable_manifest_binds_all_hard_gates(self):
         with tempfile.TemporaryDirectory() as td:
             source = Path(td) / "source"
