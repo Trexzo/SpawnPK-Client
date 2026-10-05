@@ -49,6 +49,140 @@ def _refresh_release_pins(fixture: dict) -> None:
 
 
 
+def _release_verification_required_names(
+    fixture: dict,
+) -> set[str]:
+    names = {"release_manifest_exact_reproduction"}
+    transport = fixture["clean_rebuild_report"].get(
+        "compile_transport"
+    )
+    mode = (
+        transport.get("mode")
+        if isinstance(transport, dict)
+        else None
+    )
+    if mode == "collision_derived_remap":
+        names.update(
+            {
+                "collision_private_plan_supplied",
+                "collision_plan_id_authority",
+                "collision_report_id_authority",
+                "collision_transform_id_authority",
+                "collision_base_readable_authority",
+                "collision_private_plan_kind",
+                "collision_private_plan_id",
+                "collision_private_plan_report_id",
+                "collision_private_plan_readable_sha256",
+                "collision_private_plan_sha256",
+                "collision_private_mapping_sha256",
+            }
+        )
+        if transport.get("compile_only_platform_bridges"):
+            names.update(
+                {
+                    "collision_platform_bridge_count",
+                    "collision_platform_bridge_id",
+                    "collision_platform_bridge_release",
+                    "collision_platform_bridge_runtime_forbidden",
+                    "collision_platform_bridge_transport_runtime_forbidden",
+                    "collision_platform_bridge_v308_authority",
+                    "collision_platform_bridge_source_authority",
+                }
+            )
+    elif mode == "official_first_restored":
+        names.update(
+            {
+                "official_overlay_manifest_supplied",
+                "official_overlay_source_root_supplied",
+                "official_private_replacement_plan_supplied",
+                "official_private_reverse_plan_supplied",
+                "official_artifacts_supplied",
+                "official_overlay_id",
+                "official_overlay_replacement_plan_id",
+                "official_overlay_canonical_source_tree_sha256",
+                "official_overlay_bundled_readable_sha256",
+                "official_overlay_artifact_sha256",
+                "official_overlay_source_tree_sha256",
+                "official_private_replacement_identifiers",
+                "official_private_replacement_plan_id",
+                "official_private_replacement_bundled_readable_sha256",
+                "official_private_replacement_artifact_sha256",
+                "official_private_reverse_identifiers",
+                "official_private_reverse_plan_id",
+                "official_private_reverse_replacement_plan_id",
+                "official_private_reverse_bundled_readable_sha256",
+                "official_private_reverse_bytecode_restore_ready",
+                "official_artifact_file_sha256",
+            }
+        )
+    return names
+
+
+def _release_verification_id(report: dict) -> str:
+    material = {
+        "release_id": report["release_id"],
+        "checks": [
+            (
+                row["name"],
+                row["required"],
+                row["passed"],
+                row.get("expected"),
+                row.get("actual"),
+            )
+            for row in report["checks"]
+        ],
+    }
+    raw = json.dumps(
+        material,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
+    return "REPRO_" + hashlib.sha256(raw).hexdigest()[:20].upper()
+
+
+def _refresh_release_verification(fixture: dict) -> None:
+    release = fixture["release_manifest"]
+    checks = [
+        {
+            "name": "release_manifest_exact_reproduction",
+            "required": True,
+            "passed": True,
+            "expected": release,
+            "actual": release,
+        }
+    ]
+    for name in sorted(
+        _release_verification_required_names(fixture)
+        - {"release_manifest_exact_reproduction"}
+    ):
+        checks.append(
+            {
+                "name": name,
+                "required": True,
+                "passed": True,
+                "expected": True,
+                "actual": True,
+            }
+        )
+    report = {
+        "schema_version": 1,
+        "kind": "recovery_release_verification",
+        "verification_id": "",
+        "release_id": release["release_id"],
+        "release_ready": True,
+        "verified": True,
+        "required_check_count": len(checks),
+        "failed_required_check_count": 0,
+        "checks": checks,
+        "toolchain_probe": None,
+    }
+    report["verification_id"] = _release_verification_id(
+        report
+    )
+    fixture["release_verification"] = report
+
+
 def _fixtures(source_root: Path):
     source_root.mkdir(parents=True)
     (source_root / "rs").mkdir()
@@ -176,6 +310,7 @@ def _fixtures(source_root: Path):
         "source_bytes": source_bytes,
     }
     _refresh_release_pins(fixture)
+    _refresh_release_verification(fixture)
     return fixture
 
 
@@ -355,6 +490,125 @@ class SourceMilestoneTests(unittest.TestCase):
                 manifest["blockers"],
             )
 
+    def test_minimal_release_verification_blocks_publication(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            fixture["release_verification"] = {
+                "schema_version": 1,
+                "kind": "recovery_release_verification",
+                "verification_id": "REPRO_MINIMAL",
+                "release_id": "RECOVERY_TEST",
+                "verified": True,
+            }
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "release_authority",
+                    "reason": "release_verification_structure_invalid",
+                },
+                manifest["blockers"],
+            )
+
+    def test_failed_required_release_check_blocks_publication(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            report = fixture["release_verification"]
+            report["checks"][1]["passed"] = False
+            report["failed_required_check_count"] = 1
+            report["verification_id"] = _release_verification_id(
+                report
+            )
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "release_authority",
+                    "reason": "release_verification_required_checks_failed",
+                },
+                manifest["blockers"],
+            )
+
+    def test_release_manifest_reproduction_drift_blocks_publication(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            report = fixture["release_verification"]
+            report["checks"][0]["actual"] = {
+                "kind": "drifted_release_manifest"
+            }
+            report["verification_id"] = _release_verification_id(
+                report
+            )
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "release_authority",
+                    "reason": (
+                        "release_verification_manifest_reproduction_invalid"
+                    ),
+                },
+                manifest["blockers"],
+            )
+
+    def test_missing_collision_verification_evidence_blocks_publication(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            report = fixture["release_verification"]
+            report["checks"] = [
+                row
+                for row in report["checks"]
+                if row["name"] != "collision_private_mapping_sha256"
+            ]
+            report["required_check_count"] = len(
+                report["checks"]
+            )
+            report["verification_id"] = _release_verification_id(
+                report
+            )
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "release_authority",
+                    "reason": (
+                        "release_verification_mode_evidence_incomplete"
+                    ),
+                },
+                manifest["blockers"],
+            )
+
+    def test_release_verification_id_drift_blocks_publication(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            fixture["release_verification"][
+                "verification_id"
+            ] = "REPRO_" + "0" * 20
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "release_authority",
+                    "reason": "release_verification_id_mismatch",
+                },
+                manifest["blockers"],
+            )
+
     def test_collision_provenance_binds_recovered_source_authority(self):
         with tempfile.TemporaryDirectory() as td:
             source = Path(td) / "source"
@@ -454,6 +708,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 "compile_transport"
             ] = transport
             _refresh_release_pins(fixture)
+    _refresh_release_verification(fixture)
 
             manifest = self._build(source, fixture)
 
@@ -511,6 +766,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 "compile_transport"
             ] = transport
             _refresh_release_pins(fixture)
+    _refresh_release_verification(fixture)
 
             manifest = self._build(source, fixture)
 
@@ -543,6 +799,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 "compile_transport"
             ] = transport
             _refresh_release_pins(fixture)
+    _refresh_release_verification(fixture)
 
             manifest = self._build(source, fixture)
 
