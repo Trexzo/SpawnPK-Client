@@ -20894,19 +20894,29 @@ def _normalize_missing_synthetic_private_field_accessors(
                 if not exact_flows:
                     continue
 
-                source_keys = [
-                    (
-                        match.group("receiver"),
-                        match.group("field"),
-                    )
-                    for match in source_occurrences
-                ]
                 exact_keys = [
                     (
                         flow["receiver_field"],
                         flow["private_field"],
                     )
                     for flow in exact_flows
+                ]
+                exact_key_set = set(exact_keys)
+                matching_source_occurrences = [
+                    match
+                    for match in source_occurrences
+                    if (
+                        match.group("receiver"),
+                        match.group("field"),
+                    )
+                    in exact_key_set
+                ]
+                source_keys = [
+                    (
+                        match.group("receiver"),
+                        match.group("field"),
+                    )
+                    for match in matching_source_occurrences
                 ]
                 if exact_keys != source_keys:
                     continue
@@ -20915,6 +20925,9 @@ def _normalize_missing_synthetic_private_field_accessors(
                     {
                         "method": exact_method,
                         "flows": exact_flows,
+                        "source_occurrences": (
+                            matching_source_occurrences
+                        ),
                     }
                 )
 
@@ -20924,7 +20937,7 @@ def _normalize_missing_synthetic_private_field_accessors(
 
             method_edits: list[tuple[int, int, str]] = []
             for source_match, flow in zip(
-                source_occurrences,
+                proof["source_occurrences"],
                 proof["flows"],
             ):
                 owner_dotted = flow["target_owner"].replace(
