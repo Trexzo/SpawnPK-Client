@@ -13564,6 +13564,160 @@ class ErasedIteratorAssignmentCastTests(unittest.TestCase):
             )
 
 
+
+class ExactStaticCallTernaryNestedTypeCollisionTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        false_field: str = "a",
+    ) -> Path:
+        return _compile_java_fixture(
+            root,
+            {
+                "dep/r.java": (
+                    "package dep;\n"
+                    "public class r {\n"
+                    "    public static int a = 7;\n"
+                    "    public static class a {\n"
+                    "        public static final a d = new a();\n"
+                    "        public static final a a = new a();\n"
+                    "    }\n"
+                    "    public static void use(a mode, byte[] x, byte[] y) {}\n"
+                    "}\n"
+                ),
+                "use/Current.java": (
+                    "package use;\n"
+                    "import dep.r;\n"
+                    "import dep.r.a;\n"
+                    "public class Current {\n"
+                    "    public void load(boolean flag, byte[] x, byte[] y) {\n"
+                    "        r.use(flag ? a.d : a."
+                    + false_field
+                    + ", x, y);\n"
+                    "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def _malformed(self) -> str:
+        return (
+            "package use;\n"
+            "import dep.r;\n"
+            "public class Current {\n"
+            "    public void load(boolean flag, byte[] x, byte[] y) {\n"
+            "        r.use(flag ? r.a.d : r.a.a, x, y);\n"
+            "    }\n"
+            "}\n"
+        )
+
+    def test_ternary_nested_static_call_owners_are_reconstructed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(self._malformed(), encoding="utf-8")
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-ternary-nested-owner"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("int cannot be dereferenced", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "r.use(flag ? ((dep.r.a)null).d : "
+                "((dep.r.a)null).a, x, y);",
+                normalized,
+            )
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == (
+                    "exact_static_call_ternary_nested_type_"
+                    "collision_reconstruction"
+                )
+            )
+            self.assertEqual(action["ternary_count"], 1)
+            self.assertEqual(action["replacement_count"], 2)
+            flow = action["flows"][0]
+            self.assertEqual(flow["exact_outer"], "dep/r")
+            self.assertEqual(flow["nested_owner"], "dep/r$a")
+            self.assertEqual(flow["true_field"], "d")
+            self.assertEqual(flow["false_field"], "a")
+            self.assertLess(
+                flow["true_field_offset"],
+                flow["false_field_offset"],
+            )
+            self.assertLess(flow["false_field_offset"], flow["invoke_offset"])
+            self.assertEqual(
+                report["summary"][
+                    "exact_static_call_ternary_nested_type_collision_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "exact_static_call_ternary_nested_type_collision_reference_count"
+                ],
+                2,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-ternary-nested-owner"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stdout + after.stderr)
+
+    def test_ternary_nested_static_call_fails_closed_on_false_arm_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, false_field="d")
+            source = root / "src" / "use" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == (
+                        "exact_static_call_ternary_nested_type_"
+                        "collision_reconstruction"
+                    )
+                    for row in report["actions"]
+                )
+            )
+
+
+
 class MissingSyntheticBridgeForwarderTests(unittest.TestCase):
     def _malformed_source(self) -> str:
         return (
