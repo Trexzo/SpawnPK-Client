@@ -108,6 +108,7 @@ def main(argv: list[str] | None = None) -> int:
     verify_bundle.add_argument(
         "--manifest",
         type=Path,
+        required=True,
     )
     verify_bundle.add_argument(
         "--expected-authority-commit",
@@ -174,11 +175,7 @@ def main(argv: list[str] | None = None) -> int:
             return 0 if report["verified"] else 3
 
         if args.command == "verify-bundle":
-            expected_manifest = (
-                _load(args.manifest)
-                if args.manifest is not None
-                else None
-            )
+            expected_manifest = _load(args.manifest)
             report = verify_source_publication_bundle(
                 args.bundle_dir,
                 expected_manifest=expected_manifest,
