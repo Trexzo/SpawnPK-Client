@@ -21,6 +21,7 @@ class SourceAuthorityArtifactError(ValueError):
 
 
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
+_MILESTONE_ID_RE = re.compile(r"^SRCMILESTONE_[0-9A-F]{20}$")
 _DEFAULT_AUTHORITY_REPOSITORY = "Trexzo/SpawnPK-Client"
 _DEFAULT_PUBLICATION_REPOSITORY = "Trexzo/SpawnPK-Client-Source"
 
@@ -278,6 +279,7 @@ def verify_source_authority_artifact(
     artifact_dir: Path,
     *,
     expected_authority_commit: str | None = None,
+    expected_milestone_id: str | None = None,
     expected_authority_repository: str = (
         _DEFAULT_AUTHORITY_REPOSITORY
     ),
@@ -467,6 +469,16 @@ def verify_source_authority_artifact(
     checks["milestone_publishable"] = (
         milestone is not None
         and milestone.get("publishable") is True
+    )
+    checks["expected_milestone_id"] = (
+        isinstance(expected_milestone_id, str)
+        and _MILESTONE_ID_RE.fullmatch(expected_milestone_id)
+        is not None
+        and manifest.get("preflight_milestone_id")
+        == expected_milestone_id
+        and milestone is not None
+        and milestone.get("milestone_id")
+        == expected_milestone_id
     )
     checks["milestone_id_match"] = (
         milestone is not None
