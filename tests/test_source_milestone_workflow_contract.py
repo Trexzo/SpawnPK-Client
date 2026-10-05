@@ -146,6 +146,28 @@ class SourceMilestoneWorkflowContractTests(unittest.TestCase):
             prior,
         )
 
+    def test_bundle_verification_is_bound_to_exact_authority_commit(self):
+        start = self.text.index(
+            "- name: Verify publication bundle"
+        )
+        end = self.text.index(
+            "- name: Reject binaries outside verifier contract"
+        )
+        verify = self.text[start:end]
+
+        self.assertIn(
+            "AUTHORITY_COMMIT: ${{ inputs.authority_commit }}",
+            verify,
+        )
+        self.assertIn(
+            '--expected-authority-commit "$AUTHORITY_COMMIT"',
+            verify,
+        )
+        self.assertIn(
+            "--manifest source-m1/SOURCE-MILESTONE.json",
+            verify,
+        )
+
     def test_reusable_outputs_are_verification_backed(self):
         for name in (
             "milestone_id",
