@@ -16,6 +16,7 @@ from spk_recovery.release_verify import (
     verify_recovery_release,
 )
 from spk_recovery.release_verify_cli import _load as _verify_cli_load
+from spk_recovery.source_digest import source_tree_digest
 
 
 def _release():
@@ -31,15 +32,7 @@ def _release():
 
 
 def _tree_sha(root: Path) -> str:
-    h = hashlib.sha256()
-    for path in sorted(root.rglob("*.java")):
-        rel = path.relative_to(root).as_posix().encode("utf-8")
-        data = path.read_bytes()
-        h.update(len(rel).to_bytes(4, "big"))
-        h.update(rel)
-        h.update(len(data).to_bytes(8, "big"))
-        h.update(data)
-    return h.hexdigest()
+    return source_tree_digest(root)[0]
 
 
 def _official_first_fixture(root: Path) -> dict:
@@ -214,6 +207,90 @@ class ReleaseVerificationTests(unittest.TestCase):
             )
         self.assertFalse(report["verified"])
         self.assertEqual(report["failed_required_check_count"], 1)
+
+    def test_source_tree_digest_canonicalizes_line_endings(self):
+        release = _release()
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td) / "source"
+            source = root / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_bytes(
+                b"package p;\r\npublic class A {}\r\n"
+            )
+            canonical_sha = source_tree_digest(root)[0]
+            release["final_source_tree_sha256"] = canonical_sha
+
+            with patch(
+                "spk_recovery.release_verify.build_recovery_release_manifest",
+                return_value=release.copy(),
+            ):
+                crlf_report = verify_recovery_release(
+                    release,
+                    {},
+                    {},
+                    {},
+                    {},
+                    {},
+                    {},
+                    {},
+                    source_root=root,
+                )
+
+            source.write_bytes(
+                b"package p;\npublic class A {}\n"
+            )
+            with patch(
+                "spk_recovery.release_verify.build_recovery_release_manifest",
+                return_value=release.copy(),
+            ):
+                lf_report = verify_recovery_release(
+                    release,
+                    {},
+                    {},
+                    {},
+                    {},
+                    {},
+                    {},
+                    {},
+                    source_root=root,
+                )
+
+            self.assertTrue(crlf_report["verified"])
+            self.assertTrue(lf_report["verified"])
+            for report in (crlf_report, lf_report):
+                source_check = next(
+                    row
+                    for row in report["checks"]
+                    if row["name"] == "final_source_tree_sha256"
+                )
+                self.assertEqual(
+                    source_check["actual"],
+                    canonical_sha,
+                )
+
+    def test_source_tree_digest_refuses_empty_source_root(self):
+        release = _release()
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            with patch(
+                "spk_recovery.release_verify.build_recovery_release_manifest",
+                return_value=release.copy(),
+            ):
+                with self.assertRaisesRegex(
+                    RecoveryReleaseVerificationError,
+                    "source root contains no Java files",
+                ):
+                    verify_recovery_release(
+                        release,
+                        {},
+                        {},
+                        {},
+                        {},
+                        {},
+                        {},
+                        {},
+                        source_root=root,
+                    )
 
     def test_collision_private_plan_provenance_passes(self):
         release = _release()
