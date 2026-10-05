@@ -559,8 +559,10 @@ class SourceMilestoneTests(unittest.TestCase):
             source = Path(td) / "source"
             fixture = _fixtures(source)
             report = fixture["release_verification"]
+            report["checks"][1]["actual"] = "drift"
             report["checks"][1]["passed"] = False
             report["failed_required_check_count"] = 1
+            report["verified"] = False
             report["verification_id"] = _release_verification_id(
                 report
             )
@@ -584,6 +586,9 @@ class SourceMilestoneTests(unittest.TestCase):
             report["checks"][0]["actual"] = {
                 "kind": "drifted_release_manifest"
             }
+            report["checks"][0]["passed"] = False
+            report["failed_required_check_count"] = 1
+            report["verified"] = False
             report["verification_id"] = _release_verification_id(
                 report
             )
