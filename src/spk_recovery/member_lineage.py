@@ -7,6 +7,7 @@ from typing import Any
 
 from .lineage import LineageValidationError, validate_lineage
 from .semantic_authority import (
+    SEMANTIC_IDENTIFIER_RE,
     SEMANTIC_PROPOSAL_ID_RE,
     SEMANTIC_REVIEW_ID_RE,
     semantic_proposal_id,
@@ -331,6 +332,13 @@ def validate_member_lineage(
 
         if status == "ACCEPTED":
             accepted_name = str(semantic_name)
+            if not SEMANTIC_IDENTIFIER_RE.fullmatch(
+                accepted_name
+            ):
+                raise MemberLineageError(
+                    f"{label}: accepted semantic name "
+                    f"{accepted_name!r} is not a canonical identifier"
+                )
             if kind == "field":
                 collision_key = (str(owner_id), accepted_name)
                 prior_member_id = accepted_field_names.get(
