@@ -8607,6 +8607,710 @@ def _normalize_generic_key_object_casts(
     return actions
 
 
+def _normalize_inherited_cc_generic_value_object_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Remove Object casts from inherited cc<T> calls with exact substitution.
+
+    This handles only current-instance fields inherited through a readable
+    superclass chain. Every generic superclass hop must resolve uniquely to
+    concrete reference types, and a source this.method(...) value must be
+    matched to an exact invocation returning the substituted field type.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+        cc_profile = profile_class_field_accesses(
+            readable_zip.read("gnu/trove/f/b/cc.class")
+        )
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    cc_methods = [
+        method
+        for method in cc_profile.get("methods", [])
+        if (
+            method.get("name") == "a"
+            and method.get("descriptor")
+            == "(ILjava/lang/Object;)Ljava/lang/Object;"
+            and method.get("signature") == "(ITV;)TV;"
+        )
+    ]
+    if len(cc_methods) != 1:
+        return []
+
+    profile_cache: dict[str, dict[str, Any] | None] = {
+        current_owner: profile,
+        "gnu/trove/f/b/cc": cc_profile,
+    }
+    class_cache: dict[str, Any | None] = {}
+
+    def owner_profile(owner: str) -> dict[str, Any] | None:
+        if owner in profile_cache:
+            return profile_cache[owner]
+        try:
+            parsed = profile_class_field_accesses(
+                readable_zip.read(owner + ".class")
+            )
+        except (KeyError, BytecodeProfileError):
+            profile_cache[owner] = None
+            return None
+        if str(parsed.get("internal_name", "")) != owner:
+            profile_cache[owner] = None
+            return None
+        profile_cache[owner] = parsed
+        return parsed
+
+    def owner_class(owner: str) -> Any | None:
+        if owner in class_cache:
+            return class_cache[owner]
+        try:
+            parsed = parse_class(
+                readable_zip.read(owner + ".class")
+            )
+        except (KeyError, ClassFormatError):
+            class_cache[owner] = None
+            return None
+        if parsed.name != owner:
+            class_cache[owner] = None
+            return None
+        class_cache[owner] = parsed
+        return parsed
+
+    def class_type_parameters(
+        signature: str,
+    ) -> tuple[list[str], int] | None:
+        if not signature.startswith("<"):
+            return [], 0
+
+        def skip_field_type(index: int) -> int | None:
+            if index >= len(signature):
+                return None
+            token = signature[index]
+            if token == "T":
+                end = signature.find(";", index + 1)
+                return None if end < 0 else end + 1
+            if token == "[":
+                index += 1
+                if index >= len(signature):
+                    return None
+                if signature[index] in "ZBCSIJFD":
+                    return index + 1
+                return skip_field_type(index)
+            if token != "L":
+                return None
+            depth = 0
+            index += 1
+            while index < len(signature):
+                ch = signature[index]
+                if ch == "<":
+                    depth += 1
+                elif ch == ">":
+                    if depth == 0:
+                        return None
+                    depth -= 1
+                elif ch == ";" and depth == 0:
+                    return index + 1
+                index += 1
+            return None
+
+        names: list[str] = []
+        index = 1
+        while index < len(signature) and signature[index] != ">":
+            start = index
+            while (
+                index < len(signature)
+                and (
+                    signature[index].isalnum()
+                    or signature[index] in "_$"
+                )
+            ):
+                index += 1
+            if start == index or index >= len(signature):
+                return None
+            name = signature[start:index]
+            if signature[index] != ":":
+                return None
+            names.append(name)
+
+            while index < len(signature) and signature[index] == ":":
+                index += 1
+                if index >= len(signature):
+                    return None
+                if signature[index] == ":":
+                    continue
+                next_index = skip_field_type(index)
+                if next_index is None:
+                    return None
+                index = next_index
+
+        if index >= len(signature) or signature[index] != ">":
+            return None
+        return names, index + 1
+
+    def direct_super_bindings(
+        *,
+        owner: str,
+        bindings: dict[str, str],
+        super_owner: str,
+    ) -> dict[str, str] | None:
+        current_profile = owner_profile(owner)
+        super_profile = owner_profile(super_owner)
+        if current_profile is None or super_profile is None:
+            return None
+
+        super_signature = str(
+            super_profile.get("signature") or ""
+        )
+        formal_result = class_type_parameters(
+            super_signature
+        )
+        if formal_result is None:
+            return None
+        super_formals = formal_result[0]
+        if not super_formals:
+            return {}
+
+        signature = str(
+            current_profile.get("signature") or ""
+        )
+        if not signature:
+            return None
+        current_formals = class_type_parameters(signature)
+        if current_formals is None:
+            return None
+        index = current_formals[1]
+
+        prefix = "L" + super_owner
+        if not signature.startswith(prefix, index):
+            return None
+        index += len(prefix)
+        if index >= len(signature) or signature[index] != "<":
+            return None
+        index += 1
+
+        actuals: list[str] = []
+        while index < len(signature) and signature[index] != ">":
+            token = signature[index]
+            if token == "L":
+                end = signature.find(";", index + 1)
+                if end < 0:
+                    return None
+                raw = signature[index + 1:end]
+                if "<" in raw or ">" in raw:
+                    return None
+                actuals.append(raw)
+                index = end + 1
+                continue
+            if token == "T":
+                end = signature.find(";", index + 1)
+                if end < 0:
+                    return None
+                variable = signature[index + 1:end]
+                resolved = bindings.get(variable)
+                if resolved is None:
+                    return None
+                actuals.append(resolved)
+                index = end + 1
+                continue
+            return None
+
+        if (
+            index >= len(signature)
+            or signature[index] != ">"
+            or index + 1 >= len(signature)
+            or signature[index + 1] != ";"
+            or len(actuals) != len(super_formals)
+        ):
+            return None
+        return dict(zip(super_formals, actuals))
+
+    variable_field_re = re.compile(
+        r"^Lgnu/trove/f/b/cc<T(?P<variable>"
+        r"[A-Za-z_$][A-Za-z0-9_$]*)"
+        r";>;$"
+    )
+    concrete_field_re = re.compile(
+        r"^Lgnu/trove/f/b/cc<L(?P<value>[^;<>]+);>;$"
+    )
+
+    def resolve_inherited_field(
+        field_name: str,
+    ) -> dict[str, Any] | None:
+        owner = current_owner
+        bindings: dict[str, str] = {}
+        hierarchy_path: list[str] = []
+        seen: set[str] = set()
+
+        while owner and owner not in seen and len(seen) < 64:
+            seen.add(owner)
+            hierarchy_path.append(owner)
+            parsed_profile = owner_profile(owner)
+            parsed_class = owner_class(owner)
+            if parsed_profile is None or parsed_class is None:
+                return None
+
+            named_fields = [
+                field
+                for field in parsed_profile.get("fields", [])
+                if field.get("name") == field_name
+            ]
+            if named_fields:
+                if owner == current_owner or len(named_fields) != 1:
+                    return None
+                field = named_fields[0]
+                if (
+                    field.get("descriptor")
+                    != "Lgnu/trove/f/b/cc;"
+                    or (int(field.get("access", 0)) & 0x0008)
+                    or not _field_visible_from(
+                        declaring_owner=owner,
+                        current_owner=current_owner,
+                        access=int(field.get("access", 0)),
+                    )
+                ):
+                    return None
+                signature = str(field.get("signature") or "")
+                generic_value: str | None = None
+                concrete = concrete_field_re.fullmatch(signature)
+                if concrete is not None:
+                    generic_value = concrete.group("value")
+                else:
+                    variable = variable_field_re.fullmatch(signature)
+                    if variable is None:
+                        return None
+                    generic_value = bindings.get(
+                        variable.group("variable")
+                    )
+                if generic_value is None:
+                    return None
+                try:
+                    readable_zip.getinfo(
+                        generic_value + ".class"
+                    )
+                except KeyError:
+                    if not generic_value.startswith("java/"):
+                        return None
+                return {
+                    "declaring_owner": owner,
+                    "field_name": field_name,
+                    "field_descriptor": str(
+                        field.get("descriptor", "")
+                    ),
+                    "field_signature": signature,
+                    "generic_value": generic_value,
+                    "allowed_field_owners": tuple(
+                        hierarchy_path
+                    ),
+                    "hierarchy_path": tuple(hierarchy_path),
+                    "substitutions": dict(bindings),
+                }
+
+            super_owner = parsed_class.super_name
+            if not super_owner or super_owner == "java/lang/Object":
+                return None
+            next_bindings = direct_super_bindings(
+                owner=owner,
+                bindings=bindings,
+                super_owner=super_owner,
+            )
+            if next_bindings is None:
+                return None
+            owner = super_owner
+            bindings = next_bindings
+
+        return None
+
+    full_hierarchy: list[str] = []
+    owner = current_owner
+    seen: set[str] = set()
+    while owner and owner not in seen and len(seen) < 64:
+        seen.add(owner)
+        full_hierarchy.append(owner)
+        parsed = owner_class(owner)
+        if parsed is None:
+            return []
+        owner = parsed.super_name
+        if owner == "java/lang/Object":
+            full_hierarchy.append(owner)
+            break
+    full_hierarchy_set = set(full_hierarchy)
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    call_re = re.compile(
+        r"this\.(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\.\s*a\s*\(\s*"
+        r"(?P<first>[^,\n]+?)\s*,\s*"
+        r"(?P<cast>\(\s*Object\s*\)\s*)"
+        r"this\.(?P<value_method>"
+        r"[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\(\s*(?P<value_args>[^()\n]*)\s*\)"
+    )
+
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(
+                whole_code,
+                brace_start,
+            )
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_text = text[method_start:body_end]
+        calls: list[dict[str, Any]] = []
+
+        for call in call_re.finditer(method_text):
+            field = resolve_inherited_field(
+                call.group("field")
+            )
+            if field is None:
+                continue
+            value_args = call.group("value_args")
+            calls.append(
+                {
+                    "match": call,
+                    **field,
+                    "value_method": call.group(
+                        "value_method"
+                    ),
+                    "value_arg_count": (
+                        0
+                        if not value_args.strip()
+                        else _source_parameter_count(
+                            value_args
+                        )
+                    ),
+                }
+            )
+
+        if not calls:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[
+                    method_match.start():brace_start
+                ],
+            )
+        )
+        if source_static:
+            continue
+
+        exact_candidates: list[dict[str, Any]] = []
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(
+                exact_method.get("descriptor", "")
+            )
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+                or (int(exact_method.get("access", 0)) & 0x0008)
+            ):
+                continue
+
+            instructions = list(
+                exact_method.get("instructions", [])
+            )
+            flows: list[dict[str, Any]] = []
+
+            for index, field_access in enumerate(instructions):
+                if not (
+                    field_access.get("mnemonic") == "getfield"
+                    and field_access.get("descriptor")
+                    == "Lgnu/trove/f/b/cc;"
+                ):
+                    continue
+
+                possible_calls = [
+                    call
+                    for call in calls
+                    if (
+                        field_access.get("name")
+                        == call["field_name"]
+                        and field_access.get("owner")
+                        in call["allowed_field_owners"]
+                    )
+                ]
+                if not possible_calls or index == 0:
+                    continue
+                receiver_load = instructions[index - 1]
+                if not (
+                    receiver_load.get("mnemonic") == "aload"
+                    and int(
+                        receiver_load.get("local_index", -1)
+                    ) == 0
+                ):
+                    continue
+
+                target_index: int | None = None
+                for probe in range(
+                    index + 1,
+                    min(len(instructions), index + 48),
+                ):
+                    item = instructions[probe]
+                    if (
+                        item.get("mnemonic")
+                        in {"invokevirtual", "invokeinterface"}
+                        and item.get("owner")
+                        == "gnu/trove/f/b/cc"
+                        and item.get("name") == "a"
+                        and item.get("descriptor")
+                        == "(ILjava/lang/Object;)Ljava/lang/Object;"
+                    ):
+                        target_index = probe
+                        break
+                if target_index is None:
+                    continue
+
+                segment = instructions[
+                    index + 1:target_index
+                ]
+                proven_calls: list[
+                    tuple[dict[str, Any], dict[str, Any]]
+                ] = []
+                for call in possible_calls:
+                    method_invocations = [
+                        item
+                        for item in segment
+                        if (
+                            item.get("mnemonic")
+                            == "invokevirtual"
+                            and item.get("owner")
+                            in full_hierarchy_set
+                            and item.get("name")
+                            == call["value_method"]
+                            and _descriptor_parameter_count(
+                                str(
+                                    item.get(
+                                        "descriptor",
+                                        "",
+                                    )
+                                )
+                            )
+                            == call["value_arg_count"]
+                            and _descriptor_return_descriptor(
+                                str(
+                                    item.get(
+                                        "descriptor",
+                                        "",
+                                    )
+                                )
+                            )
+                            == (
+                                "L"
+                                + call["generic_value"]
+                                + ";"
+                            )
+                        )
+                    ]
+                    if len(method_invocations) != 1:
+                        continue
+                    invocation = method_invocations[0]
+                    invocation_index = segment.index(
+                        invocation
+                    )
+                    if not any(
+                        item.get("mnemonic") == "aload"
+                        and int(
+                            item.get("local_index", -1)
+                        ) == 0
+                        for item in segment[
+                            :invocation_index
+                        ]
+                    ):
+                        continue
+                    if any(
+                        item.get("mnemonic") == "checkcast"
+                        and item.get("type")
+                        == call["generic_value"]
+                        for item in segment[
+                            invocation_index + 1:
+                        ]
+                    ):
+                        continue
+                    proven_calls.append(
+                        (call, invocation)
+                    )
+
+                if len(proven_calls) != 1:
+                    continue
+                call, invocation = proven_calls[0]
+                flows.append(
+                    {
+                        "field_owner": str(
+                            field_access.get("owner", "")
+                        ),
+                        "field_name": call["field_name"],
+                        "field_declaring_owner": call[
+                            "declaring_owner"
+                        ],
+                        "field_signature": call[
+                            "field_signature"
+                        ],
+                        "generic_value": call[
+                            "generic_value"
+                        ],
+                        "hierarchy_path": list(
+                            call["hierarchy_path"]
+                        ),
+                        "substitutions": call[
+                            "substitutions"
+                        ],
+                        "value_method": call[
+                            "value_method"
+                        ],
+                        "value_arg_count": call[
+                            "value_arg_count"
+                        ],
+                        "value_invoke_owner": str(
+                            invocation.get("owner", "")
+                        ),
+                        "value_invoke_descriptor": str(
+                            invocation.get(
+                                "descriptor", ""
+                            )
+                        ),
+                        "field_offset": int(
+                            field_access.get(
+                                "offset", -1
+                            )
+                        ),
+                        "value_invoke_offset": int(
+                            invocation.get(
+                                "offset", -1
+                            )
+                        ),
+                        "cc_invoke_offset": int(
+                            instructions[target_index].get(
+                                "offset", -1
+                            )
+                        ),
+                    }
+                )
+
+            source_proofs = [
+                (
+                    call["declaring_owner"],
+                    call["field_name"],
+                    call["generic_value"],
+                    call["value_method"],
+                    call["value_arg_count"],
+                )
+                for call in calls
+            ]
+            exact_proofs = [
+                (
+                    flow["field_declaring_owner"],
+                    flow["field_name"],
+                    flow["generic_value"],
+                    flow["value_method"],
+                    flow["value_arg_count"],
+                )
+                for flow in flows
+            ]
+            if exact_proofs != source_proofs:
+                continue
+
+            exact_candidates.append(
+                {
+                    "method": exact_method,
+                    "flows": flows,
+                }
+            )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        proof = exact_candidates[0]
+        for call in calls:
+            match = call["match"]
+            edits.append(
+                (
+                    method_start + match.start("cast"),
+                    method_start + match.end("cast"),
+                    "",
+                )
+            )
+
+        actions.append(
+            {
+                "kind": "cc_generic_value_object_cast_removal",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof[
+                    "method"
+                ]["descriptor"],
+                "fields": [
+                    "this." + call["field_name"]
+                    for call in calls
+                ],
+                "generic_value_types": [
+                    call["generic_value"]
+                    for call in calls
+                ],
+                "value_kinds": [
+                    "method_call" for _ in calls
+                ],
+                "receiver_authority": (
+                    "inherited_generic_hierarchy"
+                ),
+                "flows": proof["flows"],
+                "replacement_count": len(calls),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_erased_inherited_cc_generic_value_object_cast"
+                    ),
+                    "strategy": (
+                        "exact_super_signature_substitution_plus_method_return"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping inherited cc<T> Object-cast edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_cc_generic_value_object_casts(
     *,
     source_root: Path,
@@ -21949,6 +22653,13 @@ def normalize_procyon_source(
                 )
                 actions.extend(
                     _normalize_generic_key_object_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
+                    _normalize_inherited_cc_generic_value_object_casts(
                         source_root=source_root,
                         path=path,
                         readable_zip=z,
