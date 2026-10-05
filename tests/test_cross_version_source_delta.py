@@ -20,6 +20,23 @@ NEW_SHA = "2" * 64
 READABLE = "3" * 64
 
 
+def _release_id(release: dict) -> str:
+    material = {
+        "build_id": release.get("build_id"),
+        "authority_sha256": release.get("authority_sha256"),
+        "namespace_id": release.get("namespace_id"),
+        "readable_jar_sha256": release.get("readable_jar_sha256"),
+        "final_workspace_id": release.get("final_workspace_id"),
+        "final_source_tree_sha256": release.get(
+            "final_source_tree_sha256"
+        ),
+        "source_state": release.get("source_state"),
+        "pins": release.get("authority_pins"),
+        "blockers": release.get("blockers"),
+    }
+    return "RECOVERY_" + _digest(material)[:20].upper()
+
+
 def _digest(value):
     return hashlib.sha256(
         json.dumps(
@@ -265,9 +282,12 @@ def _authority_bundle(
         "release_id": release_id,
         "build_id": build,
         "authority_sha256": sha,
+        "namespace_id": "SEMNS_TEST",
         "readable_jar_sha256": READABLE,
         "recovered_workspace_id": workspace_id,
+        "final_workspace_id": workspace_id,
         "final_source_tree_sha256": tree,
+        "source_state": "workspace",
         "ready_for_release": True,
         "blockers": [],
         "authority_pins": {
@@ -275,6 +295,7 @@ def _authority_bundle(
             "recovered_source_manifest_sha256": _digest(recovered),
         },
     }
+    release["release_id"] = _release_id(release)
     return release, recovered, plan
 
 
@@ -374,6 +395,47 @@ class CrossVersionSourceDeltaTests(unittest.TestCase):
                 "CLIENT_CLASS_000001",
                 [row["logical_id"] for row in report["unchanged"]],
             )
+
+    def test_forged_release_id_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            old, new = self._roots(Path(tmp))
+            args = list(self._args(old, new))
+            args[0]["release_id"] = "RECOVERY_" + "0" * 20
+
+            with self.assertRaisesRegex(
+                CrossVersionSourceDeltaError,
+                "release_id is not deterministic",
+            ):
+                build_cross_version_source_delta(*args)
+
+    def test_ready_release_with_blockers_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            old, new = self._roots(Path(tmp))
+            args = list(self._args(old, new))
+            args[0]["blockers"] = [
+                {
+                    "gate": "clean_compile",
+                    "reason": "synthetic_blocker",
+                }
+            ]
+
+            with self.assertRaisesRegex(
+                CrossVersionSourceDeltaError,
+                "ready release retains blockers",
+            ):
+                build_cross_version_source_delta(*args)
+
+    def test_ready_release_requires_blocker_list(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            old, new = self._roots(Path(tmp))
+            args = list(self._args(old, new))
+            args[1].pop("blockers")
+
+            with self.assertRaisesRegex(
+                CrossVersionSourceDeltaError,
+                "blockers must be a list",
+            ):
+                build_cross_version_source_delta(*args)
 
     def test_release_tree_hash_drift_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
