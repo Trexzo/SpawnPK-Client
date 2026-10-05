@@ -16248,7 +16248,7 @@ class InheritedCcGenericValueObjectCastTests(unittest.TestCase):
                 text=True,
             )
             self.assertNotEqual(before.returncode, 0)
-            self.assertIn("no suitable method", before.stderr)
+            self.assertIn("Object cannot be converted to R", before.stderr)
 
             report = normalize_procyon_source(root / "src", jar)
             normalized = source.read_text(encoding="utf-8")
