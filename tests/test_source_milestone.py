@@ -939,6 +939,72 @@ class SourceMilestoneTests(unittest.TestCase):
                     provenance_documents={},
                 )
 
+    def test_flipped_publishable_blocked_manifest_refuses_bundle(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            fixture["clean_rebuild_report"][
+                "project_classes"
+            ]["binary_fallback_count"] = 1
+            manifest = self._build(source, fixture)
+            self.assertFalse(manifest["publishable"])
+            self.assertTrue(manifest["blockers"])
+
+            manifest["publishable"] = True
+
+            with self.assertRaisesRegex(
+                SourceMilestoneError,
+                "publication state is inconsistent",
+            ):
+                build_source_publication_bundle(
+                    manifest,
+                    source,
+                    Path(td) / "bundle",
+                    provenance_documents={},
+                )
+
+    def test_publication_allowed_must_match_publishable_manifest(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            self.assertTrue(manifest["publishable"])
+
+            manifest["publication"]["allowed"] = False
+
+            with self.assertRaisesRegex(
+                SourceMilestoneError,
+                "publication state is inconsistent",
+            ):
+                build_source_publication_bundle(
+                    manifest,
+                    source,
+                    Path(td) / "bundle",
+                    provenance_documents={},
+                )
+
+    def test_publication_bundle_rejects_milestone_identity_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+            self.assertTrue(manifest["publishable"])
+
+            manifest["milestone_id"] = (
+                "SRCMILESTONE_" + "0" * 20
+            )
+
+            with self.assertRaisesRegex(
+                SourceMilestoneError,
+                "source milestone identity mismatch",
+            ):
+                build_source_publication_bundle(
+                    manifest,
+                    source,
+                    Path(td) / "bundle",
+                    provenance_documents={},
+                )
+
     def test_provenance_document_is_deterministic_and_explicit(self):
         with tempfile.TemporaryDirectory() as td:
             source = Path(td) / "source"
