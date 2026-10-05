@@ -59,6 +59,39 @@ def _sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def _artifact_id(
+    *,
+    authority_repository: str,
+    authority_commit: str,
+    publication_repository: str,
+    preflight_milestone_id: Any,
+    build_id: Any,
+    client_sha256: Any,
+    source_tree_sha256: str,
+    source_file_count: int,
+    source_bytes: int,
+    document_sha256: dict[str, str],
+    payload_file_sha256: dict[str, str],
+) -> str:
+    material = {
+        "authority_repository": authority_repository,
+        "authority_commit": authority_commit,
+        "publication_repository": publication_repository,
+        "preflight_milestone_id": preflight_milestone_id,
+        "build_id": build_id,
+        "client_sha256": client_sha256,
+        "source_tree_sha256": source_tree_sha256,
+        "source_file_count": source_file_count,
+        "source_bytes": source_bytes,
+        "document_sha256": document_sha256,
+        "payload_file_sha256": payload_file_sha256,
+    }
+    return (
+        "SRCAUTHART_"
+        + _stable_digest(material)[:20].upper()
+    )
+
+
 def _exact_object(pairs):
     out = {}
     for key, value in pairs:
@@ -226,24 +259,20 @@ def build_source_authority_artifact(
         **source_file_sha256,
     }
 
-    material = {
-        "authority_repository": authority_repository,
-        "authority_commit": authority_commit,
-        "publication_repository": publication_repository,
-        "preflight_milestone_id": milestone["milestone_id"],
-        "build_id": milestone["provenance"]["build_id"],
-        "client_sha256": milestone["provenance"][
+    artifact_id = _artifact_id(
+        authority_repository=authority_repository,
+        authority_commit=authority_commit,
+        publication_repository=publication_repository,
+        preflight_milestone_id=milestone["milestone_id"],
+        build_id=milestone["provenance"]["build_id"],
+        client_sha256=milestone["provenance"][
             "authority_client_sha256"
         ],
-        "source_tree_sha256": tree_sha,
-        "source_file_count": len(source_files),
-        "source_bytes": source_bytes,
-        "document_sha256": document_sha256,
-        "payload_file_sha256": payload_file_sha256,
-    }
-    artifact_id = (
-        "SRCAUTHART_"
-        + _stable_digest(material)[:20].upper()
+        source_tree_sha256=tree_sha,
+        source_file_count=len(source_files),
+        source_bytes=source_bytes,
+        document_sha256=document_sha256,
+        payload_file_sha256=payload_file_sha256,
     )
 
     report = {
@@ -386,6 +415,30 @@ def verify_source_authority_artifact(
     checks["source_bytes_match"] = (
         source_bytes == manifest.get("source_bytes")
     )
+    checks["source_payload_non_empty"] = bool(source_files)
+
+    recomputed_artifact_id = _artifact_id(
+        authority_repository=str(
+            manifest.get("authority_repository") or ""
+        ),
+        authority_commit=authority_commit,
+        publication_repository=str(
+            manifest.get("publication_repository") or ""
+        ),
+        preflight_milestone_id=manifest.get(
+            "preflight_milestone_id"
+        ),
+        build_id=manifest.get("build_id"),
+        client_sha256=manifest.get("client_sha256"),
+        source_tree_sha256=tree_sha,
+        source_file_count=len(source_files),
+        source_bytes=source_bytes,
+        document_sha256=actual_document_hashes,
+        payload_file_sha256=actual_payload,
+    )
+    checks["artifact_id_match"] = (
+        manifest.get("artifact_id") == recomputed_artifact_id
+    )
 
     docs_by_key: dict[str, dict[str, Any]] = {}
     for filename, key in _DOCUMENT_NAMES.items():
@@ -460,6 +513,7 @@ def verify_source_authority_artifact(
         "kind": "source_m1_authority_artifact_verification",
         "verification_id": verification_id,
         "artifact_id": manifest.get("artifact_id"),
+        "recomputed_artifact_id": recomputed_artifact_id,
         "verified": verified,
         "authority_commit": authority_commit,
         "source_tree_sha256": tree_sha,
