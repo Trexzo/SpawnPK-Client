@@ -6683,6 +6683,17 @@ def _normalize_invokedynamic_callback_copied_int_capture(
     bootstrap_methods = list(profile.get("bootstrap_methods", []))
     if not bootstrap_methods:
         return []
+    integer_set_fields = {
+        str(field.get("name", ""))
+        for field in profile.get("fields", [])
+        if not (int(field.get("access", 0)) & 0x0008)
+        and field.get("descriptor") == "Ljava/util/Set;"
+        and field.get("signature")
+        == "Ljava/util/Set<Ljava/lang/Integer;>;"
+        and _is_java_identifier(str(field.get("name", "")))
+    }
+    if not integer_set_fields:
+        return []
 
     text = path.read_text(encoding="utf-8")
     whole_code = _java_code_mask(text)
@@ -6758,6 +6769,8 @@ def _normalize_invokedynamic_callback_copied_int_capture(
 
     def _has_helper_region_proof(
         instructions: list[dict[str, Any]],
+        *,
+        field_name: str,
     ) -> bool:
         boxed_add = False
         signed_shift = False
@@ -6767,11 +6780,19 @@ def _normalize_invokedynamic_callback_copied_int_capture(
                 row.get("mnemonic") == "iload"
                 and int(row.get("local_index", -1)) == 1
             ):
-                if index + 2 < len(instructions):
+                if index >= 2 and index + 2 < len(instructions):
+                    receiver = instructions[index - 2]
+                    field = instructions[index - 1]
                     box = instructions[index + 1]
                     add = instructions[index + 2]
                     if (
-                        box.get("mnemonic") == "invokestatic"
+                        receiver.get("mnemonic") == "aload"
+                        and int(receiver.get("local_index", -1)) == 0
+                        and field.get("mnemonic") == "getfield"
+                        and field.get("owner") == current_owner
+                        and field.get("name") == field_name
+                        and field.get("descriptor") == "Ljava/util/Set;"
+                        and box.get("mnemonic") == "invokestatic"
                         and box.get("owner") == "java/lang/Integer"
                         and box.get("name") == "valueOf"
                         and box.get("descriptor")
@@ -6858,16 +6879,21 @@ def _normalize_invokedynamic_callback_copied_int_capture(
             callback.group("p4"),
         }
 
-        add_aliases = {
-            match.group("alias")
+        add_field_aliases = {
+            (match.group("field"), match.group("alias"))
             for match in re.finditer(
-                r"\.\s*add\s*\(\s*(?P<alias>"
+                r"(?<![A-Za-z0-9_$])"
+                r"(?:this\s*\.\s*)?"
+                r"(?P<field>" + identifier + r")"
+                r"\s*\.\s*add\s*\(\s*(?P<alias>"
                 + identifier
                 + r")\s*\)",
                 callback_code,
             )
-            if match.group("alias") not in lambda_names
+            if match.group("field") in integer_set_fields
+            and match.group("alias") not in lambda_names
         }
+        add_aliases = {alias for _field, alias in add_field_aliases}
         shift_aliases = {
             match.group("alias")
             for match in re.finditer(
@@ -6894,6 +6920,14 @@ def _normalize_invokedynamic_callback_copied_int_capture(
         if len(alias_candidates) != 1:
             continue
         alias_name = next(iter(alias_candidates))
+        matching_source_fields = {
+            field
+            for field, alias in add_field_aliases
+            if alias == alias_name
+        }
+        if len(matching_source_fields) != 1:
+            continue
+        region_field_name = next(iter(matching_source_fields))
 
         alias_hits = list(
             re.finditer(
@@ -7085,7 +7119,8 @@ def _normalize_invokedynamic_callback_copied_int_capture(
             if len(helpers) != 1:
                 continue
             if not _has_helper_region_proof(
-                list(helpers[0].get("instructions", []))
+                list(helpers[0].get("instructions", [])),
+                field_name=region_field_name,
             ):
                 continue
 
@@ -7183,6 +7218,7 @@ def _normalize_invokedynamic_callback_copied_int_capture(
                 "method_descriptor": exact_method.get("descriptor"),
                 "source_original_name": region_name,
                 "corrupted_capture_alias": alias_name,
+                "affected_region_field_name": region_field_name,
                 "recovered_capture_name": recovered_name,
                 "replacement_count": len(alias_hits),
                 "invokedynamic": matching_indy[0],
