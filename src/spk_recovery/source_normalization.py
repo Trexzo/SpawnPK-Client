@@ -11124,6 +11124,521 @@ def _normalize_generic_key_object_casts(
     return actions
 
 
+
+def _normalize_generic_key_getclass_object_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Remove Object casts around getClass() used as exact generic keys.
+
+    This is a narrow companion to generic_key_object_cast_removal.  It handles
+    one-argument generic lookups where Procyon writes
+    member((Object)value.getClass()) even though exact field/class/member
+    Signatures bind K to Class<?> and bytecode proves the flow
+    getfield -> Object.getClass -> erased generic lookup -> checkcast V.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+
+    imports: dict[str, str] = {}
+    duplicate_imports: set[str] = set()
+    for import_match in _SINGLE_TYPE_IMPORT_RE.finditer(text):
+        dotted = import_match.group("name")
+        simple = dotted.rsplit(".", 1)[-1]
+        internal = dotted.replace(".", "/")
+        previous = imports.get(simple)
+        if previous is not None and previous != internal:
+            duplicate_imports.add(simple)
+        else:
+            imports[simple] = internal
+    for simple in duplicate_imports:
+        imports.pop(simple, None)
+
+    owner_cache: dict[str, dict[str, Any]] = {
+        current_owner: profile,
+    }
+
+    def owner_profile(owner: str) -> dict[str, Any] | None:
+        cached = owner_cache.get(owner)
+        if cached is not None:
+            return cached
+        try:
+            parsed = profile_class_field_accesses(
+                readable_zip.read(owner + ".class")
+            )
+        except (KeyError, BytecodeProfileError):
+            return None
+        if str(parsed.get("internal_name", "")) != owner:
+            return None
+        owner_cache[owner] = parsed
+        return parsed
+
+    def class_exists(owner: str) -> bool:
+        if owner.startswith("java/"):
+            return True
+        try:
+            readable_zip.getinfo(owner + ".class")
+            return True
+        except KeyError:
+            return False
+
+    def resolve_source_ref(type_text: str) -> str | None:
+        value = re.sub(r"\s+", "", type_text)
+        if "<" in value:
+            value = value.split("<", 1)[0]
+        while value.endswith("[]"):
+            value = value[:-2]
+        if not re.fullmatch(
+            r"[A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)*",
+            value,
+        ):
+            return None
+        if value in imports:
+            return imports[value]
+        if "." in value:
+            candidate = value.replace(".", "/")
+            return candidate if class_exists(candidate) else None
+        nested = current_owner + "$" + value
+        if class_exists(nested):
+            return nested
+        same_package = (
+            current_package + "/" + value
+            if current_package
+            else value
+        )
+        if class_exists(same_package):
+            return same_package
+        java_lang = "java/lang/" + value
+        if class_exists(java_lang):
+            return java_lang
+        return None
+
+    def consume_signature_type(
+        signature: str,
+        start: int,
+    ) -> int | None:
+        if start >= len(signature):
+            return None
+        token = signature[start]
+        if token in "+-":
+            return consume_signature_type(signature, start + 1)
+        if token == "*":
+            return start + 1
+        if token == "T":
+            end = signature.find(";", start + 1)
+            return None if end < 0 else end + 1
+        if token == "[":
+            return consume_signature_type(signature, start + 1)
+        if token != "L":
+            return None
+        depth = 0
+        index = start + 1
+        while index < len(signature):
+            ch = signature[index]
+            if ch == "<":
+                depth += 1
+            elif ch == ">":
+                if depth == 0:
+                    return None
+                depth -= 1
+            elif ch == ";" and depth == 0:
+                return index + 1
+            index += 1
+        return None
+
+    def field_signature_arguments(
+        signature: str,
+        raw_owner: str,
+    ) -> list[str] | None:
+        prefix = "L" + raw_owner + "<"
+        if not (signature.startswith(prefix) and signature.endswith(">;")):
+            return None
+        body = signature[len(prefix):-2]
+        out: list[str] = []
+        index = 0
+        while index < len(body):
+            end = consume_signature_type(body, index)
+            if end is None or end <= index:
+                return None
+            out.append(body[index:end])
+            index = end
+        return out if len(out) == 2 else None
+
+    def signature_erasure_owner(signature: str) -> str | None:
+        value = signature
+        while value and value[0] in "+-":
+            value = value[1:]
+        if not value.startswith("L") or not value.endswith(";"):
+            return None
+        body = value[1:-1]
+        generic = body.find("<")
+        owner = body if generic < 0 else body[:generic]
+        return owner if owner and class_exists(owner) else None
+
+    def source_field_arguments(
+        *,
+        field_name: str,
+        raw_owner: str,
+        exact_argument_owners: list[str],
+    ) -> bool:
+        start_re = re.compile(
+            r"(?m)^[ \t]*"
+            r"(?:(?:public|private|protected|static|final|transient|volatile)"
+            r"\s+)*"
+            r"(?P<raw>[A-Za-z_$][A-Za-z0-9_$.]*)\s*"
+            r"(?P<angle><)"
+        )
+        matches = 0
+        for match in start_re.finditer(whole_code):
+            if resolve_source_ref(match.group("raw")) != raw_owner:
+                continue
+            angle_start = match.start("angle")
+            angle_end = _matching_generic_angle_end(
+                whole_code,
+                angle_start,
+            )
+            if angle_end is None:
+                continue
+            tail = whole_code[angle_end + 1:]
+            field_match = re.match(
+                r"\s+"
+                + re.escape(field_name)
+                + r"\b\s*(?:=|;)",
+                tail,
+            )
+            if field_match is None:
+                continue
+            args_text = text[angle_start + 1:angle_end]
+            spans = _top_level_generic_argument_spans(args_text)
+            if spans is None or len(spans) != 2:
+                continue
+            source_owners = [
+                resolve_source_ref(args_text[left:right].strip())
+                for left, right in spans
+            ]
+            if source_owners != exact_argument_owners:
+                continue
+            matches += 1
+        return matches == 1
+
+    def field_binding(
+        field_name: str,
+        member_name: str,
+    ) -> dict[str, Any] | None:
+        fields = [
+            field
+            for field in profile.get("fields", [])
+            if (
+                field.get("name") == field_name
+                and not (int(field.get("access", 0)) & 0x0008)
+                and isinstance(field.get("signature"), str)
+            )
+        ]
+        if len(fields) != 1:
+            return None
+        field = fields[0]
+        descriptor = str(field.get("descriptor", ""))
+        if not (
+            descriptor.startswith("L")
+            and descriptor.endswith(";")
+        ):
+            return None
+        raw_owner = descriptor[1:-1]
+        signature = str(field.get("signature") or "")
+        exact_args = field_signature_arguments(signature, raw_owner)
+        if exact_args is None:
+            return None
+        exact_argument_owners = [
+            signature_erasure_owner(argument)
+            for argument in exact_args
+        ]
+        if any(owner is None for owner in exact_argument_owners):
+            return None
+        key_owner, value_owner = exact_argument_owners
+        if key_owner != "java/lang/Class":
+            return None
+        if not source_field_arguments(
+            field_name=field_name,
+            raw_owner=raw_owner,
+            exact_argument_owners=exact_argument_owners,
+        ):
+            return None
+
+        parsed = owner_profile(raw_owner)
+        if parsed is None:
+            return None
+        class_signature = str(parsed.get("signature") or "")
+        class_match = re.match(
+            r"^<(?P<key>[A-Za-z_$][A-Za-z0-9_$]*):"
+            r"Ljava/lang/Object;"
+            r"(?P<value>[A-Za-z_$][A-Za-z0-9_$]*):"
+            r"Ljava/lang/Object;>",
+            class_signature,
+        )
+        if class_match is None:
+            return None
+        key_variable = class_match.group("key")
+        value_variable = class_match.group("value")
+        if key_variable == value_variable:
+            return None
+
+        methods = [
+            method
+            for method in parsed.get("methods", [])
+            if (
+                method.get("name") == member_name
+                and method.get("descriptor")
+                == "(Ljava/lang/Object;)Ljava/lang/Object;"
+                and method.get("signature")
+                == f"(T{key_variable};)T{value_variable};"
+            )
+        ]
+        if len(methods) != 1:
+            return None
+
+        return {
+            "field_name": field_name,
+            "field_descriptor": descriptor,
+            "field_signature": signature,
+            "raw_owner": raw_owner,
+            "raw_class_signature": class_signature,
+            "key_owner": key_owner,
+            "value_owner": value_owner,
+            "member_name": member_name,
+            "member_descriptor": str(methods[0]["descriptor"]),
+            "member_signature": str(methods[0]["signature"]),
+        }
+
+    call_re = re.compile(
+        r"this\s*\.\s*(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\.\s*(?P<member>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\(\s*"
+        r"(?P<cast>\(\s*(?:java\.lang\.)?Object\s*\)\s*)"
+        r"(?P<identifier>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\.\s*getClass\s*\(\s*\)\s*\)"
+    )
+
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        calls: list[dict[str, Any]] = []
+
+        for match in call_re.finditer(method_code):
+            binding = field_binding(
+                match.group("field"),
+                match.group("member"),
+            )
+            if binding is None:
+                continue
+            calls.append(
+                {
+                    "match": match,
+                    "identifier": match.group("identifier"),
+                    **binding,
+                }
+            )
+
+        if not calls:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        if source_static:
+            continue
+
+        exact_candidates: list[dict[str, Any]] = []
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if int(exact_method.get("access", 0)) & 0x0008:
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            flows: list[dict[str, Any]] = []
+
+            for call in calls:
+                matching: list[dict[str, Any]] = []
+                for index in range(1, len(instructions) - 4):
+                    receiver_load = instructions[index - 1]
+                    field_get = instructions[index]
+                    key_load = instructions[index + 1]
+                    get_class = instructions[index + 2]
+                    lookup = instructions[index + 3]
+                    value_cast = instructions[index + 4]
+
+                    if not (
+                        receiver_load.get("mnemonic") == "aload"
+                        and int(receiver_load.get("local_index", -1)) == 0
+                        and field_get.get("mnemonic") == "getfield"
+                        and field_get.get("owner") == current_owner
+                        and field_get.get("name") == call["field_name"]
+                        and field_get.get("descriptor")
+                        == call["field_descriptor"]
+                        and key_load.get("mnemonic") == "aload"
+                        and int(key_load.get("local_index", -1)) > 0
+                        and get_class.get("mnemonic") == "invokevirtual"
+                        and get_class.get("owner") == "java/lang/Object"
+                        and get_class.get("name") == "getClass"
+                        and get_class.get("descriptor")
+                        == "()Ljava/lang/Class;"
+                        and lookup.get("mnemonic")
+                        in {"invokevirtual", "invokeinterface"}
+                        and lookup.get("owner") == call["raw_owner"]
+                        and lookup.get("name") == call["member_name"]
+                        and lookup.get("descriptor")
+                        == call["member_descriptor"]
+                        and value_cast.get("mnemonic") == "checkcast"
+                        and value_cast.get("type") == call["value_owner"]
+                    ):
+                        continue
+
+                    matching.append(
+                        {
+                            "field_offset": int(
+                                field_get.get("offset", -1)
+                            ),
+                            "key_load_offset": int(
+                                key_load.get("offset", -1)
+                            ),
+                            "key_local_index": int(
+                                key_load.get("local_index", -1)
+                            ),
+                            "getclass_offset": int(
+                                get_class.get("offset", -1)
+                            ),
+                            "lookup_offset": int(
+                                lookup.get("offset", -1)
+                            ),
+                            "value_checkcast_offset": int(
+                                value_cast.get("offset", -1)
+                            ),
+                        }
+                    )
+
+                if len(matching) != 1:
+                    flows = []
+                    break
+                flows.append(matching[0])
+
+            if len(flows) == len(calls):
+                exact_candidates.append(
+                    {
+                        "method": exact_method,
+                        "flows": flows,
+                    }
+                )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        proof = exact_candidates[0]
+        for call in calls:
+            match = call["match"]
+            edits.append(
+                (
+                    method_start + match.start("cast"),
+                    method_start + match.end("cast"),
+                    "",
+                )
+            )
+
+        actions.append(
+            {
+                "kind": "generic_key_object_cast_removal",
+                "mode": "getclass_expression",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "fields": [call["field_name"] for call in calls],
+                "raw_owners": [call["raw_owner"] for call in calls],
+                "field_signatures": [
+                    call["field_signature"] for call in calls
+                ],
+                "raw_class_signatures": [
+                    call["raw_class_signature"] for call in calls
+                ],
+                "member_signatures": [
+                    call["member_signature"] for call in calls
+                ],
+                "generic_key_types": [
+                    call["key_owner"] for call in calls
+                ],
+                "generic_value_types": [
+                    call["value_owner"] for call in calls
+                ],
+                "flows": proof["flows"],
+                "replacement_count": len(calls),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_erased_generic_getclass_key_object_cast"
+                    ),
+                    "strategy": (
+                        "exact_field_and_class_signatures_plus_getclass_"
+                        "lookup_checkcast_flow"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping generic getClass key edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_inherited_cc_generic_value_object_casts(
     *,
     source_root: Path,
@@ -26937,6 +27452,13 @@ def normalize_procyon_source(
                 )
                 actions.extend(
                     _normalize_generic_key_object_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
+                    _normalize_generic_key_getclass_object_casts(
                         source_root=source_root,
                         path=path,
                         readable_zip=z,
