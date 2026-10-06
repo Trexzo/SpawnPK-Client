@@ -10842,6 +10842,18 @@ def _normalize_generic_key_object_casts(
             if resolved is not None:
                 candidates.append(resolved)
 
+        enhanced_for_re = re.compile(
+            r"\bfor\s*\(\s*"
+            r"(?:(?:final)\s+)?"
+            r"(?P<type>[A-Za-z_$][A-Za-z0-9_$.]*)\s+"
+            + re.escape(identifier)
+            + r"\s*:"
+        )
+        for loop_var in enhanced_for_re.finditer(prefix):
+            resolved = resolve_source_type(loop_var.group("type"))
+            if resolved is not None:
+                candidates.append(resolved)
+
         unique = sorted(set(candidates))
         return unique[0] if len(unique) == 1 else None
 
