@@ -202,6 +202,42 @@ class ExactLocalAcceptanceWrapperTests(unittest.TestCase):
         probe_args = text[probe_start:probe_end]
         self.assertNotIn("--member-safety-acceptance", probe_args)
 
+    def test_source_m1_wrapper_threads_semantic_authority_into_publication(self):
+        text = self.source.read_text(encoding="utf-8")
+
+        self.assertIn(
+            '$PublicationSemanticReview = Join-Path $Repo '
+            '"mappings\\candidates\\v308.semantic-review.chat2.r2.json"',
+            text,
+        )
+        self.assertIn(
+            '$PublicationSemanticAcceptance = Join-Path $Repo '
+            '"mappings\\v308.semantic.acceptance.json"',
+            text,
+        )
+
+        authority_start = text.index("$AuthorityBuildArgs = @(")
+        authority_end = text.index(
+            'Invoke-PyChecked "BUILD SOURCE M1 AUTHORITY ARTIFACT"'
+        )
+        authority_args = text[authority_start:authority_end]
+        self.assertIn('"--semantic-review"', authority_args)
+        self.assertIn("$PublicationSemanticReview", authority_args)
+        self.assertIn('"--semantic-acceptance"', authority_args)
+        self.assertIn("$PublicationSemanticAcceptance", authority_args)
+
+        milestone_start = text.index("$CommonMilestoneArgs = @(")
+        milestone_end = text.index("$BuildMilestoneArgs = @(")
+        milestone_args = text[milestone_start:milestone_end]
+        self.assertIn(
+            '(Join-Path $AuthorityDir "semantic-review.json")',
+            milestone_args,
+        )
+        self.assertIn(
+            '(Join-Path $AuthorityDir "semantic-acceptance.json")',
+            milestone_args,
+        )
+
     def test_wrappers_parse_with_powershell_ast(self):
         shell = shutil.which("powershell.exe") or shutil.which("pwsh")
         if shell is None:
