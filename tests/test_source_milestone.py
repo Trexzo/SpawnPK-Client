@@ -1306,6 +1306,8 @@ class SourceMilestoneTests(unittest.TestCase):
                 authority_commit="f" * 40,
                 class_lineage=fixture["class_lineage"],
                 member_lineage=fixture["member_lineage"],
+                semantic_review=fixture["semantic_review"],
+                semantic_acceptance=fixture["semantic_acceptance"],
                 readable_manifest=fixture["readable_manifest"],
                 recovered_source_manifest=fixture[
                     "recovered_source_manifest"
@@ -1331,6 +1333,8 @@ class SourceMilestoneTests(unittest.TestCase):
                 authority_commit="f" * 40,
                 class_lineage=fixture["class_lineage"],
                 member_lineage=fixture["member_lineage"],
+                semantic_review=fixture["semantic_review"],
+                semantic_acceptance=fixture["semantic_acceptance"],
                 readable_manifest=fixture["readable_manifest"],
                 recovered_source_manifest=fixture[
                     "recovered_source_manifest"
@@ -2272,6 +2276,8 @@ class SourceMilestoneTests(unittest.TestCase):
                     authority_commit="main",
                     class_lineage=fixture["class_lineage"],
                     member_lineage=fixture["member_lineage"],
+                    semantic_review=fixture["semantic_review"],
+                    semantic_acceptance=fixture["semantic_acceptance"],
                     readable_manifest=fixture[
                         "readable_manifest"
                     ],
