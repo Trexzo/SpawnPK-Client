@@ -1139,6 +1139,11 @@ if (-not [string]::IsNullOrWhiteSpace($SourceRewriteAcceptance)) {
 }
 Invoke-PyChecked "VERIFY RECOVERY RELEASE" $VerifyArgs
 
+$PublicationSemanticReview = Join-Path $Repo "mappings\candidates\v308.semantic-review.chat2.r2.json"
+$PublicationSemanticAcceptance = Join-Path $Repo "mappings\v308.semantic.acceptance.json"
+Require-File $PublicationSemanticReview
+Require-File $PublicationSemanticAcceptance
+
 $AuthorityBuildArgs = @(
     "-3.13",
     "-m",
@@ -1150,6 +1155,10 @@ $AuthorityBuildArgs = @(
     $ClassLineage,
     "--member-lineage",
     $MemberLineage,
+    "--semantic-review",
+    $PublicationSemanticReview,
+    "--semantic-acceptance",
+    $PublicationSemanticAcceptance,
     "--readable-manifest",
     $ReadableManifest,
     "--recovered-manifest",
@@ -1193,6 +1202,10 @@ $CommonMilestoneArgs = @(
     (Join-Path $AuthorityDir "class-lineage.json"),
     "--member-lineage",
     (Join-Path $AuthorityDir "member-lineage.json"),
+    "--semantic-review",
+    (Join-Path $AuthorityDir "semantic-review.json"),
+    "--semantic-acceptance",
+    (Join-Path $AuthorityDir "semantic-acceptance.json"),
     "--readable-manifest",
     (Join-Path $AuthorityDir "readable-client-manifest.json"),
     "--recovered-manifest",
