@@ -6775,6 +6775,14 @@ def _normalize_invokedynamic_callback_copied_int_capture(
         boxed_add = False
         signed_shift = False
         low_mask = False
+        slot_one_loads = [
+            index
+            for index, row in enumerate(instructions)
+            if row.get("mnemonic") == "iload"
+            and int(row.get("local_index", -1)) == 1
+        ]
+        if len(slot_one_loads) != 4:
+            return False
         for index, row in enumerate(instructions):
             if (
                 row.get("mnemonic") == "iload"
@@ -6937,7 +6945,7 @@ def _normalize_invokedynamic_callback_copied_int_capture(
                 callback_code,
             )
         )
-        if not (3 <= len(alias_hits) <= 4):
+        if len(alias_hits) != 4:
             continue
 
         source_static = bool(
@@ -7060,6 +7068,39 @@ def _normalize_invokedynamic_callback_copied_int_capture(
             if len(copy_sites) != 1:
                 continue
             copy_index = copy_sites[0]
+            original_value_sites = [
+                index
+                for index in range(copy_index)
+                if (
+                    exact_instructions[index].get("mnemonic")
+                    in {
+                        "invokestatic",
+                        "invokevirtual",
+                        "invokeinterface",
+                        "invokespecial",
+                    }
+                    and _descriptor_return_descriptor(
+                        str(
+                            exact_instructions[index].get(
+                                "descriptor", ""
+                            )
+                        )
+                    )
+                    == "I"
+                    and index + 1 < len(exact_instructions)
+                    and exact_instructions[index + 1].get("mnemonic")
+                    == "istore"
+                    and int(
+                        exact_instructions[index + 1].get(
+                            "local_index", -1
+                        )
+                    )
+                    == original_slot
+                )
+            ]
+            if len(original_value_sites) != 1:
+                continue
+            original_value_index = original_value_sites[0]
             overwritten = any(
                 row.get("mnemonic") == "istore"
                 and int(row.get("local_index", -1)) == capture_slot
@@ -7135,6 +7176,11 @@ def _normalize_invokedynamic_callback_copied_int_capture(
                     "helper_descriptor": helper_descriptor,
                     "original_slot": original_slot,
                     "capture_slot": capture_slot,
+                    "original_value_offset": int(
+                        exact_instructions[original_value_index].get(
+                            "offset", -1
+                        )
+                    ),
                     "copy_offset": int(
                         exact_instructions[copy_index].get(
                             "offset", -1
