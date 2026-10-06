@@ -391,12 +391,12 @@ if ([string]::IsNullOrWhiteSpace($SourceIndex)) {
     Write-Host "SOURCE_INDEX_SUPPLIED=$SourceIndex" -ForegroundColor Green
 }
 
-if (-not $HasClassLineage) {
-    $CanonicalReview = Join-Path $Repo "mappings\candidates\v308.semantic-review.chat2.r2.json"
-    $CanonicalAcceptance = Join-Path $Repo "mappings\v308.semantic.acceptance.json"
-    Require-File $CanonicalReview
-    Require-File $CanonicalAcceptance
+$CanonicalReview = Join-Path $Repo "mappings\candidates\v308.semantic-review.chat2.r2.json"
+$CanonicalAcceptance = Join-Path $Repo "mappings\v308.semantic.acceptance.json"
+Require-File $CanonicalReview
+Require-File $CanonicalAcceptance
 
+if (-not $HasClassLineage) {
     $ClassLineage = Join-Path $DerivedInputDir "class-lineage.rederived.json"
     $MemberLineage = Join-Path $DerivedInputDir "member-lineage.rederived.json"
     $LineageProof = Join-Path $DerivedInputDir "v308-lineage-rederivation-proof.json"
@@ -457,6 +457,58 @@ if (-not $HasClassLineage) {
     Write-Host "CLASS_LINEAGE_SUPPLIED=$ClassLineage" -ForegroundColor Green
     Write-Host "MEMBER_LINEAGE_SUPPLIED=$MemberLineage" -ForegroundColor Green
 }
+
+$SemanticAuthorityProof = Join-Path $DerivedInputDir "v308-semantic-authority-verification.json"
+Invoke-PyChecked "VERIFY TRUSTED V308 SEMANTIC AUTHORITY" @(
+    "-3.13",
+    "-m",
+    "spk_recovery.source_m1_semantic_authority_verify",
+    $ClassLineage,
+    $MemberLineage,
+    $CanonicalReview,
+    $CanonicalAcceptance,
+    "--out",
+    $SemanticAuthorityProof
+)
+Require-File $SemanticAuthorityProof
+
+$SemanticAuthorityDoc = Get-JsonProjection `
+    -Path $SemanticAuthorityProof `
+    -Fields @{
+        verified = "/verified"
+        verification_id = "/verification_id"
+        registry_id = "/registry_id"
+        source_sha256 = "/source_sha256"
+        review_id = "/review_id"
+        trusted_review_count = "/trusted_review_count"
+        trusted_accepted_proposal_count = "/trusted_accepted_proposal_count"
+        accepted_class_records = "/accepted_class_records"
+        accepted_member_records = "/accepted_member_records"
+        accepted_records = "/accepted_records"
+        verified_provenance_rows = "/verified_provenance_rows"
+    }
+if ($SemanticAuthorityDoc.verified -ne $true) {
+    throw "Trusted semantic authority verification did not report verified=true."
+}
+if ([string]$SemanticAuthorityDoc.source_sha256 -ne $ExpectedV308) {
+    throw "Trusted semantic authority verification is not bound to exact v308."
+}
+if ([string]$SemanticAuthorityDoc.review_id -ne $ExpectedSemanticReview) {
+    throw "Trusted semantic authority verification is not bound to canonical R2 review."
+}
+if (
+    [int]$SemanticAuthorityDoc.trusted_review_count -ne 1 -or
+    [int]$SemanticAuthorityDoc.trusted_accepted_proposal_count -ne 39 -or
+    [int]$SemanticAuthorityDoc.accepted_class_records -ne 32 -or
+    [int]$SemanticAuthorityDoc.accepted_member_records -ne 7 -or
+    [int]$SemanticAuthorityDoc.accepted_records -ne 39 -or
+    [int]$SemanticAuthorityDoc.verified_provenance_rows -ne 39
+) {
+    throw "Trusted semantic authority verification summary drifted from canonical v308 R2."
+}
+
+Write-Host "SEMANTIC_AUTHORITY_VERIFICATION_ID=$($SemanticAuthorityDoc.verification_id)" -ForegroundColor Green
+Write-Host "SEMANTIC_AUTHORITY_REGISTRY_ID=$($SemanticAuthorityDoc.registry_id)" -ForegroundColor Green
 
 if (-not $HasMemberSafetyAcceptance) {
     $MemberSafetyProbeDir = Join-Path $DerivedInputDir "member-safety-probe"
