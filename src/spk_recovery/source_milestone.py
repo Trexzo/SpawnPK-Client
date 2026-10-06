@@ -15,6 +15,10 @@ from .source_digest import (
     canonical_source_bytes,
     source_tree_digest,
 )
+from .source_m1_semantic_authority_verify import (
+    SourceM1SemanticAuthorityError,
+    verify_v308_semantic_review_authority,
+)
 from .v308_authority import V308_SOURCE_AUTHORITY_SHA256
 
 
@@ -679,6 +683,8 @@ def build_source_milestone_manifest(
     authority_commit: str,
     class_lineage: dict[str, Any],
     member_lineage: dict[str, Any],
+    semantic_review: dict[str, Any],
+    semantic_acceptance: dict[str, Any],
     readable_manifest: dict[str, Any],
     recovered_source_manifest: dict[str, Any],
     clean_rebuild_report: dict[str, Any],
@@ -712,6 +718,16 @@ def build_source_milestone_manifest(
             f"invalid semantic lineage authority: {exc}"
         ) from exc
 
+    _require_doc(
+        semantic_review,
+        kind="semantic_review_set",
+        label="semantic_review",
+    )
+    _require_doc(
+        semantic_acceptance,
+        kind="semantic_acceptance_spec",
+        label="semantic_acceptance",
+    )
     _require_doc(
         readable_manifest,
         kind="readable_client_build_manifest",
@@ -753,6 +769,40 @@ def build_source_milestone_manifest(
     )
 
     blockers: list[dict[str, str]] = []
+
+    semantic_authority_input = {
+        "class_lineage_sha256": _stable_digest(class_lineage),
+        "member_lineage_sha256": _stable_digest(member_lineage),
+        "review_sha256": _stable_digest(semantic_review),
+        "acceptance_sha256": _stable_digest(semantic_acceptance),
+    }
+    try:
+        semantic_authority_verification = (
+            verify_v308_semantic_review_authority(
+                class_lineage,
+                member_lineage,
+                semantic_review,
+                semantic_acceptance,
+            )
+        )
+    except SourceM1SemanticAuthorityError as exc:
+        semantic_authority_verification = {
+            "schema_version": 1,
+            "kind": (
+                "source_m1_semantic_review_authority_verification"
+            ),
+            **semantic_authority_input,
+            "verified": False,
+            "verification_id": None,
+            "registry_id": None,
+            "review_id": semantic_review.get("review_id"),
+            "error": str(exc),
+        }
+        _block(
+            blockers,
+            gate="trusted_semantic_authority",
+            reason="trusted_semantic_review_authority_failed",
+        )
 
     if publication_repository != authority_repository:
         _block(
@@ -1080,6 +1130,9 @@ def build_source_milestone_manifest(
         "member_plan_digest": member_plan_digest,
         "semantic_review_ids": review_ids,
         "semantic_lineage_authority": semantic_lineage_authority,
+        "trusted_semantic_authority": (
+            semantic_authority_verification
+        ),
         "fallback_policy": {
             "source_safe_fallback": source_safe_fallback,
             "fallback_name_prefix": fallback_prefix,
@@ -1292,6 +1345,9 @@ def build_source_provenance_document(
             ),
             "lineage_authority": provenance.get(
                 "semantic_lineage_authority"
+            ),
+            "trusted_review": provenance.get(
+                "trusted_semantic_authority"
             ),
             "fallback_policy": provenance.get(
                 "fallback_policy"
