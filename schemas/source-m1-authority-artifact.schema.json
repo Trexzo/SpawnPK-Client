@@ -11,6 +11,7 @@
     "authority_commit",
     "publication_repository",
     "preflight_milestone_id",
+    "semantic_authority_verification_id",
     "preflight_publishable",
     "build_id",
     "client_sha256",
@@ -35,6 +36,10 @@
     },
     "publication_repository": {"type": "string", "minLength": 1},
     "preflight_milestone_id": {"type": "string", "minLength": 1},
+    "semantic_authority_verification_id": {
+      "type": "string",
+      "pattern": "^SOURCESEMAUTH_[0-9A-F]{20}$"
+    },
     "preflight_publishable": {"const": true},
     "build_id": {"const": "v308"},
     "client_sha256": {
@@ -49,7 +54,7 @@
     "source_bytes": {"type": "integer", "minimum": 1},
     "document_sha256": {
       "type": "object",
-      "minProperties": 7,
+      "minProperties": 9,
       "additionalProperties": {
         "type": "string",
         "pattern": "^[0-9a-f]{64}$"
@@ -57,7 +62,7 @@
     },
     "payload_file_sha256": {
       "type": "object",
-      "minProperties": 8,
+      "minProperties": 10,
       "additionalProperties": {
         "type": "string",
         "pattern": "^[0-9a-f]{64}$"
