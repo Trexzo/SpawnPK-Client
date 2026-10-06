@@ -47,14 +47,15 @@ A milestone is publishable only when all of the following hold:
 2. The recovery authority is exactly build `v308`.
 3. The exact client authority SHA-256 links across readable, recovered-source, clean-rebuild, and release authority.
 4. Accepted class/member semantic naming intelligence is carried by the canonical lineage and its semantic provenance.
-5. The semantic namespace ID and class/member plan digests agree across the readable and recovered-source authorities.
+5. The final class/member lineage independently authenticates against the canonical trusted v308 R2 semantic review + acceptance authority: one trusted review, 39 accepted proposals, 32 accepted class rows, 7 accepted member rows, and 39 verified provenance rows.
+7. The semantic namespace ID and class/member plan digests agree across the readable and recovered-source authorities.
 6. Deterministic source-safe fallback naming is enabled with a non-empty fallback prefix.
-7. The recovery release is ready and its reproducibility verification passes.
-8. The canonical Java source-tree SHA-256 matches the release authority.
-9. Clean project compilation completes.
-10. Project binary fallback count is exactly zero.
-11. Generated project classes exactly equal the expected project class set: no missing and no unexpected classes.
-12. When clean rebuild uses `official_first_restored`, its R8DEP14-18 authority IDs, artifact hashes, zero-fallback proof, bundled-runtime boundary, and restored-bytecode readiness are complete and valid.
+8. The recovery release is ready and its reproducibility verification passes.
+9. The canonical Java source-tree SHA-256 matches the release authority.
+10. Clean project compilation completes.
+11. Project binary fallback count is exactly zero.
+12. Generated project classes exactly equal the expected project class set: no missing and no unexpected classes.
+13. When clean rebuild uses `official_first_restored`, its R8DEP14-18 authority IDs, artifact hashes, zero-fallback proof, bundled-runtime boundary, and restored-bytecode readiness are complete and valid.
 
 A failed gate is recorded in `blockers`; it never gets silently downgraded.
 
@@ -68,6 +69,7 @@ The deterministic milestone manifest has:
 - exact authority commit and exact client SHA-256
 - semantic namespace and class/member plan digests
 - accepted semantic review IDs recovered from canonical class/member provenance
+- trusted semantic authority verification/registry IDs plus deterministic class-lineage, member-lineage, semantic-review and semantic-acceptance digests
 - fallback policy
 - recovered workspace, build authority, clean rebuild, release and release-verification IDs
 - collision-derived provenance when present
@@ -101,6 +103,7 @@ It records:
 - exact authority repository, commit and client SHA-256
 - exact v308 build ID
 - semantic namespace, class/member plan digests and review IDs
+- independently recomputed trusted R2 semantic-review authority and bound document digests
 - deterministic fallback policy
 - recovered workspace, build authority, clean rebuild, release and release-verification IDs
 - collision provenance when present
@@ -150,7 +153,7 @@ After the bundle verifies, `spk-source-milestone stage-repository` may stage the
 The artifact contains only:
 
 - `SOURCE-AUTHORITY-ARTIFACT.json`;
-- canonical JSON forms of class/member lineage and release/rebuild manifests;
+- canonical JSON forms of class/member lineage, canonical semantic review/acceptance, and release/rebuild manifests;
 - canonical LF `.java` source under `src/`.
 
 It contains no client JAR, rebuilt JAR or classfile.
@@ -177,6 +180,8 @@ authority/
   SOURCE-AUTHORITY-ARTIFACT.json
   class-lineage.json
   member-lineage.json
+  semantic-review.json
+  semantic-acceptance.json
   readable-client-manifest.json
   recovered-source-manifest.json
   clean-rebuild.json
@@ -242,7 +247,7 @@ This contract is intentionally downstream of the recovered-release pipeline. It 
 - `workflow_call` for a recovered workspace artifact uploaded earlier in the same Actions run;
 - `workflow_dispatch` for an explicit artifact from a prior Actions run.
 
-The workflow validates the exact authority commit, enforces the recovered-workspace source-only layout, builds the authority artifact with `spk-source-authority-artifact build`, independently verifies it with `spk-source-authority-artifact verify`, and uploads only the verified `authority/` directory.
+The workflow validates the exact authority commit, enforces the recovered-workspace source-only layout, sources the canonical R2 semantic review/acceptance from that exact tooling checkout, builds the authority artifact with `spk-source-authority-artifact build`, independently verifies it with `spk-source-authority-artifact verify`, and uploads only the verified `authority/` directory.
 
 Reusable outputs are:
 
