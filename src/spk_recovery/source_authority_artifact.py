@@ -25,7 +25,7 @@ class SourceAuthorityArtifactError(ValueError):
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 _MILESTONE_ID_RE = re.compile(r"^SRCMILESTONE_[0-9A-F]{20}$")
 _DEFAULT_AUTHORITY_REPOSITORY = "Trexzo/SpawnPK-Client"
-_DEFAULT_PUBLICATION_REPOSITORY = "Trexzo/SpawnPK-Client-Source"
+_DEFAULT_PUBLICATION_REPOSITORY = _DEFAULT_AUTHORITY_REPOSITORY
 
 _DOCUMENT_NAMES = {
     "class-lineage.json": "class_lineage",
