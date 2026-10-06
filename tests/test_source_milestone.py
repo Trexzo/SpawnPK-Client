@@ -1798,6 +1798,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 source,
                 fixture,
                 authority_repository="Trexzo/Forged-Authority",
+                publication_repository="Trexzo/Forged-Authority",
             )
             bundle_root = root / "bundle"
 
@@ -1807,7 +1808,12 @@ class SourceMilestoneTests(unittest.TestCase):
                 bundle_root,
                 provenance_documents={},
             )
-            report = verify_source_publication_bundle(bundle_root)
+            report = verify_source_publication_bundle(
+                bundle_root,
+                expected_publication_repository=(
+                    "Trexzo/Forged-Authority"
+                ),
+            )
 
             self.assertFalse(report["verified"])
             self.assertFalse(
