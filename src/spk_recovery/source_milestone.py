@@ -1938,29 +1938,33 @@ def stage_source_publication_bundle(
 
     bundle_dir = bundle_dir.resolve()
     copied: list[str] = []
-    for source in sorted(
-        bundle_dir.rglob("*"),
-        key=lambda item: item.relative_to(bundle_dir).as_posix(),
-    ):
-        if not source.is_file():
-            continue
-        rel = source.relative_to(bundle_dir)
-        destination = target / rel
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        destination.write_bytes(source.read_bytes())
-        copied.append(rel.as_posix())
+    try:
+        for source in sorted(
+            bundle_dir.rglob("*"),
+            key=lambda item: item.relative_to(bundle_dir).as_posix(),
+        ):
+            if not source.is_file():
+                continue
+            rel = source.relative_to(bundle_dir)
+            destination = target / rel
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(source.read_bytes())
+            copied.append(rel.as_posix())
 
-    staged_report = verify_source_publication_bundle(
-        target,
-        expected_manifest=expected_manifest,
-        expected_authority_commit=expected_authority_commit,
-        expected_publication_repository=_DEFAULT_AUTHORITY_REPOSITORY,
-        expected_publication_root=normalized_root,
-    )
-    if not staged_report.get("verified"):
-        raise SourceMilestoneError(
-            "staged repository publication failed postimage verification"
+        staged_report = verify_source_publication_bundle(
+            target,
+            expected_manifest=expected_manifest,
+            expected_authority_commit=expected_authority_commit,
+            expected_publication_repository=_DEFAULT_AUTHORITY_REPOSITORY,
+            expected_publication_root=normalized_root,
         )
+        if not staged_report.get("verified"):
+            raise SourceMilestoneError(
+                "staged repository publication failed postimage verification"
+            )
+    except Exception:
+        shutil.rmtree(target, ignore_errors=True)
+        raise
 
     return {
         "schema_version": 1,
