@@ -14,7 +14,8 @@
     "provenance_documents",
     "file_sha256",
     "contains_binary_artifacts",
-    "publication_repository"
+    "publication_repository",
+    "publication_root"
   ],
   "properties": {
     "schema_version": {"const": 1},
@@ -30,7 +31,8 @@
     "provenance_documents": {"type": "object"},
     "file_sha256": {"type": "object"},
     "contains_binary_artifacts": {"const": false},
-    "publication_repository": {"type": ["string", "null"]}
+    "publication_repository": {"type": ["string", "null"]},
+    "publication_root": {"type": ["string", "null"]}
   },
   "additionalProperties": false
 }
