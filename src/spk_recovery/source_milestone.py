@@ -15,6 +15,10 @@ from .source_digest import (
     canonical_source_bytes,
     source_tree_digest,
 )
+from .source_m1_semantic_authority_verify import (
+    SourceM1SemanticAuthorityError,
+    verify_v308_semantic_review_authority,
+)
 from .v308_authority import V308_SOURCE_AUTHORITY_SHA256
 
 
@@ -166,6 +170,8 @@ def _release_authority_pin_provenance(
     *,
     class_lineage: dict[str, Any],
     member_lineage: dict[str, Any],
+    semantic_review: dict[str, Any],
+    semantic_acceptance: dict[str, Any],
     readable_manifest: dict[str, Any],
     recovered_source_manifest: dict[str, Any],
     clean_rebuild_report: dict[str, Any],
@@ -879,6 +885,67 @@ def build_source_milestone_manifest(
         "member_class_namespace": member_class_namespace,
     }
 
+    trusted_semantic_authority: dict[str, Any] | None = None
+    try:
+        trusted_semantic_proof = (
+            verify_v308_semantic_review_authority(
+                class_lineage,
+                member_lineage,
+                semantic_review,
+                semantic_acceptance,
+            )
+        )
+    except SourceM1SemanticAuthorityError:
+        _block(
+            blockers,
+            gate="trusted_semantic_authority",
+            reason="trusted_semantic_review_authority_failed",
+        )
+    else:
+        trusted_semantic_authority = {
+            "verification_id": trusted_semantic_proof.get(
+                "verification_id"
+            ),
+            "registry_id": trusted_semantic_proof.get(
+                "registry_id"
+            ),
+            "review_id": trusted_semantic_proof.get("review_id"),
+            "source_sha256": trusted_semantic_proof.get(
+                "source_sha256"
+            ),
+            "trusted_review_count": trusted_semantic_proof.get(
+                "trusted_review_count"
+            ),
+            "trusted_accepted_proposal_count": (
+                trusted_semantic_proof.get(
+                    "trusted_accepted_proposal_count"
+                )
+            ),
+            "accepted_class_records": trusted_semantic_proof.get(
+                "accepted_class_records"
+            ),
+            "accepted_member_records": trusted_semantic_proof.get(
+                "accepted_member_records"
+            ),
+            "accepted_records": trusted_semantic_proof.get(
+                "accepted_records"
+            ),
+            "verified_provenance_rows": (
+                trusted_semantic_proof.get(
+                    "verified_provenance_rows"
+                )
+            ),
+            "verified": trusted_semantic_proof.get("verified"),
+            "class_lineage_sha256": _stable_digest(class_lineage),
+            "member_lineage_sha256": _stable_digest(member_lineage),
+            "semantic_review_sha256": _stable_digest(
+                semantic_review
+            ),
+            "semantic_acceptance_sha256": _stable_digest(
+                semantic_acceptance
+            ),
+        }
+
     namespace_id = str(
         readable_manifest.get("namespace_id") or ""
     )
@@ -1080,6 +1147,7 @@ def build_source_milestone_manifest(
         "member_plan_digest": member_plan_digest,
         "semantic_review_ids": review_ids,
         "semantic_lineage_authority": semantic_lineage_authority,
+        "trusted_semantic_authority": trusted_semantic_authority,
         "fallback_policy": {
             "source_safe_fallback": source_safe_fallback,
             "fallback_name_prefix": fallback_prefix,
@@ -1292,6 +1360,9 @@ def build_source_provenance_document(
             ),
             "lineage_authority": provenance.get(
                 "semantic_lineage_authority"
+            ),
+            "trusted_review_authority": provenance.get(
+                "trusted_semantic_authority"
             ),
             "fallback_policy": provenance.get(
                 "fallback_policy"
