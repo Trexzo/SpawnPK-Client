@@ -26,3 +26,5 @@ For build 308, the canonical Java tree will be:
 Until the v308 milestone is publishable, that version directory intentionally does not exist.
 
 Raw decompiler workspaces, client JARs, classfiles and private recovery inputs remain outside Git.
+
+The canonical publication repository is `Trexzo/SpawnPK-Client`; no separate source repository is used.
