@@ -209,54 +209,58 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.authority_artifact_name }}
-          path: authority
+          path: ${{ runner.temp }}/source-m1-authority
 
       - name: Download Source M1 authority artifact from prior run
         if: ${{ inputs.authority_run_id != '' }}
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.authority_artifact_name }}
-          path: authority
+          path: ${{ runner.temp }}/source-m1-authority
           github-token: ${{ github.token }}
           run-id: ${{ inputs.authority_run_id }}
 
       - name: Validate authority artifact contract
         shell: bash
+        env:
+          SOURCE_AUTHORITY_DIR: ${{ runner.temp }}/source-m1-authority
         run: |
           set -euo pipefail
-          test -f authority/SOURCE-AUTHORITY-ARTIFACT.json
-          test -f authority/class-lineage.json
-          test -f authority/member-lineage.json
-          test -f authority/readable-client-manifest.json
-          test -f authority/recovered-source-manifest.json
-          test -f authority/clean-rebuild.json
-          test -f authority/recovery-release.json
-          test -f authority/release-verification.json
-          test -d authority/src
+          test -f "$SOURCE_AUTHORITY_DIR/SOURCE-AUTHORITY-ARTIFACT.json"
+          test -f "$SOURCE_AUTHORITY_DIR/class-lineage.json"
+          test -f "$SOURCE_AUTHORITY_DIR/member-lineage.json"
+          test -f "$SOURCE_AUTHORITY_DIR/readable-client-manifest.json"
+          test -f "$SOURCE_AUTHORITY_DIR/recovered-source-manifest.json"
+          test -f "$SOURCE_AUTHORITY_DIR/clean-rebuild.json"
+          test -f "$SOURCE_AUTHORITY_DIR/recovery-release.json"
+          test -f "$SOURCE_AUTHORITY_DIR/release-verification.json"
+          test -d "$SOURCE_AUTHORITY_DIR/src"
 
       - name: Independently rebuild authority preflight milestone
         shell: bash
         env:
           AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+          SOURCE_AUTHORITY_DIR: ${{ runner.temp }}/source-m1-authority
         run: |
           set -euo pipefail
           mkdir -p source-m1/verification
           python -m spk_recovery.source_milestone_cli build \
             --authority-commit "$AUTHORITY_COMMIT" \
-            --class-lineage authority/class-lineage.json \
-            --member-lineage authority/member-lineage.json \
-            --readable-manifest authority/readable-client-manifest.json \
-            --recovered-manifest authority/recovered-source-manifest.json \
-            --clean-rebuild authority/clean-rebuild.json \
-            --release-manifest authority/recovery-release.json \
-            --release-verification authority/release-verification.json \
-            --source-root authority/src \
+            --class-lineage "$SOURCE_AUTHORITY_DIR/class-lineage.json" \
+            --member-lineage "$SOURCE_AUTHORITY_DIR/member-lineage.json" \
+            --readable-manifest "$SOURCE_AUTHORITY_DIR/readable-client-manifest.json" \
+            --recovered-manifest "$SOURCE_AUTHORITY_DIR/recovered-source-manifest.json" \
+            --clean-rebuild "$SOURCE_AUTHORITY_DIR/clean-rebuild.json" \
+            --release-manifest "$SOURCE_AUTHORITY_DIR/recovery-release.json" \
+            --release-verification "$SOURCE_AUTHORITY_DIR/release-verification.json" \
+            --source-root "$SOURCE_AUTHORITY_DIR/src" \
             --out source-m1/verification/PREFLIGHT-SOURCE-MILESTONE.json
 
       - name: Verify Source M1 authority artifact
         shell: bash
         env:
           AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+          SOURCE_AUTHORITY_DIR: ${{ runner.temp }}/source-m1-authority
         run: |
           set -euo pipefail
           EXPECTED_MILESTONE_ID="$(
@@ -275,7 +279,7 @@ jobs:
           test -n "$EXPECTED_MILESTONE_ID"
 
           python -m spk_recovery.source_authority_artifact_cli verify \
-            --artifact-dir authority \
+            --artifact-dir "$SOURCE_AUTHORITY_DIR" \
             --expected-authority-commit "$AUTHORITY_COMMIT" \
             --expected-milestone-id "$EXPECTED_MILESTONE_ID" \
             --out source-m1/verification/SOURCE-AUTHORITY-VERIFICATION.json
@@ -284,58 +288,62 @@ jobs:
         shell: bash
         env:
           AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+          SOURCE_AUTHORITY_DIR: ${{ runner.temp }}/source-m1-authority
         run: |
           set -euo pipefail
           python -m spk_recovery.source_milestone_cli build \
             --authority-commit "$AUTHORITY_COMMIT" \
-            --class-lineage authority/class-lineage.json \
-            --member-lineage authority/member-lineage.json \
-            --readable-manifest authority/readable-client-manifest.json \
-            --recovered-manifest authority/recovered-source-manifest.json \
-            --clean-rebuild authority/clean-rebuild.json \
-            --release-manifest authority/recovery-release.json \
-            --release-verification authority/release-verification.json \
-            --source-root authority/src \
+            --class-lineage "$SOURCE_AUTHORITY_DIR/class-lineage.json" \
+            --member-lineage "$SOURCE_AUTHORITY_DIR/member-lineage.json" \
+            --readable-manifest "$SOURCE_AUTHORITY_DIR/readable-client-manifest.json" \
+            --recovered-manifest "$SOURCE_AUTHORITY_DIR/recovered-source-manifest.json" \
+            --clean-rebuild "$SOURCE_AUTHORITY_DIR/clean-rebuild.json" \
+            --release-manifest "$SOURCE_AUTHORITY_DIR/recovery-release.json" \
+            --release-verification "$SOURCE_AUTHORITY_DIR/release-verification.json" \
+            --source-root "$SOURCE_AUTHORITY_DIR/src" \
             --out source-m1/SOURCE-MILESTONE.json
 
       - name: Exactly reproduce milestone manifest
         shell: bash
         env:
           AUTHORITY_COMMIT: ${{ inputs.authority_commit }}
+          SOURCE_AUTHORITY_DIR: ${{ runner.temp }}/source-m1-authority
         run: |
           set -euo pipefail
 
           python -m spk_recovery.source_milestone_cli verify \
             --authority-commit "$AUTHORITY_COMMIT" \
-            --class-lineage authority/class-lineage.json \
-            --member-lineage authority/member-lineage.json \
-            --readable-manifest authority/readable-client-manifest.json \
-            --recovered-manifest authority/recovered-source-manifest.json \
-            --clean-rebuild authority/clean-rebuild.json \
-            --release-manifest authority/recovery-release.json \
-            --release-verification authority/release-verification.json \
-            --source-root authority/src \
+            --class-lineage "$SOURCE_AUTHORITY_DIR/class-lineage.json" \
+            --member-lineage "$SOURCE_AUTHORITY_DIR/member-lineage.json" \
+            --readable-manifest "$SOURCE_AUTHORITY_DIR/readable-client-manifest.json" \
+            --recovered-manifest "$SOURCE_AUTHORITY_DIR/recovered-source-manifest.json" \
+            --clean-rebuild "$SOURCE_AUTHORITY_DIR/clean-rebuild.json" \
+            --release-manifest "$SOURCE_AUTHORITY_DIR/recovery-release.json" \
+            --release-verification "$SOURCE_AUTHORITY_DIR/release-verification.json" \
+            --source-root "$SOURCE_AUTHORITY_DIR/src" \
             --manifest source-m1/SOURCE-MILESTONE.json \
             --out source-m1/verification/SOURCE-MILESTONE-VERIFICATION.json
 
       - name: Build source-only publication bundle
         shell: bash
+        env:
+          SOURCE_AUTHORITY_DIR: ${{ runner.temp }}/source-m1-authority
         run: |
           set -euo pipefail
 
           python -m spk_recovery.source_milestone_cli bundle \
             --manifest source-m1/SOURCE-MILESTONE.json \
-            --source-root authority/src \
+            --source-root "$SOURCE_AUTHORITY_DIR/src" \
             --out-dir source-m1/publication \
-            --provenance source-authority-artifact.json=authority/SOURCE-AUTHORITY-ARTIFACT.json \
+            --provenance "source-authority-artifact.json=$SOURCE_AUTHORITY_DIR/SOURCE-AUTHORITY-ARTIFACT.json" \
             --provenance source-authority-verification.json=source-m1/verification/SOURCE-AUTHORITY-VERIFICATION.json \
-            --provenance class-lineage.json=authority/class-lineage.json \
-            --provenance member-lineage.json=authority/member-lineage.json \
-            --provenance readable-client-manifest.json=authority/readable-client-manifest.json \
-            --provenance recovered-source-manifest.json=authority/recovered-source-manifest.json \
-            --provenance clean-rebuild.json=authority/clean-rebuild.json \
-            --provenance recovery-release.json=authority/recovery-release.json \
-            --provenance release-verification.json=authority/release-verification.json \
+            --provenance "class-lineage.json=$SOURCE_AUTHORITY_DIR/class-lineage.json" \
+            --provenance "member-lineage.json=$SOURCE_AUTHORITY_DIR/member-lineage.json" \
+            --provenance "readable-client-manifest.json=$SOURCE_AUTHORITY_DIR/readable-client-manifest.json" \
+            --provenance "recovered-source-manifest.json=$SOURCE_AUTHORITY_DIR/recovered-source-manifest.json" \
+            --provenance "clean-rebuild.json=$SOURCE_AUTHORITY_DIR/clean-rebuild.json" \
+            --provenance "recovery-release.json=$SOURCE_AUTHORITY_DIR/recovery-release.json" \
+            --provenance "release-verification.json=$SOURCE_AUTHORITY_DIR/release-verification.json" \
             --provenance source-milestone-verification.json=source-m1/verification/SOURCE-MILESTONE-VERIFICATION.json
 
       - name: Verify publication bundle

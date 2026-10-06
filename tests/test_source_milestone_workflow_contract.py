@@ -132,6 +132,11 @@ class SourceMilestoneWorkflowContractTests(unittest.TestCase):
         )
         self.assertNotIn("run-id:", same)
         self.assertNotIn("github-token:", same)
+        self.assertIn(
+            "path: ${{ runner.temp }}/source-m1-authority",
+            same,
+        )
+        self.assertNotIn("path: authority", same)
 
         self.assertIn(
             "if: ${{ inputs.authority_run_id != '' }}",
@@ -145,6 +150,50 @@ class SourceMilestoneWorkflowContractTests(unittest.TestCase):
             "run-id: ${{ inputs.authority_run_id }}",
             prior,
         )
+        self.assertIn(
+            "path: ${{ runner.temp }}/source-m1-authority",
+            prior,
+        )
+        self.assertNotIn("path: authority", prior)
+
+    def test_authority_input_is_runner_isolated_from_checkout(self):
+        self.assertEqual(
+            self.text.count(
+                "SOURCE_AUTHORITY_DIR: "
+                "${{ runner.temp }}/source-m1-authority"
+            ),
+            6,
+        )
+        job_start = self.text.index("  verify-source-milestone:")
+        steps_start = self.text.index("    steps:", job_start)
+        self.assertNotIn(
+            "SOURCE_AUTHORITY_DIR:",
+            self.text[job_start:steps_start],
+        )
+
+        validate_start = self.text.index(
+            "- name: Validate authority artifact contract"
+        )
+        bundle_start = self.text.index(
+            "- name: Verify publication bundle"
+        )
+        authority_section = self.text[validate_start:bundle_start]
+
+        self.assertIn(
+            'test -f "$SOURCE_AUTHORITY_DIR/'
+            'SOURCE-AUTHORITY-ARTIFACT.json"',
+            authority_section,
+        )
+        self.assertIn(
+            '--artifact-dir "$SOURCE_AUTHORITY_DIR"',
+            authority_section,
+        )
+        self.assertIn(
+            '--source-root "$SOURCE_AUTHORITY_DIR/src"',
+            authority_section,
+        )
+        self.assertNotIn("--artifact-dir authority", authority_section)
+        self.assertNotIn("--source-root authority/src", authority_section)
 
     def test_authority_artifact_verification_uses_independent_preflight(self):
         preflight_start = self.text.index(
