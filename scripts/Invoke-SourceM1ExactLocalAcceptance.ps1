@@ -3,7 +3,6 @@ param(
     [string]$Repo = "C:\Users\Felix\Desktop\SpawnPK-Client",
     [Parameter(Mandatory = $true)]
     [string]$ClientJar,
-    [Parameter(Mandatory = $true)]
     [string]$SourceIndex,
     [Parameter(Mandatory = $true)]
     [string]$ClassLineage,
@@ -240,13 +239,15 @@ if ($Head -notmatch "^[0-9a-f]{40}$") {
 
 foreach ($Path in @(
     $ClientJar,
-    $SourceIndex,
     $ClassLineage,
     $MemberLineage,
     $MemberSafetyAcceptance,
     $DecompilerJar
 )) {
     Require-File $Path
+}
+if (-not [string]::IsNullOrWhiteSpace($SourceIndex)) {
+    Require-File $SourceIndex
 }
 if (-not [string]::IsNullOrWhiteSpace($SourceRewriteAcceptance)) {
     Require-File $SourceRewriteAcceptance
@@ -287,16 +288,54 @@ $CollisionDir = Join-Path $OutDir "collision-authority"
 $CollisionWorkspace = Join-Path $OutDir "collision-source"
 $ReleaseDir = Join-Path $OutDir "release"
 $AuthorityDir = Join-Path $OutDir "authority"
+$DerivedInputDir = Join-Path $OutDir "derived-inputs"
 $MilestoneDir = Join-Path $OutDir "milestone"
 $BundleDir = Join-Path $MilestoneDir "publication"
 
 New-Item -ItemType Directory -Path $CollisionDir | Out-Null
+New-Item -ItemType Directory -Path $DerivedInputDir | Out-Null
 New-Item -ItemType Directory -Path $MilestoneDir | Out-Null
 
 $env:JAVA_HOME = $Jdk
 $env:PATH = "$Jdk\bin;$env:PATH"
 $env:PYTHONPATH = Join-Path $Repo "src"
 $env:PYTHONDONTWRITEBYTECODE = "1"
+
+if ([string]::IsNullOrWhiteSpace($SourceIndex)) {
+    $SourceIndex = Join-Path $DerivedInputDir "v308-index.generated.json"
+    Invoke-PyChecked "DERIVE EXACT V308 SOURCE INDEX" @(
+        "-3.13",
+        "-m",
+        "spk_recovery.cli",
+        "index",
+        $ClientJar,
+        "--out",
+        $SourceIndex,
+        "--expect-sha256",
+        $ExpectedV308
+    )
+    Require-File $SourceIndex
+
+    $DerivedIndex = Get-JsonProjection `
+        -Path $SourceIndex `
+        -Fields @{
+            sha256 = "/sha256"
+        }
+    if ([string]$DerivedIndex.sha256 -ne $ExpectedV308) {
+        throw "Derived source index is not bound to exact v308."
+    }
+    Write-Host "SOURCE_INDEX_DERIVED=$SourceIndex" -ForegroundColor Green
+} else {
+    $SuppliedIndex = Get-JsonProjection `
+        -Path $SourceIndex `
+        -Fields @{
+            sha256 = "/sha256"
+        }
+    if ([string]$SuppliedIndex.sha256 -ne $ExpectedV308) {
+        throw "Supplied source index is not bound to exact v308."
+    }
+    Write-Host "SOURCE_INDEX_SUPPLIED=$SourceIndex" -ForegroundColor Green
+}
 
 Write-Host "AUTHORITY_COMMIT=$Head" -ForegroundColor Green
 Write-Host "V308_SHA256=$ClientSha" -ForegroundColor Green
