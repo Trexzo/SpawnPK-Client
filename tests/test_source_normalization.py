@@ -18173,6 +18173,71 @@ class InvokedynamicCallbackCopiedIntCaptureTests(unittest.TestCase):
                 )
             )
 
+    def test_callback_copied_int_capture_requires_exact_value_assignment(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            exact = self._exact_source().replace(
+                '        region = read(value, "id");\n',
+                "        region = 7;\n",
+                1,
+            )
+            jar = _compile_java_fixture(
+                root,
+                {"p/Current.java": exact},
+                release=8,
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "invokedynamic_callback_copied_int_capture"
+                    for row in report["actions"]
+                )
+            )
+
+    def test_callback_copied_int_capture_rejects_helper_use_multiplicity(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            exact = self._exact_source().replace(
+                "          h.add(finalRegion);\n",
+                "          h.add(finalRegion);\n"
+                '          report.add("extra=" + finalRegion);\n',
+                1,
+            )
+            jar = _compile_java_fixture(
+                root,
+                {"p/Current.java": exact},
+                release=8,
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "invokedynamic_callback_copied_int_capture"
+                    for row in report["actions"]
+                )
+            )
+
     def test_callback_copied_int_capture_requires_exact_slot_copy(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
