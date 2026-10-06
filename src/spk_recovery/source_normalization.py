@@ -6194,7 +6194,7 @@ def _normalize_invokedynamic_callback_reference_capture_aliases(
         r"(?:\s*<[^;=(){}]+>)?\s+"
         r"(?P<set>" + identifier + r")\s*=\s*new\s+"
         r"(?:java\.util\.)?(?:HashSet|LinkedHashSet)"
-        r"(?:\s*<[^;=(){}]+>)?\s*\("
+        r"(?:\s*<[^;=(){}]*>)?\s*\("
     )
     callback_re = re.compile(
         r"\(\s*(?P<p1>" + identifier + r")\s*,\s*"
@@ -6371,7 +6371,7 @@ def _normalize_invokedynamic_callback_reference_capture_aliases(
 
         entry_name = entry_loop.group("entry")
         map_value_re = re.compile(
-            map_value_re_template.format(entry=re.escape(entry_name))
+            map_value_re_template.replace("{entry}", re.escape(entry_name))
         )
         map_values = list(map_value_re.finditer(method_code))
         if len(map_values) != 1:
