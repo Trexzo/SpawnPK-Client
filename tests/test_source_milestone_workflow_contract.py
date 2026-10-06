@@ -195,6 +195,63 @@ class SourceMilestoneWorkflowContractTests(unittest.TestCase):
         self.assertNotIn("--artifact-dir authority", authority_section)
         self.assertNotIn("--source-root authority/src", authority_section)
 
+    def test_semantic_authority_documents_flow_through_publication(self):
+        validate_start = self.text.index(
+            "- name: Validate authority artifact contract"
+        )
+        preflight_start = self.text.index(
+            "- name: Independently rebuild authority preflight milestone"
+        )
+        verify_start = self.text.index(
+            "- name: Verify Source M1 authority artifact"
+        )
+        final_start = self.text.index(
+            "- name: Build Source Milestone 1 manifest"
+        )
+        reproduce_start = self.text.index(
+            "- name: Exactly reproduce milestone manifest"
+        )
+        bundle_start = self.text.index(
+            "- name: Build source-only publication bundle"
+        )
+        bundle_verify_start = self.text.index(
+            "- name: Verify publication bundle"
+        )
+
+        validate = self.text[validate_start:preflight_start]
+        self.assertIn(
+            'test -f "$SOURCE_AUTHORITY_DIR/semantic-review.json"',
+            validate,
+        )
+        self.assertIn(
+            'test -f "$SOURCE_AUTHORITY_DIR/semantic-acceptance.json"',
+            validate,
+        )
+
+        for section in (
+            self.text[preflight_start:verify_start],
+            self.text[final_start:reproduce_start],
+            self.text[reproduce_start:bundle_start],
+        ):
+            self.assertIn(
+                '--semantic-review "$SOURCE_AUTHORITY_DIR/semantic-review.json"',
+                section,
+            )
+            self.assertIn(
+                '--semantic-acceptance "$SOURCE_AUTHORITY_DIR/semantic-acceptance.json"',
+                section,
+            )
+
+        bundle = self.text[bundle_start:bundle_verify_start]
+        self.assertIn(
+            'semantic-review.json=$SOURCE_AUTHORITY_DIR/semantic-review.json',
+            bundle,
+        )
+        self.assertIn(
+            'semantic-acceptance.json=$SOURCE_AUTHORITY_DIR/semantic-acceptance.json',
+            bundle,
+        )
+
     def test_authority_artifact_verification_uses_independent_preflight(self):
         preflight_start = self.text.index(
             "- name: Independently rebuild authority preflight milestone"
