@@ -160,6 +160,49 @@ class JavacFrontierSummaryTests(unittest.TestCase):
                 text,
             )
 
+    def test_focus_diagnostics_can_print_bounded_source_context(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "k.java"
+            source.write_text(
+                "line one\n"
+                "line two\n"
+                "int value = i.a();\n"
+                "line four\n"
+                "line five\n"
+                "line six\n",
+                encoding="utf-8",
+            )
+            report = _report()
+            report["diagnostics"] = [
+                {
+                    "category": "cannot_be_dereferenced",
+                    "source_path": str(source),
+                    "line": 3,
+                    "message": "int cannot be dereferenced",
+                }
+            ]
+
+            text = "\n".join(
+                focus_diagnostics(
+                    report,
+                    focus_files=1,
+                    include_source_lines=True,
+                    source_context_lines=2,
+                )
+            )
+
+            self.assertIn(
+                "=== FOCUSED SOURCE CONTEXT (+/-2) ===",
+                text,
+            )
+            self.assertIn("SRCCTX: line=1 | text=line one", text)
+            self.assertIn(
+                "SRCCTX: line=3 | text=int value = i.a();",
+                text,
+            )
+            self.assertIn("SRCCTX: line=5 | text=line five", text)
+            self.assertNotIn("SRCCTX: line=6 | text=line six", text)
+
     def test_focus_source_lines_fail_soft_when_source_is_missing(self):
         report = _report()
         report["diagnostics"] = [
@@ -201,6 +244,7 @@ class JavacFrontierSummaryTests(unittest.TestCase):
         self.assertIn("--focus-files $FocusFiles", text)
         self.assertNotIn("--focus-files 3", text)
         self.assertIn("--source-lines", text)
+        self.assertIn("--source-context-lines 20", text)
         self.assertIn("private_javac_summary_failed=", text)
         self.assertIn("exit 3", text)
     def test_cli_top_limit(self):
@@ -257,6 +301,65 @@ class JavacFrontierSummaryTests(unittest.TestCase):
             self.assertEqual(stdout.getvalue(), "")
             self.assertIn(
                 "--focus-files must be between 0 and 20",
+                stderr.getvalue(),
+            )
+
+    def test_cli_rejects_source_context_without_source_lines(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "private.json"
+            path.write_text(
+                json.dumps(_report()),
+                encoding="utf-8",
+            )
+
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with (
+                contextlib.redirect_stdout(stdout),
+                contextlib.redirect_stderr(stderr),
+            ):
+                code = main(
+                    [
+                        str(path),
+                        "--source-context-lines",
+                        "3",
+                    ]
+                )
+
+            self.assertEqual(code, 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertIn(
+                "--source-context-lines requires --source-lines",
+                stderr.getvalue(),
+            )
+
+    def test_cli_rejects_invalid_source_context_count(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "private.json"
+            path.write_text(
+                json.dumps(_report()),
+                encoding="utf-8",
+            )
+
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with (
+                contextlib.redirect_stdout(stdout),
+                contextlib.redirect_stderr(stderr),
+            ):
+                code = main(
+                    [
+                        str(path),
+                        "--source-lines",
+                        "--source-context-lines",
+                        "51",
+                    ]
+                )
+
+            self.assertEqual(code, 2)
+            self.assertEqual(stdout.getvalue(), "")
+            self.assertIn(
+                "--source-context-lines must be between 0 and 50",
                 stderr.getvalue(),
             )
 

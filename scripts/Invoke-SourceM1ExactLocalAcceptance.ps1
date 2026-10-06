@@ -1140,7 +1140,8 @@ if ($ReleaseExit -ne 0) {
             $PrivateDiagnostic `
             --top 20 `
             --focus-files $FocusFiles `
-            --source-lines
+            --source-lines `
+            --source-context-lines 20
         $PrivateSummaryExit = $LASTEXITCODE
         if ($PrivateSummaryExit -ne 0) {
             Write-Host (
