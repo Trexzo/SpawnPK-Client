@@ -92,6 +92,41 @@ class ExactLocalAcceptanceWrapperTests(unittest.TestCase):
         self.assertIn("origin/main", text)
         self.assertTrue(all(ord(ch) < 128 for ch in text))
 
+    def test_source_m1_wrapper_can_derive_exact_index_without_weakening_reviewed_inputs(self):
+        text = self.source.read_text(encoding="utf-8")
+
+        source_index_prefix = text.split("[string]$SourceIndex", 1)[0]
+        self.assertFalse(
+            source_index_prefix.rstrip().endswith("[Parameter(Mandatory = $true)]")
+        )
+
+        for mandatory_name in (
+            "ClassLineage",
+            "MemberLineage",
+            "MemberSafetyAcceptance",
+        ):
+            self.assertIn(
+                "[Parameter(Mandatory = $true)]\n"
+                f"    [string]${mandatory_name}",
+                text,
+            )
+
+        self.assertIn("DERIVE EXACT V308 SOURCE INDEX", text)
+        self.assertIn('"spk_recovery.cli"', text)
+        self.assertIn('"index"', text)
+        self.assertIn('"--expect-sha256"', text)
+        self.assertIn("$ExpectedV308", text)
+        self.assertIn("SOURCE_INDEX_DERIVED=", text)
+        self.assertIn("SOURCE_INDEX_SUPPLIED=", text)
+        self.assertIn(
+            'throw "Derived source index is not bound to exact v308."',
+            text,
+        )
+        self.assertIn(
+            'throw "Supplied source index is not bound to exact v308."',
+            text,
+        )
+
     def test_wrappers_parse_with_powershell_ast(self):
         shell = shutil.which("powershell.exe") or shutil.which("pwsh")
         if shell is None:
