@@ -17667,6 +17667,220 @@ class GenericBuilderTargetInferenceCastTests(unittest.TestCase):
 
 
 
+
+class InvokedynamicCallbackReferenceCaptureAliasTests(unittest.TestCase):
+    @staticmethod
+    def _exact_source() -> str:
+        return (
+            "package p;\n"
+            "import java.util.*;\n"
+            "public class Current {\n"
+            "  interface Sink { void accept(int a,int b,int c,int d); }\n"
+            "  private final Set<Integer> affected = new HashSet<>();\n"
+            "  private final List<String> report = new ArrayList<>();\n"
+            "  private static int read(Map<String,Object> m, String key) {\n"
+            "    return ((Number)m.get(key)).intValue();\n"
+            "  }\n"
+            "  private static void scan(byte[] data, Sink sink) {\n"
+            "    sink.accept(1,2,3,4);\n"
+            "  }\n"
+            "  public void go(Map<Integer,Map<String,Object>> input) {\n"
+            "    for (Map.Entry<Integer,Map<String,Object>> entry : input.entrySet()) {\n"
+            "      Map<String,Object> value = entry.getValue();\n"
+            "      int region = -1;\n"
+            "      try {\n"
+            "        region = read(value, \"id\");\n"
+            "        int land = read(value, \"land\");\n"
+            "        byte[] data = new byte[0];\n"
+            "        Set<String> seen = new HashSet<>();\n"
+            "        int capture = region;\n"
+            "        scan(data, (obj,packed,type,rot) -> {\n"
+            "          affected.add(capture);\n"
+            "          String text = \"x\" + obj;\n"
+            "          if (seen.add(text)) {\n"
+            "            report.add(\"region=\" + capture\n"
+            "              + \" yaml=\" + entry.getKey()\n"
+            "              + \" land=\" + land\n"
+            "              + \" group=\" + value.getOrDefault(\"group\", \"\")\n"
+            "              + \" packed=\" + packed + \" type=\" + type + \" rot=\" + rot);\n"
+            "          }\n"
+            "        });\n"
+            "      } catch (Exception ex) {\n"
+            "        report.add(String.valueOf(ex));\n"
+            "      }\n"
+            "    }\n"
+            "  }\n"
+            "}\n"
+        )
+
+    @staticmethod
+    def _malformed_source(*, duplicate_map_alias: bool = False) -> str:
+        extra = (
+            ' + " group2=" + value2.getOrDefault("group2", "")'
+            if duplicate_map_alias
+            else ""
+        )
+        return (
+            "package p;\n"
+            "import java.util.*;\n"
+            "public class Current {\n"
+            "  interface Sink { void accept(int a,int b,int c,int d); }\n"
+            "  private final Set<Integer> affected = new HashSet<>();\n"
+            "  private final List<String> report = new ArrayList<>();\n"
+            "  private static int read(Map<String,Object> m, String key) {\n"
+            "    return ((Number)m.get(key)).intValue();\n"
+            "  }\n"
+            "  private static void scan(byte[] data, Sink sink) {\n"
+            "    sink.accept(1,2,3,4);\n"
+            "  }\n"
+            "  public void go(Map<Integer,Map<String,Object>> input) {\n"
+            "    for (Map.Entry<Integer,Map<String,Object>> entry : input.entrySet()) {\n"
+            "      Map<String,Object> value = entry.getValue();\n"
+            "      int region = -1;\n"
+            "      try {\n"
+            "        region = read(value, \"id\");\n"
+            "        int land = read(value, \"land\");\n"
+            "        byte[] data = new byte[0];\n"
+            "        Set<String> seen = new HashSet<>();\n"
+            "        int capture = region;\n"
+            "        scan(data, (obj,packed,type,rot) -> {\n"
+            "          affected.add(capture);\n"
+            "          String text = \"x\" + obj;\n"
+            "          if (seen2.add(text)) {\n"
+            "            report.add(\"region=\" + capture\n"
+            "              + \" yaml=\" + entry2.getKey()\n"
+            "              + \" land=\" + land\n"
+            "              + \" group=\" + value2.getOrDefault(\"group\", \"\")"
+            + extra
+            + "\n"
+            "              + \" packed=\" + packed + \" type=\" + type + \" rot=\" + rot);\n"
+            "          }\n"
+            "        });\n"
+            "      } catch (Exception ex) {\n"
+            "        report.add(String.valueOf(ex));\n"
+            "      }\n"
+            "    }\n"
+            "  }\n"
+            "}\n"
+        )
+
+    def test_callback_reference_captures_compile_after_exact_recovery(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {"p/Current.java": self._exact_source()},
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                self._malformed_source(),
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-callback-reference-captures"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("seen2", before.stderr)
+            self.assertIn("entry2", before.stderr)
+            self.assertIn("value2", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn("if (seen.add(text))", normalized)
+            self.assertIn("entry.getKey()", normalized)
+            self.assertIn('value.getOrDefault("group", "")', normalized)
+            self.assertNotIn("seen2", normalized)
+            self.assertNotIn("entry2", normalized)
+            self.assertNotIn("value2", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "invokedynamic_callback_reference_capture_alias"
+            )
+            self.assertEqual(
+                action["capture_source_names"],
+                {
+                    "set": "seen",
+                    "entry": "entry",
+                    "map": "value",
+                },
+            )
+            self.assertEqual(action["replacement_count"], 3)
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_callback_reference_capture_alias_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_callback_reference_capture_alias_reference_count"
+                ],
+                3,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-callback-reference-captures"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_callback_reference_capture_rejects_alias_multiplicity_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {"p/Current.java": self._exact_source()},
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source(
+                duplicate_map_alias=True,
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "invokedynamic_callback_reference_capture_alias"
+                    for row in report["actions"]
+                )
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
 
