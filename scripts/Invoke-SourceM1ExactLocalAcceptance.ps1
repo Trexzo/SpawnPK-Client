@@ -6,7 +6,6 @@ param(
     [string]$SourceIndex,
     [string]$ClassLineage,
     [string]$MemberLineage,
-    [Parameter(Mandatory = $true)]
     [string]$MemberSafetyAcceptance,
     [Parameter(Mandatory = $true)]
     [string]$DecompilerJar,
@@ -24,6 +23,7 @@ $ErrorActionPreference = "Stop"
 $ExpectedV308 = "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 $ExpectedProcyon = "821da96012fc69244fa1ea298c90455ee4e021434bc796d3b9546ab24601b779"
 $ExpectedSemanticReview = "SEMREVIEW_DD69CD752A6E46181BAC"
+$ExpectedMemberSafetyAcceptance = "f4c6c2b3ee1da51ce76b89164abe5fc47960ad9eceee952619928190f1374351"
 
 function Require-File {
     param([string]$Path)
@@ -238,10 +238,14 @@ if ($Head -notmatch "^[0-9a-f]{40}$") {
 
 foreach ($Path in @(
     $ClientJar,
-    $MemberSafetyAcceptance,
     $DecompilerJar
 )) {
     Require-File $Path
+}
+
+$HasMemberSafetyAcceptance = -not [string]::IsNullOrWhiteSpace($MemberSafetyAcceptance)
+if ($HasMemberSafetyAcceptance) {
+    Require-File $MemberSafetyAcceptance
 }
 
 $HasClassLineage = -not [string]::IsNullOrWhiteSpace($ClassLineage)
@@ -418,6 +422,68 @@ if (-not $HasClassLineage) {
 } else {
     Write-Host "CLASS_LINEAGE_SUPPLIED=$ClassLineage" -ForegroundColor Green
     Write-Host "MEMBER_LINEAGE_SUPPLIED=$MemberLineage" -ForegroundColor Green
+}
+
+if (-not $HasMemberSafetyAcceptance) {
+    $MemberSafetyPreflightDir = Join-Path $DerivedInputDir "member-safety-preflight"
+    Invoke-PyChecked "BUILD EXACT V308 MEMBER SAFETY PREFLIGHT" @(
+        "-3.13",
+        "-m",
+        "spk_recovery.semantic_namespace_cli",
+        $ClassLineage,
+        $MemberLineage,
+        $SourceIndex,
+        "--build-id",
+        "v308",
+        "--source-safe-fallback",
+        "--fallback-name-prefix",
+        "Recovered_",
+        "--out-dir",
+        $MemberSafetyPreflightDir
+    )
+
+    $MemberSafetyPlan = Join-Path $MemberSafetyPreflightDir "member-remap-plan.json"
+    $MemberSafetyReport = Join-Path $MemberSafetyPreflightDir "member-safety-report.json"
+    Require-File $MemberSafetyPlan
+
+    Invoke-PyChecked "SCAN EXACT V308 MEMBER SAFETY" @(
+        "-3.13",
+        "-m",
+        "spk_recovery.cli",
+        "member-safety-scan",
+        $ClientJar,
+        $SourceIndex,
+        $MemberSafetyPlan,
+        "--out",
+        $MemberSafetyReport
+    )
+    Require-File $MemberSafetyReport
+
+    $MemberSafetyAcceptance = Join-Path $DerivedInputDir "member-safety.accepted.recovered.json"
+    Invoke-PyChecked "RECOVER HISTORICAL EXACT V308 MEMBER SAFETY ACCEPTANCE" @(
+        "-3.13",
+        "-m",
+        "spk_recovery.source_m1_member_safety_recover",
+        $MemberSafetyPlan,
+        $MemberSafetyReport,
+        "--out",
+        $MemberSafetyAcceptance
+    )
+    Require-File $MemberSafetyAcceptance
+
+    $RecoveredMemberSafetySha = (
+        Get-FileHash -LiteralPath $MemberSafetyAcceptance -Algorithm SHA256
+    ).Hash.ToLowerInvariant()
+    if ($RecoveredMemberSafetySha -ne $ExpectedMemberSafetyAcceptance) {
+        throw (
+            "Recovered member-safety acceptance SHA drifted: " +
+            $RecoveredMemberSafetySha
+        )
+    }
+
+    Write-Host "MEMBER_SAFETY_ACCEPTANCE_RECOVERED=$MemberSafetyAcceptance" -ForegroundColor Green
+} else {
+    Write-Host "MEMBER_SAFETY_ACCEPTANCE_SUPPLIED=$MemberSafetyAcceptance" -ForegroundColor Green
 }
 
 Write-Host "AUTHORITY_COMMIT=$Head" -ForegroundColor Green
