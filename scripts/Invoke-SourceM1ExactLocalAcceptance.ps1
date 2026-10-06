@@ -4,9 +4,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$ClientJar,
     [string]$SourceIndex,
-    [Parameter(Mandatory = $true)]
     [string]$ClassLineage,
-    [Parameter(Mandatory = $true)]
     [string]$MemberLineage,
     [Parameter(Mandatory = $true)]
     [string]$MemberSafetyAcceptance,
@@ -239,12 +237,19 @@ if ($Head -notmatch "^[0-9a-f]{40}$") {
 
 foreach ($Path in @(
     $ClientJar,
-    $ClassLineage,
-    $MemberLineage,
     $MemberSafetyAcceptance,
     $DecompilerJar
 )) {
     Require-File $Path
+}
+$HasClassLineage = -not [string]::IsNullOrWhiteSpace($ClassLineage)
+$HasMemberLineage = -not [string]::IsNullOrWhiteSpace($MemberLineage)
+if ($HasClassLineage -xor $HasMemberLineage) {
+    throw "ClassLineage and MemberLineage must be supplied together or both omitted."
+}
+if ($HasClassLineage) {
+    Require-File $ClassLineage
+    Require-File $MemberLineage
 }
 if (-not [string]::IsNullOrWhiteSpace($SourceIndex)) {
     Require-File $SourceIndex
@@ -344,6 +349,71 @@ if ([string]::IsNullOrWhiteSpace($SourceIndex)) {
         $ExpectedV308
     )
     Write-Host "SOURCE_INDEX_SUPPLIED=$SourceIndex" -ForegroundColor Green
+}
+
+if (-not $HasClassLineage) {
+    $CanonicalReview = Join-Path $Repo "mappings\candidates\v308.semantic-review.chat2.r2.json"
+    $CanonicalAcceptance = Join-Path $Repo "mappings\v308.semantic.acceptance.json"
+    $ClassLineage = Join-Path $DerivedInputDir "class-lineage.generated.json"
+    $MemberLineage = Join-Path $DerivedInputDir "member-lineage.generated.json"
+    $LineageProof = Join-Path $DerivedInputDir "v308-lineage-rederivation-proof.json"
+
+    Require-File $CanonicalReview
+    Require-File $CanonicalAcceptance
+
+    Invoke-PyChecked "REDERIVE CANONICAL V308 LINEAGE" @(
+        "-3.13",
+        "-m",
+        "spk_recovery.source_m1_lineage_rederive",
+        $SourceIndex,
+        $CanonicalReview,
+        $CanonicalAcceptance,
+        "--class-out",
+        $ClassLineage,
+        "--member-out",
+        $MemberLineage,
+        "--report-out",
+        $LineageProof
+    )
+
+    foreach ($Path in @(
+        $ClassLineage,
+        $MemberLineage,
+        $LineageProof
+    )) {
+        Require-File $Path
+    }
+
+    $LineageProofDoc = Get-JsonProjection `
+        -Path $LineageProof `
+        -Fields @{
+            source_sha256 = "/source_sha256"
+            review_id = "/review_id"
+            class_count = "/class_count"
+            member_count = "/member_count"
+            unresolved_classes = "/unresolved_classes"
+            unresolved_members = "/unresolved_members"
+        }
+    if ([string]$LineageProofDoc.source_sha256 -ne $ExpectedV308) {
+        throw "Rederived lineage proof is not bound to exact v308."
+    }
+    if ([string]$LineageProofDoc.review_id -ne "SEMREVIEW_DD69CD752A6E46181BAC") {
+        throw "Rederived lineage proof is not bound to the canonical R2 review."
+    }
+    if (
+        [int]$LineageProofDoc.class_count -ne 1129 -or
+        [int]$LineageProofDoc.member_count -ne 13811 -or
+        [int]$LineageProofDoc.unresolved_classes -ne 0 -or
+        [int]$LineageProofDoc.unresolved_members -ne 0
+    ) {
+        throw "Rederived lineage proof has unexpected v308 shape."
+    }
+    Write-Host "CLASS_LINEAGE_DERIVED=$ClassLineage" -ForegroundColor Green
+    Write-Host "MEMBER_LINEAGE_DERIVED=$MemberLineage" -ForegroundColor Green
+    Write-Host "LINEAGE_PROOF=$LineageProof" -ForegroundColor Green
+} else {
+    Write-Host "CLASS_LINEAGE_SUPPLIED=$ClassLineage" -ForegroundColor Green
+    Write-Host "MEMBER_LINEAGE_SUPPLIED=$MemberLineage" -ForegroundColor Green
 }
 
 Write-Host "AUTHORITY_COMMIT=$Head" -ForegroundColor Green
