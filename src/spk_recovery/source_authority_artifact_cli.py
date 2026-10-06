@@ -99,7 +99,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     build.add_argument(
         "--publication-repository",
-        default="Trexzo/SpawnPK-Client-Source",
+        default="Trexzo/SpawnPK-Client",
     )
     build.add_argument(
         "--out-dir",
