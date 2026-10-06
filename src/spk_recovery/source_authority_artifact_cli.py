@@ -64,6 +64,16 @@ def main(argv: list[str] | None = None) -> int:
         required=True,
     )
     build.add_argument(
+        "--semantic-review",
+        type=Path,
+        required=True,
+    )
+    build.add_argument(
+        "--semantic-acceptance",
+        type=Path,
+        required=True,
+    )
+    build.add_argument(
         "--readable-manifest",
         type=Path,
         required=True,
@@ -134,6 +144,8 @@ def main(argv: list[str] | None = None) -> int:
             inputs = load_authority_artifact_inputs(
                 class_lineage=args.class_lineage,
                 member_lineage=args.member_lineage,
+                semantic_review=args.semantic_review,
+                semantic_acceptance=args.semantic_acceptance,
                 readable_manifest=args.readable_manifest,
                 recovered_manifest=args.recovered_manifest,
                 clean_rebuild=args.clean_rebuild,
