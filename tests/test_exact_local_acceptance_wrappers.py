@@ -92,7 +92,7 @@ class ExactLocalAcceptanceWrapperTests(unittest.TestCase):
         self.assertIn("origin/main", text)
         self.assertTrue(all(ord(ch) < 128 for ch in text))
 
-    def test_source_m1_wrapper_can_derive_exact_index_without_weakening_reviewed_inputs(self):
+    def test_source_m1_wrapper_can_derive_exact_index_and_lineage(self):
         text = self.source.read_text(encoding="utf-8")
 
         source_index_prefix = text.split("[string]$SourceIndex", 1)[0]
@@ -100,16 +100,17 @@ class ExactLocalAcceptanceWrapperTests(unittest.TestCase):
             source_index_prefix.rstrip().endswith("[Parameter(Mandatory = $true)]")
         )
 
-        for mandatory_name in (
-            "ClassLineage",
-            "MemberLineage",
-            "MemberSafetyAcceptance",
-        ):
-            self.assertIn(
-                "[Parameter(Mandatory = $true)]\n"
-                f"    [string]${mandatory_name}",
-                text,
+        for optional_name in ("ClassLineage", "MemberLineage"):
+            prefix = text.split(f"[string]${optional_name}", 1)[0]
+            self.assertFalse(
+                prefix.rstrip().endswith("[Parameter(Mandatory = $true)]")
             )
+
+        self.assertIn(
+            "[Parameter(Mandatory = $true)]\n"
+            "    [string]$MemberSafetyAcceptance",
+            text,
+        )
 
         self.assertIn("DERIVE EXACT V308 SOURCE INDEX", text)
         self.assertIn('"spk_recovery.cli"', text)
@@ -126,6 +127,44 @@ class ExactLocalAcceptanceWrapperTests(unittest.TestCase):
             'throw "Supplied source index is not bound to exact v308."',
             text,
         )
+
+        self.assertIn("$HasClassLineage -xor $HasMemberLineage", text)
+        self.assertIn(
+            '"Both -ClassLineage and -MemberLineage must be supplied together."',
+            text,
+        )
+        self.assertIn("REDERIVE CANONICAL V308 LINEAGE", text)
+        self.assertIn(
+            '"spk_recovery.source_m1_lineage_rederive"',
+            text,
+        )
+        self.assertIn(
+            '"mappings\\candidates\\v308.semantic-review.chat2.r2.json"',
+            text,
+        )
+        self.assertIn(
+            '"mappings\\v308.semantic.acceptance.json"',
+            text,
+        )
+        self.assertIn(
+            '"SEMREVIEW_DD69CD752A6E46181BAC"',
+            text,
+        )
+        self.assertIn("CLASS_LINEAGE_REDERIVED=", text)
+        self.assertIn("MEMBER_LINEAGE_REDERIVED=", text)
+        self.assertIn("LINEAGE_REDERIVATION_PROOF_ID=", text)
+        self.assertIn("CLASS_LINEAGE_SUPPLIED=", text)
+        self.assertIn("MEMBER_LINEAGE_SUPPLIED=", text)
+
+    def test_source_m1_wrapper_keeps_member_safety_mandatory(self):
+        text = self.source.read_text(encoding="utf-8")
+        self.assertIn(
+            "[Parameter(Mandatory = $true)]\n"
+            "    [string]$MemberSafetyAcceptance",
+            text,
+        )
+        self.assertIn("$MemberSafetyAcceptance", text)
+        self.assertIn('"--member-safety-acceptance"', text)
 
     def test_wrappers_parse_with_powershell_ast(self):
         shell = shutil.which("powershell.exe") or shutil.which("pwsh")

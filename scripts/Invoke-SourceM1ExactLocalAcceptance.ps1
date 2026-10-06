@@ -4,9 +4,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$ClientJar,
     [string]$SourceIndex,
-    [Parameter(Mandatory = $true)]
     [string]$ClassLineage,
-    [Parameter(Mandatory = $true)]
     [string]$MemberLineage,
     [Parameter(Mandatory = $true)]
     [string]$MemberSafetyAcceptance,
@@ -25,6 +23,7 @@ $ErrorActionPreference = "Stop"
 
 $ExpectedV308 = "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 $ExpectedProcyon = "821da96012fc69244fa1ea298c90455ee4e021434bc796d3b9546ab24601b779"
+$ExpectedSemanticReview = "SEMREVIEW_DD69CD752A6E46181BAC"
 
 function Require-File {
     param([string]$Path)
@@ -239,12 +238,20 @@ if ($Head -notmatch "^[0-9a-f]{40}$") {
 
 foreach ($Path in @(
     $ClientJar,
-    $ClassLineage,
-    $MemberLineage,
     $MemberSafetyAcceptance,
     $DecompilerJar
 )) {
     Require-File $Path
+}
+
+$HasClassLineage = -not [string]::IsNullOrWhiteSpace($ClassLineage)
+$HasMemberLineage = -not [string]::IsNullOrWhiteSpace($MemberLineage)
+if ($HasClassLineage -xor $HasMemberLineage) {
+    throw "Both -ClassLineage and -MemberLineage must be supplied together."
+}
+if ($HasClassLineage) {
+    Require-File $ClassLineage
+    Require-File $MemberLineage
 }
 if (-not [string]::IsNullOrWhiteSpace($SourceIndex)) {
     Require-File $SourceIndex
@@ -344,6 +351,73 @@ if ([string]::IsNullOrWhiteSpace($SourceIndex)) {
         $ExpectedV308
     )
     Write-Host "SOURCE_INDEX_SUPPLIED=$SourceIndex" -ForegroundColor Green
+}
+
+if (-not $HasClassLineage) {
+    $CanonicalReview = Join-Path $Repo "mappings\candidates\v308.semantic-review.chat2.r2.json"
+    $CanonicalAcceptance = Join-Path $Repo "mappings\v308.semantic.acceptance.json"
+    Require-File $CanonicalReview
+    Require-File $CanonicalAcceptance
+
+    $ClassLineage = Join-Path $DerivedInputDir "class-lineage.rederived.json"
+    $MemberLineage = Join-Path $DerivedInputDir "member-lineage.rederived.json"
+    $LineageProof = Join-Path $DerivedInputDir "v308-lineage-rederivation-proof.json"
+
+    Invoke-PyChecked "REDERIVE CANONICAL V308 LINEAGE" @(
+        "-3.13",
+        "-m",
+        "spk_recovery.source_m1_lineage_rederive",
+        $SourceIndex,
+        $CanonicalReview,
+        $CanonicalAcceptance,
+        "--class-out",
+        $ClassLineage,
+        "--member-out",
+        $MemberLineage,
+        "--report-out",
+        $LineageProof
+    )
+
+    Require-File $ClassLineage
+    Require-File $MemberLineage
+    Require-File $LineageProof
+
+    $LineageProofDoc = Get-JsonProjection `
+        -Path $LineageProof `
+        -Fields @{
+            proof_id = "/proof_id"
+            source_sha256 = "/source_sha256"
+            review_id = "/review_id"
+            class_count = "/class_count"
+            member_count = "/member_count"
+            accepted_classes = "/accepted_classes"
+            accepted_members = "/accepted_members"
+            unresolved_classes = "/unresolved_classes"
+            unresolved_members = "/unresolved_members"
+        }
+    if ([string]$LineageProofDoc.source_sha256 -ne $ExpectedV308) {
+        throw "Rederived lineage proof is not bound to exact v308."
+    }
+    if ([string]$LineageProofDoc.review_id -ne $ExpectedSemanticReview) {
+        throw "Rederived lineage proof is not bound to canonical semantic review."
+    }
+    if (
+        [int]$LineageProofDoc.class_count -ne 1129 -or
+        [int]$LineageProofDoc.member_count -ne 13811 -or
+        [int]$LineageProofDoc.accepted_classes -ne 32 -or
+        [int]$LineageProofDoc.accepted_members -ne 7 -or
+        [int]$LineageProofDoc.unresolved_classes -ne 0 -or
+        [int]$LineageProofDoc.unresolved_members -ne 0
+    ) {
+        throw "Rederived lineage proof summary drifted from canonical v308."
+    }
+
+    Write-Host "CLASS_LINEAGE_REDERIVED=$ClassLineage" -ForegroundColor Green
+    Write-Host "MEMBER_LINEAGE_REDERIVED=$MemberLineage" -ForegroundColor Green
+    Write-Host "LINEAGE_REDERIVATION_PROOF_ID=$($LineageProofDoc.proof_id)" -ForegroundColor Green
+} else {
+    Write-Host "CLASS_LINEAGE_SUPPLIED=$ClassLineage" -ForegroundColor Green
+    Write-Host "MEMBER_LINEAGE_SUPPLIED=$MemberLineage" -ForegroundColor Green
 }
 
 Write-Host "AUTHORITY_COMMIT=$Head" -ForegroundColor Green
