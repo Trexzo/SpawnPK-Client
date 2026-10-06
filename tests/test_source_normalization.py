@@ -17212,6 +17212,107 @@ class GenericKeyObjectCastTests(unittest.TestCase):
                 after.stdout + after.stderr,
             )
 
+    def test_generic_key_cast_recovers_enhanced_for_local_type(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/C.java": (
+                        "package p;\n"
+                        "public class C<K, V> {\n"
+                        "    public void a(K key, V value) {}\n"
+                        "}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.lang.reflect.Method;\n"
+                        "public class A {\n"
+                        "    private final C<Method, Object> d = new C<>();\n"
+                        "    public void run(Iterable<Method> methods, "
+                        "Object value) {\n"
+                        "        for (Method method : methods) {\n"
+                        "            this.d.a(method, value);\n"
+                        "        }\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.lang.reflect.Method;\n"
+                "public class A {\n"
+                "    private final C<Method, Object> d = new C<>();\n"
+                "    public void run(Iterable<Method> methods, Object value) {\n"
+                "        for (Method method : methods) {\n"
+                "            this.d.a((Object)method, value);\n"
+                "        }\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-enhanced-for-key"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            compact_before = before.stderr.replace(" ", "")
+            self.assertIn(
+                "ObjectcannotbeconvertedtoMethod",
+                compact_before,
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "this.d.a(method, value);",
+                normalized,
+            )
+            self.assertNotIn("(Object)method", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"] == "generic_key_object_cast_removal"
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                action["generic_key_types"],
+                ["java/lang/reflect/Method"],
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-enhanced-for-key"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
     def _assert_no_action(self, mode: str) -> None:
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
