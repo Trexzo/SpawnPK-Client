@@ -17568,10 +17568,9 @@ class DirectGenericFactoryTargetInferenceCastTests(unittest.TestCase):
                 text=True,
             )
             self.assertNotEqual(before.returncode, 0)
-            self.assertIn(
-                "Bag<Object,Object> cannot be converted",
-                before.stderr.replace(" ", ""),
-            )
+            compact_before = before.stderr.replace(" ", "")
+            self.assertIn("Bag<Object,Object>", compact_before)
+            self.assertIn("cannotbeconverted", compact_before)
 
             report = normalize_procyon_source(root / "src", jar)
             normalized = source.read_text(encoding="utf-8")
