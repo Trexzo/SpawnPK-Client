@@ -106,12 +106,6 @@ class ExactLocalAcceptanceWrapperTests(unittest.TestCase):
                 prefix.rstrip().endswith("[Parameter(Mandatory = $true)]")
             )
 
-        self.assertIn(
-            "[Parameter(Mandatory = $true)]\n"
-            "    [string]$MemberSafetyAcceptance",
-            text,
-        )
-
         self.assertIn("DERIVE EXACT V308 SOURCE INDEX", text)
         self.assertIn('"spk_recovery.cli"', text)
         self.assertIn('"index"', text)
@@ -156,15 +150,57 @@ class ExactLocalAcceptanceWrapperTests(unittest.TestCase):
         self.assertIn("CLASS_LINEAGE_SUPPLIED=", text)
         self.assertIn("MEMBER_LINEAGE_SUPPLIED=", text)
 
-    def test_source_m1_wrapper_keeps_member_safety_mandatory(self):
+    def test_source_m1_wrapper_can_recover_exact_member_safety_acceptance(self):
         text = self.source.read_text(encoding="utf-8")
+
+        prefix = text.split("[string]$MemberSafetyAcceptance", 1)[0]
+        self.assertFalse(
+            prefix.rstrip().endswith("[Parameter(Mandatory = $true)]")
+        )
+
+        self.assertIn("$HasMemberSafetyAcceptance", text)
         self.assertIn(
-            "[Parameter(Mandatory = $true)]\n"
-            "    [string]$MemberSafetyAcceptance",
+            "DERIVE EXACT V308 MEMBER SAFETY INPUTS",
             text,
         )
-        self.assertIn("$MemberSafetyAcceptance", text)
+        self.assertIn("$MemberSafetyProbeExit -ne 3", text)
+        self.assertIn(
+            "member_safety_acceptance_required",
+            text,
+        )
+        self.assertIn(
+            "MEMRISKREVIEW_E4E67B1125E7AFA4F3B7",
+            text,
+        )
+        self.assertIn(
+            "spk_recovery.source_m1_member_safety_recover",
+            text,
+        )
+        self.assertIn(
+            "f4c6c2b3ee1da51ce76b89164abe5fc"
+            "47960ad9eceee952619928190f1374351",
+            text,
+        )
+        self.assertIn(
+            "$ExpectedMemberSafetyAcceptanceSize = 2134",
+            text,
+        )
+        self.assertIn(
+            "MEMBER_SAFETY_ACCEPTANCE_RECOVERED=",
+            text,
+        )
+        self.assertIn(
+            "MEMBER_SAFETY_ACCEPTANCE_SUPPLIED=",
+            text,
+        )
         self.assertIn('"--member-safety-acceptance"', text)
+
+        probe_start = text.index("$MemberSafetyProbeArgs = @(")
+        probe_end = text.index(
+            'Write-Host "=== DERIVE EXACT V308 MEMBER SAFETY INPUTS ==="'
+        )
+        probe_args = text[probe_start:probe_end]
+        self.assertNotIn("--member-safety-acceptance", probe_args)
 
     def test_wrappers_parse_with_powershell_ast(self):
         shell = shutil.which("powershell.exe") or shutil.which("pwsh")
