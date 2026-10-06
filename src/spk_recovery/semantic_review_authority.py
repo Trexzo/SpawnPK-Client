@@ -149,6 +149,21 @@ def _validate_review_authority_entry(
             raise SemanticReviewAuthorityError(
                 f"{plabel}.stable_id must be non-empty"
             )
+        owner_logical_id = proposal.get("owner_logical_id")
+        if (
+            not isinstance(owner_logical_id, str)
+            or not owner_logical_id
+        ):
+            raise SemanticReviewAuthorityError(
+                f"{plabel}.owner_logical_id must be non-empty"
+            )
+        if (
+            target_kind == "class"
+            and owner_logical_id != stable_id
+        ):
+            raise SemanticReviewAuthorityError(
+                f"{plabel}.owner_logical_id does not match class stable ID"
+            )
         if not is_semantic_identifier(proposed_name):
             raise SemanticReviewAuthorityError(
                 f"{plabel}.proposed_name is invalid"
@@ -377,6 +392,7 @@ def _verify_record_provenance(
     record: dict[str, Any],
     stable_id: str,
     target_kind: str,
+    owner_logical_id: str | None,
     trusted: dict[tuple[str, str], dict[str, Any]],
     label: str,
 ) -> tuple[int, set[str]]:
@@ -405,6 +421,13 @@ def _verify_record_provenance(
         if proposal.get("stable_id") != stable_id:
             raise SemanticReviewAuthorityError(
                 f"{plabel} stable ID does not match trusted proposal"
+            )
+        if (
+            owner_logical_id is not None
+            and proposal.get("owner_logical_id") != owner_logical_id
+        ):
+            raise SemanticReviewAuthorityError(
+                f"{plabel} owner logical ID does not match trusted proposal"
             )
         if proposal.get("proposed_name") != semantic_name:
             raise SemanticReviewAuthorityError(
@@ -481,6 +504,7 @@ def verify_accepted_semantic_lineage(
             record=record,
             stable_id=str(record["logical_id"]),
             target_kind="class",
+            owner_logical_id=str(record["logical_id"]),
             trusted=trusted,
             label=f"classes[{ordinal}]",
         )
@@ -495,6 +519,7 @@ def verify_accepted_semantic_lineage(
             record=record,
             stable_id=str(record["member_id"]),
             target_kind=str(record["kind"]),
+            owner_logical_id=str(record["owner_logical_id"]),
             trusted=trusted,
             label=f"members[{ordinal}]",
         )
