@@ -235,6 +235,16 @@ class SourceM1AuthorityWorkflowContractTests(unittest.TestCase):
             preflight,
         )
         self.assertIn(
+            "--semantic-review "
+            "mappings/candidates/v308.semantic-review.chat2.r2.json",
+            preflight,
+        )
+        self.assertIn(
+            "--semantic-acceptance "
+            "mappings/v308.semantic.acceptance.json",
+            preflight,
+        )
+        self.assertIn(
             "verification/PREFLIGHT-SOURCE-MILESTONE.json",
             verify,
         )
@@ -275,6 +285,16 @@ class SourceM1AuthorityWorkflowContractTests(unittest.TestCase):
         )
         self.assertIn(
             '--out-dir "$SOURCE_AUTHORITY_DIR"',
+            build,
+        )
+        self.assertIn(
+            "--semantic-review "
+            "mappings/candidates/v308.semantic-review.chat2.r2.json",
+            build,
+        )
+        self.assertIn(
+            "--semantic-acceptance "
+            "mappings/v308.semantic.acceptance.json",
             build,
         )
         self.assertNotIn("--out-dir authority", build)
