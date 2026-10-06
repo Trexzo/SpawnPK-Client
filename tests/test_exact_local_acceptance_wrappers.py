@@ -100,17 +100,11 @@ class ExactLocalAcceptanceWrapperTests(unittest.TestCase):
             source_index_prefix.rstrip().endswith("[Parameter(Mandatory = $true)]")
         )
 
-        for optional_name in ("ClassLineage", "MemberLineage"):
+        for optional_name in ("ClassLineage", "MemberLineage", "MemberSafetyAcceptance"):
             prefix = text.split(f"[string]${optional_name}", 1)[0]
             self.assertFalse(
                 prefix.rstrip().endswith("[Parameter(Mandatory = $true)]")
             )
-
-        self.assertIn(
-            "[Parameter(Mandatory = $true)]\n"
-            "    [string]$MemberSafetyAcceptance",
-            text,
-        )
 
         self.assertIn("DERIVE EXACT V308 SOURCE INDEX", text)
         self.assertIn('"spk_recovery.cli"', text)
@@ -156,15 +150,32 @@ class ExactLocalAcceptanceWrapperTests(unittest.TestCase):
         self.assertIn("CLASS_LINEAGE_SUPPLIED=", text)
         self.assertIn("MEMBER_LINEAGE_SUPPLIED=", text)
 
-    def test_source_m1_wrapper_keeps_member_safety_mandatory(self):
+    def test_source_m1_wrapper_can_recover_historical_member_safety_acceptance(self):
         text = self.source.read_text(encoding="utf-8")
+
+        prefix = text.split("[string]$MemberSafetyAcceptance", 1)[0]
+        self.assertFalse(
+            prefix.rstrip().endswith("[Parameter(Mandatory = $true)]")
+        )
+
+        self.assertIn("BUILD EXACT V308 MEMBER SAFETY PREFLIGHT", text)
+        self.assertIn('"spk_recovery.semantic_namespace_cli"', text)
+        self.assertIn('"member-safety-scan"', text)
         self.assertIn(
-            "[Parameter(Mandatory = $true)]\n"
-            "    [string]$MemberSafetyAcceptance",
+            '"spk_recovery.source_m1_member_safety_recover"',
             text,
         )
-        self.assertIn("$MemberSafetyAcceptance", text)
+        self.assertIn(
+            '"f4c6c2b3ee1da51ce76b89164abe5fc47960ad9eceee952619928190f1374351"',
+            text,
+        )
+        self.assertIn("MEMBER_SAFETY_ACCEPTANCE_RECOVERED=", text)
+        self.assertIn("MEMBER_SAFETY_ACCEPTANCE_SUPPLIED=", text)
         self.assertIn('"--member-safety-acceptance"', text)
+
+        recovery = text.index("RECOVER HISTORICAL EXACT V308 MEMBER SAFETY ACCEPTANCE")
+        readable = text.index("spk_recovery.readable_build_cli")
+        self.assertLess(recovery, readable)
 
     def test_wrappers_parse_with_powershell_ast(self):
         shell = shutil.which("powershell.exe") or shutil.which("pwsh")
