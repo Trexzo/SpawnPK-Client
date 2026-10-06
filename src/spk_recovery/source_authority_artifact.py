@@ -30,6 +30,8 @@ _DEFAULT_PUBLICATION_REPOSITORY = _DEFAULT_AUTHORITY_REPOSITORY
 _DOCUMENT_NAMES = {
     "class-lineage.json": "class_lineage",
     "member-lineage.json": "member_lineage",
+    "semantic-review.json": "semantic_review",
+    "semantic-acceptance.json": "semantic_acceptance",
     "readable-client-manifest.json": "readable_manifest",
     "recovered-source-manifest.json": "recovered_source_manifest",
     "clean-rebuild.json": "clean_rebuild_report",
@@ -151,6 +153,8 @@ def _build_milestone(
             authority_commit=authority_commit,
             class_lineage=documents["class_lineage"],
             member_lineage=documents["member_lineage"],
+            semantic_review=documents["semantic_review"],
+            semantic_acceptance=documents["semantic_acceptance"],
             readable_manifest=documents["readable_manifest"],
             recovered_source_manifest=documents[
                 "recovered_source_manifest"
@@ -175,6 +179,8 @@ def build_source_authority_artifact(
     authority_commit: str,
     class_lineage: dict[str, Any],
     member_lineage: dict[str, Any],
+    semantic_review: dict[str, Any],
+    semantic_acceptance: dict[str, Any],
     readable_manifest: dict[str, Any],
     recovered_source_manifest: dict[str, Any],
     clean_rebuild_report: dict[str, Any],
@@ -224,6 +230,8 @@ def build_source_authority_artifact(
     documents = {
         "class_lineage": class_lineage,
         "member_lineage": member_lineage,
+        "semantic_review": semantic_review,
+        "semantic_acceptance": semantic_acceptance,
         "readable_manifest": readable_manifest,
         "recovered_source_manifest": recovered_source_manifest,
         "clean_rebuild_report": clean_rebuild_report,
@@ -611,6 +619,8 @@ def load_authority_artifact_inputs(
     *,
     class_lineage: Path,
     member_lineage: Path,
+    semantic_review: Path,
+    semantic_acceptance: Path,
     readable_manifest: Path,
     recovered_manifest: Path,
     clean_rebuild: Path,
@@ -620,6 +630,8 @@ def load_authority_artifact_inputs(
     return {
         "class_lineage": _read_json(class_lineage),
         "member_lineage": _read_json(member_lineage),
+        "semantic_review": _read_json(semantic_review),
+        "semantic_acceptance": _read_json(semantic_acceptance),
         "readable_manifest": _read_json(readable_manifest),
         "recovered_source_manifest": _read_json(
             recovered_manifest
