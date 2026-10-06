@@ -18088,6 +18088,7 @@ class InvokedynamicCallbackCopiedIntCaptureTests(unittest.TestCase):
             )
             self.assertEqual(action["source_original_name"], "region")
             self.assertEqual(action["corrupted_capture_alias"], "i")
+            self.assertEqual(action["affected_region_field_name"], "h")
             self.assertEqual(action["replacement_count"], 4)
             self.assertEqual(
                 report["summary"][
@@ -18119,6 +18120,44 @@ class InvokedynamicCallbackCopiedIntCaptureTests(unittest.TestCase):
                 after.returncode,
                 0,
                 after.stdout + after.stderr,
+            )
+
+    def test_callback_copied_int_capture_requires_matching_set_field(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            exact = self._exact_source()
+            exact = exact.replace(
+                "  private final Set<Integer> h = new HashSet<>();\n",
+                "  private final Set<Integer> h = new HashSet<>();\n"
+                "  private final Set<Integer> other = new HashSet<>();\n",
+                1,
+            )
+            exact = exact.replace(
+                "          h.add(finalRegion);\n",
+                "          other.add(finalRegion);\n",
+                1,
+            )
+            jar = _compile_java_fixture(
+                root,
+                {"p/Current.java": exact},
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "invokedynamic_callback_copied_int_capture"
+                    for row in report["actions"]
+                )
             )
 
     def test_callback_copied_int_capture_requires_exact_slot_copy(self):
