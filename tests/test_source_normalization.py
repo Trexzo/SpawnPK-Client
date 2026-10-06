@@ -5448,6 +5448,373 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 0,
             )
 
+    def test_intpredicate_derived_local_capture_uses_loop_expression(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Arrays;\n"
+                        "import java.util.LinkedHashSet;\n"
+                        "import java.util.Set;\n"
+                        "public class A {\n"
+                        "    public static boolean contains() {\n"
+                        "        Set<Integer> set = new LinkedHashSet<>();\n"
+                        "        set.add(Integer.valueOf(65536));\n"
+                        "        for (int intValue : set) {\n"
+                        "            int local = intValue >>> 16;\n"
+                        "            if (Arrays.stream(new int[] {1, 2, 3})\n"
+                        "                    .anyMatch(n10 -> n10 == local)) {\n"
+                        "                return true;\n"
+                        "            }\n"
+                        "        }\n"
+                        "        return false;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.Arrays;\n"
+                "import java.util.LinkedHashSet;\n"
+                "import java.util.Set;\n"
+                "public class A {\n"
+                "    public static boolean contains() {\n"
+                "        Set set = new LinkedHashSet();\n"
+                "        set.add(Integer.valueOf(65536));\n"
+                "        for (int intValue : set) {\n"
+                "            if (Arrays.stream(new int[] {1, 2, 3})\n"
+                "                    .anyMatch(n10 -> n10 == n8)) {\n"
+                "                return true;\n"
+                "            }\n"
+                "        }\n"
+                "        return false;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-derived-intpredicate"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                ".anyMatch(n10 -> n10 == (intValue >>> 16))",
+                normalized,
+            )
+            self.assertIn(
+                "for (int intValue : ((java.util.Set<Integer>)set))",
+                normalized,
+            )
+            self.assertNotIn("n8", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "intpredicate_derived_local_capture_alias"
+            )
+            self.assertEqual(action["loop_element_name"], "intValue")
+            self.assertEqual(action["undeclared_capture_alias"], "n8")
+            self.assertEqual(
+                action["derived_expression"],
+                "(intValue >>> 16)",
+            )
+            self.assertNotEqual(
+                action["element_slot"],
+                action["capture_slot"],
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                report["summary"][
+                    "intpredicate_derived_local_capture_alias_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "intpredicate_derived_local_capture_alias_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-derived-intpredicate"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_intpredicate_derived_local_capture_rejects_shift_constant_drift(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Arrays;\n"
+                        "import java.util.LinkedHashSet;\n"
+                        "import java.util.Set;\n"
+                        "public class A {\n"
+                        "    public static boolean contains() {\n"
+                        "        Set<Integer> set = new LinkedHashSet<>();\n"
+                        "        for (int intValue : set) {\n"
+                        "            int local = intValue >>> 15;\n"
+                        "            if (Arrays.stream(new int[] {1})\n"
+                        "                    .anyMatch(n10 -> n10 == local)) return true;\n"
+                        "        }\n"
+                        "        return false;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            original = (
+                "package p;\n"
+                "import java.util.Arrays;\n"
+                "import java.util.LinkedHashSet;\n"
+                "import java.util.Set;\n"
+                "public class A {\n"
+                "    public static boolean contains() {\n"
+                "        Set set = new LinkedHashSet();\n"
+                "        for (int intValue : set) {\n"
+                "            if (Arrays.stream(new int[] {1})\n"
+                "                    .anyMatch(n10 -> n10 == n8)) return true;\n"
+                "        }\n"
+                "        return false;\n"
+                "    }\n"
+                "}\n"
+            )
+            source.write_text(original, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn("n10 == n8", normalized)
+            self.assertEqual(
+                report["summary"][
+                    "intpredicate_derived_local_capture_alias_action_count"
+                ],
+                0,
+            )
+
+    def test_intpredicate_derived_local_capture_rejects_signed_shift(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Arrays;\n"
+                        "import java.util.LinkedHashSet;\n"
+                        "import java.util.Set;\n"
+                        "public class A {\n"
+                        "    public static boolean contains() {\n"
+                        "        Set<Integer> set = new LinkedHashSet<>();\n"
+                        "        for (int intValue : set) {\n"
+                        "            int local = intValue >> 16;\n"
+                        "            if (Arrays.stream(new int[] {1})\n"
+                        "                    .anyMatch(n10 -> n10 == local)) return true;\n"
+                        "        }\n"
+                        "        return false;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.Arrays;\n"
+                "import java.util.LinkedHashSet;\n"
+                "import java.util.Set;\n"
+                "public class A {\n"
+                "    public static boolean contains() {\n"
+                "        Set set = new LinkedHashSet();\n"
+                "        for (int intValue : set) {\n"
+                "            if (Arrays.stream(new int[] {1})\n"
+                "                    .anyMatch(n10 -> n10 == n8)) return true;\n"
+                "        }\n"
+                "        return false;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertIn(
+                "n10 == n8",
+                source.read_text(encoding="utf-8"),
+            )
+            self.assertEqual(
+                report["summary"][
+                    "intpredicate_derived_local_capture_alias_reference_count"
+                ],
+                0,
+            )
+
+    def test_intpredicate_derived_local_capture_rejects_non_equality_helper(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Arrays;\n"
+                        "import java.util.LinkedHashSet;\n"
+                        "import java.util.Set;\n"
+                        "public class A {\n"
+                        "    public static boolean contains() {\n"
+                        "        Set<Integer> set = new LinkedHashSet<>();\n"
+                        "        for (int intValue : set) {\n"
+                        "            int local = intValue >>> 16;\n"
+                        "            if (Arrays.stream(new int[] {1})\n"
+                        "                    .anyMatch(n10 -> n10 < local)) return true;\n"
+                        "        }\n"
+                        "        return false;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.Arrays;\n"
+                "import java.util.LinkedHashSet;\n"
+                "import java.util.Set;\n"
+                "public class A {\n"
+                "    public static boolean contains() {\n"
+                "        Set set = new LinkedHashSet();\n"
+                "        for (int intValue : set) {\n"
+                "            if (Arrays.stream(new int[] {1})\n"
+                "                    .anyMatch(n10 -> n10 == n8)) return true;\n"
+                "        }\n"
+                "        return false;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertIn(
+                "n10 == n8",
+                source.read_text(encoding="utf-8"),
+            )
+            self.assertEqual(
+                report["summary"][
+                    "intpredicate_derived_local_capture_alias_action_count"
+                ],
+                0,
+            )
+
+    def test_intpredicate_derived_local_capture_requires_predicate_in_loop(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Arrays;\n"
+                        "import java.util.LinkedHashSet;\n"
+                        "import java.util.Set;\n"
+                        "public class A {\n"
+                        "    public static boolean contains() {\n"
+                        "        Set<Integer> set = new LinkedHashSet<>();\n"
+                        "        for (int intValue : set) {\n"
+                        "            int local = intValue >>> 16;\n"
+                        "            if (Arrays.stream(new int[] {1})\n"
+                        "                    .anyMatch(n10 -> n10 == local)) return true;\n"
+                        "        }\n"
+                        "        return false;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.Arrays;\n"
+                "import java.util.LinkedHashSet;\n"
+                "import java.util.Set;\n"
+                "public class A {\n"
+                "    public static boolean contains() {\n"
+                "        Set set = new LinkedHashSet();\n"
+                "        for (int intValue : set) {\n"
+                "            if (intValue == 7) return true;\n"
+                "        }\n"
+                "        return Arrays.stream(new int[] {1})\n"
+                "            .anyMatch(n10 -> n10 == n8);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertIn(
+                "n10 == n8",
+                source.read_text(encoding="utf-8"),
+            )
+            self.assertEqual(
+                report["summary"][
+                    "intpredicate_derived_local_capture_alias_action_count"
+                ],
+                0,
+            )
+
     def test_intpredicate_parameter_capture_alias_rejects_non_equality_helper(
         self,
     ):
