@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import os
@@ -20,8 +21,167 @@ from spk_recovery.source_milestone import (
     verify_source_publication_bundle as _verify_source_publication_bundle,
 )
 
-_CLASS_REVIEW_ID = "SEMREVIEW_" + "A" * 20
-_MEMBER_REVIEW_ID = "SEMREVIEW_" + "B" * 20
+_CANONICAL_REVIEW_ID = "SEMREVIEW_DD69CD752A6E46181BAC"
+
+
+
+def _hex(seed: str) -> str:
+    return hashlib.sha256(seed.encode("utf-8")).hexdigest()
+
+
+def _semantic_provenance(proposal: dict, review_id: str) -> dict:
+    return {
+        "proposal_id": proposal["proposal_id"],
+        "review_id": review_id,
+        "source_build": proposal["source_build"],
+        "source_sha256": proposal["source_sha256"],
+        "source_coordinate": copy.deepcopy(
+            proposal["source_coordinate"]
+        ),
+        "evidence": copy.deepcopy(proposal["evidence"]),
+        "note": proposal.get("note"),
+    }
+
+
+def _real_r2_lineage(review: dict, acceptance: dict):
+    accepted = set(acceptance["accept"])
+    proposals = [
+        row
+        for row in review["proposals"]
+        if row["proposal_id"] in accepted
+    ]
+    class_proposals = {
+        row["stable_id"]: row
+        for row in proposals
+        if row["target_kind"] == "class"
+    }
+    member_proposals = [
+        row
+        for row in proposals
+        if row["target_kind"] != "class"
+    ]
+
+    owner_names = {
+        stable_id: row["source_coordinate"]["owner"]
+        for stable_id, row in class_proposals.items()
+    }
+    for row in member_proposals:
+        owner_id = row["owner_logical_id"]
+        owner = row["source_coordinate"]["owner"]
+        prior = owner_names.get(owner_id)
+        if prior is not None:
+            assert prior == owner
+        owner_names[owner_id] = owner
+
+    review_id = str(review["review_id"])
+    classes = []
+    ordered_owner_ids = sorted(
+        owner_names,
+        key=lambda logical_id: (
+            logical_id not in class_proposals,
+            logical_id,
+        ),
+    )
+    for logical_id in ordered_owner_ids:
+        owner = owner_names[logical_id]
+        proposal = class_proposals.get(logical_id)
+        accepted_class = proposal is not None
+        classes.append(
+            {
+                "logical_id": logical_id,
+                "semantic_name": (
+                    proposal["proposed_name"]
+                    if accepted_class
+                    else None
+                ),
+                "semantic_status": (
+                    "ACCEPTED" if accepted_class else "UNKNOWN"
+                ),
+                "semantic_confidence": (
+                    proposal["confidence"] if accepted_class else 0.0
+                ),
+                "lineage": [
+                    {
+                        "build_id": "v308",
+                        "internal_name": owner,
+                        "entry_path": owner + ".class",
+                        "entry_sha256": _hex("entry:" + owner),
+                        "structural_sha256": _hex(
+                            "structural:" + owner
+                        ),
+                        "relation": "BASELINE",
+                        "confidence": 1.0,
+                        "provenance": [],
+                    }
+                ],
+                "semantic_provenance": (
+                    [_semantic_provenance(proposal, review_id)]
+                    if accepted_class
+                    else []
+                ),
+            }
+        )
+
+    members = []
+    for proposal in sorted(
+        member_proposals,
+        key=lambda row: row["stable_id"],
+    ):
+        coordinate = proposal["source_coordinate"]
+        members.append(
+            {
+                "member_id": proposal["stable_id"],
+                "owner_logical_id": proposal["owner_logical_id"],
+                "kind": proposal["target_kind"],
+                "semantic_name": proposal["proposed_name"],
+                "semantic_status": "ACCEPTED",
+                "semantic_confidence": proposal["confidence"],
+                "lineage": [
+                    {
+                        "build_id": "v308",
+                        "owner_internal_name": coordinate["owner"],
+                        "name": coordinate["name"],
+                        "descriptor": coordinate["descriptor"],
+                        "access": 1,
+                        "relation": "BASELINE",
+                        "confidence": 1.0,
+                        "provenance": [],
+                    }
+                ],
+                "semantic_provenance": [
+                    _semantic_provenance(proposal, review_id)
+                ],
+            }
+        )
+
+    return (
+        {
+            "schema_version": 1,
+            "namespace": "spawnpk-client",
+            "id_format": "CLIENT_CLASS_%06d",
+            "baseline_build_id": "v308",
+            "builds": [
+                {
+                    "build_id": "v308",
+                    "build_number": 308,
+                    "sha256": V308_SOURCE_AUTHORITY_SHA256,
+                    "source_name": "client.jar",
+                    "authority": "EXACT_CURRENT_CLIENT",
+                }
+            ],
+            "classes": classes,
+            "unresolved": [],
+        },
+        {
+            "schema_version": 1,
+            "kind": "member_lineage",
+            "class_namespace": "spawnpk-client",
+            "baseline_build_id": "v308",
+            "source_sha256": V308_SOURCE_AUTHORITY_SHA256,
+            "members": members,
+            "unresolved": [],
+        },
+    )
 
 
 def verify_source_publication_bundle(bundle_dir, **kwargs):
@@ -217,115 +377,26 @@ def _fixtures(source_root: Path):
     class_digest = "c" * 64
     member_digest = "d" * 64
 
-    classes = {
-        "schema_version": 1,
-        "namespace": "spawnpk-client",
-        "id_format": "CLIENT_CLASS_%06d",
-        "baseline_build_id": "v308",
-        "builds": [
-            {
-                "build_id": "v308",
-                "build_number": 308,
-                "sha256": authority_sha,
-                "source_name": "client.jar",
-                "authority": "EXACT_CURRENT_CLIENT",
-            }
-        ],
-        "classes": [
-            {
-                "logical_id": "CLIENT_CLASS_000001",
-                "semantic_name": "A",
-                "semantic_status": "ACCEPTED",
-                "semantic_confidence": 1.0,
-                "lineage": [
-                    {
-                        "build_id": "v308",
-                        "internal_name": "rs/A",
-                        "entry_path": "rs/A.class",
-                        "entry_sha256": "1" * 64,
-                        "structural_sha256": "2" * 64,
-                        "relation": "BASELINE",
-                        "confidence": 1.0,
-                        "provenance": [
-                            {
-                                "authority": "EXACT_CURRENT_CLIENT",
-                                "source": "test-fixture",
-                            }
-                        ],
-                    }
-                ],
-                "semantic_provenance": [
-                    {
-                        "proposal_id": semantic_proposal_id(
-                            authority_sha,
-                            "class",
-                            "CLIENT_CLASS_000001",
-                            "A",
-                        ),
-                        "review_id": _CLASS_REVIEW_ID,
-                        "source_build": "v308",
-                        "source_sha256": authority_sha,
-                        "source_coordinate": {
-                            "owner": "rs/A",
-                            "name": None,
-                            "descriptor": None,
-                        },
-                        "evidence": [],
-                    }
-                ],
-            }
-        ],
-        "unresolved": [],
-    }
-    members = {
-        "schema_version": 1,
-        "kind": "member_lineage",
-        "class_namespace": "spawnpk-client",
-        "baseline_build_id": "v308",
-        "source_sha256": authority_sha,
-        "members": [
-            {
-                "member_id": "CLIENT_FIELD_000001",
-                "owner_logical_id": "CLIENT_CLASS_000001",
-                "kind": "field",
-                "semantic_name": "value",
-                "semantic_status": "ACCEPTED",
-                "semantic_confidence": 1.0,
-                "lineage": [
-                    {
-                        "build_id": "v308",
-                        "owner_internal_name": "rs/A",
-                        "name": "a",
-                        "descriptor": "I",
-                        "access": 1,
-                        "relation": "BASELINE",
-                        "confidence": 1.0,
-                        "provenance": [],
-                    }
-                ],
-                "semantic_provenance": [
-                    {
-                        "proposal_id": semantic_proposal_id(
-                            authority_sha,
-                            "field",
-                            "CLIENT_FIELD_000001",
-                            "value",
-                        ),
-                        "review_id": _MEMBER_REVIEW_ID,
-                        "source_build": "v308",
-                        "source_sha256": authority_sha,
-                        "source_coordinate": {
-                            "owner": "rs/A",
-                            "name": "a",
-                            "descriptor": "I",
-                        },
-                        "evidence": [],
-                    }
-                ],
-            }
-        ],
-        "unresolved": [],
-    }
+    repo_root = Path(__file__).resolve().parents[1]
+    semantic_review = json.loads(
+        (
+            repo_root
+            / "mappings"
+            / "candidates"
+            / "v308.semantic-review.chat2.r2.json"
+        ).read_text(encoding="utf-8")
+    )
+    semantic_acceptance = json.loads(
+        (
+            repo_root
+            / "mappings"
+            / "v308.semantic.acceptance.json"
+        ).read_text(encoding="utf-8")
+    )
+    classes, members = _real_r2_lineage(
+        semantic_review,
+        semantic_acceptance,
+    )
 
     readable = {
         "schema_version": 1,
@@ -402,6 +473,8 @@ def _fixtures(source_root: Path):
     fixture = {
         "class_lineage": classes,
         "member_lineage": members,
+        "semantic_review": semantic_review,
+        "semantic_acceptance": semantic_acceptance,
         "readable_manifest": readable,
         "recovered_source_manifest": recovered,
         "clean_rebuild_report": clean,
@@ -422,6 +495,8 @@ class SourceMilestoneTests(unittest.TestCase):
             authority_commit="f" * 40,
             class_lineage=fixture["class_lineage"],
             member_lineage=fixture["member_lineage"],
+            semantic_review=fixture["semantic_review"],
+            semantic_acceptance=fixture["semantic_acceptance"],
             readable_manifest=fixture["readable_manifest"],
             recovered_source_manifest=fixture[
                 "recovered_source_manifest"
@@ -724,8 +799,7 @@ class SourceMilestoneTests(unittest.TestCase):
             self.assertEqual(
                 manifest["provenance"]["semantic_review_ids"],
                 [
-                    _CLASS_REVIEW_ID,
-                    _MEMBER_REVIEW_ID,
+                    _CANONICAL_REVIEW_ID,
                 ],
             )
             self.assertEqual(
@@ -1392,8 +1466,7 @@ class SourceMilestoneTests(unittest.TestCase):
             self.assertEqual(
                 first["semantic_authority"]["review_ids"],
                 [
-                    _CLASS_REVIEW_ID,
-                    _MEMBER_REVIEW_ID,
+                    _CANONICAL_REVIEW_ID,
                 ],
             )
             self.assertEqual(
