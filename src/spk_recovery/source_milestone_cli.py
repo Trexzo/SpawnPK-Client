@@ -289,6 +289,10 @@ def main(argv: list[str] | None = None) -> int:
                 "bundle_verification_id="
                 + str(staged["bundle_verification_id"])
             )
+            print(
+                "staged_bundle_verification_id="
+                + str(staged["staged_bundle_verification_id"])
+            )
             print(f"repository_root={staged['repository_root']}")
             print(f"file_count={staged['file_count']}")
             print(f"target_path={staged['target_path']}")
