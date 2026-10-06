@@ -100,16 +100,20 @@ class ExactLocalAcceptanceWrapperTests(unittest.TestCase):
             source_index_prefix.rstrip().endswith("[Parameter(Mandatory = $true)]")
         )
 
-        for mandatory_name in (
+        for optional_name in (
             "ClassLineage",
             "MemberLineage",
-            "MemberSafetyAcceptance",
         ):
-            self.assertIn(
-                "[Parameter(Mandatory = $true)]\n"
-                f"    [string]${mandatory_name}",
-                text,
+            prefix = text.split(f"[string]${optional_name}", 1)[0]
+            self.assertFalse(
+                prefix.rstrip().endswith("[Parameter(Mandatory = $true)]")
             )
+
+        self.assertIn(
+            "[Parameter(Mandatory = $true)]\n"
+            "    [string]$MemberSafetyAcceptance",
+            text,
+        )
 
         self.assertIn("DERIVE EXACT V308 SOURCE INDEX", text)
         self.assertIn('"spk_recovery.cli"', text)
@@ -126,6 +130,22 @@ class ExactLocalAcceptanceWrapperTests(unittest.TestCase):
             'throw "Supplied source index is not bound to exact v308."',
             text,
         )
+        self.assertIn(
+            "ClassLineage and MemberLineage must be supplied together or both omitted.",
+            text,
+        )
+        self.assertIn("REDERIVE CANONICAL V308 LINEAGE", text)
+        self.assertIn("spk_recovery.source_m1_lineage_rederive", text)
+        self.assertIn(
+            "mappings\\candidates\\v308.semantic-review.chat2.r2.json",
+            text,
+        )
+        self.assertIn("mappings\\v308.semantic.acceptance.json", text)
+        self.assertIn("SEMREVIEW_DD69CD752A6E46181BAC", text)
+        self.assertIn("CLASS_LINEAGE_DERIVED=", text)
+        self.assertIn("MEMBER_LINEAGE_DERIVED=", text)
+        self.assertIn("CLASS_LINEAGE_SUPPLIED=", text)
+        self.assertIn("MEMBER_LINEAGE_SUPPLIED=", text)
 
     def test_wrappers_parse_with_powershell_ast(self):
         shell = shutil.which("powershell.exe") or shutil.which("pwsh")
