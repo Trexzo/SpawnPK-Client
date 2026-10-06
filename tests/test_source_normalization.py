@@ -18360,6 +18360,7 @@ class InvokedynamicCallbackDirectIntCaptureAliasTests(unittest.TestCase):
             jar = _compile_java_fixture(
                 root,
                 {"p/Current.java": self._exact_source()},
+                release=8,
             )
             source = root / "src" / "p" / "Current.java"
             source.parent.mkdir(parents=True)
@@ -18415,6 +18416,7 @@ class InvokedynamicCallbackDirectIntCaptureAliasTests(unittest.TestCase):
             jar = _compile_java_fixture(
                 root,
                 {"p/Current.java": self._exact_source()},
+                release=8,
             )
             source = root / "src" / "p" / "Current.java"
             source.parent.mkdir(parents=True)
