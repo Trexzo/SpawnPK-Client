@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import os
@@ -7,7 +8,6 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from spk_recovery.semantic_authority import semantic_proposal_id
 from spk_recovery.source_authority_artifact import (
     SourceAuthorityArtifactError,
     build_source_authority_artifact,
@@ -16,8 +16,163 @@ from spk_recovery.source_authority_artifact import (
 from spk_recovery.source_digest import source_tree_digest
 from spk_recovery.v308_authority import V308_SOURCE_AUTHORITY_SHA256
 
-_CLASS_REVIEW_ID = "SEMREVIEW_" + "A" * 20
-_MEMBER_REVIEW_ID = "SEMREVIEW_" + "B" * 20
+
+def _hex(seed: str) -> str:
+    return hashlib.sha256(seed.encode("utf-8")).hexdigest()
+
+
+def _semantic_provenance(proposal: dict, review_id: str) -> dict:
+    return {
+        "proposal_id": proposal["proposal_id"],
+        "review_id": review_id,
+        "source_build": proposal["source_build"],
+        "source_sha256": proposal["source_sha256"],
+        "source_coordinate": copy.deepcopy(
+            proposal["source_coordinate"]
+        ),
+        "evidence": copy.deepcopy(proposal["evidence"]),
+        "note": proposal.get("note"),
+    }
+
+
+def _real_r2_lineage(review: dict, acceptance: dict):
+    accepted = set(acceptance["accept"])
+    proposals = [
+        row
+        for row in review["proposals"]
+        if row["proposal_id"] in accepted
+    ]
+    class_proposals = {
+        row["stable_id"]: row
+        for row in proposals
+        if row["target_kind"] == "class"
+    }
+    member_proposals = [
+        row
+        for row in proposals
+        if row["target_kind"] != "class"
+    ]
+
+    owner_names = {
+        stable_id: row["source_coordinate"]["owner"]
+        for stable_id, row in class_proposals.items()
+    }
+    for row in member_proposals:
+        owner_id = row["owner_logical_id"]
+        owner = row["source_coordinate"]["owner"]
+        prior = owner_names.get(owner_id)
+        if prior is not None:
+            assert prior == owner
+        owner_names[owner_id] = owner
+
+    review_id = str(review["review_id"])
+    classes = []
+    for logical_id in sorted(
+        owner_names,
+        key=lambda value: (
+            value not in class_proposals,
+            value,
+        ),
+    ):
+        owner = owner_names[logical_id]
+        proposal = class_proposals.get(logical_id)
+        accepted_class = proposal is not None
+        classes.append(
+            {
+                "logical_id": logical_id,
+                "semantic_name": (
+                    proposal["proposed_name"]
+                    if accepted_class
+                    else None
+                ),
+                "semantic_status": (
+                    "ACCEPTED" if accepted_class else "UNKNOWN"
+                ),
+                "semantic_confidence": (
+                    proposal["confidence"] if accepted_class else 0.0
+                ),
+                "lineage": [
+                    {
+                        "build_id": "v308",
+                        "internal_name": owner,
+                        "entry_path": owner + ".class",
+                        "entry_sha256": _hex("entry:" + owner),
+                        "structural_sha256": _hex(
+                            "structural:" + owner
+                        ),
+                        "relation": "BASELINE",
+                        "confidence": 1.0,
+                        "provenance": [],
+                    }
+                ],
+                "semantic_provenance": (
+                    [_semantic_provenance(proposal, review_id)]
+                    if accepted_class
+                    else []
+                ),
+            }
+        )
+
+    members = []
+    for proposal in sorted(
+        member_proposals,
+        key=lambda row: row["stable_id"],
+    ):
+        coordinate = proposal["source_coordinate"]
+        members.append(
+            {
+                "member_id": proposal["stable_id"],
+                "owner_logical_id": proposal["owner_logical_id"],
+                "kind": proposal["target_kind"],
+                "semantic_name": proposal["proposed_name"],
+                "semantic_status": "ACCEPTED",
+                "semantic_confidence": proposal["confidence"],
+                "lineage": [
+                    {
+                        "build_id": "v308",
+                        "owner_internal_name": coordinate["owner"],
+                        "name": coordinate["name"],
+                        "descriptor": coordinate["descriptor"],
+                        "access": 1,
+                        "relation": "BASELINE",
+                        "confidence": 1.0,
+                        "provenance": [],
+                    }
+                ],
+                "semantic_provenance": [
+                    _semantic_provenance(proposal, review_id)
+                ],
+            }
+        )
+
+    return (
+        {
+            "schema_version": 1,
+            "namespace": "spawnpk-client",
+            "id_format": "CLIENT_CLASS_%06d",
+            "baseline_build_id": "v308",
+            "builds": [
+                {
+                    "build_id": "v308",
+                    "build_number": 308,
+                    "sha256": V308_SOURCE_AUTHORITY_SHA256,
+                    "source_name": "client.jar",
+                    "authority": "EXACT_CURRENT_CLIENT",
+                }
+            ],
+            "classes": classes,
+            "unresolved": [],
+        },
+        {
+            "schema_version": 1,
+            "kind": "member_lineage",
+            "class_namespace": "spawnpk-client",
+            "baseline_build_id": "v308",
+            "source_sha256": V308_SOURCE_AUTHORITY_SHA256,
+            "members": members,
+            "unresolved": [],
+        },
+    )
 
 
 def _artifact_milestone_id(artifact_dir: Path) -> str:
@@ -145,116 +300,32 @@ def _fixture(source_root: Path) -> dict:
     class_digest = "c" * 64
     member_digest = "d" * 64
 
+    repo_root = Path(__file__).resolve().parents[1]
+    semantic_review = json.loads(
+        (
+            repo_root
+            / "mappings"
+            / "candidates"
+            / "v308.semantic-review.chat2.r2.json"
+        ).read_text(encoding="utf-8")
+    )
+    semantic_acceptance = json.loads(
+        (
+            repo_root
+            / "mappings"
+            / "v308.semantic.acceptance.json"
+        ).read_text(encoding="utf-8")
+    )
+    classes, members = _real_r2_lineage(
+        semantic_review,
+        semantic_acceptance,
+    )
+
     fixture = {
-        "class_lineage": {
-            "schema_version": 1,
-            "namespace": "spawnpk-client",
-            "id_format": "CLIENT_CLASS_%06d",
-            "baseline_build_id": "v308",
-            "builds": [
-                {
-                    "build_id": "v308",
-                    "build_number": 308,
-                    "sha256": authority_sha,
-                    "source_name": "client.jar",
-                    "authority": "EXACT_CURRENT_CLIENT",
-                }
-            ],
-            "classes": [
-                {
-                    "logical_id": "CLIENT_CLASS_000001",
-                    "semantic_name": "A",
-                    "semantic_status": "ACCEPTED",
-                    "semantic_confidence": 1.0,
-                    "lineage": [
-                        {
-                            "build_id": "v308",
-                            "internal_name": "rs/A",
-                            "entry_path": "rs/A.class",
-                            "entry_sha256": "1" * 64,
-                            "structural_sha256": "2" * 64,
-                            "relation": "BASELINE",
-                            "confidence": 1.0,
-                            "provenance": [
-                                {
-                                    "authority": "EXACT_CURRENT_CLIENT",
-                                    "source": "test-fixture",
-                                }
-                            ],
-                        }
-                    ],
-                    "semantic_provenance": [
-                        {
-                            "proposal_id": semantic_proposal_id(
-                                authority_sha,
-                                "class",
-                                "CLIENT_CLASS_000001",
-                                "A",
-                            ),
-                            "review_id": _CLASS_REVIEW_ID,
-                            "source_build": "v308",
-                            "source_sha256": authority_sha,
-                            "source_coordinate": {
-                                "owner": "rs/A",
-                                "name": None,
-                                "descriptor": None,
-                            },
-                            "evidence": [],
-                        }
-                    ],
-                }
-            ],
-            "unresolved": [],
-        },
-        "member_lineage": {
-            "schema_version": 1,
-            "kind": "member_lineage",
-            "class_namespace": "spawnpk-client",
-            "baseline_build_id": "v308",
-            "source_sha256": authority_sha,
-            "members": [
-                {
-                    "member_id": "CLIENT_FIELD_000001",
-                    "owner_logical_id": "CLIENT_CLASS_000001",
-                    "kind": "field",
-                    "semantic_name": "value",
-                    "semantic_status": "ACCEPTED",
-                    "semantic_confidence": 1.0,
-                    "lineage": [
-                        {
-                            "build_id": "v308",
-                            "owner_internal_name": "rs/A",
-                            "name": "a",
-                            "descriptor": "I",
-                            "access": 1,
-                            "relation": "BASELINE",
-                            "confidence": 1.0,
-                            "provenance": [],
-                        }
-                    ],
-                    "semantic_provenance": [
-                        {
-                            "proposal_id": semantic_proposal_id(
-                                authority_sha,
-                                "field",
-                                "CLIENT_FIELD_000001",
-                                "value",
-                            ),
-                            "review_id": _MEMBER_REVIEW_ID,
-                            "source_build": "v308",
-                            "source_sha256": authority_sha,
-                            "source_coordinate": {
-                                "owner": "rs/A",
-                                "name": "a",
-                                "descriptor": "I",
-                            },
-                            "evidence": [],
-                        }
-                    ],
-                }
-            ],
-            "unresolved": [],
-        },
+        "class_lineage": classes,
+        "member_lineage": members,
+        "semantic_review": semantic_review,
+        "semantic_acceptance": semantic_acceptance,
         "readable_manifest": {
             "schema_version": 1,
             "kind": "readable_client_build_manifest",
@@ -494,6 +565,25 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
             self.assertTrue(
                 first["artifact_id"].startswith("SRCAUTHART_")
             )
+            self.assertTrue(
+                first["semantic_authority_verification_id"].startswith(
+                    "SOURCESEMAUTH_"
+                )
+            )
+            self.assertTrue(
+                (first_dir / "semantic-review.json").is_file()
+            )
+            self.assertTrue(
+                (first_dir / "semantic-acceptance.json").is_file()
+            )
+            self.assertIn(
+                "semantic-review.json",
+                first["document_sha256"],
+            )
+            self.assertIn(
+                "semantic-acceptance.json",
+                first["document_sha256"],
+            )
 
             exported = (
                 first_dir / "src" / "rs" / "A.java"
@@ -523,7 +613,42 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
                 all(report["checks"].values())
             )
 
-    def test_verifier_rejects_noncanonical_authority_repository(self):
+    def test_verifier_rejects_semantic_authority_payload_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            out = root / "artifact"
+
+            self._build(source, out, fixture)
+            review_path = out / "semantic-review.json"
+            review = json.loads(
+                review_path.read_text(encoding="utf-8")
+            )
+            review["proposal_count"] = 0
+            review_path.write_text(
+                json.dumps(
+                    review,
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            report = verify_source_authority_artifact(
+                out,
+                expected_authority_commit="f" * 40,
+            )
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["payload_file_hashes_match"]
+            )
+            self.assertFalse(
+                report["checks"]["milestone_publishable"]
+            )
+
+    def test_verifier_rejects_noncanonical_same_repository(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             source = root / "source"
@@ -535,6 +660,7 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
                 out,
                 fixture,
                 authority_repository="Trexzo/Forged-Authority",
+                publication_repository="Trexzo/Forged-Authority",
             )
             report = verify_source_authority_artifact(
                 out,
@@ -545,33 +671,6 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
             self.assertFalse(
                 report["checks"]["expected_authority_repository"]
             )
-            self.assertTrue(
-                all(
-                    value
-                    for key, value in report["checks"].items()
-                    if key != "expected_authority_repository"
-                )
-            )
-
-    def test_verifier_rejects_noncanonical_publication_repository(self):
-        with tempfile.TemporaryDirectory() as td:
-            root = Path(td)
-            source = root / "source"
-            fixture = _fixture(source)
-            out = root / "artifact"
-
-            self._build(
-                source,
-                out,
-                fixture,
-                publication_repository="Trexzo/Forged-Publication",
-            )
-            report = verify_source_authority_artifact(
-                out,
-                expected_authority_commit="f" * 40,
-            )
-
-            self.assertFalse(report["verified"])
             self.assertFalse(
                 report["checks"]["expected_publication_repository"]
             )
@@ -579,9 +678,31 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
                 all(
                     value
                     for key, value in report["checks"].items()
-                    if key != "expected_publication_repository"
+                    if key
+                    not in {
+                        "expected_authority_repository",
+                        "expected_publication_repository",
+                    }
                 )
             )
+
+    def test_builder_rejects_split_publication_repository(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            out = root / "artifact"
+
+            with self.assertRaisesRegex(
+                SourceAuthorityArtifactError,
+                "publication_repository_must_equal_authority_repository",
+            ):
+                self._build(
+                    source,
+                    out,
+                    fixture,
+                    publication_repository="Trexzo/Forged-Publication",
+                )
 
     def test_artifact_id_drift_is_rejected(self):
         with tempfile.TemporaryDirectory() as td:

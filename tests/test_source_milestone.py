@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import os
@@ -15,12 +16,172 @@ from spk_recovery.source_milestone import (
     build_source_milestone_manifest,
     build_source_provenance_document,
     build_source_publication_bundle,
+    stage_source_publication_bundle,
     verify_source_milestone_manifest,
     verify_source_publication_bundle as _verify_source_publication_bundle,
 )
 
-_CLASS_REVIEW_ID = "SEMREVIEW_" + "A" * 20
-_MEMBER_REVIEW_ID = "SEMREVIEW_" + "B" * 20
+_CANONICAL_REVIEW_ID = "SEMREVIEW_DD69CD752A6E46181BAC"
+
+
+
+def _hex(seed: str) -> str:
+    return hashlib.sha256(seed.encode("utf-8")).hexdigest()
+
+
+def _semantic_provenance(proposal: dict, review_id: str) -> dict:
+    return {
+        "proposal_id": proposal["proposal_id"],
+        "review_id": review_id,
+        "source_build": proposal["source_build"],
+        "source_sha256": proposal["source_sha256"],
+        "source_coordinate": copy.deepcopy(
+            proposal["source_coordinate"]
+        ),
+        "evidence": copy.deepcopy(proposal["evidence"]),
+        "note": proposal.get("note"),
+    }
+
+
+def _real_r2_lineage(review: dict, acceptance: dict):
+    accepted = set(acceptance["accept"])
+    proposals = [
+        row
+        for row in review["proposals"]
+        if row["proposal_id"] in accepted
+    ]
+    class_proposals = {
+        row["stable_id"]: row
+        for row in proposals
+        if row["target_kind"] == "class"
+    }
+    member_proposals = [
+        row
+        for row in proposals
+        if row["target_kind"] != "class"
+    ]
+
+    owner_names = {
+        stable_id: row["source_coordinate"]["owner"]
+        for stable_id, row in class_proposals.items()
+    }
+    for row in member_proposals:
+        owner_id = row["owner_logical_id"]
+        owner = row["source_coordinate"]["owner"]
+        prior = owner_names.get(owner_id)
+        if prior is not None:
+            assert prior == owner
+        owner_names[owner_id] = owner
+
+    review_id = str(review["review_id"])
+    classes = []
+    ordered_owner_ids = sorted(
+        owner_names,
+        key=lambda logical_id: (
+            logical_id not in class_proposals,
+            logical_id,
+        ),
+    )
+    for logical_id in ordered_owner_ids:
+        owner = owner_names[logical_id]
+        proposal = class_proposals.get(logical_id)
+        accepted_class = proposal is not None
+        classes.append(
+            {
+                "logical_id": logical_id,
+                "semantic_name": (
+                    proposal["proposed_name"]
+                    if accepted_class
+                    else None
+                ),
+                "semantic_status": (
+                    "ACCEPTED" if accepted_class else "UNKNOWN"
+                ),
+                "semantic_confidence": (
+                    proposal["confidence"] if accepted_class else 0.0
+                ),
+                "lineage": [
+                    {
+                        "build_id": "v308",
+                        "internal_name": owner,
+                        "entry_path": owner + ".class",
+                        "entry_sha256": _hex("entry:" + owner),
+                        "structural_sha256": _hex(
+                            "structural:" + owner
+                        ),
+                        "relation": "BASELINE",
+                        "confidence": 1.0,
+                        "provenance": [],
+                    }
+                ],
+                "semantic_provenance": (
+                    [_semantic_provenance(proposal, review_id)]
+                    if accepted_class
+                    else []
+                ),
+            }
+        )
+
+    members = []
+    for proposal in sorted(
+        member_proposals,
+        key=lambda row: row["stable_id"],
+    ):
+        coordinate = proposal["source_coordinate"]
+        members.append(
+            {
+                "member_id": proposal["stable_id"],
+                "owner_logical_id": proposal["owner_logical_id"],
+                "kind": proposal["target_kind"],
+                "semantic_name": proposal["proposed_name"],
+                "semantic_status": "ACCEPTED",
+                "semantic_confidence": proposal["confidence"],
+                "lineage": [
+                    {
+                        "build_id": "v308",
+                        "owner_internal_name": coordinate["owner"],
+                        "name": coordinate["name"],
+                        "descriptor": coordinate["descriptor"],
+                        "access": 1,
+                        "relation": "BASELINE",
+                        "confidence": 1.0,
+                        "provenance": [],
+                    }
+                ],
+                "semantic_provenance": [
+                    _semantic_provenance(proposal, review_id)
+                ],
+            }
+        )
+
+    return (
+        {
+            "schema_version": 1,
+            "namespace": "spawnpk-client",
+            "id_format": "CLIENT_CLASS_%06d",
+            "baseline_build_id": "v308",
+            "builds": [
+                {
+                    "build_id": "v308",
+                    "build_number": 308,
+                    "sha256": V308_SOURCE_AUTHORITY_SHA256,
+                    "source_name": "client.jar",
+                    "authority": "EXACT_CURRENT_CLIENT",
+                }
+            ],
+            "classes": classes,
+            "unresolved": [],
+        },
+        {
+            "schema_version": 1,
+            "kind": "member_lineage",
+            "class_namespace": "spawnpk-client",
+            "baseline_build_id": "v308",
+            "source_sha256": V308_SOURCE_AUTHORITY_SHA256,
+            "members": members,
+            "unresolved": [],
+        },
+    )
 
 
 def verify_source_publication_bundle(bundle_dir, **kwargs):
@@ -216,115 +377,26 @@ def _fixtures(source_root: Path):
     class_digest = "c" * 64
     member_digest = "d" * 64
 
-    classes = {
-        "schema_version": 1,
-        "namespace": "spawnpk-client",
-        "id_format": "CLIENT_CLASS_%06d",
-        "baseline_build_id": "v308",
-        "builds": [
-            {
-                "build_id": "v308",
-                "build_number": 308,
-                "sha256": authority_sha,
-                "source_name": "client.jar",
-                "authority": "EXACT_CURRENT_CLIENT",
-            }
-        ],
-        "classes": [
-            {
-                "logical_id": "CLIENT_CLASS_000001",
-                "semantic_name": "A",
-                "semantic_status": "ACCEPTED",
-                "semantic_confidence": 1.0,
-                "lineage": [
-                    {
-                        "build_id": "v308",
-                        "internal_name": "rs/A",
-                        "entry_path": "rs/A.class",
-                        "entry_sha256": "1" * 64,
-                        "structural_sha256": "2" * 64,
-                        "relation": "BASELINE",
-                        "confidence": 1.0,
-                        "provenance": [
-                            {
-                                "authority": "EXACT_CURRENT_CLIENT",
-                                "source": "test-fixture",
-                            }
-                        ],
-                    }
-                ],
-                "semantic_provenance": [
-                    {
-                        "proposal_id": semantic_proposal_id(
-                            authority_sha,
-                            "class",
-                            "CLIENT_CLASS_000001",
-                            "A",
-                        ),
-                        "review_id": _CLASS_REVIEW_ID,
-                        "source_build": "v308",
-                        "source_sha256": authority_sha,
-                        "source_coordinate": {
-                            "owner": "rs/A",
-                            "name": None,
-                            "descriptor": None,
-                        },
-                        "evidence": [],
-                    }
-                ],
-            }
-        ],
-        "unresolved": [],
-    }
-    members = {
-        "schema_version": 1,
-        "kind": "member_lineage",
-        "class_namespace": "spawnpk-client",
-        "baseline_build_id": "v308",
-        "source_sha256": authority_sha,
-        "members": [
-            {
-                "member_id": "CLIENT_FIELD_000001",
-                "owner_logical_id": "CLIENT_CLASS_000001",
-                "kind": "field",
-                "semantic_name": "value",
-                "semantic_status": "ACCEPTED",
-                "semantic_confidence": 1.0,
-                "lineage": [
-                    {
-                        "build_id": "v308",
-                        "owner_internal_name": "rs/A",
-                        "name": "a",
-                        "descriptor": "I",
-                        "access": 1,
-                        "relation": "BASELINE",
-                        "confidence": 1.0,
-                        "provenance": [],
-                    }
-                ],
-                "semantic_provenance": [
-                    {
-                        "proposal_id": semantic_proposal_id(
-                            authority_sha,
-                            "field",
-                            "CLIENT_FIELD_000001",
-                            "value",
-                        ),
-                        "review_id": _MEMBER_REVIEW_ID,
-                        "source_build": "v308",
-                        "source_sha256": authority_sha,
-                        "source_coordinate": {
-                            "owner": "rs/A",
-                            "name": "a",
-                            "descriptor": "I",
-                        },
-                        "evidence": [],
-                    }
-                ],
-            }
-        ],
-        "unresolved": [],
-    }
+    repo_root = Path(__file__).resolve().parents[1]
+    semantic_review = json.loads(
+        (
+            repo_root
+            / "mappings"
+            / "candidates"
+            / "v308.semantic-review.chat2.r2.json"
+        ).read_text(encoding="utf-8")
+    )
+    semantic_acceptance = json.loads(
+        (
+            repo_root
+            / "mappings"
+            / "v308.semantic.acceptance.json"
+        ).read_text(encoding="utf-8")
+    )
+    classes, members = _real_r2_lineage(
+        semantic_review,
+        semantic_acceptance,
+    )
 
     readable = {
         "schema_version": 1,
@@ -401,6 +473,8 @@ def _fixtures(source_root: Path):
     fixture = {
         "class_lineage": classes,
         "member_lineage": members,
+        "semantic_review": semantic_review,
+        "semantic_acceptance": semantic_acceptance,
         "readable_manifest": readable,
         "recovered_source_manifest": recovered,
         "clean_rebuild_report": clean,
@@ -421,6 +495,8 @@ class SourceMilestoneTests(unittest.TestCase):
             authority_commit="f" * 40,
             class_lineage=fixture["class_lineage"],
             member_lineage=fixture["member_lineage"],
+            semantic_review=fixture["semantic_review"],
+            semantic_acceptance=fixture["semantic_acceptance"],
             readable_manifest=fixture["readable_manifest"],
             recovered_source_manifest=fixture[
                 "recovered_source_manifest"
@@ -553,29 +629,29 @@ class SourceMilestoneTests(unittest.TestCase):
             ] = wrong_sha
             fixture["member_lineage"]["source_sha256"] = wrong_sha
 
-            class_record = fixture["class_lineage"]["classes"][0]
-            class_provenance = class_record[
-                "semantic_provenance"
-            ][0]
-            class_provenance["source_sha256"] = wrong_sha
-            class_provenance["proposal_id"] = semantic_proposal_id(
-                wrong_sha,
-                "class",
-                class_record["logical_id"],
-                class_record["semantic_name"],
-            )
+            for class_record in fixture["class_lineage"]["classes"]:
+                for class_provenance in class_record[
+                    "semantic_provenance"
+                ]:
+                    class_provenance["source_sha256"] = wrong_sha
+                    class_provenance["proposal_id"] = semantic_proposal_id(
+                        wrong_sha,
+                        "class",
+                        class_record["logical_id"],
+                        class_record["semantic_name"],
+                    )
 
-            member_record = fixture["member_lineage"]["members"][0]
-            member_provenance = member_record[
-                "semantic_provenance"
-            ][0]
-            member_provenance["source_sha256"] = wrong_sha
-            member_provenance["proposal_id"] = semantic_proposal_id(
-                wrong_sha,
-                member_record["kind"],
-                member_record["member_id"],
-                member_record["semantic_name"],
-            )
+            for member_record in fixture["member_lineage"]["members"]:
+                for member_provenance in member_record[
+                    "semantic_provenance"
+                ]:
+                    member_provenance["source_sha256"] = wrong_sha
+                    member_provenance["proposal_id"] = semantic_proposal_id(
+                        wrong_sha,
+                        member_record["kind"],
+                        member_record["member_id"],
+                        member_record["semantic_name"],
+                    )
 
             _refresh_release_pins(fixture)
             _refresh_release_verification(fixture)
@@ -606,20 +682,18 @@ class SourceMilestoneTests(unittest.TestCase):
             fixture["class_lineage"]["baseline_build_id"] = "v309"
             fixture["class_lineage"]["builds"][0]["build_id"] = "v309"
             fixture["class_lineage"]["builds"][0]["build_number"] = 309
-            fixture["class_lineage"]["classes"][0]["lineage"][0][
-                "build_id"
-            ] = "v309"
-            fixture["class_lineage"]["classes"][0][
-                "semantic_provenance"
-            ][0]["source_build"] = "v309"
+            for class_record in fixture["class_lineage"]["classes"]:
+                for lineage_entry in class_record["lineage"]:
+                    lineage_entry["build_id"] = "v309"
+                for provenance in class_record["semantic_provenance"]:
+                    provenance["source_build"] = "v309"
 
             fixture["member_lineage"]["baseline_build_id"] = "v309"
-            fixture["member_lineage"]["members"][0]["lineage"][0][
-                "build_id"
-            ] = "v309"
-            fixture["member_lineage"]["members"][0][
-                "semantic_provenance"
-            ][0]["source_build"] = "v309"
+            for member_record in fixture["member_lineage"]["members"]:
+                for lineage_entry in member_record["lineage"]:
+                    lineage_entry["build_id"] = "v309"
+                for provenance in member_record["semantic_provenance"]:
+                    provenance["source_build"] = "v309"
 
             _refresh_release_pins(fixture)
             _refresh_release_verification(fixture)
@@ -696,6 +770,33 @@ class SourceMilestoneTests(unittest.TestCase):
             ):
                 self._build(source, fixture)
 
+    def test_trusted_semantic_acceptance_drift_blocks_publication(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            fixture["semantic_acceptance"] = copy.deepcopy(
+                fixture["semantic_acceptance"]
+            )
+            fixture["semantic_acceptance"]["accept"] = (
+                fixture["semantic_acceptance"]["accept"][1:]
+            )
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "trusted_semantic_authority",
+                    "reason": "trusted_semantic_review_authority_failed",
+                },
+                manifest["blockers"],
+            )
+            trusted = manifest["provenance"][
+                "trusted_semantic_authority"
+            ]
+            self.assertFalse(trusted["verified"])
+            self.assertIsNone(trusted["verification_id"])
+
     def test_publishable_manifest_binds_all_hard_gates(self):
         with tempfile.TemporaryDirectory() as td:
             source = Path(td) / "source"
@@ -723,8 +824,7 @@ class SourceMilestoneTests(unittest.TestCase):
             self.assertEqual(
                 manifest["provenance"]["semantic_review_ids"],
                 [
-                    _CLASS_REVIEW_ID,
-                    _MEMBER_REVIEW_ID,
+                    _CANONICAL_REVIEW_ID,
                 ],
             )
             self.assertEqual(
@@ -750,7 +850,11 @@ class SourceMilestoneTests(unittest.TestCase):
             )
             self.assertEqual(
                 manifest["publication"]["target_repository"],
-                "Trexzo/SpawnPK-Client-Source",
+                "Trexzo/SpawnPK-Client",
+            )
+            self.assertEqual(
+                manifest["publication"]["repository_root"],
+                "recovered-source/v308/",
             )
             evidence = manifest["provenance"][
                 "release_verification_evidence"
@@ -1227,6 +1331,8 @@ class SourceMilestoneTests(unittest.TestCase):
                 authority_commit="f" * 40,
                 class_lineage=fixture["class_lineage"],
                 member_lineage=fixture["member_lineage"],
+                semantic_review=fixture["semantic_review"],
+                semantic_acceptance=fixture["semantic_acceptance"],
                 readable_manifest=fixture["readable_manifest"],
                 recovered_source_manifest=fixture[
                     "recovered_source_manifest"
@@ -1252,6 +1358,8 @@ class SourceMilestoneTests(unittest.TestCase):
                 authority_commit="f" * 40,
                 class_lineage=fixture["class_lineage"],
                 member_lineage=fixture["member_lineage"],
+                semantic_review=fixture["semantic_review"],
+                semantic_acceptance=fixture["semantic_acceptance"],
                 readable_manifest=fixture["readable_manifest"],
                 recovered_source_manifest=fixture[
                     "recovered_source_manifest"
@@ -1387,8 +1495,7 @@ class SourceMilestoneTests(unittest.TestCase):
             self.assertEqual(
                 first["semantic_authority"]["review_ids"],
                 [
-                    _CLASS_REVIEW_ID,
-                    _MEMBER_REVIEW_ID,
+                    _CANONICAL_REVIEW_ID,
                 ],
             )
             self.assertEqual(
@@ -1793,6 +1900,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 source,
                 fixture,
                 authority_repository="Trexzo/Forged-Authority",
+                publication_repository="Trexzo/Forged-Authority",
             )
             bundle_root = root / "bundle"
 
@@ -1802,7 +1910,12 @@ class SourceMilestoneTests(unittest.TestCase):
                 bundle_root,
                 provenance_documents={},
             )
-            report = verify_source_publication_bundle(bundle_root)
+            report = verify_source_publication_bundle(
+                bundle_root,
+                expected_publication_repository=(
+                    "Trexzo/Forged-Authority"
+                ),
+            )
 
             self.assertFalse(report["verified"])
             self.assertFalse(
@@ -1816,7 +1929,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 )
             )
 
-    def test_bundle_verifier_rejects_noncanonical_publication_repository(self):
+    def test_noncanonical_publication_repository_blocks_milestone(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             source = root / "source"
@@ -1826,6 +1939,44 @@ class SourceMilestoneTests(unittest.TestCase):
                 fixture,
                 publication_repository="Trexzo/Forged-Publication",
             )
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "publication_target",
+                    "reason": (
+                        "publication_repository_must_equal_authority_repository"
+                    ),
+                },
+                manifest["blockers"],
+            )
+
+    def test_noncanonical_publication_root_blocks_milestone(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(
+                source,
+                fixture,
+                publication_root="somewhere-else/v308/",
+            )
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "publication_target",
+                    "reason": "publication_root_not_canonical_v308_path",
+                },
+                manifest["blockers"],
+            )
+
+    def test_verified_bundle_stages_into_same_repository_v308_root(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
             bundle_root = root / "bundle"
 
             build_source_publication_bundle(
@@ -1834,19 +1985,50 @@ class SourceMilestoneTests(unittest.TestCase):
                 bundle_root,
                 provenance_documents={},
             )
-            report = verify_source_publication_bundle(bundle_root)
 
-            self.assertFalse(report["verified"])
-            self.assertFalse(
-                report["checks"]["expected_publication_repository"]
+            repository = root / "repo"
+            repository.mkdir()
+            staged = stage_source_publication_bundle(
+                bundle_root,
+                repository,
+                expected_manifest=manifest,
+                expected_authority_commit="f" * 40,
+            )
+
+            target = repository / "recovered-source" / "v308"
+            self.assertEqual(
+                staged["repository_root"],
+                "recovered-source/v308/",
+            )
+            self.assertEqual(
+                staged["target_repository"],
+                "Trexzo/SpawnPK-Client",
             )
             self.assertTrue(
-                all(
-                    value
-                    for key, value in report["checks"].items()
-                    if key != "expected_publication_repository"
-                )
+                (target / "SOURCE-MILESTONE.json").is_file()
             )
+            self.assertTrue((target / "BUNDLE.json").is_file())
+            self.assertTrue(
+                (target / "src" / "rs" / "A.java").is_file()
+            )
+            self.assertTrue(
+                (
+                    target
+                    / "provenance"
+                    / "SOURCE-PROVENANCE.json"
+                ).is_file()
+            )
+
+            with self.assertRaisesRegex(
+                SourceMilestoneError,
+                "absent or empty",
+            ):
+                stage_source_publication_bundle(
+                    bundle_root,
+                    repository,
+                    expected_manifest=manifest,
+                    expected_authority_commit="f" * 40,
+                )
 
     def test_bundle_verifier_rejects_bundle_id_drift(self):
         with tempfile.TemporaryDirectory() as td:
@@ -2119,6 +2301,8 @@ class SourceMilestoneTests(unittest.TestCase):
                     authority_commit="main",
                     class_lineage=fixture["class_lineage"],
                     member_lineage=fixture["member_lineage"],
+                    semantic_review=fixture["semantic_review"],
+                    semantic_acceptance=fixture["semantic_acceptance"],
                     readable_manifest=fixture[
                         "readable_manifest"
                     ],

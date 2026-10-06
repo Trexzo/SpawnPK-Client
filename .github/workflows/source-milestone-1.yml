@@ -229,6 +229,8 @@ jobs:
           test -f "$SOURCE_AUTHORITY_DIR/SOURCE-AUTHORITY-ARTIFACT.json"
           test -f "$SOURCE_AUTHORITY_DIR/class-lineage.json"
           test -f "$SOURCE_AUTHORITY_DIR/member-lineage.json"
+          test -f "$SOURCE_AUTHORITY_DIR/semantic-review.json"
+          test -f "$SOURCE_AUTHORITY_DIR/semantic-acceptance.json"
           test -f "$SOURCE_AUTHORITY_DIR/readable-client-manifest.json"
           test -f "$SOURCE_AUTHORITY_DIR/recovered-source-manifest.json"
           test -f "$SOURCE_AUTHORITY_DIR/clean-rebuild.json"
@@ -248,6 +250,8 @@ jobs:
             --authority-commit "$AUTHORITY_COMMIT" \
             --class-lineage "$SOURCE_AUTHORITY_DIR/class-lineage.json" \
             --member-lineage "$SOURCE_AUTHORITY_DIR/member-lineage.json" \
+            --semantic-review "$SOURCE_AUTHORITY_DIR/semantic-review.json" \
+            --semantic-acceptance "$SOURCE_AUTHORITY_DIR/semantic-acceptance.json" \
             --readable-manifest "$SOURCE_AUTHORITY_DIR/readable-client-manifest.json" \
             --recovered-manifest "$SOURCE_AUTHORITY_DIR/recovered-source-manifest.json" \
             --clean-rebuild "$SOURCE_AUTHORITY_DIR/clean-rebuild.json" \
@@ -295,6 +299,8 @@ jobs:
             --authority-commit "$AUTHORITY_COMMIT" \
             --class-lineage "$SOURCE_AUTHORITY_DIR/class-lineage.json" \
             --member-lineage "$SOURCE_AUTHORITY_DIR/member-lineage.json" \
+            --semantic-review "$SOURCE_AUTHORITY_DIR/semantic-review.json" \
+            --semantic-acceptance "$SOURCE_AUTHORITY_DIR/semantic-acceptance.json" \
             --readable-manifest "$SOURCE_AUTHORITY_DIR/readable-client-manifest.json" \
             --recovered-manifest "$SOURCE_AUTHORITY_DIR/recovered-source-manifest.json" \
             --clean-rebuild "$SOURCE_AUTHORITY_DIR/clean-rebuild.json" \
@@ -315,6 +321,8 @@ jobs:
             --authority-commit "$AUTHORITY_COMMIT" \
             --class-lineage "$SOURCE_AUTHORITY_DIR/class-lineage.json" \
             --member-lineage "$SOURCE_AUTHORITY_DIR/member-lineage.json" \
+            --semantic-review "$SOURCE_AUTHORITY_DIR/semantic-review.json" \
+            --semantic-acceptance "$SOURCE_AUTHORITY_DIR/semantic-acceptance.json" \
             --readable-manifest "$SOURCE_AUTHORITY_DIR/readable-client-manifest.json" \
             --recovered-manifest "$SOURCE_AUTHORITY_DIR/recovered-source-manifest.json" \
             --clean-rebuild "$SOURCE_AUTHORITY_DIR/clean-rebuild.json" \
@@ -339,6 +347,8 @@ jobs:
             --provenance source-authority-verification.json=source-m1/verification/SOURCE-AUTHORITY-VERIFICATION.json \
             --provenance "class-lineage.json=$SOURCE_AUTHORITY_DIR/class-lineage.json" \
             --provenance "member-lineage.json=$SOURCE_AUTHORITY_DIR/member-lineage.json" \
+            --provenance "semantic-review.json=$SOURCE_AUTHORITY_DIR/semantic-review.json" \
+            --provenance "semantic-acceptance.json=$SOURCE_AUTHORITY_DIR/semantic-acceptance.json" \
             --provenance "readable-client-manifest.json=$SOURCE_AUTHORITY_DIR/readable-client-manifest.json" \
             --provenance "recovered-source-manifest.json=$SOURCE_AUTHORITY_DIR/recovered-source-manifest.json" \
             --provenance "clean-rebuild.json=$SOURCE_AUTHORITY_DIR/clean-rebuild.json" \
