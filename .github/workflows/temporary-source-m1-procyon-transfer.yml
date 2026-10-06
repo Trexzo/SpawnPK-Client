@@ -1,0 +1,29 @@
+name: Temporary Source M1 Procyon Transfer
+
+on:
+  push:
+    branches:
+      - chat/source-m1-container-transfer-a54ed52
+
+permissions:
+  contents: read
+
+jobs:
+  procyon:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch and verify pinned Procyon
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$RUNNER_TEMP/procyon-decompiler-0.6.0.jar"
+          curl -fL --retry 3 -o "$OUT" \
+            https://github.com/mstrobel/procyon/releases/download/v0.6.0/procyon-decompiler-0.6.0.jar
+          test "$(stat -c '%s' "$OUT")" = "2004704"
+          echo "821da96012fc69244fa1ea298c90455ee4e021434bc796d3b9546ab24601b779  $OUT" | sha256sum -c -
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-m1-procyon-0.6.0
+          path: ${{ runner.temp }}/procyon-decompiler-0.6.0.jar
+          if-no-files-found: error
+          retention-days: 1
