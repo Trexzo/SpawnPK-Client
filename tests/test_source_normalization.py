@@ -18187,6 +18187,177 @@ class InvokedynamicCallbackCopiedIntCaptureTests(unittest.TestCase):
             )
 
 
+
+class InvokedynamicCallbackDirectIntCaptureAliasTests(unittest.TestCase):
+    @staticmethod
+    def _exact_source() -> str:
+        return (
+            "package p;\n"
+            "import java.util.*;\n"
+            "public class Current {\n"
+            "  interface Sink { void accept(int a,int b,int c,int d); }\n"
+            "  private final Set<Integer> h = new HashSet<>();\n"
+            "  private final List<String> report = new ArrayList<>();\n"
+            "  private static int read(Map<String,Object> m, String key) {\n"
+            "    return ((Number)m.get(key)).intValue();\n"
+            "  }\n"
+            "  private static void scan(byte[] data, Sink sink) {\n"
+            "    sink.accept(1,2,3,4);\n"
+            "  }\n"
+            "  public void go(Map<Integer,Map<String,Object>> input) {\n"
+            "    for (Map.Entry<Integer,Map<String,Object>> entry : input.entrySet()) {\n"
+            "      Map<String,Object> value = entry.getValue();\n"
+            "      int region = -1;\n"
+            "      try {\n"
+            "        region = read(value, \"id\");\n"
+            "        int land = read(value, \"land\");\n"
+            "        byte[] data = new byte[0];\n"
+            "        Set<String> seen = new HashSet<>();\n"
+            "        int finalRegion = region;\n"
+            "        scan(data, (obj,packed,type,rot) -> {\n"
+            "          h.add(finalRegion);\n"
+            "          if (seen.add(\"x\" + obj)) {\n"
+            "            report.add(\"region=\" + finalRegion\n"
+            "              + \" yaml=\" + entry.getKey()\n"
+            "              + \" land=\" + land\n"
+            "              + \" group=\" + value.getOrDefault(\"group\", \"\")\n"
+            "              + \" packed=\" + packed + \" type=\" + type + \" rot=\" + rot);\n"
+            "          }\n"
+            "        });\n"
+            "      } catch (Exception ex) {\n"
+            "        report.add(String.valueOf(ex));\n"
+            "      }\n"
+            "    }\n"
+            "  }\n"
+            "}\n"
+        )
+
+    @staticmethod
+    def _malformed_source() -> str:
+        return (
+            "package p;\n"
+            "import java.util.*;\n"
+            "public class Current {\n"
+            "  interface Sink { void accept(int a,int b,int c,int d); }\n"
+            "  private final Set<Integer> h = new HashSet<>();\n"
+            "  private final List<String> report = new ArrayList<>();\n"
+            "  private static int read(Map<String,Object> m, String key) {\n"
+            "    return ((Number)m.get(key)).intValue();\n"
+            "  }\n"
+            "  private static void scan(byte[] data, Sink sink) {\n"
+            "    sink.accept(1,2,3,4);\n"
+            "  }\n"
+            "  public void go(Map<Integer,Map<String,Object>> input) {\n"
+            "    for (Map.Entry<Integer,Map<String,Object>> entry : input.entrySet()) {\n"
+            "      Map<String,Object> value = entry.getValue();\n"
+            "      int region = -1;\n"
+            "      try {\n"
+            "        region = read(value, \"id\");\n"
+            "        int land = read(value, \"land\");\n"
+            "        byte[] data = new byte[0];\n"
+            "        Set<String> seen = new HashSet<>();\n"
+            "        int finalRegion = region;\n"
+            "        scan(data, (obj,packed,type,rot) -> {\n"
+            "          h.add(finalRegion);\n"
+            "          if (seen.add(\"x\" + obj)) {\n"
+            "            report.add(\"region=\" + finalRegion\n"
+            "              + \" yaml=\" + entry.getKey()\n"
+            "              + \" land=\" + n5\n"
+            "              + \" group=\" + value.getOrDefault(\"group\", \"\")\n"
+            "              + \" packed=\" + packed + \" type=\" + type + \" rot=\" + rot);\n"
+            "          }\n"
+            "        });\n"
+            "      } catch (Exception ex) {\n"
+            "        report.add(String.valueOf(ex));\n"
+            "      }\n"
+            "    }\n"
+            "  }\n"
+            "}\n"
+        )
+
+    def test_direct_int_capture_alias_is_restored_and_compiles(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {"p/Current.java": self._exact_source()},
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(self._malformed_source(), encoding="utf-8")
+
+            before = subprocess.run(
+                ["javac", "-cp", str(jar), "-d", str(root / "before-direct-int"), str(source)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn("n5", before.stderr)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn('" land=" + land', normalized)
+            self.assertNotIn("n5", normalized)
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "invokedynamic_callback_direct_int_capture_alias"
+            )
+            self.assertEqual(action["source_capture_name"], "land")
+            self.assertEqual(action["undeclared_capture_alias"], "n5")
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_callback_direct_int_capture_alias_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_callback_direct_int_capture_alias_reference_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                ["javac", "-cp", str(jar), "-d", str(root / "after-direct-int"), str(source)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(after.returncode, 0, after.stdout + after.stderr)
+
+    def test_direct_int_capture_alias_requires_land_report_shape(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {"p/Current.java": self._exact_source()},
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source().replace(
+                '" land=" + n5',
+                '" other=" + n5',
+                1,
+            )
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(source.read_text(encoding="utf-8"), malformed)
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "invokedynamic_callback_direct_int_capture_alias"
+                    for row in report["actions"]
+                )
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
 
