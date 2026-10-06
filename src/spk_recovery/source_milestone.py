@@ -30,6 +30,12 @@ _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 _DEFAULT_AUTHORITY_REPOSITORY = "Trexzo/SpawnPK-Client"
 _DEFAULT_PUBLICATION_REPOSITORY = _DEFAULT_AUTHORITY_REPOSITORY
 _DEFAULT_PUBLICATION_ROOT = "recovered-source/v308/"
+_TRUSTED_SEMANTIC_BUNDLE_FILES = (
+    "class-lineage.json",
+    "member-lineage.json",
+    "semantic-review.json",
+    "semantic-acceptance.json",
+)
 
 
 def _normalize_publication_root(value: str) -> str:
@@ -101,6 +107,23 @@ def _exact_json_object(pairs):
             )
         out[key] = value
     return out
+
+
+def _load_json_object(path: Path, *, label: str) -> dict[str, Any]:
+    try:
+        value = json.loads(
+            path.read_text(encoding="utf-8"),
+            object_pairs_hook=_exact_json_object,
+        )
+    except (OSError, json.JSONDecodeError) as exc:
+        raise SourceMilestoneError(
+            f"{label} is not valid JSON: {path}"
+        ) from exc
+    if not isinstance(value, dict):
+        raise SourceMilestoneError(
+            f"{label} must be a JSON object: {path}"
+        )
+    return value
 
 
 def _stable_digest(value: Any) -> str:
@@ -1451,6 +1474,18 @@ def build_source_publication_bundle(
             "source milestone publication state is inconsistent"
         )
 
+    missing_semantic_authority = [
+        name
+        for name in _TRUSTED_SEMANTIC_BUNDLE_FILES
+        if name not in provenance_documents
+    ]
+    if missing_semantic_authority:
+        raise SourceMilestoneError(
+            "publication bundle is missing trusted semantic authority "
+            "documents: "
+            + ", ".join(missing_semantic_authority)
+        )
+
     milestone_material = {
         "provenance": manifest.get("provenance"),
         "source_tree": manifest.get("source_tree"),
@@ -1892,6 +1927,80 @@ def verify_source_publication_bundle(
     )
     checks["generated_provenance_match"] = (
         stored_provenance == recomputed_provenance
+    )
+
+    try:
+        semantic_class_lineage = _load_json_object(
+            provenance_dir / "class-lineage.json",
+            label="bundle class lineage",
+        )
+        semantic_member_lineage = _load_json_object(
+            provenance_dir / "member-lineage.json",
+            label="bundle member lineage",
+        )
+        semantic_review = _load_json_object(
+            provenance_dir / "semantic-review.json",
+            label="bundle semantic review",
+        )
+        semantic_acceptance = _load_json_object(
+            provenance_dir / "semantic-acceptance.json",
+            label="bundle semantic acceptance",
+        )
+        semantic_proof = verify_v308_semantic_review_authority(
+            semantic_class_lineage,
+            semantic_member_lineage,
+            semantic_review,
+            semantic_acceptance,
+        )
+        reproduced_semantic_authority = {
+            "verification_id": semantic_proof.get(
+                "verification_id"
+            ),
+            "registry_id": semantic_proof.get("registry_id"),
+            "review_id": semantic_proof.get("review_id"),
+            "source_sha256": semantic_proof.get("source_sha256"),
+            "trusted_review_count": semantic_proof.get(
+                "trusted_review_count"
+            ),
+            "trusted_accepted_proposal_count": semantic_proof.get(
+                "trusted_accepted_proposal_count"
+            ),
+            "accepted_class_records": semantic_proof.get(
+                "accepted_class_records"
+            ),
+            "accepted_member_records": semantic_proof.get(
+                "accepted_member_records"
+            ),
+            "accepted_records": semantic_proof.get(
+                "accepted_records"
+            ),
+            "verified_provenance_rows": semantic_proof.get(
+                "verified_provenance_rows"
+            ),
+            "verified": semantic_proof.get("verified"),
+            "class_lineage_sha256": _stable_digest(
+                semantic_class_lineage
+            ),
+            "member_lineage_sha256": _stable_digest(
+                semantic_member_lineage
+            ),
+            "semantic_review_sha256": _stable_digest(
+                semantic_review
+            ),
+            "semantic_acceptance_sha256": _stable_digest(
+                semantic_acceptance
+            ),
+        }
+    except (
+        SourceMilestoneError,
+        SourceM1SemanticAuthorityError,
+    ):
+        reproduced_semantic_authority = None
+
+    checks["trusted_semantic_authority_reproduced"] = (
+        reproduced_semantic_authority
+        == provenance.get("trusted_semantic_authority")
+        and reproduced_semantic_authority is not None
     )
 
     bundle_material = {
