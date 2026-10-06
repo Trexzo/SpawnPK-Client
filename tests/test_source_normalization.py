@@ -227,7 +227,12 @@ def _hierarchy_shadow_fixture(
     return jar
 
 
-def _compile_java_fixture(root: Path, files: dict[str, str]) -> Path:
+def _compile_java_fixture(
+    root: Path,
+    files: dict[str, str],
+    *,
+    release: int | None = None,
+) -> Path:
     legal = root / "custom-legal"
     sources: list[Path] = []
     for rel, content in sorted(files.items()):
@@ -237,8 +242,11 @@ def _compile_java_fixture(root: Path, files: dict[str, str]) -> Path:
         sources.append(path)
     classes = root / "custom-classes"
     classes.mkdir()
+    javac = ["javac"]
+    if release is not None:
+        javac.extend(["--release", str(release)])
     proc = subprocess.run(
-        ["javac", "-d", str(classes), *map(str, sources)],
+        [*javac, "-d", str(classes), *map(str, sources)],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
@@ -17770,6 +17778,7 @@ class InvokedynamicCallbackReferenceCaptureAliasTests(unittest.TestCase):
             jar = _compile_java_fixture(
                 root,
                 {"p/Current.java": self._exact_source()},
+                release=8,
             )
             source = root / "src" / "p" / "Current.java"
             source.parent.mkdir(parents=True)
@@ -17858,6 +17867,7 @@ class InvokedynamicCallbackReferenceCaptureAliasTests(unittest.TestCase):
             jar = _compile_java_fixture(
                 root,
                 {"p/Current.java": self._exact_source()},
+                release=8,
             )
             source = root / "src" / "p" / "Current.java"
             source.parent.mkdir(parents=True)
@@ -17902,6 +17912,7 @@ class InvokedynamicCallbackReferenceCaptureAliasTests(unittest.TestCase):
             jar = _compile_java_fixture(
                 root,
                 {"p/Current.java": drifted_exact},
+                release=8,
             )
             source = root / "src" / "p" / "Current.java"
             source.parent.mkdir(parents=True)
@@ -18037,6 +18048,7 @@ class InvokedynamicCallbackCopiedIntCaptureTests(unittest.TestCase):
             jar = _compile_java_fixture(
                 root,
                 {"p/Current.java": self._exact_source()},
+                release=8,
             )
             source = root / "src" / "p" / "Current.java"
             source.parent.mkdir(parents=True)
@@ -18140,6 +18152,7 @@ class InvokedynamicCallbackCopiedIntCaptureTests(unittest.TestCase):
             jar = _compile_java_fixture(
                 root,
                 {"p/Current.java": exact},
+                release=8,
             )
             source = root / "src" / "p" / "Current.java"
             source.parent.mkdir(parents=True)
@@ -18166,6 +18179,7 @@ class InvokedynamicCallbackCopiedIntCaptureTests(unittest.TestCase):
             jar = _compile_java_fixture(
                 root,
                 {"p/Current.java": self._exact_source(copied=False)},
+                release=8,
             )
             source = root / "src" / "p" / "Current.java"
             source.parent.mkdir(parents=True)
