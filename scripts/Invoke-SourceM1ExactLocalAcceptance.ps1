@@ -936,7 +936,7 @@ $AuthorityBuildArgs = @(
 )
 Invoke-PyChecked "BUILD SOURCE M1 AUTHORITY ARTIFACT" $AuthorityBuildArgs
 
-$AuthorityVerification = Join-Path $AuthorityDir "SOURCE-AUTHORITY-VERIFICATION.json"
+$AuthorityVerification = Join-Path $MilestoneDir "SOURCE-AUTHORITY-VERIFICATION.json"
 $AuthorityVerifyArgs = @(
     "-3.13",
     "-m",
