@@ -11,6 +11,7 @@ from .source_milestone import (
     SourceMilestoneError,
     build_source_milestone_manifest,
     build_source_publication_bundle,
+    stage_source_publication_bundle,
     verify_source_milestone_manifest,
     verify_source_publication_bundle,
     write_json,
@@ -94,7 +95,11 @@ def _common_inputs(p: argparse.ArgumentParser) -> None:
     )
     p.add_argument(
         "--publication-repository",
-        default="Trexzo/SpawnPK-Client-Source",
+        default="Trexzo/SpawnPK-Client",
+    )
+    p.add_argument(
+        "--publication-root",
+        default="recovered-source/v308/",
     )
 
 
@@ -121,6 +126,7 @@ def _kwargs(args: argparse.Namespace) -> dict:
         "source_root": args.source_root,
         "authority_repository": args.authority_repository,
         "publication_repository": args.publication_repository,
+        "publication_root": args.publication_root,
     }
 
 
@@ -168,6 +174,12 @@ def main(argv: list[str] | None = None) -> int:
         default=[],
         metavar="NAME=PATH",
     )
+
+    stage = sub.add_parser("stage-repository")
+    stage.add_argument("--bundle-dir", type=Path, required=True)
+    stage.add_argument("--manifest", type=Path, required=True)
+    stage.add_argument("--expected-authority-commit", required=True)
+    stage.add_argument("--repository-root", type=Path, required=True)
 
     args = p.parse_args(argv)
 
@@ -260,6 +272,31 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(f"out={args.out}")
             return 0 if report["verified"] else 3
+
+        if args.command == "stage-repository":
+            manifest = _load(args.manifest)
+            staged = stage_source_publication_bundle(
+                args.bundle_dir,
+                args.repository_root,
+                expected_manifest=manifest,
+                expected_authority_commit=(
+                    args.expected_authority_commit
+                ),
+            )
+            print("SPK_SOURCE_MILESTONE_REPOSITORY_STAGE_COMPLETE")
+            print(f"milestone_id={staged['milestone_id']}")
+            print(
+                "bundle_verification_id="
+                + str(staged["bundle_verification_id"])
+            )
+            print(
+                "staged_bundle_verification_id="
+                + str(staged["staged_bundle_verification_id"])
+            )
+            print(f"repository_root={staged['repository_root']}")
+            print(f"file_count={staged['file_count']}")
+            print(f"target_path={staged['target_path']}")
+            return 0
 
         provenance: dict[str, dict] = {}
         for item in args.provenance:
