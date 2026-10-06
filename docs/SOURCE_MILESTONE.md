@@ -48,8 +48,8 @@ A milestone is publishable only when all of the following hold:
 3. The exact client authority SHA-256 links across readable, recovered-source, clean-rebuild, and release authority.
 4. Accepted class/member semantic naming intelligence is carried by the canonical lineage and its semantic provenance.
 5. The final class/member lineage independently authenticates against the canonical trusted v308 R2 semantic review + acceptance authority: one trusted review, 39 accepted proposals, 32 accepted class rows, 7 accepted member rows, and 39 verified provenance rows.
-7. The semantic namespace ID and class/member plan digests agree across the readable and recovered-source authorities.
-6. Deterministic source-safe fallback naming is enabled with a non-empty fallback prefix.
+6. The semantic namespace ID and class/member plan digests agree across the readable and recovered-source authorities.
+7. Deterministic source-safe fallback naming is enabled with a non-empty fallback prefix.
 8. The recovery release is ready and its reproducibility verification passes.
 9. The canonical Java source-tree SHA-256 matches the release authority.
 10. Clean project compilation completes.
