@@ -293,6 +293,8 @@ jobs:
             --authority-commit "$AUTHORITY_COMMIT" \
             --class-lineage workspace/class-lineage.json \
             --member-lineage workspace/member-lineage.json \
+            --semantic-review mappings/candidates/v308.semantic-review.chat2.r2.json \
+            --semantic-acceptance mappings/v308.semantic.acceptance.json \
             --readable-manifest workspace/readable-client-manifest.json \
             --recovered-manifest workspace/recovered-source-manifest.json \
             --clean-rebuild workspace/clean-rebuild.json \
@@ -309,7 +311,19 @@ jobs:
         run: |
           set -euo pipefail
           test ! -e "$SOURCE_AUTHORITY_DIR"
-          python -m spk_recovery.source_authority_artifact_cli build             --authority-commit "$AUTHORITY_COMMIT"             --class-lineage workspace/class-lineage.json             --member-lineage workspace/member-lineage.json             --readable-manifest workspace/readable-client-manifest.json             --recovered-manifest workspace/recovered-source-manifest.json             --clean-rebuild workspace/clean-rebuild.json             --release-manifest workspace/recovery-release.json             --release-verification workspace/release-verification.json             --source-root workspace/src             --out-dir "$SOURCE_AUTHORITY_DIR"
+          python -m spk_recovery.source_authority_artifact_cli build \
+            --authority-commit "$AUTHORITY_COMMIT" \
+            --class-lineage workspace/class-lineage.json \
+            --member-lineage workspace/member-lineage.json \
+            --semantic-review mappings/candidates/v308.semantic-review.chat2.r2.json \
+            --semantic-acceptance mappings/v308.semantic.acceptance.json \
+            --readable-manifest workspace/readable-client-manifest.json \
+            --recovered-manifest workspace/recovered-source-manifest.json \
+            --clean-rebuild workspace/clean-rebuild.json \
+            --release-manifest workspace/recovery-release.json \
+            --release-verification workspace/release-verification.json \
+            --source-root workspace/src \
+            --out-dir "$SOURCE_AUTHORITY_DIR"
 
       - name: Independently verify Source M1 authority artifact
         shell: bash
