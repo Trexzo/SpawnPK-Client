@@ -169,6 +169,40 @@ class SourceM1AuthorityWorkflowContractTests(unittest.TestCase):
             validate,
         )
 
+    def test_trusted_semantic_authority_is_canonical_and_explicit(self):
+        validate_start = self.text.index(
+            "- name: Validate trusted semantic authority inputs"
+        )
+        workspace_start = self.text.index(
+            "- name: Validate recovered workspace contract"
+        )
+        preflight_start = self.text.index(
+            "- name: Build trusted preflight Source Milestone manifest"
+        )
+        build_start = self.text.index(
+            "- name: Build Source M1 authority artifact"
+        )
+
+        self.assertLess(validate_start, workspace_start)
+        self.assertLess(workspace_start, preflight_start)
+        validate = self.text[validate_start:workspace_start]
+        preflight = self.text[preflight_start:build_start]
+        build = self.text[
+            build_start:
+            self.text.index(
+                "- name: Independently verify Source M1 authority artifact"
+            )
+        ]
+
+        review = "mappings/candidates/v308.semantic-review.chat2.r2.json"
+        acceptance = "mappings/v308.semantic.acceptance.json"
+        self.assertIn(review, validate)
+        self.assertIn(acceptance, validate)
+        self.assertIn("--semantic-review " + review, preflight)
+        self.assertIn("--semantic-acceptance " + acceptance, preflight)
+        self.assertIn("--semantic-review " + review, build)
+        self.assertIn("--semantic-acceptance " + acceptance, build)
+
     def test_recovered_workspace_contract_is_source_only(self):
         validate_start = self.text.index(
             "- name: Validate recovered workspace contract"
