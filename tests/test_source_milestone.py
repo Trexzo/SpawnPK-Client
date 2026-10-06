@@ -6,9 +6,13 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 from spk_recovery.semantic_authority import semantic_proposal_id
 from spk_recovery.source_digest import source_tree_digest
+from spk_recovery.source_m1_semantic_authority_verify import (
+    SourceM1SemanticAuthorityError,
+)
 from spk_recovery.v308_authority import V308_SOURCE_AUTHORITY_SHA256
 from spk_recovery.source_milestone import (
     SourceMilestoneError,
@@ -22,6 +26,24 @@ from spk_recovery.source_milestone import (
 
 _CLASS_REVIEW_ID = "SEMREVIEW_" + "A" * 20
 _MEMBER_REVIEW_ID = "SEMREVIEW_" + "B" * 20
+
+def _trusted_semantic_proof() -> dict:
+    return {
+        "schema_version": 1,
+        "kind": "source_m1_semantic_review_authority_verification",
+        "verification_id": "SOURCESEMAUTH_" + "A" * 20,
+        "registry_id": "SEMREGAUTH_" + "B" * 20,
+        "source_sha256": V308_SOURCE_AUTHORITY_SHA256,
+        "review_id": "SEMREVIEW_DD69CD752A6E46181BAC",
+        "trusted_review_count": 1,
+        "trusted_accepted_proposal_count": 39,
+        "accepted_class_records": 32,
+        "accepted_member_records": 7,
+        "accepted_records": 39,
+        "verified_provenance_rows": 39,
+        "verified": True,
+    }
+
 
 
 def verify_source_publication_bundle(bundle_dir, **kwargs):
@@ -402,6 +424,14 @@ def _fixtures(source_root: Path):
     fixture = {
         "class_lineage": classes,
         "member_lineage": members,
+        "semantic_review": {
+            "schema_version": 1,
+            "kind": "semantic_review_fixture",
+        },
+        "semantic_acceptance": {
+            "schema_version": 1,
+            "kind": "semantic_acceptance_fixture",
+        },
         "readable_manifest": readable,
         "recovered_source_manifest": recovered,
         "clean_rebuild_report": clean,
@@ -417,11 +447,22 @@ def _fixtures(source_root: Path):
 
 
 class SourceMilestoneTests(unittest.TestCase):
+    def setUp(self):
+        self._semantic_authority_patch = mock.patch(
+            "spk_recovery.source_milestone."
+            "verify_v308_semantic_review_authority",
+            return_value=_trusted_semantic_proof(),
+        )
+        self._semantic_authority_patch.start()
+        self.addCleanup(self._semantic_authority_patch.stop)
+
     def _build(self, root: Path, fixture: dict, **build_kwargs):
         return build_source_milestone_manifest(
             authority_commit="f" * 40,
             class_lineage=fixture["class_lineage"],
             member_lineage=fixture["member_lineage"],
+            semantic_review=fixture["semantic_review"],
+            semantic_acceptance=fixture["semantic_acceptance"],
             readable_manifest=fixture["readable_manifest"],
             recovered_source_manifest=fixture[
                 "recovered_source_manifest"
@@ -465,6 +506,79 @@ class SourceMilestoneTests(unittest.TestCase):
             "bundled_runtime_dependency_modified": False,
             "restored_project_bytecode_ready_for_runtime_assembly": True,
         }
+
+    def test_trusted_semantic_authority_is_bound_into_provenance(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
+
+            trusted = manifest["provenance"][
+                "trusted_semantic_authority"
+            ]
+            self.assertEqual(
+                trusted["verification_id"],
+                "SOURCESEMAUTH_" + "A" * 20,
+            )
+            self.assertEqual(
+                trusted["registry_id"],
+                "SEMREGAUTH_" + "B" * 20,
+            )
+            self.assertEqual(trusted["trusted_review_count"], 1)
+            self.assertEqual(
+                trusted["trusted_accepted_proposal_count"],
+                39,
+            )
+            self.assertEqual(trusted["accepted_class_records"], 32)
+            self.assertEqual(trusted["accepted_member_records"], 7)
+            self.assertEqual(trusted["accepted_records"], 39)
+            self.assertEqual(trusted["verified_provenance_rows"], 39)
+            self.assertEqual(
+                trusted["class_lineage_sha256"],
+                _document_digest(fixture["class_lineage"]),
+            )
+            self.assertEqual(
+                trusted["member_lineage_sha256"],
+                _document_digest(fixture["member_lineage"]),
+            )
+            self.assertEqual(
+                trusted["semantic_review_sha256"],
+                _document_digest(fixture["semantic_review"]),
+            )
+            self.assertEqual(
+                trusted["semantic_acceptance_sha256"],
+                _document_digest(fixture["semantic_acceptance"]),
+            )
+
+            provenance = build_source_provenance_document(manifest)
+            self.assertEqual(
+                provenance["semantic_authority"][
+                    "trusted_review_authority"
+                ],
+                trusted,
+            )
+
+    def test_trusted_semantic_authority_failure_blocks_publication(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            with mock.patch(
+                "spk_recovery.source_milestone."
+                "verify_v308_semantic_review_authority",
+                side_effect=SourceM1SemanticAuthorityError(
+                    "untrusted accepted semantic lineage"
+                ),
+            ):
+                manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "trusted_semantic_authority",
+                    "reason": "trusted_semantic_review_authority_failed",
+                },
+                manifest["blockers"],
+            )
 
     def test_empty_java_source_tree_blocks_publication(self):
         with tempfile.TemporaryDirectory() as td:
