@@ -17216,9 +17216,12 @@ class GenericKeyObjectCastTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             repeated_calls = (
-                "        this.d.a(method, value);\n"
-                "        this.d.a(method, value);\n"
-                "        this.d.a(method, value);\n"
+                "        Object a2 = value;\n"
+                "        Object a3 = value;\n"
+                "        Object fallback = new Object();\n"
+                "        this.d.a(method, (a2 == null) ? fallback : a2);\n"
+                "        this.d.a(method, fallback);\n"
+                "        this.d.a(method, (a3 == null) ? fallback : a3);\n"
             )
             jar = _compile_java_fixture(
                 root,
@@ -17249,9 +17252,12 @@ class GenericKeyObjectCastTests(unittest.TestCase):
                 "public class A {\n"
                 "    private final C<Method, Object> d = new C<>();\n"
                 "    public void run(Method method, Object value) {\n"
-                "        this.d.a((Object)method, value);\n"
-                "        this.d.a((Object)method, value);\n"
-                "        this.d.a((Object)method, value);\n"
+                "        Object a2 = value;\n"
+                "        Object a3 = value;\n"
+                "        Object fallback = new Object();\n"
+                "        this.d.a((Object)method, (a2 == null) ? fallback : a2);\n"
+                "        this.d.a((Object)method, fallback);\n"
+                "        this.d.a((Object)method, (a3 == null) ? fallback : a3);\n"
                 "    }\n"
                 "}\n",
                 encoding="utf-8",
@@ -17275,9 +17281,14 @@ class GenericKeyObjectCastTests(unittest.TestCase):
             report = normalize_procyon_source(root / "src", jar)
             normalized = source.read_text(encoding="utf-8")
             self.assertEqual(normalized.count("(Object)method"), 0)
-            self.assertEqual(
-                normalized.count("this.d.a(method, value);"),
-                3,
+            self.assertIn(
+                "this.d.a(method, (a2 == null) ? fallback : a2);",
+                normalized,
+            )
+            self.assertIn("this.d.a(method, fallback);", normalized)
+            self.assertIn(
+                "this.d.a(method, (a3 == null) ? fallback : a3);",
+                normalized,
             )
 
             action = next(
