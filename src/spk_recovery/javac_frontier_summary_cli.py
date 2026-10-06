@@ -153,6 +153,7 @@ def focus_diagnostics(
     *,
     focus_files: int,
     include_source_lines: bool = False,
+    source_context_lines: int = 0,
 ) -> list[str]:
     if focus_files <= 0:
         return []
@@ -231,6 +232,29 @@ def focus_diagnostics(
                         f"SRC: line={line_number} | text={rendered}"
                     )
 
+                if source_context_lines > 0 and line_numbers:
+                    context_numbers: set[int] = set()
+                    for line_number in line_numbers:
+                        if line_number > len(source_lines):
+                            continue
+                        start = max(1, line_number - source_context_lines)
+                        end = min(
+                            len(source_lines),
+                            line_number + source_context_lines,
+                        )
+                        context_numbers.update(range(start, end + 1))
+                    out.append(
+                        "=== FOCUSED SOURCE CONTEXT "
+                        f"(+/-{source_context_lines}) ==="
+                    )
+                    for line_number in sorted(context_numbers):
+                        rendered = source_lines[line_number - 1].replace(
+                            "\t", "    "
+                        )
+                        out.append(
+                            f"SRCCTX: line={line_number} | text={rendered}"
+                        )
+
         for row in sorted(
             file_rows,
             key=lambda item: (
@@ -270,6 +294,15 @@ def main(argv: list[str] | None = None) -> int:
             "intended only for private exact-local runs"
         ),
     )
+    parser.add_argument(
+        "--source-context-lines",
+        type=int,
+        default=0,
+        help=(
+            "also print this many local source lines before/after focused "
+            "diagnostics; requires --source-lines"
+        ),
+    )
     args = parser.parse_args(argv)
 
     if args.top < 1 or args.top > 100:
@@ -284,6 +317,18 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 2
+    if args.source_context_lines < 0 or args.source_context_lines > 50:
+        print(
+            "REFUSED: --source-context-lines must be between 0 and 50",
+            file=sys.stderr,
+        )
+        return 2
+    if args.source_context_lines and not args.source_lines:
+        print(
+            "REFUSED: --source-context-lines requires --source-lines",
+            file=sys.stderr,
+        )
+        return 2
 
     try:
         report = _load(args.private_diagnostic)
@@ -293,6 +338,7 @@ def main(argv: list[str] | None = None) -> int:
                 report,
                 focus_files=args.focus_files,
                 include_source_lines=args.source_lines,
+                source_context_lines=args.source_context_lines,
             )
         )
     except JavacFrontierSummaryError as exc:
