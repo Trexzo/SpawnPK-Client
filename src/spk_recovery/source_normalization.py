@@ -11828,6 +11828,518 @@ def _normalize_inherited_cc_generic_value_object_casts(
     return actions
 
 
+
+def _normalize_direct_generic_factory_target_inference_casts(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Remove parameterized casts that defeat direct generic factory inference.
+
+    The repair is intentionally narrow.  Source must assign a zero-argument
+    static generic factory directly into a parameterized instance field while
+    wrapping the factory result in the same parameterized raw type.  Exact
+    field Signature authority must prove both concrete type arguments, the
+    factory Signature must be exactly a two-variable Object-bounded generic
+    factory returning that raw type, and caller bytecode must prove one direct
+    invokestatic -> putfield flow per edited source occurrence.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+
+    imports: dict[str, str] = {}
+    duplicate_imports: set[str] = set()
+    for import_match in _SINGLE_TYPE_IMPORT_RE.finditer(text):
+        dotted = import_match.group("name")
+        simple = dotted.rsplit(".", 1)[-1]
+        internal = dotted.replace(".", "/")
+        previous = imports.get(simple)
+        if previous is not None and previous != internal:
+            duplicate_imports.add(simple)
+        else:
+            imports[simple] = internal
+    for simple in duplicate_imports:
+        imports.pop(simple, None)
+
+    owner_cache: dict[str, dict[str, Any]] = {
+        current_owner: profile,
+    }
+
+    def owner_profile(owner: str) -> dict[str, Any] | None:
+        cached = owner_cache.get(owner)
+        if cached is not None:
+            return cached
+        try:
+            parsed = profile_class_field_accesses(
+                readable_zip.read(owner + ".class")
+            )
+        except (KeyError, BytecodeProfileError):
+            return None
+        if str(parsed.get("internal_name", "")) != owner:
+            return None
+        owner_cache[owner] = parsed
+        return parsed
+
+    def class_exists(owner: str) -> bool:
+        if owner.startswith("java/"):
+            return True
+        try:
+            readable_zip.getinfo(owner + ".class")
+            return True
+        except KeyError:
+            return False
+
+    def resolve_source_ref(type_text: str) -> str | None:
+        value = re.sub(r"\s+", "", type_text)
+        if "<" in value:
+            value = value.split("<", 1)[0]
+        while value.endswith("[]"):
+            value = value[:-2]
+        if not re.fullmatch(
+            r"[A-Za-z_$][A-Za-z0-9_$]*(?:\.[A-Za-z_$][A-Za-z0-9_$]*)*",
+            value,
+        ):
+            return None
+        if value in imports:
+            return imports[value]
+        if "." in value:
+            candidate = value.replace(".", "/")
+            return candidate if class_exists(candidate) else None
+        nested = current_owner + "$" + value
+        if class_exists(nested):
+            return nested
+        same_package = (
+            current_package + "/" + value
+            if current_package
+            else value
+        )
+        if class_exists(same_package):
+            return same_package
+        java_lang = "java/lang/" + value
+        if class_exists(java_lang):
+            return java_lang
+        return None
+
+    def consume_signature_type(
+        signature: str,
+        start: int,
+    ) -> int | None:
+        if start >= len(signature):
+            return None
+        token = signature[start]
+        if token in "+-":
+            return consume_signature_type(signature, start + 1)
+        if token == "*":
+            return start + 1
+        if token == "T":
+            end = signature.find(";", start + 1)
+            return None if end < 0 else end + 1
+        if token == "[":
+            return consume_signature_type(signature, start + 1)
+        if token != "L":
+            return None
+        depth = 0
+        index = start + 1
+        while index < len(signature):
+            ch = signature[index]
+            if ch == "<":
+                depth += 1
+            elif ch == ">":
+                if depth == 0:
+                    return None
+                depth -= 1
+            elif ch == ";" and depth == 0:
+                return index + 1
+            index += 1
+        return None
+
+    def field_signature_arguments(
+        signature: str,
+        raw_owner: str,
+    ) -> list[str] | None:
+        prefix = "L" + raw_owner + "<"
+        if not (signature.startswith(prefix) and signature.endswith(">;")):
+            return None
+        body = signature[len(prefix):-2]
+        arguments: list[str] = []
+        index = 0
+        while index < len(body):
+            end = consume_signature_type(body, index)
+            if end is None or end <= index:
+                return None
+            arguments.append(body[index:end])
+            index = end
+        return arguments if len(arguments) == 2 else None
+
+    def signature_erasure_owner(signature: str) -> str | None:
+        value = signature
+        while value and value[0] in "+-":
+            value = value[1:]
+        if not value.startswith("L") or not value.endswith(";"):
+            return None
+        body = value[1:-1]
+        generic = body.find("<")
+        owner = body if generic < 0 else body[:generic]
+        return owner if owner and class_exists(owner) else None
+
+    def field_proof(
+        *,
+        field_name: str,
+        source_raw: str,
+        source_args: list[str],
+    ) -> dict[str, Any] | None:
+        fields = [
+            field
+            for field in profile.get("fields", [])
+            if (
+                field.get("name") == field_name
+                and not (int(field.get("access", 0)) & 0x0008)
+                and isinstance(field.get("signature"), str)
+            )
+        ]
+        if len(fields) != 1:
+            return None
+        field = fields[0]
+        descriptor = str(field.get("descriptor", ""))
+        if not (
+            descriptor.startswith("L")
+            and descriptor.endswith(";")
+        ):
+            return None
+        raw_owner = descriptor[1:-1]
+        if resolve_source_ref(source_raw) != raw_owner:
+            return None
+
+        signature = str(field.get("signature") or "")
+        exact_args = field_signature_arguments(signature, raw_owner)
+        if exact_args is None or len(source_args) != 2:
+            return None
+        exact_arg_owners = [
+            signature_erasure_owner(argument)
+            for argument in exact_args
+        ]
+        source_arg_owners = [
+            resolve_source_ref(argument)
+            for argument in source_args
+        ]
+        if (
+            any(owner is None for owner in exact_arg_owners)
+            or source_arg_owners != exact_arg_owners
+        ):
+            return None
+
+        return {
+            "field_name": field_name,
+            "descriptor": descriptor,
+            "signature": signature,
+            "raw_owner": raw_owner,
+            "exact_argument_signatures": exact_args,
+            "exact_argument_owners": exact_arg_owners,
+        }
+
+    def factory_proof(
+        *,
+        raw_owner: str,
+        factory_name: str,
+    ) -> dict[str, Any] | None:
+        parsed = owner_profile(raw_owner)
+        if parsed is None:
+            return None
+        rows = [
+            method
+            for method in parsed.get("methods", [])
+            if (
+                method.get("name") == factory_name
+                and method.get("descriptor") == "()L" + raw_owner + ";"
+                and int(method.get("access", 0)) & 0x0008
+                and isinstance(method.get("signature"), str)
+            )
+        ]
+        if len(rows) != 1:
+            return None
+        signature = str(rows[0].get("signature") or "")
+        match = re.fullmatch(
+            r"<(?P<t1>[A-Za-z_$][A-Za-z0-9_$]*):"
+            r"Ljava/lang/Object;"
+            r"(?P<t2>[A-Za-z_$][A-Za-z0-9_$]*):"
+            r"Ljava/lang/Object;>"
+            r"\(\)L"
+            + re.escape(raw_owner)
+            + r"<T(?P=t1);T(?P=t2);>;",
+            signature,
+        )
+        if match is None or match.group("t1") == match.group("t2"):
+            return None
+        return {
+            "owner": raw_owner,
+            "name": factory_name,
+            "descriptor": "()L" + raw_owner + ";",
+            "signature": signature,
+            "type_variables": [
+                match.group("t1"),
+                match.group("t2"),
+            ],
+        }
+
+    start_re = re.compile(
+        r"this\s*\.\s*(?P<field>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*=\s*"
+        r"(?P<cast_open>\(\s*)"
+        r"(?P<raw>[A-Za-z_$][A-Za-z0-9_$.]*)\s*"
+        r"(?P<angle><)"
+    )
+    tail_re = re.compile(
+        r"(?P<cast_close>\s*\))\s*"
+        r"(?P<factory_owner>[A-Za-z_$][A-Za-z0-9_$.]*)"
+        r"\s*\.\s*"
+        r"(?P<factory>[A-Za-z_$][A-Za-z0-9_$]*)"
+        r"\s*\(\s*\)\s*;"
+    )
+
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        method_text = text[method_start:body_end]
+        occurrences: list[dict[str, Any]] = []
+
+        for match in start_re.finditer(method_code):
+            angle_start = match.start("angle")
+            angle_end = _matching_generic_angle_end(
+                method_code,
+                angle_start,
+            )
+            if angle_end is None:
+                continue
+
+            args_text = method_text[angle_start + 1:angle_end]
+            spans = _top_level_generic_argument_spans(args_text)
+            if spans is None or len(spans) != 2:
+                continue
+            source_args = [
+                args_text[left:right].strip()
+                for left, right in spans
+            ]
+
+            tail = method_code[angle_end + 1:]
+            tail_match = tail_re.match(tail)
+            if tail_match is None:
+                continue
+
+            field = field_proof(
+                field_name=match.group("field"),
+                source_raw=match.group("raw"),
+                source_args=source_args,
+            )
+            if field is None:
+                continue
+            factory_owner = resolve_source_ref(
+                tail_match.group("factory_owner")
+            )
+            if factory_owner != field["raw_owner"]:
+                continue
+            factory = factory_proof(
+                raw_owner=field["raw_owner"],
+                factory_name=tail_match.group("factory"),
+            )
+            if factory is None:
+                continue
+
+            occurrences.append(
+                {
+                    "field": field,
+                    "factory": factory,
+                    "cast_start": (
+                        method_start + match.start("cast_open")
+                    ),
+                    "cast_end": (
+                        method_start
+                        + angle_end
+                        + 1
+                        + tail_match.end("cast_close")
+                    ),
+                }
+            )
+
+        if not occurrences:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        if source_static:
+            continue
+
+        exact_candidates: list[dict[str, Any]] = []
+        for exact_method in profile.get("methods", []):
+            if exact_method.get("name") != method_match.group("name"):
+                continue
+            descriptor = str(exact_method.get("descriptor", ""))
+            if (
+                _source_parameters_match_descriptor(
+                    method_match.group("params"),
+                    descriptor,
+                    current_package=current_package,
+                )
+                is not True
+            ):
+                continue
+            if int(exact_method.get("access", 0)) & 0x0008:
+                continue
+
+            instructions = list(exact_method.get("instructions", []))
+            flows: list[dict[str, Any]] = []
+            used_store_offsets: set[int] = set()
+
+            for occurrence in occurrences:
+                field = occurrence["field"]
+                factory = occurrence["factory"]
+                matches: list[dict[str, Any]] = []
+                for index in range(1, len(instructions) - 1):
+                    receiver = instructions[index - 1]
+                    call = instructions[index]
+                    store = instructions[index + 1]
+                    if not (
+                        receiver.get("mnemonic") == "aload"
+                        and int(receiver.get("local_index", -1)) == 0
+                        and call.get("mnemonic") == "invokestatic"
+                        and call.get("owner") == factory["owner"]
+                        and call.get("name") == factory["name"]
+                        and call.get("descriptor")
+                        == factory["descriptor"]
+                        and store.get("mnemonic") == "putfield"
+                        and store.get("owner") == current_owner
+                        and store.get("name") == field["field_name"]
+                        and store.get("descriptor")
+                        == field["descriptor"]
+                    ):
+                        continue
+                    matches.append(
+                        {
+                            "factory_offset": int(
+                                call.get("offset", -1)
+                            ),
+                            "store_offset": int(
+                                store.get("offset", -1)
+                            ),
+                            "field_name": field["field_name"],
+                            "factory_owner": factory["owner"],
+                            "factory_name": factory["name"],
+                            "factory_descriptor": factory["descriptor"],
+                            "factory_signature": factory["signature"],
+                        }
+                    )
+
+                if len(matches) != 1:
+                    flows = []
+                    break
+                if matches[0]["store_offset"] in used_store_offsets:
+                    flows = []
+                    break
+                used_store_offsets.add(matches[0]["store_offset"])
+                flows.append(matches[0])
+
+            if len(flows) == len(occurrences):
+                exact_candidates.append(
+                    {
+                        "method": exact_method,
+                        "flows": flows,
+                    }
+                )
+
+        if len(exact_candidates) != 1:
+            continue
+
+        proof = exact_candidates[0]
+        for occurrence in occurrences:
+            edits.append(
+                (
+                    int(occurrence["cast_start"]),
+                    int(occurrence["cast_end"]),
+                    "",
+                )
+            )
+
+        actions.append(
+            {
+                "kind": "generic_builder_target_inference_cast_removal",
+                "mode": "direct_static_factory",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": proof["method"]["descriptor"],
+                "field_names": [
+                    occurrence["field"]["field_name"]
+                    for occurrence in occurrences
+                ],
+                "field_signatures": [
+                    occurrence["field"]["signature"]
+                    for occurrence in occurrences
+                ],
+                "factory_signatures": [
+                    occurrence["factory"]["signature"]
+                    for occurrence in occurrences
+                ],
+                "exact_flows": proof["flows"],
+                "replacement_count": len(occurrences),
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_parameterized_cast_blocks_direct_generic_"
+                        "factory_target_inference"
+                    ),
+                    "strategy": (
+                        "exact_field_signature_plus_generic_factory_signature_"
+                        "plus_invokestatic_putfield_flow"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping direct generic factory edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_generic_builder_target_inference_casts(
     *,
     source_root: Path,
@@ -26432,6 +26944,13 @@ def normalize_procyon_source(
                 )
                 actions.extend(
                     _normalize_inherited_cc_generic_value_object_casts(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
+                    _normalize_direct_generic_factory_target_inference_casts(
                         source_root=source_root,
                         path=path,
                         readable_zip=z,

@@ -17472,6 +17472,230 @@ class CcGenericInstanceValueObjectCastTests(unittest.TestCase):
 
     def test_cc_generic_instance_field_fails_on_multiplicity_drift(self):
         self._assert_no_instance_action(mode="multiplicity")
+
+class DirectGenericFactoryTargetInferenceCastTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        generic_factory: bool = True,
+        duplicate: bool = False,
+    ) -> Path:
+        if generic_factory:
+            factory = (
+                "    public static <K, V> Bag<K, V> empty() {\n"
+                "        return new Bag<>();\n"
+                "    }\n"
+            )
+            assignment = (
+                "        this.subscribers = "
+                "Bag.<Class<?>, Subscriber>empty();\n"
+            )
+        else:
+            factory = (
+                "    public static Bag<Object, Object> empty() {\n"
+                "        return new Bag<>();\n"
+                "    }\n"
+            )
+            assignment = (
+                "        this.subscribers = (Bag)Bag.empty();\n"
+            )
+
+        second = assignment if duplicate else ""
+        return _compile_java_fixture(
+            root,
+            {
+                "p/Bag.java": (
+                    "package p;\n"
+                    "public final class Bag<K, V> {\n"
+                    + factory
+                    + "}\n"
+                ),
+                "p/A.java": (
+                    "package p;\n"
+                    "public class A {\n"
+                    "    public static final class Subscriber {}\n"
+                    "    private Bag<Class<?>, Subscriber> subscribers;\n"
+                    "    public void reset() {\n"
+                    + assignment
+                    + second
+                    + "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def _malformed_source(
+        self,
+        *,
+        key_type: str = "Class<?>",
+    ) -> str:
+        return (
+            "package p;\n"
+            "public class A {\n"
+            "    public static final class Subscriber {}\n"
+            "    private Bag<Class<?>, Subscriber> subscribers;\n"
+            "    public void reset() {\n"
+            "        this.subscribers = (Bag<"
+            + key_type
+            + ", Subscriber>)Bag.empty();\n"
+            "    }\n"
+            "}\n"
+        )
+
+    def test_direct_factory_cast_is_removed_from_exact_target_inference(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                self._malformed_source(),
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-direct-factory"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            compact_before = before.stderr.replace(" ", "")
+            self.assertIn("Bag<Object,Object>", compact_before)
+            self.assertIn("cannotbeconverted", compact_before)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "this.subscribers = Bag.empty();",
+                normalized,
+            )
+            self.assertNotIn(
+                "(Bag<Class<?>, Subscriber>)",
+                normalized,
+            )
+
+            actions = [
+                row
+                for row in report["actions"]
+                if (
+                    row["kind"]
+                    == "generic_builder_target_inference_cast_removal"
+                    and row.get("mode") == "direct_static_factory"
+                )
+            ]
+            self.assertEqual(len(actions), 1)
+            self.assertEqual(actions[0]["replacement_count"], 1)
+            self.assertEqual(
+                actions[0]["field_names"],
+                ["subscribers"],
+            )
+            self.assertEqual(
+                len(actions[0]["factory_signatures"]),
+                1,
+            )
+            self.assertIn(
+                "()Lp/Bag<T",
+                actions[0]["factory_signatures"][0],
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-direct-factory"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_direct_factory_cast_fails_closed_on_source_type_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source(key_type="String")
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "generic_builder_target_inference_cast_removal"
+                    and row.get("mode") == "direct_static_factory"
+                    for row in report["actions"]
+                )
+            )
+
+    def test_direct_factory_cast_fails_closed_on_factory_signature_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, generic_factory=False)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "generic_builder_target_inference_cast_removal"
+                    and row.get("mode") == "direct_static_factory"
+                    for row in report["actions"]
+                )
+            )
+
+    def test_direct_factory_cast_fails_closed_on_exact_multiplicity_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, duplicate=True)
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "generic_builder_target_inference_cast_removal"
+                    and row.get("mode") == "direct_static_factory"
+                    for row in report["actions"]
+                )
+            )
+
+
 class GenericBuilderTargetInferenceCastTests(unittest.TestCase):
     def _fixture(
         self,
