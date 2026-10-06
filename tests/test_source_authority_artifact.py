@@ -523,7 +523,7 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
                 all(report["checks"].values())
             )
 
-    def test_verifier_rejects_noncanonical_authority_repository(self):
+    def test_verifier_rejects_noncanonical_same_repository(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             source = root / "source"
@@ -535,6 +535,7 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
                 out,
                 fixture,
                 authority_repository="Trexzo/Forged-Authority",
+                publication_repository="Trexzo/Forged-Authority",
             )
             report = verify_source_authority_artifact(
                 out,
@@ -545,33 +546,6 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
             self.assertFalse(
                 report["checks"]["expected_authority_repository"]
             )
-            self.assertTrue(
-                all(
-                    value
-                    for key, value in report["checks"].items()
-                    if key != "expected_authority_repository"
-                )
-            )
-
-    def test_verifier_rejects_noncanonical_publication_repository(self):
-        with tempfile.TemporaryDirectory() as td:
-            root = Path(td)
-            source = root / "source"
-            fixture = _fixture(source)
-            out = root / "artifact"
-
-            self._build(
-                source,
-                out,
-                fixture,
-                publication_repository="Trexzo/Forged-Publication",
-            )
-            report = verify_source_authority_artifact(
-                out,
-                expected_authority_commit="f" * 40,
-            )
-
-            self.assertFalse(report["verified"])
             self.assertFalse(
                 report["checks"]["expected_publication_repository"]
             )
@@ -579,9 +553,31 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
                 all(
                     value
                     for key, value in report["checks"].items()
-                    if key != "expected_publication_repository"
+                    if key
+                    not in {
+                        "expected_authority_repository",
+                        "expected_publication_repository",
+                    }
                 )
             )
+
+    def test_builder_rejects_split_publication_repository(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            out = root / "artifact"
+
+            with self.assertRaisesRegex(
+                SourceAuthorityArtifactError,
+                "publication_repository_must_equal_authority_repository",
+            ):
+                self._build(
+                    source,
+                    out,
+                    fixture,
+                    publication_repository="Trexzo/Forged-Publication",
+                )
 
     def test_artifact_id_drift_is_rejected(self):
         with tempfile.TemporaryDirectory() as td:
