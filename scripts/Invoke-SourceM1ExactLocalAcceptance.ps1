@@ -7,7 +7,6 @@ param(
     [string]$ClassLineage,
     [string]$MemberLineage,
     [string]$MemberSafetyAcceptance,
-    [Parameter(Mandatory = $true)]
     [string]$DecompilerJar,
     [string]$SourceRewriteAcceptance,
     [string]$ExternalOracleReport,
@@ -22,6 +21,8 @@ $ErrorActionPreference = "Stop"
 
 $ExpectedV308 = "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 $ExpectedProcyon = "821da96012fc69244fa1ea298c90455ee4e021434bc796d3b9546ab24601b779"
+$ExpectedProcyonSize = 2004704
+$ExpectedProcyonUrl = "https://github.com/mstrobel/procyon/releases/download/v0.6.0/procyon-decompiler-0.6.0.jar"
 $ExpectedSemanticReview = "SEMREVIEW_DD69CD752A6E46181BAC"
 $ExpectedMemberSafetyReport = "MEMRISKREVIEW_E4E67B1125E7AFA4F3B7"
 $ExpectedMemberSafetyAcceptanceSha = "f4c6c2b3ee1da51ce76b89164abe5fc47960ad9eceee952619928190f1374351"
@@ -238,11 +239,11 @@ if ($Head -notmatch "^[0-9a-f]{40}$") {
     throw "Current authority commit is not lowercase 40-hex: $Head"
 }
 
-foreach ($Path in @(
-    $ClientJar,
-    $DecompilerJar
-)) {
-    Require-File $Path
+Require-File $ClientJar
+
+$HasDecompilerJar = -not [string]::IsNullOrWhiteSpace($DecompilerJar)
+if ($HasDecompilerJar) {
+    Require-File $DecompilerJar
 }
 
 $HasMemberSafetyAcceptance = -not [string]::IsNullOrWhiteSpace($MemberSafetyAcceptance)
@@ -274,11 +275,6 @@ Require-File $Javac
 $ClientSha = (Get-FileHash -LiteralPath $ClientJar -Algorithm SHA256).Hash.ToLowerInvariant()
 if ($ClientSha -ne $ExpectedV308) {
     throw "Exact v308 SHA mismatch: $ClientSha"
-}
-
-$DecompilerSha = (Get-FileHash -LiteralPath $DecompilerJar -Algorithm SHA256).Hash.ToLowerInvariant()
-if ($DecompilerSha -ne $ExpectedProcyon) {
-    throw "Exact Procyon 0.6.0 SHA mismatch: $DecompilerSha"
 }
 
 if (Test-Path -LiteralPath $OutDir) {
@@ -313,6 +309,42 @@ $env:JAVA_HOME = $Jdk
 $env:PATH = "$Jdk\bin;$env:PATH"
 $env:PYTHONPATH = Join-Path $Repo "src"
 $env:PYTHONDONTWRITEBYTECODE = "1"
+
+if (-not $HasDecompilerJar) {
+    $DecompilerJar = Join-Path $DerivedInputDir "procyon-decompiler-0.6.0.jar"
+    Write-Host ""
+    Write-Host "=== FETCH PINNED PROCYON 0.6.0 ===" -ForegroundColor Cyan
+    try {
+        Invoke-WebRequest `
+            -Uri $ExpectedProcyonUrl `
+            -OutFile $DecompilerJar `
+            -UseBasicParsing
+    }
+    catch {
+        throw (
+            "Could not fetch pinned Procyon 0.6.0 from official release: " +
+            $_.Exception.Message
+        )
+    }
+    Require-File $DecompilerJar
+
+    $FetchedProcyonSize = (Get-Item -LiteralPath $DecompilerJar).Length
+    if ([long]$FetchedProcyonSize -ne $ExpectedProcyonSize) {
+        throw (
+            "Fetched Procyon 0.6.0 byte size mismatch: " +
+            $FetchedProcyonSize
+        )
+    }
+    Write-Host "PROCYON_FETCHED=$DecompilerJar" -ForegroundColor Green
+    Write-Host "PROCYON_BYTES=$FetchedProcyonSize" -ForegroundColor Green
+} else {
+    Write-Host "PROCYON_SUPPLIED=$DecompilerJar" -ForegroundColor Green
+}
+
+$DecompilerSha = (Get-FileHash -LiteralPath $DecompilerJar -Algorithm SHA256).Hash.ToLowerInvariant()
+if ($DecompilerSha -ne $ExpectedProcyon) {
+    throw "Exact Procyon 0.6.0 SHA mismatch: $DecompilerSha"
+}
 
 if ([string]::IsNullOrWhiteSpace($SourceIndex)) {
     $SourceIndex = Join-Path $DerivedInputDir "v308-index.generated.json"
