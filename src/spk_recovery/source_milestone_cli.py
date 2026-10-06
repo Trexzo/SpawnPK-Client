@@ -71,6 +71,8 @@ def _common_input_paths(args: argparse.Namespace) -> tuple[Path, ...]:
     return (
         args.class_lineage,
         args.member_lineage,
+        args.semantic_review,
+        args.semantic_acceptance,
         args.readable_manifest,
         args.recovered_manifest,
         args.clean_rebuild,
@@ -83,6 +85,8 @@ def _common_inputs(p: argparse.ArgumentParser) -> None:
     p.add_argument("--authority-commit", required=True)
     p.add_argument("--class-lineage", type=Path, required=True)
     p.add_argument("--member-lineage", type=Path, required=True)
+    p.add_argument("--semantic-review", type=Path, required=True)
+    p.add_argument("--semantic-acceptance", type=Path, required=True)
     p.add_argument("--readable-manifest", type=Path, required=True)
     p.add_argument("--recovered-manifest", type=Path, required=True)
     p.add_argument("--clean-rebuild", type=Path, required=True)
@@ -114,6 +118,8 @@ def _kwargs(args: argparse.Namespace) -> dict:
         "member_lineage": load_member_lineage(
             args.member_lineage
         ),
+        "semantic_review": _load(args.semantic_review),
+        "semantic_acceptance": _load(args.semantic_acceptance),
         "readable_manifest": _load(args.readable_manifest),
         "recovered_source_manifest": _load(
             args.recovered_manifest
