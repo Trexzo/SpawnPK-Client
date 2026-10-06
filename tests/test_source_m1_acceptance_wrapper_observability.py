@@ -5,6 +5,36 @@ import unittest
 
 
 class SourceM1AcceptanceWrapperObservabilityTests(unittest.TestCase):
+    def test_prints_derived_intpredicate_capture_counts(self):
+        repo = Path(__file__).resolve().parents[1]
+        script = (
+            repo
+            / "scripts"
+            / "Invoke-SourceM1ExactLocalAcceptance.ps1"
+        )
+        text = script.read_text(encoding="utf-8")
+
+        self.assertIn(
+            'intpredicate_derived_local_capture_alias_action_count = '
+            '"/normalization_summary/'
+            'intpredicate_derived_local_capture_alias_action_count"',
+            text,
+        )
+        self.assertIn(
+            'intpredicate_derived_local_capture_alias_reference_count = '
+            '"/normalization_summary/'
+            'intpredicate_derived_local_capture_alias_reference_count"',
+            text,
+        )
+        self.assertIn(
+            "INTPREDICATE_DERIVED_LOCAL_CAPTURE_ALIAS_ACTIONS=",
+            text,
+        )
+        self.assertIn(
+            "INTPREDICATE_DERIVED_LOCAL_CAPTURE_ALIAS_REFERENCES=",
+            text,
+        )
+
     def test_prints_normalization_identity_and_same_package_shadow_counts(self):
         repo = Path(__file__).resolve().parents[1]
         script = (
