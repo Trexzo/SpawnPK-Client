@@ -16066,6 +16066,112 @@ class MethodHandleInvokeExactResultCastTests(unittest.TestCase):
                 after.stdout + after.stderr,
             )
 
+
+    def test_invokeexact_result_cast_ignores_object_target_multiplicity(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.lang.invoke.MethodHandle;\n"
+                        "import java.util.function.Consumer;\n"
+                        "public class A {\n"
+                        "    public static Object read(MethodHandle handle) "
+                        "throws Throwable {\n"
+                        "        Consumer<Object> typed;\n"
+                        "        typed = (Consumer<Object>)"
+                        "(handle.invokeExact());\n"
+                        "        Object raw;\n"
+                        "        raw = handle.invokeExact();\n"
+                        "        return typed != null ? typed : raw;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.lang.invoke.MethodHandle;\n"
+                "import java.util.function.Consumer;\n"
+                "public class A {\n"
+                "    public static Object read(MethodHandle handle) "
+                "throws Throwable {\n"
+                "        Consumer<Object> typed;\n"
+                "        typed = handle.invokeExact();\n"
+                "        Object raw;\n"
+                "        raw = handle.invokeExact();\n"
+                "        return typed != null ? typed : raw;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-invokeexact-mixed-target"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            self.assertIn(
+                "Object cannot be converted to Consumer<Object>",
+                before.stderr,
+            )
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "typed = (Consumer<Object>)(handle.invokeExact());",
+                normalized,
+            )
+            self.assertIn(
+                "raw = handle.invokeExact();",
+                normalized,
+            )
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "methodhandle_invokeexact_result_cast_reconstruction"
+            )
+            self.assertEqual(action["replacement_count"], 1)
+            self.assertEqual(
+                action["ignored_object_target_count"],
+                1,
+            )
+            self.assertEqual(action["local_names"], ["typed"])
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-invokeexact-mixed-target"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
     def test_invokeexact_result_cast_fails_on_target_type_drift(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
