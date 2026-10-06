@@ -17881,6 +17881,48 @@ class InvokedynamicCallbackReferenceCaptureAliasTests(unittest.TestCase):
             )
 
 
+    def test_callback_reference_capture_rejects_capture_order_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            exact = self._exact_source()
+            needle = (
+                "          if (seen.add(text)) {\n"
+                "            report.add(\"region=\" + capture\n"
+                "              + \" yaml=\" + entry.getKey()\n"
+            )
+            replacement = (
+                "          String key = String.valueOf(entry.getKey());\n"
+                "          if (seen.add(text)) {\n"
+                "            report.add(\"region=\" + capture\n"
+                "              + \" yaml=\" + key\n"
+            )
+            self.assertIn(needle, exact)
+            drifted_exact = exact.replace(needle, replacement, 1)
+
+            jar = _compile_java_fixture(
+                root,
+                {"p/Current.java": drifted_exact},
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "invokedynamic_callback_reference_capture_alias"
+                    for row in report["actions"]
+                )
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
 
