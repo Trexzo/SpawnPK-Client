@@ -6129,6 +6129,529 @@ def _normalize_invokedynamic_captured_class_local_aliases(
     return actions
 
 
+
+def _normalize_invokedynamic_callback_reference_capture_aliases(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore lost reference captures in a four-int callback lambda.
+
+    Procyon can reconstruct an instance LambdaMetafactory callback body with
+    undeclared aliases for outer reference locals even when the outer source
+    locals are still present.  Repair only the narrow shape where source and
+    exact bytecode independently prove the captured Set, Map.Entry, and Map
+    values. Primitive captures are deliberately left to separate rules.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    bootstrap_methods = list(profile.get("bootstrap_methods", []))
+    if not bootstrap_methods:
+        return []
+    class_field_names = {
+        str(field.get("name", ""))
+        for field in profile.get("fields", [])
+        if _is_java_identifier(str(field.get("name", "")))
+    }
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+    identifier = r"[A-Za-z_$][A-Za-z0-9_$]*"
+
+    entry_loop_re = re.compile(
+        r"for\s*\(\s*"
+        r"(?:(?:java\.util\.)?Map\s*\.\s*)?Entry"
+        r"(?:\s*<[^;(){}]+>)?\s+"
+        r"(?P<entry>" + identifier + r")\s*:\s*"
+        r"(?P<input>" + identifier + r")\s*\.\s*entrySet"
+        r"\s*\(\s*\)\s*\)"
+    )
+    map_value_re_template = (
+        r"\b(?:final\s+)?(?:java\.util\.)?Map"
+        r"(?:\s*<[^;=(){}]+>)?\s+"
+        r"(?P<map>" + identifier + r")\s*=\s*"
+        r"(?:\(\s*(?:java\.util\.)?Map"
+        r"(?:\s*<[^;=(){}]+>)?\s*\)\s*)?"
+        r"{entry}\s*\.\s*getValue\s*\(\s*\)"
+    )
+    set_decl_re = re.compile(
+        r"\b(?:final\s+)?(?:java\.util\.)?"
+        r"(?:Set|HashSet|LinkedHashSet)"
+        r"(?:\s*<[^;=(){}]+>)?\s+"
+        r"(?P<set>" + identifier + r")\s*=\s*new\s+"
+        r"(?:java\.util\.)?(?:HashSet|LinkedHashSet)"
+        r"(?:\s*<[^;=(){}]*>)?\s*\("
+    )
+    callback_re = re.compile(
+        r"\(\s*(?P<p1>" + identifier + r")\s*,\s*"
+        r"(?P<p2>" + identifier + r")\s*,\s*"
+        r"(?P<p3>" + identifier + r")\s*,\s*"
+        r"(?P<p4>" + identifier + r")\s*\)\s*->\s*\{"
+    )
+
+    expected_bootstrap_descriptors = {
+        "metafactory": (
+            "(Ljava/lang/invoke/MethodHandles$Lookup;"
+            "Ljava/lang/String;"
+            "Ljava/lang/invoke/MethodType;"
+            "Ljava/lang/invoke/MethodType;"
+            "Ljava/lang/invoke/MethodHandle;"
+            "Ljava/lang/invoke/MethodType;)"
+            "Ljava/lang/invoke/CallSite;"
+        ),
+        "altMetafactory": (
+            "(Ljava/lang/invoke/MethodHandles$Lookup;"
+            "Ljava/lang/String;"
+            "Ljava/lang/invoke/MethodType;"
+            "[Ljava/lang/Object;)"
+            "Ljava/lang/invoke/CallSite;"
+        ),
+    }
+
+    expected_capture_shapes = [
+        (0, "ref", current_owner),
+        (0, "primitive", "I"),
+        (0, "ref", "java/util/Set"),
+        (0, "ref", "java/util/Map$Entry"),
+        (0, "primitive", "I"),
+        (0, "ref", "java/util/Map"),
+    ]
+    expected_helper_shapes = [
+        (0, "primitive", "I"),
+        (0, "ref", "java/util/Set"),
+        (0, "ref", "java/util/Map$Entry"),
+        (0, "primitive", "I"),
+        (0, "ref", "java/util/Map"),
+        (0, "primitive", "I"),
+        (0, "primitive", "I"),
+        (0, "primitive", "I"),
+        (0, "primitive", "I"),
+    ]
+
+    def _declared_in_method(
+        method_code: str,
+        name: str,
+        parameter_names: list[str],
+        lambda_names: set[str],
+    ) -> bool:
+        if (
+            name in parameter_names
+            or name in lambda_names
+            or name in class_field_names
+        ):
+            return True
+        declaration_re = re.compile(
+            r"\b(?:final\s+)?"
+            r"[A-Za-z_$][A-Za-z0-9_$.<>\[\]?]*\s+"
+            + re.escape(name)
+            + r"\b"
+        )
+        return declaration_re.search(method_code) is not None
+
+    def _unique_undeclared_alias(
+        lambda_code: str,
+        method_code: str,
+        pattern: re.Pattern[str],
+        *,
+        outer_name: str,
+        parameter_names: list[str],
+        lambda_names: set[str],
+    ) -> tuple[str, list[re.Match[str]]] | None:
+        matches = list(pattern.finditer(lambda_code))
+        aliases = {
+            match.group("alias")
+            for match in matches
+            if match.group("alias") != outer_name
+            and not _declared_in_method(
+                method_code,
+                match.group("alias"),
+                parameter_names,
+                lambda_names,
+            )
+        }
+        if len(aliases) != 1:
+            return None
+        alias = next(iter(aliases))
+        alias_matches = [
+            match for match in matches if match.group("alias") == alias
+        ]
+        token_hits = list(
+            re.finditer(
+                r"(?<![A-Za-z0-9_$])"
+                + re.escape(alias)
+                + r"(?![A-Za-z0-9_$])",
+                lambda_code,
+            )
+        )
+        if (
+            len(alias_matches) != 1
+            or len(token_hits) != 1
+            or token_hits[0].start() != alias_matches[0].start("alias")
+        ):
+            return None
+        return alias, alias_matches
+
+    def _helper_uses_capture(
+        instructions: list[dict[str, Any]],
+        *,
+        slot: int,
+        owner: str,
+        name: str,
+        descriptor: str,
+        lookback: int = 3,
+    ) -> bool:
+        sites = []
+        for index, instruction in enumerate(instructions):
+            if not (
+                instruction.get("mnemonic")
+                in {"invokeinterface", "invokevirtual"}
+                and instruction.get("owner") == owner
+                and instruction.get("name") == name
+                and instruction.get("descriptor") == descriptor
+            ):
+                continue
+            start = max(0, index - lookback)
+            window = instructions[start:index]
+            if any(
+                row.get("mnemonic") == "aload"
+                and int(row.get("local_index", -1)) == slot
+                for row in window
+            ):
+                sites.append(index)
+        return len(sites) == 1
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        source_params = method_match.group("params")
+        parameter_names = _source_parameter_names(source_params)
+        if parameter_names is None:
+            continue
+
+        entry_loops = list(entry_loop_re.finditer(method_code))
+        callbacks = list(callback_re.finditer(method_code))
+        set_decls = list(set_decl_re.finditer(method_code))
+        if (
+            len(entry_loops) != 1
+            or len(callbacks) != 1
+            or len(set_decls) != 1
+        ):
+            continue
+        entry_loop = entry_loops[0]
+        callback = callbacks[0]
+        set_decl = set_decls[0]
+        if not (
+            entry_loop.start() < set_decl.start() < callback.start()
+        ):
+            continue
+
+        entry_name = entry_loop.group("entry")
+        map_value_re = re.compile(
+            map_value_re_template.replace("{entry}", re.escape(entry_name))
+        )
+        map_values = list(map_value_re.finditer(method_code))
+        if len(map_values) != 1:
+            continue
+        map_value = map_values[0]
+        if not (
+            entry_loop.start() < map_value.start() < callback.start()
+        ):
+            continue
+
+        map_name = map_value.group("map")
+        set_name = set_decl.group("set")
+        callback_brace = method_code.find(
+            "{", callback.start(), callback.end()
+        )
+        if callback_brace < 0:
+            continue
+        try:
+            callback_end = _matching_brace_end(
+                method_code, callback_brace
+            )
+        except SourceNormalizationError:
+            continue
+        callback_code = method_code[callback_brace:callback_end]
+        lambda_names = {
+            callback.group("p1"),
+            callback.group("p2"),
+            callback.group("p3"),
+            callback.group("p4"),
+        }
+
+        set_alias = _unique_undeclared_alias(
+            callback_code,
+            method_code,
+            re.compile(
+                r"(?<![A-Za-z0-9_$.])"
+                r"(?P<alias>" + identifier + r")\s*\.\s*add\s*\("
+            ),
+            outer_name=set_name,
+            parameter_names=parameter_names,
+            lambda_names=lambda_names,
+        )
+        entry_alias = _unique_undeclared_alias(
+            callback_code,
+            method_code,
+            re.compile(
+                r"(?<![A-Za-z0-9_$.])"
+                r"(?P<alias>" + identifier + r")\s*\.\s*getKey"
+                r"\s*\(\s*\)"
+            ),
+            outer_name=entry_name,
+            parameter_names=parameter_names,
+            lambda_names=lambda_names,
+        )
+        map_alias = _unique_undeclared_alias(
+            callback_code,
+            method_code,
+            re.compile(
+                r"(?<![A-Za-z0-9_$.])"
+                r"(?P<alias>" + identifier + r")\s*\.\s*getOrDefault"
+                r"\s*\("
+            ),
+            outer_name=map_name,
+            parameter_names=parameter_names,
+            lambda_names=lambda_names,
+        )
+        if set_alias is None or entry_alias is None or map_alias is None:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        if source_static:
+            continue
+        exact_candidates = [
+            exact_method
+            for exact_method in profile.get("methods", [])
+            if exact_method.get("name") == method_match.group("name")
+            and _source_parameters_match_descriptor(
+                source_params,
+                str(exact_method.get("descriptor", "")),
+                current_package=current_package,
+            )
+            is True
+            and not (int(exact_method.get("access", 0)) & 0x0008)
+        ]
+        if len(exact_candidates) != 1:
+            continue
+        exact_method = exact_candidates[0]
+
+        matching_indy: list[dict[str, Any]] = []
+        for invocation in exact_method.get("method_invocations", []):
+            if invocation.get("operation") != "invokedynamic":
+                continue
+            descriptor = str(invocation.get("descriptor", ""))
+            captured_shapes = _descriptor_parameter_shapes(descriptor)
+            return_descriptor = _descriptor_return_descriptor(descriptor)
+            if not (
+                captured_shapes == expected_capture_shapes
+                and return_descriptor is not None
+                and return_descriptor.startswith("L")
+                and return_descriptor.endswith(";")
+            ):
+                continue
+
+            bootstrap_index = int(
+                invocation.get("bootstrap_method_attr_index", -1)
+            )
+            if not (0 <= bootstrap_index < len(bootstrap_methods)):
+                continue
+            bootstrap = bootstrap_methods[bootstrap_index]
+            bootstrap_method = bootstrap.get("bootstrap_method", {})
+            bootstrap_name = str(bootstrap_method.get("name", ""))
+            if not (
+                bootstrap_method.get("owner")
+                == "java/lang/invoke/LambdaMetafactory"
+                and bootstrap_name in expected_bootstrap_descriptors
+                and bootstrap_method.get("descriptor")
+                == expected_bootstrap_descriptors[bootstrap_name]
+                and bootstrap_method.get("target_kind") == "method"
+            ):
+                continue
+
+            implementation_handles = [
+                argument.get("method_handle", {})
+                for argument in bootstrap.get("arguments", [])
+                if argument.get("kind") == "method_handle"
+                and argument.get("method_handle", {}).get("owner")
+                == current_owner
+            ]
+            if len(implementation_handles) != 1:
+                continue
+            implementation = implementation_handles[0]
+            helper_descriptor = str(
+                implementation.get("descriptor", "")
+            )
+            helper_shapes = _descriptor_parameter_shapes(
+                helper_descriptor
+            )
+            if not (
+                implementation.get("target_kind") == "method"
+                and int(implementation.get("reference_kind", -1)) == 7
+                and helper_shapes == expected_helper_shapes
+                and _descriptor_return_descriptor(helper_descriptor) == "V"
+            ):
+                continue
+
+            instantiated_types = {
+                str(argument.get("descriptor", ""))
+                for argument in bootstrap.get("arguments", [])
+                if argument.get("kind") == "method_type"
+            }
+            if "(IIII)V" not in instantiated_types:
+                continue
+
+            helpers = [
+                helper
+                for helper in profile.get("methods", [])
+                if helper.get("name") == implementation.get("name")
+                and helper.get("descriptor") == helper_descriptor
+                and not (int(helper.get("access", 0)) & 0x0008)
+                and (int(helper.get("access", 0)) & 0x1000)
+            ]
+            if len(helpers) != 1:
+                continue
+            helper_instructions = list(
+                helpers[0].get("instructions", [])
+            )
+            if not (
+                _helper_uses_capture(
+                    helper_instructions,
+                    slot=2,
+                    owner="java/util/Set",
+                    name="add",
+                    descriptor="(Ljava/lang/Object;)Z",
+                )
+                and _helper_uses_capture(
+                    helper_instructions,
+                    slot=3,
+                    owner="java/util/Map$Entry",
+                    name="getKey",
+                    descriptor="()Ljava/lang/Object;",
+                    lookback=2,
+                )
+                and _helper_uses_capture(
+                    helper_instructions,
+                    slot=5,
+                    owner="java/util/Map",
+                    name="getOrDefault",
+                    descriptor=(
+                        "(Ljava/lang/Object;Ljava/lang/Object;)"
+                        "Ljava/lang/Object;"
+                    ),
+                )
+            ):
+                continue
+
+            matching_indy.append(
+                {
+                    "descriptor": descriptor,
+                    "offset": int(invocation.get("offset", -1)),
+                    "bootstrap_method_attr_index": bootstrap_index,
+                    "helper_name": str(
+                        implementation.get("name", "")
+                    ),
+                    "helper_descriptor": helper_descriptor,
+                }
+            )
+
+        if len(matching_indy) != 1:
+            continue
+
+        replacements = [
+            (set_alias[0], set_alias[1][0], set_name, "set"),
+            (entry_alias[0], entry_alias[1][0], entry_name, "entry"),
+            (map_alias[0], map_alias[1][0], map_name, "map"),
+        ]
+        for alias_name, match, replacement, _role in replacements:
+            start = (
+                method_start
+                + callback_brace
+                + match.start("alias")
+            )
+            end = (
+                method_start
+                + callback_brace
+                + match.end("alias")
+            )
+            edits.append((start, end, replacement))
+
+        actions.append(
+            {
+                "kind": (
+                    "invokedynamic_callback_reference_capture_alias"
+                ),
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": exact_method.get("descriptor"),
+                "capture_source_names": {
+                    "set": set_name,
+                    "entry": entry_name,
+                    "map": map_name,
+                },
+                "undeclared_capture_aliases": {
+                    "set": set_alias[0],
+                    "entry": entry_alias[0],
+                    "map": map_alias[0],
+                },
+                "invokedynamic": matching_indy[0],
+                "replacement_count": 3,
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_invokedynamic_callback_reference_capture_alias"
+                    ),
+                    "strategy": (
+                        "source_outer_reference_roles_plus_exact_instance_lambda_helper"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping callback capture-alias edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_intpredicate_parameter_capture_aliases(
     *,
     source_root: Path,
@@ -24796,6 +25319,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_invokedynamic_callback_reference_capture_aliases(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_intpredicate_parameter_capture_aliases(
                         source_root=source_root,
                         path=path,
@@ -25388,6 +25918,17 @@ def normalize_procyon_source(
             int(action.get("replacement_count", 0))
             for action in actions
             if action["kind"] == "impossible_collectors_tolist_cast_removal"
+        ),
+        "invokedynamic_callback_reference_capture_alias_action_count": sum(
+            action["kind"]
+            == "invokedynamic_callback_reference_capture_alias"
+            for action in actions
+        ),
+        "invokedynamic_callback_reference_capture_alias_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "invokedynamic_callback_reference_capture_alias"
         ),
         "invokedynamic_captured_class_local_alias_action_count": sum(
             action["kind"]
