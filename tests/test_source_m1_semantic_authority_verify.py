@@ -212,6 +212,50 @@ class SourceM1SemanticAuthorityVerifyTests(unittest.TestCase):
             proof["used_review_ids"],
             [EXPECTED_REVIEW_ID],
         )
+        self.assertEqual(
+            proof["class_lineage_sha256"],
+            hashlib.sha256(
+                json.dumps(
+                    self.classes,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    ensure_ascii=False,
+                ).encode("utf-8")
+            ).hexdigest(),
+        )
+        self.assertEqual(
+            proof["member_lineage_sha256"],
+            hashlib.sha256(
+                json.dumps(
+                    self.members,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    ensure_ascii=False,
+                ).encode("utf-8")
+            ).hexdigest(),
+        )
+        self.assertEqual(
+            proof["review_sha256"],
+            hashlib.sha256(
+                json.dumps(
+                    self.review,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    ensure_ascii=False,
+                ).encode("utf-8")
+            ).hexdigest(),
+        )
+        self.assertEqual(
+            proof["acceptance_sha256"],
+            hashlib.sha256(
+                json.dumps(
+                    self.acceptance,
+                    sort_keys=True,
+                    separators=(",", ":"),
+                    ensure_ascii=False,
+                ).encode("utf-8")
+            ).hexdigest(),
+        )
 
     def test_semantic_confidence_drift_is_rejected(self):
         classes = copy.deepcopy(self.classes)
