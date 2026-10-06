@@ -565,6 +565,25 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
             self.assertTrue(
                 first["artifact_id"].startswith("SRCAUTHART_")
             )
+            self.assertTrue(
+                first["semantic_authority_verification_id"].startswith(
+                    "SOURCESEMAUTH_"
+                )
+            )
+            self.assertTrue(
+                (first_dir / "semantic-review.json").is_file()
+            )
+            self.assertTrue(
+                (first_dir / "semantic-acceptance.json").is_file()
+            )
+            self.assertIn(
+                "semantic-review.json",
+                first["document_sha256"],
+            )
+            self.assertIn(
+                "semantic-acceptance.json",
+                first["document_sha256"],
+            )
 
             exported = (
                 first_dir / "src" / "rs" / "A.java"
@@ -592,6 +611,41 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
             )
             self.assertTrue(
                 all(report["checks"].values())
+            )
+
+    def test_verifier_rejects_semantic_authority_payload_drift(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            out = root / "artifact"
+
+            self._build(source, out, fixture)
+            review_path = out / "semantic-review.json"
+            review = json.loads(
+                review_path.read_text(encoding="utf-8")
+            )
+            review["proposal_count"] = 0
+            review_path.write_text(
+                json.dumps(
+                    review,
+                    indent=2,
+                    sort_keys=True,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            report = verify_source_authority_artifact(
+                out,
+                expected_authority_commit="f" * 40,
+            )
+            self.assertFalse(report["verified"])
+            self.assertFalse(
+                report["checks"]["payload_file_hashes_match"]
+            )
+            self.assertFalse(
+                report["checks"]["milestone_publishable"]
             )
 
     def test_verifier_rejects_noncanonical_same_repository(self):
