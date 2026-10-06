@@ -3295,6 +3295,49 @@ def _normalize_exact_static_call_nested_type_collisions(
     current_package = current_owner.rpartition("/")[0]
 
     text = path.read_text(encoding="utf-8")
+    imports: dict[str, str] = {}
+    duplicate_imports: set[str] = set()
+    for import_match in _SINGLE_TYPE_IMPORT_RE.finditer(text):
+        dotted = import_match.group("name")
+        simple = dotted.rsplit(".", 1)[-1]
+        internal = dotted.replace(".", "/")
+        previous = imports.get(simple)
+        if previous is not None and previous != internal:
+            duplicate_imports.add(simple)
+        else:
+            imports[simple] = internal
+    for simple in duplicate_imports:
+        imports.pop(simple, None)
+
+    def source_return_matches(
+        source_return: str,
+        exact_return: str | None,
+    ) -> bool:
+        if exact_return is None:
+            return False
+        if (
+            _source_parameters_match_descriptor(
+                source_return + " recoveredReturn",
+                "(" + exact_return + ")V",
+                current_package=current_package,
+            )
+            is True
+        ):
+            return True
+        if not (
+            exact_return.startswith("L")
+            and exact_return.endswith(";")
+        ):
+            return False
+        source_simple = source_return.strip()
+        if not re.fullmatch(
+            r"[A-Za-z_$][A-Za-z0-9_$]*",
+            source_simple,
+        ):
+            return False
+        imported_owner = imports.get(source_simple)
+        return imported_owner == exact_return[1:-1]
+
     whole_code = _java_code_mask(text)
     pair_re = re.compile(
         r"(?<![A-Za-z0-9_$.])"
@@ -3422,13 +3465,9 @@ def _normalize_exact_static_call_nested_type_collisions(
             if source_return == "void":
                 if exact_return != "V":
                     continue
-            elif exact_return is None or (
-                _source_parameters_match_descriptor(
-                    source_return + " recoveredReturn",
-                    "(" + exact_return + ")V",
-                    current_package=current_package,
-                )
-                is not True
+            elif not source_return_matches(
+                source_return,
+                exact_return,
             ):
                 continue
 
