@@ -629,29 +629,29 @@ class SourceMilestoneTests(unittest.TestCase):
             ] = wrong_sha
             fixture["member_lineage"]["source_sha256"] = wrong_sha
 
-            class_record = fixture["class_lineage"]["classes"][0]
-            class_provenance = class_record[
-                "semantic_provenance"
-            ][0]
-            class_provenance["source_sha256"] = wrong_sha
-            class_provenance["proposal_id"] = semantic_proposal_id(
-                wrong_sha,
-                "class",
-                class_record["logical_id"],
-                class_record["semantic_name"],
-            )
+            for class_record in fixture["class_lineage"]["classes"]:
+                for class_provenance in class_record[
+                    "semantic_provenance"
+                ]:
+                    class_provenance["source_sha256"] = wrong_sha
+                    class_provenance["proposal_id"] = semantic_proposal_id(
+                        wrong_sha,
+                        "class",
+                        class_record["logical_id"],
+                        class_record["semantic_name"],
+                    )
 
-            member_record = fixture["member_lineage"]["members"][0]
-            member_provenance = member_record[
-                "semantic_provenance"
-            ][0]
-            member_provenance["source_sha256"] = wrong_sha
-            member_provenance["proposal_id"] = semantic_proposal_id(
-                wrong_sha,
-                member_record["kind"],
-                member_record["member_id"],
-                member_record["semantic_name"],
-            )
+            for member_record in fixture["member_lineage"]["members"]:
+                for member_provenance in member_record[
+                    "semantic_provenance"
+                ]:
+                    member_provenance["source_sha256"] = wrong_sha
+                    member_provenance["proposal_id"] = semantic_proposal_id(
+                        wrong_sha,
+                        member_record["kind"],
+                        member_record["member_id"],
+                        member_record["semantic_name"],
+                    )
 
             _refresh_release_pins(fixture)
             _refresh_release_verification(fixture)
@@ -682,20 +682,18 @@ class SourceMilestoneTests(unittest.TestCase):
             fixture["class_lineage"]["baseline_build_id"] = "v309"
             fixture["class_lineage"]["builds"][0]["build_id"] = "v309"
             fixture["class_lineage"]["builds"][0]["build_number"] = 309
-            fixture["class_lineage"]["classes"][0]["lineage"][0][
-                "build_id"
-            ] = "v309"
-            fixture["class_lineage"]["classes"][0][
-                "semantic_provenance"
-            ][0]["source_build"] = "v309"
+            for class_record in fixture["class_lineage"]["classes"]:
+                for lineage_entry in class_record["lineage"]:
+                    lineage_entry["build_id"] = "v309"
+                for provenance in class_record["semantic_provenance"]:
+                    provenance["source_build"] = "v309"
 
             fixture["member_lineage"]["baseline_build_id"] = "v309"
-            fixture["member_lineage"]["members"][0]["lineage"][0][
-                "build_id"
-            ] = "v309"
-            fixture["member_lineage"]["members"][0][
-                "semantic_provenance"
-            ][0]["source_build"] = "v309"
+            for member_record in fixture["member_lineage"]["members"]:
+                for lineage_entry in member_record["lineage"]:
+                    lineage_entry["build_id"] = "v309"
+                for provenance in member_record["semantic_provenance"]:
+                    provenance["source_build"] = "v309"
 
             _refresh_release_pins(fixture)
             _refresh_release_verification(fixture)
