@@ -5577,6 +5577,119 @@ class ProcyonSourceNormalizationTests(unittest.TestCase):
                 after.stdout + after.stderr,
             )
 
+    def test_intpredicate_parameter_and_derived_local_captures_compose(
+        self,
+    ):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.util.Arrays;\n"
+                        "import java.util.LinkedHashSet;\n"
+                        "import java.util.Set;\n"
+                        "public class A {\n"
+                        "    public static boolean contains(int target) {\n"
+                        "        Set<Integer> set = new LinkedHashSet<>();\n"
+                        "        set.add(Integer.valueOf(65536));\n"
+                        "        for (int intValue : set) {\n"
+                        "            int local = intValue >>> 16;\n"
+                        "            if (Arrays.stream(new int[] {1, 2, 3})\n"
+                        "                    .anyMatch(n10 -> n10 == target)) return true;\n"
+                        "            if (Arrays.stream(new int[] {4, 5, 6})\n"
+                        "                    .anyMatch(n10 -> n10 == local)) return true;\n"
+                        "        }\n"
+                        "        return false;\n"
+                        "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.util.Arrays;\n"
+                "import java.util.LinkedHashSet;\n"
+                "import java.util.Set;\n"
+                "public class A {\n"
+                "    public static boolean contains(int target) {\n"
+                "        Set set = new LinkedHashSet();\n"
+                "        set.add(Integer.valueOf(65536));\n"
+                "        for (int intValue : set) {\n"
+                "            if (Arrays.stream(new int[] {1, 2, 3})\n"
+                "                    .anyMatch(n10 -> n10 == n5)) return true;\n"
+                "            if (Arrays.stream(new int[] {4, 5, 6})\n"
+                "                    .anyMatch(n10 -> n10 == n8)) return true;\n"
+                "        }\n"
+                "        return false;\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-composed-intpredicate"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn("n10 -> n10 == target", normalized)
+            self.assertIn(
+                "n10 -> n10 == (intValue >>> 16)",
+                normalized,
+            )
+            self.assertNotIn("n5", normalized)
+            self.assertNotIn("n8", normalized)
+            self.assertIn(
+                "for (int intValue : ((java.util.Set<Integer>)set))",
+                normalized,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "intpredicate_parameter_capture_alias_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "intpredicate_derived_local_capture_alias_action_count"
+                ],
+                1,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-composed-intpredicate"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
     def test_intpredicate_derived_local_capture_rejects_shift_constant_drift(
         self,
     ):
