@@ -23,7 +23,8 @@ venv/
 .DS_Store
 Thumbs.db
 
-# Recovered/decompiled source is generated until explicitly promoted.
+# Raw recovered/decompiled workspaces stay out of Git. Certified Source-M1
+# publications use the tracked recovered-source/<build>/ tree instead.
 recovered-src/
 decompiled/
 *.jar
