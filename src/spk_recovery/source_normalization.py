@@ -6652,6 +6652,649 @@ def _normalize_invokedynamic_callback_reference_capture_aliases(
     return actions
 
 
+
+def _normalize_invokedynamic_callback_copied_int_capture(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Reconstruct one copied effectively-final int callback capture.
+
+    This handles the narrow Procyon shape where source preserves a mutable
+    outer int local but loses the compiler-required effectively-final copy
+    captured by a four-int callback lambda. Exact bytecode must prove the
+    original -1-initialized local is copied to a fresh slot immediately before
+    the established six-value LambdaMetafactory capture sequence.
+    """
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    bootstrap_methods = list(profile.get("bootstrap_methods", []))
+    if not bootstrap_methods:
+        return []
+    integer_set_fields = {
+        str(field.get("name", ""))
+        for field in profile.get("fields", [])
+        if not (int(field.get("access", 0)) & 0x0008)
+        and field.get("descriptor") == "Ljava/util/Set;"
+        and field.get("signature")
+        == "Ljava/util/Set<Ljava/lang/Integer;>;"
+        and _is_java_identifier(str(field.get("name", "")))
+    }
+    if not integer_set_fields:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+    identifier = r"[A-Za-z_$][A-Za-z0-9_$]*"
+
+    region_decl_re = re.compile(
+        r"\bint\s+(?P<region>" + identifier + r")\s*=\s*-1\s*;"
+    )
+    callback_re = re.compile(
+        r"\(\s*(?P<p1>" + identifier + r")\s*,\s*"
+        r"(?P<p2>" + identifier + r")\s*,\s*"
+        r"(?P<p3>" + identifier + r")\s*,\s*"
+        r"(?P<p4>" + identifier + r")\s*\)\s*->\s*\{"
+    )
+
+    expected_capture_shapes = [
+        (0, "ref", current_owner),
+        (0, "primitive", "I"),
+        (0, "ref", "java/util/Set"),
+        (0, "ref", "java/util/Map$Entry"),
+        (0, "primitive", "I"),
+        (0, "ref", "java/util/Map"),
+    ]
+    expected_helper_shapes = [
+        (0, "primitive", "I"),
+        (0, "ref", "java/util/Set"),
+        (0, "ref", "java/util/Map$Entry"),
+        (0, "primitive", "I"),
+        (0, "ref", "java/util/Map"),
+        (0, "primitive", "I"),
+        (0, "primitive", "I"),
+        (0, "primitive", "I"),
+        (0, "primitive", "I"),
+    ]
+    expected_bootstrap_descriptors = {
+        "metafactory": (
+            "(Ljava/lang/invoke/MethodHandles$Lookup;"
+            "Ljava/lang/String;"
+            "Ljava/lang/invoke/MethodType;"
+            "Ljava/lang/invoke/MethodType;"
+            "Ljava/lang/invoke/MethodHandle;"
+            "Ljava/lang/invoke/MethodType;)"
+            "Ljava/lang/invoke/CallSite;"
+        ),
+        "altMetafactory": (
+            "(Ljava/lang/invoke/MethodHandles$Lookup;"
+            "Ljava/lang/String;"
+            "Ljava/lang/invoke/MethodType;"
+            "[Ljava/lang/Object;)"
+            "Ljava/lang/invoke/CallSite;"
+        ),
+    }
+
+    def _instruction_int_constant(
+        row: dict[str, Any],
+    ) -> int | None:
+        value = row.get("int_constant")
+        if isinstance(value, int):
+            return value
+        mnemonic = str(row.get("mnemonic", ""))
+        constants = {
+            "iconst_m1": -1,
+            "iconst_0": 0,
+            "iconst_1": 1,
+            "iconst_2": 2,
+            "iconst_3": 3,
+            "iconst_4": 4,
+            "iconst_5": 5,
+        }
+        return constants.get(mnemonic)
+
+    def _has_helper_region_proof(
+        instructions: list[dict[str, Any]],
+        *,
+        field_name: str,
+    ) -> bool:
+        boxed_add = False
+        signed_shift = False
+        low_mask = False
+        slot_one_loads = [
+            index
+            for index, row in enumerate(instructions)
+            if row.get("mnemonic") == "iload"
+            and int(row.get("local_index", -1)) == 1
+        ]
+        if len(slot_one_loads) != 4:
+            return False
+        for index, row in enumerate(instructions):
+            if (
+                row.get("mnemonic") == "iload"
+                and int(row.get("local_index", -1)) == 1
+            ):
+                if index >= 2 and index + 2 < len(instructions):
+                    receiver = instructions[index - 2]
+                    field = instructions[index - 1]
+                    box = instructions[index + 1]
+                    add = instructions[index + 2]
+                    if (
+                        receiver.get("mnemonic") == "aload"
+                        and int(receiver.get("local_index", -1)) == 0
+                        and field.get("mnemonic") == "getfield"
+                        and field.get("owner") == current_owner
+                        and field.get("name") == field_name
+                        and field.get("descriptor") == "Ljava/util/Set;"
+                        and box.get("mnemonic") == "invokestatic"
+                        and box.get("owner") == "java/lang/Integer"
+                        and box.get("name") == "valueOf"
+                        and box.get("descriptor")
+                        == "(I)Ljava/lang/Integer;"
+                        and add.get("mnemonic") == "invokeinterface"
+                        and add.get("owner") == "java/util/Set"
+                        and add.get("name") == "add"
+                        and add.get("descriptor")
+                        == "(Ljava/lang/Object;)Z"
+                    ):
+                        boxed_add = True
+                if index + 2 < len(instructions):
+                    constant = _instruction_int_constant(
+                        instructions[index + 1]
+                    )
+                    operation = instructions[index + 2]
+                    if (
+                        constant == 8
+                        and operation.get("mnemonic") == "ishr"
+                    ):
+                        signed_shift = True
+                    if (
+                        constant == 255
+                        and operation.get("mnemonic") == "iand"
+                    ):
+                        low_mask = True
+        return boxed_add and signed_shift and low_mask
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        region_decls = list(region_decl_re.finditer(method_code))
+        callbacks = list(callback_re.finditer(method_code))
+        if len(region_decls) != 1 or len(callbacks) != 1:
+            continue
+        region_decl = region_decls[0]
+        callback = callbacks[0]
+        region_name = region_decl.group("region")
+        if region_decl.start() >= callback.start():
+            continue
+
+        region_assign_re = re.compile(
+            r"(?<![A-Za-z0-9_$])"
+            + re.escape(region_name)
+            + r"\s*=\s*(?P<rhs>[^;{}]+)\s*;"
+        )
+        region_assignments = [
+            match
+            for match in region_assign_re.finditer(method_code)
+            if region_decl.end() <= match.start() < callback.start()
+        ]
+        if len(region_assignments) != 1:
+            continue
+        region_assignment = region_assignments[0]
+        if "(" not in region_assignment.group("rhs"):
+            continue
+
+        callback_brace = method_code.find(
+            "{", callback.start(), callback.end()
+        )
+        if callback_brace < 0:
+            continue
+        try:
+            callback_end = _matching_brace_end(
+                method_code, callback_brace
+            )
+        except SourceNormalizationError:
+            continue
+        callback_code = method_code[callback_brace:callback_end]
+        lambda_names = {
+            callback.group("p1"),
+            callback.group("p2"),
+            callback.group("p3"),
+            callback.group("p4"),
+        }
+
+        add_field_aliases = {
+            (match.group("field"), match.group("alias"))
+            for match in re.finditer(
+                r"(?<![A-Za-z0-9_$])"
+                r"(?:this\s*\.\s*)?"
+                r"(?P<field>" + identifier + r")"
+                r"\s*\.\s*add\s*\(\s*(?P<alias>"
+                + identifier
+                + r")\s*\)",
+                callback_code,
+            )
+            if match.group("field") in integer_set_fields
+            and match.group("alias") not in lambda_names
+        }
+        add_aliases = {alias for _field, alias in add_field_aliases}
+        shift_aliases = {
+            match.group("alias")
+            for match in re.finditer(
+                r"(?<![A-Za-z0-9_$])(?P<alias>"
+                + identifier
+                + r")\s*>>\s*8",
+                callback_code,
+            )
+        }
+        mask_aliases = {
+            match.group("alias")
+            for match in re.finditer(
+                r"(?<![A-Za-z0-9_$])(?P<alias>"
+                + identifier
+                + r")\s*&\s*(?:0[xX]0*[fF]{2}|255)",
+                callback_code,
+            )
+        }
+        alias_candidates = (
+            add_aliases & shift_aliases & mask_aliases
+        )
+        alias_candidates.discard(region_name)
+        alias_candidates.difference_update(lambda_names)
+        if len(alias_candidates) != 1:
+            continue
+        alias_name = next(iter(alias_candidates))
+        matching_source_fields = {
+            field
+            for field, alias in add_field_aliases
+            if alias == alias_name
+        }
+        if len(matching_source_fields) != 1:
+            continue
+        region_field_name = next(iter(matching_source_fields))
+
+        alias_hits = list(
+            re.finditer(
+                r"(?<![A-Za-z0-9_$])"
+                + re.escape(alias_name)
+                + r"(?![A-Za-z0-9_$])",
+                callback_code,
+            )
+        )
+        if len(alias_hits) != 4:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        if source_static:
+            continue
+        source_params = method_match.group("params")
+        exact_candidates = [
+            exact_method
+            for exact_method in profile.get("methods", [])
+            if exact_method.get("name") == method_match.group("name")
+            and _source_parameters_match_descriptor(
+                source_params,
+                str(exact_method.get("descriptor", "")),
+                current_package=current_package,
+            )
+            is True
+            and not (int(exact_method.get("access", 0)) & 0x0008)
+        ]
+        if len(exact_candidates) != 1:
+            continue
+        exact_method = exact_candidates[0]
+        exact_instructions = list(
+            exact_method.get("instructions", [])
+        )
+        instruction_index_by_offset = {
+            int(row.get("offset", -1)): index
+            for index, row in enumerate(exact_instructions)
+            if int(row.get("offset", -1)) >= 0
+        }
+
+        parameter_slots = _descriptor_parameter_local_slots(
+            str(exact_method.get("descriptor", "")),
+            is_static=False,
+        )
+        if parameter_slots is None:
+            continue
+        parameter_slot_set = set(parameter_slots)
+
+        minus_one_slots = {
+            int(exact_instructions[index + 1].get("local_index", -1))
+            for index in range(len(exact_instructions) - 1)
+            if _instruction_int_constant(exact_instructions[index]) == -1
+            and exact_instructions[index + 1].get("mnemonic") == "istore"
+            and int(
+                exact_instructions[index + 1].get("local_index", -1)
+            )
+            >= 0
+        }
+        if len(minus_one_slots) != 1:
+            continue
+        original_slot = next(iter(minus_one_slots))
+        if original_slot in parameter_slot_set:
+            continue
+
+        matching_indy: list[dict[str, Any]] = []
+        for invocation in exact_method.get("method_invocations", []):
+            if invocation.get("operation") != "invokedynamic":
+                continue
+            descriptor = str(invocation.get("descriptor", ""))
+            if (
+                _descriptor_parameter_shapes(descriptor)
+                != expected_capture_shapes
+            ):
+                continue
+            invocation_offset = int(invocation.get("offset", -1))
+            instruction_index = instruction_index_by_offset.get(
+                invocation_offset
+            )
+            if instruction_index is None or instruction_index < 6:
+                continue
+            capture_rows = exact_instructions[
+                instruction_index - 6:instruction_index
+            ]
+            if not (
+                capture_rows[0].get("mnemonic") == "aload"
+                and int(capture_rows[0].get("local_index", -1)) == 0
+                and capture_rows[1].get("mnemonic") == "iload"
+                and capture_rows[2].get("mnemonic") == "aload"
+                and capture_rows[3].get("mnemonic") == "aload"
+                and capture_rows[4].get("mnemonic") == "iload"
+                and capture_rows[5].get("mnemonic") == "aload"
+            ):
+                continue
+            capture_slot = int(
+                capture_rows[1].get("local_index", -1)
+            )
+            if (
+                capture_slot < 0
+                or capture_slot == original_slot
+                or capture_slot in parameter_slot_set
+            ):
+                continue
+
+            copy_sites = [
+                index
+                for index in range(instruction_index - 1)
+                if (
+                    exact_instructions[index].get("mnemonic") == "iload"
+                    and int(
+                        exact_instructions[index].get(
+                            "local_index", -1
+                        )
+                    )
+                    == original_slot
+                    and exact_instructions[index + 1].get("mnemonic")
+                    == "istore"
+                    and int(
+                        exact_instructions[index + 1].get(
+                            "local_index", -1
+                        )
+                    )
+                    == capture_slot
+                )
+            ]
+            if len(copy_sites) != 1:
+                continue
+            copy_index = copy_sites[0]
+            original_value_sites = [
+                index
+                for index in range(copy_index)
+                if (
+                    exact_instructions[index].get("mnemonic")
+                    in {
+                        "invokestatic",
+                        "invokevirtual",
+                        "invokeinterface",
+                        "invokespecial",
+                    }
+                    and _descriptor_return_descriptor(
+                        str(
+                            exact_instructions[index].get(
+                                "descriptor", ""
+                            )
+                        )
+                    )
+                    == "I"
+                    and index + 1 < len(exact_instructions)
+                    and exact_instructions[index + 1].get("mnemonic")
+                    == "istore"
+                    and int(
+                        exact_instructions[index + 1].get(
+                            "local_index", -1
+                        )
+                    )
+                    == original_slot
+                )
+            ]
+            if len(original_value_sites) != 1:
+                continue
+            original_value_index = original_value_sites[0]
+            overwritten = any(
+                row.get("mnemonic") == "istore"
+                and int(row.get("local_index", -1)) == capture_slot
+                for row in exact_instructions[
+                    copy_index + 2:instruction_index
+                ]
+            )
+            if overwritten:
+                continue
+
+            bootstrap_index = int(
+                invocation.get("bootstrap_method_attr_index", -1)
+            )
+            if not (0 <= bootstrap_index < len(bootstrap_methods)):
+                continue
+            bootstrap = bootstrap_methods[bootstrap_index]
+            bootstrap_method = bootstrap.get("bootstrap_method", {})
+            bootstrap_name = str(bootstrap_method.get("name", ""))
+            if not (
+                bootstrap_method.get("owner")
+                == "java/lang/invoke/LambdaMetafactory"
+                and bootstrap_name in expected_bootstrap_descriptors
+                and bootstrap_method.get("descriptor")
+                == expected_bootstrap_descriptors[bootstrap_name]
+            ):
+                continue
+
+            implementation_handles = [
+                argument.get("method_handle", {})
+                for argument in bootstrap.get("arguments", [])
+                if argument.get("kind") == "method_handle"
+                and argument.get("method_handle", {}).get("owner")
+                == current_owner
+            ]
+            if len(implementation_handles) != 1:
+                continue
+            implementation = implementation_handles[0]
+            helper_descriptor = str(
+                implementation.get("descriptor", "")
+            )
+            if not (
+                int(implementation.get("reference_kind", -1)) == 7
+                and _descriptor_parameter_shapes(helper_descriptor)
+                == expected_helper_shapes
+                and _descriptor_return_descriptor(helper_descriptor) == "V"
+            ):
+                continue
+
+            helpers = [
+                helper
+                for helper in profile.get("methods", [])
+                if helper.get("name") == implementation.get("name")
+                and helper.get("descriptor") == helper_descriptor
+                and not (int(helper.get("access", 0)) & 0x0008)
+                and (int(helper.get("access", 0)) & 0x1000)
+            ]
+            if len(helpers) != 1:
+                continue
+            if not _has_helper_region_proof(
+                list(helpers[0].get("instructions", [])),
+                field_name=region_field_name,
+            ):
+                continue
+
+            matching_indy.append(
+                {
+                    "descriptor": descriptor,
+                    "offset": invocation_offset,
+                    "bootstrap_method_attr_index": bootstrap_index,
+                    "helper_name": str(
+                        implementation.get("name", "")
+                    ),
+                    "helper_descriptor": helper_descriptor,
+                    "original_slot": original_slot,
+                    "capture_slot": capture_slot,
+                    "original_value_offset": int(
+                        exact_instructions[original_value_index].get(
+                            "offset", -1
+                        )
+                    ),
+                    "copy_offset": int(
+                        exact_instructions[copy_index].get(
+                            "offset", -1
+                        )
+                    ),
+                }
+            )
+
+        if len(matching_indy) != 1:
+            continue
+
+        statement_boundary = max(
+            method_code.rfind(";", 0, callback.start()),
+            method_code.rfind("{", 0, callback.start()),
+            method_code.rfind("}", 0, callback.start()),
+        ) + 1
+        statement_start = statement_boundary
+        while (
+            statement_start < callback.start()
+            and method_code[statement_start].isspace()
+        ):
+            statement_start += 1
+        if statement_start >= callback.start():
+            continue
+
+        absolute_statement_start = method_start + statement_start
+        line_start = text.rfind(
+            "\n", 0, absolute_statement_start
+        ) + 1
+        indentation = text[line_start:absolute_statement_start]
+        if indentation.strip():
+            continue
+
+        digest = hashlib.sha256(
+            (
+                rel
+                + "\0"
+                + method_match.group("name")
+                + "\0"
+                + str(exact_method.get("descriptor", ""))
+                + "\0"
+                + region_name
+            ).encode("utf-8")
+        ).hexdigest()[:12]
+        recovered_name = "recoveredCallbackCapture_" + digest
+        if re.search(
+            r"(?<![A-Za-z0-9_$])"
+            + re.escape(recovered_name)
+            + r"(?![A-Za-z0-9_$])",
+            method_code,
+        ):
+            continue
+
+        declaration = (
+            indentation
+            + "final int "
+            + recovered_name
+            + " = "
+            + region_name
+            + ";\n"
+        )
+        edits.append((line_start, line_start, declaration))
+        for alias_hit in alias_hits:
+            edits.append(
+                (
+                    method_start
+                    + callback_brace
+                    + alias_hit.start(),
+                    method_start
+                    + callback_brace
+                    + alias_hit.end(),
+                    recovered_name,
+                )
+            )
+
+        actions.append(
+            {
+                "kind": "invokedynamic_callback_copied_int_capture",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": exact_method.get("descriptor"),
+                "source_original_name": region_name,
+                "corrupted_capture_alias": alias_name,
+                "affected_region_field_name": region_field_name,
+                "recovered_capture_name": recovered_name,
+                "replacement_count": len(alias_hits),
+                "invokedynamic": matching_indy[0],
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_lost_effectively_final_callback_int_copy"
+                    ),
+                    "strategy": (
+                        "unique_minus_one_source_local_plus_exact_jvm_slot_copy"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: (row[0], row[1]))
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping copied-int callback edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_intpredicate_parameter_capture_aliases(
     *,
     source_root: Path,
@@ -25326,6 +25969,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_invokedynamic_callback_copied_int_capture(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_intpredicate_parameter_capture_aliases(
                         source_root=source_root,
                         path=path,
@@ -25918,6 +26568,17 @@ def normalize_procyon_source(
             int(action.get("replacement_count", 0))
             for action in actions
             if action["kind"] == "impossible_collectors_tolist_cast_removal"
+        ),
+        "invokedynamic_callback_copied_int_capture_action_count": sum(
+            action["kind"]
+            == "invokedynamic_callback_copied_int_capture"
+            for action in actions
+        ),
+        "invokedynamic_callback_copied_int_capture_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "invokedynamic_callback_copied_int_capture"
         ),
         "invokedynamic_callback_reference_capture_alias_action_count": sum(
             action["kind"]
