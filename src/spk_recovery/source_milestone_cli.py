@@ -40,6 +40,44 @@ def _load(path: Path) -> dict:
     return value
 
 
+def _reject_output_overlap(
+    out: Path,
+    *,
+    authority_roots: tuple[Path, ...] = (),
+    input_files: tuple[Path, ...] = (),
+) -> None:
+    resolved_out = out.resolve()
+    for root in authority_roots:
+        resolved_root = root.resolve()
+        try:
+            resolved_out.relative_to(resolved_root)
+        except ValueError:
+            pass
+        else:
+            raise SourceMilestoneError(
+                "output path must be outside authority tree: "
+                + str(root)
+            )
+    for input_path in input_files:
+        if resolved_out == input_path.resolve():
+            raise SourceMilestoneError(
+                "output path must not overwrite input authority: "
+                + str(input_path)
+            )
+
+
+def _common_input_paths(args: argparse.Namespace) -> tuple[Path, ...]:
+    return (
+        args.class_lineage,
+        args.member_lineage,
+        args.readable_manifest,
+        args.recovered_manifest,
+        args.clean_rebuild,
+        args.release_manifest,
+        args.release_verification,
+    )
+
+
 def _common_inputs(p: argparse.ArgumentParser) -> None:
     p.add_argument("--authority-commit", required=True)
     p.add_argument("--class-lineage", type=Path, required=True)
@@ -135,6 +173,11 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         if args.command == "build":
+            _reject_output_overlap(
+                args.out,
+                authority_roots=(args.source_root,),
+                input_files=_common_input_paths(args),
+            )
             manifest = build_source_milestone_manifest(
                 **_kwargs(args)
             )
@@ -153,6 +196,14 @@ def main(argv: list[str] | None = None) -> int:
             return 0 if manifest["publishable"] else 3
 
         if args.command == "verify":
+            _reject_output_overlap(
+                args.out,
+                authority_roots=(args.source_root,),
+                input_files=(
+                    *_common_input_paths(args),
+                    args.manifest,
+                ),
+            )
             manifest = _load(args.manifest)
             report = verify_source_milestone_manifest(
                 manifest,
@@ -175,6 +226,11 @@ def main(argv: list[str] | None = None) -> int:
             return 0 if report["verified"] else 3
 
         if args.command == "verify-bundle":
+            _reject_output_overlap(
+                args.out,
+                authority_roots=(args.bundle_dir,),
+                input_files=(args.manifest,),
+            )
             expected_manifest = _load(args.manifest)
             report = verify_source_publication_bundle(
                 args.bundle_dir,
