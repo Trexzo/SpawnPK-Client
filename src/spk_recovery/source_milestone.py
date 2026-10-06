@@ -1950,6 +1950,18 @@ def stage_source_publication_bundle(
         destination.write_bytes(source.read_bytes())
         copied.append(rel.as_posix())
 
+    staged_report = verify_source_publication_bundle(
+        target,
+        expected_manifest=expected_manifest,
+        expected_authority_commit=expected_authority_commit,
+        expected_publication_repository=_DEFAULT_AUTHORITY_REPOSITORY,
+        expected_publication_root=normalized_root,
+    )
+    if not staged_report.get("verified"):
+        raise SourceMilestoneError(
+            "staged repository publication failed postimage verification"
+        )
+
     return {
         "schema_version": 1,
         "kind": "source_repository_staging",
@@ -1957,6 +1969,9 @@ def stage_source_publication_bundle(
         "repository_root": normalized_root,
         "milestone_id": expected_manifest.get("milestone_id"),
         "bundle_verification_id": report.get("verification_id"),
+        "staged_bundle_verification_id": staged_report.get(
+            "verification_id"
+        ),
         "file_count": len(copied),
         "files": copied,
         "target_path": str(target),
