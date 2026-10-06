@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 from spk_recovery.semantic_authority import semantic_proposal_id
 from spk_recovery.source_authority_artifact import (
@@ -18,6 +19,24 @@ from spk_recovery.v308_authority import V308_SOURCE_AUTHORITY_SHA256
 
 _CLASS_REVIEW_ID = "SEMREVIEW_" + "A" * 20
 _MEMBER_REVIEW_ID = "SEMREVIEW_" + "B" * 20
+
+def _trusted_semantic_proof() -> dict:
+    return {
+        "schema_version": 1,
+        "kind": "source_m1_semantic_review_authority_verification",
+        "verification_id": "SOURCESEMAUTH_" + "A" * 20,
+        "registry_id": "SEMREGAUTH_" + "B" * 20,
+        "source_sha256": V308_SOURCE_AUTHORITY_SHA256,
+        "review_id": "SEMREVIEW_DD69CD752A6E46181BAC",
+        "trusted_review_count": 1,
+        "trusted_accepted_proposal_count": 39,
+        "accepted_class_records": 32,
+        "accepted_member_records": 7,
+        "accepted_records": 39,
+        "verified_provenance_rows": 39,
+        "verified": True,
+    }
+
 
 
 def _artifact_milestone_id(artifact_dir: Path) -> str:
@@ -206,6 +225,14 @@ def _fixture(source_root: Path) -> dict:
             ],
             "unresolved": [],
         },
+        "semantic_review": {
+            "schema_version": 1,
+            "kind": "semantic_review_fixture",
+        },
+        "semantic_acceptance": {
+            "schema_version": 1,
+            "kind": "semantic_acceptance_fixture",
+        },
         "member_lineage": {
             "schema_version": 1,
             "kind": "member_lineage",
@@ -351,6 +378,15 @@ def _fixture(source_root: Path) -> dict:
 
 
 class SourceAuthorityArtifactTests(unittest.TestCase):
+    def setUp(self):
+        self._semantic_authority_patch = mock.patch(
+            "spk_recovery.source_milestone."
+            "verify_v308_semantic_review_authority",
+            return_value=_trusted_semantic_proof(),
+        )
+        self._semantic_authority_patch.start()
+        self.addCleanup(self._semantic_authority_patch.stop)
+
     def _build(
         self,
         source: Path,
@@ -365,6 +401,30 @@ class SourceAuthorityArtifactTests(unittest.TestCase):
             **fixture,
             **build_kwargs,
         )
+
+    def test_artifact_packages_semantic_authority_documents(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixture(source)
+            out = root / "artifact"
+
+            report = self._build(source, out, fixture)
+
+            self.assertTrue((out / "semantic-review.json").is_file())
+            self.assertTrue(
+                (out / "semantic-acceptance.json").is_file()
+            )
+            self.assertIn(
+                "semantic-review.json",
+                report["document_sha256"],
+            )
+            self.assertIn(
+                "semantic-acceptance.json",
+                report["document_sha256"],
+            )
+            verified = verify_source_authority_artifact(out)
+            self.assertTrue(verified["verified"])
 
     def test_verifier_requires_external_authority_commit(self):
         with tempfile.TemporaryDirectory() as td:
