@@ -238,6 +238,19 @@ class ExactLocalAcceptanceWrapperTests(unittest.TestCase):
             milestone_args,
         )
 
+        bundle_start = text.index("$BundleArgs = @(")
+        bundle_end = text.index(
+            'Invoke-PyChecked "BUILD SOURCE-ONLY PUBLICATION BUNDLE"'
+        )
+        bundle_args = text[bundle_start:bundle_end]
+        for name in (
+            "class-lineage.json",
+            "member-lineage.json",
+            "semantic-review.json",
+            "semantic-acceptance.json",
+        ):
+            self.assertIn(name, bundle_args)
+
     def test_wrappers_parse_with_powershell_ast(self):
         shell = shutil.which("powershell.exe") or shutil.which("pwsh")
         if shell is None:
