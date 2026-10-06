@@ -202,6 +202,41 @@ class ExactLocalAcceptanceWrapperTests(unittest.TestCase):
         probe_args = text[probe_start:probe_end]
         self.assertNotIn("--member-safety-acceptance", probe_args)
 
+    def test_source_m1_wrapper_can_fetch_pinned_procyon_when_omitted(self):
+        text = self.source.read_text(encoding="utf-8")
+
+        prefix = text.split("[string]$DecompilerJar", 1)[0]
+        self.assertFalse(
+            prefix.rstrip().endswith("[Parameter(Mandatory = $true)]")
+        )
+
+        self.assertIn(
+            "https://github.com/mstrobel/procyon/releases/download/"
+            "v0.6.0/procyon-decompiler-0.6.0.jar",
+            text,
+        )
+        self.assertIn(
+            "821da96012fc69244fa1ea298c90455ee"
+            "4e021434bc796d3b9546ab24601b779",
+            text,
+        )
+        self.assertIn("$ExpectedProcyonSize = 2004704", text)
+        self.assertIn("FETCH PINNED PROCYON 0.6.0", text)
+        self.assertIn("Invoke-WebRequest", text)
+        self.assertIn("-Uri $ExpectedProcyonUrl", text)
+        self.assertIn("-OutFile $DecompilerJar", text)
+        self.assertIn("PROCYON_FETCHED=", text)
+        self.assertIn("PROCYON_SUPPLIED=", text)
+        self.assertIn("PROCYON_BYTES=", text)
+        self.assertIn(
+            "Get-FileHash -LiteralPath $DecompilerJar -Algorithm SHA256",
+            text,
+        )
+        self.assertIn(
+            'throw "Exact Procyon 0.6.0 SHA mismatch: $DecompilerSha"',
+            text,
+        )
+
     def test_wrappers_parse_with_powershell_ast(self):
         shell = shutil.which("powershell.exe") or shutil.which("pwsh")
         if shell is None:
