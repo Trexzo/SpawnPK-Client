@@ -10989,7 +10989,20 @@ def _normalize_generic_key_object_casts(
                         == call["field_descriptor"]
                     )
                 ]
-                if len(matching_calls) != 1:
+                if not matching_calls:
+                    continue
+                matching_proofs = {
+                    (
+                        call["field_name"],
+                        call["field_descriptor"],
+                        call["raw_owner"],
+                        call["member_name"],
+                        call["member_descriptor"],
+                        call["key_owner"],
+                    )
+                    for call in matching_calls
+                }
+                if len(matching_proofs) != 1:
                     continue
                 call = matching_calls[0]
                 if index == 0:
