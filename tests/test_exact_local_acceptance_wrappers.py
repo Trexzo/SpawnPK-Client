@@ -150,6 +150,103 @@ class ExactLocalAcceptanceWrapperTests(unittest.TestCase):
         self.assertIn("CLASS_LINEAGE_SUPPLIED=", text)
         self.assertIn("MEMBER_LINEAGE_SUPPLIED=", text)
 
+    def test_source_m1_wrapper_enforces_trusted_semantic_authority(self):
+        text = self.source.read_text(encoding="utf-8")
+
+        canonical_review = (
+            '$CanonicalReview = Join-Path $Repo '
+            '"mappings\\candidates\\v308.semantic-review.chat2.r2.json"'
+        )
+        canonical_acceptance = (
+            '$CanonicalAcceptance = Join-Path $Repo '
+            '"mappings\\v308.semantic.acceptance.json"'
+        )
+        lineage_branch = text.index("if (-not $HasClassLineage) {")
+        self.assertLess(text.index(canonical_review), lineage_branch)
+        self.assertLess(text.index(canonical_acceptance), lineage_branch)
+
+        self.assertIn(
+            "VERIFY TRUSTED V308 SEMANTIC AUTHORITY",
+            text,
+        )
+        self.assertIn(
+            '"spk_recovery.source_m1_semantic_authority_verify"',
+            text,
+        )
+        self.assertIn(
+            "v308-semantic-authority-verification.json",
+            text,
+        )
+        self.assertIn(
+            'verified = "/verified"',
+            text,
+        )
+        self.assertIn(
+            'trusted_review_count = "/trusted_review_count"',
+            text,
+        )
+        self.assertIn(
+            'trusted_accepted_proposal_count = '
+            '"/trusted_accepted_proposal_count"',
+            text,
+        )
+        self.assertIn(
+            'accepted_class_records = "/accepted_class_records"',
+            text,
+        )
+        self.assertIn(
+            'accepted_member_records = "/accepted_member_records"',
+            text,
+        )
+        self.assertIn(
+            'accepted_records = "/accepted_records"',
+            text,
+        )
+        self.assertIn(
+            'verified_provenance_rows = "/verified_provenance_rows"',
+            text,
+        )
+        self.assertIn(
+            "$SemanticAuthorityDoc.trusted_review_count -ne 1",
+            text,
+        )
+        self.assertIn(
+            "$SemanticAuthorityDoc.trusted_accepted_proposal_count -ne 39",
+            text,
+        )
+        self.assertIn(
+            "$SemanticAuthorityDoc.accepted_class_records -ne 32",
+            text,
+        )
+        self.assertIn(
+            "$SemanticAuthorityDoc.accepted_member_records -ne 7",
+            text,
+        )
+        self.assertIn(
+            "$SemanticAuthorityDoc.accepted_records -ne 39",
+            text,
+        )
+        self.assertIn(
+            "$SemanticAuthorityDoc.verified_provenance_rows -ne 39",
+            text,
+        )
+        self.assertIn(
+            "SEMANTIC_AUTHORITY_VERIFICATION_ID=",
+            text,
+        )
+        self.assertIn(
+            "SEMANTIC_AUTHORITY_REGISTRY_ID=",
+            text,
+        )
+
+        verify_pos = text.index(
+            "VERIFY TRUSTED V308 SEMANTIC AUTHORITY"
+        )
+        member_safety_pos = text.index(
+            "$MemberSafetyProbeDir = Join-Path"
+        )
+        self.assertLess(verify_pos, member_safety_pos)
+
     def test_source_m1_wrapper_can_recover_exact_member_safety_acceptance(self):
         text = self.source.read_text(encoding="utf-8")
 
