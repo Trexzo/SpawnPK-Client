@@ -170,6 +170,18 @@ def verify_v308_semantic_review_authority(
         "source_sha256": EXPECTED_V308_SHA256,
         "review_id": EXPECTED_REVIEW_ID,
         "registry_id": summary["registry_id"],
+        "class_lineage_sha256": hashlib.sha256(
+            _stable_json(class_lineage)
+        ).hexdigest(),
+        "member_lineage_sha256": hashlib.sha256(
+            _stable_json(member_lineage)
+        ).hexdigest(),
+        "review_sha256": hashlib.sha256(
+            _stable_json(review)
+        ).hexdigest(),
+        "acceptance_sha256": hashlib.sha256(
+            _stable_json(acceptance)
+        ).hexdigest(),
         **expected,
     }
     return {
