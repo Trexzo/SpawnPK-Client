@@ -49,7 +49,7 @@
     "source_bytes": {"type": "integer", "minimum": 1},
     "document_sha256": {
       "type": "object",
-      "minProperties": 7,
+      "minProperties": 9,
       "additionalProperties": {
         "type": "string",
         "pattern": "^[0-9a-f]{64}$"
@@ -57,7 +57,7 @@
     },
     "payload_file_sha256": {
       "type": "object",
-      "minProperties": 8,
+      "minProperties": 10,
       "additionalProperties": {
         "type": "string",
         "pattern": "^[0-9a-f]{64}$"
