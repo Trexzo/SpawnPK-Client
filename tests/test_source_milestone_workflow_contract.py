@@ -192,6 +192,27 @@ class SourceMilestoneWorkflowContractTests(unittest.TestCase):
             '--source-root "$SOURCE_AUTHORITY_DIR/src"',
             authority_section,
         )
+        self.assertIn(
+            'test -f "$SOURCE_AUTHORITY_DIR/semantic-review.json"',
+            authority_section,
+        )
+        self.assertIn(
+            'test -f "$SOURCE_AUTHORITY_DIR/semantic-acceptance.json"',
+            authority_section,
+        )
+        self.assertEqual(
+            authority_section.count(
+                '--semantic-review "$SOURCE_AUTHORITY_DIR/semantic-review.json"'
+            ),
+            3,
+        )
+        self.assertEqual(
+            authority_section.count(
+                '--semantic-acceptance '
+                '"$SOURCE_AUTHORITY_DIR/semantic-acceptance.json"'
+            ),
+            3,
+        )
         self.assertNotIn("--artifact-dir authority", authority_section)
         self.assertNotIn("--source-root authority/src", authority_section)
 
@@ -235,6 +256,25 @@ class SourceMilestoneWorkflowContractTests(unittest.TestCase):
         self.assertIn(
             '--expected-milestone-id "$EXPECTED_MILESTONE_ID"',
             verify,
+        )
+
+    def test_bundle_carries_semantic_authority_documents(self):
+        start = self.text.index(
+            "- name: Build source-only publication bundle"
+        )
+        end = self.text.index(
+            "- name: Verify publication bundle"
+        )
+        bundle = self.text[start:end]
+        self.assertIn(
+            '--provenance "semantic-review.json='
+            '$SOURCE_AUTHORITY_DIR/semantic-review.json"',
+            bundle,
+        )
+        self.assertIn(
+            '--provenance "semantic-acceptance.json='
+            '$SOURCE_AUTHORITY_DIR/semantic-acceptance.json"',
+            bundle,
         )
 
     def test_bundle_verification_is_bound_to_exact_authority_commit(self):
