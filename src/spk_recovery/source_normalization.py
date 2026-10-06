@@ -6160,6 +6160,11 @@ def _normalize_invokedynamic_callback_reference_capture_aliases(
     bootstrap_methods = list(profile.get("bootstrap_methods", []))
     if not bootstrap_methods:
         return []
+    class_field_names = {
+        str(field.get("name", ""))
+        for field in profile.get("fields", [])
+        if _is_java_identifier(str(field.get("name", "")))
+    }
 
     text = path.read_text(encoding="utf-8")
     whole_code = _java_code_mask(text)
@@ -6243,7 +6248,11 @@ def _normalize_invokedynamic_callback_reference_capture_aliases(
         parameter_names: list[str],
         lambda_names: set[str],
     ) -> bool:
-        if name in parameter_names or name in lambda_names:
+        if (
+            name in parameter_names
+            or name in lambda_names
+            or name in class_field_names
+        ):
             return True
         declaration_re = re.compile(
             r"\b(?:final\s+)?"
