@@ -25,11 +25,13 @@ class SourceAuthorityArtifactError(ValueError):
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 _MILESTONE_ID_RE = re.compile(r"^SRCMILESTONE_[0-9A-F]{20}$")
 _DEFAULT_AUTHORITY_REPOSITORY = "Trexzo/SpawnPK-Client"
-_DEFAULT_PUBLICATION_REPOSITORY = "Trexzo/SpawnPK-Client-Source"
+_DEFAULT_PUBLICATION_REPOSITORY = _DEFAULT_AUTHORITY_REPOSITORY
 
 _DOCUMENT_NAMES = {
     "class-lineage.json": "class_lineage",
     "member-lineage.json": "member_lineage",
+    "semantic-review.json": "semantic_review",
+    "semantic-acceptance.json": "semantic_acceptance",
     "readable-client-manifest.json": "readable_manifest",
     "recovered-source-manifest.json": "recovered_source_manifest",
     "clean-rebuild.json": "clean_rebuild_report",
@@ -151,6 +153,8 @@ def _build_milestone(
             authority_commit=authority_commit,
             class_lineage=documents["class_lineage"],
             member_lineage=documents["member_lineage"],
+            semantic_review=documents["semantic_review"],
+            semantic_acceptance=documents["semantic_acceptance"],
             readable_manifest=documents["readable_manifest"],
             recovered_source_manifest=documents[
                 "recovered_source_manifest"
@@ -175,6 +179,8 @@ def build_source_authority_artifact(
     authority_commit: str,
     class_lineage: dict[str, Any],
     member_lineage: dict[str, Any],
+    semantic_review: dict[str, Any],
+    semantic_acceptance: dict[str, Any],
     readable_manifest: dict[str, Any],
     recovered_source_manifest: dict[str, Any],
     clean_rebuild_report: dict[str, Any],
@@ -224,6 +230,8 @@ def build_source_authority_artifact(
     documents = {
         "class_lineage": class_lineage,
         "member_lineage": member_lineage,
+        "semantic_review": semantic_review,
+        "semantic_acceptance": semantic_acceptance,
         "readable_manifest": readable_manifest,
         "recovered_source_manifest": recovered_source_manifest,
         "clean_rebuild_report": clean_rebuild_report,
@@ -295,11 +303,33 @@ def build_source_authority_artifact(
         **source_file_sha256,
     }
 
+    semantic_authority = milestone.get("provenance", {}).get(
+        "trusted_semantic_authority",
+        {},
+    )
+    semantic_authority_verification_id = (
+        semantic_authority.get("verification_id")
+        if isinstance(semantic_authority, dict)
+        else None
+    )
+    if (
+        not isinstance(semantic_authority_verification_id, str)
+        or not semantic_authority_verification_id.startswith(
+            "SOURCESEMAUTH_"
+        )
+    ):
+        raise SourceAuthorityArtifactError(
+            "publishable milestone lacks trusted semantic authority proof"
+        )
+
     material = {
         "authority_repository": authority_repository,
         "authority_commit": authority_commit,
         "publication_repository": publication_repository,
         "preflight_milestone_id": milestone["milestone_id"],
+        "semantic_authority_verification_id": (
+            semantic_authority_verification_id
+        ),
         "build_id": milestone["provenance"]["build_id"],
         "client_sha256": milestone["provenance"][
             "authority_client_sha256"
@@ -323,6 +353,9 @@ def build_source_authority_artifact(
         "authority_commit": authority_commit,
         "publication_repository": publication_repository,
         "preflight_milestone_id": milestone["milestone_id"],
+        "semantic_authority_verification_id": (
+            semantic_authority_verification_id
+        ),
         "preflight_publishable": True,
         "build_id": milestone["provenance"]["build_id"],
         "client_sha256": milestone["provenance"][
@@ -427,6 +460,9 @@ def verify_source_authority_artifact(
         "publication_repository": publication_repository,
         "preflight_milestone_id": manifest.get(
             "preflight_milestone_id"
+        ),
+        "semantic_authority_verification_id": manifest.get(
+            "semantic_authority_verification_id"
         ),
         "build_id": manifest.get("build_id"),
         "client_sha256": manifest.get("client_sha256"),
@@ -567,6 +603,14 @@ def verify_source_authority_artifact(
         )
         == manifest.get("client_sha256")
     )
+    checks["semantic_authority_verification_id_match"] = (
+        milestone is not None
+        and milestone.get("provenance", {}).get(
+            "trusted_semantic_authority",
+            {},
+        ).get("verification_id")
+        == manifest.get("semantic_authority_verification_id")
+    )
 
     material = {
         "artifact_id": manifest.get("artifact_id"),
@@ -611,6 +655,8 @@ def load_authority_artifact_inputs(
     *,
     class_lineage: Path,
     member_lineage: Path,
+    semantic_review: Path,
+    semantic_acceptance: Path,
     readable_manifest: Path,
     recovered_manifest: Path,
     clean_rebuild: Path,
@@ -620,6 +666,8 @@ def load_authority_artifact_inputs(
     return {
         "class_lineage": _read_json(class_lineage),
         "member_lineage": _read_json(member_lineage),
+        "semantic_review": _read_json(semantic_review),
+        "semantic_acceptance": _read_json(semantic_acceptance),
         "readable_manifest": _read_json(readable_manifest),
         "recovered_source_manifest": _read_json(
             recovered_manifest
