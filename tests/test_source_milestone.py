@@ -772,6 +772,33 @@ class SourceMilestoneTests(unittest.TestCase):
             ):
                 self._build(source, fixture)
 
+    def test_trusted_semantic_acceptance_drift_blocks_publication(self):
+        with tempfile.TemporaryDirectory() as td:
+            source = Path(td) / "source"
+            fixture = _fixtures(source)
+            fixture["semantic_acceptance"] = copy.deepcopy(
+                fixture["semantic_acceptance"]
+            )
+            fixture["semantic_acceptance"]["accept"] = (
+                fixture["semantic_acceptance"]["accept"][1:]
+            )
+
+            manifest = self._build(source, fixture)
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "trusted_semantic_authority",
+                    "reason": "trusted_semantic_review_authority_failed",
+                },
+                manifest["blockers"],
+            )
+            trusted = manifest["provenance"][
+                "trusted_semantic_authority"
+            ]
+            self.assertFalse(trusted["verified"])
+            self.assertIsNone(trusted["verification_id"])
+
     def test_publishable_manifest_binds_all_hard_gates(self):
         with tempfile.TemporaryDirectory() as td:
             source = Path(td) / "source"
