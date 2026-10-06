@@ -1,0 +1,29 @@
+name: Temporary Source M1 Repo Transfer 29d88d
+
+on:
+  push:
+    branches:
+      - chat/source-m1-container-transfer-29d88d
+
+permissions:
+  contents: read
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Build public repository snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar --exclude=.git -czf "$RUNNER_TEMP/SpawnPK-Client-29d88d.tar.gz" .
+          sha256sum "$RUNNER_TEMP/SpawnPK-Client-29d88d.tar.gz"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-m1-public-repo-29d88d
+          path: ${{ runner.temp }}/SpawnPK-Client-29d88d.tar.gz
+          if-no-files-found: error
+          retention-days: 1
