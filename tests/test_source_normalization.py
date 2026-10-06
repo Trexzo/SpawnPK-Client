@@ -17212,6 +17212,120 @@ class GenericKeyObjectCastTests(unittest.TestCase):
                 after.stdout + after.stderr,
             )
 
+    def test_generic_key_cast_supports_repeated_same_proof_calls(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            repeated_calls = (
+                "        Object a2 = value;\n"
+                "        Object a3 = value;\n"
+                "        Object fallback = new Object();\n"
+                "        this.d.a(method, (a2 == null) ? fallback : a2);\n"
+                "        this.d.a(method, fallback);\n"
+                "        this.d.a(method, (a3 == null) ? fallback : a3);\n"
+            )
+            jar = _compile_java_fixture(
+                root,
+                {
+                    "p/C.java": (
+                        "package p;\n"
+                        "public class C<K, V> {\n"
+                        "    public void a(K key, V value) {}\n"
+                        "}\n"
+                    ),
+                    "p/A.java": (
+                        "package p;\n"
+                        "import java.lang.reflect.Method;\n"
+                        "public class A {\n"
+                        "    private final C<Method, Object> d = new C<>();\n"
+                        "    public void run(Method method, Object value) {\n"
+                        + repeated_calls
+                        + "    }\n"
+                        "}\n"
+                    ),
+                },
+            )
+            source = root / "src" / "p" / "A.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package p;\n"
+                "import java.lang.reflect.Method;\n"
+                "public class A {\n"
+                "    private final C<Method, Object> d = new C<>();\n"
+                "    public void run(Method method, Object value) {\n"
+                "        Object a2 = value;\n"
+                "        Object a3 = value;\n"
+                "        Object fallback = new Object();\n"
+                "        this.d.a((Object)method, (a2 == null) ? fallback : a2);\n"
+                "        this.d.a((Object)method, fallback);\n"
+                "        this.d.a((Object)method, (a3 == null) ? fallback : a3);\n"
+                "    }\n"
+                "}\n",
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-repeated-generic-key"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertEqual(normalized.count("(Object)method"), 0)
+            self.assertIn(
+                "this.d.a(method, (a2 == null) ? fallback : a2);",
+                normalized,
+            )
+            self.assertIn("this.d.a(method, fallback);", normalized)
+            self.assertIn(
+                "this.d.a(method, (a3 == null) ? fallback : a3);",
+                normalized,
+            )
+
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"] == "generic_key_object_cast_removal"
+            )
+            self.assertEqual(action["replacement_count"], 3)
+            self.assertEqual(
+                action["generic_key_types"],
+                [
+                    "java/lang/reflect/Method",
+                    "java/lang/reflect/Method",
+                    "java/lang/reflect/Method",
+                ],
+            )
+            self.assertEqual(len(action["flows"]), 3)
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-repeated-generic-key"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
     def test_generic_key_cast_recovers_enhanced_for_local_type(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
