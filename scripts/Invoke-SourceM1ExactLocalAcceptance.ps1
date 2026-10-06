@@ -334,6 +334,15 @@ if ([string]::IsNullOrWhiteSpace($SourceIndex)) {
     if ([string]$SuppliedIndex.sha256 -ne $ExpectedV308) {
         throw "Supplied source index is not bound to exact v308."
     }
+    Invoke-PyChecked "VERIFY SUPPLIED EXACT V308 SOURCE INDEX" @(
+        "-3.13",
+        "-m",
+        "spk_recovery.source_index_verify_cli",
+        $ClientJar,
+        $SourceIndex,
+        "--expect-sha256",
+        $ExpectedV308
+    )
     Write-Host "SOURCE_INDEX_SUPPLIED=$SourceIndex" -ForegroundColor Green
 }
 
