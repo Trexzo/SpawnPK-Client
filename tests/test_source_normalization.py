@@ -17934,6 +17934,338 @@ class InvokedynamicCallbackReferenceCaptureAliasTests(unittest.TestCase):
             )
 
 
+class InvokedynamicCallbackCopiedIntCaptureTests(unittest.TestCase):
+    @staticmethod
+    def _exact_source(*, copied: bool = True) -> str:
+        if copied:
+            region_setup = (
+                '      int region = -1;\n'
+                '      try {\n'
+                '        region = read(value, "id");\n'
+                '        int land = read(value, "land");\n'
+            )
+            capture_decl = '        int finalRegion = region;\n'
+            capture_name = "finalRegion"
+        else:
+            region_setup = (
+                '      int region = read(value, "id");\n'
+                '      try {\n'
+                '        int land = read(value, "land");\n'
+            )
+            capture_decl = ""
+            capture_name = "region"
+        return (
+            "package p;\n"
+            "import java.util.*;\n"
+            "public class Current {\n"
+            "  interface Sink { void accept(int a,int b,int c,int d); }\n"
+            "  private final Set<Integer> h = new HashSet<>();\n"
+            "  private final List<String> i = new ArrayList<>();\n"
+            "  private final List<String> report = new ArrayList<>();\n"
+            "  private static int read(Map<String,Object> m, String key) {\n"
+            "    return ((Number)m.get(key)).intValue();\n"
+            "  }\n"
+            "  private static void scan(byte[] data, Sink sink) {\n"
+            "    sink.accept(1,2,3,4);\n"
+            "  }\n"
+            "  public void go(Map<Integer,Map<String,Object>> input) {\n"
+            "    for (Map.Entry<Integer,Map<String,Object>> entry : input.entrySet()) {\n"
+            "      Map<String,Object> value = entry.getValue();\n"
+            + region_setup
+            + "        byte[] data = new byte[0];\n"
+            "        Set<String> seen = new HashSet<>();\n"
+            + capture_decl
+            + "        scan(data, (obj,packed,type,rot) -> {\n"
+            + "          h.add(" + capture_name + ");\n"
+            "          String text = \"x\" + obj;\n"
+            "          if (seen.add(text)) {\n"
+            + "            int x = (" + capture_name + " >> 8) * 64 + (packed >> 6 & 63);\n"
+            + "            int y = (" + capture_name + " & 255) * 64 + (packed & 63);\n"
+            + "            report.add(\"region=\" + " + capture_name + "\n"
+            "              + \" yaml=\" + entry.getKey()\n"
+            "              + \" land=\" + land\n"
+            "              + \" group=\" + value.getOrDefault(\"group\", \"\")\n"
+            "              + \" \" + x + \",\" + y + \" type=\" + type + \" rot=\" + rot);\n"
+            "          }\n"
+            "        });\n"
+            "      } catch (Exception ex) {\n"
+            "        report.add(\"INCOMPLETE region=\" + region + \" \" + ex);\n"
+            "      }\n"
+            "    }\n"
+            "  }\n"
+            "}\n"
+        )
+
+    @staticmethod
+    def _malformed_source() -> str:
+        return (
+            "package p;\n"
+            "import java.util.*;\n"
+            "public class Current {\n"
+            "  interface Sink { void accept(int a,int b,int c,int d); }\n"
+            "  private final Set<Integer> h = new HashSet<>();\n"
+            "  private final List<String> i = new ArrayList<>();\n"
+            "  private final List<String> report = new ArrayList<>();\n"
+            "  private static int read(Map<String,Object> m, String key) {\n"
+            "    return ((Number)m.get(key)).intValue();\n"
+            "  }\n"
+            "  private static void scan(byte[] data, Sink sink) {\n"
+            "    sink.accept(1,2,3,4);\n"
+            "  }\n"
+            "  public void go(Map<Integer,Map<String,Object>> input) {\n"
+            "    for (Map.Entry<Integer,Map<String,Object>> entry : input.entrySet()) {\n"
+            "      Map<String,Object> value = entry.getValue();\n"
+            "      int region = -1;\n"
+            "      try {\n"
+            "        region = read(value, \"id\");\n"
+            "        int land = read(value, \"land\");\n"
+            "        byte[] data = new byte[0];\n"
+            "        Set<String> seen = new HashSet<>();\n"
+            "        scan(data, (obj,packed,type,rot) -> {\n"
+            "          h.add(i);\n"
+            "          String text = \"x\" + obj;\n"
+            "          if (seen.add(text)) {\n"
+            "            int x = (i >> 8) * 64 + (packed >> 6 & 63);\n"
+            "            int y = (i & 255) * 64 + (packed & 63);\n"
+            "            report.add(\"region=\" + i\n"
+            "              + \" yaml=\" + entry.getKey()\n"
+            "              + \" land=\" + land\n"
+            "              + \" group=\" + value.getOrDefault(\"group\", \"\")\n"
+            "              + \" \" + x + \",\" + y + \" type=\" + type + \" rot=\" + rot);\n"
+            "          }\n"
+            "        });\n"
+            "      } catch (Exception ex) {\n"
+            "        report.add(\"INCOMPLETE region=\" + region + \" \" + ex);\n"
+            "      }\n"
+            "    }\n"
+            "  }\n"
+            "}\n"
+        )
+
+    def test_callback_copied_int_capture_is_reconstructed_and_compiles(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {"p/Current.java": self._exact_source()},
+                release=8,
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                self._malformed_source(),
+                encoding="utf-8",
+            )
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-copied-int-capture"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            action = next(
+                row
+                for row in report["actions"]
+                if row["kind"]
+                == "invokedynamic_callback_copied_int_capture"
+            )
+            recovered_name = action["recovered_capture_name"]
+            self.assertRegex(
+                recovered_name,
+                r"^recoveredCallbackCapture_[0-9a-f]{12}$",
+            )
+            self.assertIn(
+                "final int "
+                + recovered_name
+                + " = region;",
+                normalized,
+            )
+            self.assertIn("h.add(" + recovered_name + ")", normalized)
+            self.assertIn("(" + recovered_name + " >> 8)", normalized)
+            self.assertIn("(" + recovered_name + " & 255)", normalized)
+            self.assertIn(
+                '"region=" + ' + recovered_name,
+                normalized,
+            )
+            self.assertEqual(action["source_original_name"], "region")
+            self.assertEqual(action["corrupted_capture_alias"], "i")
+            self.assertEqual(action["affected_region_field_name"], "h")
+            self.assertEqual(action["replacement_count"], 4)
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_callback_copied_int_capture_action_count"
+                ],
+                1,
+            )
+            self.assertEqual(
+                report["summary"][
+                    "invokedynamic_callback_copied_int_capture_reference_count"
+                ],
+                4,
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-copied-int-capture"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def test_callback_copied_int_capture_requires_matching_set_field(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            exact = self._exact_source()
+            exact = exact.replace(
+                "  private final Set<Integer> h = new HashSet<>();\n",
+                "  private final Set<Integer> h = new HashSet<>();\n"
+                "  private final Set<Integer> other = new HashSet<>();\n",
+                1,
+            )
+            exact = exact.replace(
+                "          h.add(finalRegion);\n",
+                "          other.add(finalRegion);\n",
+                1,
+            )
+            jar = _compile_java_fixture(
+                root,
+                {"p/Current.java": exact},
+                release=8,
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "invokedynamic_callback_copied_int_capture"
+                    for row in report["actions"]
+                )
+            )
+
+    def test_callback_copied_int_capture_requires_exact_value_assignment(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            exact = self._exact_source().replace(
+                '        region = read(value, "id");\n',
+                "        region = 7;\n",
+                1,
+            )
+            jar = _compile_java_fixture(
+                root,
+                {"p/Current.java": exact},
+                release=8,
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "invokedynamic_callback_copied_int_capture"
+                    for row in report["actions"]
+                )
+            )
+
+    def test_callback_copied_int_capture_rejects_helper_use_multiplicity(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            exact = self._exact_source().replace(
+                "          h.add(finalRegion);\n",
+                "          h.add(finalRegion);\n"
+                '          report.add("extra=" + finalRegion);\n',
+                1,
+            )
+            jar = _compile_java_fixture(
+                root,
+                {"p/Current.java": exact},
+                release=8,
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "invokedynamic_callback_copied_int_capture"
+                    for row in report["actions"]
+                )
+            )
+
+    def test_callback_copied_int_capture_requires_exact_slot_copy(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = _compile_java_fixture(
+                root,
+                {"p/Current.java": self._exact_source(copied=False)},
+                release=8,
+            )
+            source = root / "src" / "p" / "Current.java"
+            source.parent.mkdir(parents=True)
+            malformed = self._malformed_source()
+            source.write_text(malformed, encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                malformed,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"]
+                    == "invokedynamic_callback_copied_int_capture"
+                    for row in report["actions"]
+                )
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
 
