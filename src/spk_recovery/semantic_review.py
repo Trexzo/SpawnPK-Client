@@ -45,7 +45,8 @@ def _proposal_id(
     )
 
 
-def _review_id(proposals: list[dict[str, Any]]) -> str:
+def semantic_review_id(proposals: list[dict[str, Any]]) -> str:
+    """Derive the canonical review identity from the complete proposal set."""
     canonical = [
         {
             "proposal_id": row["proposal_id"],
@@ -57,6 +58,10 @@ def _review_id(proposals: list[dict[str, Any]]) -> str:
         for row in sorted(proposals, key=lambda r: r["proposal_id"])
     ]
     return "SEMREVIEW_" + hashlib.sha256(_stable_json(canonical)).hexdigest()[:20].upper()
+
+
+def _review_id(proposals: list[dict[str, Any]]) -> str:
+    return semantic_review_id(proposals)
 
 
 def _validate_name(name: Any) -> str:
