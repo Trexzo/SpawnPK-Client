@@ -24,7 +24,24 @@ class SourceMilestoneError(ValueError):
 
 _COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 _DEFAULT_AUTHORITY_REPOSITORY = "Trexzo/SpawnPK-Client"
-_DEFAULT_PUBLICATION_REPOSITORY = "Trexzo/SpawnPK-Client-Source"
+_DEFAULT_PUBLICATION_REPOSITORY = _DEFAULT_AUTHORITY_REPOSITORY
+_DEFAULT_PUBLICATION_ROOT = "recovered-source/v308/"
+
+
+def _normalize_publication_root(value: str) -> str:
+    if not isinstance(value, str):
+        raise SourceMilestoneError("publication root must be a string")
+    raw = value.strip().replace("\\", "/")
+    if not raw or raw.startswith("/"):
+        raise SourceMilestoneError(
+            "publication root must be a non-empty relative path"
+        )
+    parts = [part for part in raw.split("/") if part]
+    if not parts or any(part in {".", ".."} for part in parts):
+        raise SourceMilestoneError(
+            "publication root must not contain dot segments"
+        )
+    return "/".join(parts) + "/"
 
 
 def _reject_unsafe_tree_entries(
@@ -670,6 +687,7 @@ def build_source_milestone_manifest(
     source_root: Path,
     authority_repository: str = _DEFAULT_AUTHORITY_REPOSITORY,
     publication_repository: str = _DEFAULT_PUBLICATION_REPOSITORY,
+    publication_root: str = _DEFAULT_PUBLICATION_ROOT,
 ) -> dict[str, Any]:
     authority_commit = authority_commit.strip().lower()
     if not _COMMIT_RE.fullmatch(authority_commit):
@@ -681,6 +699,7 @@ def build_source_milestone_manifest(
         raise SourceMilestoneError("authority repository is required")
     if not publication_repository:
         raise SourceMilestoneError("publication repository is required")
+    publication_root = _normalize_publication_root(publication_root)
 
     try:
         validate_lineage(class_lineage)
@@ -734,6 +753,19 @@ def build_source_milestone_manifest(
     )
 
     blockers: list[dict[str, str]] = []
+
+    if publication_repository != authority_repository:
+        _block(
+            blockers,
+            gate="publication_target",
+            reason="publication_repository_must_equal_authority_repository",
+        )
+    if publication_root != _DEFAULT_PUBLICATION_ROOT:
+        _block(
+            blockers,
+            gate="publication_target",
+            reason="publication_root_not_canonical_v308_path",
+        )
 
     if not source_files:
         _block(
@@ -1094,6 +1126,7 @@ def build_source_milestone_manifest(
 
     publication = {
         "target_repository": publication_repository,
+        "repository_root": publication_root,
         "allowed": len(blockers) == 0,
         "layout": {
             "source": "src/",
@@ -1217,6 +1250,9 @@ def build_source_provenance_document(
         "publication_repository": publication.get(
             "target_repository"
         ),
+        "publication_root": publication.get(
+            "repository_root"
+        ),
     }
 
     return {
@@ -1303,6 +1339,9 @@ def build_source_provenance_document(
         "class_set": class_set,
         "publication_repository": publication.get(
             "target_repository"
+        ),
+        "publication_root": publication.get(
+            "repository_root"
         ),
         "semantic_name_statement": (
             "Accepted semantic names are evidence-backed recovery "
@@ -1484,6 +1523,14 @@ def build_source_publication_bundle(
         "source_bytes": source_bytes,
         "provenance_index": provenance_index,
         "files": file_hashes,
+        "publication_repository": manifest.get(
+            "publication",
+            {},
+        ).get("target_repository"),
+        "publication_root": manifest.get(
+            "publication",
+            {},
+        ).get("repository_root"),
     }
     bundle_id = (
         "SRCBUNDLE_"
@@ -1505,6 +1552,10 @@ def build_source_publication_bundle(
             "publication",
             {},
         ).get("target_repository"),
+        "publication_root": manifest.get(
+            "publication",
+            {},
+        ).get("repository_root"),
     }
     (out_dir / "BUNDLE.json").write_bytes(
         (
@@ -1530,6 +1581,7 @@ def verify_source_publication_bundle(
     expected_publication_repository: str = (
         _DEFAULT_PUBLICATION_REPOSITORY
     ),
+    expected_publication_root: str = _DEFAULT_PUBLICATION_ROOT,
 ) -> dict[str, Any]:
     _reject_unsafe_tree_entries(
         bundle_dir,
@@ -1636,6 +1688,10 @@ def verify_source_publication_bundle(
         publication.get("target_repository")
         == expected_publication_repository
     )
+    checks["expected_publication_root"] = (
+        publication.get("repository_root")
+        == _normalize_publication_root(expected_publication_root)
+    )
     checks["milestone_publishable"] = (
         milestone.get("publishable") is True
     )
@@ -1657,6 +1713,10 @@ def verify_source_publication_bundle(
     checks["publication_repository_match"] = (
         bundle.get("publication_repository")
         == publication.get("target_repository")
+    )
+    checks["publication_root_match"] = (
+        bundle.get("publication_root")
+        == publication.get("repository_root")
     )
     checks["contains_binary_artifacts_false"] = (
         bundle.get("contains_binary_artifacts") is False
@@ -1770,6 +1830,10 @@ def verify_source_publication_bundle(
         "source_bytes": source_bytes,
         "provenance_index": actual_provenance_index,
         "files": actual_indexed_files,
+        "publication_repository": publication.get(
+            "target_repository"
+        ),
+        "publication_root": publication.get("repository_root"),
     }
     expected_bundle_id = (
         "SRCBUNDLE_"
@@ -1809,6 +1873,112 @@ def verify_source_publication_bundle(
         "provenance_document_count": len(
             actual_provenance_index
         ),
+    }
+
+
+def stage_source_publication_bundle(
+    bundle_dir: Path,
+    repository_root: Path,
+    *,
+    expected_manifest: dict[str, Any],
+    expected_authority_commit: str,
+    publication_root: str = _DEFAULT_PUBLICATION_ROOT,
+) -> dict[str, Any]:
+    normalized_root = _normalize_publication_root(publication_root)
+    if normalized_root != _DEFAULT_PUBLICATION_ROOT:
+        raise SourceMilestoneError(
+            "repository staging is restricted to recovered-source/v308/"
+        )
+
+    report = verify_source_publication_bundle(
+        bundle_dir,
+        expected_manifest=expected_manifest,
+        expected_authority_commit=expected_authority_commit,
+        expected_publication_repository=_DEFAULT_AUTHORITY_REPOSITORY,
+        expected_publication_root=normalized_root,
+    )
+    if not report.get("verified"):
+        raise SourceMilestoneError(
+            "publication bundle must verify before repository staging"
+        )
+
+    repository_root = repository_root.resolve()
+    if (
+        not repository_root.exists()
+        or repository_root.is_symlink()
+        or not repository_root.is_dir()
+    ):
+        raise SourceMilestoneError(
+            "repository root must be an existing ordinary directory"
+        )
+
+    publication_parent = repository_root / "recovered-source"
+    if publication_parent.exists() and (
+        publication_parent.is_symlink()
+        or not publication_parent.is_dir()
+    ):
+        raise SourceMilestoneError(
+            "recovered-source parent must be an ordinary directory"
+        )
+
+    target = repository_root.joinpath(
+        *[part for part in normalized_root.rstrip("/").split("/") if part]
+    )
+    if target.exists():
+        if target.is_symlink() or not target.is_dir():
+            raise SourceMilestoneError(
+                "publication target must be an ordinary directory"
+            )
+        if any(target.iterdir()):
+            raise SourceMilestoneError(
+                "publication target must be absent or empty before staging"
+            )
+    else:
+        target.mkdir(parents=True, exist_ok=False)
+
+    bundle_dir = bundle_dir.resolve()
+    copied: list[str] = []
+    try:
+        for source in sorted(
+            bundle_dir.rglob("*"),
+            key=lambda item: item.relative_to(bundle_dir).as_posix(),
+        ):
+            if not source.is_file():
+                continue
+            rel = source.relative_to(bundle_dir)
+            destination = target / rel
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(source.read_bytes())
+            copied.append(rel.as_posix())
+
+        staged_report = verify_source_publication_bundle(
+            target,
+            expected_manifest=expected_manifest,
+            expected_authority_commit=expected_authority_commit,
+            expected_publication_repository=_DEFAULT_AUTHORITY_REPOSITORY,
+            expected_publication_root=normalized_root,
+        )
+        if not staged_report.get("verified"):
+            raise SourceMilestoneError(
+                "staged repository publication failed postimage verification"
+            )
+    except Exception:
+        shutil.rmtree(target, ignore_errors=True)
+        raise
+
+    return {
+        "schema_version": 1,
+        "kind": "source_repository_staging",
+        "target_repository": _DEFAULT_AUTHORITY_REPOSITORY,
+        "repository_root": normalized_root,
+        "milestone_id": expected_manifest.get("milestone_id"),
+        "bundle_verification_id": report.get("verification_id"),
+        "staged_bundle_verification_id": staged_report.get(
+            "verification_id"
+        ),
+        "file_count": len(copied),
+        "files": copied,
+        "target_path": str(target),
     }
 
 

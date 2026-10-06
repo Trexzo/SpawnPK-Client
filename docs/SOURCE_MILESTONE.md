@@ -2,15 +2,42 @@
 
 Source Milestone 1 is the publication gate for the recovered v308 Java source repository.
 
-The target publication repository is:
+The target publication repository is this repository:
 
-`Trexzo/SpawnPK-Client-Source`
+`Trexzo/SpawnPK-Client`
 
-That repository MUST NOT be created or populated until a source milestone manifest reports:
+The canonical exact-v308 publication root is:
+
+`recovered-source/v308/`
+
+That path MUST NOT be populated until a source milestone manifest reports:
 
 ```json
 "publishable": true
 ```
+
+## Canonical Git repository layout
+
+Once published, the same repository contains both recovery tooling and the certified source tree:
+
+```text
+SpawnPK-Client/
+  src/spk_recovery/             # recovery tooling
+  mappings/                     # semantic/lineage authority
+  scripts/
+  tests/
+  recovered-source/
+    README.md
+    v308/
+      SOURCE-MILESTONE.json
+      BUNDLE.json
+      src/**/*.java
+      provenance/
+        SOURCE-PROVENANCE.json
+        *.json
+```
+
+Future certified builds use sibling version roots such as `recovered-source/v309/`; raw intermediate decompiler output never belongs there.
 
 ## Hard gates
 
@@ -112,7 +139,9 @@ Publication itself is a separate action and remains forbidden until:
 3. exact milestone verification reports `verified=true` and `publishable=true`;
 4. the source-only bundle is built from that exact source authority.
 
-Until those conditions are satisfied, do not create or populate `Trexzo/SpawnPK-Client-Source`.
+Until those conditions are satisfied, do not populate `recovered-source/v308/`.
+
+After the bundle verifies, `spk-source-milestone stage-repository` may stage the exact verified bundle into `recovered-source/v308/` inside a clean `Trexzo/SpawnPK-Client` checkout. The staging command refuses a noncanonical publication root, refuses an unverified bundle, and refuses to overwrite a non-empty existing v308 publication tree.
 
 ## Source M1 authority artifact
 
@@ -174,7 +203,7 @@ source-m1/
     SOURCE-BUNDLE-VERIFICATION.json
 ```
 
-The workflow does **not** create, push to, or otherwise populate `Trexzo/SpawnPK-Client-Source`. Publication remains a separate action that is forbidden until the milestone and bundle verification both pass.
+The workflow remains read-only and does **not** push recovered source into Git by itself. After the milestone and bundle verification both pass, the verified bundle is staged into this repository at `recovered-source/v308/` and committed/reviewed as the canonical recovered-source publication.
 
 ## Bundle verification
 
@@ -222,7 +251,7 @@ Reusable outputs are:
 - `source_tree_sha256`
 - `authority_artifact_name`
 
-The workflow retains read-only repository/action permissions and does not create or push to the publication repository.
+The workflow retains read-only repository/action permissions and does not mutate the repository. The verified publication bundle is the input to the separate in-repository staging/commit step.
 
 ## Reusable workflow handoff
 
@@ -285,7 +314,7 @@ Source Milestone reusable outputs are emitted only after the authority artifact 
 - `source_tree_sha256`
 - `publication_artifact_name`
 
-Neither reusable workflow creates, pushes to, or otherwise populates `Trexzo/SpawnPK-Client-Source`.
+Neither reusable workflow mutates Git. Their verified output is later staged into `Trexzo/SpawnPK-Client/recovered-source/v308/`.
 
 ## Private caller repository model
 
