@@ -22,6 +22,21 @@ Exact v308 authority:
 The known v307 -> v308 update changed one archive entry (`rs/f/a.class`) and one
 meaningful build constant (`307 -> 308`).
 
+## Recovered source in this repository
+
+Certified recovered Java source is published in this same GitHub repository, versioned by exact client build:
+
+```text
+recovered-source/
+  v308/
+    SOURCE-MILESTONE.json
+    BUNDLE.json
+    src/**/*.java
+    provenance/*.json
+```
+
+`recovered-source/v308/src/` becomes canonical only after Source Milestone 1 reports `publishable=true` and the publication bundle independently verifies. Raw/intermediate decompiler output is not committed.
+
 ## What exists today
 
 The repository now has a complete core recovery/update pipeline:
@@ -343,7 +358,7 @@ not proof that inferred names are original identifiers.
 ## Repository rules
 
 - Do not commit client JARs or cache binaries.
-- Do not commit generated/decompiled client output.
+- Do not commit raw or intermediate generated/decompiled client output. The only exception is a verified Source-Milestone publication under `recovered-source/<build>/`.
 - Preserve exact SHA-256 provenance for authority builds.
 - Do not claim inferred names are original developer names.
 - Do not automatically promote unmatched-new classes or members.
