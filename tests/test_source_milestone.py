@@ -44,6 +44,14 @@ def _trusted_semantic_proof() -> dict:
         "verified": True,
     }
 
+def _semantic_bundle_provenance(fixture: dict) -> dict:
+    return {
+        "class-lineage.json": fixture["class_lineage"],
+        "member-lineage.json": fixture["member_lineage"],
+        "semantic-review.json": fixture["semantic_review"],
+        "semantic-acceptance.json": fixture["semantic_acceptance"],
+    }
+
 
 
 def verify_source_publication_bundle(bundle_dir, **kwargs):
@@ -1413,7 +1421,7 @@ class SourceMilestoneTests(unittest.TestCase):
                     manifest,
                     source,
                     Path(td) / "bundle",
-                    provenance_documents={},
+                    provenance_documents=_semantic_bundle_provenance(fixture),
                 )
 
     def test_flipped_publishable_blocked_manifest_refuses_bundle(self):
@@ -1437,7 +1445,7 @@ class SourceMilestoneTests(unittest.TestCase):
                     manifest,
                     source,
                     Path(td) / "bundle",
-                    provenance_documents={},
+                    provenance_documents=_semantic_bundle_provenance(fixture),
                 )
 
     def test_publication_allowed_must_match_publishable_manifest(self):
@@ -1457,7 +1465,7 @@ class SourceMilestoneTests(unittest.TestCase):
                     manifest,
                     source,
                     Path(td) / "bundle",
-                    provenance_documents={},
+                    provenance_documents=_semantic_bundle_provenance(fixture),
                 )
 
     def test_publication_bundle_rejects_milestone_identity_drift(self):
@@ -1479,7 +1487,7 @@ class SourceMilestoneTests(unittest.TestCase):
                     manifest,
                     source,
                     Path(td) / "bundle",
-                    provenance_documents={},
+                    provenance_documents=_semantic_bundle_provenance(fixture),
                 )
 
     def test_provenance_document_is_deterministic_and_explicit(self):
@@ -1534,6 +1542,7 @@ class SourceMilestoneTests(unittest.TestCase):
                     source,
                     Path(td) / "bundle",
                     provenance_documents={
+                        **_semantic_bundle_provenance(fixture),
                         "SOURCE-PROVENANCE.json": {},
                     },
                 )
@@ -1557,7 +1566,7 @@ class SourceMilestoneTests(unittest.TestCase):
                     manifest,
                     source,
                     nested_output,
-                    provenance_documents={},
+                    provenance_documents=_semantic_bundle_provenance(fixture),
                 )
 
             self.assertEqual(source_tree_digest(source)[0], before)
@@ -1580,6 +1589,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 source,
                 root / "bundle",
                 provenance_documents={
+                    **_semantic_bundle_provenance(fixture),
                     "recovery-release.json": fixture[
                         "release_manifest"
                     ],
@@ -1639,7 +1649,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 manifest,
                 source,
                 bundle_root,
-                provenance_documents={},
+                provenance_documents=_semantic_bundle_provenance(fixture),
             )
             report = _verify_source_publication_bundle(
                 bundle_root,
@@ -1700,7 +1710,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 bundled_manifest,
                 bundled_source,
                 bundle_root,
-                provenance_documents={},
+                provenance_documents=_semantic_bundle_provenance(fixture),
             )
             report = _verify_source_publication_bundle(
                 bundle_root,
@@ -1732,7 +1742,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 manifest,
                 source,
                 bundle_root,
-                provenance_documents={},
+                provenance_documents=_semantic_bundle_provenance(fixture),
             )
 
             report = _verify_source_publication_bundle(
@@ -1764,7 +1774,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 manifest,
                 source,
                 bundle_root,
-                provenance_documents={},
+                provenance_documents=_semantic_bundle_provenance(fixture),
             )
 
             report = _verify_source_publication_bundle(
@@ -1797,7 +1807,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 manifest,
                 source,
                 bundle_root,
-                provenance_documents={},
+                provenance_documents=_semantic_bundle_provenance(fixture),
             )
 
             stored = (
@@ -1840,7 +1850,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 manifest,
                 source,
                 bundle_root,
-                provenance_documents={},
+                provenance_documents=_semantic_bundle_provenance(fixture),
             )
 
             fifo = bundle_root / "ignored.fifo"
@@ -1874,6 +1884,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 source,
                 bundle_root,
                 provenance_documents={
+                    **_semantic_bundle_provenance(fixture),
                     "recovery-release.json": fixture[
                         "release_manifest"
                     ],
@@ -1920,7 +1931,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 manifest,
                 source,
                 bundle_root,
-                provenance_documents={},
+                provenance_documents=_semantic_bundle_provenance(fixture),
             )
             report = verify_source_publication_bundle(
                 bundle_root,
@@ -1995,7 +2006,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 manifest,
                 source,
                 bundle_root,
-                provenance_documents={},
+                provenance_documents=_semantic_bundle_provenance(fixture),
             )
 
             repository = root / "repo"
@@ -2054,7 +2065,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 manifest,
                 source,
                 bundle_root,
-                provenance_documents={},
+                provenance_documents=_semantic_bundle_provenance(fixture),
             )
             bundle_path = bundle_root / "BUNDLE.json"
             bundle = json.loads(
@@ -2092,7 +2103,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 manifest,
                 source,
                 bundle_root,
-                provenance_documents={},
+                provenance_documents=_semantic_bundle_provenance(fixture),
             )
             milestone_path = bundle_root / "SOURCE-MILESTONE.json"
             milestone = json.loads(
@@ -2133,7 +2144,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 manifest,
                 source,
                 bundle_root,
-                provenance_documents={},
+                provenance_documents=_semantic_bundle_provenance(fixture),
             )
             milestone_path = bundle_root / "SOURCE-MILESTONE.json"
             milestone = json.loads(
@@ -2169,7 +2180,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 manifest,
                 source,
                 bundle_root,
-                provenance_documents={},
+                provenance_documents=_semantic_bundle_provenance(fixture),
             )
             milestone_path = bundle_root / "SOURCE-MILESTONE.json"
             milestone = json.loads(
@@ -2207,7 +2218,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 manifest,
                 source,
                 bundle_root,
-                provenance_documents={},
+                provenance_documents=_semantic_bundle_provenance(fixture),
             )
             (bundle_root / "src" / "rs" / "A.java").unlink()
 
@@ -2231,7 +2242,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 manifest,
                 source,
                 bundle_root,
-                provenance_documents={},
+                provenance_documents=_semantic_bundle_provenance(fixture),
             )
 
             target = bundle_root / "src" / "rs" / "A.java"
@@ -2265,7 +2276,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 manifest,
                 source,
                 bundle_root,
-                provenance_documents={},
+                provenance_documents=_semantic_bundle_provenance(fixture),
             )
 
             (bundle_root / "payload.jar").write_bytes(b"binary")
