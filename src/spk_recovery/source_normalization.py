@@ -7310,6 +7310,24 @@ def _normalize_invokedynamic_callback_direct_int_capture_alias(
         (0, "primitive", "I"),
         (0, "primitive", "I"),
     ]
+    expected_bootstrap_descriptors = {
+        "metafactory": (
+            "(Ljava/lang/invoke/MethodHandles$Lookup;"
+            "Ljava/lang/String;"
+            "Ljava/lang/invoke/MethodType;"
+            "Ljava/lang/invoke/MethodType;"
+            "Ljava/lang/invoke/MethodHandle;"
+            "Ljava/lang/invoke/MethodType;)"
+            "Ljava/lang/invoke/CallSite;"
+        ),
+        "altMetafactory": (
+            "(Ljava/lang/invoke/MethodHandles$Lookup;"
+            "Ljava/lang/String;"
+            "Ljava/lang/invoke/MethodType;"
+            "[Ljava/lang/Object;)"
+            "Ljava/lang/invoke/CallSite;"
+        ),
+    }
 
     def _helper_uses_land_slot(
         instructions: list[dict[str, Any]],
@@ -7490,6 +7508,17 @@ def _normalize_invokedynamic_callback_direct_int_capture_alias(
             if not (0 <= bootstrap_index < len(bootstrap_methods)):
                 continue
             bootstrap = bootstrap_methods[bootstrap_index]
+            bootstrap_method = bootstrap.get("bootstrap_method", {})
+            bootstrap_name = str(bootstrap_method.get("name", ""))
+            if not (
+                bootstrap_method.get("owner")
+                == "java/lang/invoke/LambdaMetafactory"
+                and bootstrap_name in expected_bootstrap_descriptors
+                and bootstrap_method.get("descriptor")
+                == expected_bootstrap_descriptors[bootstrap_name]
+                and bootstrap_method.get("target_kind") == "method"
+            ):
+                continue
             implementation_handles = [
                 argument.get("method_handle", {})
                 for argument in bootstrap.get("arguments", [])
@@ -7504,11 +7533,19 @@ def _normalize_invokedynamic_callback_direct_int_capture_alias(
                 implementation.get("descriptor", "")
             )
             if not (
-                int(implementation.get("reference_kind", -1)) == 7
+                implementation.get("target_kind") == "method"
+                and int(implementation.get("reference_kind", -1)) == 7
                 and _descriptor_parameter_shapes(helper_descriptor)
                 == expected_helper_shapes
                 and _descriptor_return_descriptor(helper_descriptor) == "V"
             ):
+                continue
+            instantiated_types = {
+                str(argument.get("descriptor", ""))
+                for argument in bootstrap.get("arguments", [])
+                if argument.get("kind") == "method_type"
+            }
+            if "(IIII)V" not in instantiated_types:
                 continue
             helpers = [
                 helper
