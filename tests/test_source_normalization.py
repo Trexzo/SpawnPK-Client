@@ -17026,6 +17026,196 @@ class GenericKeyObjectCastTests(unittest.TestCase):
         self._assert_no_action("slot_type")
 
 
+
+class GenericKeyGetClassObjectCastTests(unittest.TestCase):
+    def _fixture(
+        self,
+        root: Path,
+        *,
+        mode: str = "exact",
+    ) -> Path:
+        field_key = "Class<?>"
+        method = "    public V i(K key) { return null; }\n"
+        body = (
+            "        return this.subscribers.i(o.getClass()).name();\n"
+        )
+
+        if mode == "field_signature":
+            field_key = "String"
+            body = (
+                "        return this.subscribers.i(o.toString()).name();\n"
+            )
+        elif mode == "method_signature":
+            method = "    public V i(Object key) { return null; }\n"
+        elif mode == "multiplicity":
+            body = (
+                "        this.subscribers.i(o.getClass()).name();\n"
+                "        return this.subscribers.i(o.getClass()).name();\n"
+            )
+        elif mode == "flow":
+            body = (
+                "        Class<?> type = o.getClass();\n"
+                "        return this.subscribers.i(type).name();\n"
+            )
+        elif mode != "exact":
+            raise AssertionError(mode)
+
+        return _compile_java_fixture(
+            root,
+            {
+                "p/C.java": (
+                    "package p;\n"
+                    "public class C<K, V> {\n"
+                    + method
+                    + "}\n"
+                ),
+                "p/A.java": (
+                    "package p;\n"
+                    "public class A {\n"
+                    "    public static final class Subscriber {\n"
+                    "        public String name() { return \"ok\"; }\n"
+                    "    }\n"
+                    "    private C<"
+                    + field_key
+                    + ", Subscriber> subscribers = new C<>();\n"
+                    "    public String run(Object o) {\n"
+                    + body
+                    + "    }\n"
+                    "}\n"
+                ),
+            },
+        )
+
+    def _malformed_source(self) -> str:
+        return (
+            "package p;\n"
+            "public class A {\n"
+            "    public static final class Subscriber {\n"
+            "        public String name() { return \"ok\"; }\n"
+            "    }\n"
+            "    private C<Class<?>, Subscriber> subscribers = new C<>();\n"
+            "    public String run(Object o) {\n"
+            "        return this.subscribers.i((Object)o.getClass()).name();\n"
+            "    }\n"
+            "}\n"
+        )
+
+    def _write_source(self, root: Path) -> Path:
+        source = root / "src" / "p" / "A.java"
+        source.parent.mkdir(parents=True)
+        source.write_text(
+            self._malformed_source(),
+            encoding="utf-8",
+        )
+        return source
+
+    def test_getclass_generic_key_object_cast_is_removed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root)
+            source = self._write_source(root)
+
+            before = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "before-getclass-key"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertNotEqual(before.returncode, 0)
+            compact_before = before.stderr.replace(" ", "")
+            self.assertIn("ObjectcannotbeconvertedtoClass<?>", compact_before)
+
+            report = normalize_procyon_source(root / "src", jar)
+            normalized = source.read_text(encoding="utf-8")
+            self.assertIn(
+                "this.subscribers.i(o.getClass()).name()",
+                normalized,
+            )
+            self.assertNotIn("(Object)o.getClass()", normalized)
+
+            actions = [
+                row
+                for row in report["actions"]
+                if (
+                    row["kind"] == "generic_key_object_cast_removal"
+                    and row.get("mode") == "getclass_expression"
+                )
+            ]
+            self.assertEqual(len(actions), 1)
+            self.assertEqual(actions[0]["replacement_count"], 1)
+            self.assertEqual(
+                actions[0]["generic_key_types"],
+                ["java/lang/Class"],
+            )
+            self.assertEqual(
+                actions[0]["generic_value_types"],
+                ["p/A$Subscriber"],
+            )
+            self.assertEqual(
+                actions[0]["member_signatures"],
+                ["(TK;)TV;"],
+            )
+
+            after = subprocess.run(
+                [
+                    "javac",
+                    "-cp",
+                    str(jar),
+                    "-d",
+                    str(root / "after-getclass-key"),
+                    str(source),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                after.returncode,
+                0,
+                after.stdout + after.stderr,
+            )
+
+    def _assert_no_action(self, mode: str) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            jar = self._fixture(root, mode=mode)
+            source = self._write_source(root)
+            original = source.read_text(encoding="utf-8")
+
+            report = normalize_procyon_source(root / "src", jar)
+
+            self.assertEqual(
+                source.read_text(encoding="utf-8"),
+                original,
+            )
+            self.assertFalse(
+                any(
+                    row["kind"] == "generic_key_object_cast_removal"
+                    and row.get("mode") == "getclass_expression"
+                    for row in report["actions"]
+                )
+            )
+
+    def test_getclass_generic_key_fails_on_field_signature_drift(self):
+        self._assert_no_action("field_signature")
+
+    def test_getclass_generic_key_fails_on_method_signature_drift(self):
+        self._assert_no_action("method_signature")
+
+    def test_getclass_generic_key_fails_on_exact_multiplicity_drift(self):
+        self._assert_no_action("multiplicity")
+
+    def test_getclass_generic_key_fails_on_bytecode_flow_drift(self):
+        self._assert_no_action("flow")
+
+
 class InheritedCcGenericValueObjectCastTests(unittest.TestCase):
     def _fixture(
         self,
