@@ -15,6 +15,7 @@ from spk_recovery.source_milestone import (
     build_source_milestone_manifest,
     build_source_provenance_document,
     build_source_publication_bundle,
+    stage_source_publication_bundle,
     verify_source_milestone_manifest,
     verify_source_publication_bundle as _verify_source_publication_bundle,
 )
@@ -750,7 +751,11 @@ class SourceMilestoneTests(unittest.TestCase):
             )
             self.assertEqual(
                 manifest["publication"]["target_repository"],
-                "Trexzo/SpawnPK-Client-Source",
+                "Trexzo/SpawnPK-Client",
+            )
+            self.assertEqual(
+                manifest["publication"]["repository_root"],
+                "recovered-source/v308/",
             )
             evidence = manifest["provenance"][
                 "release_verification_evidence"
@@ -1816,7 +1821,7 @@ class SourceMilestoneTests(unittest.TestCase):
                 )
             )
 
-    def test_bundle_verifier_rejects_noncanonical_publication_repository(self):
+    def test_noncanonical_publication_repository_blocks_milestone(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             source = root / "source"
@@ -1826,6 +1831,44 @@ class SourceMilestoneTests(unittest.TestCase):
                 fixture,
                 publication_repository="Trexzo/Forged-Publication",
             )
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "publication_target",
+                    "reason": (
+                        "publication_repository_must_equal_authority_repository"
+                    ),
+                },
+                manifest["blockers"],
+            )
+
+    def test_noncanonical_publication_root_blocks_milestone(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(
+                source,
+                fixture,
+                publication_root="somewhere-else/v308/",
+            )
+
+            self.assertFalse(manifest["publishable"])
+            self.assertIn(
+                {
+                    "gate": "publication_target",
+                    "reason": "publication_root_not_canonical_v308_path",
+                },
+                manifest["blockers"],
+            )
+
+    def test_verified_bundle_stages_into_same_repository_v308_root(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "source"
+            fixture = _fixtures(source)
+            manifest = self._build(source, fixture)
             bundle_root = root / "bundle"
 
             build_source_publication_bundle(
@@ -1834,19 +1877,50 @@ class SourceMilestoneTests(unittest.TestCase):
                 bundle_root,
                 provenance_documents={},
             )
-            report = verify_source_publication_bundle(bundle_root)
 
-            self.assertFalse(report["verified"])
-            self.assertFalse(
-                report["checks"]["expected_publication_repository"]
+            repository = root / "repo"
+            repository.mkdir()
+            staged = stage_source_publication_bundle(
+                bundle_root,
+                repository,
+                expected_manifest=manifest,
+                expected_authority_commit="f" * 40,
+            )
+
+            target = repository / "recovered-source" / "v308"
+            self.assertEqual(
+                staged["repository_root"],
+                "recovered-source/v308/",
+            )
+            self.assertEqual(
+                staged["target_repository"],
+                "Trexzo/SpawnPK-Client",
             )
             self.assertTrue(
-                all(
-                    value
-                    for key, value in report["checks"].items()
-                    if key != "expected_publication_repository"
-                )
+                (target / "SOURCE-MILESTONE.json").is_file()
             )
+            self.assertTrue((target / "BUNDLE.json").is_file())
+            self.assertTrue(
+                (target / "src" / "rs" / "A.java").is_file()
+            )
+            self.assertTrue(
+                (
+                    target
+                    / "provenance"
+                    / "SOURCE-PROVENANCE.json"
+                ).is_file()
+            )
+
+            with self.assertRaisesRegex(
+                SourceMilestoneError,
+                "absent or empty",
+            ):
+                stage_source_publication_bundle(
+                    bundle_root,
+                    repository,
+                    expected_manifest=manifest,
+                    expected_authority_commit="f" * 40,
+                )
 
     def test_bundle_verifier_rejects_bundle_id_drift(self):
         with tempfile.TemporaryDirectory() as td:
