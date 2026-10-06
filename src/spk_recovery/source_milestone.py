@@ -1523,6 +1523,14 @@ def build_source_publication_bundle(
         "source_bytes": source_bytes,
         "provenance_index": provenance_index,
         "files": file_hashes,
+        "publication_repository": manifest.get(
+            "publication",
+            {},
+        ).get("target_repository"),
+        "publication_root": manifest.get(
+            "publication",
+            {},
+        ).get("repository_root"),
     }
     bundle_id = (
         "SRCBUNDLE_"
@@ -1822,6 +1830,10 @@ def verify_source_publication_bundle(
         "source_bytes": source_bytes,
         "provenance_index": actual_provenance_index,
         "files": actual_indexed_files,
+        "publication_repository": publication.get(
+            "target_repository"
+        ),
+        "publication_root": publication.get("repository_root"),
     }
     expected_bundle_id = (
         "SRCBUNDLE_"
