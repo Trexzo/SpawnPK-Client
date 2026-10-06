@@ -7295,6 +7295,405 @@ def _normalize_invokedynamic_callback_copied_int_capture(
     return actions
 
 
+
+def _normalize_invokedynamic_callback_direct_int_capture_alias(
+    *,
+    source_root: Path,
+    path: Path,
+    readable_zip: zipfile.ZipFile,
+) -> list[dict[str, Any]]:
+    """Restore one directly captured int alias in the callback report."""
+
+    rel = path.relative_to(source_root).as_posix()
+    class_entry = Path(rel).with_suffix(".class").as_posix()
+    try:
+        class_bytes = readable_zip.read(class_entry)
+        profile = profile_class_field_accesses(class_bytes)
+    except (KeyError, BytecodeProfileError):
+        return []
+
+    current_owner = str(profile.get("internal_name", ""))
+    if current_owner != class_entry[:-6]:
+        return []
+    current_package = current_owner.rpartition("/")[0]
+    bootstrap_methods = list(profile.get("bootstrap_methods", []))
+    if not bootstrap_methods:
+        return []
+
+    text = path.read_text(encoding="utf-8")
+    whole_code = _java_code_mask(text)
+    edits: list[tuple[int, int, str]] = []
+    actions: list[dict[str, Any]] = []
+    identifier = r"[A-Za-z_$][A-Za-z0-9_$]*"
+
+    callback_re = re.compile(
+        r"\(\s*(?P<p1>" + identifier + r")\s*,\s*"
+        r"(?P<p2>" + identifier + r")\s*,\s*"
+        r"(?P<p3>" + identifier + r")\s*,\s*"
+        r"(?P<p4>" + identifier + r")\s*\)\s*->\s*\{"
+    )
+    int_decl_re = re.compile(
+        r"\bint\s+(?P<name>" + identifier + r")\s*=\s*"
+        r"(?P<rhs>[^;{}]+)\s*;"
+    )
+
+    expected_capture_shapes = [
+        (0, "ref", current_owner),
+        (0, "primitive", "I"),
+        (0, "ref", "java/util/Set"),
+        (0, "ref", "java/util/Map$Entry"),
+        (0, "primitive", "I"),
+        (0, "ref", "java/util/Map"),
+    ]
+    expected_helper_shapes = [
+        (0, "primitive", "I"),
+        (0, "ref", "java/util/Set"),
+        (0, "ref", "java/util/Map$Entry"),
+        (0, "primitive", "I"),
+        (0, "ref", "java/util/Map"),
+        (0, "primitive", "I"),
+        (0, "primitive", "I"),
+        (0, "primitive", "I"),
+        (0, "primitive", "I"),
+    ]
+    expected_bootstrap_descriptors = {
+        "metafactory": (
+            "(Ljava/lang/invoke/MethodHandles$Lookup;"
+            "Ljava/lang/String;"
+            "Ljava/lang/invoke/MethodType;"
+            "Ljava/lang/invoke/MethodType;"
+            "Ljava/lang/invoke/MethodHandle;"
+            "Ljava/lang/invoke/MethodType;)"
+            "Ljava/lang/invoke/CallSite;"
+        ),
+        "altMetafactory": (
+            "(Ljava/lang/invoke/MethodHandles$Lookup;"
+            "Ljava/lang/String;"
+            "Ljava/lang/invoke/MethodType;"
+            "[Ljava/lang/Object;)"
+            "Ljava/lang/invoke/CallSite;"
+        ),
+    }
+
+    def _helper_uses_land_slot(
+        instructions: list[dict[str, Any]],
+    ) -> bool:
+        sites = 0
+        for index in range(len(instructions) - 1):
+            load = instructions[index]
+            call = instructions[index + 1]
+            if not (
+                load.get("mnemonic") == "iload"
+                and int(load.get("local_index", -1)) == 4
+                and call.get("mnemonic") == "invokevirtual"
+                and call.get("owner") == "java/lang/StringBuilder"
+                and call.get("name") == "append"
+                and call.get("descriptor")
+                == "(I)Ljava/lang/StringBuilder;"
+            ):
+                continue
+            sites += 1
+        return sites == 1
+
+    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+        brace_start = whole_code.find(
+            "{", method_match.start(), method_match.end()
+        )
+        if brace_start < 0:
+            continue
+        try:
+            body_end = _matching_brace_end(whole_code, brace_start)
+        except SourceNormalizationError:
+            continue
+
+        method_start = method_match.start()
+        method_code = whole_code[method_start:body_end]
+        callbacks = list(callback_re.finditer(method_code))
+        if len(callbacks) != 1:
+            continue
+        callback = callbacks[0]
+        callback_brace = method_code.find(
+            "{", callback.start(), callback.end()
+        )
+        if callback_brace < 0:
+            continue
+        try:
+            callback_end = _matching_brace_end(
+                method_code, callback_brace
+            )
+        except SourceNormalizationError:
+            continue
+
+        local_candidates = [
+            match
+            for match in int_decl_re.finditer(method_code)
+            if match.end() < callback.start()
+            and "(" in match.group("rhs")
+            and not match.group("rhs").strip().startswith("-")
+        ]
+        if not local_candidates:
+            continue
+
+        raw_callback = text[
+            method_start + callback_brace:
+            method_start + callback_end
+        ]
+        land_alias_match = re.search(
+            r"\"(?:\\.|[^\"\\])*land\s*=\s*\""
+            r"\s*\+\s*(?P<alias>" + identifier + r")",
+            raw_callback,
+        )
+        if land_alias_match is None:
+            continue
+        alias_name = land_alias_match.group("alias")
+        lambda_names = {
+            callback.group("p1"),
+            callback.group("p2"),
+            callback.group("p3"),
+            callback.group("p4"),
+        }
+        if alias_name in lambda_names:
+            continue
+        alias_hits = list(
+            re.finditer(
+                r"(?<![A-Za-z0-9_$])"
+                + re.escape(alias_name)
+                + r"(?![A-Za-z0-9_$])",
+                raw_callback,
+            )
+        )
+        if len(alias_hits) != 1:
+            continue
+
+        source_static = bool(
+            re.search(
+                r"\bstatic\b",
+                whole_code[method_match.start():brace_start],
+            )
+        )
+        if source_static:
+            continue
+        exact_candidates = [
+            exact_method
+            for exact_method in profile.get("methods", [])
+            if exact_method.get("name") == method_match.group("name")
+            and _source_parameters_match_descriptor(
+                method_match.group("params"),
+                str(exact_method.get("descriptor", "")),
+                current_package=current_package,
+            )
+            is True
+            and not (int(exact_method.get("access", 0)) & 0x0008)
+        ]
+        if len(exact_candidates) != 1:
+            continue
+        exact_method = exact_candidates[0]
+        instructions = list(exact_method.get("instructions", []))
+        by_offset = {
+            int(row.get("offset", -1)): index
+            for index, row in enumerate(instructions)
+            if int(row.get("offset", -1)) >= 0
+        }
+
+        matching_indy: list[dict[str, Any]] = []
+        for invocation in exact_method.get("method_invocations", []):
+            if (
+                invocation.get("operation") != "invokedynamic"
+                or _descriptor_parameter_shapes(
+                    str(invocation.get("descriptor", ""))
+                )
+                != expected_capture_shapes
+            ):
+                continue
+            idx = by_offset.get(int(invocation.get("offset", -1)))
+            if idx is None or idx < 6:
+                continue
+            capture_rows = instructions[idx - 6:idx]
+            if not (
+                capture_rows[4].get("mnemonic") == "iload"
+            ):
+                continue
+            land_slot = int(
+                capture_rows[4].get("local_index", -1)
+            )
+            if land_slot < 0:
+                continue
+
+            direct_stores = []
+            for ins_idx in range(1, idx):
+                store = instructions[ins_idx]
+                prev = instructions[ins_idx - 1]
+                if not (
+                    store.get("mnemonic") == "istore"
+                    and int(store.get("local_index", -1)) == land_slot
+                ):
+                    continue
+                if prev.get("mnemonic") not in {
+                    "invokestatic",
+                    "invokevirtual",
+                    "invokeinterface",
+                }:
+                    continue
+                descriptor = str(prev.get("descriptor", ""))
+                if _descriptor_return_descriptor(descriptor) != "I":
+                    continue
+                direct_stores.append(ins_idx)
+            if len(direct_stores) != 1:
+                continue
+            store_idx = direct_stores[0]
+            if any(
+                row.get("mnemonic") == "istore"
+                and int(row.get("local_index", -1)) == land_slot
+                for row in instructions[store_idx + 1:idx]
+            ):
+                continue
+
+            bootstrap_index = int(
+                invocation.get("bootstrap_method_attr_index", -1)
+            )
+            if not (0 <= bootstrap_index < len(bootstrap_methods)):
+                continue
+            bootstrap = bootstrap_methods[bootstrap_index]
+            bootstrap_method = bootstrap.get("bootstrap_method", {})
+            bootstrap_name = str(bootstrap_method.get("name", ""))
+            if not (
+                bootstrap_method.get("owner")
+                == "java/lang/invoke/LambdaMetafactory"
+                and bootstrap_name in expected_bootstrap_descriptors
+                and bootstrap_method.get("descriptor")
+                == expected_bootstrap_descriptors[bootstrap_name]
+                and bootstrap_method.get("target_kind") == "method"
+            ):
+                continue
+            implementation_handles = [
+                argument.get("method_handle", {})
+                for argument in bootstrap.get("arguments", [])
+                if argument.get("kind") == "method_handle"
+                and argument.get("method_handle", {}).get("owner")
+                == current_owner
+            ]
+            if len(implementation_handles) != 1:
+                continue
+            implementation = implementation_handles[0]
+            helper_descriptor = str(
+                implementation.get("descriptor", "")
+            )
+            if not (
+                implementation.get("target_kind") == "method"
+                and int(implementation.get("reference_kind", -1)) == 7
+                and _descriptor_parameter_shapes(helper_descriptor)
+                == expected_helper_shapes
+                and _descriptor_return_descriptor(helper_descriptor) == "V"
+            ):
+                continue
+            instantiated_types = {
+                str(argument.get("descriptor", ""))
+                for argument in bootstrap.get("arguments", [])
+                if argument.get("kind") == "method_type"
+            }
+            if "(IIII)V" not in instantiated_types:
+                continue
+            helpers = [
+                helper
+                for helper in profile.get("methods", [])
+                if helper.get("name") == implementation.get("name")
+                and helper.get("descriptor") == helper_descriptor
+                and not (int(helper.get("access", 0)) & 0x0008)
+                and (int(helper.get("access", 0)) & 0x1000)
+            ]
+            if len(helpers) != 1:
+                continue
+            if not _helper_uses_land_slot(
+                list(helpers[0].get("instructions", []))
+            ):
+                continue
+
+            matching_indy.append(
+                {
+                    "land_slot": land_slot,
+                    "descriptor": str(
+                        invocation.get("descriptor", "")
+                    ),
+                    "offset": int(invocation.get("offset", -1)),
+                    "helper_name": str(
+                        implementation.get("name", "")
+                    ),
+                    "helper_descriptor": helper_descriptor,
+                }
+            )
+
+        if len(matching_indy) != 1:
+            continue
+
+        source_candidates = []
+        for local in local_candidates:
+            source_name = local.group("name")
+            if source_name == alias_name:
+                continue
+            raw_after = text[
+                method_start + local.end():
+                method_start + callback.start()
+            ]
+            if re.search(
+                r"(?<![A-Za-z0-9_$])"
+                + re.escape(source_name)
+                + r"\s*=",
+                raw_after,
+            ):
+                continue
+            source_candidates.append(local)
+        if len(source_candidates) != 1:
+            continue
+        source_name = source_candidates[0].group("name")
+
+        absolute_start = (
+            method_start
+            + callback_brace
+            + land_alias_match.start("alias")
+        )
+        absolute_end = (
+            method_start
+            + callback_brace
+            + land_alias_match.end("alias")
+        )
+        edits.append((absolute_start, absolute_end, source_name))
+        actions.append(
+            {
+                "kind": "invokedynamic_callback_direct_int_capture_alias",
+                "source_path": rel,
+                "method_name": method_match.group("name"),
+                "method_descriptor": exact_method.get("descriptor"),
+                "source_capture_name": source_name,
+                "undeclared_capture_alias": alias_name,
+                "replacement_count": 1,
+                "invokedynamic": matching_indy[0],
+                "provenance": {
+                    "kind": "source_safety",
+                    "reason": (
+                        "procyon_invokedynamic_direct_int_capture_alias"
+                    ),
+                    "strategy": (
+                        "unique_source_int_assignment_plus_exact_direct_capture_slot"
+                    ),
+                },
+            }
+        )
+
+    if not edits:
+        return []
+
+    edits.sort(key=lambda row: row[0])
+    for left, right in zip(edits, edits[1:]):
+        if left[1] > right[0]:
+            raise SourceNormalizationError(
+                f"{rel}: overlapping direct-int callback edits"
+            )
+    for start, end, replacement in reversed(edits):
+        text = text[:start] + replacement + text[end:]
+    path.write_text(text, encoding="utf-8")
+    return actions
+
+
 def _normalize_intpredicate_parameter_capture_aliases(
     *,
     source_root: Path,
@@ -25976,6 +26375,13 @@ def normalize_procyon_source(
                     )
                 )
                 actions.extend(
+                    _normalize_invokedynamic_callback_direct_int_capture_alias(
+                        source_root=source_root,
+                        path=path,
+                        readable_zip=z,
+                    )
+                )
+                actions.extend(
                     _normalize_intpredicate_parameter_capture_aliases(
                         source_root=source_root,
                         path=path,
@@ -26568,6 +26974,17 @@ def normalize_procyon_source(
             int(action.get("replacement_count", 0))
             for action in actions
             if action["kind"] == "impossible_collectors_tolist_cast_removal"
+        ),
+        "invokedynamic_callback_direct_int_capture_alias_action_count": sum(
+            action["kind"]
+            == "invokedynamic_callback_direct_int_capture_alias"
+            for action in actions
+        ),
+        "invokedynamic_callback_direct_int_capture_alias_reference_count": sum(
+            int(action.get("replacement_count", 0))
+            for action in actions
+            if action["kind"]
+            == "invokedynamic_callback_direct_int_capture_alias"
         ),
         "invokedynamic_callback_copied_int_capture_action_count": sum(
             action["kind"]
