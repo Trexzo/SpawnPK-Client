@@ -17051,7 +17051,11 @@ class GenericKeyObjectCastTests(unittest.TestCase):
                 text=True,
             )
             self.assertNotEqual(before.returncode, 0)
-            self.assertIn("no suitable method", before.stderr)
+            compact_before = before.stderr.replace(" ", "")
+            self.assertIn(
+                "ObjectcannotbeconvertedtoMethod",
+                compact_before,
+            )
 
             report = normalize_procyon_source(root / "src", jar)
             normalized = source.read_text(encoding="utf-8")
