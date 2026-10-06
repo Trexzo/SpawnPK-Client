@@ -14893,6 +14893,25 @@ def _normalize_methodhandle_invokeexact_result_casts(
             )
 
         source_rows.sort(key=lambda row: int(row["start"]))
+
+        # Object is the declared signature-polymorphic return type itself.
+        # Such assignments need no reconstructed source cast and their exact
+        # invokeExact descriptor is intentionally excluded below.  Do the
+        # same exclusion on the source side before enforcing multiplicity so
+        # a harmless Object-target call cannot hide a separate typed call in
+        # the same method.
+        ignored_object_target_count = sum(
+            1
+            for row in source_rows
+            if re.sub(r"\\s+", "", str(row["type"]))
+            in {"Object", "java.lang.Object"}
+        )
+        source_rows = [
+            row
+            for row in source_rows
+            if re.sub(r"\\s+", "", str(row["type"]))
+            not in {"Object", "java.lang.Object"}
+        ]
         if not source_rows:
             continue
 
@@ -15019,6 +15038,9 @@ def _normalize_methodhandle_invokeexact_result_casts(
                 ],
                 "flows": proof["flows"],
                 "replacement_count": len(source_rows),
+                "ignored_object_target_count": (
+                    ignored_object_target_count
+                ),
                 "provenance": {
                     "kind": "source_safety",
                     "reason": (
