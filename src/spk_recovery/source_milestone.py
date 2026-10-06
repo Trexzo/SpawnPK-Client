@@ -1900,6 +1900,15 @@ def stage_source_publication_bundle(
             "repository root must be an existing ordinary directory"
         )
 
+    publication_parent = repository_root / "recovered-source"
+    if publication_parent.exists() and (
+        publication_parent.is_symlink()
+        or not publication_parent.is_dir()
+    ):
+        raise SourceMilestoneError(
+            "recovered-source parent must be an ordinary directory"
+        )
+
     target = repository_root.joinpath(
         *[part for part in normalized_root.rstrip("/").split("/") if part]
     )
