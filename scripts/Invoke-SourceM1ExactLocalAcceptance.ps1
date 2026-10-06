@@ -6,7 +6,6 @@ param(
     [string]$SourceIndex,
     [string]$ClassLineage,
     [string]$MemberLineage,
-    [Parameter(Mandatory = $true)]
     [string]$MemberSafetyAcceptance,
     [Parameter(Mandatory = $true)]
     [string]$DecompilerJar,
@@ -24,6 +23,9 @@ $ErrorActionPreference = "Stop"
 $ExpectedV308 = "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 $ExpectedProcyon = "821da96012fc69244fa1ea298c90455ee4e021434bc796d3b9546ab24601b779"
 $ExpectedSemanticReview = "SEMREVIEW_DD69CD752A6E46181BAC"
+$ExpectedMemberSafetyReport = "MEMRISKREVIEW_E4E67B1125E7AFA4F3B7"
+$ExpectedMemberSafetyAcceptanceSha = "f4c6c2b3ee1da51ce76b89164abe5fc47960ad9eceee952619928190f1374351"
+$ExpectedMemberSafetyAcceptanceSize = 2134
 
 function Require-File {
     param([string]$Path)
@@ -238,10 +240,14 @@ if ($Head -notmatch "^[0-9a-f]{40}$") {
 
 foreach ($Path in @(
     $ClientJar,
-    $MemberSafetyAcceptance,
     $DecompilerJar
 )) {
     Require-File $Path
+}
+
+$HasMemberSafetyAcceptance = -not [string]::IsNullOrWhiteSpace($MemberSafetyAcceptance)
+if ($HasMemberSafetyAcceptance) {
+    Require-File $MemberSafetyAcceptance
 }
 
 $HasClassLineage = -not [string]::IsNullOrWhiteSpace($ClassLineage)
@@ -418,6 +424,93 @@ if (-not $HasClassLineage) {
 } else {
     Write-Host "CLASS_LINEAGE_SUPPLIED=$ClassLineage" -ForegroundColor Green
     Write-Host "MEMBER_LINEAGE_SUPPLIED=$MemberLineage" -ForegroundColor Green
+}
+
+if (-not $HasMemberSafetyAcceptance) {
+    $MemberSafetyProbeDir = Join-Path $DerivedInputDir "member-safety-probe"
+    $MemberSafetyProbeArgs = @(
+        "-3.13",
+        "-m",
+        "spk_recovery.readable_build_cli",
+        $ClientJar,
+        $ClassLineage,
+        $MemberLineage,
+        $SourceIndex,
+        "--build-id",
+        "v308",
+        "--source-safe-fallback",
+        "--fallback-name-prefix",
+        "Recovered_",
+        "--out-dir",
+        $MemberSafetyProbeDir
+    )
+
+    Write-Host ""
+    Write-Host "=== DERIVE EXACT V308 MEMBER SAFETY INPUTS ===" -ForegroundColor Cyan
+    & py @MemberSafetyProbeArgs
+    $MemberSafetyProbeExit = $LASTEXITCODE
+    if ($MemberSafetyProbeExit -ne 3) {
+        throw (
+            "Member-safety probe must block with exit=3, actual=" +
+            $MemberSafetyProbeExit
+        )
+    }
+
+    $MemberSafetyProbeManifest = Join-Path $MemberSafetyProbeDir "readable-client-manifest.json"
+    $MemberSafetyProbePlan = Join-Path $MemberSafetyProbeDir "member-remap-plan.json"
+    $MemberSafetyProbeReport = Join-Path $MemberSafetyProbeDir "member-safety-report.json"
+    Require-File $MemberSafetyProbeManifest
+    Require-File $MemberSafetyProbePlan
+    Require-File $MemberSafetyProbeReport
+
+    $MemberSafetyProbeDoc = Get-JsonProjection `
+        -Path $MemberSafetyProbeManifest `
+        -Fields @{
+            status = "/status"
+            blocker_code = "/blocker/code"
+            blocker_report_id = "/blocker/report_id"
+            blocker_member_count = "/blocker/member_count"
+        }
+    if (
+        [string]$MemberSafetyProbeDoc.status -ne "blocked" -or
+        [string]$MemberSafetyProbeDoc.blocker_code -ne "member_safety_acceptance_required" -or
+        [string]$MemberSafetyProbeDoc.blocker_report_id -ne $ExpectedMemberSafetyReport -or
+        [int]$MemberSafetyProbeDoc.blocker_member_count -ne 10
+    ) {
+        throw "Member-safety probe did not reproduce the exact reviewed v308 blocker."
+    }
+
+    $MemberSafetyAcceptance = Join-Path $DerivedInputDir "member-safety.accepted.recovered.json"
+    Invoke-PyChecked "RECOVER EXACT V308 MEMBER SAFETY ACCEPTANCE" @(
+        "-3.13",
+        "-m",
+        "spk_recovery.source_m1_member_safety_recover",
+        $MemberSafetyProbePlan,
+        $MemberSafetyProbeReport,
+        "--out",
+        $MemberSafetyAcceptance
+    )
+    Require-File $MemberSafetyAcceptance
+
+    $RecoveredMemberSafetySize = (Get-Item -LiteralPath $MemberSafetyAcceptance).Length
+    if ([long]$RecoveredMemberSafetySize -ne $ExpectedMemberSafetyAcceptanceSize) {
+        throw (
+            "Recovered member-safety acceptance byte size mismatch: " +
+            $RecoveredMemberSafetySize
+        )
+    }
+    $RecoveredMemberSafetySha = (
+        Get-FileHash -LiteralPath $MemberSafetyAcceptance -Algorithm SHA256
+    ).Hash.ToLowerInvariant()
+    if ($RecoveredMemberSafetySha -ne $ExpectedMemberSafetyAcceptanceSha) {
+        throw "Recovered member-safety acceptance SHA-256 mismatch."
+    }
+
+    Write-Host "MEMBER_SAFETY_ACCEPTANCE_RECOVERED=$MemberSafetyAcceptance" -ForegroundColor Green
+    Write-Host "MEMBER_SAFETY_ACCEPTANCE_SHA256=$RecoveredMemberSafetySha" -ForegroundColor Green
+    Write-Host "MEMBER_SAFETY_ACCEPTANCE_BYTES=$RecoveredMemberSafetySize" -ForegroundColor Green
+} else {
+    Write-Host "MEMBER_SAFETY_ACCEPTANCE_SUPPLIED=$MemberSafetyAcceptance" -ForegroundColor Green
 }
 
 Write-Host "AUTHORITY_COMMIT=$Head" -ForegroundColor Green
