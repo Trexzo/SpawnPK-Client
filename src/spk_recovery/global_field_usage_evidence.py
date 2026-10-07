@@ -258,6 +258,8 @@ def _stable_reviews(
     old_owners = old_aliases
     new_owners = new_aliases
     seen_relationships: set[str] = set()
+    seen_old_coords: set[tuple[str, str, str]] = set()
+    seen_new_coords: set[tuple[str, str, str]] = set()
     reviews: list[dict[str, Any]] = []
 
     for item in member_lineage.get("unresolved", []):
@@ -351,6 +353,19 @@ def _stable_reviews(
             raise GlobalFieldUsageEvidenceError(
                 f"{relationship_id}: stable_symbol descriptor identity changed"
             )
+
+        old_key = (old_owner, old_name, old_desc)
+        new_key = (new_owner, new_name, new_desc)
+        if old_key in seen_old_coords:
+            raise GlobalFieldUsageEvidenceError(
+                f"{relationship_id}: duplicate old review coordinate {old_key!r}"
+            )
+        if new_key in seen_new_coords:
+            raise GlobalFieldUsageEvidenceError(
+                f"{relationship_id}: duplicate new review coordinate {new_key!r}"
+            )
+        seen_old_coords.add(old_key)
+        seen_new_coords.add(new_key)
 
         reviews.append(
             {
