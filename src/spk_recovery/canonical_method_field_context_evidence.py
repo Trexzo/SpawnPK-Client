@@ -316,6 +316,7 @@ def _context_unique_in_method(
     target_context: Counter[str],
     member_map: dict[tuple[str, str, str, str], str],
     class_aliases: dict[str, str],
+    radius: int = 4,
 ) -> bool:
     if not target_context:
         return False
@@ -328,6 +329,7 @@ def _context_unique_in_method(
             operation=operation,
             member_map=member_map,
             class_aliases=class_aliases,
+            radius=radius,
         )
         if other and other == target_context:
             return False
