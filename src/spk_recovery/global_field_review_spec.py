@@ -477,10 +477,10 @@ def build_global_field_review_spec(
         class_rows = _topology_rows(
             row.get("global_source_class_topology"),
             label=f"{relationship_id}.global_source_class_topology",
-            source_key="logical_class_id",
+            source_key="source_class",
         )
         if any(
-            str(item.get("logical_class_id", "")).startswith("RAW:")
+            str(item.get("source_class", "")).startswith("RAW:")
             for item in class_rows
         ):
             raise GlobalFieldReviewSpecError(
