@@ -432,6 +432,7 @@ def build_raw_source_inbound_canonical_evidence(
     global_report_id = previous.get("global_usage_report_id")
     previous_report_id = previous.get("report_id")
     structural_report_id = structural.get("report_id")
+    structural_report_digest = _stable_digest(structural)
     if (
         not old_build_id
         or not new_build_id
@@ -449,6 +450,22 @@ def build_raw_source_inbound_canonical_evidence(
     ):
         raise RawSourceInboundCanonicalEvidenceError(
             "base report binding is invalid"
+        )
+
+    if (
+        str(structural.get("old_build_id", "")) != old_build_id
+        or str(structural.get("new_build_id", "")) != new_build_id
+        or str(structural.get("old_sha256", "")) != old_sha
+        or str(structural.get("new_sha256", "")) != new_sha
+        or structural.get("member_lineage_digest") != member_digest
+        or structural.get("global_usage_report_id") != global_report_id
+        or previous.get("base_structural_topology_report_id")
+        != structural_report_id
+        or previous.get("base_structural_topology_report_digest")
+        != structural_report_digest
+    ):
+        raise RawSourceInboundCanonicalEvidenceError(
+            "canonical-reference/structural report binding mismatch"
         )
 
     target_ids = {
@@ -842,8 +859,8 @@ def build_raw_source_inbound_canonical_evidence(
             previous
         ),
         "base_structural_topology_report_id": structural_report_id,
-        "base_structural_topology_report_digest": _stable_digest(
-            structural
+        "base_structural_topology_report_digest": (
+            structural_report_digest
         ),
         "summary": summary,
         "candidates": candidates,
