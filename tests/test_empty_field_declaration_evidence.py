@@ -2,14 +2,70 @@ from __future__ import annotations
 
 import copy
 from pathlib import Path
+import shutil
+import subprocess
+import tempfile
 import unittest
 from unittest.mock import patch
+import zipfile
 
 from spk_recovery.empty_field_declaration_evidence import (
     EmptyFieldDeclarationEvidenceError,
+    _jar_field_table,
     _stable_digest,
     build_empty_field_declaration_evidence,
 )
+
+
+@unittest.skipUnless(shutil.which("javac"), "Java compiler required")
+class ExactJarFieldTableTests(unittest.TestCase):
+    def test_exact_jar_reader_preserves_jvm_field_table_order(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            src = root / "src" / "rs"
+            classes = root / "classes"
+            src.mkdir(parents=True)
+            classes.mkdir()
+
+            java = src / "A.java"
+            java.write_text(
+                "package rs; public class A { "
+                "public int z; "
+                "private String x; "
+                "protected long a; "
+                "}",
+                encoding="utf-8",
+            )
+            compiled = subprocess.run(
+                [
+                    "javac",
+                    "-g:none",
+                    "-d",
+                    str(classes),
+                    str(java),
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            self.assertEqual(
+                compiled.returncode,
+                0,
+                compiled.stdout + compiled.stderr,
+            )
+
+            jar = root / "client.jar"
+            with zipfile.ZipFile(jar, "w", zipfile.ZIP_STORED) as archive:
+                archive.write(
+                    classes / "rs" / "A.class",
+                    "rs/A.class",
+                )
+
+            fields = _jar_field_table(jar, owner="rs/A")
+            self.assertEqual(
+                [row["name"] for row in fields],
+                ["z", "x", "a"],
+            )
 
 
 class EmptyFieldDeclarationEvidenceTests(unittest.TestCase):
