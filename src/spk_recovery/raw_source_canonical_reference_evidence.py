@@ -198,14 +198,17 @@ def _reference_profile(
         name = row.get("name")
         descriptor = row.get("descriptor")
         if (
-            kind not in {"field", "method"}
+            kind not in {"field", "method", "interface_method"}
             or not isinstance(owner, str)
             or not isinstance(name, str)
             or not isinstance(descriptor, str)
         ):
             continue
+        lineage_kind = (
+            "method" if kind in {"method", "interface_method"} else "field"
+        )
         member_id = member_map.get(
-            (kind, owner, name, descriptor)
+            (lineage_kind, owner, name, descriptor)
         )
         if member_id is not None:
             member_counts[f"{kind}:{member_id}"] += 1
