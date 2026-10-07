@@ -101,6 +101,11 @@ from .boundary_field_review_spec import (
     build_boundary_field_review_spec,
     write_spec as write_boundary_field_review_spec,
 )
+from .raw_source_exact_declaration_evidence import (
+    RawSourceExactDeclarationEvidenceError,
+    build_raw_source_exact_declaration_evidence,
+    write_report as write_raw_source_exact_declaration_evidence,
+)
 from .member_remap_plan import (
     MemberRemapPlanError,
     build_member_remap_plan,
@@ -371,6 +376,22 @@ def main(argv: list[str] | None = None) -> int:
     pbfrs.add_argument("global_usage_report", type=Path)
     pbfrs.add_argument("boundary_report", type=Path)
     pbfrs.add_argument("--out", type=Path, required=True)
+
+    prsde = sub.add_parser(
+        "raw-source-exact-declaration-evidence",
+        help=(
+            "Measure RAW-source declaration identity only when every RAW "
+            "source class is byte-identical across exact old/new JARs"
+        ),
+    )
+    prsde.add_argument("class_lineage", type=Path)
+    prsde.add_argument("member_lineage", type=Path)
+    prsde.add_argument("old_index", type=Path)
+    prsde.add_argument("new_index", type=Path)
+    prsde.add_argument("old_jar", type=Path)
+    prsde.add_argument("new_jar", type=Path)
+    prsde.add_argument("global_usage_report", type=Path)
+    prsde.add_argument("--out", type=Path, required=True)
 
     psr = sub.add_parser(
         "semantic-resolve",
@@ -1039,6 +1060,37 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         print("SPK_BOUNDARY_FIELD_REVIEW_SPEC_PASS")
         print(f"relationship_ids={len(spec['relationship_ids'])}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "raw-source-exact-declaration-evidence":
+        try:
+            report = build_raw_source_exact_declaration_evidence(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.old_index),
+                _load(args.new_index),
+                args.old_jar,
+                args.new_jar,
+                _load(args.global_usage_report),
+            )
+            write_raw_source_exact_declaration_evidence(
+                report,
+                args.out,
+            )
+        except (
+            RawSourceExactDeclarationEvidenceError,
+            EmptyFieldDeclarationEvidenceError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RAW_SOURCE_EXACT_DECLARATION_EVIDENCE_PASS")
+        print(f"report_id={report['report_id']}")
+        for k, v in report["summary"].items():
+            print(f"{k}={v}")
         print(f"out={args.out}")
         return 0
 
