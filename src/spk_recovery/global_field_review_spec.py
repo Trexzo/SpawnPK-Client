@@ -82,6 +82,70 @@ def _owner_map(
     return out
 
 
+def _paired_class_ids(
+    class_lineage: dict[str, Any],
+    *,
+    old_build_id: str,
+    new_build_id: str,
+) -> set[str]:
+    out: set[str] = set()
+    for record in class_lineage.get("classes", []):
+        logical_id = record.get("logical_id")
+        if not isinstance(logical_id, str) or not logical_id:
+            continue
+        old_hits = [
+            row
+            for row in record.get("lineage", [])
+            if row.get("build_id") == old_build_id
+        ]
+        new_hits = [
+            row
+            for row in record.get("lineage", [])
+            if row.get("build_id") == new_build_id
+        ]
+        if len(old_hits) > 1 or len(new_hits) > 1:
+            raise GlobalFieldReviewSpecError(
+                f"{logical_id}: duplicate old/new class relation"
+            )
+        if old_hits and new_hits:
+            out.add(logical_id)
+    return out
+
+
+def _paired_method_ids(
+    member_lineage: dict[str, Any],
+    *,
+    old_build_id: str,
+    new_build_id: str,
+) -> set[str]:
+    out: set[str] = set()
+    for record in member_lineage.get("members", []):
+        if record.get("kind") != "method":
+            continue
+        member_id = record.get("member_id")
+        if not isinstance(member_id, str) or not member_id:
+            raise GlobalFieldReviewSpecError(
+                "canonical method record lacks member_id"
+            )
+        old_hits = [
+            row
+            for row in record.get("lineage", [])
+            if row.get("build_id") == old_build_id
+        ]
+        new_hits = [
+            row
+            for row in record.get("lineage", [])
+            if row.get("build_id") == new_build_id
+        ]
+        if len(old_hits) > 1 or len(new_hits) > 1:
+            raise GlobalFieldReviewSpecError(
+                f"{member_id}: duplicate old/new method relation"
+            )
+        if old_hits and new_hits:
+            out.add(member_id)
+    return out
+
+
 def _exact_field(
     index: dict[str, Any],
     *,
@@ -384,6 +448,16 @@ def build_global_field_review_spec(
 
     old_owners = _owner_map(class_lineage, old_build_id)
     new_owners = _owner_map(class_lineage, new_build_id)
+    paired_class_ids = _paired_class_ids(
+        class_lineage,
+        old_build_id=old_build_id,
+        new_build_id=new_build_id,
+    )
+    paired_method_ids = _paired_method_ids(
+        member_lineage,
+        old_build_id=old_build_id,
+        new_build_id=new_build_id,
+    )
     seen_ids: set[str] = set()
     seen_old: set[tuple[str, str, str]] = set()
     seen_new: set[tuple[str, str, str]] = set()
@@ -546,6 +620,20 @@ def build_global_field_review_spec(
         ):
             raise GlobalFieldReviewSpecError(
                 f"{relationship_id}: RAW source class support is not reviewable"
+            )
+        if any(
+            str(item["member_id"]) not in paired_method_ids
+            for item in method_rows
+        ):
+            raise GlobalFieldReviewSpecError(
+                f"{relationship_id}: topology references an unpaired canonical method"
+            )
+        if any(
+            str(item["source_class"]) not in paired_class_ids
+            for item in class_rows
+        ):
+            raise GlobalFieldReviewSpecError(
+                f"{relationship_id}: topology references an unpaired canonical source class"
             )
         if sum(int(item["count"]) for item in method_rows) != observations:
             raise GlobalFieldReviewSpecError(
