@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+from pathlib import Path
 import unittest
 from unittest.mock import patch
 
@@ -211,6 +212,12 @@ class EmptyFieldDeclarationEvidenceTests(unittest.TestCase):
         old_index = old_index or self._old_index()
         new_index = new_index or self._new_index()
         report = report or self._report(members)
+        def jar_fields(_jar_path, *, owner):
+            source = old_index if owner == "rs/A" else new_index
+            return copy.deepcopy(
+                source["classes"][owner + ".class"]["fields"]
+            )
+
         with (
             patch(
                 "spk_recovery.empty_field_declaration_evidence."
@@ -220,12 +227,24 @@ class EmptyFieldDeclarationEvidenceTests(unittest.TestCase):
                 "spk_recovery.empty_field_declaration_evidence."
                 "validate_member_lineage"
             ),
+            patch(
+                "spk_recovery.empty_field_declaration_evidence."
+                "sha256_file",
+                side_effect=["1" * 64, "2" * 64],
+            ),
+            patch(
+                "spk_recovery.empty_field_declaration_evidence."
+                "_jar_field_table",
+                side_effect=jar_fields,
+            ),
         ):
             return build_empty_field_declaration_evidence(
                 self._classes(),
                 members,
                 old_index,
                 new_index,
+                Path("old.jar"),
+                Path("new.jar"),
                 report,
             )
 
@@ -338,6 +357,38 @@ class EmptyFieldDeclarationEvidenceTests(unittest.TestCase):
             report["summary"]["declaration_interval_shape_mismatch"],
             1,
         )
+
+    def test_exact_jar_sha_drift_is_refused(self):
+        members = self._members()
+        report = self._report(members)
+        with (
+            patch(
+                "spk_recovery.empty_field_declaration_evidence."
+                "validate_lineage"
+            ),
+            patch(
+                "spk_recovery.empty_field_declaration_evidence."
+                "validate_member_lineage"
+            ),
+            patch(
+                "spk_recovery.empty_field_declaration_evidence."
+                "sha256_file",
+                side_effect=["9" * 64, "2" * 64],
+            ),
+        ):
+            with self.assertRaisesRegex(
+                EmptyFieldDeclarationEvidenceError,
+                "old JAR SHA does not match exact old index",
+            ):
+                build_empty_field_declaration_evidence(
+                    self._classes(),
+                    members,
+                    self._old_index(),
+                    self._new_index(),
+                    Path("old.jar"),
+                    Path("new.jar"),
+                    report,
+                )
 
     def test_member_lineage_digest_drift_is_refused(self):
         members = self._members()
