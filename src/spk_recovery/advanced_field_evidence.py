@@ -438,6 +438,10 @@ def build_advanced_field_evidence(
     input_fields = sum(len(group["old"]) for group in frontier.values())
 
     for (old_owner, new_owner), group in sorted(frontier.items()):
+        if len(group["old"]) != len(group["new"]):
+            raise AdvancedFieldEvidenceError(
+                "frontier field relation is not one-to-one"
+            )
         logical_id = old_owner_ids.get(old_owner)
         if logical_id is None or new_owner_ids.get(new_owner) != logical_id:
             raise AdvancedFieldEvidenceError(
