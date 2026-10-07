@@ -228,6 +228,18 @@ class ReviewedMemberIdentityTests(unittest.TestCase):
                 spec,
             )
 
+    def test_review_source_must_be_member_identity_candidates(self):
+        lineage = _member_lineage()
+        lineage["unresolved"][0]["source"] = "other_research"
+        with self.assertRaises(ReviewedMemberIdentityError):
+            accept_reviewed_member_identities(
+                _class_lineage(),
+                lineage,
+                _old_index(),
+                _new_index(),
+                _spec(),
+            )
+
     def test_target_owner_must_share_canonical_class(self):
         lineage = _member_lineage()
         lineage["unresolved"][0]["candidate"]["new_owner"] = "rs/z.class"
