@@ -72,6 +72,10 @@ from .member_promotion import (
     NewMemberPromotionError,
     promote_new_members,
 )
+from .member_review_acceptance import (
+    ReviewedMemberIdentityError,
+    accept_reviewed_member_identities,
+)
 from .member_remap_plan import (
     MemberRemapPlanError,
     build_member_remap_plan,
@@ -248,6 +252,20 @@ def main(argv: list[str] | None = None) -> int:
     pmp.add_argument("new_index", type=Path)
     pmp.add_argument("spec", type=Path)
     pmp.add_argument("--out", type=Path, required=True)
+
+    pmra = sub.add_parser(
+        "member-accept-review",
+        help=(
+            "Accept explicitly reviewed existing field identity relations "
+            "already recorded as member_identity_review"
+        ),
+    )
+    pmra.add_argument("class_lineage", type=Path)
+    pmra.add_argument("member_lineage", type=Path)
+    pmra.add_argument("old_index", type=Path)
+    pmra.add_argument("new_index", type=Path)
+    pmra.add_argument("spec", type=Path)
+    pmra.add_argument("--out", type=Path, required=True)
 
     psr = sub.add_parser(
         "semantic-resolve",
@@ -758,6 +776,30 @@ def main(argv: list[str] | None = None) -> int:
             print(f"REFUSED: {e}", file=sys.stderr)
             return 2
         print("SPK_RECOVERY_MEMBER_PROMOTE_NEW_PASS")
+        for k, v in summary.items():
+            print(f"{k}={v}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "member-accept-review":
+        try:
+            out, summary = accept_reviewed_member_identities(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.old_index),
+                _load(args.new_index),
+                _load(args.spec),
+            )
+            write_member_lineage(out, args.out)
+        except (
+            ReviewedMemberIdentityError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_MEMBER_ACCEPT_REVIEW_PASS")
         for k, v in summary.items():
             print(f"{k}={v}")
         print(f"out={args.out}")
