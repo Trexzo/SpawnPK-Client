@@ -86,6 +86,11 @@ from .empty_field_declaration_evidence import (
     build_empty_field_declaration_evidence,
     write_report as write_empty_field_declaration_evidence,
 )
+from .empty_field_review_spec import (
+    EmptyFieldReviewSpecError,
+    build_empty_field_review_spec,
+    write_spec as write_empty_field_review_spec,
+)
 from .member_remap_plan import (
     MemberRemapPlanError,
     build_member_remap_plan,
@@ -306,6 +311,23 @@ def main(argv: list[str] | None = None) -> int:
     pefde.add_argument("new_jar", type=Path)
     pefde.add_argument("global_usage_report", type=Path)
     pefde.add_argument("--out", type=Path, required=True)
+
+    pefrs = sub.add_parser(
+        "empty-field-review-spec",
+        help=(
+            "Re-run exact-JAR empty-field declaration evidence and emit an "
+            "explicit reviewed-member acceptance spec for exact candidates"
+        ),
+    )
+    pefrs.add_argument("class_lineage", type=Path)
+    pefrs.add_argument("member_lineage", type=Path)
+    pefrs.add_argument("old_index", type=Path)
+    pefrs.add_argument("new_index", type=Path)
+    pefrs.add_argument("old_jar", type=Path)
+    pefrs.add_argument("new_jar", type=Path)
+    pefrs.add_argument("global_usage_report", type=Path)
+    pefrs.add_argument("declaration_report", type=Path)
+    pefrs.add_argument("--out", type=Path, required=True)
 
     psr = sub.add_parser(
         "semantic-resolve",
@@ -892,6 +914,33 @@ def main(argv: list[str] | None = None) -> int:
         print(f"report_id={report['report_id']}")
         for k, v in report["summary"].items():
             print(f"{k}={v}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "empty-field-review-spec":
+        try:
+            spec = build_empty_field_review_spec(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.old_index),
+                _load(args.new_index),
+                args.old_jar,
+                args.new_jar,
+                _load(args.global_usage_report),
+                _load(args.declaration_report),
+            )
+            write_empty_field_review_spec(spec, args.out)
+        except (
+            EmptyFieldReviewSpecError,
+            EmptyFieldDeclarationEvidenceError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_EMPTY_FIELD_REVIEW_SPEC_PASS")
+        print(f"relationship_ids={len(spec['relationship_ids'])}")
         print(f"out={args.out}")
         return 0
 
