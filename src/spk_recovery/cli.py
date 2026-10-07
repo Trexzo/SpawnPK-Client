@@ -111,6 +111,11 @@ from .raw_source_structural_topology_evidence import (
     build_raw_source_structural_topology_evidence,
     write_report as write_raw_source_structural_topology_evidence,
 )
+from .raw_source_structural_topology_review_spec import (
+    RawSourceStructuralTopologyReviewSpecError,
+    build_raw_source_structural_topology_review_spec,
+    write_spec as write_raw_source_structural_topology_review_spec,
+)
 from .member_remap_plan import (
     MemberRemapPlanError,
     build_member_remap_plan,
@@ -413,6 +418,23 @@ def main(argv: list[str] | None = None) -> int:
     prste.add_argument("new_jar", type=Path)
     prste.add_argument("global_usage_report", type=Path)
     prste.add_argument("--out", type=Path, required=True)
+
+    prstrs = sub.add_parser(
+        "raw-source-structural-topology-review-spec",
+        help=(
+            "Re-run RAW structural-topology evidence and emit an explicit "
+            "reviewed-member acceptance spec for exact candidates"
+        ),
+    )
+    prstrs.add_argument("class_lineage", type=Path)
+    prstrs.add_argument("member_lineage", type=Path)
+    prstrs.add_argument("old_index", type=Path)
+    prstrs.add_argument("new_index", type=Path)
+    prstrs.add_argument("old_jar", type=Path)
+    prstrs.add_argument("new_jar", type=Path)
+    prstrs.add_argument("global_usage_report", type=Path)
+    prstrs.add_argument("topology_report", type=Path)
+    prstrs.add_argument("--out", type=Path, required=True)
 
     psr = sub.add_parser(
         "semantic-resolve",
@@ -1144,6 +1166,38 @@ def main(argv: list[str] | None = None) -> int:
         print(f"report_id={report['report_id']}")
         for k, v in report["summary"].items():
             print(f"{k}={v}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "raw-source-structural-topology-review-spec":
+        try:
+            spec = build_raw_source_structural_topology_review_spec(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.old_index),
+                _load(args.new_index),
+                args.old_jar,
+                args.new_jar,
+                _load(args.global_usage_report),
+                _load(args.topology_report),
+            )
+            write_raw_source_structural_topology_review_spec(
+                spec,
+                args.out,
+            )
+        except (
+            RawSourceStructuralTopologyReviewSpecError,
+            RawSourceStructuralTopologyEvidenceError,
+            RawSourceExactDeclarationEvidenceError,
+            EmptyFieldDeclarationEvidenceError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RAW_SOURCE_STRUCTURAL_TOPOLOGY_REVIEW_SPEC_PASS")
+        print(f"relationship_ids={len(spec['relationship_ids'])}")
         print(f"out={args.out}")
         return 0
 
