@@ -11,6 +11,11 @@ import zipfile
 
 from .classfile import parse_class
 from .indexer import sha256_file
+from .global_field_usage_evidence import (
+    _paired_method_maps,
+    _scan_source_class_usage,
+    _scan_usage,
+)
 from .lineage import LineageValidationError, load_lineage, validate_lineage
 from .member_identity import _descriptor_identity_shape
 from .member_lineage import (
@@ -429,9 +434,33 @@ def build_empty_field_declaration_evidence(
 
     summary = global_usage_report.get("summary")
     outcomes = global_usage_report.get("review_outcomes")
-    if not isinstance(summary, dict) or not isinstance(outcomes, list):
+    report_candidates = global_usage_report.get("candidates")
+    if (
+        not isinstance(summary, dict)
+        or not isinstance(outcomes, list)
+        or not isinstance(report_candidates, list)
+    ):
         raise EmptyFieldDeclarationEvidenceError(
-            "report summary/review_outcomes shape is invalid"
+            "report summary/candidates/review_outcomes shape is invalid"
+        )
+
+    expected_report_id = (
+        "GLOBALFIELDUSE_"
+        + _stable_digest(
+            {
+                "old_build_id": old_build_id,
+                "new_build_id": new_build_id,
+                "old_sha256": old_sha,
+                "new_sha256": new_sha,
+                "member_lineage_digest": member_digest,
+                "candidates": report_candidates,
+                "review_outcomes": outcomes,
+            }
+        )[:20].upper()
+    )
+    if global_usage_report.get("report_id") != expected_report_id:
+        raise EmptyFieldDeclarationEvidenceError(
+            "global usage report_id digest does not match report evidence"
         )
     input_count = summary.get("input_stable_symbol_reviews")
     reported_outcomes = summary.get("review_outcomes")
@@ -502,6 +531,58 @@ def build_empty_field_declaration_evidence(
         new_build_id=new_build_id,
     )
 
+    old_targets: set[tuple[str, str, str]] = set()
+    new_targets: set[tuple[str, str, str]] = set()
+    for row in empty_rows:
+        old_name, old_desc, _old_access = _coord(
+            row.get("old"),
+            label=f"{row['relationship_id']}.old",
+        )
+        new_name, new_desc, _new_access = _coord(
+            row.get("new"),
+            label=f"{row['relationship_id']}.new",
+        )
+        old_targets.add(
+            (
+                str(row.get("old_owner", "")).removesuffix(".class"),
+                old_name,
+                old_desc,
+            )
+        )
+        new_targets.add(
+            (
+                str(row.get("new_owner", "")).removesuffix(".class"),
+                new_name,
+                new_desc,
+            )
+        )
+
+    old_methods, new_methods, _paired_method_count = _paired_method_maps(
+        member_lineage,
+        old_build_id=old_build_id,
+        new_build_id=new_build_id,
+    )
+    old_method_usage, _old_method_scan = _scan_usage(
+        old_jar,
+        old_methods,
+        old_targets,
+    )
+    new_method_usage, _new_method_scan = _scan_usage(
+        new_jar,
+        new_methods,
+        new_targets,
+    )
+    old_global_usage, _old_global_scan = _scan_source_class_usage(
+        old_jar,
+        old_aliases,
+        old_targets,
+    )
+    new_global_usage, _new_global_scan = _scan_source_class_usage(
+        new_jar,
+        new_aliases,
+        new_targets,
+    )
+
     candidates: list[dict[str, Any]] = []
     rejected: list[dict[str, Any]] = []
     reason_counts: Counter[str] = Counter()
@@ -548,6 +629,75 @@ def build_empty_field_declaration_evidence(
                 f"{relationship_id}: outcome coordinate differs from unresolved review"
             )
 
+        def reject(reason: str, **evidence: Any) -> None:
+            reason_counts[reason] += 1
+            rejected.append(
+                {
+                    "relationship_id": relationship_id,
+                    "logical_class_id": old_logical,
+                    "old_owner": old_owner,
+                    "new_owner": new_owner,
+                    "reason": reason,
+                    **evidence,
+                }
+            )
+
+        old_key = (old_owner, old_coord[0], old_coord[1])
+        new_key = (new_owner, new_coord[0], new_coord[1])
+        old_method_topology = old_method_usage.get(old_key, Counter())
+        new_method_topology = new_method_usage.get(new_key, Counter())
+        if old_method_topology or new_method_topology:
+            raise EmptyFieldDeclarationEvidenceError(
+                f"{relationship_id}: empty_both classification disagrees "
+                "with exact canonical-method usage"
+            )
+
+        old_global_topology = old_global_usage.get(old_key, Counter())
+        new_global_topology = new_global_usage.get(new_key, Counter())
+
+        def source_rows(
+            topology: Counter[tuple[str, str]],
+        ) -> list[dict[str, Any]]:
+            return [
+                {
+                    "source_class": source_class,
+                    "operation": operation,
+                    "count": count,
+                }
+                for (source_class, operation), count
+                in sorted(topology.items())
+            ]
+
+        if any(
+            source_class.startswith("RAW:")
+            for source_class, _operation in (
+                set(old_global_topology)
+                | set(new_global_topology)
+            )
+        ):
+            reject(
+                "raw_source_guard_rejected",
+                old_global_source_class_topology=source_rows(
+                    old_global_topology
+                ),
+                new_global_source_class_topology=source_rows(
+                    new_global_topology
+                ),
+            )
+            continue
+
+        if old_global_topology != new_global_topology:
+            reject(
+                "global_class_topology_guard_rejected",
+                old_global_source_class_topology=source_rows(
+                    old_global_topology
+                ),
+                new_global_source_class_topology=source_rows(
+                    new_global_topology
+                ),
+            )
+            continue
+
         old_fields = _jar_field_table(old_jar, owner=old_owner)
         new_fields = _jar_field_table(new_jar, owner=new_owner)
         old_index_pos = _field_index(
@@ -589,19 +739,6 @@ def build_empty_field_declaration_evidence(
             target_index=new_index_pos,
             direction=1,
         )
-
-        def reject(reason: str, **evidence: Any) -> None:
-            reason_counts[reason] += 1
-            rejected.append(
-                {
-                    "relationship_id": relationship_id,
-                    "logical_class_id": old_logical,
-                    "old_owner": old_owner,
-                    "new_owner": new_owner,
-                    "reason": reason,
-                    **evidence,
-                }
-            )
 
         if old_left is None or old_right is None or new_left is None or new_right is None:
             reject(
@@ -696,6 +833,12 @@ def build_empty_field_declaration_evidence(
                 "interval_offset": old_offset,
                 "interval_length": len(old_segment),
                 "interval_digest": _stable_digest(old_segment),
+                "global_source_class_topology": source_rows(
+                    old_global_topology
+                ),
+                "global_observations": sum(
+                    old_global_topology.values()
+                ),
             }
         )
 
@@ -734,6 +877,12 @@ def build_empty_field_declaration_evidence(
             "input_empty_both_reviews": len(empty_rows),
             "candidate_fields": len(candidates),
             "remaining_without_declaration_proof": len(rejected),
+            "raw_source_guard_rejected": reason_counts[
+                "raw_source_guard_rejected"
+            ],
+            "global_class_topology_guard_rejected": reason_counts[
+                "global_class_topology_guard_rejected"
+            ],
             "missing_two_sided_canonical_anchor": reason_counts[
                 "missing_two_sided_canonical_anchor"
             ],
@@ -757,7 +906,9 @@ def build_empty_field_declaration_evidence(
         "rejected": rejected,
         "note": (
             "Research-only exact-JAR-bound evidence. canonical=false. Only empty_both residual "
-            "stable-symbol reviews are considered. A candidate requires the same "
+            "stable-symbol reviews are considered. The empty canonical-method classification "
+            "is independently rechecked from exact JARs, and whole-JAR source-class/read-write "
+            "topology must be identical and RAW-free. A candidate then requires the same "
             "paired canonical field IDs immediately bracketing the target in both "
             "exact JVM field tables, an identical ordered declaration-signature "
             "interval between those anchors, the same target offset, and a unique "
