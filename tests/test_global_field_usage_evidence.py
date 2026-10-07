@@ -12,6 +12,7 @@ import zipfile
 from spk_recovery.global_field_usage_evidence import (
     GlobalFieldUsageEvidenceError,
     _scan_usage,
+    _stable_reviews,
     build_global_field_usage_evidence,
 )
 
@@ -297,6 +298,90 @@ class GlobalFieldUsageEvidenceTests(unittest.TestCase):
         self.assertEqual(report["summary"]["candidate_fields"], 0)
         self.assertEqual(report["summary"]["changed_or_one_sided"], 1)
         self.assertEqual(report["candidates"], [])
+
+    def test_duplicate_review_coordinate_is_refused(self):
+        classes = {
+            "classes": [
+                {
+                    "logical_id": "CLIENT_CLASS_000001",
+                    "lineage": [
+                        {
+                            "build_id": "v308",
+                            "internal_name": "rs/A",
+                        },
+                        {
+                            "build_id": "v309",
+                            "internal_name": "rs/A",
+                        },
+                    ],
+                }
+            ]
+        }
+        candidate = {
+            "relationship_id": "MEMREL_1",
+            "strategy": "stable_symbol",
+            "old_owner": "rs/A.class",
+            "new_owner": "rs/A.class",
+            "old": {
+                "name": "x",
+                "descriptor": "I",
+                "access": 1,
+            },
+            "new": {
+                "name": "x",
+                "descriptor": "I",
+                "access": 1,
+            },
+        }
+        second = {
+            **candidate,
+            "relationship_id": "MEMREL_2",
+        }
+        members = {
+            "unresolved": [
+                {
+                    "kind": "member_identity_review",
+                    "member_kind": "field",
+                    "source": "member_identity_candidates",
+                    "old_build_id": "v308",
+                    "new_build_id": "v309",
+                    "candidate": candidate,
+                },
+                {
+                    "kind": "member_identity_review",
+                    "member_kind": "field",
+                    "source": "member_identity_candidates",
+                    "old_build_id": "v308",
+                    "new_build_id": "v309",
+                    "candidate": second,
+                },
+            ]
+        }
+        index = {
+            "classes": {
+                "rs/A.class": {
+                    "fields": [
+                        {
+                            "name": "x",
+                            "descriptor": "I",
+                            "access": 1,
+                        }
+                    ]
+                }
+            }
+        }
+        with self.assertRaisesRegex(
+            GlobalFieldUsageEvidenceError,
+            "duplicate old review coordinate",
+        ):
+            _stable_reviews(
+                classes,
+                members,
+                index,
+                index,
+                old_build_id="v308",
+                new_build_id="v309",
+            )
 
     def test_exact_jar_index_sha_drift_is_refused(self):
         with (
