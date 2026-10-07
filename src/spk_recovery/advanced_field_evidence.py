@@ -170,6 +170,8 @@ def _frontier(
             continue
         if item.get("member_kind") != "field":
             continue
+        if item.get("source") != "member_identity_candidates":
+            continue
         candidate = item.get("candidate")
         if not isinstance(candidate, dict):
             continue
@@ -193,6 +195,68 @@ def _frontier(
         group["new"].add(_coord(candidate.get("new"), label="candidate.new"))
 
     return groups
+
+
+def _review_relationships(
+    member_lineage: dict[str, Any],
+    *,
+    new_build_id: str,
+) -> dict[
+    tuple[str, str, tuple[str, str], tuple[str, str]],
+    str,
+]:
+    out: dict[
+        tuple[str, str, tuple[str, str], tuple[str, str]],
+        str,
+    ] = {}
+    seen_ids: dict[
+        str,
+        tuple[str, str, tuple[str, str], tuple[str, str]],
+    ] = {}
+    for item in member_lineage.get("unresolved", []):
+        if not isinstance(item, dict):
+            continue
+        if (
+            item.get("new_build_id") != new_build_id
+            or item.get("kind") != "member_identity_review"
+            or item.get("member_kind") != "field"
+            or item.get("source") != "member_identity_candidates"
+        ):
+            continue
+        candidate = item.get("candidate")
+        if not isinstance(candidate, dict):
+            continue
+        relationship_id = candidate.get("relationship_id")
+        if not isinstance(relationship_id, str) or not relationship_id:
+            continue
+        old_owner = str(candidate.get("old_owner", "")).removesuffix(
+            ".class"
+        )
+        new_owner = str(candidate.get("new_owner", "")).removesuffix(
+            ".class"
+        )
+        if not old_owner or not new_owner:
+            continue
+        key = (
+            old_owner,
+            new_owner,
+            _coord(candidate.get("old"), label="candidate.old"),
+            _coord(candidate.get("new"), label="candidate.new"),
+        )
+        if key in out and out[key] != relationship_id:
+            raise AdvancedFieldEvidenceError(
+                "duplicate unresolved field coordinate pair has "
+                "different relationship IDs"
+            )
+        prior_key = seen_ids.get(relationship_id)
+        if prior_key is not None and prior_key != key:
+            raise AdvancedFieldEvidenceError(
+                "one relationship ID identifies multiple unresolved "
+                "field coordinate pairs"
+            )
+        out[key] = relationship_id
+        seen_ids[relationship_id] = key
+    return out
 
 
 def _field_lookup(profile: dict[str, Any]) -> dict[tuple[str, str], dict[str, Any]]:
@@ -365,9 +429,13 @@ def _candidate(
     old_owner: str,
     new_owner: str,
     row: dict[str, Any],
+    *,
+    relationship_id: str | None,
 ) -> dict[str, Any]:
     return {
         "logical_class_id": logical_id,
+        "relationship_id": relationship_id,
+        "supports_existing_review": relationship_id is not None,
         "old_owner": old_owner,
         "new_owner": new_owner,
         "old": {
@@ -423,6 +491,10 @@ def build_advanced_field_evidence(
         )
 
     frontier = _frontier(member_lineage, new_build_id=new_build_id)
+    review_relationships = _review_relationships(
+        member_lineage,
+        new_build_id=new_build_id,
+    )
     old_owner_ids = _owner_to_logical(class_lineage, old_build_id)
     new_owner_ids = _owner_to_logical(class_lineage, new_build_id)
     old_aliases = _aliases(class_lineage, old_build_id)
@@ -538,12 +610,24 @@ def build_advanced_field_evidence(
         ]
 
         for row in [*constant, *context, *alignment]:
+            old_coord = (
+                str(row["old"].get("name")),
+                str(row["old"].get("descriptor")),
+            )
+            new_coord = (
+                str(row["new"].get("name")),
+                str(row["new"].get("descriptor")),
+            )
+            relationship_id = review_relationships.get(
+                (old_owner, new_owner, old_coord, new_coord)
+            )
             candidates.append(
                 _candidate(
                     logical_id,
                     old_owner,
                     new_owner,
                     row,
+                    relationship_id=relationship_id,
                 )
             )
             strategy_counts[str(row.get("strategy"))] += 1
@@ -557,6 +641,11 @@ def build_advanced_field_evidence(
         )
     )
     resolved = len(candidates)
+    existing_review_candidates = sum(
+        1
+        for row in candidates
+        if row.get("supports_existing_review") is True
+    )
     material = {
         "old_build_id": old_build_id,
         "new_build_id": new_build_id,
@@ -581,6 +670,8 @@ def build_advanced_field_evidence(
             "input_unresolved_fields": input_fields,
             "class_pairs": len(frontier),
             "candidate_fields": resolved,
+            "existing_review_candidates": existing_review_candidates,
+            "novel_pair_candidates": resolved - existing_review_candidates,
             "remaining_unresolved_fields": input_fields - resolved,
             "constant_value_exact": strategy_counts["constant_value_exact"],
             "canonical_method_instruction_context": strategy_counts[
@@ -592,8 +683,11 @@ def build_advanced_field_evidence(
         },
         "candidates": candidates,
         "note": (
-            "Research-only evidence. canonical=false. No member lineage "
-            "relationship is appended by this report."
+            "Research-only evidence. canonical=false. Existing unresolved "
+            "relationship IDs are preserved only when an advanced candidate "
+            "supports the exact recorded old/new coordinate pair. Novel pairs "
+            "remain research-only and are not directly acceptable. No member "
+            "lineage relationship is appended by this report."
         ),
     }
 
