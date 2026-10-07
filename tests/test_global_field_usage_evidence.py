@@ -265,6 +265,8 @@ class GlobalFieldUsageEvidenceTests(unittest.TestCase):
         self.assertFalse(report["canonical"])
         self.assertEqual(report["summary"]["input_stable_symbol_reviews"], 2)
         self.assertEqual(report["summary"]["candidate_fields"], 1)
+        self.assertEqual(report["summary"]["eligible_stable_symbol_reviews"], 2)
+        self.assertEqual(report["summary"]["descriptor_identity_guard_rejected"], 0)
         self.assertEqual(report["summary"]["empty_both"], 1)
         self.assertEqual(
             report["summary"]["remaining_without_global_topology_proof"],
@@ -551,6 +553,110 @@ class GlobalFieldUsageEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(report["summary"]["candidate_fields"], 0)
         self.assertEqual(report["candidates"], [])
+
+    def test_descriptor_identity_drift_can_be_collected_as_veto(self):
+        classes = {
+            "classes": [
+                {
+                    "logical_id": "CLIENT_CLASS_E",
+                    "lineage": [
+                        {"build_id": "v308", "internal_name": "rs/E"},
+                        {"build_id": "v309", "internal_name": "rs/E"},
+                    ],
+                },
+                {
+                    "logical_id": "CLIENT_CLASS_C_OLD",
+                    "lineage": [
+                        {"build_id": "v308", "internal_name": "rs/C"},
+                    ],
+                },
+                {
+                    "logical_id": "CLIENT_CLASS_C_NEW",
+                    "lineage": [
+                        {"build_id": "v309", "internal_name": "rs/C"},
+                    ],
+                },
+            ]
+        }
+        candidate = {
+            "relationship_id": "MEMREL_DESCRIPTOR_DRIFT",
+            "strategy": "stable_symbol",
+            "old_owner": "rs/E.class",
+            "new_owner": "rs/E.class",
+            "old": {
+                "name": "a",
+                "descriptor": "Lrs/C;",
+                "access": 18,
+            },
+            "new": {
+                "name": "a",
+                "descriptor": "Lrs/C;",
+                "access": 18,
+            },
+        }
+        members = {
+            "unresolved": [
+                {
+                    "kind": "member_identity_review",
+                    "member_kind": "field",
+                    "source": "member_identity_candidates",
+                    "old_build_id": "v308",
+                    "new_build_id": "v309",
+                    "candidate": candidate,
+                }
+            ]
+        }
+        index = {
+            "classes": {
+                "rs/E.class": {
+                    "fields": [
+                        {
+                            "name": "a",
+                            "descriptor": "Lrs/C;",
+                            "access": 18,
+                        }
+                    ]
+                }
+            }
+        }
+
+        with self.assertRaisesRegex(
+            GlobalFieldUsageEvidenceError,
+            "descriptor identity changed",
+        ):
+            _stable_reviews(
+                classes,
+                members,
+                index,
+                index,
+                old_build_id="v308",
+                new_build_id="v309",
+            )
+
+        rejected = []
+        reviews = _stable_reviews(
+            classes,
+            members,
+            index,
+            index,
+            old_build_id="v308",
+            new_build_id="v309",
+            descriptor_identity_rejections=rejected,
+        )
+        self.assertEqual(reviews, [])
+        self.assertEqual(len(rejected), 1)
+        self.assertEqual(
+            rejected[0]["relationship_id"],
+            "MEMREL_DESCRIPTOR_DRIFT",
+        )
+        self.assertEqual(
+            rejected[0]["reason"],
+            "canonical_descriptor_identity_changed",
+        )
+        self.assertNotEqual(
+            rejected[0]["old_descriptor_identity"],
+            rejected[0]["new_descriptor_identity"],
+        )
 
     def test_duplicate_review_coordinate_is_refused(self):
         classes = {
