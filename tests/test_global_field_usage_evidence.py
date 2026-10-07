@@ -465,6 +465,93 @@ class GlobalFieldUsageEvidenceTests(unittest.TestCase):
         self.assertEqual(report["summary"]["candidate_fields"], 0)
         self.assertEqual(report["candidates"], [])
 
+    def test_raw_source_class_support_is_refused(self):
+        review = self._review("MEMREL_1", "x")
+        method_usage = {
+            ("rs/A", "x", "I"): Counter(
+                {("CLIENT_METHOD_1", "getfield"): 1}
+            )
+        }
+        class_usage = {
+            ("rs/A", "x", "I"): Counter(
+                {("RAW:rs/unmapped", "getfield"): 1}
+            )
+        }
+        method_summary = {
+            "source_classes_scanned": 1,
+            "source_classes_relevant": 1,
+            "canonical_methods_scanned": 1,
+            "field_access_observations": 1,
+        }
+        class_summary = {
+            "classes_scanned": 2,
+            "classes_relevant": 1,
+            "field_access_observations": 1,
+        }
+
+        with (
+            patch(
+                "spk_recovery.global_field_usage_evidence.validate_lineage"
+            ),
+            patch(
+                "spk_recovery.global_field_usage_evidence."
+                "validate_member_lineage"
+            ),
+            patch(
+                "spk_recovery.global_field_usage_evidence.sha256_file",
+                side_effect=["1" * 64, "2" * 64],
+            ),
+            patch(
+                "spk_recovery.global_field_usage_evidence._stable_reviews",
+                return_value=[review],
+            ),
+            patch(
+                "spk_recovery.global_field_usage_evidence."
+                "_paired_method_maps",
+                return_value=(
+                    {"rs/B": {("m", "()V"): "CLIENT_METHOD_1"}},
+                    {"rs/B": {("m", "()V"): "CLIENT_METHOD_1"}},
+                    1,
+                ),
+            ),
+            patch(
+                "spk_recovery.global_field_usage_evidence._scan_usage",
+                side_effect=[
+                    (method_usage, method_summary),
+                    (method_usage, method_summary),
+                ],
+            ),
+            patch(
+                "spk_recovery.global_field_usage_evidence."
+                "_scan_source_class_usage",
+                side_effect=[
+                    (class_usage, class_summary),
+                    (class_usage, class_summary),
+                ],
+            ),
+        ):
+            report = build_global_field_usage_evidence(
+                self._classes(),
+                {"members": [], "unresolved": []},
+                {"sha256": "1" * 64},
+                {"sha256": "2" * 64},
+                Path("old.jar"),
+                Path("new.jar"),
+                old_build_id="v308",
+                new_build_id="v309",
+            )
+
+        self.assertEqual(
+            report["summary"]["canonical_method_topology_matches"],
+            1,
+        )
+        self.assertEqual(
+            report["summary"]["raw_source_guard_rejected"],
+            1,
+        )
+        self.assertEqual(report["summary"]["candidate_fields"], 0)
+        self.assertEqual(report["candidates"], [])
+
     def test_duplicate_review_coordinate_is_refused(self):
         classes = {
             "classes": [
