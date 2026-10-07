@@ -9,6 +9,7 @@ from spk_recovery.raw_source_inbound_canonical_evidence import (
     _global_inbound_identity_proofs,
     _profile_key,
     _scan_inbound_profiles,
+    _stable_digest,
     build_raw_source_inbound_canonical_evidence,
 )
 
@@ -154,6 +155,12 @@ class RawSourceInboundCanonicalEvidenceTests(unittest.TestCase):
     ):
         previous = self._previous()
         structural = structural or self._structural()
+        previous["base_structural_topology_report_id"] = (
+            structural["report_id"]
+        )
+        previous["base_structural_topology_report_digest"] = (
+            _stable_digest(structural)
+        )
         old_fields = old_fields or [
             self._field("left"),
             self._field("x"),
@@ -560,6 +567,40 @@ class RawSourceInboundCanonicalEvidenceTests(unittest.TestCase):
             ],
             1,
         )
+
+    def test_predecessor_digest_binding_is_fail_closed(self):
+        structural = self._structural()
+        previous = self._previous()
+        previous["base_structural_topology_report_id"] = (
+            structural["report_id"]
+        )
+        previous["base_structural_topology_report_digest"] = "f" * 64
+
+        with (
+            patch(
+                "spk_recovery.raw_source_inbound_canonical_evidence."
+                "build_raw_source_canonical_reference_evidence",
+                return_value=previous,
+            ),
+            patch(
+                "spk_recovery.raw_source_inbound_canonical_evidence."
+                "build_raw_source_structural_topology_evidence",
+                return_value=structural,
+            ),
+        ):
+            with self.assertRaisesRegex(
+                Exception,
+                "binding mismatch",
+            ):
+                build_raw_source_inbound_canonical_evidence(
+                    {},
+                    {},
+                    {},
+                    {},
+                    Path("old.jar"),
+                    Path("new.jar"),
+                    {"report_id": "GLOBAL_TEST"},
+                )
 
     def test_inputs_are_not_mutated(self):
         structural = self._structural()
