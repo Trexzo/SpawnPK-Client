@@ -305,6 +305,25 @@ New-Item -ItemType Directory -Path $CollisionDir | Out-Null
 New-Item -ItemType Directory -Path $DerivedInputDir | Out-Null
 New-Item -ItemType Directory -Path $MilestoneDir | Out-Null
 
+# Snapshot the already-verified exact v308 authority into the isolated
+# acceptance workspace. The live ~/.spawnpk-data/client.jar path can be
+# replaced by the game updater while a long Source-M1 run is in progress;
+# every downstream authority/release stage must consume immutable bytes.
+$AuthorityClientJar = Join-Path $DerivedInputDir "client-v308-authority.jar"
+Copy-Item -LiteralPath $ClientJar -Destination $AuthorityClientJar -Force
+Require-File $AuthorityClientJar
+$AuthorityClientSha = (
+    Get-FileHash -LiteralPath $AuthorityClientJar -Algorithm SHA256
+).Hash.ToLowerInvariant()
+if ($AuthorityClientSha -ne $ExpectedV308) {
+    throw (
+        "Exact v308 authority snapshot SHA mismatch: " +
+        $AuthorityClientSha
+    )
+}
+Write-Host "V308_AUTHORITY_SNAPSHOT=$AuthorityClientJar" -ForegroundColor Green
+Write-Host "V308_AUTHORITY_SNAPSHOT_SHA256=$AuthorityClientSha" -ForegroundColor Green
+
 $env:JAVA_HOME = $Jdk
 $env:PATH = "$Jdk\bin;$env:PATH"
 $env:PYTHONPATH = Join-Path $Repo "src"
@@ -353,7 +372,7 @@ if ([string]::IsNullOrWhiteSpace($SourceIndex)) {
         "-m",
         "spk_recovery.cli",
         "index",
-        $ClientJar,
+        $AuthorityClientJar,
         "--out",
         $SourceIndex,
         "--expect-sha256",
@@ -383,7 +402,7 @@ if ([string]::IsNullOrWhiteSpace($SourceIndex)) {
         "-3.13",
         "-m",
         "spk_recovery.source_index_verify_cli",
-        $ClientJar,
+        $AuthorityClientJar,
         $SourceIndex,
         "--expect-sha256",
         $ExpectedV308
@@ -516,7 +535,7 @@ if (-not $HasMemberSafetyAcceptance) {
         "-3.13",
         "-m",
         "spk_recovery.readable_build_cli",
-        $ClientJar,
+        $AuthorityClientJar,
         $ClassLineage,
         $MemberLineage,
         $SourceIndex,
@@ -605,7 +624,7 @@ $ReadableArgs = @(
     "-3.13",
     "-m",
     "spk_recovery.readable_build_cli",
-    $ClientJar,
+    $AuthorityClientJar,
     $ClassLineage,
     $MemberLineage,
     $SourceIndex,
@@ -1031,7 +1050,7 @@ $ReleaseArgs = @(
     "-3.13",
     "-m",
     "spk_recovery.release_workspace_orchestrator_cli",
-    $ClientJar,
+    $AuthorityClientJar,
     $SourceIndex,
     $ClassLineage,
     $MemberLineage,
@@ -1205,7 +1224,7 @@ $VerifyArgs = @(
     $CleanRebuild,
     $RoundTrip,
     "--authority-jar",
-    $ClientJar,
+    $AuthorityClientJar,
     "--readable-jar",
     $ReadableJar,
     "--decompiler-jar",
