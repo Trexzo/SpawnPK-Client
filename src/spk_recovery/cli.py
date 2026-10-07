@@ -302,6 +302,8 @@ def main(argv: list[str] | None = None) -> int:
     pefde.add_argument("member_lineage", type=Path)
     pefde.add_argument("old_index", type=Path)
     pefde.add_argument("new_index", type=Path)
+    pefde.add_argument("old_jar", type=Path)
+    pefde.add_argument("new_jar", type=Path)
     pefde.add_argument("global_usage_report", type=Path)
     pefde.add_argument("--out", type=Path, required=True)
 
@@ -873,6 +875,8 @@ def main(argv: list[str] | None = None) -> int:
                 load_member_lineage(args.member_lineage),
                 _load(args.old_index),
                 _load(args.new_index),
+                args.old_jar,
+                args.new_jar,
                 _load(args.global_usage_report),
             )
             write_empty_field_declaration_evidence(report, args.out)
