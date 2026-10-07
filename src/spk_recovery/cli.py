@@ -131,6 +131,11 @@ from .raw_source_inbound_canonical_review_spec import (
     build_raw_source_inbound_canonical_review_spec,
     write_spec as write_raw_source_inbound_canonical_review_spec,
 )
+from .canonical_method_field_context_evidence import (
+    CanonicalMethodFieldContextEvidenceError,
+    build_canonical_method_field_context_evidence,
+    write_report as write_canonical_method_field_context_evidence,
+)
 from .member_remap_plan import (
     MemberRemapPlanError,
     build_member_remap_plan,
@@ -499,6 +504,22 @@ def main(argv: list[str] | None = None) -> int:
     prics.add_argument("global_usage_report", type=Path)
     prics.add_argument("inbound_report", type=Path)
     prics.add_argument("--out", type=Path, required=True)
+
+    pcmfc = sub.add_parser(
+        "canonical-method-field-context-evidence",
+        help=(
+            "Recover globally-vetoed field identities through exact unique "
+            "local instruction contexts inside paired canonical methods"
+        ),
+    )
+    pcmfc.add_argument("class_lineage", type=Path)
+    pcmfc.add_argument("member_lineage", type=Path)
+    pcmfc.add_argument("old_index", type=Path)
+    pcmfc.add_argument("new_index", type=Path)
+    pcmfc.add_argument("old_jar", type=Path)
+    pcmfc.add_argument("new_jar", type=Path)
+    pcmfc.add_argument("global_usage_report", type=Path)
+    pcmfc.add_argument("--out", type=Path, required=True)
 
     psr = sub.add_parser(
         "semantic-resolve",
@@ -1363,6 +1384,40 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         print("SPK_RAW_SOURCE_INBOUND_CANONICAL_REVIEW_SPEC_PASS")
         print(f"relationship_ids={len(spec['relationship_ids'])}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "canonical-method-field-context-evidence":
+        try:
+            report = build_canonical_method_field_context_evidence(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.old_index),
+                _load(args.new_index),
+                args.old_jar,
+                args.new_jar,
+                _load(args.global_usage_report),
+            )
+            write_canonical_method_field_context_evidence(
+                report,
+                args.out,
+            )
+        except (
+            CanonicalMethodFieldContextEvidenceError,
+            GlobalFieldUsageEvidenceError,
+            BytecodeProfileError,
+            EmptyFieldDeclarationEvidenceError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+            OSError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_CANONICAL_METHOD_FIELD_CONTEXT_EVIDENCE_PASS")
+        print(f"report_id={report['report_id']}")
+        for k, v in report["summary"].items():
+            print(f"{k}={v}")
         print(f"out={args.out}")
         return 0
 
