@@ -327,6 +327,20 @@ def build_raw_source_structural_topology_review_spec(
 
     rejected_ids: set[str] = set()
     rejected_tally = {key: 0 for key in rejection_keys}
+    used_exact_tokens: set[str] = set()
+    used_structural_tokens: set[str] = set()
+
+    def tally_proof_tokens(tokens: set[str]) -> None:
+        for token in tokens:
+            if token.startswith("exact_sha256_unique_global:"):
+                used_exact_tokens.add(token)
+            elif token.startswith("structural_sha256_unique_global:"):
+                used_structural_tokens.add(token)
+            else:
+                raise RawSourceStructuralTopologyReviewSpecError(
+                    "unsupported RAW proof token prefix"
+                )
+
     for i, row in enumerate(rejected):
         if not isinstance(row, dict):
             raise RawSourceStructuralTopologyReviewSpecError(
@@ -346,6 +360,12 @@ def build_raw_source_structural_topology_review_spec(
         rejected_ids.add(relationship_id)
         rejected_tally[reason] += 1
 
+        proofs = row.get("raw_source_identity_proofs")
+        if proofs is not None:
+            tally_proof_tokens(
+                _validate_proofs(relationship_id, proofs)
+            )
+
     for key in rejection_keys:
         if rejected_tally[key] != summary[key]:
             raise RawSourceStructuralTopologyReviewSpecError(
@@ -356,8 +376,6 @@ def build_raw_source_structural_topology_review_spec(
     seen_ids: set[str] = set()
     seen_old: set[tuple[str, str, str]] = set()
     seen_new: set[tuple[str, str, str]] = set()
-    used_exact_tokens: set[str] = set()
-    used_structural_tokens: set[str] = set()
 
     for i, row in enumerate(candidates):
         label = f"candidates[{i}]"
@@ -408,11 +426,7 @@ def build_raw_source_structural_topology_review_spec(
             relationship_id,
             row.get("raw_source_identity_proofs"),
         )
-        for token in proof_tokens:
-            if token.startswith("exact_sha256_unique_global:"):
-                used_exact_tokens.add(token)
-            elif token.startswith("structural_sha256_unique_global:"):
-                used_structural_tokens.add(token)
+        tally_proof_tokens(proof_tokens)
 
         _validate_normalized_topology(
             relationship_id,
