@@ -735,6 +735,13 @@ def build_global_field_usage_evidence(
     )
 
     candidates: list[dict[str, Any]] = []
+    review_outcomes: list[dict[str, Any]] = [
+        {
+            **row,
+            "outcome": "descriptor_identity_guard_rejected",
+        }
+        for row in descriptor_identity_rejections
+    ]
     empty_both = 0
     changed_or_one_sided = 0
     canonical_method_topology_matches = 0
@@ -749,9 +756,29 @@ def build_global_field_usage_evidence(
 
         if not old_topology and not new_topology:
             empty_both += 1
+            review_outcomes.append(
+                {
+                    **review,
+                    "outcome": "empty_both",
+                    "canonical_method_topology": [],
+                    "global_source_class_topology": [],
+                }
+            )
             continue
         if not old_topology or old_topology != new_topology:
             changed_or_one_sided += 1
+            review_outcomes.append(
+                {
+                    **review,
+                    "outcome": "changed_or_one_sided",
+                    "old_canonical_method_topology": _topology_rows(
+                        old_topology
+                    ),
+                    "new_canonical_method_topology": _topology_rows(
+                        new_topology
+                    ),
+                }
+            )
             continue
 
         canonical_method_topology_matches += 1
@@ -768,37 +795,87 @@ def build_global_field_usage_evidence(
             or old_class_topology != new_class_topology
         ):
             global_class_topology_guard_rejected += 1
+            review_outcomes.append(
+                {
+                    **review,
+                    "outcome": "global_class_topology_guard_rejected",
+                    "canonical_method_topology": _topology_rows(
+                        old_topology
+                    ),
+                    "old_global_source_class_topology": (
+                        _source_class_topology_rows(
+                            old_class_topology
+                        )
+                    ),
+                    "new_global_source_class_topology": (
+                        _source_class_topology_rows(
+                            new_class_topology
+                        )
+                    ),
+                }
+            )
             continue
         if any(
             source_class.startswith("RAW:")
             for source_class, _operation in old_class_topology
         ):
             raw_source_guard_rejected += 1
+            review_outcomes.append(
+                {
+                    **review,
+                    "outcome": "raw_source_guard_rejected",
+                    "canonical_method_topology": _topology_rows(
+                        old_topology
+                    ),
+                    "global_source_class_topology": (
+                        _source_class_topology_rows(
+                            old_class_topology
+                        )
+                    ),
+                }
+            )
             continue
 
         method_rows = _topology_rows(old_topology)
         class_rows = _source_class_topology_rows(
             old_class_topology
         )
-        candidates.append(
+        candidate = {
+            **review,
+            "strategy": (
+                "canonical_method_and_global_class_usage_"
+                "topology_exact"
+            ),
+            "confidence": "INFERRED_HIGH",
+            "supports_existing_review": True,
+            "observations": sum(old_topology.values()),
+            "canonical_methods": len(
+                {member_id for member_id, _operation in old_topology}
+            ),
+            "canonical_method_topology": method_rows,
+            "global_source_class_topology": class_rows,
+        }
+        candidates.append(candidate)
+        review_outcomes.append(
             {
                 **review,
-                "strategy": (
-                    "canonical_method_and_global_class_usage_"
-                    "topology_exact"
-                ),
-                "confidence": "INFERRED_HIGH",
-                "supports_existing_review": True,
-                "observations": sum(old_topology.values()),
-                "canonical_methods": len(
-                    {member_id for member_id, _operation in old_topology}
-                ),
+                "outcome": "candidate",
                 "canonical_method_topology": method_rows,
                 "global_source_class_topology": class_rows,
             }
         )
 
     candidates.sort(key=lambda row: row["relationship_id"])
+    review_outcomes.sort(key=lambda row: row["relationship_id"])
+    if len(review_outcomes) != input_stable_symbol_reviews:
+        raise GlobalFieldUsageEvidenceError(
+            "review outcome ledger does not cover the exact input frontier"
+        )
+    outcome_ids = [row["relationship_id"] for row in review_outcomes]
+    if len(set(outcome_ids)) != len(outcome_ids):
+        raise GlobalFieldUsageEvidenceError(
+            "review outcome ledger contains duplicate relationship_id"
+        )
     material = {
         "old_build_id": old_build_id,
         "new_build_id": new_build_id,
@@ -806,6 +883,7 @@ def build_global_field_usage_evidence(
         "new_sha256": new_sha,
         "member_lineage_digest": _stable_digest(member_lineage),
         "candidates": candidates,
+        "review_outcomes": review_outcomes,
     }
     report = {
         "schema_version": 1,
@@ -828,6 +906,7 @@ def build_global_field_usage_evidence(
             ),
             "paired_canonical_methods": paired_method_count,
             "candidate_fields": len(candidates),
+            "review_outcomes": len(review_outcomes),
             "empty_both": empty_both,
             "changed_or_one_sided": changed_or_one_sided,
             "canonical_method_topology_matches": (
@@ -878,6 +957,7 @@ def build_global_field_usage_evidence(
             ],
         },
         "candidates": candidates,
+        "review_outcomes": review_outcomes,
         "descriptor_identity_rejections": descriptor_identity_rejections,
         "note": (
             "Research-only evidence. canonical=false. A candidate is emitted "
@@ -890,7 +970,8 @@ def build_global_field_usage_evidence(
             "relation is appended by this report. Stable-symbol reviews whose "
             "descriptor identity is contradicted by stronger canonical class "
             "lineage are recorded as rejected evidence and never considered "
-            "candidates."
+            "candidates. review_outcomes is an exhaustive one-row-per-relationship "
+            "ledger over the exact stable-symbol input frontier."
         ),
     }
     return report

@@ -265,6 +265,7 @@ class GlobalFieldUsageEvidenceTests(unittest.TestCase):
         self.assertFalse(report["canonical"])
         self.assertEqual(report["summary"]["input_stable_symbol_reviews"], 2)
         self.assertEqual(report["summary"]["candidate_fields"], 1)
+        self.assertEqual(report["summary"]["review_outcomes"], 2)
         self.assertEqual(report["summary"]["eligible_stable_symbol_reviews"], 2)
         self.assertEqual(report["summary"]["descriptor_identity_guard_rejected"], 0)
         self.assertEqual(report["summary"]["empty_both"], 1)
@@ -281,6 +282,16 @@ class GlobalFieldUsageEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(candidate["observations"], 3)
         self.assertEqual(candidate["canonical_methods"], 2)
+        self.assertEqual(
+            {
+                row["relationship_id"]: row["outcome"]
+                for row in report["review_outcomes"]
+            },
+            {
+                "MEMREL_1": "candidate",
+                "MEMREL_2": "empty_both",
+            },
+        )
 
     def test_mismatched_topology_remains_unresolved(self):
         review = self._review("MEMREL_1", "x")
@@ -366,6 +377,10 @@ class GlobalFieldUsageEvidenceTests(unittest.TestCase):
         self.assertEqual(report["summary"]["candidate_fields"], 0)
         self.assertEqual(report["summary"]["changed_or_one_sided"], 1)
         self.assertEqual(report["candidates"], [])
+        self.assertEqual(
+            report["review_outcomes"][0]["outcome"],
+            "changed_or_one_sided",
+        )
 
     def test_global_class_topology_can_veto_method_match(self):
         review = self._review("MEMREL_1", "x")
@@ -466,6 +481,20 @@ class GlobalFieldUsageEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(report["summary"]["candidate_fields"], 0)
         self.assertEqual(report["candidates"], [])
+        self.assertEqual(
+            report["review_outcomes"][0]["outcome"],
+            "global_class_topology_guard_rejected",
+        )
+        self.assertTrue(
+            report["review_outcomes"][0][
+                "old_global_source_class_topology"
+            ]
+        )
+        self.assertTrue(
+            report["review_outcomes"][0][
+                "new_global_source_class_topology"
+            ]
+        )
 
     def test_raw_source_class_support_is_refused(self):
         review = self._review("MEMREL_1", "x")
@@ -553,6 +582,16 @@ class GlobalFieldUsageEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(report["summary"]["candidate_fields"], 0)
         self.assertEqual(report["candidates"], [])
+        self.assertEqual(
+            report["review_outcomes"][0]["outcome"],
+            "raw_source_guard_rejected",
+        )
+        self.assertEqual(
+            report["review_outcomes"][0][
+                "global_source_class_topology"
+            ][0]["source_class"],
+            "RAW:rs/unmapped",
+        )
 
     def test_descriptor_identity_drift_can_be_collected_as_veto(self):
         classes = {
