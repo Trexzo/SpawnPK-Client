@@ -550,6 +550,10 @@ def _constant_probe_value(
         return struct.unpack(">i", value[1])[0]
     if tag == 4:
         return struct.unpack(">f", value[1])[0]
+    if tag == 5:
+        return struct.unpack(">q", value[1])[0]
+    if tag == 6:
+        return struct.unpack(">d", value[1])[0]
     if tag == 8:
         return _utf8(cp, value[1])
     if tag == 7:
@@ -814,10 +818,25 @@ def profile_class_field_accesses(
         descriptor = _utf8(cp, r.u2())
         signature: str | None = None
         signature_seen = False
+        constant_value: Any = None
+        constant_value_seen = False
         for _ in range(r.u2()):
             attr_name = _utf8(cp, r.u2())
             attr_length = r.u4()
             payload = r.take(attr_length)
+            if attr_name == "ConstantValue":
+                if constant_value_seen:
+                    raise BytecodeProfileError(
+                        f"duplicate field ConstantValue attribute: {name}:{descriptor}"
+                    )
+                if len(payload) != 2:
+                    raise BytecodeProfileError(
+                        f"field {name}:{descriptor} ConstantValue must contain one u2 index"
+                    )
+                constant_value_seen = True
+                cp_index = (payload[0] << 8) | payload[1]
+                constant_value = _constant_probe_value(cp, cp_index)
+                continue
             if attr_name != "Signature":
                 continue
             if signature_seen:
@@ -836,6 +855,7 @@ def profile_class_field_accesses(
                 "descriptor": descriptor,
                 "access": access,
                 "signature": signature,
+                "constant_value": constant_value,
             }
         )
 
