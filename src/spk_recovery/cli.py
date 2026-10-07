@@ -91,6 +91,11 @@ from .empty_field_review_spec import (
     build_empty_field_review_spec,
     write_spec as write_empty_field_review_spec,
 )
+from .boundary_field_block_evidence import (
+    BoundaryFieldBlockEvidenceError,
+    build_boundary_field_block_evidence,
+    write_report as write_boundary_field_block_evidence,
+)
 from .member_remap_plan import (
     MemberRemapPlanError,
     build_member_remap_plan,
@@ -328,6 +333,22 @@ def main(argv: list[str] | None = None) -> int:
     pefrs.add_argument("global_usage_report", type=Path)
     pefrs.add_argument("declaration_report", type=Path)
     pefrs.add_argument("--out", type=Path, required=True)
+
+    pbfbe = sub.add_parser(
+        "boundary-field-block-evidence",
+        help=(
+            "Measure exact whole-prefix/whole-suffix/whole-class declaration "
+            "bijection for residual fields that lack two-sided anchors"
+        ),
+    )
+    pbfbe.add_argument("class_lineage", type=Path)
+    pbfbe.add_argument("member_lineage", type=Path)
+    pbfbe.add_argument("old_index", type=Path)
+    pbfbe.add_argument("new_index", type=Path)
+    pbfbe.add_argument("old_jar", type=Path)
+    pbfbe.add_argument("new_jar", type=Path)
+    pbfbe.add_argument("global_usage_report", type=Path)
+    pbfbe.add_argument("--out", type=Path, required=True)
 
     psr = sub.add_parser(
         "semantic-resolve",
@@ -941,6 +962,34 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         print("SPK_EMPTY_FIELD_REVIEW_SPEC_PASS")
         print(f"relationship_ids={len(spec['relationship_ids'])}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "boundary-field-block-evidence":
+        try:
+            report = build_boundary_field_block_evidence(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.old_index),
+                _load(args.new_index),
+                args.old_jar,
+                args.new_jar,
+                _load(args.global_usage_report),
+            )
+            write_boundary_field_block_evidence(report, args.out)
+        except (
+            BoundaryFieldBlockEvidenceError,
+            EmptyFieldDeclarationEvidenceError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_BOUNDARY_FIELD_BLOCK_EVIDENCE_PASS")
+        print(f"report_id={report['report_id']}")
+        for k, v in report["summary"].items():
+            print(f"{k}={v}")
         print(f"out={args.out}")
         return 0
 
