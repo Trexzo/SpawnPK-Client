@@ -25,13 +25,64 @@ class GlobalFieldReviewSpecTests(unittest.TestCase):
                         {"build_id": "v308", "internal_name": "rs/A"},
                         {"build_id": "v309", "internal_name": "rs/B"},
                     ],
+                },
+                {
+                    "logical_id": "CLIENT_CLASS_C",
+                    "lineage": [
+                        {"build_id": "v308", "internal_name": "rs/C"},
+                        {"build_id": "v309", "internal_name": "rs/C"},
+                    ],
+                },
+                {
+                    "logical_id": "CLIENT_CLASS_D",
+                    "lineage": [
+                        {"build_id": "v308", "internal_name": "rs/D"},
+                        {"build_id": "v309", "internal_name": "rs/D"},
+                    ],
                 }
             ],
         }
 
     def _members(self):
         return {
-            "members": [],
+            "members": [
+                {
+                    "member_id": "CLIENT_METHOD_1",
+                    "kind": "method",
+                    "lineage": [
+                        {
+                            "build_id": "v308",
+                            "owner_internal_name": "rs/C",
+                            "name": "m1",
+                            "descriptor": "()V",
+                        },
+                        {
+                            "build_id": "v309",
+                            "owner_internal_name": "rs/C",
+                            "name": "m1",
+                            "descriptor": "()V",
+                        },
+                    ],
+                },
+                {
+                    "member_id": "CLIENT_METHOD_2",
+                    "kind": "method",
+                    "lineage": [
+                        {
+                            "build_id": "v308",
+                            "owner_internal_name": "rs/D",
+                            "name": "m2",
+                            "descriptor": "()V",
+                        },
+                        {
+                            "build_id": "v309",
+                            "owner_internal_name": "rs/D",
+                            "name": "m2",
+                            "descriptor": "()V",
+                        },
+                    ],
+                },
+            ],
             "unresolved": [
                 {
                     "kind": "member_identity_review",
@@ -345,12 +396,21 @@ class GlobalFieldReviewSpecTests(unittest.TestCase):
 
     def test_candidate_cannot_also_be_descriptor_vetoed(self):
         members = self._members()
+        second = copy.deepcopy(members["unresolved"][0])
+        second["candidate"]["relationship_id"] = "MEMREL_OTHER"
+        second["candidate"]["old"]["name"] = "z"
+        second["candidate"]["new"]["name"] = "z"
+        members["unresolved"].append(second)
+
         report = self._report(members)
         report["summary"].update(
             {
-                "eligible_stable_symbol_reviews": 0,
+                "input_stable_symbol_reviews": 2,
+                "eligible_stable_symbol_reviews": 1,
                 "descriptor_identity_guard_rejected": 1,
-                "canonical_method_topology_matches": 0,
+                "candidate_fields": 1,
+                "remaining_without_global_topology_proof": 1,
+                "canonical_method_topology_matches": 1,
             }
         )
         report["descriptor_identity_rejections"] = [
@@ -362,6 +422,30 @@ class GlobalFieldReviewSpecTests(unittest.TestCase):
         with self.assertRaisesRegex(
             GlobalFieldReviewSpecError,
             "also descriptor-vetoed",
+        ):
+            self._build(report=report, members=members)
+
+    def test_unpaired_method_topology_identity_is_refused(self):
+        members = self._members()
+        report = self._report(members)
+        report["candidates"][0]["canonical_method_topology"][0][
+            "member_id"
+        ] = "CLIENT_METHOD_UNKNOWN"
+        with self.assertRaisesRegex(
+            GlobalFieldReviewSpecError,
+            "unpaired canonical method",
+        ):
+            self._build(report=report, members=members)
+
+    def test_unpaired_source_class_topology_identity_is_refused(self):
+        members = self._members()
+        report = self._report(members)
+        report["candidates"][0]["global_source_class_topology"][0][
+            "source_class"
+        ] = "CLIENT_CLASS_UNKNOWN"
+        with self.assertRaisesRegex(
+            GlobalFieldReviewSpecError,
+            "unpaired canonical source class",
         ):
             self._build(report=report, members=members)
 
