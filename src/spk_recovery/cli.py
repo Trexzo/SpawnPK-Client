@@ -126,6 +126,11 @@ from .raw_source_inbound_canonical_evidence import (
     build_raw_source_inbound_canonical_evidence,
     write_report as write_raw_source_inbound_canonical_evidence,
 )
+from .raw_source_inbound_canonical_review_spec import (
+    RawSourceInboundCanonicalReviewSpecError,
+    build_raw_source_inbound_canonical_review_spec,
+    write_spec as write_raw_source_inbound_canonical_review_spec,
+)
 from .member_remap_plan import (
     MemberRemapPlanError,
     build_member_remap_plan,
@@ -477,6 +482,23 @@ def main(argv: list[str] | None = None) -> int:
     price.add_argument("new_jar", type=Path)
     price.add_argument("global_usage_report", type=Path)
     price.add_argument("--out", type=Path, required=True)
+
+    prics = sub.add_parser(
+        "raw-source-inbound-canonical-review-spec",
+        help=(
+            "Re-run RAW inbound-canonical evidence and emit an explicit "
+            "reviewed-member acceptance spec for exact candidates"
+        ),
+    )
+    prics.add_argument("class_lineage", type=Path)
+    prics.add_argument("member_lineage", type=Path)
+    prics.add_argument("old_index", type=Path)
+    prics.add_argument("new_index", type=Path)
+    prics.add_argument("old_jar", type=Path)
+    prics.add_argument("new_jar", type=Path)
+    prics.add_argument("global_usage_report", type=Path)
+    prics.add_argument("inbound_report", type=Path)
+    prics.add_argument("--out", type=Path, required=True)
 
     psr = sub.add_parser(
         "semantic-resolve",
@@ -1307,6 +1329,40 @@ def main(argv: list[str] | None = None) -> int:
         print(f"report_id={report['report_id']}")
         for k, v in report["summary"].items():
             print(f"{k}={v}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "raw-source-inbound-canonical-review-spec":
+        try:
+            spec = build_raw_source_inbound_canonical_review_spec(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.old_index),
+                _load(args.new_index),
+                args.old_jar,
+                args.new_jar,
+                _load(args.global_usage_report),
+                _load(args.inbound_report),
+            )
+            write_raw_source_inbound_canonical_review_spec(
+                spec,
+                args.out,
+            )
+        except (
+            RawSourceInboundCanonicalReviewSpecError,
+            RawSourceInboundCanonicalEvidenceError,
+            RawSourceCanonicalReferenceEvidenceError,
+            RawSourceStructuralTopologyEvidenceError,
+            RawSourceExactDeclarationEvidenceError,
+            EmptyFieldDeclarationEvidenceError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RAW_SOURCE_INBOUND_CANONICAL_REVIEW_SPEC_PASS")
+        print(f"relationship_ids={len(spec['relationship_ids'])}")
         print(f"out={args.out}")
         return 0
 
