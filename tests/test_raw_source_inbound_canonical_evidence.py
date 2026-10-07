@@ -215,6 +215,11 @@ class RawSourceInboundCanonicalEvidenceTests(unittest.TestCase):
                 return_value=copy.deepcopy(structural),
             ),
             patch(
+                "spk_recovery.raw_source_inbound_canonical_evidence."
+                "_paired_class_aliases",
+                return_value=({}, {}),
+            ),
+            patch(
                 "spk_recovery.raw_source_inbound_canonical_evidence._aliases",
                 side_effect=[{}, {}],
             ),
