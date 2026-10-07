@@ -11,6 +11,7 @@ from spk_recovery.advanced_field_evidence import (
     _alignment_votes,
     _frontier,
     _instruction_contexts,
+    _review_relationships,
     build_advanced_field_evidence,
 )
 from spk_recovery.bytecode_profile import profile_class_field_accesses
@@ -24,6 +25,7 @@ class AdvancedFieldEvidenceTests(unittest.TestCase):
                     "new_build_id": "v309",
                     "kind": "member_identity_review",
                     "member_kind": "field",
+                    "source": "member_identity_candidates",
                     "candidate": {
                         "old_owner": "rs/a.class",
                         "new_owner": "rs/b.class",
@@ -41,6 +43,7 @@ class AdvancedFieldEvidenceTests(unittest.TestCase):
                     "new_build_id": "v310",
                     "kind": "member_identity_review",
                     "member_kind": "field",
+                    "source": "member_identity_candidates",
                     "candidate": {
                         "old_owner": "rs/c.class",
                         "new_owner": "rs/d.class",
@@ -59,6 +62,66 @@ class AdvancedFieldEvidenceTests(unittest.TestCase):
                     "new": {("y", "I")},
                 }
             },
+        )
+
+    def test_review_relationship_id_cannot_name_two_pairs(self):
+        members = {
+            "unresolved": [
+                {
+                    "new_build_id": "v309",
+                    "kind": "member_identity_review",
+                    "member_kind": "field",
+                    "source": "member_identity_candidates",
+                    "candidate": {
+                        "relationship_id": "MEMREL_DUP",
+                        "old_owner": "rs/a.class",
+                        "new_owner": "rs/b.class",
+                        "old": {"name": "x", "descriptor": "I"},
+                        "new": {"name": "y", "descriptor": "I"},
+                    },
+                },
+                {
+                    "new_build_id": "v309",
+                    "kind": "member_identity_review",
+                    "member_kind": "field",
+                    "source": "member_identity_candidates",
+                    "candidate": {
+                        "relationship_id": "MEMREL_DUP",
+                        "old_owner": "rs/a.class",
+                        "new_owner": "rs/b.class",
+                        "old": {"name": "z", "descriptor": "I"},
+                        "new": {"name": "q", "descriptor": "I"},
+                    },
+                },
+            ]
+        }
+        with self.assertRaisesRegex(
+            ValueError,
+            "one relationship ID identifies multiple",
+        ):
+            _review_relationships(members, new_build_id="v309")
+
+    def test_frontier_ignores_other_research_sources(self):
+        members = {
+            "unresolved": [
+                {
+                    "new_build_id": "v309",
+                    "kind": "member_identity_review",
+                    "member_kind": "field",
+                    "source": "other_research",
+                    "candidate": {
+                        "relationship_id": "OTHER",
+                        "old_owner": "rs/a.class",
+                        "new_owner": "rs/b.class",
+                        "old": {"name": "x", "descriptor": "I"},
+                        "new": {"name": "y", "descriptor": "I"},
+                    },
+                }
+            ]
+        }
+        self.assertEqual(
+            _frontier(members, new_build_id="v309"),
+            {},
         )
 
     def test_instruction_context_requires_two_observations(self):
@@ -223,6 +286,7 @@ class AdvancedFieldEvidenceTests(unittest.TestCase):
                     "new_build_id": "v309",
                     "kind": "member_identity_review",
                     "member_kind": "field",
+                    "source": "member_identity_candidates",
                     "candidate": {
                         "old_owner": "rs/a.class",
                         "new_owner": "rs/b.class",
@@ -234,6 +298,7 @@ class AdvancedFieldEvidenceTests(unittest.TestCase):
                     "new_build_id": "v309",
                     "kind": "member_identity_review",
                     "member_kind": "field",
+                    "source": "member_identity_candidates",
                     "candidate": {
                         "old_owner": "rs/a.class",
                         "new_owner": "rs/b.class",
@@ -297,7 +362,9 @@ class AdvancedFieldEvidenceTests(unittest.TestCase):
                     "new_build_id": "v309",
                     "kind": "member_identity_review",
                     "member_kind": "field",
+                    "source": "member_identity_candidates",
                     "candidate": {
+                        "relationship_id": "MEMREL_TEST_1",
                         "old_owner": "rs/a.class",
                         "new_owner": "rs/b.class",
                         "old": {"name": "x", "descriptor": "I"},
@@ -361,7 +428,16 @@ class AdvancedFieldEvidenceTests(unittest.TestCase):
         self.assertFalse(report["canonical"])
         self.assertEqual(report["summary"]["input_unresolved_fields"], 1)
         self.assertEqual(report["summary"]["candidate_fields"], 1)
+        self.assertEqual(report["summary"]["existing_review_candidates"], 1)
+        self.assertEqual(report["summary"]["novel_pair_candidates"], 0)
         self.assertEqual(report["summary"]["constant_value_exact"], 1)
+        self.assertEqual(
+            report["candidates"][0]["relationship_id"],
+            "MEMREL_TEST_1",
+        )
+        self.assertTrue(
+            report["candidates"][0]["supports_existing_review"]
+        )
         self.assertEqual(
             report["summary"]["remaining_unresolved_fields"],
             0,
