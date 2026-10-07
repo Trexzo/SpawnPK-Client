@@ -170,6 +170,8 @@ def _frontier(
             continue
         if item.get("member_kind") != "field":
             continue
+        if item.get("source") != "member_identity_candidates":
+            continue
         candidate = item.get("candidate")
         if not isinstance(candidate, dict):
             continue
