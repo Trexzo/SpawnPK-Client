@@ -136,6 +136,11 @@ from .canonical_method_field_context_evidence import (
     build_canonical_method_field_context_evidence,
     write_report as write_canonical_method_field_context_evidence,
 )
+from .canonical_method_field_context_review_spec import (
+    CanonicalMethodFieldContextReviewSpecError,
+    build_canonical_method_field_context_review_spec,
+    write_spec as write_canonical_method_field_context_review_spec,
+)
 from .member_remap_plan import (
     MemberRemapPlanError,
     build_member_remap_plan,
@@ -520,6 +525,23 @@ def main(argv: list[str] | None = None) -> int:
     pcmfc.add_argument("new_jar", type=Path)
     pcmfc.add_argument("global_usage_report", type=Path)
     pcmfc.add_argument("--out", type=Path, required=True)
+
+    pcmfr = sub.add_parser(
+        "canonical-method-field-context-review-spec",
+        help=(
+            "Re-run canonical-method field-context evidence and emit an "
+            "explicit reviewed-member acceptance spec for exact candidates"
+        ),
+    )
+    pcmfr.add_argument("class_lineage", type=Path)
+    pcmfr.add_argument("member_lineage", type=Path)
+    pcmfr.add_argument("old_index", type=Path)
+    pcmfr.add_argument("new_index", type=Path)
+    pcmfr.add_argument("old_jar", type=Path)
+    pcmfr.add_argument("new_jar", type=Path)
+    pcmfr.add_argument("global_usage_report", type=Path)
+    pcmfr.add_argument("context_report", type=Path)
+    pcmfr.add_argument("--out", type=Path, required=True)
 
     psr = sub.add_parser(
         "semantic-resolve",
@@ -1418,6 +1440,40 @@ def main(argv: list[str] | None = None) -> int:
         print(f"report_id={report['report_id']}")
         for k, v in report["summary"].items():
             print(f"{k}={v}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "canonical-method-field-context-review-spec":
+        try:
+            spec = build_canonical_method_field_context_review_spec(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.old_index),
+                _load(args.new_index),
+                args.old_jar,
+                args.new_jar,
+                _load(args.global_usage_report),
+                _load(args.context_report),
+            )
+            write_canonical_method_field_context_review_spec(
+                spec,
+                args.out,
+            )
+        except (
+            CanonicalMethodFieldContextReviewSpecError,
+            CanonicalMethodFieldContextEvidenceError,
+            GlobalFieldUsageEvidenceError,
+            BytecodeProfileError,
+            EmptyFieldDeclarationEvidenceError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+            OSError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_CANONICAL_METHOD_FIELD_CONTEXT_REVIEW_SPEC_PASS")
+        print(f"relationship_ids={len(spec['relationship_ids'])}")
         print(f"out={args.out}")
         return 0
 
