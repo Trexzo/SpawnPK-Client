@@ -108,6 +108,11 @@ class GlobalFieldReviewSpecTests(unittest.TestCase):
                 "descriptor_identity_guard_rejected": 0,
                 "candidate_fields": 1,
                 "remaining_without_global_topology_proof": 0,
+                "empty_both": 0,
+                "changed_or_one_sided": 0,
+                "canonical_method_topology_matches": 1,
+                "global_class_topology_guard_rejected": 0,
+                "raw_source_guard_rejected": 0,
             },
             "candidates": [
                 {
@@ -274,6 +279,7 @@ class GlobalFieldReviewSpecTests(unittest.TestCase):
         report["summary"]["input_stable_symbol_reviews"] = 2
         report["summary"]["eligible_stable_symbol_reviews"] = 2
         report["summary"]["candidate_fields"] = 2
+        report["summary"]["canonical_method_topology_matches"] = 2
         report["candidates"].append(
             copy.deepcopy(report["candidates"][0])
         )
@@ -336,6 +342,28 @@ class GlobalFieldReviewSpecTests(unittest.TestCase):
                 for row in spec["evidence"]
             )
         )
+
+    def test_candidate_cannot_also_be_descriptor_vetoed(self):
+        members = self._members()
+        report = self._report(members)
+        report["summary"].update(
+            {
+                "eligible_stable_symbol_reviews": 0,
+                "descriptor_identity_guard_rejected": 1,
+                "canonical_method_topology_matches": 0,
+            }
+        )
+        report["descriptor_identity_rejections"] = [
+            {
+                "relationship_id": "MEMREL_TEST_1",
+                "reason": "canonical_descriptor_identity_changed",
+            }
+        ]
+        with self.assertRaisesRegex(
+            GlobalFieldReviewSpecError,
+            "also descriptor-vetoed",
+        ):
+            self._build(report=report, members=members)
 
     def test_frontier_accounting_drift_is_refused(self):
         members = self._members()
