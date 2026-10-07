@@ -117,6 +117,56 @@ class EmptyFieldReviewSpecTests(unittest.TestCase):
             )
         )
 
+    def test_json_equivalent_tuple_list_recomputation_is_accepted(self):
+        report = self._report()
+        report["summary"]["input_empty_both_reviews"] = 2
+        report["summary"]["candidate_fields"] = 1
+        report["summary"]["remaining_without_declaration_proof"] = 1
+        report["summary"]["missing_two_sided_canonical_anchor"] = 1
+        report["rejected"] = [
+            {
+                "relationship_id": "MEMREL_REJECTED",
+                "logical_class_id": "CLIENT_CLASS_A",
+                "old_owner": "rs/A",
+                "new_owner": "rs/B",
+                "reason": "missing_two_sided_canonical_anchor",
+                "old_left": ["CLIENT_FIELD_LEFT", 1],
+                "old_right": None,
+                "new_left": ["CLIENT_FIELD_LEFT", 1],
+                "new_right": None,
+            }
+        ]
+        recomputed = copy.deepcopy(report)
+        recomputed["rejected"][0]["old_left"] = (
+            "CLIENT_FIELD_LEFT",
+            1,
+        )
+        recomputed["rejected"][0]["new_left"] = (
+            "CLIENT_FIELD_LEFT",
+            1,
+        )
+
+        with patch(
+            "spk_recovery.empty_field_review_spec."
+            "build_empty_field_declaration_evidence",
+            return_value=recomputed,
+        ):
+            spec = build_empty_field_review_spec(
+                {},
+                {},
+                {},
+                {},
+                Path("old.jar"),
+                Path("new.jar"),
+                {"report_id": "GLOBALFIELDUSE_TEST"},
+                report,
+            )
+
+        self.assertEqual(
+            spec["relationship_ids"],
+            ["MEMREL_TEST_1"],
+        )
+
     def test_supplied_report_must_equal_exact_jar_recomputation(self):
         report = self._report()
         recomputed = copy.deepcopy(report)
