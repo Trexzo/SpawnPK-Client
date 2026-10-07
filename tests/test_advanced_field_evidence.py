@@ -198,6 +198,74 @@ class AdvancedFieldEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(out, [])
 
+    def test_non_bijective_frontier_is_refused(self):
+        old_sha = "1" * 64
+        new_sha = "2" * 64
+        classes = {
+            "builds": [
+                {"build_id": "v308", "sha256": old_sha},
+                {"build_id": "v309", "sha256": new_sha},
+            ],
+            "classes": [
+                {
+                    "logical_id": "CLIENT_CLASS_000001",
+                    "lineage": [
+                        {"build_id": "v308", "internal_name": "rs/a"},
+                        {"build_id": "v309", "internal_name": "rs/b"},
+                    ],
+                }
+            ],
+        }
+        members = {
+            "members": [],
+            "unresolved": [
+                {
+                    "new_build_id": "v309",
+                    "kind": "member_identity_review",
+                    "member_kind": "field",
+                    "candidate": {
+                        "old_owner": "rs/a.class",
+                        "new_owner": "rs/b.class",
+                        "old": {"name": "x", "descriptor": "I"},
+                        "new": {"name": "y", "descriptor": "I"},
+                    },
+                },
+                {
+                    "new_build_id": "v309",
+                    "kind": "member_identity_review",
+                    "member_kind": "field",
+                    "candidate": {
+                        "old_owner": "rs/a.class",
+                        "new_owner": "rs/b.class",
+                        "old": {"name": "x", "descriptor": "I"},
+                        "new": {"name": "z", "descriptor": "I"},
+                    },
+                },
+            ],
+        }
+        with (
+            patch("spk_recovery.advanced_field_evidence.validate_lineage"),
+            patch("spk_recovery.advanced_field_evidence.validate_member_lineage"),
+            patch(
+                "spk_recovery.advanced_field_evidence.sha256_file",
+                side_effect=[old_sha, new_sha],
+            ),
+        ):
+            with self.assertRaisesRegex(
+                ValueError,
+                "not one-to-one",
+            ):
+                build_advanced_field_evidence(
+                    classes,
+                    members,
+                    {"sha256": old_sha},
+                    {"sha256": new_sha},
+                    Path("old.jar"),
+                    Path("new.jar"),
+                    old_build_id="v308",
+                    new_build_id="v309",
+                )
+
     def test_report_is_research_only_and_does_not_mutate_lineage(self):
         old_sha = "1" * 64
         new_sha = "2" * 64
