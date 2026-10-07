@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter
 import copy
 from pathlib import Path
 import shutil
@@ -218,42 +219,58 @@ class EmptyFieldDeclarationEvidenceTests(unittest.TestCase):
         }
 
     def _report(self, members):
-        return {
-            "schema_version": 1,
-            "kind": "global_field_usage_identity_candidates",
-            "canonical": False,
-            "report_id": "GLOBALFIELDUSE_LEDGER_TEST",
+        outcomes = [
+            {
+                "relationship_id": "MEMREL_EMPTY_1",
+                "logical_class_id": "CLIENT_CLASS_A",
+                "old_owner": "rs/A",
+                "new_owner": "rs/B",
+                "old": {
+                    "name": "x",
+                    "descriptor": "Ljava/lang/String;",
+                    "access": 2,
+                },
+                "new": {
+                    "name": "x",
+                    "descriptor": "Ljava/lang/String;",
+                    "access": 2,
+                },
+                "outcome": "empty_both",
+                "canonical_method_topology": [],
+                "global_source_class_topology": [],
+            }
+        ]
+        member_digest = _stable_digest(members)
+        material = {
             "old_build_id": "v308",
             "new_build_id": "v309",
             "old_sha256": "1" * 64,
             "new_sha256": "2" * 64,
-            "member_lineage_digest": _stable_digest(members),
+            "member_lineage_digest": member_digest,
+            "candidates": [],
+            "review_outcomes": outcomes,
+        }
+        return {
+            "schema_version": 1,
+            "kind": "global_field_usage_identity_candidates",
+            "canonical": False,
+            "report_id": (
+                "GLOBALFIELDUSE_"
+                + _stable_digest(material)[:20].upper()
+            ),
+            "old_build_id": "v308",
+            "new_build_id": "v309",
+            "old_sha256": "1" * 64,
+            "new_sha256": "2" * 64,
+            "member_lineage_digest": member_digest,
             "summary": {
                 "input_stable_symbol_reviews": 1,
                 "review_outcomes": 1,
                 "empty_both": 1,
             },
-            "review_outcomes": [
-                {
-                    "relationship_id": "MEMREL_EMPTY_1",
-                    "logical_class_id": "CLIENT_CLASS_A",
-                    "old_owner": "rs/A",
-                    "new_owner": "rs/B",
-                    "old": {
-                        "name": "x",
-                        "descriptor": "Ljava/lang/String;",
-                        "access": 2,
-                    },
-                    "new": {
-                        "name": "x",
-                        "descriptor": "Ljava/lang/String;",
-                        "access": 2,
-                    },
-                    "outcome": "empty_both",
-                    "canonical_method_topology": [],
-                    "global_source_class_topology": [],
-                }
-            ],
+            "candidates": [],
+            "review_outcomes": outcomes,
+            "descriptor_identity_rejections": [],
         }
 
     def _build(
@@ -263,6 +280,10 @@ class EmptyFieldDeclarationEvidenceTests(unittest.TestCase):
         old_index=None,
         new_index=None,
         report=None,
+        old_method_usage=None,
+        new_method_usage=None,
+        old_global_usage=None,
+        new_global_usage=None,
     ):
         members = members or self._members()
         old_index = old_index or self._old_index()
@@ -292,6 +313,27 @@ class EmptyFieldDeclarationEvidenceTests(unittest.TestCase):
                 "spk_recovery.empty_field_declaration_evidence."
                 "_jar_field_table",
                 side_effect=jar_fields,
+            ),
+            patch(
+                "spk_recovery.empty_field_declaration_evidence."
+                "_paired_method_maps",
+                return_value=({}, {}, 0),
+            ),
+            patch(
+                "spk_recovery.empty_field_declaration_evidence."
+                "_scan_usage",
+                side_effect=[
+                    (old_method_usage or {}, {}),
+                    (new_method_usage or {}, {}),
+                ],
+            ),
+            patch(
+                "spk_recovery.empty_field_declaration_evidence."
+                "_scan_source_class_usage",
+                side_effect=[
+                    (old_global_usage or {}, {}),
+                    (new_global_usage or {}, {}),
+                ],
             ),
         ):
             return build_empty_field_declaration_evidence(
@@ -331,6 +373,64 @@ class EmptyFieldDeclarationEvidenceTests(unittest.TestCase):
         )
         self.assertEqual(candidate["interval_length"], 1)
         self.assertEqual(candidate["interval_offset"], 0)
+        self.assertEqual(candidate["global_observations"], 0)
+
+    def test_changed_whole_jar_topology_vetoes_declaration(self):
+        old_global = {
+            ("rs/A", "x", "Ljava/lang/String;"): Counter(
+                {("CLIENT_CLASS_C", "getfield"): 1}
+            )
+        }
+        new_global = {
+            ("rs/B", "x", "Ljava/lang/String;"): Counter(
+                {("CLIENT_CLASS_C", "getfield"): 2}
+            )
+        }
+        report = self._build(
+            old_global_usage=old_global,
+            new_global_usage=new_global,
+        )
+        self.assertEqual(report["summary"]["candidate_fields"], 0)
+        self.assertEqual(
+            report["summary"]["global_class_topology_guard_rejected"],
+            1,
+        )
+        self.assertEqual(
+            report["rejected"][0]["reason"],
+            "global_class_topology_guard_rejected",
+        )
+
+    def test_raw_whole_jar_source_vetoes_declaration(self):
+        topology = Counter({("RAW:rs/unmapped", "getfield"): 1})
+        report = self._build(
+            old_global_usage={
+                ("rs/A", "x", "Ljava/lang/String;"): topology
+            },
+            new_global_usage={
+                ("rs/B", "x", "Ljava/lang/String;"): topology
+            },
+        )
+        self.assertEqual(report["summary"]["candidate_fields"], 0)
+        self.assertEqual(
+            report["summary"]["raw_source_guard_rejected"],
+            1,
+        )
+        self.assertEqual(
+            report["rejected"][0]["reason"],
+            "raw_source_guard_rejected",
+        )
+
+    def test_empty_both_is_rechecked_from_exact_jar_usage(self):
+        old_method = {
+            ("rs/A", "x", "Ljava/lang/String;"): Counter(
+                {("CLIENT_METHOD_1", "getfield"): 1}
+            )
+        }
+        with self.assertRaisesRegex(
+            EmptyFieldDeclarationEvidenceError,
+            "empty_both classification disagrees",
+        ):
+            self._build(old_method_usage=old_method)
 
     def test_anchor_identity_mismatch_is_rejected(self):
         new_index = self._new_index()
