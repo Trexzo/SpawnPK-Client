@@ -171,6 +171,7 @@ def _review_rows(
         if (
             item.get("kind") != "member_identity_review"
             or item.get("member_kind") != "field"
+            or item.get("source") != "member_identity_candidates"
             or item.get("old_build_id") != old_build_id
             or item.get("new_build_id") != new_build_id
         ):
