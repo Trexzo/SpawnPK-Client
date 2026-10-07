@@ -252,7 +252,7 @@ class CanonicalMethodFieldContextEvidenceTests(unittest.TestCase):
                         "access": 1,
                     },
                     "new": {
-                        "name": "y",
+                        "name": "x",
                         "descriptor": "I",
                         "access": 1,
                     },
@@ -284,7 +284,7 @@ class CanonicalMethodFieldContextEvidenceTests(unittest.TestCase):
                 ins(
                     "getfield",
                     owner=owner,
-                    name="x" if owner == "rs/A" else "y",
+                    name="x",
                     descriptor="I",
                 ),
                 ins(f"iconst_{marker}", int_constant=marker),
@@ -343,7 +343,7 @@ class CanonicalMethodFieldContextEvidenceTests(unittest.TestCase):
         )
 
         def table(_jar, *, owner):
-            name = "x" if owner == "rs/A" else "y"
+            name = "x"
             return [
                 {"name": "left", "descriptor": "I", "access": 1, "attributes": []},
                 {"name": name, "descriptor": "I", "access": 1, "attributes": []},
@@ -403,7 +403,7 @@ class CanonicalMethodFieldContextEvidenceTests(unittest.TestCase):
                             "access": 1,
                         },
                         "new": {
-                            "name": "y",
+                            "name": "x",
                             "descriptor": "I",
                             "access": 1,
                         },
