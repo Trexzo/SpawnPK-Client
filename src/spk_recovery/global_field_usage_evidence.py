@@ -505,6 +505,101 @@ def _scan_usage(
     }
 
 
+def _scan_source_class_usage(
+    jar_path: Path,
+    aliases: dict[str, str],
+    targets: set[tuple[str, str, str]],
+) -> tuple[
+    dict[
+        tuple[str, str, str],
+        Counter[tuple[str, str]],
+    ],
+    dict[str, int],
+]:
+    usage: dict[
+        tuple[str, str, str],
+        Counter[tuple[str, str]],
+    ] = defaultdict(Counter)
+    classes_scanned = 0
+    classes_relevant = 0
+    observations = 0
+
+    try:
+        with zipfile.ZipFile(jar_path, "r") as archive:
+            entries = sorted(
+                name
+                for name in archive.namelist()
+                if name.endswith(".class")
+            )
+            for entry in entries:
+                data = archive.read(entry)
+                classes_scanned += 1
+                cp_profile = profile_class_constant_pool_references(data)
+                internal_name = cp_profile.get("internal_name")
+                if not isinstance(internal_name, str) or not internal_name:
+                    raise GlobalFieldUsageEvidenceError(
+                        f"class profile missing internal name: {entry}"
+                    )
+                possible = {
+                    (
+                        str(row.get("owner")),
+                        str(row.get("name")),
+                        str(row.get("descriptor")),
+                    )
+                    for row in cp_profile.get("member_references", [])
+                    if isinstance(row, dict)
+                    and row.get("kind") == "field"
+                }
+                if not (possible & targets):
+                    continue
+
+                classes_relevant += 1
+                profile = profile_class_field_accesses(data)
+                if profile.get("internal_name") != internal_name:
+                    raise GlobalFieldUsageEvidenceError(
+                        f"profile owner mismatch: {entry}"
+                    )
+                source_identity = aliases.get(
+                    internal_name,
+                    "RAW:" + internal_name,
+                )
+                for method in profile.get("methods", []):
+                    if not isinstance(method, dict):
+                        continue
+                    for access in method.get("field_accesses", []):
+                        if not isinstance(access, dict):
+                            continue
+                        key = (
+                            str(access.get("owner")),
+                            str(access.get("name")),
+                            str(access.get("descriptor")),
+                        )
+                        if key not in targets:
+                            continue
+                        operation = str(access.get("operation", ""))
+                        if operation not in {
+                            "getstatic",
+                            "putstatic",
+                            "getfield",
+                            "putfield",
+                        }:
+                            raise GlobalFieldUsageEvidenceError(
+                                f"unexpected field operation {operation!r}"
+                            )
+                        usage[key][(source_identity, operation)] += 1
+                        observations += 1
+    except zipfile.BadZipFile as exc:
+        raise GlobalFieldUsageEvidenceError(
+            f"invalid JAR: {jar_path}"
+        ) from exc
+
+    return dict(usage), {
+        "classes_scanned": classes_scanned,
+        "classes_relevant": classes_relevant,
+        "field_access_observations": observations,
+    }
+
+
 def _topology_rows(
     topology: Counter[tuple[str, str]],
 ) -> list[dict[str, Any]]:
@@ -515,6 +610,19 @@ def _topology_rows(
             "count": count,
         }
         for (member_id, operation), count in sorted(topology.items())
+    ]
+
+
+def _source_class_topology_rows(
+    topology: Counter[tuple[str, str]],
+) -> list[dict[str, Any]]:
+    return [
+        {
+            "source_class": source_class,
+            "operation": operation,
+            "count": count,
+        }
+        for (source_class, operation), count in sorted(topology.items())
     ]
 
 
@@ -595,10 +703,22 @@ def build_global_field_usage_evidence(
         new_methods,
         new_targets,
     )
+    old_class_usage, old_class_scan = _scan_source_class_usage(
+        old_jar,
+        _aliases(class_lineage, old_build_id),
+        old_targets,
+    )
+    new_class_usage, new_class_scan = _scan_source_class_usage(
+        new_jar,
+        _aliases(class_lineage, new_build_id),
+        new_targets,
+    )
 
     candidates: list[dict[str, Any]] = []
     empty_both = 0
     changed_or_one_sided = 0
+    canonical_method_topology_matches = 0
+    global_class_topology_guard_rejected = 0
 
     for review in reviews:
         old_key = _target_key(review["old_owner"], review["old"])
@@ -613,12 +733,32 @@ def build_global_field_usage_evidence(
             changed_or_one_sided += 1
             continue
 
-        rows = _topology_rows(old_topology)
+        canonical_method_topology_matches += 1
+        old_class_topology = old_class_usage.get(
+            old_key,
+            Counter(),
+        )
+        new_class_topology = new_class_usage.get(
+            new_key,
+            Counter(),
+        )
+        if (
+            not old_class_topology
+            or old_class_topology != new_class_topology
+        ):
+            global_class_topology_guard_rejected += 1
+            continue
+
+        method_rows = _topology_rows(old_topology)
+        class_rows = _source_class_topology_rows(
+            old_class_topology
+        )
         candidates.append(
             {
                 **review,
                 "strategy": (
-                    "canonical_global_method_usage_topology_exact"
+                    "canonical_method_and_global_class_usage_"
+                    "topology_exact"
                 ),
                 "confidence": "INFERRED_HIGH",
                 "supports_existing_review": True,
@@ -626,7 +766,8 @@ def build_global_field_usage_evidence(
                 "canonical_methods": len(
                     {member_id for member_id, _operation in old_topology}
                 ),
-                "topology": rows,
+                "canonical_method_topology": method_rows,
+                "global_source_class_topology": class_rows,
             }
         )
 
@@ -658,6 +799,12 @@ def build_global_field_usage_evidence(
             "candidate_fields": len(candidates),
             "empty_both": empty_both,
             "changed_or_one_sided": changed_or_one_sided,
+            "canonical_method_topology_matches": (
+                canonical_method_topology_matches
+            ),
+            "global_class_topology_guard_rejected": (
+                global_class_topology_guard_rejected
+            ),
             "remaining_without_global_topology_proof": (
                 len(reviews) - len(candidates)
             ),
@@ -679,14 +826,34 @@ def build_global_field_usage_evidence(
             "new_field_access_observations": new_scan[
                 "field_access_observations"
             ],
+            "old_global_classes_scanned": old_class_scan[
+                "classes_scanned"
+            ],
+            "new_global_classes_scanned": new_class_scan[
+                "classes_scanned"
+            ],
+            "old_global_classes_relevant": old_class_scan[
+                "classes_relevant"
+            ],
+            "new_global_classes_relevant": new_class_scan[
+                "classes_relevant"
+            ],
+            "old_global_field_access_observations": old_class_scan[
+                "field_access_observations"
+            ],
+            "new_global_field_access_observations": new_class_scan[
+                "field_access_observations"
+            ],
         },
         "candidates": candidates,
         "note": (
             "Research-only evidence. canonical=false. A candidate is emitted "
-            "only when an existing stable_symbol field review has the same "
-            "non-empty multiset of canonical method IDs and field read/write "
-            "operations across the exact old/new client JARs. No member "
-            "lineage relation is appended by this report."
+            "only when an existing stable_symbol field review has both the "
+            "same non-empty multiset of canonical method IDs/read-write "
+            "operations and the same complete source-class/read-write topology "
+            "across the exact old/new client JARs. This second guard detects "
+            "contradictory accesses in unpaired methods. No member lineage "
+            "relation is appended by this report."
         ),
     }
     return report
