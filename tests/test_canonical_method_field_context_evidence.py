@@ -222,6 +222,7 @@ class CanonicalMethodFieldContextEvidenceTests(unittest.TestCase):
                 target_context=target_ctx,
                 member_map={},
                 class_aliases={},
+                radius=1,
             )
         )
 
@@ -344,9 +345,9 @@ class CanonicalMethodFieldContextEvidenceTests(unittest.TestCase):
         def table(_jar, *, owner):
             name = "x" if owner == "rs/A" else "y"
             return [
-                {"name": "left", "descriptor": "I", "access": 1},
-                {"name": name, "descriptor": "I", "access": 1},
-                {"name": "right", "descriptor": "I", "access": 1},
+                {"name": "left", "descriptor": "I", "access": 1, "attributes": []},
+                {"name": name, "descriptor": "I", "access": 1, "attributes": []},
+                {"name": "right", "descriptor": "I", "access": 1, "attributes": []},
             ]
 
         with (
