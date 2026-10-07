@@ -276,11 +276,18 @@ class RawSourceExactDeclarationEvidenceTests(unittest.TestCase):
 
     def test_declaration_interval_shape_must_match(self):
         report = self._run(
+            old_fields=[
+                self._field("left"),
+                self._field("x"),
+                self._field("oldNeighbor"),
+                self._field("right"),
+            ],
             new_fields=[
                 self._field("left"),
-                self._field("x", descriptor="J"),
+                self._field("x"),
+                self._field("newNeighbor"),
                 self._field("right"),
-            ]
+            ],
         )
 
         self.assertEqual(report["summary"]["candidate_fields"], 0)
