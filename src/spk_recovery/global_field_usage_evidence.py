@@ -252,6 +252,7 @@ def _stable_reviews(
     *,
     old_build_id: str,
     new_build_id: str,
+    descriptor_identity_rejections: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     old_aliases = _aliases(class_lineage, old_build_id)
     new_aliases = _aliases(class_lineage, new_build_id)
@@ -350,9 +351,23 @@ def _stable_reviews(
         old_shape = _descriptor_identity_shape(old_desc, old_aliases)
         new_shape = _descriptor_identity_shape(new_desc, new_aliases)
         if old_shape != new_shape:
-            raise GlobalFieldUsageEvidenceError(
-                f"{relationship_id}: stable_symbol descriptor identity changed"
+            if descriptor_identity_rejections is None:
+                raise GlobalFieldUsageEvidenceError(
+                    f"{relationship_id}: stable_symbol descriptor identity changed"
+                )
+            descriptor_identity_rejections.append(
+                {
+                    "relationship_id": relationship_id,
+                    "old_owner": old_owner,
+                    "new_owner": new_owner,
+                    "old_descriptor": old_desc,
+                    "new_descriptor": new_desc,
+                    "old_descriptor_identity": old_shape,
+                    "new_descriptor_identity": new_shape,
+                    "reason": "canonical_descriptor_identity_changed",
+                }
             )
+            continue
 
         old_key = (old_owner, old_name, old_desc)
         new_key = (new_owner, new_name, new_desc)
@@ -671,6 +686,7 @@ def build_global_field_usage_evidence(
             "new JAR SHA does not match canonical new build"
         )
 
+    descriptor_identity_rejections: list[dict[str, Any]] = []
     reviews = _stable_reviews(
         class_lineage,
         member_lineage,
@@ -678,6 +694,10 @@ def build_global_field_usage_evidence(
         new_index,
         old_build_id=old_build_id,
         new_build_id=new_build_id,
+        descriptor_identity_rejections=descriptor_identity_rejections,
+    )
+    input_stable_symbol_reviews = (
+        len(reviews) + len(descriptor_identity_rejections)
     )
     old_methods, new_methods, paired_method_count = _paired_method_maps(
         member_lineage,
@@ -801,7 +821,11 @@ def build_global_field_usage_evidence(
         "new_sha256": new_sha,
         "member_lineage_digest": material["member_lineage_digest"],
         "summary": {
-            "input_stable_symbol_reviews": len(reviews),
+            "input_stable_symbol_reviews": input_stable_symbol_reviews,
+            "eligible_stable_symbol_reviews": len(reviews),
+            "descriptor_identity_guard_rejected": (
+                len(descriptor_identity_rejections)
+            ),
             "paired_canonical_methods": paired_method_count,
             "candidate_fields": len(candidates),
             "empty_both": empty_both,
@@ -814,7 +838,7 @@ def build_global_field_usage_evidence(
             ),
             "raw_source_guard_rejected": raw_source_guard_rejected,
             "remaining_without_global_topology_proof": (
-                len(reviews) - len(candidates)
+                input_stable_symbol_reviews - len(candidates)
             ),
             "old_source_classes_scanned": old_scan[
                 "source_classes_scanned"
@@ -854,6 +878,7 @@ def build_global_field_usage_evidence(
             ],
         },
         "candidates": candidates,
+        "descriptor_identity_rejections": descriptor_identity_rejections,
         "note": (
             "Research-only evidence. canonical=false. A candidate is emitted "
             "only when an existing stable_symbol field review has both the "
@@ -862,7 +887,10 @@ def build_global_field_usage_evidence(
             "topology across the exact old/new client JARs. Any supporting "
             "source class that is not canonical is refused. These guards detect "
             "contradictory accesses in unpaired methods. No member lineage "
-            "relation is appended by this report."
+            "relation is appended by this report. Stable-symbol reviews whose "
+            "descriptor identity is contradicted by stronger canonical class "
+            "lineage are recorded as rejected evidence and never considered "
+            "candidates."
         ),
     }
     return report
