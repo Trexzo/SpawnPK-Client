@@ -7,7 +7,10 @@ import json
 from pathlib import Path
 import sys
 from typing import Any
+import zipfile
 
+from .classfile import parse_class
+from .indexer import sha256_file
 from .lineage import LineageValidationError, load_lineage, validate_lineage
 from .member_identity import _descriptor_identity_shape
 from .member_lineage import (
@@ -217,23 +220,33 @@ def _paired_field_maps(
     return old, new
 
 
-def _field_table(
-    index: dict[str, Any],
+def _jar_field_table(
+    jar_path: Path,
     *,
     owner: str,
 ) -> list[dict[str, Any]]:
-    cls = index.get("classes", {}).get(owner + ".class")
-    if not isinstance(cls, dict):
+    entry = owner + ".class"
+    try:
+        with zipfile.ZipFile(jar_path, "r") as archive:
+            try:
+                data = archive.read(entry)
+            except KeyError as exc:
+                raise EmptyFieldDeclarationEvidenceError(
+                    f"exact JAR missing owner {owner!r}"
+                ) from exc
+    except zipfile.BadZipFile as exc:
         raise EmptyFieldDeclarationEvidenceError(
-            f"exact index missing owner {owner!r}"
-        )
-    fields = cls.get("fields")
-    if not isinstance(fields, list):
+            f"invalid JAR: {jar_path}"
+        ) from exc
+
+    parsed = parse_class(data)
+    if parsed.name != owner:
         raise EmptyFieldDeclarationEvidenceError(
-            f"exact index field table missing for {owner!r}"
+            f"exact JAR owner mismatch for {entry!r}"
         )
+
     out: list[dict[str, Any]] = []
-    for i, row in enumerate(fields):
+    for i, row in enumerate(parsed.fields):
         if not isinstance(row, dict):
             raise EmptyFieldDeclarationEvidenceError(
                 f"{owner}.fields[{i}] must be an object"
@@ -340,6 +353,8 @@ def build_empty_field_declaration_evidence(
     member_lineage: dict[str, Any],
     old_index: dict[str, Any],
     new_index: dict[str, Any],
+    old_jar: Path,
+    new_jar: Path,
     global_usage_report: dict[str, Any],
 ) -> dict[str, Any]:
     validate_lineage(class_lineage)
@@ -371,8 +386,20 @@ def build_empty_field_declaration_evidence(
             "report build binding is invalid"
         )
 
+    old_jar = old_jar.resolve()
+    new_jar = new_jar.resolve()
+    old_jar_sha = sha256_file(old_jar)
+    new_jar_sha = sha256_file(new_jar)
     old_sha = str(old_index.get("sha256", "")).lower()
     new_sha = str(new_index.get("sha256", "")).lower()
+    if old_jar_sha.lower() != old_sha:
+        raise EmptyFieldDeclarationEvidenceError(
+            "old JAR SHA does not match exact old index"
+        )
+    if new_jar_sha.lower() != new_sha:
+        raise EmptyFieldDeclarationEvidenceError(
+            "new JAR SHA does not match exact new index"
+        )
     if old_sha != str(
         _build(class_lineage, old_build_id).get("sha256", "")
     ).lower():
@@ -521,8 +548,8 @@ def build_empty_field_declaration_evidence(
                 f"{relationship_id}: outcome coordinate differs from unresolved review"
             )
 
-        old_fields = _field_table(old_index, owner=old_owner)
-        new_fields = _field_table(new_index, owner=new_owner)
+        old_fields = _jar_field_table(old_jar, owner=old_owner)
+        new_fields = _jar_field_table(new_jar, owner=new_owner)
         old_index_pos = _field_index(
             old_fields,
             old_coord,
@@ -729,7 +756,7 @@ def build_empty_field_declaration_evidence(
         "candidates": candidates,
         "rejected": rejected,
         "note": (
-            "Research-only evidence. canonical=false. Only empty_both residual "
+            "Research-only exact-JAR-bound evidence. canonical=false. Only empty_both residual "
             "stable-symbol reviews are considered. A candidate requires the same "
             "paired canonical field IDs immediately bracketing the target in both "
             "exact JVM field tables, an identical ordered declaration-signature "
@@ -762,6 +789,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("member_lineage", type=Path)
     p.add_argument("old_index", type=Path)
     p.add_argument("new_index", type=Path)
+    p.add_argument("old_jar", type=Path)
+    p.add_argument("new_jar", type=Path)
     p.add_argument("global_usage_report", type=Path)
     p.add_argument("--out", type=Path, required=True)
     args = p.parse_args(argv)
@@ -772,6 +801,8 @@ def main(argv: list[str] | None = None) -> int:
             load_member_lineage(args.member_lineage),
             _load(args.old_index),
             _load(args.new_index),
+            args.old_jar,
+            args.new_jar,
             _load(args.global_usage_report),
         )
         write_report(report, args.out)
