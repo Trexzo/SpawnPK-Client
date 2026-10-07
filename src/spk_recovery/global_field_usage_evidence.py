@@ -719,6 +719,7 @@ def build_global_field_usage_evidence(
     changed_or_one_sided = 0
     canonical_method_topology_matches = 0
     global_class_topology_guard_rejected = 0
+    raw_source_guard_rejected = 0
 
     for review in reviews:
         old_key = _target_key(review["old_owner"], review["old"])
@@ -747,6 +748,12 @@ def build_global_field_usage_evidence(
             or old_class_topology != new_class_topology
         ):
             global_class_topology_guard_rejected += 1
+            continue
+        if any(
+            source_class.startswith("RAW:")
+            for source_class, _operation in old_class_topology
+        ):
+            raw_source_guard_rejected += 1
             continue
 
         method_rows = _topology_rows(old_topology)
@@ -805,6 +812,7 @@ def build_global_field_usage_evidence(
             "global_class_topology_guard_rejected": (
                 global_class_topology_guard_rejected
             ),
+            "raw_source_guard_rejected": raw_source_guard_rejected,
             "remaining_without_global_topology_proof": (
                 len(reviews) - len(candidates)
             ),
@@ -850,8 +858,9 @@ def build_global_field_usage_evidence(
             "Research-only evidence. canonical=false. A candidate is emitted "
             "only when an existing stable_symbol field review has both the "
             "same non-empty multiset of canonical method IDs/read-write "
-            "operations and the same complete source-class/read-write topology "
-            "across the exact old/new client JARs. This second guard detects "
+            "operations and the same complete canonical source-class/read-write "
+            "topology across the exact old/new client JARs. Any supporting "
+            "source class that is not canonical is refused. These guards detect "
             "contradictory accesses in unpaired methods. No member lineage "
             "relation is appended by this report."
         ),
