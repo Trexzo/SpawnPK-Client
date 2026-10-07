@@ -273,6 +273,22 @@ class EmptyFieldDeclarationEvidenceTests(unittest.TestCase):
             "descriptor_identity_rejections": [],
         }
 
+    def _refresh_report_id(self, report):
+        material = {
+            "old_build_id": report["old_build_id"],
+            "new_build_id": report["new_build_id"],
+            "old_sha256": report["old_sha256"],
+            "new_sha256": report["new_sha256"],
+            "member_lineage_digest": report["member_lineage_digest"],
+            "candidates": report["candidates"],
+            "review_outcomes": report["review_outcomes"],
+        }
+        report["report_id"] = (
+            "GLOBALFIELDUSE_"
+            + _stable_digest(material)[:20].upper()
+        )
+        return report
+
     def _build(
         self,
         *,
@@ -616,6 +632,7 @@ class EmptyFieldDeclarationEvidenceTests(unittest.TestCase):
             }
         )
 
+        self._refresh_report_id(report_doc)
         report = self._build(
             members=members,
             old_index=old_index,
@@ -631,10 +648,24 @@ class EmptyFieldDeclarationEvidenceTests(unittest.TestCase):
             {"MEMREL_EMPTY_1"},
         )
 
+    def test_tampered_outcome_ledger_report_id_is_refused(self):
+        members = self._members()
+        report = self._report(members)
+        report["review_outcomes"][0]["relationship_id"] = "MEMREL_TAMPERED"
+        with self.assertRaisesRegex(
+            EmptyFieldDeclarationEvidenceError,
+            "report_id digest",
+        ):
+            self._build(
+                members=members,
+                report=report,
+            )
+
     def test_outcome_ledger_must_cover_exact_unresolved_frontier(self):
         members = self._members()
         report = self._report(members)
         report["review_outcomes"][0]["relationship_id"] = "MEMREL_OTHER"
+        self._refresh_report_id(report)
         with self.assertRaisesRegex(
             EmptyFieldDeclarationEvidenceError,
             "exact unresolved stable-symbol frontier",
