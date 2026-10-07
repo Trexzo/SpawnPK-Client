@@ -76,6 +76,11 @@ from .member_review_acceptance import (
     ReviewedMemberIdentityError,
     accept_reviewed_member_identities,
 )
+from .global_field_review_spec import (
+    GlobalFieldReviewSpecError,
+    build_global_field_review_spec,
+    write_spec as write_global_field_review_spec,
+)
 from .member_remap_plan import (
     MemberRemapPlanError,
     build_member_remap_plan,
@@ -266,6 +271,20 @@ def main(argv: list[str] | None = None) -> int:
     pmra.add_argument("new_index", type=Path)
     pmra.add_argument("spec", type=Path)
     pmra.add_argument("--out", type=Path, required=True)
+
+    pgfrs = sub.add_parser(
+        "global-field-review-spec",
+        help=(
+            "Re-verify research-only global field-usage candidates against "
+            "the exact unresolved frontier and emit an explicit review spec"
+        ),
+    )
+    pgfrs.add_argument("class_lineage", type=Path)
+    pgfrs.add_argument("member_lineage", type=Path)
+    pgfrs.add_argument("old_index", type=Path)
+    pgfrs.add_argument("new_index", type=Path)
+    pgfrs.add_argument("report", type=Path)
+    pgfrs.add_argument("--out", type=Path, required=True)
 
     psr = sub.add_parser(
         "semantic-resolve",
@@ -802,6 +821,29 @@ def main(argv: list[str] | None = None) -> int:
         print("SPK_RECOVERY_MEMBER_ACCEPT_REVIEW_PASS")
         for k, v in summary.items():
             print(f"{k}={v}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "global-field-review-spec":
+        try:
+            spec = build_global_field_review_spec(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.old_index),
+                _load(args.new_index),
+                _load(args.report),
+            )
+            write_global_field_review_spec(spec, args.out)
+        except (
+            GlobalFieldReviewSpecError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_GLOBAL_FIELD_REVIEW_SPEC_PASS")
+        print(f"relationship_ids={len(spec['relationship_ids'])}")
         print(f"out={args.out}")
         return 0
 
