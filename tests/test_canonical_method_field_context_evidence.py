@@ -294,7 +294,7 @@ class CanonicalMethodFieldContextEvidenceTests(unittest.TestCase):
             "field_accesses": [
                 {
                     "owner": owner,
-                    "name": "x" if owner == "rs/A" else "y",
+                    "name": "x",
                     "descriptor": "I",
                     "operation": "getfield",
                 }
