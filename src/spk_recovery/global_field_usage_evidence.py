@@ -970,7 +970,8 @@ def build_global_field_usage_evidence(
             "relation is appended by this report. Stable-symbol reviews whose "
             "descriptor identity is contradicted by stronger canonical class "
             "lineage are recorded as rejected evidence and never considered "
-            "candidates."
+            "candidates. review_outcomes is an exhaustive one-row-per-relationship "
+            "ledger over the exact stable-symbol input frontier."
         ),
     }
     return report
