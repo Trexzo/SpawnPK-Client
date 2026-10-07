@@ -150,6 +150,8 @@ def _unresolved_reviews(
         candidate = item.get("candidate")
         if not isinstance(candidate, dict):
             continue
+        if candidate.get("strategy") != "stable_symbol":
+            continue
         relationship_id = candidate.get("relationship_id")
         if not isinstance(relationship_id, str) or not relationship_id:
             continue
@@ -289,6 +291,11 @@ def build_global_field_review_spec(
     veto_count = summary.get("descriptor_identity_guard_rejected")
     candidate_count = summary.get("candidate_fields")
     remaining_count = summary.get("remaining_without_global_topology_proof")
+    empty_both = summary.get("empty_both")
+    changed_or_one_sided = summary.get("changed_or_one_sided")
+    method_matches = summary.get("canonical_method_topology_matches")
+    global_rejected = summary.get("global_class_topology_guard_rejected")
+    raw_rejected = summary.get("raw_source_guard_rejected")
     if any(
         not isinstance(value, int) or isinstance(value, bool) or value < 0
         for value in (
@@ -297,6 +304,11 @@ def build_global_field_review_spec(
             veto_count,
             candidate_count,
             remaining_count,
+            empty_both,
+            changed_or_one_sided,
+            method_matches,
+            global_rejected,
+            raw_rejected,
         )
     ):
         raise GlobalFieldReviewSpecError(
@@ -305,6 +317,20 @@ def build_global_field_review_spec(
     if eligible_count + veto_count != input_count:
         raise GlobalFieldReviewSpecError(
             "eligible+descriptor-veto frontier accounting mismatch"
+        )
+    if (
+        empty_both + changed_or_one_sided + method_matches
+        != eligible_count
+    ):
+        raise GlobalFieldReviewSpecError(
+            "eligible topology frontier accounting mismatch"
+        )
+    if (
+        candidate_count + global_rejected + raw_rejected
+        != method_matches
+    ):
+        raise GlobalFieldReviewSpecError(
+            "method topology outcome accounting mismatch"
         )
     if len(rejections) != veto_count:
         raise GlobalFieldReviewSpecError(
@@ -328,6 +354,33 @@ def build_global_field_review_spec(
         raise GlobalFieldReviewSpecError(
             "report frontier count does not match unresolved review frontier"
         )
+
+    veto_ids: set[str] = set()
+    for i, row in enumerate(rejections):
+        label = f"descriptor_identity_rejections[{i}]"
+        if not isinstance(row, dict):
+            raise GlobalFieldReviewSpecError(
+                f"{label} must be an object"
+            )
+        relationship_id = row.get("relationship_id")
+        if (
+            not isinstance(relationship_id, str)
+            or not relationship_id
+            or relationship_id in veto_ids
+        ):
+            raise GlobalFieldReviewSpecError(
+                f"{label} has invalid/duplicate relationship_id"
+            )
+        if row.get("reason") != "canonical_descriptor_identity_changed":
+            raise GlobalFieldReviewSpecError(
+                f"{relationship_id}: unexpected descriptor veto reason"
+            )
+        original = unresolved.get(relationship_id)
+        if original is None:
+            raise GlobalFieldReviewSpecError(
+                f"{relationship_id}: descriptor veto is not in exact unresolved frontier"
+            )
+        veto_ids.add(relationship_id)
 
     old_owners = _owner_map(class_lineage, old_build_id)
     new_owners = _owner_map(class_lineage, new_build_id)
@@ -361,12 +414,20 @@ def build_global_field_review_spec(
             raise GlobalFieldReviewSpecError(
                 f"{label} has invalid/duplicate relationship_id"
             )
+        if relationship_id in veto_ids:
+            raise GlobalFieldReviewSpecError(
+                f"{relationship_id}: candidate is also descriptor-vetoed"
+            )
         seen_ids.add(relationship_id)
 
         original = unresolved.get(relationship_id)
         if original is None:
             raise GlobalFieldReviewSpecError(
                 f"{relationship_id}: not present in exact unresolved frontier"
+            )
+        if original.get("strategy") != "stable_symbol":
+            raise GlobalFieldReviewSpecError(
+                f"{relationship_id}: unresolved source is not stable_symbol"
             )
 
         old_owner = str(row.get("old_owner", "")).removesuffix(".class")
