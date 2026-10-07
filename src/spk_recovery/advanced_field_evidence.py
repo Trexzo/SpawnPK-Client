@@ -281,7 +281,7 @@ def _instruction_contexts(
     return {
         coord: tuple(sorted(rows, key=repr))
         for coord, rows in out.items()
-        if rows
+        if len(rows) >= 2
     }
 
 
@@ -316,49 +316,42 @@ def _alignment_votes(
             for row in old_by_id[member_id].get("field_accesses", [])
             if isinstance(row, dict)
             and row.get("owner") == old_owner
-            and (
-                str(row.get("name")),
-                str(row.get("descriptor")),
-            )
-            in old_allowed
         ]
         new_seq = [
             row
             for row in new_by_id[member_id].get("field_accesses", [])
             if isinstance(row, dict)
             and row.get("owner") == new_owner
-            and (
-                str(row.get("name")),
-                str(row.get("descriptor")),
-            )
-            in new_allowed
         ]
         if not old_seq or len(old_seq) != len(new_seq):
             continue
 
-        for old_row, new_row in zip(old_seq, new_seq):
-            if old_row.get("operation") != new_row.get("operation"):
-                continue
-            if _descriptor_identity_shape(
+        pairs = list(zip(old_seq, new_seq))
+        if any(
+            old_row.get("operation") != new_row.get("operation")
+            or _descriptor_identity_shape(
                 str(old_row.get("descriptor", "")),
                 old_aliases,
             ) != _descriptor_identity_shape(
                 str(new_row.get("descriptor", "")),
                 new_aliases,
-            ):
+            )
+            for old_row, new_row in pairs
+        ):
+            continue
+
+        for old_row, new_row in pairs:
+            old_coord = (
+                str(old_row.get("name")),
+                str(old_row.get("descriptor")),
+            )
+            new_coord = (
+                str(new_row.get("name")),
+                str(new_row.get("descriptor")),
+            )
+            if old_coord not in old_allowed or new_coord not in new_allowed:
                 continue
-            counts[
-                (
-                    (
-                        str(old_row.get("name")),
-                        str(old_row.get("descriptor")),
-                    ),
-                    (
-                        str(new_row.get("name")),
-                        str(new_row.get("descriptor")),
-                    ),
-                )
-            ] += 1
+            counts[(old_coord, new_coord)] += 1
 
     rows = [
         {"old": old, "new": new, "count": count}
