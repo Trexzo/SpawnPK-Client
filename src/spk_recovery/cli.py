@@ -116,6 +116,11 @@ from .raw_source_structural_topology_review_spec import (
     build_raw_source_structural_topology_review_spec,
     write_spec as write_raw_source_structural_topology_review_spec,
 )
+from .raw_source_canonical_reference_evidence import (
+    RawSourceCanonicalReferenceEvidenceError,
+    build_raw_source_canonical_reference_evidence,
+    write_report as write_raw_source_canonical_reference_evidence,
+)
 from .member_remap_plan import (
     MemberRemapPlanError,
     build_member_remap_plan,
@@ -435,6 +440,22 @@ def main(argv: list[str] | None = None) -> int:
     prstrs.add_argument("global_usage_report", type=Path)
     prstrs.add_argument("topology_report", type=Path)
     prstrs.add_argument("--out", type=Path, required=True)
+
+    prcre = sub.add_parser(
+        "raw-source-canonical-reference-evidence",
+        help=(
+            "Recover RAW source identity only through globally unique exact "
+            "topology of already-canonical class/member references"
+        ),
+    )
+    prcre.add_argument("class_lineage", type=Path)
+    prcre.add_argument("member_lineage", type=Path)
+    prcre.add_argument("old_index", type=Path)
+    prcre.add_argument("new_index", type=Path)
+    prcre.add_argument("old_jar", type=Path)
+    prcre.add_argument("new_jar", type=Path)
+    prcre.add_argument("global_usage_report", type=Path)
+    prcre.add_argument("--out", type=Path, required=True)
 
     psr = sub.add_parser(
         "semantic-resolve",
@@ -1198,6 +1219,39 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         print("SPK_RAW_SOURCE_STRUCTURAL_TOPOLOGY_REVIEW_SPEC_PASS")
         print(f"relationship_ids={len(spec['relationship_ids'])}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "raw-source-canonical-reference-evidence":
+        try:
+            report = build_raw_source_canonical_reference_evidence(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.old_index),
+                _load(args.new_index),
+                args.old_jar,
+                args.new_jar,
+                _load(args.global_usage_report),
+            )
+            write_raw_source_canonical_reference_evidence(
+                report,
+                args.out,
+            )
+        except (
+            RawSourceCanonicalReferenceEvidenceError,
+            RawSourceStructuralTopologyEvidenceError,
+            RawSourceExactDeclarationEvidenceError,
+            EmptyFieldDeclarationEvidenceError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RAW_SOURCE_CANONICAL_REFERENCE_EVIDENCE_PASS")
+        print(f"report_id={report['report_id']}")
+        for k, v in report["summary"].items():
+            print(f"{k}={v}")
         print(f"out={args.out}")
         return 0
 
