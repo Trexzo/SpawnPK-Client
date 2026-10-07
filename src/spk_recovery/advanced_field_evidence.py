@@ -209,6 +209,10 @@ def _review_relationships(
         tuple[str, str, tuple[str, str], tuple[str, str]],
         str,
     ] = {}
+    seen_ids: dict[
+        str,
+        tuple[str, str, tuple[str, str], tuple[str, str]],
+    ] = {}
     for item in member_lineage.get("unresolved", []):
         if not isinstance(item, dict):
             continue
@@ -244,7 +248,14 @@ def _review_relationships(
                 "duplicate unresolved field coordinate pair has "
                 "different relationship IDs"
             )
+        prior_key = seen_ids.get(relationship_id)
+        if prior_key is not None and prior_key != key:
+            raise AdvancedFieldEvidenceError(
+                "one relationship ID identifies multiple unresolved "
+                "field coordinate pairs"
+            )
         out[key] = relationship_id
+        seen_ids[relationship_id] = key
     return out
 
 
