@@ -96,7 +96,7 @@ def build_empty_field_review_spec(
         new_jar,
         global_usage_report,
     )
-    if recomputed != declaration_report:
+    if _stable_digest(recomputed) != _stable_digest(declaration_report):
         raise EmptyFieldReviewSpecError(
             "declaration report does not equal exact-JAR recomputation"
         )
