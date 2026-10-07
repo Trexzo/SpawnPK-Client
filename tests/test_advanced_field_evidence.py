@@ -8,7 +8,9 @@ import unittest
 from unittest.mock import patch
 
 from spk_recovery.advanced_field_evidence import (
+    _alignment_votes,
     _frontier,
+    _instruction_contexts,
     build_advanced_field_evidence,
 )
 from spk_recovery.bytecode_profile import profile_class_field_accesses
@@ -58,6 +60,143 @@ class AdvancedFieldEvidenceTests(unittest.TestCase):
                 }
             },
         )
+
+    def test_instruction_context_requires_two_observations(self):
+        profile = {
+            "internal_name": "rs/a",
+            "methods": [
+                {
+                    "name": "m",
+                    "descriptor": "()V",
+                    "instructions": [
+                        {"offset": 0, "mnemonic": "aload"},
+                        {"offset": 1, "mnemonic": "getfield"},
+                        {"offset": 4, "mnemonic": "pop"},
+                        {"offset": 5, "mnemonic": "getfield"},
+                        {"offset": 8, "mnemonic": "return"},
+                    ],
+                    "field_accesses": [
+                        {
+                            "owner": "rs/a",
+                            "name": "x",
+                            "descriptor": "I",
+                            "operation": "getfield",
+                            "offset": 1,
+                        },
+                        {
+                            "owner": "rs/a",
+                            "name": "x",
+                            "descriptor": "I",
+                            "operation": "getfield",
+                            "offset": 5,
+                        },
+                        {
+                            "owner": "rs/a",
+                            "name": "y",
+                            "descriptor": "I",
+                            "operation": "getfield",
+                            "offset": 5,
+                        },
+                    ],
+                }
+            ],
+        }
+        out = _instruction_contexts(
+            profile,
+            {("m", "()V"): "CLIENT_METHOD_000001"},
+            {("x", "I"), ("y", "I")},
+        )
+        self.assertIn(("x", "I"), out)
+        self.assertNotIn(("y", "I"), out)
+
+    def test_alignment_votes_require_full_sequence_shape_alignment(self):
+        old_profile = {
+            "internal_name": "rs/a",
+            "methods": [
+                {
+                    "name": "m",
+                    "descriptor": "()V",
+                    "field_accesses": [
+                        {
+                            "owner": "rs/a",
+                            "name": "x",
+                            "descriptor": "I",
+                            "operation": "getfield",
+                        },
+                        {
+                            "owner": "rs/a",
+                            "name": "z",
+                            "descriptor": "J",
+                            "operation": "getfield",
+                        },
+                    ],
+                },
+                {
+                    "name": "n",
+                    "descriptor": "()V",
+                    "field_accesses": [
+                        {
+                            "owner": "rs/a",
+                            "name": "x",
+                            "descriptor": "I",
+                            "operation": "getfield",
+                        }
+                    ],
+                },
+            ],
+        }
+        new_profile = {
+            "internal_name": "rs/b",
+            "methods": [
+                {
+                    "name": "m",
+                    "descriptor": "()V",
+                    "field_accesses": [
+                        {
+                            "owner": "rs/b",
+                            "name": "y",
+                            "descriptor": "I",
+                            "operation": "getfield",
+                        },
+                        {
+                            "owner": "rs/b",
+                            "name": "q",
+                            "descriptor": "D",
+                            "operation": "getfield",
+                        },
+                    ],
+                },
+                {
+                    "name": "n",
+                    "descriptor": "()V",
+                    "field_accesses": [
+                        {
+                            "owner": "rs/b",
+                            "name": "y",
+                            "descriptor": "I",
+                            "operation": "getfield",
+                        }
+                    ],
+                },
+            ],
+        }
+        out = _alignment_votes(
+            old_profile,
+            new_profile,
+            {
+                ("m", "()V"): "M1",
+                ("n", "()V"): "M2",
+            },
+            {
+                ("m", "()V"): "M1",
+                ("n", "()V"): "M2",
+            },
+            {("x", "I")},
+            {("y", "I")},
+            {},
+            {},
+        )
+        self.assertEqual(out, [])
 
     def test_report_is_research_only_and_does_not_mutate_lineage(self):
         old_sha = "1" * 64
