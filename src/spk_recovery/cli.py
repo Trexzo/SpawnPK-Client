@@ -121,6 +121,11 @@ from .raw_source_canonical_reference_evidence import (
     build_raw_source_canonical_reference_evidence,
     write_report as write_raw_source_canonical_reference_evidence,
 )
+from .raw_source_inbound_canonical_evidence import (
+    RawSourceInboundCanonicalEvidenceError,
+    build_raw_source_inbound_canonical_evidence,
+    write_report as write_raw_source_inbound_canonical_evidence,
+)
 from .member_remap_plan import (
     MemberRemapPlanError,
     build_member_remap_plan,
@@ -456,6 +461,22 @@ def main(argv: list[str] | None = None) -> int:
     prcre.add_argument("new_jar", type=Path)
     prcre.add_argument("global_usage_report", type=Path)
     prcre.add_argument("--out", type=Path, required=True)
+
+    price = sub.add_parser(
+        "raw-source-inbound-canonical-evidence",
+        help=(
+            "Recover RAW source identity only through globally unique inbound "
+            "topology from already-canonical classes/methods"
+        ),
+    )
+    price.add_argument("class_lineage", type=Path)
+    price.add_argument("member_lineage", type=Path)
+    price.add_argument("old_index", type=Path)
+    price.add_argument("new_index", type=Path)
+    price.add_argument("old_jar", type=Path)
+    price.add_argument("new_jar", type=Path)
+    price.add_argument("global_usage_report", type=Path)
+    price.add_argument("--out", type=Path, required=True)
 
     psr = sub.add_parser(
         "semantic-resolve",
@@ -1249,6 +1270,40 @@ def main(argv: list[str] | None = None) -> int:
             print(f"REFUSED: {e}", file=sys.stderr)
             return 2
         print("SPK_RAW_SOURCE_CANONICAL_REFERENCE_EVIDENCE_PASS")
+        print(f"report_id={report['report_id']}")
+        for k, v in report["summary"].items():
+            print(f"{k}={v}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "raw-source-inbound-canonical-evidence":
+        try:
+            report = build_raw_source_inbound_canonical_evidence(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.old_index),
+                _load(args.new_index),
+                args.old_jar,
+                args.new_jar,
+                _load(args.global_usage_report),
+            )
+            write_raw_source_inbound_canonical_evidence(
+                report,
+                args.out,
+            )
+        except (
+            RawSourceInboundCanonicalEvidenceError,
+            RawSourceCanonicalReferenceEvidenceError,
+            RawSourceStructuralTopologyEvidenceError,
+            RawSourceExactDeclarationEvidenceError,
+            EmptyFieldDeclarationEvidenceError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RAW_SOURCE_INBOUND_CANONICAL_EVIDENCE_PASS")
         print(f"report_id={report['report_id']}")
         for k, v in report["summary"].items():
             print(f"{k}={v}")
