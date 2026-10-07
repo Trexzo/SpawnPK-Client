@@ -11,6 +11,7 @@ import zipfile
 
 from spk_recovery.global_field_usage_evidence import (
     GlobalFieldUsageEvidenceError,
+    _scan_source_class_usage,
     _scan_usage,
     _stable_reviews,
     build_global_field_usage_evidence,
@@ -92,6 +93,28 @@ class GlobalFieldUsageScannerTests(unittest.TestCase):
             self.assertEqual(summary["source_classes_relevant"], 1)
             self.assertEqual(summary["field_access_observations"], 2)
 
+    def test_source_class_topology_includes_noncanonical_methods(self):
+        with tempfile.TemporaryDirectory() as td:
+            jar = self._jar(Path(td))
+            usage, summary = _scan_source_class_usage(
+                jar,
+                {"rs/B": "CLIENT_CLASS_B"},
+                {("rs/A", "x", "I")},
+            )
+
+            self.assertEqual(
+                usage[("rs/A", "x", "I")],
+                Counter(
+                    {
+                        ("CLIENT_CLASS_B", "getfield"): 2,
+                        ("CLIENT_CLASS_B", "putfield"): 1,
+                    }
+                ),
+            )
+            self.assertGreaterEqual(summary["classes_scanned"], 2)
+            self.assertEqual(summary["classes_relevant"], 1)
+            self.assertEqual(summary["field_access_observations"], 3)
+
     def test_noncanonical_method_access_is_not_counted(self):
         with tempfile.TemporaryDirectory() as td:
             jar = self._jar(Path(td))
@@ -169,6 +192,23 @@ class GlobalFieldUsageEvidenceTests(unittest.TestCase):
             "canonical_methods_scanned": 2,
             "field_access_observations": 3,
         }
+        old_class_usage = {
+            ("rs/A", "x", "I"): Counter(
+                {("CLIENT_CLASS_B", "getfield"): 3}
+            ),
+            ("rs/A", "y", "I"): Counter(),
+        }
+        new_class_usage = {
+            ("rs/A", "x", "I"): Counter(
+                {("CLIENT_CLASS_B", "getfield"): 3}
+            ),
+            ("rs/A", "y", "I"): Counter(),
+        }
+        class_scan_summary = {
+            "classes_scanned": 3,
+            "classes_relevant": 1,
+            "field_access_observations": 3,
+        }
 
         with (
             patch(
@@ -202,6 +242,14 @@ class GlobalFieldUsageEvidenceTests(unittest.TestCase):
                     (new_usage, scan_summary),
                 ],
             ),
+            patch(
+                "spk_recovery.global_field_usage_evidence."
+                "_scan_source_class_usage",
+                side_effect=[
+                    (old_class_usage, class_scan_summary),
+                    (new_class_usage, class_scan_summary),
+                ],
+            ),
         ):
             report = build_global_field_usage_evidence(
                 self._classes(),
@@ -227,7 +275,7 @@ class GlobalFieldUsageEvidenceTests(unittest.TestCase):
         self.assertTrue(candidate["supports_existing_review"])
         self.assertEqual(
             candidate["strategy"],
-            "canonical_global_method_usage_topology_exact",
+            "canonical_method_and_global_class_usage_topology_exact",
         )
         self.assertEqual(candidate["observations"], 3)
         self.assertEqual(candidate["canonical_methods"], 2)
@@ -248,6 +296,16 @@ class GlobalFieldUsageEvidenceTests(unittest.TestCase):
             "source_classes_scanned": 1,
             "source_classes_relevant": 1,
             "canonical_methods_scanned": 1,
+            "field_access_observations": 1,
+        }
+        class_usage = {
+            ("rs/A", "x", "I"): Counter(
+                {("CLIENT_CLASS_B", "getfield"): 1}
+            )
+        }
+        class_scan_summary = {
+            "classes_scanned": 2,
+            "classes_relevant": 1,
             "field_access_observations": 1,
         }
 
@@ -283,6 +341,14 @@ class GlobalFieldUsageEvidenceTests(unittest.TestCase):
                     (new_usage, scan_summary),
                 ],
             ),
+            patch(
+                "spk_recovery.global_field_usage_evidence."
+                "_scan_source_class_usage",
+                side_effect=[
+                    (class_usage, class_scan_summary),
+                    (class_usage, class_scan_summary),
+                ],
+            ),
         ):
             report = build_global_field_usage_evidence(
                 self._classes(),
@@ -297,6 +363,106 @@ class GlobalFieldUsageEvidenceTests(unittest.TestCase):
 
         self.assertEqual(report["summary"]["candidate_fields"], 0)
         self.assertEqual(report["summary"]["changed_or_one_sided"], 1)
+        self.assertEqual(report["candidates"], [])
+
+    def test_global_class_topology_can_veto_method_match(self):
+        review = self._review("MEMREL_1", "x")
+        method_usage = {
+            ("rs/A", "x", "I"): Counter(
+                {("CLIENT_METHOD_1", "getfield"): 1}
+            )
+        }
+        old_class_usage = {
+            ("rs/A", "x", "I"): Counter(
+                {("CLIENT_CLASS_B", "getfield"): 1}
+            )
+        }
+        new_class_usage = {
+            ("rs/A", "x", "I"): Counter(
+                {
+                    ("CLIENT_CLASS_B", "getfield"): 1,
+                    ("CLIENT_CLASS_C", "putfield"): 1,
+                }
+            )
+        }
+        method_summary = {
+            "source_classes_scanned": 1,
+            "source_classes_relevant": 1,
+            "canonical_methods_scanned": 1,
+            "field_access_observations": 1,
+        }
+        old_class_summary = {
+            "classes_scanned": 2,
+            "classes_relevant": 1,
+            "field_access_observations": 1,
+        }
+        new_class_summary = {
+            "classes_scanned": 3,
+            "classes_relevant": 2,
+            "field_access_observations": 2,
+        }
+
+        with (
+            patch(
+                "spk_recovery.global_field_usage_evidence.validate_lineage"
+            ),
+            patch(
+                "spk_recovery.global_field_usage_evidence."
+                "validate_member_lineage"
+            ),
+            patch(
+                "spk_recovery.global_field_usage_evidence.sha256_file",
+                side_effect=["1" * 64, "2" * 64],
+            ),
+            patch(
+                "spk_recovery.global_field_usage_evidence._stable_reviews",
+                return_value=[review],
+            ),
+            patch(
+                "spk_recovery.global_field_usage_evidence."
+                "_paired_method_maps",
+                return_value=(
+                    {"rs/B": {("m", "()V"): "CLIENT_METHOD_1"}},
+                    {"rs/B": {("m", "()V"): "CLIENT_METHOD_1"}},
+                    1,
+                ),
+            ),
+            patch(
+                "spk_recovery.global_field_usage_evidence._scan_usage",
+                side_effect=[
+                    (method_usage, method_summary),
+                    (method_usage, method_summary),
+                ],
+            ),
+            patch(
+                "spk_recovery.global_field_usage_evidence."
+                "_scan_source_class_usage",
+                side_effect=[
+                    (old_class_usage, old_class_summary),
+                    (new_class_usage, new_class_summary),
+                ],
+            ),
+        ):
+            report = build_global_field_usage_evidence(
+                self._classes(),
+                {"members": [], "unresolved": []},
+                {"sha256": "1" * 64},
+                {"sha256": "2" * 64},
+                Path("old.jar"),
+                Path("new.jar"),
+                old_build_id="v308",
+                new_build_id="v309",
+            )
+
+        self.assertEqual(
+            report["summary"]["canonical_method_topology_matches"],
+            1,
+        )
+        self.assertEqual(
+            report["summary"]["global_class_topology_guard_rejected"],
+            1,
+        )
+        self.assertEqual(report["summary"]["candidate_fields"], 0)
         self.assertEqual(report["candidates"], [])
 
     def test_duplicate_review_coordinate_is_refused(self):
