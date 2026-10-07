@@ -106,6 +106,11 @@ from .raw_source_exact_declaration_evidence import (
     build_raw_source_exact_declaration_evidence,
     write_report as write_raw_source_exact_declaration_evidence,
 )
+from .raw_source_structural_topology_evidence import (
+    RawSourceStructuralTopologyEvidenceError,
+    build_raw_source_structural_topology_evidence,
+    write_report as write_raw_source_structural_topology_evidence,
+)
 from .member_remap_plan import (
     MemberRemapPlanError,
     build_member_remap_plan,
@@ -392,6 +397,22 @@ def main(argv: list[str] | None = None) -> int:
     prsde.add_argument("new_jar", type=Path)
     prsde.add_argument("global_usage_report", type=Path)
     prsde.add_argument("--out", type=Path, required=True)
+
+    prste = sub.add_parser(
+        "raw-source-structural-topology-evidence",
+        help=(
+            "Normalize RAW source-class topology only through globally unique "
+            "exact or structural class identities, then re-run declaration proof"
+        ),
+    )
+    prste.add_argument("class_lineage", type=Path)
+    prste.add_argument("member_lineage", type=Path)
+    prste.add_argument("old_index", type=Path)
+    prste.add_argument("new_index", type=Path)
+    prste.add_argument("old_jar", type=Path)
+    prste.add_argument("new_jar", type=Path)
+    prste.add_argument("global_usage_report", type=Path)
+    prste.add_argument("--out", type=Path, required=True)
 
     psr = sub.add_parser(
         "semantic-resolve",
@@ -1088,6 +1109,38 @@ def main(argv: list[str] | None = None) -> int:
             print(f"REFUSED: {e}", file=sys.stderr)
             return 2
         print("SPK_RAW_SOURCE_EXACT_DECLARATION_EVIDENCE_PASS")
+        print(f"report_id={report['report_id']}")
+        for k, v in report["summary"].items():
+            print(f"{k}={v}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "raw-source-structural-topology-evidence":
+        try:
+            report = build_raw_source_structural_topology_evidence(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.old_index),
+                _load(args.new_index),
+                args.old_jar,
+                args.new_jar,
+                _load(args.global_usage_report),
+            )
+            write_raw_source_structural_topology_evidence(
+                report,
+                args.out,
+            )
+        except (
+            RawSourceStructuralTopologyEvidenceError,
+            RawSourceExactDeclarationEvidenceError,
+            EmptyFieldDeclarationEvidenceError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_RAW_SOURCE_STRUCTURAL_TOPOLOGY_EVIDENCE_PASS")
         print(f"report_id={report['report_id']}")
         for k, v in report["summary"].items():
             print(f"{k}={v}")
