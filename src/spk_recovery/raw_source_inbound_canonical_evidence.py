@@ -28,6 +28,7 @@ from .global_field_usage_evidence import _paired_method_maps
 from .member_lineage import MemberLineageError
 from .raw_source_canonical_reference_evidence import (
     RawSourceCanonicalReferenceEvidenceError,
+    _paired_class_aliases,
     build_raw_source_canonical_reference_evidence,
 )
 from .raw_source_exact_declaration_evidence import _topology
@@ -495,6 +496,11 @@ def build_raw_source_inbound_canonical_evidence(
         for relationship_id in sorted(target_ids)
     ]
 
+    old_source_aliases, new_source_aliases = _paired_class_aliases(
+        class_lineage,
+        old_build_id=old_build_id,
+        new_build_id=new_build_id,
+    )
     old_aliases = _aliases(class_lineage, old_build_id)
     new_aliases = _aliases(class_lineage, new_build_id)
     old_methods, new_methods, _paired_count = _paired_method_maps(
@@ -506,8 +512,8 @@ def build_raw_source_inbound_canonical_evidence(
         _global_inbound_identity_proofs(
             old_jar,
             new_jar,
-            old_aliases=old_aliases,
-            new_aliases=new_aliases,
+            old_aliases=old_source_aliases,
+            new_aliases=new_source_aliases,
             old_method_maps=old_methods,
             new_method_maps=new_methods,
         )
