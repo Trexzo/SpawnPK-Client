@@ -22,6 +22,49 @@ Exact v308 authority:
 The known v307 -> v308 update changed one archive entry (`rs/f/a.class`) and one
 meaningful build constant (`307 -> 308`).
 
+## v309 active recovery frontier (October 2026)
+
+**v308 is the last exact historical build used as the pinned baseline**, not a
+claim that the current post-v308 client is still v308. Exact v309 has SHA-256
+`ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38`.
+
+The GitHub-first v309 handoff in
+[`research/v309-field-recovery/`](research/v309-field-recovery/README.md) is
+**ACCEPTED_INCOMPLETE** with **143 unresolved fields**. It is **not**
+`EXACT_CURRENT_CLIENT`; do not hand-edit lineages, change old authority or
+claim v309 release readiness to remove these blockers.
+
+The **current descriptor-class evidence lane** is implemented on `main`:
+
+1. `descriptor_class_dependencies` groups the 26 field descriptor vetoes by
+   8 old canonical class IDs (largest: `CLIENT_CLASS_000029`, 14 fields).
+2. `descriptor_class_index_witness` requires independently unique cross-build
+   class-index hashes before proposing a research candidate.
+3. `descriptor_class_verified_replay` regenerates that inventory from the
+   original global report rather than trusting a hand-edited queue.
+4. `descriptor_class_private_jar_replay` verifies the accepted GitHub frontier,
+   both **exact private JARs**, and all source-file hashes, builds indexes only
+   in memory, then writes a **new research-only report**.
+
+On a local, installed checkout containing the *exact private v308 and v309 JARs*:
+
+```powershell
+python -m spk_recovery.descriptor_class_private_jar_replay `
+  --v308-jar "C:\\private\\exact-v308-client.jar" `
+  --v309-jar "C:\\private\\exact-v309-client.jar" `
+  --out "$env:TEMP\\spk-v309-class-witness-new.json"
+```
+
+The JAR paths above are **examples, not known files**; replace both with the
+real private paths. Use a **new** output filename each run: existing reports and
+pinned inputs are never overwritten. This command cannot accept a class or field
+identity, modify `authority/`, or certify v309. After measuring exact witnesses,
+use separate reviewed canonical acceptance and regenerate all dependent evidence.
+**Do not commit JARs, complete indexes, or raw private outputs** to Git.
+
+Older R0/R1 examples below intentionally document the historical v308 baseline.
+For new v309 work, start with the linked accepted frontier, not those examples.
+
 ## Recovered source in this repository
 
 Certified recovered Java source is published in this same GitHub repository, versioned by exact client build:
