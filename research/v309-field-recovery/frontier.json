@@ -1,0 +1,70 @@
+{
+    "schema_version":  1,
+    "kind":  "v309_recovery_frontier",
+    "state":  "ACCEPTED_INCOMPLETE",
+    "build_id":  "v309",
+    "github":  {
+                   "base_main":  "b56e2b9d76c71141264d79f0350c4a6470d5eaaf",
+                   "branch":  "research/v309-github-first-frontier",
+                   "pull_request":  857
+               },
+    "exact_clients":  {
+                          "v308_sha256":  "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+                          "v309_sha256":  "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38"
+                      },
+    "files":  {
+                  "class_lineage":  {
+                                        "path":  "research/v309-field-recovery/class-lineage.json",
+                                        "sha256":  "86B7A4761EB93CBD79F7014FD801659F0F66845C52E9195BE0F3C250168C83E4"
+                                    },
+                  "member_lineage":  {
+                                         "path":  "research/v309-field-recovery/member-lineage.json",
+                                         "sha256":  "21D590B6C27BFD3DE5E17B664A61FE430F02BF5129638D6FDD678D81AF387070"
+                                     },
+                  "global_field_usage":  {
+                                             "path":  "research/v309-field-recovery/global-field-usage.json",
+                                             "sha256":  "1BBF68FF9D053F26D869EC83C7B2054EA87E49FA09CC40A4CDECB6C342D53C64",
+                                             "report_id":  "GLOBALFIELDUSE_A4B72C537D6B449C0F9E"
+                                         },
+                  "canonical_method_field_context":  {
+                                                         "path":  "research/v309-field-recovery/canonical-method-field-context.json",
+                                                         "sha256":  "5D0800F520EEA925B2EA7048540911AD2EDAE7F27F381B79D077403E5490FF6F",
+                                                         "report_id":  "METHODCTX_AC21811B4B4AC7112489"
+                                                     },
+                  "accepted_boundary_report":  {
+                                                   "path":  "research/v309-field-recovery/method-context-boundary-report.json",
+                                                   "sha256":  "662CD72515BA14AD881ECB23B462EE3A6A436A23478CC9EB4DC54D75844C5474",
+                                                   "report_id":  "METHODBOUNDARY_3D5AF61BCEDF9BD1687C"
+                                               },
+                  "accepted_review_spec":  {
+                                               "path":  "research/v309-field-recovery/method-context-boundary-review-spec.json",
+                                               "sha256":  "FA39804B9E6BA589EDA013F86B8B69EB9D17941F3F0152D9801C984EE2096640"
+                                           }
+              },
+    "acceptance":  {
+                       "source_member_sha256":  "F3B3E0C9522C7C4719223DBE1B3F34AF0C36F816E0A4C265201030DBD3446BD0",
+                       "source_unresolved":  149,
+                       "accepted_relationship_ids":  6,
+                       "accepted_via":  "member-accept-review",
+                       "evidence_report":  "METHODBOUNDARY_3D5AF61BCEDF9BD1687C",
+                       "review_spec_sha256":  "FA39804B9E6BA589EDA013F86B8B69EB9D17941F3F0152D9801C984EE2096640",
+                       "unresolved_after":  143
+                   },
+    "frontier":  {
+                     "unresolved":  143,
+                     "global_candidates":  0,
+                     "descriptor_identity_guard_rejected":  26,
+                     "empty_both":  68,
+                     "canonical_method_topology_matches":  49,
+                     "global_class_topology_guard_rejected":  48,
+                     "raw_source_guard_rejected":  1,
+                     "method_context_input":  48,
+                     "method_context_candidates":  0,
+                     "method_context_remaining":  48,
+                     "method_context_missing":  1,
+                     "method_context_nonunique":  6,
+                     "method_context_insufficient_witness":  41,
+                     "method_context_missing_two_sided_anchor":  0
+                 },
+    "note":  "Accepted v309 recovery frontier; not an EXACT_CURRENT_CLIENT authority snapshot. authority/v309.json remains blocked until the normal completion gate passes."
+}

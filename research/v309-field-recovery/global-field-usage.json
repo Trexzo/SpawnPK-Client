@@ -1,0 +1,4561 @@
+{
+  "candidates": [],
+  "canonical": false,
+  "descriptor_identity_rejections": [
+    {
+      "new_descriptor": "Lrs/C;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/E",
+      "old_descriptor": "Lrs/C;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000028;",
+      "old_owner": "rs/E",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_2CF8CB8EA3D48DF3"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/a/m",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/a/m",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_814CDEC212324301"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/d/d",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/d/d",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_5AE9DC13614B17CA"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/i/b",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/i/b",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_D4819A8BA9FF165E"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/l/b/a/d",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/l/b/a/d",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_E13C738B305BA23F"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/l/e/h",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/l/e/h",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_F45E1C4F6AE2C92E"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/l/e/q",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/l/e/q",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_DD57D4449C55C251"
+    },
+    {
+      "new_descriptor": "Lrs/d/t;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/l/f/a/d/d",
+      "old_descriptor": "Lrs/d/r;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000131;",
+      "old_owner": "rs/l/f/a/d/d",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_9D27CC5649FBBC4C"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/l/f/b",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/l/f/b",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_70DA607EF8C7F66B"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/l/f/i",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/l/f/i",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_4BD29C9933DE0B84"
+    },
+    {
+      "new_descriptor": "Lrs/l/f/e;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/l/f/i",
+      "old_descriptor": "Lrs/l/f/e;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000486;",
+      "old_owner": "rs/l/f/i",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_2084C1D26F2BEE4B"
+    },
+    {
+      "new_descriptor": "Lrs/ui/f;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/l/f/i",
+      "old_descriptor": "Lrs/ui/f;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_001096;",
+      "old_owner": "rs/l/f/i",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_478F4F6F6DC5ADD3"
+    },
+    {
+      "new_descriptor": "Lrs/C;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/q/b",
+      "old_descriptor": "Lrs/C;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000028;",
+      "old_owner": "rs/q/b",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_04A32B42F497ACDE"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/c/c",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/s/c/c",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_48A17D1220B985AA"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/e/c",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/s/e/c",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_19F1EC3DAE0616BA"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/m/c",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/s/l/c",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_E90BCD9C833097F6"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/o/c",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/s/n/c",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_1ECCDE1D99FCF9B3"
+    },
+    {
+      "new_descriptor": "Lrs/ui/f;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/o/c",
+      "old_descriptor": "Lrs/ui/f;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_001096;",
+      "old_owner": "rs/s/n/c",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_7FAEB93E979E35E2"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/p/e",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/s/o/e",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_2371178C47B08FDB"
+    },
+    {
+      "new_descriptor": "Lrs/s/p/c;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/p/e",
+      "old_descriptor": "Lrs/s/o/c;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000943;",
+      "old_owner": "rs/s/o/e",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_A0EEE2B2DD6AC178"
+    },
+    {
+      "new_descriptor": "Lrs/s/u/d;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/u/e",
+      "old_descriptor": "Lrs/s/t/d;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000966;",
+      "old_owner": "rs/s/t/e",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_1381B143F1196C53"
+    },
+    {
+      "new_descriptor": "Lrs/s/u/c;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/u/f",
+      "old_descriptor": "Lrs/s/t/c;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000965;",
+      "old_owner": "rs/s/t/f",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_9925F9DCB62BCEB6"
+    },
+    {
+      "new_descriptor": "Lrs/s/u/d;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/u/f",
+      "old_descriptor": "Lrs/s/t/d;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000966;",
+      "old_owner": "rs/s/t/f",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_276F6B62412E4577"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/u/i",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/s/t/i",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_B6BB1EAE87E3E619"
+    },
+    {
+      "new_descriptor": "Lrs/ui/f;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/ui/g",
+      "old_descriptor": "Lrs/ui/f;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_001096;",
+      "old_owner": "rs/ui/g",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_6E5CECCB9A1CEAC9"
+    },
+    {
+      "new_descriptor": "Lrs/ui/f;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/ui/h",
+      "old_descriptor": "Lrs/ui/f;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_001096;",
+      "old_owner": "rs/ui/h",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_26F11967E08796D3"
+    }
+  ],
+  "kind": "global_field_usage_identity_candidates",
+  "member_lineage_digest": "93aa0d06f6f93a7690fd9b8e94c322671d9352984191e49f62df2edd87f8ea75",
+  "new_build_id": "v309",
+  "new_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "note": "Research-only evidence. canonical=false. A candidate is emitted only when an existing stable_symbol field review has both the same non-empty multiset of canonical method IDs/read-write operations and the same complete canonical source-class/read-write topology across the exact old/new client JARs. Any supporting source class that is not canonical is refused. These guards detect contradictory accesses in unpaired methods. No member lineage relation is appended by this report. Stable-symbol reviews whose descriptor identity is contradicted by stronger canonical class lineage are recorded as rejected evidence and never considered candidates. review_outcomes is an exhaustive one-row-per-relationship ledger over the exact stable-symbol input frontier.",
+  "old_build_id": "v308",
+  "old_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "report_id": "GLOBALFIELDUSE_A4B72C537D6B449C0F9E",
+  "review_outcomes": [
+    {
+      "new_descriptor": "Lrs/C;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/q/b",
+      "old_descriptor": "Lrs/C;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000028;",
+      "old_owner": "rs/q/b",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_04A32B42F497ACDE"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "ah"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "ah"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_08E1A283CEA3FE17"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_003005",
+          "operation": "getfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000452",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "M"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000452"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/l/f/a/c/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "M"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000452"
+        }
+      ],
+      "old_owner": "rs/l/f/a/c/c",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_08E3A3863BA693AB"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000452",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "O"
+      },
+      "new_owner": "rs/l/f/a/c/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "O"
+      },
+      "old_owner": "rs/l/f/a/c/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_09AF0B525B583838"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_004179",
+          "operation": "putfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000684",
+      "new": {
+        "access": 1,
+        "descriptor": "Ljava/lang/String;",
+        "name": "k"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000684"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/n/e",
+      "old": {
+        "access": 1,
+        "descriptor": "Ljava/lang/String;",
+        "name": "k"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000684"
+        }
+      ],
+      "old_owner": "rs/n/e",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_09F5D406BF2B13DD"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_002604",
+          "operation": "getstatic"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000113",
+      "new": {
+        "access": 9,
+        "descriptor": "Lrs/F;",
+        "name": "N"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000113"
+        },
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000378"
+        },
+        {
+          "count": 3,
+          "operation": "getstatic",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/d/d",
+      "old": {
+        "access": 9,
+        "descriptor": "Lrs/F;",
+        "name": "N"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 3,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000113"
+        },
+        {
+          "count": 2,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000294"
+        },
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000378"
+        }
+      ],
+      "old_owner": "rs/d/d",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_0BEBE9DD46AD7C91"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_001299",
+          "operation": "getstatic"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000132",
+      "new": {
+        "access": 16409,
+        "descriptor": "Lrs/d/t$a;",
+        "name": "b"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000132"
+        },
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000132"
+        },
+        {
+          "count": 6,
+          "operation": "getstatic",
+          "source_class": "RAW:rs/Client"
+        },
+        {
+          "count": 5,
+          "operation": "getstatic",
+          "source_class": "RAW:rs/d/t"
+        }
+      ],
+      "new_owner": "rs/d/t$a",
+      "old": {
+        "access": 16409,
+        "descriptor": "Lrs/d/r$a;",
+        "name": "b"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 6,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 5,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000131"
+        },
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000132"
+        },
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000132"
+        }
+      ],
+      "old_owner": "rs/d/r$a",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_0EAD035B8431B4AC"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_005587",
+          "operation": "putstatic"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000962",
+      "new": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "k"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000962"
+        },
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/s/t/b",
+      "old": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "k"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000962"
+        }
+      ],
+      "old_owner": "rs/s/s/b",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_0F1345183764ED2E"
+    },
+    {
+      "new_descriptor": "Lrs/s/u/d;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/u/e",
+      "old_descriptor": "Lrs/s/t/d;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000966;",
+      "old_owner": "rs/s/t/e",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_1381B143F1196C53"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_000972",
+          "operation": "getfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000075",
+      "new": {
+        "access": 17,
+        "descriptor": "I",
+        "name": "i"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000075"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000075"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/a/l",
+      "old": {
+        "access": 17,
+        "descriptor": "I",
+        "name": "i"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000075"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000075"
+        }
+      ],
+      "old_owner": "rs/a/l",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_1753048911FE365D"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000049",
+      "new": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "g"
+      },
+      "new_owner": "rs/V",
+      "old": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "g"
+      },
+      "old_owner": "rs/V",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_1765C15418C87860"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000452",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "N"
+      },
+      "new_owner": "rs/l/f/a/c/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "N"
+      },
+      "old_owner": "rs/l/f/a/c/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_181F802E79FAA758"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/e/c",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/s/e/c",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_19F1EC3DAE0616BA"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "K"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "K"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_1B69F8B8BC77450C"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "C"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "C"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_1D3029F128655DB5"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000122",
+      "new": {
+        "access": 1,
+        "descriptor": "Z",
+        "name": "D"
+      },
+      "new_owner": "rs/d/k",
+      "old": {
+        "access": 1,
+        "descriptor": "Z",
+        "name": "D"
+      },
+      "old_owner": "rs/d/k",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_1DF79B59C83EB2A6"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/o/c",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/s/n/c",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_1ECCDE1D99FCF9B3"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000073",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "aF"
+      },
+      "new_owner": "rs/a/j",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "aF"
+      },
+      "old_owner": "rs/a/j",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_207A9C12FDD87407"
+    },
+    {
+      "new_descriptor": "Lrs/l/f/e;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/l/f/i",
+      "old_descriptor": "Lrs/l/f/e;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000486;",
+      "old_owner": "rs/l/f/i",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_2084C1D26F2BEE4B"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_005587",
+          "operation": "putstatic"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000962",
+      "new": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "h"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000962"
+        },
+        {
+          "count": 3,
+          "operation": "getstatic",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/s/t/b",
+      "old": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "h"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 3,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000962"
+        }
+      ],
+      "old_owner": "rs/s/s/b",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_213006A36E299868"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/p/e",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/s/o/e",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_2371178C47B08FDB"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000429",
+      "new": {
+        "access": 2,
+        "descriptor": "Lrs/l/F;",
+        "name": "f"
+      },
+      "new_owner": "rs/l/e/h",
+      "old": {
+        "access": 2,
+        "descriptor": "Lrs/l/F;",
+        "name": "f"
+      },
+      "old_owner": "rs/l/e/h",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_2446487F74DE43EF"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "Ljava/lang/String;",
+        "name": "q"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "Ljava/lang/String;",
+        "name": "q"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_25FACCE59F6A5F92"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000399",
+      "new": {
+        "access": 9,
+        "descriptor": "Lrs/q/a/a/a;",
+        "name": "w"
+      },
+      "new_owner": "rs/l/e/a/a",
+      "old": {
+        "access": 9,
+        "descriptor": "Lrs/q/a/a/a;",
+        "name": "w"
+      },
+      "old_owner": "rs/l/e/a/a",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_26E28E16B3EF0D3E"
+    },
+    {
+      "new_descriptor": "Lrs/ui/f;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/ui/h",
+      "old_descriptor": "Lrs/ui/f;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_001096;",
+      "old_owner": "rs/ui/h",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_26F11967E08796D3"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_000942",
+          "operation": "getfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "I"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000073"
+        },
+        {
+          "count": 5,
+          "operation": "getfield",
+          "source_class": "RAW:rs/Client"
+        },
+        {
+          "count": 2,
+          "operation": "putfield",
+          "source_class": "RAW:rs/Client"
+        },
+        {
+          "count": 4,
+          "operation": "getfield",
+          "source_class": "RAW:rs/a/k"
+        }
+      ],
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "I"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 5,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 2,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000073"
+        },
+        {
+          "count": 4,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000074"
+        }
+      ],
+      "old_owner": "rs/a/c",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_272ED6C9C32C205A"
+    },
+    {
+      "new_descriptor": "Lrs/s/u/d;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/u/f",
+      "old_descriptor": "Lrs/s/t/d;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000966;",
+      "old_owner": "rs/s/t/f",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_276F6B62412E4577"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "Q"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "Q"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_2CD471308270FAA9"
+    },
+    {
+      "new_descriptor": "Lrs/C;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/E",
+      "old_descriptor": "Lrs/C;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000028;",
+      "old_owner": "rs/E",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_2CF8CB8EA3D48DF3"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_000971",
+          "operation": "putfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000075",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "o"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000075"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/a/l",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "o"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000075"
+        }
+      ],
+      "old_owner": "rs/a/l",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_2DDCB799BCE369B9"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "Y"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "Y"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_3088B88E27268AD9"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000297",
+      "new": {
+        "access": 1,
+        "descriptor": "[Lrs/l/F;",
+        "name": "a"
+      },
+      "new_owner": "rs/i/b",
+      "old": {
+        "access": 1,
+        "descriptor": "[Lrs/l/F;",
+        "name": "a"
+      },
+      "old_owner": "rs/i/b",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_30DBE375955E491C"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "X"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "X"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_325D140EA0181166"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "ab"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "ab"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_33A0DAB622791DC8"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_000939",
+          "operation": "getfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000073",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "aD"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000073"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000073"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/a/j",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "aD"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000073"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000073"
+        }
+      ],
+      "old_owner": "rs/a/j",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_350D2596ACC52DC1"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_000781",
+          "operation": "putfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "n"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000065"
+        },
+        {
+          "count": 5,
+          "operation": "getfield",
+          "source_class": "RAW:rs/Client"
+        },
+        {
+          "count": 6,
+          "operation": "putfield",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "n"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 5,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 6,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000065"
+        }
+      ],
+      "old_owner": "rs/a/c",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_3677F88C7F4CB0FD"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "y"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "y"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_379903B2474C4926"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "R"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "R"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_37C1FC21D3E7EBD6"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "L"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "L"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_384183BFB73D4B88"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_005704",
+          "operation": "putfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000113",
+      "new": {
+        "access": 1,
+        "descriptor": "Z",
+        "name": "O"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000113"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000984"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/d/d",
+      "old": {
+        "access": 1,
+        "descriptor": "Z",
+        "name": "O"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000113"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000984"
+        }
+      ],
+      "old_owner": "rs/d/d",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_386D404C7202DCAA"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "p"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "p"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_389C8B49E655E321"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_005704",
+          "operation": "putfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000113",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "V"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000113"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000984"
+        },
+        {
+          "count": 2,
+          "operation": "getfield",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/d/d",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "V"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 2,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000113"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000984"
+        }
+      ],
+      "old_owner": "rs/d/d",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_3A07534051FC0496"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_005587",
+          "operation": "putstatic"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000962",
+      "new": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "i"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000962"
+        },
+        {
+          "count": 2,
+          "operation": "getstatic",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/s/t/b",
+      "old": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "i"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 2,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000962"
+        }
+      ],
+      "old_owner": "rs/s/s/b",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_41351162FAF2ABCF"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_001304",
+          "operation": "putfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000135",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "w"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000135"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "RAW:rs/x"
+        }
+      ],
+      "new_owner": "rs/d/v",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "w"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000135"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_001114"
+        }
+      ],
+      "old_owner": "rs/d/t",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_41488AE40E6D0BA3"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_005704",
+          "operation": "putfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000113",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "U"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000113"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000984"
+        },
+        {
+          "count": 2,
+          "operation": "getfield",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/d/d",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "U"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 2,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000113"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000984"
+        }
+      ],
+      "old_owner": "rs/d/d",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_41F1BA7778A5CE9B"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_005587",
+          "operation": "putstatic"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000962",
+      "new": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "g"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000962"
+        },
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/s/t/b",
+      "old": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "g"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000962"
+        }
+      ],
+      "old_owner": "rs/s/s/b",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_41F6C73F6427DA78"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "u"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "u"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_42F3018CDA551BE5"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_000705",
+          "operation": "getfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000073",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "aw"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000051"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/a/j",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "aw"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000051"
+        }
+      ],
+      "old_owner": "rs/a/j",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_472FC3F1A7F4EC35"
+    },
+    {
+      "new_descriptor": "Lrs/ui/f;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/l/f/i",
+      "old_descriptor": "Lrs/ui/f;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_001096;",
+      "old_owner": "rs/l/f/i",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_478F4F6F6DC5ADD3"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/c/c",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/s/c/c",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_48A17D1220B985AA"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/l/f/i",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/l/f/i",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_4BD29C9933DE0B84"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "V"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "V"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_4D9D5225EBA34390"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000058",
+      "new": {
+        "access": 17,
+        "descriptor": "I",
+        "name": "j"
+      },
+      "new_owner": "rs/a/b",
+      "old": {
+        "access": 17,
+        "descriptor": "I",
+        "name": "j"
+      },
+      "old_owner": "rs/a/b",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_50114BBD37364565"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000318",
+      "new": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "l"
+      },
+      "new_owner": "rs/k/b",
+      "old": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "l"
+      },
+      "old_owner": "rs/k/b",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_51D607E753C7AB46"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_003027",
+          "operation": "getstatic"
+        },
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_003028",
+          "operation": "getstatic"
+        },
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_003031",
+          "operation": "getstatic"
+        },
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_004939",
+          "operation": "putstatic"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000889",
+      "new": {
+        "access": 9,
+        "descriptor": "Lrs/s/c/d;",
+        "name": "b"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 3,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000455"
+        },
+        {
+          "count": 2,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000889"
+        },
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000894"
+        },
+        {
+          "count": 3,
+          "operation": "getstatic",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/s/c/c",
+      "old": {
+        "access": 9,
+        "descriptor": "Lrs/s/c/d;",
+        "name": "b"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 3,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 4,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000294"
+        },
+        {
+          "count": 3,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000455"
+        },
+        {
+          "count": 2,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000889"
+        },
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000894"
+        }
+      ],
+      "old_owner": "rs/s/c/c",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_532D72C8DD8ECFDC"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000490",
+      "new": {
+        "access": 18,
+        "descriptor": "Lrs/g/a/b;",
+        "name": "y"
+      },
+      "new_owner": "rs/l/f/i",
+      "old": {
+        "access": 18,
+        "descriptor": "Lrs/g/a/b;",
+        "name": "y"
+      },
+      "old_owner": "rs/l/f/i",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_54949E352C2DEFC4"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "aa"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "aa"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_559C8EC213FAB344"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_005276",
+          "operation": "putstatic"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000250",
+      "new": {
+        "access": 9,
+        "descriptor": "Lrs/gui/b/h;",
+        "name": "b"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000925"
+        },
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "RAW:rs/gui/Launcher"
+        }
+      ],
+      "new_owner": "rs/gui/b/h",
+      "old": {
+        "access": 9,
+        "descriptor": "Lrs/gui/b/h;",
+        "name": "b"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000196"
+        },
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000925"
+        }
+      ],
+      "old_owner": "rs/gui/b/h",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_56757E63BF22CD55"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000058",
+      "new": {
+        "access": 17,
+        "descriptor": "I",
+        "name": "h"
+      },
+      "new_owner": "rs/a/b",
+      "old": {
+        "access": 17,
+        "descriptor": "I",
+        "name": "h"
+      },
+      "old_owner": "rs/a/b",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_5AA2226B4D38CED9"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/d/d",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/d/d",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_5AE9DC13614B17CA"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_005704",
+          "operation": "putfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000113",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "W"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000113"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000984"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/d/d",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "W"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000113"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000984"
+        }
+      ],
+      "old_owner": "rs/d/d",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_5D7B8E4C8A99F236"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_005587",
+          "operation": "putstatic"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000962",
+      "new": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "c"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000962"
+        },
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/s/t/b",
+      "old": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "c"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000962"
+        }
+      ],
+      "old_owner": "rs/s/s/b",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_5D9AA205AC031B27"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000075",
+      "new": {
+        "access": 17,
+        "descriptor": "I",
+        "name": "j"
+      },
+      "new_owner": "rs/a/l",
+      "old": {
+        "access": 17,
+        "descriptor": "I",
+        "name": "j"
+      },
+      "old_owner": "rs/a/l",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_5F7D6ED24B63A89C"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000975",
+      "new": {
+        "access": 9,
+        "descriptor": "Ljavax/swing/Icon;",
+        "name": "a"
+      },
+      "new_owner": "rs/s/u/m",
+      "old": {
+        "access": 9,
+        "descriptor": "Ljavax/swing/Icon;",
+        "name": "a"
+      },
+      "old_owner": "rs/s/t/m",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_60A5B897DB9C1B06"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_001184",
+          "operation": "getfield"
+        },
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_005704",
+          "operation": "putfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000113",
+      "new": {
+        "access": 1,
+        "descriptor": "Z",
+        "name": "g"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000113"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000113"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000984"
+        },
+        {
+          "count": 3,
+          "operation": "getfield",
+          "source_class": "RAW:rs/t/b/a"
+        }
+      ],
+      "new_owner": "rs/d/d",
+      "old": {
+        "access": 1,
+        "descriptor": "Z",
+        "name": "g"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000113"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000113"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000984"
+        },
+        {
+          "count": 3,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000991"
+        }
+      ],
+      "old_owner": "rs/d/d",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_64E30CA3D5C206AE"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 2,
+          "member_id": "CLIENT_METHOD_000940",
+          "operation": "getfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "D"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 2,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000073"
+        },
+        {
+          "count": 3,
+          "operation": "getfield",
+          "source_class": "RAW:rs/a/k"
+        }
+      ],
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "D"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 2,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000073"
+        },
+        {
+          "count": 3,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000074"
+        }
+      ],
+      "old_owner": "rs/a/c",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_66642837F455D21D"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "J"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "J"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_6681C20DB02C2AC4"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000490",
+      "new": {
+        "access": 0,
+        "descriptor": "Lrs/l/f/c;",
+        "name": "a"
+      },
+      "new_owner": "rs/l/f/i",
+      "old": {
+        "access": 0,
+        "descriptor": "Lrs/l/f/c;",
+        "name": "a"
+      },
+      "old_owner": "rs/l/f/i",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_6708AB95A0168628"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000452",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "Q"
+      },
+      "new_owner": "rs/l/f/a/c/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "Q"
+      },
+      "old_owner": "rs/l/f/a/c/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_682724F4624E2B41"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000404",
+      "new": {
+        "access": 25,
+        "descriptor": "Lrs/q/a/a/a;",
+        "name": "s"
+      },
+      "new_owner": "rs/l/e/a/f",
+      "old": {
+        "access": 25,
+        "descriptor": "Lrs/q/a/a/a;",
+        "name": "s"
+      },
+      "old_owner": "rs/l/e/a/f",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_6ADF7A6499ADE064"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "W"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "W"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_6CD519CDFBCC9541"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000499",
+      "new": {
+        "access": 9,
+        "descriptor": "[I",
+        "name": "c"
+      },
+      "new_owner": "rs/l/j",
+      "old": {
+        "access": 9,
+        "descriptor": "[I",
+        "name": "c"
+      },
+      "old_owner": "rs/l/j",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_6CD7E90B89848BB0"
+    },
+    {
+      "new_descriptor": "Lrs/ui/f;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/ui/g",
+      "old_descriptor": "Lrs/ui/f;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_001096;",
+      "old_owner": "rs/ui/g",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_6E5CECCB9A1CEAC9"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_004945",
+          "operation": "putstatic"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000889",
+      "new": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "e"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 2,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000889"
+        },
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "RAW:rs/d/t"
+        }
+      ],
+      "new_owner": "rs/s/c/c",
+      "old": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "e"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000131"
+        },
+        {
+          "count": 2,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000889"
+        }
+      ],
+      "old_owner": "rs/s/c/c",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_707E1ADDA88F6CDE"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/l/f/b",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/l/f/b",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_70DA607EF8C7F66B"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "ae"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "ae"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_711CA6E4D8862DB3"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000058",
+      "new": {
+        "access": 17,
+        "descriptor": "I",
+        "name": "i"
+      },
+      "new_owner": "rs/a/b",
+      "old": {
+        "access": 17,
+        "descriptor": "I",
+        "name": "i"
+      },
+      "old_owner": "rs/a/b",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_724DD60345DEE4D3"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_002523",
+          "operation": "getfield"
+        },
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_004172",
+          "operation": "putfield"
+        }
+      ],
+      "global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000367"
+        },
+        {
+          "count": 2,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000684"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "RAW:tools/QueuedInputRegression"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "RAW:tools/QueuedSwitchingRegression"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000684",
+      "new": {
+        "access": 1,
+        "descriptor": "Z",
+        "name": "bp"
+      },
+      "new_owner": "rs/n/e",
+      "old": {
+        "access": 1,
+        "descriptor": "Z",
+        "name": "bp"
+      },
+      "old_owner": "rs/n/e",
+      "outcome": "raw_source_guard_rejected",
+      "relationship_id": "MEMREL_73640FBA7DA8712C"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_001256",
+          "operation": "getstatic"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000122",
+      "new": {
+        "access": 9,
+        "descriptor": "Lrs/F;",
+        "name": "m"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000122"
+        },
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000122"
+        },
+        {
+          "count": 2,
+          "operation": "getstatic",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/d/k",
+      "old": {
+        "access": 9,
+        "descriptor": "Lrs/F;",
+        "name": "m"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 2,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000122"
+        },
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000122"
+        },
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000294"
+        }
+      ],
+      "old_owner": "rs/d/k",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_74455AB8040348A0"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000122",
+      "new": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "H"
+      },
+      "new_owner": "rs/d/k",
+      "old": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "H"
+      },
+      "old_owner": "rs/d/k",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_7544443C14E9C7FE"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "ai"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "ai"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_761881065114A37E"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_000672",
+          "operation": "putstatic"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000049",
+      "new": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "q"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000049"
+        },
+        {
+          "count": 2,
+          "operation": "getstatic",
+          "source_class": "RAW:rs/Client"
+        },
+        {
+          "count": 2,
+          "operation": "putstatic",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/V",
+      "old": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "q"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 2,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 2,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000049"
+        }
+      ],
+      "old_owner": "rs/V",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_77B948942E61140D"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "Z"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "Z"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_79C2E01DCBD7009A"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "H"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "H"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_7AD9161A5C40D8EA"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000490",
+      "new": {
+        "access": 18,
+        "descriptor": "Lrs/eventbus/EventBus;",
+        "name": "B"
+      },
+      "new_owner": "rs/l/f/i",
+      "old": {
+        "access": 18,
+        "descriptor": "Lrs/eventbus/EventBus;",
+        "name": "B"
+      },
+      "old_owner": "rs/l/f/i",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_7B15541B248F3A48"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_005587",
+          "operation": "putstatic"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000962",
+      "new": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "f"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000962"
+        },
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/s/t/b",
+      "old": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "f"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000962"
+        }
+      ],
+      "old_owner": "rs/s/s/b",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_7B18597F2E4C5BB6"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000937",
+      "new": {
+        "access": 18,
+        "descriptor": "Lrs/e/i;",
+        "name": "k"
+      },
+      "new_owner": "rs/s/o/c",
+      "old": {
+        "access": 18,
+        "descriptor": "Lrs/e/i;",
+        "name": "k"
+      },
+      "old_owner": "rs/s/n/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_7C36015C1BFC7775"
+    },
+    {
+      "new_descriptor": "Lrs/ui/f;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/o/c",
+      "old_descriptor": "Lrs/ui/f;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_001096;",
+      "old_owner": "rs/s/n/c",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_7FAEB93E979E35E2"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/a/m",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/a/m",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_814CDEC212324301"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000297",
+      "new": {
+        "access": 2,
+        "descriptor": "[Lrs/l/F;",
+        "name": "m"
+      },
+      "new_owner": "rs/i/b",
+      "old": {
+        "access": 2,
+        "descriptor": "[Lrs/l/F;",
+        "name": "m"
+      },
+      "old_owner": "rs/i/b",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_852A792ECC46B14B"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_005704",
+          "operation": "putfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000113",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "T"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000113"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000984"
+        },
+        {
+          "count": 4,
+          "operation": "getfield",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/d/d",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "T"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 4,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000113"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000984"
+        }
+      ],
+      "old_owner": "rs/d/d",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_85822239CBE93753"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000420",
+      "new": {
+        "access": 9,
+        "descriptor": "Lrs/q/a/a/a;",
+        "name": "w"
+      },
+      "new_owner": "rs/l/e/a/v",
+      "old": {
+        "access": 9,
+        "descriptor": "Lrs/q/a/a/a;",
+        "name": "w"
+      },
+      "old_owner": "rs/l/e/a/v",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_8AEE7E2C589A9E78"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_005587",
+          "operation": "putstatic"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000962",
+      "new": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "o"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000962"
+        },
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/s/t/b",
+      "old": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "o"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000962"
+        }
+      ],
+      "old_owner": "rs/s/s/b",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_8AF7C97816580A6F"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000406",
+      "new": {
+        "access": 25,
+        "descriptor": "Lrs/q/a/a/a;",
+        "name": "D"
+      },
+      "new_owner": "rs/l/e/a/h",
+      "old": {
+        "access": 25,
+        "descriptor": "Lrs/q/a/a/a;",
+        "name": "D"
+      },
+      "old_owner": "rs/l/e/a/h",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_8B8A876C0EF66CD4"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_000705",
+          "operation": "getfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000073",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "ay"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000051"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/a/j",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "ay"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000051"
+        }
+      ],
+      "old_owner": "rs/a/j",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_8D5C0F18EBE8E34D"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000401",
+      "new": {
+        "access": 9,
+        "descriptor": "Lrs/q/a/a/a;",
+        "name": "v"
+      },
+      "new_owner": "rs/l/e/a/c",
+      "old": {
+        "access": 9,
+        "descriptor": "Lrs/q/a/a/a;",
+        "name": "v"
+      },
+      "old_owner": "rs/l/e/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_8DF7418E8F8D4248"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 2,
+          "member_id": "CLIENT_METHOD_000942",
+          "operation": "getfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "t"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000065"
+        },
+        {
+          "count": 2,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000073"
+        },
+        {
+          "count": 2,
+          "operation": "getfield",
+          "source_class": "RAW:rs/Client"
+        },
+        {
+          "count": 5,
+          "operation": "getfield",
+          "source_class": "RAW:rs/a/k"
+        },
+        {
+          "count": 6,
+          "operation": "putfield",
+          "source_class": "RAW:rs/a/k"
+        }
+      ],
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "t"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 2,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000065"
+        },
+        {
+          "count": 2,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000073"
+        },
+        {
+          "count": 5,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000074"
+        },
+        {
+          "count": 6,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000074"
+        }
+      ],
+      "old_owner": "rs/a/c",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_8EE258D6FB4D55F2"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_003005",
+          "operation": "getfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000452",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "L"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000452"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/l/f/a/c/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "L"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000452"
+        }
+      ],
+      "old_owner": "rs/l/f/a/c/c",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_94AE27191DF7A98E"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000971",
+      "new": {
+        "access": 25,
+        "descriptor": "Lrs/q/a/a/a;",
+        "name": "b"
+      },
+      "new_owner": "rs/s/u/i",
+      "old": {
+        "access": 25,
+        "descriptor": "Lrs/q/a/a/a;",
+        "name": "b"
+      },
+      "old_owner": "rs/s/t/i",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_97E5DD7ED9AE9D19"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_000705",
+          "operation": "getfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000073",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "ax"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000051"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/a/j",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "ax"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000051"
+        }
+      ],
+      "old_owner": "rs/a/j",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_98BF37BE1BAE2356"
+    },
+    {
+      "new_descriptor": "Lrs/s/u/c;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/u/f",
+      "old_descriptor": "Lrs/s/t/c;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000965;",
+      "old_owner": "rs/s/t/f",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_9925F9DCB62BCEB6"
+    },
+    {
+      "new_descriptor": "Lrs/d/t;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/l/f/a/d/d",
+      "old_descriptor": "Lrs/d/r;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000131;",
+      "old_owner": "rs/l/f/a/d/d",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_9D27CC5649FBBC4C"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "Z",
+        "name": "T"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "Z",
+        "name": "T"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_A08D181176AC9EFD"
+    },
+    {
+      "new_descriptor": "Lrs/s/p/c;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/p/e",
+      "old_descriptor": "Lrs/s/o/c;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000943;",
+      "old_owner": "rs/s/o/e",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_A0EEE2B2DD6AC178"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_004945",
+          "operation": "putstatic"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000889",
+      "new": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "f"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 2,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000889"
+        },
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/s/c/c",
+      "old": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "f"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 2,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000889"
+        }
+      ],
+      "old_owner": "rs/s/c/c",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_A20E8CFC117587F4"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000499",
+      "new": {
+        "access": 25,
+        "descriptor": "Lgnu/trove/i/a/i;",
+        "name": "d"
+      },
+      "new_owner": "rs/l/j",
+      "old": {
+        "access": 25,
+        "descriptor": "Lgnu/trove/i/a/i;",
+        "name": "d"
+      },
+      "old_owner": "rs/l/j",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_A2858F49A9FB11D4"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_001303",
+          "operation": "putfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000135",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "t"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000135"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "RAW:rs/x"
+        }
+      ],
+      "new_owner": "rs/d/v",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "t"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000135"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_001114"
+        }
+      ],
+      "old_owner": "rs/d/t",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_A405761D1F04D4E2"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_000940",
+          "operation": "putfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "r"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000065"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000073"
+        },
+        {
+          "count": 63,
+          "operation": "getfield",
+          "source_class": "RAW:rs/Client"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "RAW:rs/a/k"
+        }
+      ],
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "r"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 63,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000065"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000073"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000074"
+        }
+      ],
+      "old_owner": "rs/a/c",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_A5BA837E207156FF"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "N"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "N"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_A7E1345AB964AF31"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_000946",
+          "operation": "getfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000073",
+      "new": {
+        "access": 1,
+        "descriptor": "Z",
+        "name": "aH"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000073"
+        },
+        {
+          "count": 3,
+          "operation": "getfield",
+          "source_class": "RAW:rs/Client"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/a/j",
+      "old": {
+        "access": 1,
+        "descriptor": "Z",
+        "name": "aH"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 3,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000073"
+        }
+      ],
+      "old_owner": "rs/a/j",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_A9D7E2ADA6C146F8"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/u/i",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/s/t/i",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_B6BB1EAE87E3E619"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_001331",
+          "operation": "putfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000142",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "b"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000142"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/d/B",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "b"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000142"
+        }
+      ],
+      "old_owner": "rs/d/z",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_B738754CF5064DD3"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "B"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "B"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_BC1F24E25B1244DA"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_005587",
+          "operation": "putstatic"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000962",
+      "new": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "d"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000962"
+        },
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/s/t/b",
+      "old": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "d"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000962"
+        }
+      ],
+      "old_owner": "rs/s/s/b",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_BF3B88A14347F780"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000122",
+      "new": {
+        "access": 9,
+        "descriptor": "Ljava/lang/String;",
+        "name": "d"
+      },
+      "new_owner": "rs/d/k",
+      "old": {
+        "access": 9,
+        "descriptor": "Ljava/lang/String;",
+        "name": "d"
+      },
+      "old_owner": "rs/d/k",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_C3A73649C3ECC93A"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000075",
+      "new": {
+        "access": 17,
+        "descriptor": "I",
+        "name": "h"
+      },
+      "new_owner": "rs/a/l",
+      "old": {
+        "access": 17,
+        "descriptor": "I",
+        "name": "h"
+      },
+      "old_owner": "rs/a/l",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_C7FDD1E24DABC6CF"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000075",
+      "new": {
+        "access": 17,
+        "descriptor": "I",
+        "name": "n"
+      },
+      "new_owner": "rs/a/l",
+      "old": {
+        "access": 17,
+        "descriptor": "I",
+        "name": "n"
+      },
+      "old_owner": "rs/a/l",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_C87BE4118E41FE4B"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_004945",
+          "operation": "putstatic"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000889",
+      "new": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "d"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 2,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000889"
+        },
+        {
+          "count": 4,
+          "operation": "getstatic",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/s/c/c",
+      "old": {
+        "access": 9,
+        "descriptor": "Z",
+        "name": "d"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 4,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 2,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000889"
+        }
+      ],
+      "old_owner": "rs/s/c/c",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_CA87C1D26159AB17"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000058",
+      "new": {
+        "access": 17,
+        "descriptor": "I",
+        "name": "k"
+      },
+      "new_owner": "rs/a/b",
+      "old": {
+        "access": 17,
+        "descriptor": "I",
+        "name": "k"
+      },
+      "old_owner": "rs/a/b",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_CBC484D04F9DAB6A"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/i/b",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/i/b",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_D4819A8BA9FF165E"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_001303",
+          "operation": "putfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000135",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "s"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000135"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "RAW:rs/x"
+        }
+      ],
+      "new_owner": "rs/d/v",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "s"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000135"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_001114"
+        }
+      ],
+      "old_owner": "rs/d/t",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_D4AD0230BB91286C"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_005704",
+          "operation": "putfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000113",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "S"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000113"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000984"
+        },
+        {
+          "count": 2,
+          "operation": "getfield",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/d/d",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "S"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 2,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000113"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000984"
+        }
+      ],
+      "old_owner": "rs/d/d",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_D5AE99F99841F713"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000075",
+      "new": {
+        "access": 17,
+        "descriptor": "I",
+        "name": "p"
+      },
+      "new_owner": "rs/a/l",
+      "old": {
+        "access": 17,
+        "descriptor": "I",
+        "name": "p"
+      },
+      "old_owner": "rs/a/l",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_D71ACCCD3C16E8D4"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000684",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "bA"
+      },
+      "new_owner": "rs/n/e",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "bA"
+      },
+      "old_owner": "rs/n/e",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_DA2331D546FF1424"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_001795",
+          "operation": "getfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000250",
+      "new": {
+        "access": 2,
+        "descriptor": "Lrs/gui/b/b/d;",
+        "name": "f"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 8,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000250"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000250"
+        }
+      ],
+      "new_owner": "rs/gui/b/h",
+      "old": {
+        "access": 2,
+        "descriptor": "Lrs/gui/b/b/d;",
+        "name": "f"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 10,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000250"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000250"
+        }
+      ],
+      "old_owner": "rs/gui/b/h",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_DCD7BB0481B1F147"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/l/e/q",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/l/e/q",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_DD57D4449C55C251"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "s"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "s"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_E0E13102B9F268A2"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/l/b/a/d",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/l/b/a/d",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_E13C738B305BA23F"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_000939",
+          "operation": "getfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000073",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "aE"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000073"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000073"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/a/j",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "aE"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000073"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000073"
+        }
+      ],
+      "old_owner": "rs/a/j",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_E7B8749D7BECF30A"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "v"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "v"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_E8FD0BA6ED1ACCFB"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/s/m/c",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/s/l/c",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_E90BCD9C833097F6"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000058",
+      "new": {
+        "access": 17,
+        "descriptor": "I",
+        "name": "l"
+      },
+      "new_owner": "rs/a/b",
+      "old": {
+        "access": 17,
+        "descriptor": "I",
+        "name": "l"
+      },
+      "old_owner": "rs/a/b",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_E92D98837B734058"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "M"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "M"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_EA7E8A4839ABBE7E"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "O"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "O"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_EAEBCEC81A1601F8"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_001189",
+          "operation": "putfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000113",
+      "new": {
+        "access": 1,
+        "descriptor": "[B",
+        "name": "H"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000113"
+        },
+        {
+          "count": 2,
+          "operation": "getfield",
+          "source_class": "RAW:rs/Client"
+        }
+      ],
+      "new_owner": "rs/d/d",
+      "old": {
+        "access": 1,
+        "descriptor": "[B",
+        "name": "H"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 2,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000113"
+        }
+      ],
+      "old_owner": "rs/d/d",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_F09112376EF82BA0"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_001299",
+          "operation": "getstatic"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000132",
+      "new": {
+        "access": 16409,
+        "descriptor": "Lrs/d/t$a;",
+        "name": "c"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000132"
+        },
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000132"
+        },
+        {
+          "count": 2,
+          "operation": "getstatic",
+          "source_class": "RAW:rs/Client"
+        },
+        {
+          "count": 3,
+          "operation": "getstatic",
+          "source_class": "RAW:rs/d/t"
+        }
+      ],
+      "new_owner": "rs/d/t$a",
+      "old": {
+        "access": 16409,
+        "descriptor": "Lrs/d/r$a;",
+        "name": "c"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 2,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000029"
+        },
+        {
+          "count": 3,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000131"
+        },
+        {
+          "count": 1,
+          "operation": "getstatic",
+          "source_class": "CLIENT_CLASS_000132"
+        },
+        {
+          "count": 1,
+          "operation": "putstatic",
+          "source_class": "CLIENT_CLASS_000132"
+        }
+      ],
+      "old_owner": "rs/d/r$a",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_F150EDB1AAB6D2ED"
+    },
+    {
+      "new_descriptor": "Lrs/Client;",
+      "new_descriptor_identity": "Lrs/?;",
+      "new_owner": "rs/l/e/h",
+      "old_descriptor": "Lrs/Client;",
+      "old_descriptor_identity": "L@CLIENT_CLASS_000029;",
+      "old_owner": "rs/l/e/h",
+      "outcome": "descriptor_identity_guard_rejected",
+      "reason": "canonical_descriptor_identity_changed",
+      "relationship_id": "MEMREL_F45E1C4F6AE2C92E"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "aj"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "aj"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_F55E45E76F762614"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000073",
+      "new": {
+        "access": 1,
+        "descriptor": "S",
+        "name": "az"
+      },
+      "new_owner": "rs/a/j",
+      "old": {
+        "access": 1,
+        "descriptor": "S",
+        "name": "az"
+      },
+      "old_owner": "rs/a/j",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_F6130ADFE29CEAFE"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "ag"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "ag"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_F78C3538CA720218"
+    },
+    {
+      "canonical_method_topology": [
+        {
+          "count": 1,
+          "member_id": "CLIENT_METHOD_001303",
+          "operation": "putfield"
+        }
+      ],
+      "logical_class_id": "CLIENT_CLASS_000135",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "r"
+      },
+      "new_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000135"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "RAW:rs/x"
+        }
+      ],
+      "new_owner": "rs/d/v",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "r"
+      },
+      "old_global_source_class_topology": [
+        {
+          "count": 1,
+          "operation": "putfield",
+          "source_class": "CLIENT_CLASS_000135"
+        },
+        {
+          "count": 1,
+          "operation": "getfield",
+          "source_class": "CLIENT_CLASS_001114"
+        }
+      ],
+      "old_owner": "rs/d/t",
+      "outcome": "global_class_topology_guard_rejected",
+      "relationship_id": "MEMREL_F7E5B596E582EECC"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "o"
+      },
+      "new_owner": "rs/a/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "o"
+      },
+      "old_owner": "rs/a/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_FCFA0C07AA5CC8BA"
+    },
+    {
+      "canonical_method_topology": [],
+      "global_source_class_topology": [],
+      "logical_class_id": "CLIENT_CLASS_000452",
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "P"
+      },
+      "new_owner": "rs/l/f/a/c/c",
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "P"
+      },
+      "old_owner": "rs/l/f/a/c/c",
+      "outcome": "empty_both",
+      "relationship_id": "MEMREL_FD05D94128E62258"
+    }
+  ],
+  "schema_version": 1,
+  "summary": {
+    "candidate_fields": 0,
+    "canonical_method_topology_matches": 49,
+    "changed_or_one_sided": 0,
+    "descriptor_identity_guard_rejected": 26,
+    "eligible_stable_symbol_reviews": 117,
+    "empty_both": 68,
+    "global_class_topology_guard_rejected": 48,
+    "input_stable_symbol_reviews": 143,
+    "new_field_access_observations": 56,
+    "new_global_classes_relevant": 49,
+    "new_global_classes_scanned": 10502,
+    "new_global_field_access_observations": 575,
+    "new_source_classes_relevant": 35,
+    "new_source_classes_scanned": 982,
+    "old_field_access_observations": 56,
+    "old_global_classes_relevant": 50,
+    "old_global_classes_scanned": 10472,
+    "old_global_field_access_observations": 583,
+    "old_source_classes_relevant": 35,
+    "old_source_classes_scanned": 982,
+    "paired_canonical_methods": 5567,
+    "raw_source_guard_rejected": 1,
+    "remaining_without_global_topology_proof": 143,
+    "review_outcomes": 143
+  }
+}

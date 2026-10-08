@@ -1,0 +1,503 @@
+{
+  "base_context_report_digest": "01a52b8e11b0ff4b31cd33c0637d082b0f92c3a66f3adf97e54b1276e6fe3a66",
+  "base_context_report_id": "METHODCTX_3733EDA2EADFB63C8512",
+  "base_global_usage_report_digest": "0debdd95007d42341c280a4d708959754c8ea756c6601ff544e606364268a488",
+  "base_global_usage_report_id": "GLOBALFIELDUSE_B90414CD70007CA60E57",
+  "candidates": [
+    {
+      "anchor_member_id": "CLIENT_FIELD_001828",
+      "base_context_reason": "missing_two_sided_canonical_anchor",
+      "base_context_report_digest": "01a52b8e11b0ff4b31cd33c0637d082b0f92c3a66f3adf97e54b1276e6fe3a66",
+      "base_context_report_id": "METHODCTX_3733EDA2EADFB63C8512",
+      "base_global_usage_report_id": "GLOBALFIELDUSE_B90414CD70007CA60E57",
+      "block_digest": "9aad3db2afc1b45a16c75c1c17af2b6935ffc085b9a43c94b0a99402be4303b7",
+      "block_kind": "prefix_block_exact",
+      "block_length": 1,
+      "canonical_methods": 2,
+      "confidence": "INFERRED_HIGH",
+      "distinct_contexts": 2,
+      "logical_class_id": "CLIENT_CLASS_000118",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "6adacf30c5fa1f2c80427b3da0dd83efca684c0b9d5ed43a2e927c12f6b28dda",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_000666",
+          "operation": "getstatic"
+        },
+        {
+          "contexts": [
+            [
+              "225c3c3c38d98dc0cd459d96464298171ed574eccdde0b65c76d9f02ee4b0aff",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_001210",
+          "operation": "putstatic"
+        }
+      ],
+      "new": {
+        "access": 9,
+        "descriptor": "Lrs/d/h$a;",
+        "name": "a"
+      },
+      "new_owner": "rs/d/h",
+      "observations": 2,
+      "old": {
+        "access": 9,
+        "descriptor": "Lrs/d/h$a;",
+        "name": "a"
+      },
+      "old_owner": "rs/d/h",
+      "relationship_id": "MEMREL_3514F546778F7BE6",
+      "score": 0.9995,
+      "strategy": "canonical_method_unique_local_context_and_boundary_block_declaration_exact",
+      "supports_existing_review": true,
+      "target_offset": 0,
+      "target_signature_digest": "4ef8c8c8c51f99447bb260e21be3830e2b2def8b22d8b35e5f860ae134aa6e0c"
+    },
+    {
+      "anchor_member_id": "CLIENT_FIELD_001910",
+      "base_context_reason": "missing_two_sided_canonical_anchor",
+      "base_context_report_digest": "01a52b8e11b0ff4b31cd33c0637d082b0f92c3a66f3adf97e54b1276e6fe3a66",
+      "base_context_report_id": "METHODCTX_3733EDA2EADFB63C8512",
+      "base_global_usage_report_id": "GLOBALFIELDUSE_B90414CD70007CA60E57",
+      "block_digest": "bb2ea6af75715611c880afe4ed0cc7739f6690e2c6b273074884c7a6a6fefb66",
+      "block_kind": "prefix_block_exact",
+      "block_length": 1,
+      "canonical_methods": 4,
+      "confidence": "INFERRED_HIGH",
+      "distinct_contexts": 3,
+      "logical_class_id": "CLIENT_CLASS_000122",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "254e5fa661654cec420dc07bf4605f90fdbe1a5f106efe3f560f597a0dd92078",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_001240",
+          "operation": "getstatic"
+        },
+        {
+          "contexts": [
+            [
+              "7eeaa758e61b930591422d6f7d5887856269b131af0db8c19cc0f48df6f468e7",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_001534",
+          "operation": "getstatic"
+        },
+        {
+          "contexts": [
+            [
+              "76b1b9150a9d974c3b10e7f56ae39fd1c39f42a49fc89755e4ff157648f119fa",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_003819",
+          "operation": "getstatic"
+        },
+        {
+          "contexts": [
+            [
+              "7eeaa758e61b930591422d6f7d5887856269b131af0db8c19cc0f48df6f468e7",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_005148",
+          "operation": "getstatic"
+        }
+      ],
+      "new": {
+        "access": 9,
+        "descriptor": "I",
+        "name": "a"
+      },
+      "new_owner": "rs/d/k",
+      "observations": 4,
+      "old": {
+        "access": 9,
+        "descriptor": "I",
+        "name": "a"
+      },
+      "old_owner": "rs/d/k",
+      "relationship_id": "MEMREL_9B79C386C962CCD4",
+      "score": 0.9995,
+      "strategy": "canonical_method_unique_local_context_and_boundary_block_declaration_exact",
+      "supports_existing_review": true,
+      "target_offset": 0,
+      "target_signature_digest": "23a5d8472174b9aaaf668018b165b8780ed955be766bb26245f5de786327f1d4"
+    },
+    {
+      "anchor_member_id": "CLIENT_FIELD_002046",
+      "base_context_reason": "missing_two_sided_canonical_anchor",
+      "base_context_report_digest": "01a52b8e11b0ff4b31cd33c0637d082b0f92c3a66f3adf97e54b1276e6fe3a66",
+      "base_context_report_id": "METHODCTX_3733EDA2EADFB63C8512",
+      "base_global_usage_report_id": "GLOBALFIELDUSE_B90414CD70007CA60E57",
+      "block_digest": "34bd9e9b8fb555be26e761ca02bff2a60755165a826b13ad35291019fd111f18",
+      "block_kind": "prefix_block_exact",
+      "block_length": 4,
+      "canonical_methods": 5,
+      "confidence": "INFERRED_HIGH",
+      "distinct_contexts": 6,
+      "logical_class_id": "CLIENT_CLASS_000132",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "2b16b6a13d644fc0f47baf5e111d1b8e53a9eb198439534f957f8e4e1c907795",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_001092",
+          "operation": "getstatic"
+        },
+        {
+          "contexts": [
+            [
+              "60151c2fba90d6d46d9087f6fcf7fbc71e3d85df07571b7e29c22a3754e7fd7f",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_001120",
+          "operation": "getstatic"
+        },
+        {
+          "contexts": [
+            [
+              "64ddaae95536673f075acad44a39a5a1990de8f934923395b5c3c471c669fa5d",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_001122",
+          "operation": "getstatic"
+        },
+        {
+          "contexts": [
+            [
+              "ff5102ca36406dc92f981c262a05757fb46844153a6ec8dcd6e1040cb1c46430",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_001299",
+          "operation": "getstatic"
+        },
+        {
+          "contexts": [
+            [
+              "2df8ef167012d83b44fc87a02b13756cfc00de2692ed3583e05f98868ee927ad",
+              1
+            ],
+            [
+              "8bbcc8a8407b578c3572ce0ecef7379eef776c4f065ca8bb1ae1525a19adec0e",
+              1
+            ]
+          ],
+          "count": 2,
+          "method_id": "CLIENT_METHOD_005722",
+          "operation": "getstatic"
+        }
+      ],
+      "new": {
+        "access": 16409,
+        "descriptor": "Lrs/d/t$a;",
+        "name": "d"
+      },
+      "new_owner": "rs/d/t$a",
+      "observations": 6,
+      "old": {
+        "access": 16409,
+        "descriptor": "Lrs/d/r$a;",
+        "name": "d"
+      },
+      "old_owner": "rs/d/r$a",
+      "relationship_id": "MEMREL_A130193BD075343D",
+      "score": 0.9995,
+      "strategy": "canonical_method_unique_local_context_and_boundary_block_declaration_exact",
+      "supports_existing_review": true,
+      "target_offset": 3,
+      "target_signature_digest": "56a2e5a898195093333dc8a64c6311835590e46b064e2cd512764f4a77e1af17"
+    },
+    {
+      "anchor_member_id": null,
+      "base_context_reason": "missing_two_sided_canonical_anchor",
+      "base_context_report_digest": "01a52b8e11b0ff4b31cd33c0637d082b0f92c3a66f3adf97e54b1276e6fe3a66",
+      "base_context_report_id": "METHODCTX_3733EDA2EADFB63C8512",
+      "base_global_usage_report_id": "GLOBALFIELDUSE_B90414CD70007CA60E57",
+      "block_digest": "0388d44fc2d3b061a70aa48c2463abb27f07b2eab71ea1a508d91ad4ba849466",
+      "block_kind": "whole_class_exact",
+      "block_length": 2,
+      "canonical_methods": 2,
+      "confidence": "INFERRED_HIGH",
+      "distinct_contexts": 4,
+      "logical_class_id": "CLIENT_CLASS_000051",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "6d683a92b840121701066d2d197ac9477e24226f95c547194d79fe680e071bc2",
+              1
+            ],
+            [
+              "c64827b58be4dfce0f5607b5918cd84b6b298a3c1f2631303b4af84936bc7bb1",
+              1
+            ],
+            [
+              "e0604a64549d47af11a90984d6fd6e13a8699b7995f2b1b37f6a97112d774e12",
+              1
+            ]
+          ],
+          "count": 3,
+          "method_id": "CLIENT_METHOD_000677",
+          "operation": "getfield"
+        },
+        {
+          "contexts": [
+            [
+              "5dafb3242b17d05c2eb9f57f3e52b25ece958d0725eea691dd956b014d8be2bc",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_000705",
+          "operation": "putfield"
+        }
+      ],
+      "new": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "g"
+      },
+      "new_owner": "rs/a/a",
+      "observations": 4,
+      "old": {
+        "access": 1,
+        "descriptor": "I",
+        "name": "g"
+      },
+      "old_owner": "rs/a/a",
+      "relationship_id": "MEMREL_C7E2D6B8E06965BD",
+      "score": 0.9995,
+      "strategy": "canonical_method_unique_local_context_and_boundary_block_declaration_exact",
+      "supports_existing_review": true,
+      "target_offset": 1,
+      "target_signature_digest": "31061b3441ee8a4955228f6fce4ca3c9d8d4875ba52a190ec441af54e213ada7"
+    },
+    {
+      "anchor_member_id": null,
+      "base_context_reason": "missing_two_sided_canonical_anchor",
+      "base_context_report_digest": "01a52b8e11b0ff4b31cd33c0637d082b0f92c3a66f3adf97e54b1276e6fe3a66",
+      "base_context_report_id": "METHODCTX_3733EDA2EADFB63C8512",
+      "base_global_usage_report_id": "GLOBALFIELDUSE_B90414CD70007CA60E57",
+      "block_digest": "0388d44fc2d3b061a70aa48c2463abb27f07b2eab71ea1a508d91ad4ba849466",
+      "block_kind": "whole_class_exact",
+      "block_length": 2,
+      "canonical_methods": 4,
+      "confidence": "INFERRED_HIGH",
+      "distinct_contexts": 10,
+      "logical_class_id": "CLIENT_CLASS_000051",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "481df3f1be2c926058f2ff8f709bb12b976202b69e2224388d8c562f2f2d76a6",
+              1
+            ],
+            [
+              "6d8e1845c236af0014881a7914c34298a4d3a0e183dc2251285d39f0950899ca",
+              1
+            ],
+            [
+              "759f174d47274aa47de4438e27c12951664faba77578ba23559afde3ca3f78e8",
+              1
+            ]
+          ],
+          "count": 3,
+          "method_id": "CLIENT_METHOD_000656",
+          "operation": "getfield"
+        },
+        {
+          "contexts": [
+            [
+              "cd01d5173d4f49f4ffa620120b261b863a450dbbc083ba774c0877d348156b58",
+              4
+            ]
+          ],
+          "count": 4,
+          "method_id": "CLIENT_METHOD_000662",
+          "operation": "getfield"
+        },
+        {
+          "contexts": [
+            [
+              "10db077384c39e96c63b70b24bd65aa312b92352111bf25eb71e60494652f9f9",
+              1
+            ],
+            [
+              "25b782a0519d43fdc636e9c01274346c1d40839669912770f8c4ef48494ff98f",
+              1
+            ]
+          ],
+          "count": 2,
+          "method_id": "CLIENT_METHOD_000667",
+          "operation": "getfield"
+        },
+        {
+          "contexts": [
+            [
+              "b10ea770692e3b2b6a1ac1d42330e28cb39e5a671b8f2b911174f4f2a2581348",
+              1
+            ],
+            [
+              "be453e36357d71e2db6f75826c7c748551781bc98547f1595333dce4bc9e3bde",
+              1
+            ],
+            [
+              "c61693c328016c6df21f3f188bf316ae7965564602e3edbc9125eb2644b30db8",
+              1
+            ],
+            [
+              "d26fdd83de0fd61ee5cbad240e1d0c3c68f68c9b6fffd2f7e0ae3972ffa99dfc",
+              1
+            ]
+          ],
+          "count": 4,
+          "method_id": "CLIENT_METHOD_000700",
+          "operation": "getfield"
+        }
+      ],
+      "new": {
+        "access": 1,
+        "descriptor": "Lrs/S;",
+        "name": "f"
+      },
+      "new_owner": "rs/a/a",
+      "observations": 13,
+      "old": {
+        "access": 1,
+        "descriptor": "Lrs/S;",
+        "name": "f"
+      },
+      "old_owner": "rs/a/a",
+      "relationship_id": "MEMREL_F5687C5856E54E32",
+      "score": 0.9995,
+      "strategy": "canonical_method_unique_local_context_and_boundary_block_declaration_exact",
+      "supports_existing_review": true,
+      "target_offset": 0,
+      "target_signature_digest": "123b7935cf680f9d039833681e0efb22af4ad20938ed70481eec0ab2c6793eaa"
+    },
+    {
+      "anchor_member_id": "CLIENT_FIELD_002046",
+      "base_context_reason": "missing_two_sided_canonical_anchor",
+      "base_context_report_digest": "01a52b8e11b0ff4b31cd33c0637d082b0f92c3a66f3adf97e54b1276e6fe3a66",
+      "base_context_report_id": "METHODCTX_3733EDA2EADFB63C8512",
+      "base_global_usage_report_id": "GLOBALFIELDUSE_B90414CD70007CA60E57",
+      "block_digest": "34bd9e9b8fb555be26e761ca02bff2a60755165a826b13ad35291019fd111f18",
+      "block_kind": "prefix_block_exact",
+      "block_length": 4,
+      "canonical_methods": 3,
+      "confidence": "INFERRED_HIGH",
+      "distinct_contexts": 4,
+      "logical_class_id": "CLIENT_CLASS_000132",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "af6a4be138c4acd3638a0683c47c18bdb0df158b76496ac17e16252b0650a7e9",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_001122",
+          "operation": "getstatic"
+        },
+        {
+          "contexts": [
+            [
+              "efde1ee3a8295eb7960f8e946c3be7dda6c17c1d413b61545ac3d871abddad0f",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_001299",
+          "operation": "getstatic"
+        },
+        {
+          "contexts": [
+            [
+              "1695d284df7b6ad73099ea28193c557281c4cc2476ee56bc9f278ae055b9ed51",
+              1
+            ],
+            [
+              "18562ba7e3ffb61e2ae6e2e684284a30d99671ea953f98a29e98066db0e23015",
+              1
+            ]
+          ],
+          "count": 2,
+          "method_id": "CLIENT_METHOD_005722",
+          "operation": "getstatic"
+        }
+      ],
+      "new": {
+        "access": 16409,
+        "descriptor": "Lrs/d/t$a;",
+        "name": "a"
+      },
+      "new_owner": "rs/d/t$a",
+      "observations": 4,
+      "old": {
+        "access": 16409,
+        "descriptor": "Lrs/d/r$a;",
+        "name": "a"
+      },
+      "old_owner": "rs/d/r$a",
+      "relationship_id": "MEMREL_F58B9F6E27EC3274",
+      "score": 0.9995,
+      "strategy": "canonical_method_unique_local_context_and_boundary_block_declaration_exact",
+      "supports_existing_review": true,
+      "target_offset": 0,
+      "target_signature_digest": "1b90a91d5582f648ef64a4837c75495162c6b39e79c84a5b03a44953eb8de880"
+    }
+  ],
+  "canonical": false,
+  "kind": "canonical_method_boundary_block_identity_candidates",
+  "member_lineage_digest": "fc0547ad7ba62fd18fca87212efcbb8c6046f03931e2dab02ead5032d66cc1e0",
+  "new_build_id": "v309",
+  "new_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "note": "Research-only continuation of canonical-method field-context evidence. Only rows that already satisfy the strong exact paired canonical-method local-context identity proof and fail solely at missing_two_sided_canonical_anchor are considered. The method witness is not weakened or recomputed from names. Declaration continuity may be supplied only by the exact certified boundary semantics: matching prefix/suffix/whole-class declaration blocks, matching single canonical anchor identity when present, identical block shape, identical target offset, and a unique target declaration signature. canonical=false; no lineage mutation.",
+  "old_build_id": "v308",
+  "old_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "rejected": [],
+  "report_id": "METHODBOUNDARY_3D5AF61BCEDF9BD1687C",
+  "schema_version": 1,
+  "summary": {
+    "block_length_mismatch": 0,
+    "block_shape_mismatch": 0,
+    "boundary_symmetry_mismatch": 0,
+    "candidate_fields": 6,
+    "input_context_missing_anchor_reviews": 6,
+    "prefix_block_exact": 4,
+    "remaining_without_boundary_block_proof": 0,
+    "single_anchor_identity_mismatch": 0,
+    "suffix_block_exact": 0,
+    "target_offset_mismatch": 0,
+    "target_signature_not_unique": 0,
+    "whole_class_exact": 2
+  }
+}
