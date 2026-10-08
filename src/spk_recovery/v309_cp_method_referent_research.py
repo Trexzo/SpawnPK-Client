@@ -164,6 +164,10 @@ def _instruction_semantics(
             or (tag in (7, 8) and type(value) is not str)
         ):
             raise V309CpMethodWitnessError("unsupported/unresolved LDC CP referent")
+        # Only Class LDC values carry owner identities; String literals
+        # must remain byte-for-byte exact, even when they look like names.
+        if tag == 7:
+            value = _rename(value, old_owner=old_owner, new_owner=new_owner)
         base += [tag, type(value).__name__, repr(value)]
     elif opcode == "0xba":
         base.append(_indy_semantics(row, bootstrap,
