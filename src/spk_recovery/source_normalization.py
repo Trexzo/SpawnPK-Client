@@ -7519,7 +7519,7 @@ def _normalize_invokedynamic_callback_direct_int_capture_alias(
             method_start + callback_end
         ]
         land_alias_match = re.search(
-            r"\"(?:\.|[^\"\])*land\s*=\s*\""
+            r"\"(?:\\.|[^\"\\])*land\s*=\s*\""
             r"\s*\+\s*(?P<alias>" + identifier + r")",
             raw_callback,
         )
