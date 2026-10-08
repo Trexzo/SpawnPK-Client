@@ -116,6 +116,19 @@ def _check_empty_report(
             )
             if accepted:
                 _ensure(
+                    set(row) == {
+                        "relationship_id", "logical_class_id", "old_owner",
+                        "new_owner", "old", "new", "strategy", "confidence",
+                        "score", "supports_existing_review",
+                        "left_anchor_member_id", "right_anchor_member_id",
+                        "old_field_ordinal", "new_field_ordinal",
+                        "interval_offset", "interval_length",
+                        "interval_digest", "global_source_class_topology",
+                        "global_observations",
+                    },
+                    "unknown empty-field candidate or acceptance fields",
+                )
+                _ensure(
                     row.get("strategy") == "canonical_anchor_declaration_interval_exact"
                     and row.get("confidence") == "INFERRED_HIGH"
                     and row.get("supports_existing_review") is True
@@ -137,11 +150,6 @@ def _check_empty_report(
                     and type(row.get("global_observations")) is int
                     and row["global_observations"] >= 0,
                     "unsupported or incomplete empty-field candidate",
-                )
-                _ensure(
-                    row["old_field_ordinal"] - row["new_field_ordinal"]
-                    == 0 or row["old_field_ordinal"] >= 0,
-                    "invalid ordinals",
                 )
             else:
                 reason = row.get("reason")
@@ -196,6 +204,17 @@ def verify_v309_dual_bundle_offline(
     new = exact.get("v309_sha256")
     _ensure(_is_sha(old) and _is_sha(new), "invalid pinned exact client hashes")
 
+    _ensure(
+        set(manifest) == {
+            "bundle_id", "schema_version", "kind", "canonical", "state",
+            "global_report_id", "v308_sha256", "v309_sha256",
+            "descriptor_report_id", "descriptor_report_digest",
+            "empty_report_id", "empty_report_digest",
+            "descriptor_summary", "empty_summary",
+            "unresolved_accepted_frontier", "warning",
+        },
+        "unexpected bundle metadata/authority fields",
+    )
     _ensure(
         manifest.get("schema_version") == 1
         and manifest.get("kind") == "v309_private_dual_proof_research_bundle"
