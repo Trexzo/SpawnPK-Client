@@ -70,7 +70,10 @@ class CanonicalMethodSingleContextDeclarationEvidenceTests(unittest.TestCase):
         *,
         context_report=None,
         paired_fields=True,
+        old_descriptor="I",
         new_descriptor="I",
+        old_aliases=None,
+        new_aliases=None,
     ):
         context_report = context_report or self._context_report()
         old_paired = (
@@ -94,7 +97,12 @@ class CanonicalMethodSingleContextDeclarationEvidenceTests(unittest.TestCase):
             if owner == "rs/A":
                 return [
                     {"name": "left", "descriptor": "I", "access": 1, "attributes": []},
-                    {"name": "x", "descriptor": "I", "access": 1, "attributes": []},
+                    {
+                        "name": "x",
+                        "descriptor": old_descriptor,
+                        "access": 1,
+                        "attributes": [],
+                    },
                     {"name": "right", "descriptor": "I", "access": 1, "attributes": []},
                 ]
             return [
@@ -122,7 +130,7 @@ class CanonicalMethodSingleContextDeclarationEvidenceTests(unittest.TestCase):
                         "strategy": "stable_symbol",
                         "old": {
                             "name": "x",
-                            "descriptor": "I",
+                            "descriptor": old_descriptor,
                             "access": 1,
                         },
                         "new": {
@@ -141,7 +149,10 @@ class CanonicalMethodSingleContextDeclarationEvidenceTests(unittest.TestCase):
             patch(
                 "spk_recovery.canonical_method_single_context_declaration_evidence."
                 "_aliases",
-                side_effect=[{}, {}],
+                side_effect=[
+                    old_aliases or {},
+                    new_aliases or {},
+                ],
             ),
             patch(
                 "spk_recovery.canonical_method_single_context_declaration_evidence."
@@ -186,6 +197,15 @@ class CanonicalMethodSingleContextDeclarationEvidenceTests(unittest.TestCase):
             out["summary"]["declaration_interval_shape_mismatch"],
             1,
         )
+
+    def test_canonical_class_descriptor_rename_is_normalized(self):
+        out = self._run(
+            old_descriptor="Lrs/old/A;",
+            new_descriptor="Lrs/new/B;",
+            old_aliases={"rs/old/A": "CLIENT_CLASS_TARGET"},
+            new_aliases={"rs/new/B": "CLIENT_CLASS_TARGET"},
+        )
+        self.assertEqual(out["summary"]["candidate_fields"], 1)
 
     def test_repeated_observations_of_one_context_are_candidate(self):
         report = self._context_report()
