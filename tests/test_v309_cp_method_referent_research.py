@@ -23,7 +23,8 @@ def _instruction(opcode, length, offset, **fields):
 def _test_method(*, constant="private-value", cp_slot=12, owner="p/Old",
                  name="run", extra=None):
     instructions = [
-        _instruction("0x12", 2, 0, constant=constant, constant_pool_index=cp_slot),
+        _instruction("0x12", 2, 0, constant=constant, constant_pool_index=cp_slot,
+                     constant_pool_tag=8),
         _instruction("0xb8", 3, 2, owner=owner, name="call",
                      descriptor="(Ljava/lang/String;)V"),
         _instruction("0xb1", 1, 5),
@@ -65,6 +66,19 @@ class CpMethodReferentTests(unittest.TestCase):
                                          constant="different-secret"),
         ))
         self.assertEqual(result["unique_cp_semantic_method_matches"], 0)
+
+    def test_same_visible_text_but_class_vs_string_ldc_must_not_match(self):
+        new = _profile(
+            "p/New", method=_test_method(owner="p/New", cp_slot=12),
+        )
+        row = new["methods"][0]["instructions"][0]
+        row["constant_pool_tag"] = 7  # CONSTANT_Class instead of CONSTANT_String
+        self.assertEqual(self.compare(new=new)["unique_cp_semantic_method_matches"], 0)
+
+    def test_missing_cp_kind_is_not_proof(self):
+        old = _profile("p/Old")
+        del old["methods"][0]["instructions"][0]["constant_pool_tag"]
+        self.assertEqual(self.compare(old=old)["old_unsupported"], 1)
 
     def test_changed_member_target_meaning_must_not_match(self):
         new = _profile("p/New", method=_test_method(owner="p/Other", cp_slot=12))
