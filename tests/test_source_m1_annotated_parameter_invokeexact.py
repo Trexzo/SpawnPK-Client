@@ -17,7 +17,7 @@ from spk_recovery.source_normalization import (
 
 EXPRESSION = (
     "MethodHandles.constant(Consumer.class, "
-    "(Consumer<Object>)(ignored -> {})).invokeExact()"
+    "(Consumer<Object>)(ignored -> System.out.println(ignored))).invokeExact()"
 )
 CASTED = "invokeExact = (Consumer<Object>)(" + EXPRESSION + ");"
 BROKEN = "invokeExact = " + EXPRESSION + ";"
