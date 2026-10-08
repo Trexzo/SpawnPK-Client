@@ -10,6 +10,7 @@ from unittest.mock import patch
 from spk_recovery.descriptor_class_private_jar_replay import (
     ExactJarDescriptorClassReplayError,
     build_exact_jar_descriptor_class_replay,
+    write_research_report_no_clobber,
 )
 
 
@@ -195,3 +196,42 @@ class ExactJarDescriptorClassReplayTests(TestCase):
                 ExactJarDescriptorClassReplayError, "accounting changed",
             ):
                 self._replay()
+
+    def test_research_output_written_once_and_does_not_contain_full_index(self):
+        out = Path(self.temp.name) / "proof.json"
+        report = self._success_report()
+        write_research_report_no_clobber(
+            report, out, (self.old, self.new, self.frontier, self.lineage, self.field),
+        )
+        self.assertEqual(json.loads(out.read_text(encoding="utf-8")), report)
+        self.assertNotIn("classes", report)
+        with self.assertRaisesRegex(
+            ExactJarDescriptorClassReplayError, "already exists"
+        ):
+            write_research_report_no_clobber(
+                report, out, (self.old, self.new, self.frontier, self.lineage, self.field),
+            )
+
+    def test_output_cannot_overwrite_pinned_frontier_or_jar(self):
+        report = self._success_report()
+        protected = (self.old, self.new, self.frontier, self.lineage, self.field)
+        before = {str(p): p.read_bytes() for p in protected}
+        for path in protected:
+            with self.subTest(path=path):
+                with self.assertRaisesRegex(
+                    ExactJarDescriptorClassReplayError, "must not overwrite"
+                ):
+                    write_research_report_no_clobber(report, path, protected)
+        for path in protected:
+            self.assertEqual(path.read_bytes(), before[str(path)])
+
+    def test_output_refuses_existing_symlink(self):
+        out = Path(self.temp.name) / "existing.txt"
+        out.write_text("keep me", encoding="utf-8")
+        with self.assertRaisesRegex(
+            ExactJarDescriptorClassReplayError, "already exists"
+        ):
+            write_research_report_no_clobber(
+                self._success_report(), out, (self.frontier,),
+            )
+        self.assertEqual(out.read_text(encoding="utf-8"), "keep me")
