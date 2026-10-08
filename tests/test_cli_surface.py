@@ -21,6 +21,8 @@ COMMANDS = [
     "member-promote-new",
     "canonical-method-nonunique-context-declaration-evidence",
     "canonical-method-nonunique-context-declaration-review-spec",
+    "canonical-method-missing-context-full-method-evidence",
+    "canonical-method-missing-context-full-method-review-spec",
     "canonical-method-single-context-declaration-evidence",
     "canonical-method-single-context-declaration-review-spec",
     "semantic-resolve",
