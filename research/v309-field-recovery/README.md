@@ -38,22 +38,33 @@ Client JARs remain untracked.
 6. GitHub CI/review is the normal workflow after this handoff. Local exact-JAR execution is
    only required when a new proof lane genuinely needs the proprietary client bytes.
 
-## Current handoff
+## Current accepted frontier
 
-The branch was created from:
+The GitHub-first handoff was completed by PR #857 and is now on `main`.
+The tracked accepted member lineage remains at **143 unresolved**, with SHA-256
+`21D590B6C27BFD3DE5E17B664A61FE430F02BF5129638D6FDD678D81AF387070`.
+The next research evidence generators (#858/#859 and follow-ups) do **not**
+automatically reduce that count: their review specs require exact private-JAR
+measurement and explicit `member-accept-review` promotion.
 
-`b56e2b9d76c71141264d79f0350c4a6470d5eaaf`
+## Descriptor-class dependency gate
 
-The local source frontier before final handoff has:
+Use the tracked `global-field-usage.json` and run:
 
-- member lineage SHA-256
-  `F3B3E0C9522C7C4719223DBE1B3F34AF0C36F816E0A4C265201030DBD3446BD0`
-- 149 unresolved members
-- six additional reviewed method-context/boundary-block identities from
-  `METHODBOUNDARY_3D5AF61BCEDF9BD1687C`
-- review spec SHA-256
-  `FA39804B9E6BA589EDA013F86B8B69EB9D17941F3F0152D9801C984EE2096640`
+```sh
+python -m spk_recovery.descriptor_class_dependencies \
+  research/v309-field-recovery/global-field-usage.json \
+  --out descriptor-class-dependencies.review.json
+```
 
-The final local handoff step must accept exactly those six reviewed IDs, validate the
-expected 143 unresolved frontier, recompute its reports, write the tracked files above,
-and push them to this branch.
+This read-only research report groups **26 descriptor identity vetoes** by
+**8 missing new-build class identities**. The largest dependency is the
+old canonical `CLIENT_CLASS_000029` (`rs/Client` descriptor), blocking
+14 field identities. Five field descriptors and nine field owners changed
+their raw names across v308/v309.
+
+The output is **not** class-lineage or member-lineage authority. Resolving a
+descriptor gate requires an independently proven new class identity, an exact
+recomputation of dependent field evidence, and an explicit reviewed acceptance
+step. Matching raw strings is insufficient; no veto may be bypassed merely
+because a raw descriptor appears unchanged.
