@@ -100,8 +100,8 @@ class DescriptorClassVerifiedReplayTests(unittest.TestCase):
 
     def test_same_class_name_but_different_index_proof_is_rejected(self):
         args = list(_inputs())
-        args[2]["entries"]["rs/b.class"]["sha256"] = "9" * 64
-        args[2]["classes"]["rs/b.class"]["structural_sha256"] = "8" * 64
+        args[3]["entries"]["rs/b.class"]["sha256"] = "9" * 64
+        args[3]["classes"]["rs/b.class"]["structural_sha256"] = "8" * 64
         report = build_descriptor_class_verified_replay(*args)
         self.assertEqual(report["summary"]["candidate_classes"], 0)
         self.assertEqual(report["summary"]["still_blocked_fields"], 1)
