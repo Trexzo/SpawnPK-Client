@@ -37,3 +37,19 @@ No class/member lineage is changed, no mappings are accepted, and the
 accepted **143 unresolved** frontier remains authoritative until the
 separate independent exact-JAR evidence and explicit acceptance gates succeed.
 Do not automatically commit the private research bundle to GitHub.
+
+## Cross-lane research priority overlay
+
+The offline verifier also projects the existing, independently tracked
+**eight-class v309 cross-lane priority analysis** onto the descriptor-replay
+candidate/rejection partition. Each row reports whether a class-index witness
+*candidate was reported in the JSON bundle*, alongside the 26-descriptor and
+48-topology research-priority counts. The largest pre-measurement hypothesis is
+`CLIENT_CLASS_000029` (14 descriptor + 31 alias-only topology = 45 research rows).
+
+**Important:** a reported candidate is not an authenticated private-JAR witness
+or an accepted class identity. Cross-lane aliases are counterfactual research
+priorities, not resolved topology identities; sums across these priorities may
+overlap. No field count decreases, no canonical lineage or authority changes,
+and the verified status remains **143 unresolved**. Only separately recomputed
+exact private bytecode evidence and explicit reviewed acceptance can change it.
