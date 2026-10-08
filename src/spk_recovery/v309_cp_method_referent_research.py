@@ -17,7 +17,7 @@ from typing import Any
 import zipfile
 
 from .bytecode_profile import BytecodeProfileError, profile_class_field_accesses
-from .classfile import parse_class, _descriptor_shape
+from .classfile import parse_class
 from .descriptor_class_dependencies import build_descriptor_class_dependency_report
 from .descriptor_class_private_jar_replay import _read_json_exact, write_research_report_no_clobber
 from .indexer import sha256_file
@@ -258,7 +258,9 @@ def _method_semantics(
         ))
     return (
         method["access"],
-        _descriptor_shape(method["descriptor"]),
+        # Do not erase arbitrary unrelated reference parameter/return types.
+        # Only the one proposed old class owner may be normalized.
+        _rename(method["descriptor"], old_owner=old_owner, new_owner=new_owner),
         method["code_length"],
         tuple(signature),
         tuple(normalized_handlers),
