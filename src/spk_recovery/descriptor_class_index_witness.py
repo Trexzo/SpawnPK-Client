@@ -66,7 +66,6 @@ def build_descriptor_class_index_witness(
         or dependency_report.get("new_build_id") != "v309"
     ):
         raise ValueError("wrong v309 descriptor dependency input")
-    from .descriptor_class_dependencies import build_descriptor_class_dependency_report
     # The inventory may only be constructed from the actual global report; it
     # cannot stand alone as accepted identity evidence. This function binds it
     # to independently validated indexes and class-lineage hashes.
@@ -167,14 +166,14 @@ def build_descriptor_class_index_witness(
         if expected_new_path not in new_index["classes"]:
             reject("referenced_new_class_absent_from_index")
             continue
-        if expected_new_path in already_mapped:
+        if expected_new_path[:-6] in already_mapped:
             reject(
                 "new_class_already_owned",
                 owner_logical_id=already_mapped[expected_new_path[:-6]],
             )
             continue
 
-        exact_candidate = (
+        exact_old = (
             _single(old_sha, old["entry_sha256"])
             if _single(new_sha, old["entry_sha256"]) is not None
             else None
@@ -185,7 +184,7 @@ def build_descriptor_class_index_witness(
         strategy = None
         proof_value = None
         proven_new = None
-        if exact_candidate == old_path and exact_new is not None:
+        if exact_old == old_path and exact_new is not None:
             strategy = "globally_unique_exact_entry_sha256"
             proof_value = old["entry_sha256"].lower()
             proven_new = exact_new
@@ -202,7 +201,7 @@ def build_descriptor_class_index_witness(
                 witness_new_class=proven_new[:-6],
             )
             continue
-        if proven_new in already_mapped:
+        if proven_new[:-6] in already_mapped:
             reject("new_class_already_owned", owner_logical_id=already_mapped[proven_new[:-6]])
             continue
 
