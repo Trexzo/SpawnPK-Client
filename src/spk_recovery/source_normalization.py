@@ -1229,7 +1229,11 @@ def _source_parameter_shapes(
     }
     out: list[tuple[int, str, str]] = []
     for part in parts:
-        value = re.sub(r"^(?:final\s+)+", "", part.strip())
+        value = re.sub(
+            r"^(?:(?:final|@[A-Za-z_$][A-Za-z0-9_$.]*)\s+)+",
+            "",
+            part.strip(),
+        )
         match = re.fullmatch(
             r"(?P<type>.+?)\s+"
             r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)"
@@ -5136,7 +5140,11 @@ def _source_parameter_names(params: str) -> list[str] | None:
 
     out: list[str] = []
     for part in parts:
-        value = re.sub(r"^(?:final\s+)+", "", part.strip())
+        value = re.sub(
+            r"^(?:(?:final|@[A-Za-z_$][A-Za-z0-9_$.]*)\s+)+",
+            "",
+            part.strip(),
+        )
         match = re.fullmatch(
             r".+?\s+"
             r"(?P<name>[A-Za-z_$][A-Za-z0-9_$]*)"
