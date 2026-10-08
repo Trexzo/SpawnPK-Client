@@ -137,6 +137,22 @@ class DescriptorClassReplayOfflineReviewTests(unittest.TestCase):
         with self.assertRaisesRegex(DescriptorClassOfflineReviewError, "unexpected replay report fields"):
             build_descriptor_class_offline_review(*args)
 
+    def test_hidden_acceptance_field_in_rejection_is_rejected(self):
+        args = list(self.base[:4])
+        args[3] = copy.deepcopy(args[3])
+        args[3]["rejected"][0]["accepted"] = True
+        _rebind(args[3])
+        with self.assertRaisesRegex(DescriptorClassOfflineReviewError, "unknown rejection"):
+            build_descriptor_class_offline_review(*args)
+
+    def test_rejection_detail_must_match_its_reason(self):
+        args = list(self.base[:4])
+        args[3] = copy.deepcopy(args[3])
+        args[3]["rejected"][0]["reason"] = "new_class_already_owned"
+        _rebind(args[3])
+        with self.assertRaisesRegex(DescriptorClassOfflineReviewError, "rejection details inconsistent"):
+            build_descriptor_class_offline_review(*args)
+
     def test_consistent_synthetic_candidate_is_not_independent_proof(self):
         args = list(self.base[:4])
         args[3] = copy.deepcopy(args[3])
