@@ -100,7 +100,7 @@ class CanonicalMethodSingleContextDeclarationEvidenceTests(unittest.TestCase):
             return [
                 {"name": "left", "descriptor": "I", "access": 1, "attributes": []},
                 {
-                    "name": "y",
+                    "name": "x",
                     "descriptor": new_descriptor,
                     "access": 1,
                     "attributes": [],
@@ -126,7 +126,7 @@ class CanonicalMethodSingleContextDeclarationEvidenceTests(unittest.TestCase):
                             "access": 1,
                         },
                         "new": {
-                            "name": "y",
+                            "name": "x",
                             "descriptor": new_descriptor,
                             "access": 1,
                         },
