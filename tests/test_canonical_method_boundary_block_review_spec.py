@@ -13,6 +13,9 @@ from spk_recovery.canonical_method_boundary_block_review_spec import (
 
 
 class CanonicalMethodBoundaryBlockReviewSpecTests(unittest.TestCase):
+    def _global(self):
+        return {"report_id": "GLOBAL_TEST"}
+
     def _context(self):
         return {
             "schema_version": 1,
@@ -77,7 +80,7 @@ class CanonicalMethodBoundaryBlockReviewSpecTests(unittest.TestCase):
             "new_sha256": "2" * 64,
             "member_lineage_digest": "3" * 64,
             "base_global_usage_report_id": "GLOBAL_TEST",
-            "base_global_usage_report_digest": "4" * 64,
+            "base_global_usage_report_digest": _digest(self._global()),
             "base_context_report_id": "METHODCTX_TEST",
             "base_context_report_digest": _digest(context),
             "summary": {
@@ -123,7 +126,7 @@ class CanonicalMethodBoundaryBlockReviewSpecTests(unittest.TestCase):
                 {},
                 Path("old.jar"),
                 Path("new.jar"),
-                {"report_id": "GLOBAL_TEST"},
+                self._global(),
                 context,
                 report,
             )
