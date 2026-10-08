@@ -148,6 +148,8 @@ def build_canonical_method_boundary_block_review_spec(
             "method-context boundary binding is invalid"
         )
 
+    _hex_digest(old_sha, label="old_sha256")
+    _hex_digest(new_sha, label="new_sha256")
     _hex_digest(member_digest, label="member_lineage_digest")
     _hex_digest(
         base_global_digest,
@@ -158,6 +160,14 @@ def build_canonical_method_boundary_block_review_spec(
         label="base_context_report_digest",
     )
 
+    if global_usage_report.get("report_id") != base_global_id:
+        raise CanonicalMethodBoundaryBlockReviewSpecError(
+            "base global usage report ID drift"
+        )
+    if _digest(global_usage_report) != base_global_digest:
+        raise CanonicalMethodBoundaryBlockReviewSpecError(
+            "base global usage report digest drift"
+        )
     if context_report.get("report_id") != base_context_id:
         raise CanonicalMethodBoundaryBlockReviewSpecError(
             "base context report ID drift"
