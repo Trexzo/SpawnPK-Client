@@ -7519,7 +7519,7 @@ def _normalize_invokedynamic_callback_direct_int_capture_alias(
             method_start + callback_end
         ]
         land_alias_match = re.search(
-            r"\"(?:\\.|[^\"\\])*land\s*=\s*\""
+            r"\"(?:\.|[^\"\])*land\s*=\s*\""
             r"\s*\+\s*(?P<alias>" + identifier + r")",
             raw_callback,
         )
@@ -12741,10 +12741,10 @@ def _normalize_direct_generic_factory_target_inference_casts(
     # infer a nested class constructor from its surrounding source file.
     constructor_simple = current_owner.rsplit("/", 1)[-1].rsplit("$", 1)[-1]
     constructor_re = re.compile(
-        r"(?m)^[ \\t]*(?:(?:public|private|protected)\\s+)?"
+        r"(?m)^[ \t]*(?:(?:public|private|protected)\s+)?"
         + re.escape(constructor_simple)
-        + r"\\s*\\((?P<params>[^()\\n]*)\\)\\s*"
-        r"(?:throws\\s+[^\\{\\n]+\\s*)?\\{"
+        + r"\s*\((?P<params>[^()\n]*)\)\s*"
+        r"(?:throws\s+[^\{\n]+\s*)?\{"
     )
     constructors = [
         match
