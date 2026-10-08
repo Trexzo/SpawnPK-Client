@@ -9,8 +9,11 @@ from spk_recovery.descriptor_class_dependencies import (
     build_descriptor_class_dependency_report,
 )
 from spk_recovery.v309_private_dual_proof_replay import _digest
+from spk_recovery.v309_crosslane_class_impact import build_v309_crosslane_class_impact
+from spk_recovery.descriptor_class_replay_offline_review import build_descriptor_class_offline_review
 from spk_recovery.v309_dual_bundle_offline_verify import (
     V309DualBundleOfflineVerifyError,
+    _crosslane_candidate_status,
     verify_v309_dual_bundle_offline,
 )
 
@@ -181,6 +184,63 @@ class V309DualBundleOfflineVerifyTests(unittest.TestCase):
         self.assertEqual(result["descriptor_summary"]["still_blocked_fields"], 26)
         self.assertEqual(result["empty_summary"]["remaining_without_declaration_proof"], 68)
         self.assertEqual(result["accepted_frontier_unresolved"], 143)
+
+    def test_crosslane_impact_in_bundle_is_prioritization_not_identity(self):
+        result = self.run_verify(self.base)
+        groups = result["crosslane_candidate_priorities"]
+        self.assertEqual(len(groups), 8)
+        self.assertEqual(len({r["old_canonical_class_id"] for r in groups}), 8)
+        top = groups[0]
+        self.assertEqual(top["old_canonical_class_id"], "CLIENT_CLASS_000029")
+        self.assertEqual(top["hypothetical_new_source_class"], "RAW:rs/Client")
+        self.assertEqual(top["descriptor_blocked_fields"], 14)
+        self.assertEqual(top["alias_only_topology_hypotheses"], 31)
+        self.assertEqual(top["research_priority_rows"], 45)
+        self.assertFalse(any(r["reported_index_witness_candidate"] for r in groups))
+        self.assertEqual(result["accepted_frontier_unresolved"], 143)
+        self.assertFalse(result["canonical"])
+        self.assertTrue(all("NO_IDENTITY_ACCEPTED" in r["state"] for r in groups))
+
+    def test_crosslane_overlay_distinguishes_reported_candidate_from_acceptance(self):
+        frontier, classes, _, global_report, _, descriptor, _ = self.base
+        offline = build_descriptor_class_offline_review(
+            frontier, classes, global_report, descriptor,
+        )
+        impact = build_v309_crosslane_class_impact(global_report)
+        changed = copy.deepcopy(offline)
+        cid = impact["class_hypotheses"][0]["old_canonical_class_id"]
+        row = next(r for r in changed["rejected"] if r["old_canonical_class_id"] == cid)
+        changed["rejected"].remove(row)
+        changed["candidates"].append({"old_canonical_class_id": cid})
+        priorities = _crosslane_candidate_status(impact, changed)
+        self.assertTrue(priorities[0]["reported_index_witness_candidate"])
+        self.assertFalse(any(r["reported_index_witness_candidate"] for r in priorities[1:]))
+        self.assertTrue(all("NO_IDENTITY_ACCEPTED" in r["state"] for r in priorities))
+        self.assertEqual(priorities[0]["research_priority_rows"], 45)
+
+    def test_crosslane_overlay_refuses_missing_class_candidate_group(self):
+        frontier, classes, _, global_report, _, descriptor, _ = self.base
+        offline = build_descriptor_class_offline_review(
+            frontier, classes, global_report, descriptor,
+        )
+        changed = copy.deepcopy(offline)
+        changed["rejected"].pop()
+        with self.assertRaisesRegex(V309DualBundleOfflineVerifyError, "group drift"):
+            _crosslane_candidate_status(
+                build_v309_crosslane_class_impact(global_report), changed,
+            )
+
+    def test_crosslane_overlay_refuses_claimed_accepted_state(self):
+        frontier, classes, _, global_report, _, descriptor, _ = self.base
+        offline = build_descriptor_class_offline_review(
+            frontier, classes, global_report, descriptor,
+        )
+        changed = copy.deepcopy(offline)
+        changed["state"] = "ACCEPTED"
+        with self.assertRaisesRegex(V309DualBundleOfflineVerifyError, "unverified"):
+            _crosslane_candidate_status(
+                build_v309_crosslane_class_impact(global_report), changed,
+            )
 
     def test_changed_descriptor_payload_fails_manifest_binding(self):
         args = list(self.base)
