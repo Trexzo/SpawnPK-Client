@@ -7,7 +7,6 @@ from typing import Any
 
 from .boundary_field_block_evidence import _block_signatures
 from .canonical_method_field_context_evidence import (
-    CanonicalMethodFieldContextEvidenceError,
     build_canonical_method_field_context_evidence,
 )
 from .empty_field_declaration_evidence import (
