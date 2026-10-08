@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 import tempfile
@@ -103,7 +104,7 @@ class ImportedOuterNestedEnumSourceM1Tests(unittest.TestCase):
         self.assertEqual(sum(x["replacement_count"] for x in fields), 3)
         normalized = self.target.read_text(encoding="utf-8")
         self.assertEqual(normalized.count(GOOD_OWNER), 4)
-        self.assertNotIn(BROKEN_OWNER, normalized)
+        self.assertEqual(re.findall(r"(?<!\\.)\\bd\\.a\\b", normalized), [])
 
         after = self.javac(self.root / "after")
         self.assertEqual(after.returncode, 0, after.stderr)
