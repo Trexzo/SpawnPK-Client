@@ -644,24 +644,33 @@ def _decoded_instructions(
             row["mnemonic"] = _FIELD_OPS[opcode]
             cp_index = struct.unpack_from(">H", code, offset + 1)[0]
             owner, name, descriptor = _member_ref(cp, cp_index)
+            cp_entry = _bootstrap_cp_entry(cp, cp_index, role="field instruction")
             row.update(
                 {
                     "owner": owner,
                     "name": name,
                     "descriptor": descriptor,
+                    "member_constant_pool_tag": cp_entry[0],
                 }
             )
         elif opcode in _INVOKE_OPS:
             row["mnemonic"] = _INVOKE_OPS[opcode]
             cp_index = struct.unpack_from(">H", code, offset + 1)[0]
             owner, name, descriptor = _member_ref(cp, cp_index)
+            cp_entry = _bootstrap_cp_entry(cp, cp_index, role="method instruction")
             row.update(
                 {
                     "owner": owner,
                     "name": name,
                     "descriptor": descriptor,
+                    "member_constant_pool_tag": cp_entry[0],
                 }
             )
+            if opcode == 0xB9:
+                # Last two JVM invokeinterface operands: argument-slot
+                # count and a reserved zero byte.
+                row["invokeinterface_count"] = int(code[offset + 3])
+                row["invokeinterface_reserved"] = int(code[offset + 4])
         elif opcode == 0xBA:
             row["mnemonic"] = "invokedynamic"
             cp_index = struct.unpack_from(">H", code, offset + 1)[0]
@@ -673,6 +682,9 @@ def _decoded_instructions(
                     "bootstrap_method_attr_index": bootstrap_index,
                     "name": name,
                     "descriptor": descriptor,
+                    "invokedynamic_reserved": (
+                        (code[offset + 3] << 8) | code[offset + 4]
+                    ),
                 }
             )
         elif opcode in {*range(0x99, 0xA9), 0xC6, 0xC7}:
