@@ -161,6 +161,16 @@ from .canonical_method_nonunique_context_declaration_review_spec import (
     build_canonical_method_nonunique_context_declaration_review_spec,
     write_spec as write_canonical_method_nonunique_context_declaration_review_spec,
 )
+from .canonical_method_missing_context_full_method_evidence import (
+    CanonicalMethodMissingContextFullMethodEvidenceError,
+    build_canonical_method_missing_context_full_method_evidence,
+    write_report as write_canonical_method_missing_context_full_method_evidence,
+)
+from .canonical_method_missing_context_full_method_review_spec import (
+    CanonicalMethodMissingContextFullMethodReviewSpecError,
+    build_canonical_method_missing_context_full_method_review_spec,
+    write_spec as write_canonical_method_missing_context_full_method_review_spec,
+)
 from .canonical_method_single_context_declaration_evidence import (
     CanonicalMethodSingleContextDeclarationEvidenceError,
     build_canonical_method_single_context_declaration_evidence,
@@ -617,6 +627,27 @@ def main(argv: list[str] | None = None) -> int:
     for name in ("class_lineage","member_lineage","old_index","new_index","old_jar","new_jar","global_usage_report","context_report","nonunique_report"):
         pncdr.add_argument(name, type=Path)
     pncdr.add_argument("--out", type=Path, required=True)
+
+    pmcfm = sub.add_parser(
+        "canonical-method-missing-context-full-method-evidence"
+    )
+    for name in (
+        "class_lineage", "member_lineage", "old_index", "new_index",
+        "old_jar", "new_jar", "global_usage_report", "context_report",
+    ):
+        pmcfm.add_argument(name, type=Path)
+    pmcfm.add_argument("--out", type=Path, required=True)
+
+    pmcfmr = sub.add_parser(
+        "canonical-method-missing-context-full-method-review-spec"
+    )
+    for name in (
+        "class_lineage", "member_lineage", "old_index", "new_index",
+        "old_jar", "new_jar", "global_usage_report", "context_report",
+        "full_method_report",
+    ):
+        pmcfmr.add_argument(name, type=Path)
+    pmcfmr.add_argument("--out", type=Path, required=True)
 
     pscd = sub.add_parser(
         "canonical-method-single-context-declaration-evidence",
@@ -1711,6 +1742,82 @@ def main(argv: list[str] | None = None) -> int:
             print(f"REFUSED: {e}", file=sys.stderr)
             return 2
         print("SPK_CANONICAL_METHOD_NONUNIQUE_CONTEXT_DECLARATION_REVIEW_SPEC_PASS")
+        print(f"relationship_ids={len(spec['relationship_ids'])}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "canonical-method-missing-context-full-method-evidence":
+        try:
+            report = build_canonical_method_missing_context_full_method_evidence(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.old_index),
+                _load(args.new_index),
+                args.old_jar,
+                args.new_jar,
+                _load(args.global_usage_report),
+                _load(args.context_report),
+            )
+            write_canonical_method_missing_context_full_method_evidence(
+                report,
+                args.out,
+            )
+        except (
+            CanonicalMethodMissingContextFullMethodEvidenceError,
+            CanonicalMethodFieldContextEvidenceError,
+            GlobalFieldUsageEvidenceError,
+            BytecodeProfileError,
+            EmptyFieldDeclarationEvidenceError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+            OSError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print(
+            "SPK_CANONICAL_METHOD_MISSING_CONTEXT_FULL_METHOD_EVIDENCE_PASS"
+        )
+        print(f"report_id={report['report_id']}")
+        for k, v in report["summary"].items():
+            print(f"{k}={v}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "canonical-method-missing-context-full-method-review-spec":
+        try:
+            spec = build_canonical_method_missing_context_full_method_review_spec(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.old_index),
+                _load(args.new_index),
+                args.old_jar,
+                args.new_jar,
+                _load(args.global_usage_report),
+                _load(args.context_report),
+                _load(args.full_method_report),
+            )
+            write_canonical_method_missing_context_full_method_review_spec(
+                spec,
+                args.out,
+            )
+        except (
+            CanonicalMethodMissingContextFullMethodReviewSpecError,
+            CanonicalMethodMissingContextFullMethodEvidenceError,
+            CanonicalMethodFieldContextEvidenceError,
+            GlobalFieldUsageEvidenceError,
+            BytecodeProfileError,
+            EmptyFieldDeclarationEvidenceError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+            OSError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print(
+            "SPK_CANONICAL_METHOD_MISSING_CONTEXT_FULL_METHOD_REVIEW_SPEC_PASS"
+        )
         print(f"relationship_ids={len(spec['relationship_ids'])}")
         print(f"out={args.out}")
         return 0
