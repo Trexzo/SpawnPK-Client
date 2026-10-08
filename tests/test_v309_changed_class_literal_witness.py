@@ -103,6 +103,8 @@ class V309ChangedClassLiteralWitnessTests(unittest.TestCase):
         self.assertEqual(candidate["classification"], "RESEARCH_CANDIDATE_NOT_ACCEPTED")
         self.assertEqual(candidate["competing_anchor_count"], 0)
         self.assertNotIn(self.anchor_groups["CLIENT_CLASS_000029"][0], json.dumps(report))
+        self.assertTrue(all("anchor_set_digest" not in row for row in report["candidates"]))
+        self.assertNotIn("synthetic-only-class-", json.dumps(report))
 
     def test_rival_new_class_literal_veto_even_if_main_pair_has_three(self):
         index = copy.deepcopy(self.new_index)
