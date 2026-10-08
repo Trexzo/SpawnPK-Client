@@ -46,18 +46,21 @@ The **current descriptor-class evidence lane** is implemented on `main`:
    both **exact private JARs**, and all source-file hashes, builds indexes only
    in memory, then writes a **new research-only report**.
 
+The **preferred two-lane command** now also measures the 68 `empty_both` fields using the same exact class indexes, while preserving its independent proof requirements. See [`docs/V309_PRIVATE_DUAL_PROOF_REPLAY.md`](docs/V309_PRIVATE_DUAL_PROOF_REPLAY.md).
+
 On a local, installed checkout containing the *exact private v308 and v309 JARs*:
 
 ```powershell
-python -m spk_recovery.descriptor_class_private_jar_replay `
+python -m spk_recovery.v309_private_dual_proof_replay `
   --v308-jar "C:\private\exact-v308-client.jar" `
   --v309-jar "C:\private\exact-v309-client.jar" `
-  --out "$env:TEMP\spk-v309-class-witness-new.json"
+  --out-dir "$env:TEMP\spk-v309-dual-proof-new"
 ```
 
 The JAR paths above are **examples, not known files**; replace both with the
-real private paths. Use a **new** output filename each run: existing reports and
-pinned inputs are never overwritten. This command cannot accept a class or field
+real private paths. Use a **new, nonexistent output directory** each run: existing
+reports and pinned inputs are never overwritten. The output contains only the
+two research reports and one SHA-pinned manifest, not the two full class indexes. This command cannot accept a class or field
 identity, modify `authority/`, or certify v309. After measuring exact witnesses,
 use separate reviewed canonical acceptance and regenerate all dependent evidence.
 **Do not commit JARs, complete indexes, or raw private outputs** to Git.
