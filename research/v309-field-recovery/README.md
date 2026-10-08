@@ -68,3 +68,41 @@ descriptor gate requires an independently proven new class identity, an exact
 recomputation of dependent field evidence, and an explicit reviewed acceptance
 step. Matching raw strings is insufficient; no veto may be bypassed merely
 because a raw descriptor appears unchanged.
+
+## Single current descriptor-class replay (merged GitHub chain)
+
+The authoritative tooling chain on `main` is:
+
+- PR #862: `descriptor_class_dependencies` (26 vetoes, 8 class dependencies).
+- PR #863: `descriptor_class_index_witness` (unique exact/structural
+  class-index witnesses; research-only).
+- PR #864: `descriptor_class_verified_replay` (rebuild from original global
+  report; recompute class/index evidence; research-only).
+- PR #865: `descriptor_class_private_jar_replay` (pinned local exact-JAR
+  entry point; full indexes remain in memory; outputs never overwrite inputs).
+
+For measurement with the two exact private JARs, use the command documented in
+[the root README](../../README.md#v309-active-recovery-frontier-october-2026).
+Do not run the old index/diff/authority recipe in place of this current proof
+lane. Never commit the private client JARs or full reconstructed indexes.
+
+The exact pinned hashes remain:
+
+- v308: `854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6`
+- v309: `ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38`
+
+The command stops if either JAR mismatches, a tracked frontier file has
+changed, any class cannot be parsed, or the 26/8 group accounting drifts.
+A successful command produces **research candidates only**. Even a candidate
+for `CLIENT_CLASS_000029` does **not** automatically remove any of the
+143 unresolved fields. A separately reviewed class relationship, recomputed
+field evidence and explicit canonical acceptance are still required.
+
+## Continue-here contract
+
+`research/v309-field-recovery/frontier.json` remains the source of truth for
+the accepted-but-incomplete handoff; `authority/v309.json` must not be
+invented or promoted for convenience. Follow GitHub `main` for tooling, keep
+new unmeasured work in draft PRs, and require hosted CI before merge.
+The current proof lane needs local private JARs only for the exact replay;
+GitHub-only changes should not pretend that they measured private bytes.
