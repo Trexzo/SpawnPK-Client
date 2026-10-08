@@ -126,6 +126,28 @@ def build_exact_jar_descriptor_class_replay(
     return result
 
 
+def write_research_report_no_clobber(
+    report: dict[str, Any],
+    out_path: Path,
+    protected_inputs: tuple[Path, ...],
+) -> None:
+    """Write only a new research file; never overwrite a pinned input or prior result."""
+    resolved_out = out_path.resolve()
+    if any(resolved_out == path.resolve() for path in protected_inputs):
+        raise ExactJarDescriptorClassReplayError(
+            "research output must not overwrite a pinned JAR or frontier input"
+        )
+    if out_path.exists() or out_path.is_symlink():
+        raise ExactJarDescriptorClassReplayError(
+            "research output already exists; choose a new path"
+        )
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    with out_path.open("x", encoding="utf-8", newline="\n") as stream:
+        stream.write(
+            json.dumps(report, sort_keys=True, indent=2, ensure_ascii=False) + "\n"
+        )
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(
         prog="spk-v309-exact-jar-class-replay",
@@ -152,10 +174,11 @@ def main(argv: list[str] | None = None) -> int:
             args.v308_jar, args.v309_jar,
             args.frontier, args.class_lineage, args.global_field_report,
         )
-        args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(
-            json.dumps(report, sort_keys=True, indent=2, ensure_ascii=False) + "\n",
-            encoding="utf-8",
+        write_research_report_no_clobber(
+            report, args.out, (
+                args.v308_jar, args.v309_jar,
+                args.frontier, args.class_lineage, args.global_field_report,
+            )
         )
     except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError) as exc:
         print(f"SPK_V309_EXACT_JAR_CLASS_REPLAY_FAIL: {exc}")
