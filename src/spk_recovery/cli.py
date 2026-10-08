@@ -1667,7 +1667,17 @@ def main(argv: list[str] | None = None) -> int:
                 _load(args.global_usage_report), _load(args.context_report),
             )
             write_canonical_method_nonunique_context_declaration_evidence(report, args.out)
-        except Exception as e:
+        except (
+            CanonicalMethodNonuniqueContextDeclarationEvidenceError,
+            CanonicalMethodFieldContextEvidenceError,
+            GlobalFieldUsageEvidenceError,
+            BytecodeProfileError,
+            EmptyFieldDeclarationEvidenceError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+            OSError,
+        ) as e:
             print(f"REFUSED: {e}", file=sys.stderr)
             return 2
         print("SPK_CANONICAL_METHOD_NONUNIQUE_CONTEXT_DECLARATION_EVIDENCE_PASS")
@@ -1686,7 +1696,18 @@ def main(argv: list[str] | None = None) -> int:
                 _load(args.nonunique_report),
             )
             write_canonical_method_nonunique_context_declaration_review_spec(spec, args.out)
-        except Exception as e:
+        except (
+            CanonicalMethodNonuniqueContextDeclarationReviewSpecError,
+            CanonicalMethodNonuniqueContextDeclarationEvidenceError,
+            CanonicalMethodFieldContextEvidenceError,
+            GlobalFieldUsageEvidenceError,
+            BytecodeProfileError,
+            EmptyFieldDeclarationEvidenceError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+            OSError,
+        ) as e:
             print(f"REFUSED: {e}", file=sys.stderr)
             return 2
         print("SPK_CANONICAL_METHOD_NONUNIQUE_CONTEXT_DECLARATION_REVIEW_SPEC_PASS")
