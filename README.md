@@ -50,9 +50,9 @@ On a local, installed checkout containing the *exact private v308 and v309 JARs*
 
 ```powershell
 python -m spk_recovery.descriptor_class_private_jar_replay `
-  --v308-jar "C:\\private\\exact-v308-client.jar" `
-  --v309-jar "C:\\private\\exact-v309-client.jar" `
-  --out "$env:TEMP\\spk-v309-class-witness-new.json"
+  --v308-jar "C:\private\exact-v308-client.jar" `
+  --v309-jar "C:\private\exact-v309-client.jar" `
+  --out "$env:TEMP\spk-v309-class-witness-new.json"
 ```
 
 The JAR paths above are **examples, not known files**; replace both with the
