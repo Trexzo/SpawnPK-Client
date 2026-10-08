@@ -15147,6 +15147,7 @@ def _normalize_methodhandle_invokeexact_result_casts(
             continue
 
         proof = exact_candidates[0]
+        method_edits: list[tuple[int, int, str]] = []
         for source_row in source_rows:
             expr_start = int(source_row["expr_start"])
             expr_end = int(source_row["expr_end"])
@@ -15155,7 +15156,15 @@ def _normalize_methodhandle_invokeexact_result_casts(
                 method_start + expr_end
             ]
             source_type = str(source_row["type"])
-            edits.append(
+            # The previous pass emits exactly this typed wrapper. Keep the
+            # full source/bytecode flow-multiplicity proof above, but never
+            # nest a second cast around an already reconstructed expression.
+            if (
+                expression.startswith("(" + source_type + ")(")
+                and expression.endswith(")")
+            ):
+                continue
+            method_edits.append(
                 (
                     method_start + expr_start,
                     method_start + expr_end,
@@ -15163,6 +15172,9 @@ def _normalize_methodhandle_invokeexact_result_casts(
                 )
             )
 
+        if not method_edits:
+            continue
+        edits.extend(method_edits)
         actions.append(
             {
                 "kind": (
@@ -15178,7 +15190,7 @@ def _normalize_methodhandle_invokeexact_result_casts(
                     str(row["type"]) for row in source_rows
                 ],
                 "flows": proof["flows"],
-                "replacement_count": len(source_rows),
+                "replacement_count": len(method_edits),
                 "ignored_object_target_count": (
                     ignored_object_target_count
                 ),
