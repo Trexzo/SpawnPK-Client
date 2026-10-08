@@ -81,10 +81,12 @@ The authoritative tooling chain on `main` is:
 - PR #865: `descriptor_class_private_jar_replay` (pinned local exact-JAR
   entry point; full indexes remain in memory; outputs never overwrite inputs).
 
-For measurement with the two exact private JARs, use the command documented in
-[the root README](../../README.md#v309-active-recovery-frontier-october-2026).
-Do not run the old index/diff/authority recipe in place of this current proof
-lane. Never commit the private client JARs or full reconstructed indexes.
+For measurement with the two exact private JARs, use the **preferred shared
+26-descriptor + 68-empty-field research replay** documented in
+[the root README](../../README.md#v309-active-recovery-frontier-october-2026)
+and [the two-lane guide](../../docs/V309_PRIVATE_DUAL_PROOF_REPLAY.md).
+The four individual tools above remain available for targeted debugging; do not
+run the old index/diff/authority recipe in place of this current proof lane. Never commit the private client JARs or full reconstructed indexes.
 
 The exact pinned hashes remain:
 
