@@ -115,6 +115,42 @@ class CpMethodReferentTests(unittest.TestCase):
         self.assertEqual(result["unique_cp_semantic_method_matches"], 0)
         self.assertEqual(result["ambiguous_duplicate_semantic_shapes"], 1)
 
+    def test_float_nan_payload_bits_distinguish_exact_ldc_meaning(self):
+        old = _profile("p/Old")
+        new = _profile("p/New", method=_test_method(owner="p/New"))
+        a = old["methods"][0]["instructions"][0]
+        b = new["methods"][0]["instructions"][0]
+        # Both values stringify to nan; only raw exact CP bits distinguish
+        # different JVM constant entries.
+        for x in (a, b):
+            x["constant_pool_tag"] = 4
+            x["constant"] = float("nan")
+            x["constant_raw_bits"] = "7fc00000"
+        self.assertEqual(
+            self.compare(old=old, new=new)["unique_cp_semantic_method_matches"], 1)
+        b["constant_raw_bits"] = "7fc00001"
+        self.assertEqual(
+            self.compare(old=old, new=new)["unique_cp_semantic_method_matches"], 0)
+        del b["constant_raw_bits"]
+        self.assertEqual(self.compare(old=old, new=new)["new_unsupported"], 1)
+
+    def test_bootstrap_float_requires_exact_cp_bits(self):
+        from spk_recovery.v309_cp_method_referent_research import (
+            _argument_semantics,
+        )
+        good = {
+            "kind": "constant", "tag": 4, "value": float("nan"),
+            "constant_raw_bits": "7fc00000",
+        }
+        self.assertEqual(
+            _argument_semantics(good, old_owner="p/Old", new_owner="p/New"),
+            ("constant", 4, "7fc00000"),
+        )
+        bad = dict(good)
+        bad.pop("constant_raw_bits")
+        with self.assertRaises(V309CpMethodWitnessError):
+            _argument_semantics(bad, old_owner="p/Old", new_owner="p/New")
+
     def test_method_cp_tag_changes_are_not_equivalent(self):
         old = _profile("p/Old")
         new = _profile("p/New", method=_test_method(owner="p/New"))
