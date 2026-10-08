@@ -63,7 +63,12 @@ def _full_method_tokens(
     if len(_target_access_indices(method, target=target, operation=operation)) != expected_count:
         return None
     instructions = method.get("instructions")
-    if not isinstance(instructions, list) or not instructions:
+    if (
+        not isinstance(instructions, list)
+        or not instructions
+        or not all(isinstance(row, dict) for row in instructions)
+    ):
+        # A full-method proof must not silently omit malformed instruction rows.
         return None
     return [
         _instruction_token(
@@ -73,7 +78,6 @@ def _full_method_tokens(
             class_aliases=class_aliases,
         )
         for row in instructions
-        if isinstance(row, dict)
     ]
 
 
