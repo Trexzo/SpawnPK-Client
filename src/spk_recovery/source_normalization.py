@@ -12734,7 +12734,35 @@ def _normalize_direct_generic_factory_target_inference_casts(
     edits: list[tuple[int, int, str]] = []
     actions: list[dict[str, Any]] = []
 
-    for method_match in _METHOD_DECL_RE.finditer(whole_code):
+    # Procyon also emits this impossible cast in Java constructors.
+    # Method-only scanning cannot reach <init> even when the exact readable
+    # class proves an aload_0 -> generic invokestatic -> putfield flow.
+    # Restrict constructor matches to the current top-level class: never
+    # infer a nested class constructor from its surrounding source file.
+    constructor_simple = current_owner.rsplit("/", 1)[-1].rsplit("$", 1)[-1]
+    constructor_re = re.compile(
+        r"(?m)^[ \\t]*(?:(?:public|private|protected)\\s+)?"
+        + re.escape(constructor_simple)
+        + r"\\s*\\((?P<params>[^()\\n]*)\\)\\s*"
+        r"(?:throws\\s+[^\\{\\n]+\\s*)?\\{"
+    )
+    constructors = [
+        match
+        for match in constructor_re.finditer(whole_code)
+        if _brace_depth_before(whole_code, match.start()) == 1
+    ]
+    source_declarations = [
+        (match, match.group("name"))
+        for match in _METHOD_DECL_RE.finditer(whole_code)
+        if not any(
+            match.start() == ctor.start() and match.end() == ctor.end()
+            for ctor in constructors
+        )
+    ]
+    source_declarations.extend((match, "<init>") for match in constructors)
+    source_declarations.sort(key=lambda pair: pair[0].start())
+
+    for method_match, source_method_name in source_declarations:
         brace_start = whole_code.find(
             "{", method_match.start(), method_match.end()
         )
@@ -12822,7 +12850,7 @@ def _normalize_direct_generic_factory_target_inference_casts(
 
         exact_candidates: list[dict[str, Any]] = []
         for exact_method in profile.get("methods", []):
-            if exact_method.get("name") != method_match.group("name"):
+            if exact_method.get("name") != source_method_name:
                 continue
             descriptor = str(exact_method.get("descriptor", ""))
             if (
@@ -12915,7 +12943,7 @@ def _normalize_direct_generic_factory_target_inference_casts(
                 "kind": "generic_builder_target_inference_cast_removal",
                 "mode": "direct_static_factory",
                 "source_path": rel,
-                "method_name": method_match.group("name"),
+                "method_name": source_method_name,
                 "method_descriptor": proof["method"]["descriptor"],
                 "field_names": [
                     occurrence["field"]["field_name"]
