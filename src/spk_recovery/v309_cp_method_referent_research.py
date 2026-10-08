@@ -154,9 +154,17 @@ def _instruction_semantics(
         # The existing bytecode profiler resolves only numeric, String, and
         # Class LDC; MethodHandle, MethodType, condy are intentionally refused.
         value = row.get("constant")
-        if type(value) not in (int, float, str):
+        tag = row.get("constant_pool_tag")
+        if (
+            type(tag) is not int
+            or tag not in (3, 4, 5, 6, 7, 8)
+            or type(value) not in (int, float, str)
+            or (tag in (3, 5) and type(value) is not int)
+            or (tag in (4, 6) and type(value) is not float)
+            or (tag in (7, 8) and type(value) is not str)
+        ):
             raise V309CpMethodWitnessError("unsupported/unresolved LDC CP referent")
-        base += [type(value).__name__, repr(value)]
+        base += [tag, type(value).__name__, repr(value)]
     elif opcode == "0xba":
         base.append(_indy_semantics(row, bootstrap,
             old_owner=old_owner, new_owner=new_owner))
