@@ -229,6 +229,25 @@ class CpMethodReferentTests(unittest.TestCase):
         new["bootstrap_methods"][0]["arguments"][0]["method_handle"]["name"] = "different"
         self.assertEqual(self.compare(old=old, new=new)["unique_cp_semantic_method_matches"], 0)
 
+    def test_unrelated_method_parameter_types_do_not_erase_to_same_shape(self):
+        old = _profile("p/Old")
+        new = _profile("p/New", method=_test_method(owner="p/New"))
+        old["methods"][0]["descriptor"] = "(Ljava/lang/String;)V"
+        new["methods"][0]["descriptor"] = "(Ljava/util/Map;)V"
+        self.assertEqual(
+            self.compare(old=old, new=new)["unique_cp_semantic_method_matches"], 0)
+
+    def test_only_pinned_self_owner_descriptor_alias_is_allowed(self):
+        old = _profile("p/Old")
+        new = _profile("p/New", method=_test_method(owner="p/New"))
+        old["methods"][0]["descriptor"] = "(Lp/Old;)V"
+        new["methods"][0]["descriptor"] = "(Lp/New;)V"
+        self.assertEqual(
+            self.compare(old=old, new=new)["unique_cp_semantic_method_matches"], 1)
+        new["methods"][0]["descriptor"] = "(Lp/Unrelated;)V"
+        self.assertEqual(
+            self.compare(old=old, new=new)["unique_cp_semantic_method_matches"], 0)
+
     def test_zero_cp_reference_methods_are_excluded(self):
         simple = _test_method(extra=[_instruction("0xb1", 1, 0)])
         result = self.compare(
