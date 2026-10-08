@@ -258,5 +258,20 @@ class CanonicalMethodMissingContextFullMethodEvidenceTests(unittest.TestCase):
             self.assertEqual(report, before)
 
 
+    def test_full_method_rejects_malformed_instruction_rows(self):
+        method = self._method("rs/A", "a")
+        method["instructions"].insert(1, None)
+        self.assertIsNone(
+            _full_method_tokens(
+                method,
+                target=("rs/A", "x", "I"),
+                operation="getstatic",
+                expected_count=1,
+                member_map={},
+                class_aliases={},
+            )
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
