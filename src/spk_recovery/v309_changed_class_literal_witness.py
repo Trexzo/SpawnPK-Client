@@ -2,8 +2,8 @@ from __future__ import annotations
 
 """Exact-private changed-class literal witnesses; research ONLY.
 
-All class String literals are counted in memory. Output contains aggregate counts
-and a single salted set digest per candidate, never raw literals or a full index.
+All class String literals are counted in memory. Output contains only aggregate
+counts per candidate, never raw literals, literal digests or a full index.
 Co-located literals may correlate: this does NOT accept class/member identity.
 """
 
@@ -204,7 +204,6 @@ def build_v309_changed_class_literal_witness(
             "classification": "RESEARCH_CANDIDATE_NOT_ACCEPTED",
             "matching_anchor_count": len(exact_anchors),
             "competing_anchor_count": 0,
-            "anchor_set_digest": _digest(exact_anchors),
         })
     candidates.sort(key=lambda v: v["old_canonical_class_id"])
     rejected.sort(key=lambda v: v["old_canonical_class_id"])
