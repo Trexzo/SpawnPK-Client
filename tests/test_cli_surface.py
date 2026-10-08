@@ -19,6 +19,8 @@ COMMANDS = [
     "member-lineage-seed",
     "member-lineage-validate",
     "member-promote-new",
+    "canonical-method-single-context-declaration-evidence",
+    "canonical-method-single-context-declaration-review-spec",
     "semantic-resolve",
     "semantic-accept",
     "lineage-apply-candidates",
