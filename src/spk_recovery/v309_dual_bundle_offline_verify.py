@@ -16,6 +16,7 @@ from typing import Any
 from .descriptor_class_private_jar_replay import _read_json_exact
 from .descriptor_class_replay_offline_review import build_descriptor_class_offline_review
 from .v309_private_dual_proof_replay import _digest
+from .v309_crosslane_class_impact import build_v309_crosslane_class_impact
 
 
 class V309DualBundleOfflineVerifyError(ValueError):
@@ -173,6 +174,53 @@ def _check_empty_report(
     return expected
 
 
+def _crosslane_candidate_status(
+    impact: dict[str, Any], offline_descriptor_review: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Prioritize *reported* candidate rows, never infer recovered identities.
+
+    Call only after independent bundle JSON consistency checks. No local index
+    or proprietary bytecode is reauthenticated by this presentation layer.
+    """
+    if offline_descriptor_review.get("state") != (
+        "CONSISTENCY_ONLY_NOT_INDEPENDENT_PROOF_NO_IDENTITIES_ACCEPTED"
+    ):
+        raise V309DualBundleOfflineVerifyError("unverified descriptor review state")
+    candidates = offline_descriptor_review.get("candidates")
+    rejected = offline_descriptor_review.get("rejected")
+    groups = impact.get("class_hypotheses")
+    if not all(isinstance(rows, list) for rows in (candidates, rejected, groups)):
+        raise V309DualBundleOfflineVerifyError("invalid class-impact inputs")
+    candidate_ids = [row["old_canonical_class_id"] for row in candidates]
+    rejected_ids = [row["old_canonical_class_id"] for row in rejected]
+    group_ids = [row["old_canonical_class_id"] for row in groups]
+    if (
+        len(groups) != 8
+        or len(set(group_ids)) != 8
+        or len(candidate_ids) + len(rejected_ids) != 8
+        or len(set(candidate_ids + rejected_ids)) != 8
+        or set(group_ids) != set(candidate_ids + rejected_ids)
+    ):
+        raise V309DualBundleOfflineVerifyError("class candidate/impact group drift")
+    selected = set(candidate_ids)
+    return [
+        {
+            "old_canonical_class_id": row["old_canonical_class_id"],
+            "hypothetical_new_source_class": row["hypothetical_new_source_class"],
+            "descriptor_blocked_fields": row["descriptor_blocked_fields"],
+            "alias_only_topology_hypotheses": row[
+                "topology_rows_equal_after_this_alias_only"
+            ],
+            "research_priority_rows": row["combined_research_priority_rows"],
+            "reported_index_witness_candidate": (
+                row["old_canonical_class_id"] in selected
+            ),
+            "state": "OFFLINE_CANDIDATE_OR_ALIAS_ONLY_NO_IDENTITY_ACCEPTED",
+        }
+        for row in groups
+    ]
+
+
 def verify_v309_dual_bundle_offline(
     frontier: dict[str, Any],
     class_lineage: dict[str, Any],
@@ -249,6 +297,8 @@ def verify_v309_dual_bundle_offline(
             + descriptor_review["summary"]["still_blocked_fields"] == 26,
         "dual-bundle 26/8/68 summary drift",
     )
+    impact = build_v309_crosslane_class_impact(global_field_report)
+    crosslane_priorities = _crosslane_candidate_status(impact, descriptor_review)
     return {
         "schema_version": 1,
         "kind": "v309_dual_bundle_offline_consistency",
@@ -259,6 +309,7 @@ def verify_v309_dual_bundle_offline(
         "empty_report_id": empty_report["report_id"],
         "descriptor_summary": descriptor_review["summary"],
         "empty_summary": empty_summary,
+        "crosslane_candidate_priorities": crosslane_priorities,
         "accepted_frontier_unresolved": 143,
         "warning": (
             "This checks only local JSON consistency and tracked-file bindings. "
@@ -315,6 +366,13 @@ def main(argv: list[str] | None = None) -> int:
         print(f"descriptor.{key}={value}")
     for key, value in result["empty_summary"].items():
         print(f"empty.{key}={value}")
+    for row in result["crosslane_candidate_priorities"]:
+        print(
+            "crosslane." + row["old_canonical_class_id"] + "="
+            + ("REPORTED_RESEARCH_CANDIDATE" if row["reported_index_witness_candidate"]
+               else "UNPROVEN_ALIAS_ONLY")
+            + " priority=" + str(row["research_priority_rows"])
+        )
     return 0
 
 
