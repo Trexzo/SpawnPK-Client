@@ -75,6 +75,17 @@ class CpMethodReferentTests(unittest.TestCase):
         row["constant_pool_tag"] = 7  # CONSTANT_Class instead of CONSTANT_String
         self.assertEqual(self.compare(new=new)["unique_cp_semantic_method_matches"], 0)
 
+    def test_class_ldc_respects_only_pinned_owner_alias(self):
+        old = _profile("p/Old", method=_test_method(owner="p/Old"))
+        new = _profile("p/New", method=_test_method(owner="p/New"))
+        old_ref = old["methods"][0]["instructions"][0]
+        new_ref = new["methods"][0]["instructions"][0]
+        old_ref.update(constant_pool_tag=7, constant="p/Old")
+        new_ref.update(constant_pool_tag=7, constant="p/New")
+        self.assertEqual(self.compare(old=old, new=new)["unique_cp_semantic_method_matches"], 1)
+        new_ref["constant"] = "p/Unrelated"
+        self.assertEqual(self.compare(old=old, new=new)["unique_cp_semantic_method_matches"], 0)
+
     def test_missing_cp_kind_is_not_proof(self):
         old = _profile("p/Old")
         del old["methods"][0]["instructions"][0]["constant_pool_tag"]
