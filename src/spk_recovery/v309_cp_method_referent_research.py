@@ -141,6 +141,24 @@ def _instruction_semantics(
     if opcode in _CP_MEMBER:
         if not all(isinstance(row.get(k), str) for k in ("owner", "name", "descriptor")):
             raise V309CpMethodWitnessError("unresolved field/method CP reference")
+        tag = row.get("member_constant_pool_tag")
+        allowed_tags = (
+            {9} if opcode in {"0xb2", "0xb3", "0xb4", "0xb5"}
+            else {11} if opcode == "0xb9"
+            else {10} if opcode == "0xb6"
+            else {10, 11}
+        )
+        if type(tag) is not int or tag not in allowed_tags:
+            raise V309CpMethodWitnessError("invalid member CP reference kind for opcode")
+        base.append(tag)
+        if opcode == "0xb9":
+            if (
+                type(row.get("invokeinterface_count")) is not int
+                or not 1 <= row["invokeinterface_count"] <= 255
+                or row.get("invokeinterface_reserved") != 0
+            ):
+                raise V309CpMethodWitnessError("invalid invokeinterface count/reserved")
+            base.append(row["invokeinterface_count"])
         base += [
             _rename(row["owner"], old_owner=old_owner, new_owner=new_owner),
             row["name"],
@@ -170,6 +188,8 @@ def _instruction_semantics(
             value = _rename(value, old_owner=old_owner, new_owner=new_owner)
         base += [tag, type(value).__name__, repr(value)]
     elif opcode == "0xba":
+        if row.get("invokedynamic_reserved") != 0:
+            raise V309CpMethodWitnessError("invalid invokedynamic reserved bytes")
         base.append(_indy_semantics(row, bootstrap,
             old_owner=old_owner, new_owner=new_owner))
     else:
