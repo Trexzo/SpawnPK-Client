@@ -116,6 +116,23 @@ def build_descriptor_class_offline_review(
     if not isinstance(replay["candidates"], list) or not isinstance(replay["rejected"], list):
         raise DescriptorClassOfflineReviewError("invalid candidate/rejection lists")
 
+    allowed_candidate_keys = {
+        "old_canonical_class_id", "old_class", "blocked_relationship_ids",
+        "blocked_fields", "proposed_new_class", "strategy", "proof_fingerprint",
+        "classification", "old_index_sha256", "new_index_sha256",
+        "new_entry_sha256", "new_structural_sha256",
+        "independent_global_uniqueness",
+    }
+    base_rejected_keys = {
+        "old_canonical_class_id", "old_class", "blocked_relationship_ids",
+        "blocked_fields", "reason",
+    }
+    paired_v309 = {
+        item["internal_name"]
+        for c in class_lineage.get("classes", [])
+        for item in c["lineage"]
+        if item["build_id"] == "v309"
+    }
     covered: set[str] = set()
     proposed_new_classes: set[str] = set()
     candidates = []
@@ -139,6 +156,8 @@ def build_descriptor_class_offline_review(
             ):
                 raise DescriptorClassOfflineReviewError("blocked class relationship drift")
             if accepted:
+                if set(row) != allowed_candidate_keys:
+                    raise DescriptorClassOfflineReviewError("unknown candidate proof or acceptance fields")
                 name = row.get("proposed_new_class")
                 strategy = row.get("strategy")
                 proof = row.get("proof_fingerprint")
@@ -147,6 +166,7 @@ def build_descriptor_class_offline_review(
                     or row.get("independent_global_uniqueness") is not True
                     or not isinstance(name, str)
                     or name in proposed_new_classes
+                    or name in paired_v309
                     or ["L" + name + ";"] != group["new_raw_descriptors"]
                     or strategy not in (
                         "globally_unique_exact_entry_sha256",
@@ -170,6 +190,22 @@ def build_descriptor_class_offline_review(
                 output.append({"old_canonical_class_id": cid, "proposed_new_class": name,
                                "blocked_fields": row["blocked_fields"], "strategy": strategy})
             else:
+                extra = set(row) - base_rejected_keys
+                if not base_rejected_keys.issubset(row) or extra not in (
+                    set(), {"owner_logical_id"}, {"witness_new_class"}
+                ):
+                    raise DescriptorClassOfflineReviewError("unknown rejection or acceptance fields")
+                reason = row.get("reason")
+                if (
+                    (reason == "new_class_already_owned" and extra != {"owner_logical_id"})
+                    or (reason == "independent_witness_disagrees_with_field_descriptor"
+                        and extra != {"witness_new_class"})
+                    or (reason not in (
+                        "new_class_already_owned",
+                        "independent_witness_disagrees_with_field_descriptor",
+                    ) and extra)
+                ):
+                    raise DescriptorClassOfflineReviewError("rejection details inconsistent")
                 if row.get("reason") not in {
                     "class_already_paired_requires_replay",
                     "ambiguous_new_descriptor",
