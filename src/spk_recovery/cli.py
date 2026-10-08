@@ -146,6 +146,11 @@ from .canonical_method_boundary_block_evidence import (
     build_canonical_method_boundary_block_evidence,
     write_report as write_canonical_method_boundary_block_evidence,
 )
+from .canonical_method_boundary_block_review_spec import (
+    CanonicalMethodBoundaryBlockReviewSpecError,
+    build_canonical_method_boundary_block_review_spec,
+    write_spec as write_canonical_method_boundary_block_review_spec,
+)
 from .member_remap_plan import (
     MemberRemapPlanError,
     build_member_remap_plan,
@@ -564,6 +569,24 @@ def main(argv: list[str] | None = None) -> int:
     pcmbb.add_argument("global_usage_report", type=Path)
     pcmbb.add_argument("context_report", type=Path)
     pcmbb.add_argument("--out", type=Path, required=True)
+
+    pcmbbr = sub.add_parser(
+        "canonical-method-boundary-block-review-spec",
+        help=(
+            "Re-run method-context boundary-block evidence and emit an "
+            "explicit reviewed-member acceptance spec for exact candidates"
+        ),
+    )
+    pcmbbr.add_argument("class_lineage", type=Path)
+    pcmbbr.add_argument("member_lineage", type=Path)
+    pcmbbr.add_argument("old_index", type=Path)
+    pcmbbr.add_argument("new_index", type=Path)
+    pcmbbr.add_argument("old_jar", type=Path)
+    pcmbbr.add_argument("new_jar", type=Path)
+    pcmbbr.add_argument("global_usage_report", type=Path)
+    pcmbbr.add_argument("context_report", type=Path)
+    pcmbbr.add_argument("boundary_report", type=Path)
+    pcmbbr.add_argument("--out", type=Path, required=True)
 
     psr = sub.add_parser(
         "semantic-resolve",
@@ -1532,6 +1555,42 @@ def main(argv: list[str] | None = None) -> int:
         print(f"report_id={report['report_id']}")
         for k, v in report["summary"].items():
             print(f"{k}={v}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "canonical-method-boundary-block-review-spec":
+        try:
+            spec = build_canonical_method_boundary_block_review_spec(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.old_index),
+                _load(args.new_index),
+                args.old_jar,
+                args.new_jar,
+                _load(args.global_usage_report),
+                _load(args.context_report),
+                _load(args.boundary_report),
+            )
+            write_canonical_method_boundary_block_review_spec(
+                spec,
+                args.out,
+            )
+        except (
+            CanonicalMethodBoundaryBlockReviewSpecError,
+            CanonicalMethodBoundaryBlockEvidenceError,
+            CanonicalMethodFieldContextEvidenceError,
+            GlobalFieldUsageEvidenceError,
+            BytecodeProfileError,
+            EmptyFieldDeclarationEvidenceError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+            OSError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print("SPK_CANONICAL_METHOD_BOUNDARY_BLOCK_REVIEW_SPEC_PASS")
+        print(f"relationship_ids={len(spec['relationship_ids'])}")
         print(f"out={args.out}")
         return 0
 
