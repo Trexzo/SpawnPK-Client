@@ -315,6 +315,8 @@ def _bootstrap_argument_profile(
             "kind": "constant",
             "tag": tag,
             "value": _constant_probe_value(cp, index),
+            # CP float NaN payloads and signed zero require bit-level proof.
+            "constant_raw_bits": value[1].hex(),
         }
     return {
         "constant_pool_index": index,
@@ -614,6 +616,9 @@ def _decoded_instructions(
             # interchangeable LDC referents across client builds.
             entry = _bootstrap_cp_entry(cp, cp_index, role="ldc")
             row["constant_pool_tag"] = int(entry[0])
+            if entry[0] in (3, 4, 5, 6):
+                # Do not collapse NaN payloads or other raw IEEE constants.
+                row["constant_raw_bits"] = entry[1].hex()
             constant = _constant_probe_value(cp, cp_index)
             if constant is not None:
                 row["constant"] = constant
