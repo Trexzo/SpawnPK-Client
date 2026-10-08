@@ -91,9 +91,16 @@ def _argument_semantics(
     if kind == "constant":
         tag = arg.get("tag")
         value = arg.get("value")
-        if tag not in (3, 4) or type(value) not in (int, float):
+        bits = arg.get("constant_raw_bits")
+        if (
+            tag not in (3, 4)
+            or type(value) is not (int if tag == 3 else float)
+            or not isinstance(bits, str)
+            or len(bits) != 8
+            or any(c not in "0123456789abcdef" for c in bits)
+        ):
             raise V309CpMethodWitnessError("unsupported bootstrap primitive constant")
-        return ("constant", tag, repr(value))
+        return ("constant", tag, bits)
     # Includes dynamic/nested condy and any unsupported CP tag. Never silently
     # ignore unknown bootstrap semantics.
     raise V309CpMethodWitnessError("unresolved invokedynamic bootstrap argument")
@@ -182,11 +189,23 @@ def _instruction_semantics(
             or (tag in (7, 8) and type(value) is not str)
         ):
             raise V309CpMethodWitnessError("unsupported/unresolved LDC CP referent")
-        # Only Class LDC values carry owner identities; String literals
-        # must remain byte-for-byte exact, even when they look like names.
-        if tag == 7:
-            value = _rename(value, old_owner=old_owner, new_owner=new_owner)
-        base += [tag, type(value).__name__, repr(value)]
+        # A float NaN is not specified by repr() alone: preserve exact
+        # IEEE numeric payload bits from the original constant-pool entry.
+        if tag in (3, 4, 5, 6):
+            bits = row.get("constant_raw_bits")
+            if (
+                not isinstance(bits, str)
+                or len(bits) != (8 if tag in (3, 4) else 16)
+                or any(c not in "0123456789abcdef" for c in bits)
+            ):
+                raise V309CpMethodWitnessError("missing exact numeric constant CP bits")
+            base += [tag, bits]
+        else:
+            # Only Class LDC values carry owner identities; String literals
+            # must remain exact, even when they resemble class names.
+            if tag == 7:
+                value = _rename(value, old_owner=old_owner, new_owner=new_owner)
+            base += [tag, type(value).__name__, repr(value)]
     elif opcode == "0xba":
         if row.get("invokedynamic_reserved") != 0:
             raise V309CpMethodWitnessError("invalid invokedynamic reserved bytes")
