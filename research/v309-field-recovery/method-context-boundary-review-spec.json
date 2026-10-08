@@ -1,0 +1,29 @@
+{
+  "evidence": [
+    "report_id=METHODBOUNDARY_3D5AF61BCEDF9BD1687C",
+    "report_digest_sha256=c0cdcc5908e925283edd28600dad1d2f1902827b4c34acf45f6fed89640a7baf",
+    "base_context_report_id=METHODCTX_3733EDA2EADFB63C8512",
+    "base_context_report_digest_sha256=01a52b8e11b0ff4b31cd33c0637d082b0f92c3a66f3adf97e54b1276e6fe3a66",
+    "base_global_usage_report_id=GLOBALFIELDUSE_B90414CD70007CA60E57",
+    "base_global_usage_report_digest_sha256=0debdd95007d42341c280a4d708959754c8ea756c6601ff544e606364268a488",
+    "member_lineage_digest_sha256=fc0547ad7ba62fd18fca87212efcbb8c6046f03931e2dab02ead5032d66cc1e0",
+    "strategy=canonical_method_unique_local_context_and_boundary_block_declaration_exact",
+    "reviewed_candidates=6",
+    "remaining_without_boundary_block_proof=0"
+  ],
+  "kind": "reviewed_member_identity_acceptance_spec",
+  "new_build_id": "v309",
+  "new_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "note": "Explicitly reviewed from METHODBOUNDARY_3D5AF61BCEDF9BD1687C: field continuity was already independently proven by the strong exact paired canonical-method local-context witness. The missing two-sided declaration anchor was replaced only by an exact symmetric prefix/suffix/whole-class boundary block with matching canonical single-anchor identity where present, identical block shape and target offset, and a unique target declaration signature. Rejected rows remain unresolved.",
+  "old_build_id": "v308",
+  "old_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "relationship_ids": [
+    "MEMREL_3514F546778F7BE6",
+    "MEMREL_9B79C386C962CCD4",
+    "MEMREL_A130193BD075343D",
+    "MEMREL_C7E2D6B8E06965BD",
+    "MEMREL_F5687C5856E54E32",
+    "MEMREL_F58B9F6E27EC3274"
+  ],
+  "schema_version": 1
+}

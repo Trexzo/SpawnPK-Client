@@ -1,0 +1,1137 @@
+{
+  "base_global_usage_report_digest": "eb686ae8c115edb9bdce6e35a73bc4597f660f8d29dd18b6baca2c43c1c71439",
+  "base_global_usage_report_id": "GLOBALFIELDUSE_A4B72C537D6B449C0F9E",
+  "candidates": [],
+  "canonical": false,
+  "kind": "canonical_method_field_context_identity_candidates",
+  "member_lineage_digest": "93aa0d06f6f93a7690fd9b8e94c322671d9352984191e49f62df2edd87f8ea75",
+  "new_build_id": "v309",
+  "new_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "note": "Research-only field identity evidence over rows already rejected by the complete global source-class topology guard. The guard is not weakened or reclassified. A new independent candidate requires the exact paired canonical-method access topology from the base report plus exact name-insensitive local JVM instruction-context multisets for every target access in each paired canonical method. The target field operand is masked. Neighboring paired members and classes are normalized to canonical IDs; unresolved member names, RAW type names, literal strings, constant-pool indices, absolute bytecode offsets and absolute branch targets cannot contribute. The target context multiset must also be unique against other same-shape fields in both exact methods. At least two canonical methods, or two observations with two distinct contexts, are required before the unchanged two-sided canonical declaration interval proof is applied. canonical=false; no lineage mutation.",
+  "old_build_id": "v308",
+  "old_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "rejected": [
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000452",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "35f899b22a02ee8ed4f5036a717324b934c972ac05ab46145f52248b12cd5158",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_003005",
+          "operation": "getfield"
+        }
+      ],
+      "new_owner": "rs/l/f/a/c/c",
+      "observations": 1,
+      "old_owner": "rs/l/f/a/c/c",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_08E3A3863BA693AB"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000684",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "b70ab8da02fc6f3830e951eb697e741e50a9e9e3431655f9d6d7c5030e214c3f",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_004179",
+          "operation": "putfield"
+        }
+      ],
+      "new_owner": "rs/n/e",
+      "observations": 1,
+      "old_owner": "rs/n/e",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_09F5D406BF2B13DD"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000113",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "dea0e50364a642b2a491d27caa28abbf03d07216963082a982a8cc8e1b5aca37",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_002604",
+          "operation": "getstatic"
+        }
+      ],
+      "new_owner": "rs/d/d",
+      "observations": 1,
+      "old_owner": "rs/d/d",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_0BEBE9DD46AD7C91"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000132",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "6b0359598ba3af17f58b6defbff71d9abfb565dcbe617d0e15a26f7267233e87",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_001299",
+          "operation": "getstatic"
+        }
+      ],
+      "new_owner": "rs/d/t$a",
+      "observations": 1,
+      "old_owner": "rs/d/r$a",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_0EAD035B8431B4AC"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000962",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "2fbf81e8fe65b8049266dc45876a23dc7774c2838898fecdc97302c4b804ef24",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_005587",
+          "operation": "putstatic"
+        }
+      ],
+      "new_owner": "rs/s/t/b",
+      "observations": 1,
+      "old_owner": "rs/s/s/b",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_0F1345183764ED2E"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000075",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "d7c03c6a8f7f0ead9a88db1ebbdfab7a055ac0bab93fda0b8bbcf3ef69229179",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_000972",
+          "operation": "getfield"
+        }
+      ],
+      "new_owner": "rs/a/l",
+      "observations": 1,
+      "old_owner": "rs/a/l",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_1753048911FE365D"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000962",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "047a57331138ac7d82004ef71ad04bd4b2d767616d9de4d6c6827ccb3563907b",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_005587",
+          "operation": "putstatic"
+        }
+      ],
+      "new_owner": "rs/s/t/b",
+      "observations": 1,
+      "old_owner": "rs/s/s/b",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_213006A36E299868"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "e9d0722e999f08e9a71592184fb3546212c2dba0459324e211eb0d592a319b33",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_000942",
+          "operation": "getfield"
+        }
+      ],
+      "new_owner": "rs/a/c",
+      "observations": 1,
+      "old_owner": "rs/a/c",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_272ED6C9C32C205A"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000075",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "7a19522dff3dec53b2570f8da6d46bf6fe1a6e4c59e5143f979b2f8f8473deff",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_000971",
+          "operation": "putfield"
+        }
+      ],
+      "new_owner": "rs/a/l",
+      "observations": 1,
+      "old_owner": "rs/a/l",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_2DDCB799BCE369B9"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000073",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "c69438154a3e82629bd4f59dcfdd769edde091aee604a728ddace54c8a9fe864",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_000939",
+          "operation": "getfield"
+        }
+      ],
+      "new_owner": "rs/a/j",
+      "observations": 1,
+      "old_owner": "rs/a/j",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_350D2596ACC52DC1"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "7fcd43cb5891fae6ee4c64637ef5bf0e4b332d132605d0da96ca803a7c0adbfe",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_000781",
+          "operation": "putfield"
+        }
+      ],
+      "new_owner": "rs/a/c",
+      "observations": 1,
+      "old_owner": "rs/a/c",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_3677F88C7F4CB0FD"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000113",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "cf8647c4e26e449d481605b9266f31b679cb9739448494a301d3cf754feccdf7",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_005704",
+          "operation": "putfield"
+        }
+      ],
+      "new_owner": "rs/d/d",
+      "observations": 1,
+      "old_owner": "rs/d/d",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_386D404C7202DCAA"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "contexts": [
+        [
+          "b07c0f816cc4fb48bfa996ecccd46152ce4dec945caa5a862bbf9e905e6ff093",
+          1
+        ]
+      ],
+      "logical_class_id": "CLIENT_CLASS_000113",
+      "method_id": "CLIENT_METHOD_005704",
+      "new_owner": "rs/d/d",
+      "new_unique": false,
+      "old_owner": "rs/d/d",
+      "old_unique": false,
+      "operation": "putfield",
+      "reason": "canonical_method_context_nonunique",
+      "relationship_id": "MEMREL_3A07534051FC0496"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000962",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "d64f9e056eb61bf6ccd327fa23a145afb9806c83eeece4cb662fd0130b72716b",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_005587",
+          "operation": "putstatic"
+        }
+      ],
+      "new_owner": "rs/s/t/b",
+      "observations": 1,
+      "old_owner": "rs/s/s/b",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_41351162FAF2ABCF"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000135",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "592bd027b7cf8506bf195aad6f344850d7b3083caa14b713ca3a35d957851526",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_001304",
+          "operation": "putfield"
+        }
+      ],
+      "new_owner": "rs/d/v",
+      "observations": 1,
+      "old_owner": "rs/d/t",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_41488AE40E6D0BA3"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "contexts": [
+        [
+          "b07c0f816cc4fb48bfa996ecccd46152ce4dec945caa5a862bbf9e905e6ff093",
+          1
+        ]
+      ],
+      "logical_class_id": "CLIENT_CLASS_000113",
+      "method_id": "CLIENT_METHOD_005704",
+      "new_owner": "rs/d/d",
+      "new_unique": false,
+      "old_owner": "rs/d/d",
+      "old_unique": false,
+      "operation": "putfield",
+      "reason": "canonical_method_context_nonunique",
+      "relationship_id": "MEMREL_41F1BA7778A5CE9B"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000962",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "2e927f5f377bfb87e0ed77636f7b60d584382d8fe28f40f468f65e20fc1db6e9",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_005587",
+          "operation": "putstatic"
+        }
+      ],
+      "new_owner": "rs/s/t/b",
+      "observations": 1,
+      "old_owner": "rs/s/s/b",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_41F6C73F6427DA78"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000073",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "c2e8558a3ae846d4998077e560a1c63a13907b19ac2846b8fbabbee2fc3702b7",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_000705",
+          "operation": "getfield"
+        }
+      ],
+      "new_owner": "rs/a/j",
+      "observations": 1,
+      "old_owner": "rs/a/j",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_472FC3F1A7F4EC35"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "expected_count": 1,
+      "logical_class_id": "CLIENT_CLASS_000889",
+      "method_id": "CLIENT_METHOD_003028",
+      "new_context_count": 0,
+      "new_owner": "rs/s/c/c",
+      "old_context_count": 0,
+      "old_owner": "rs/s/c/c",
+      "operation": "getstatic",
+      "reason": "canonical_method_context_missing",
+      "relationship_id": "MEMREL_532D72C8DD8ECFDC"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000250",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "936fca234e3fcb17e4b713f946ed7f3eeae97dbc6f865f4426b10b5e22a1a065",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_005276",
+          "operation": "putstatic"
+        }
+      ],
+      "new_owner": "rs/gui/b/h",
+      "observations": 1,
+      "old_owner": "rs/gui/b/h",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_56757E63BF22CD55"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "contexts": [
+        [
+          "b07c0f816cc4fb48bfa996ecccd46152ce4dec945caa5a862bbf9e905e6ff093",
+          1
+        ]
+      ],
+      "logical_class_id": "CLIENT_CLASS_000113",
+      "method_id": "CLIENT_METHOD_005704",
+      "new_owner": "rs/d/d",
+      "new_unique": false,
+      "old_owner": "rs/d/d",
+      "old_unique": false,
+      "operation": "putfield",
+      "reason": "canonical_method_context_nonunique",
+      "relationship_id": "MEMREL_5D7B8E4C8A99F236"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000962",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "546ab797d1bebfd909ec13aac5da913f122e4f74bc2b099387afda21f5ca21cc",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_005587",
+          "operation": "putstatic"
+        }
+      ],
+      "new_owner": "rs/s/t/b",
+      "observations": 1,
+      "old_owner": "rs/s/s/b",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_5D9AA205AC031B27"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "contexts": [
+        [
+          "c4a2755b26268855665e36928eb7914d942337114a4315cef33f10f0c18a9be5",
+          1
+        ]
+      ],
+      "logical_class_id": "CLIENT_CLASS_000113",
+      "method_id": "CLIENT_METHOD_005704",
+      "new_owner": "rs/d/d",
+      "new_unique": false,
+      "old_owner": "rs/d/d",
+      "old_unique": false,
+      "operation": "putfield",
+      "reason": "canonical_method_context_nonunique",
+      "relationship_id": "MEMREL_64E30CA3D5C206AE"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "a5d81883041248bf4ba5ca612152349d3a92be7eda919d57b8f9d919b8ebbb02",
+              2
+            ]
+          ],
+          "count": 2,
+          "method_id": "CLIENT_METHOD_000940",
+          "operation": "getfield"
+        }
+      ],
+      "new_owner": "rs/a/c",
+      "observations": 2,
+      "old_owner": "rs/a/c",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_66642837F455D21D"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000889",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "8980be1a1083f5bfd27ae1619c3dd2591cb952d62e9a7c082cae1dc17f1fac5f",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_004945",
+          "operation": "putstatic"
+        }
+      ],
+      "new_owner": "rs/s/c/c",
+      "observations": 1,
+      "old_owner": "rs/s/c/c",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_707E1ADDA88F6CDE"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000122",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "88b4eea22d51a19e36724f2841b68c5b94f79333c5d5a865124533d280d4a67d",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_001256",
+          "operation": "getstatic"
+        }
+      ],
+      "new_owner": "rs/d/k",
+      "observations": 1,
+      "old_owner": "rs/d/k",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_74455AB8040348A0"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000049",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "33479e44aebd764a1949a65addd60dbb6dd2aa75c2fb5bed5b7011fc8dec62eb",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_000672",
+          "operation": "putstatic"
+        }
+      ],
+      "new_owner": "rs/V",
+      "observations": 1,
+      "old_owner": "rs/V",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_77B948942E61140D"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000962",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "909f92a7a594e6927eb8d8c44532fb2b66c97e2a4dae68a2dea2bf3b78da0f86",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_005587",
+          "operation": "putstatic"
+        }
+      ],
+      "new_owner": "rs/s/t/b",
+      "observations": 1,
+      "old_owner": "rs/s/s/b",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_7B18597F2E4C5BB6"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "contexts": [
+        [
+          "b07c0f816cc4fb48bfa996ecccd46152ce4dec945caa5a862bbf9e905e6ff093",
+          1
+        ]
+      ],
+      "logical_class_id": "CLIENT_CLASS_000113",
+      "method_id": "CLIENT_METHOD_005704",
+      "new_owner": "rs/d/d",
+      "new_unique": false,
+      "old_owner": "rs/d/d",
+      "old_unique": false,
+      "operation": "putfield",
+      "reason": "canonical_method_context_nonunique",
+      "relationship_id": "MEMREL_85822239CBE93753"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000962",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "982b584fd4910698a70ecb3cf6015575c7c24fc9c29cce2a9b33601ea824514f",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_005587",
+          "operation": "putstatic"
+        }
+      ],
+      "new_owner": "rs/s/t/b",
+      "observations": 1,
+      "old_owner": "rs/s/s/b",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_8AF7C97816580A6F"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000073",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "9995a188e08a6d8b64d0448f94c30bce1ef02e2fb0e70a876d8d900ade1545f0",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_000705",
+          "operation": "getfield"
+        }
+      ],
+      "new_owner": "rs/a/j",
+      "observations": 1,
+      "old_owner": "rs/a/j",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_8D5C0F18EBE8E34D"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "dffda0f8ce793e5436e482c35d9516f044889f5aa8fd59c21b6dce2830619ed0",
+              2
+            ]
+          ],
+          "count": 2,
+          "method_id": "CLIENT_METHOD_000942",
+          "operation": "getfield"
+        }
+      ],
+      "new_owner": "rs/a/c",
+      "observations": 2,
+      "old_owner": "rs/a/c",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_8EE258D6FB4D55F2"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000452",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "18e543e2bdb242fca1685ef44839b7fb28fe4bc395af51e4693f8404e1a16509",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_003005",
+          "operation": "getfield"
+        }
+      ],
+      "new_owner": "rs/l/f/a/c/c",
+      "observations": 1,
+      "old_owner": "rs/l/f/a/c/c",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_94AE27191DF7A98E"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000073",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "55bd4c1549b2c9c6c069ffc666a1d040f84fdbf3ee0e3eca1d716f1001e3cf78",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_000705",
+          "operation": "getfield"
+        }
+      ],
+      "new_owner": "rs/a/j",
+      "observations": 1,
+      "old_owner": "rs/a/j",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_98BF37BE1BAE2356"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000889",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "f2a57477132a9a10254ee4b3dd1e711e5e7a5d73580f98cb23b3338558f100d1",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_004945",
+          "operation": "putstatic"
+        }
+      ],
+      "new_owner": "rs/s/c/c",
+      "observations": 1,
+      "old_owner": "rs/s/c/c",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_A20E8CFC117587F4"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000135",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "2b6cff2fb56c02f70f07a273470ec0f43efe0d84fedea63089e4b88d45b14995",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_001303",
+          "operation": "putfield"
+        }
+      ],
+      "new_owner": "rs/d/v",
+      "observations": 1,
+      "old_owner": "rs/d/t",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_A405761D1F04D4E2"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000065",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "87fcb907d3e6c2c5983de9af6c8a2bdd74b7c305c95c79671298de14074833ee",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_000940",
+          "operation": "putfield"
+        }
+      ],
+      "new_owner": "rs/a/c",
+      "observations": 1,
+      "old_owner": "rs/a/c",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_A5BA837E207156FF"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000073",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "bcf50ff8f94891f1d68e8ed7ef3a746f5f8696f64e5ed6a1c7fce7b294742b60",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_000946",
+          "operation": "getfield"
+        }
+      ],
+      "new_owner": "rs/a/j",
+      "observations": 1,
+      "old_owner": "rs/a/j",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_A9D7E2ADA6C146F8"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000142",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "2d3d69f2e855c0f733c9a9198bfa81048e115d1c6a73629bc5be5e55cebbd8a0",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_001331",
+          "operation": "putfield"
+        }
+      ],
+      "new_owner": "rs/d/B",
+      "observations": 1,
+      "old_owner": "rs/d/z",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_B738754CF5064DD3"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000962",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "e1c59084ba2ea5b38ad860ade15a50aa3f1f1c55fc7dee1218df633fbed9f759",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_005587",
+          "operation": "putstatic"
+        }
+      ],
+      "new_owner": "rs/s/t/b",
+      "observations": 1,
+      "old_owner": "rs/s/s/b",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_BF3B88A14347F780"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000889",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "3ff70445bf2c9a348c519edeebb2c56845ad503b92f08f213c7242a7371cba98",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_004945",
+          "operation": "putstatic"
+        }
+      ],
+      "new_owner": "rs/s/c/c",
+      "observations": 1,
+      "old_owner": "rs/s/c/c",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_CA87C1D26159AB17"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000135",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "e3e7798c6df7bc89d10b57ea0c2fb7182769bac75286831a71f3ece89fe4b2e6",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_001303",
+          "operation": "putfield"
+        }
+      ],
+      "new_owner": "rs/d/v",
+      "observations": 1,
+      "old_owner": "rs/d/t",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_D4AD0230BB91286C"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "contexts": [
+        [
+          "b07c0f816cc4fb48bfa996ecccd46152ce4dec945caa5a862bbf9e905e6ff093",
+          1
+        ]
+      ],
+      "logical_class_id": "CLIENT_CLASS_000113",
+      "method_id": "CLIENT_METHOD_005704",
+      "new_owner": "rs/d/d",
+      "new_unique": false,
+      "old_owner": "rs/d/d",
+      "old_unique": false,
+      "operation": "putfield",
+      "reason": "canonical_method_context_nonunique",
+      "relationship_id": "MEMREL_D5AE99F99841F713"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000250",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "acc6a43945b124d4e72a9c2621bb3513162ac8c381bac5a505defaf74715cc96",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_001795",
+          "operation": "getfield"
+        }
+      ],
+      "new_owner": "rs/gui/b/h",
+      "observations": 1,
+      "old_owner": "rs/gui/b/h",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_DCD7BB0481B1F147"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000073",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "8f19a5f00c06f8f15632aea23a543459de26c4a76864b5abbda1ab02030a3487",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_000939",
+          "operation": "getfield"
+        }
+      ],
+      "new_owner": "rs/a/j",
+      "observations": 1,
+      "old_owner": "rs/a/j",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_E7B8749D7BECF30A"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000113",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "fdea1addba032ada626c5a71b02fad6d8754aa5bdcf215119d8e36ca5a745aac",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_001189",
+          "operation": "putfield"
+        }
+      ],
+      "new_owner": "rs/d/d",
+      "observations": 1,
+      "old_owner": "rs/d/d",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_F09112376EF82BA0"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000132",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "b5fdb20503059a9686e1e4e55f0b89a9e74a33f15e67c8f3c6e6f8b1ee5ff68b",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_001299",
+          "operation": "getstatic"
+        }
+      ],
+      "new_owner": "rs/d/t$a",
+      "observations": 1,
+      "old_owner": "rs/d/r$a",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_F150EDB1AAB6D2ED"
+    },
+    {
+      "base_global_usage_outcome": "global_class_topology_guard_rejected",
+      "canonical_methods": 1,
+      "distinct_contexts": 1,
+      "logical_class_id": "CLIENT_CLASS_000135",
+      "method_witnesses": [
+        {
+          "contexts": [
+            [
+              "5ba9b2079e62e781d91f0ac3696d2b85710aee7b9d61a8299654294f63a6c2dd",
+              1
+            ]
+          ],
+          "count": 1,
+          "method_id": "CLIENT_METHOD_001303",
+          "operation": "putfield"
+        }
+      ],
+      "new_owner": "rs/d/v",
+      "observations": 1,
+      "old_owner": "rs/d/t",
+      "reason": "insufficient_independent_context_witness",
+      "relationship_id": "MEMREL_F7E5B596E582EECC"
+    }
+  ],
+  "report_id": "METHODCTX_AC21811B4B4AC7112489",
+  "schema_version": 1,
+  "summary": {
+    "candidate_fields": 0,
+    "canonical_anchor_identity_mismatch": 0,
+    "canonical_method_context_mismatch": 0,
+    "canonical_method_context_missing": 1,
+    "canonical_method_context_nonunique": 6,
+    "declaration_interval_length_mismatch": 0,
+    "declaration_interval_shape_mismatch": 0,
+    "input_global_class_topology_guard_rejected": 48,
+    "insufficient_independent_context_witness": 41,
+    "missing_two_sided_canonical_anchor": 0,
+    "remaining_without_context_proof": 48,
+    "target_declaration_signature_not_unique": 0,
+    "target_interval_offset_mismatch": 0
+  }
+}
