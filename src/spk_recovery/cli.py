@@ -151,6 +151,16 @@ from .canonical_method_boundary_block_review_spec import (
     build_canonical_method_boundary_block_review_spec,
     write_spec as write_canonical_method_boundary_block_review_spec,
 )
+from .canonical_method_single_context_declaration_evidence import (
+    CanonicalMethodSingleContextDeclarationEvidenceError,
+    build_canonical_method_single_context_declaration_evidence,
+    write_report as write_canonical_method_single_context_declaration_evidence,
+)
+from .canonical_method_single_context_declaration_review_spec import (
+    CanonicalMethodSingleContextDeclarationReviewSpecError,
+    build_canonical_method_single_context_declaration_review_spec,
+    write_spec as write_canonical_method_single_context_declaration_review_spec,
+)
 from .member_remap_plan import (
     MemberRemapPlanError,
     build_member_remap_plan,
@@ -587,6 +597,41 @@ def main(argv: list[str] | None = None) -> int:
     pcmbbr.add_argument("context_report", type=Path)
     pcmbbr.add_argument("boundary_report", type=Path)
     pcmbbr.add_argument("--out", type=Path, required=True)
+
+    pscd = sub.add_parser(
+        "canonical-method-single-context-declaration-evidence",
+        help=(
+            "Continue exact single canonical-method context witnesses through "
+            "independent two-sided canonical declaration intervals"
+        ),
+    )
+    pscd.add_argument("class_lineage", type=Path)
+    pscd.add_argument("member_lineage", type=Path)
+    pscd.add_argument("old_index", type=Path)
+    pscd.add_argument("new_index", type=Path)
+    pscd.add_argument("old_jar", type=Path)
+    pscd.add_argument("new_jar", type=Path)
+    pscd.add_argument("global_usage_report", type=Path)
+    pscd.add_argument("context_report", type=Path)
+    pscd.add_argument("--out", type=Path, required=True)
+
+    pscdr = sub.add_parser(
+        "canonical-method-single-context-declaration-review-spec",
+        help=(
+            "Re-run single-context declaration evidence and emit an explicit "
+            "reviewed-member acceptance spec for exact candidates"
+        ),
+    )
+    pscdr.add_argument("class_lineage", type=Path)
+    pscdr.add_argument("member_lineage", type=Path)
+    pscdr.add_argument("old_index", type=Path)
+    pscdr.add_argument("new_index", type=Path)
+    pscdr.add_argument("old_jar", type=Path)
+    pscdr.add_argument("new_jar", type=Path)
+    pscdr.add_argument("global_usage_report", type=Path)
+    pscdr.add_argument("context_report", type=Path)
+    pscdr.add_argument("single_context_report", type=Path)
+    pscdr.add_argument("--out", type=Path, required=True)
 
     psr = sub.add_parser(
         "semantic-resolve",
@@ -1590,6 +1635,82 @@ def main(argv: list[str] | None = None) -> int:
             print(f"REFUSED: {e}", file=sys.stderr)
             return 2
         print("SPK_CANONICAL_METHOD_BOUNDARY_BLOCK_REVIEW_SPEC_PASS")
+        print(f"relationship_ids={len(spec['relationship_ids'])}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "canonical-method-single-context-declaration-evidence":
+        try:
+            report = build_canonical_method_single_context_declaration_evidence(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.old_index),
+                _load(args.new_index),
+                args.old_jar,
+                args.new_jar,
+                _load(args.global_usage_report),
+                _load(args.context_report),
+            )
+            write_canonical_method_single_context_declaration_evidence(
+                report,
+                args.out,
+            )
+        except (
+            CanonicalMethodSingleContextDeclarationEvidenceError,
+            CanonicalMethodFieldContextEvidenceError,
+            GlobalFieldUsageEvidenceError,
+            BytecodeProfileError,
+            EmptyFieldDeclarationEvidenceError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+            OSError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print(
+            "SPK_CANONICAL_METHOD_SINGLE_CONTEXT_DECLARATION_EVIDENCE_PASS"
+        )
+        print(f"report_id={report['report_id']}")
+        for k, v in report["summary"].items():
+            print(f"{k}={v}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "canonical-method-single-context-declaration-review-spec":
+        try:
+            spec = build_canonical_method_single_context_declaration_review_spec(
+                load_lineage(args.class_lineage),
+                load_member_lineage(args.member_lineage),
+                _load(args.old_index),
+                _load(args.new_index),
+                args.old_jar,
+                args.new_jar,
+                _load(args.global_usage_report),
+                _load(args.context_report),
+                _load(args.single_context_report),
+            )
+            write_canonical_method_single_context_declaration_review_spec(
+                spec,
+                args.out,
+            )
+        except (
+            CanonicalMethodSingleContextDeclarationReviewSpecError,
+            CanonicalMethodSingleContextDeclarationEvidenceError,
+            CanonicalMethodFieldContextEvidenceError,
+            GlobalFieldUsageEvidenceError,
+            BytecodeProfileError,
+            EmptyFieldDeclarationEvidenceError,
+            MemberLineageError,
+            LineageValidationError,
+            json.JSONDecodeError,
+            OSError,
+        ) as e:
+            print(f"REFUSED: {e}", file=sys.stderr)
+            return 2
+        print(
+            "SPK_CANONICAL_METHOD_SINGLE_CONTEXT_DECLARATION_REVIEW_SPEC_PASS"
+        )
         print(f"relationship_ids={len(spec['relationship_ids'])}")
         print(f"out={args.out}")
         return 0
