@@ -609,6 +609,11 @@ def _decoded_instructions(
                 else struct.unpack_from(">H", code, offset + 1)[0]
             )
             row["constant_pool_index"] = cp_index
+            # Preserve the JVM CP entry kind. CONSTANT_Class and
+            # CONSTANT_String can resolve to identical text but are not
+            # interchangeable LDC referents across client builds.
+            entry = _bootstrap_cp_entry(cp, cp_index, role="ldc")
+            row["constant_pool_tag"] = int(entry[0])
             constant = _constant_probe_value(cp, cp_index)
             if constant is not None:
                 row["constant"] = constant
