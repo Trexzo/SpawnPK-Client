@@ -16,6 +16,18 @@ from spk_recovery.v309_cp_method_referent_research import (
 
 
 def _instruction(opcode, length, offset, **fields):
+    # Synthetic fixtures explicitly model the JVM CP reference category and
+    # four/five-byte instruction operands instead of silently omitting them.
+    if opcode in ("0xb2", "0xb3", "0xb4", "0xb5"):
+        fields.setdefault("member_constant_pool_tag", 9)
+    if opcode in ("0xb6", "0xb7", "0xb8"):
+        fields.setdefault("member_constant_pool_tag", 10)
+    if opcode == "0xb9":
+        fields.setdefault("member_constant_pool_tag", 11)
+        fields.setdefault("invokeinterface_count", 1)
+        fields.setdefault("invokeinterface_reserved", 0)
+    if opcode == "0xba":
+        fields.setdefault("invokedynamic_reserved", 0)
     return {"opcode": opcode, "mnemonic": "synthetic", "length": length,
             "offset": offset, **fields}
 
@@ -102,6 +114,44 @@ class CpMethodReferentTests(unittest.TestCase):
         result = self.compare(old=old)
         self.assertEqual(result["unique_cp_semantic_method_matches"], 0)
         self.assertEqual(result["ambiguous_duplicate_semantic_shapes"], 1)
+
+    def test_method_cp_tag_changes_are_not_equivalent(self):
+        old = _profile("p/Old")
+        new = _profile("p/New", method=_test_method(owner="p/New"))
+        # Identical target text cannot hide Methodref vs InterfaceMethodref.
+        new["methods"][0]["instructions"][1]["member_constant_pool_tag"] = 11
+        self.assertEqual(self.compare(old=old, new=new)["unique_cp_semantic_method_matches"], 0)
+
+    def test_invalid_invokeinterface_count_or_reserved_bytes_rejected(self):
+        def interface(owner, **kwargs):
+            return _profile(owner, method=_test_method(extra=[
+                _instruction("0xb9", 5, 0, owner="java/lang/Runnable",
+                             name="run", descriptor="()V", **kwargs),
+                _instruction("0xb1", 1, 5),
+            ]))
+        good_old = interface("p/Old")
+        self.assertEqual(
+            self.compare(old=good_old, new=interface("p/New"))[
+                "unique_cp_semantic_method_matches"], 1)
+        for kwargs in (
+            {"invokeinterface_count": 0},
+            {"invokeinterface_reserved": 1},
+            {"member_constant_pool_tag": 10},
+        ):
+            with self.subTest(kwargs=kwargs):
+                bad = interface("p/New", **kwargs)
+                self.assertEqual(
+                    self.compare(old=good_old, new=bad)["new_unsupported"], 1)
+
+    def test_invokedynamic_nonzero_reserved_bytes_are_not_proof(self):
+        method = _test_method(extra=[
+            _instruction("0xba", 5, 0, bootstrap_method_attr_index=0,
+                         name="call", descriptor="()V",
+                         invokedynamic_reserved=1),
+            _instruction("0xb1", 1, 5),
+        ])
+        result = self.compare(old=_profile("p/Old", method=method))
+        self.assertEqual(result["old_unsupported"], 1)
 
     def test_source_profile_with_unsupported_method_handle_ldc_refused(self):
         bad = _profile("p/Old", method=_test_method(extra=[
