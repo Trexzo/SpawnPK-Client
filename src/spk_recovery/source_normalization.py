@@ -2879,6 +2879,7 @@ def _nested_owner_binary_candidates(
     *,
     owner: str,
     current_owner: str,
+    imported_outers: dict[str, str] | None = None,
 ) -> list[tuple[str, str]]:
     """Return exact binary candidates plus the Java owner used for rewriting.
 
@@ -2919,6 +2920,17 @@ def _nested_owner_binary_candidates(
         if nested_candidate not in seen:
             seen.add(nested_candidate)
             out.append((nested_candidate, java_owner))
+
+    # An explicit import may name an outer class outside this package.
+    # Preserve all other candidates; multiple bytecode witnesses still veto.
+    if imported_outers and len(parts) >= 2:
+        imported_outer = imported_outers.get(parts[0])
+        if imported_outer:
+            candidate = imported_outer + "$" + "$".join(parts[1:])
+            java_owner = imported_outer.replace("/", ".") + "." + ".".join(parts[1:])
+            if candidate not in seen:
+                seen.add(candidate)
+                out.append((candidate, java_owner))
 
     return out
 
@@ -3010,12 +3022,14 @@ def _resolve_shadowed_nested_static_field(
     readable_zip: zipfile.ZipFile,
     entries: set[str],
     class_cache: dict[str, Any],
+    imported_outers: dict[str, str] | None = None,
 ) -> tuple[str, list[str], str] | None:
     matches: list[tuple[str, list[str], str]] = []
 
     for candidate, java_owner in _nested_owner_binary_candidates(
         owner=owner,
         current_owner=current_owner,
+        imported_outers=imported_outers,
     ):
         entry = candidate + ".class"
         if entry not in entries:
@@ -3155,12 +3169,14 @@ def _resolve_shadowed_nested_static_method(
     readable_zip: zipfile.ZipFile,
     entries: set[str],
     class_cache: dict[str, Any],
+    imported_outers: dict[str, str] | None = None,
 ) -> tuple[str, list[str], str] | None:
     matches: list[tuple[str, list[str], str]] = []
 
     for candidate, java_owner in _nested_owner_binary_candidates(
         owner=owner,
         current_owner=current_owner,
+        imported_outers=imported_outers,
     ):
         entry = candidate + ".class"
         if entry not in entries:
@@ -4140,6 +4156,16 @@ def _normalize_shadowed_nested_static_field_owners(
 
     current_owner = str(profile["internal_name"])
     text = path.read_text(encoding="utf-8")
+    imported_outers: dict[str, str] = {}
+    conflicting_imports: set[str] = set()
+    for imported in _SINGLE_TYPE_IMPORT_RE.finditer(text):
+        target = imported.group("name").replace(".", "/")
+        simple = target.rsplit("/", 1)[-1]
+        if simple in imported_outers and imported_outers[simple] != target:
+            conflicting_imports.add(simple)
+        imported_outers[simple] = target
+    for simple in conflicting_imports:
+        imported_outers.pop(simple, None)
     if "." not in text:
         return []
 
@@ -4204,6 +4230,7 @@ def _normalize_shadowed_nested_static_field_owners(
                     readable_zip=readable_zip,
                     entries=entries,
                     class_cache=class_cache,
+                    imported_outers=imported_outers,
                 )
                 if resolved is None:
                     continue
@@ -4365,6 +4392,7 @@ def _normalize_shadowed_nested_static_field_owners(
                     readable_zip=readable_zip,
                     entries=entries,
                     class_cache=class_cache,
+                    imported_outers=imported_outers,
                 )
                 if resolved is None:
                     continue
@@ -4538,6 +4566,7 @@ def _normalize_shadowed_nested_static_field_owners(
                         readable_zip=readable_zip,
                         entries=entries,
                         class_cache=class_cache,
+                        imported_outers=imported_outers,
                     )
                     if resolved is None:
                         continue
@@ -4664,6 +4693,16 @@ def _normalize_shadowed_nested_static_method_owners(
         return []
 
     text = path.read_text(encoding="utf-8")
+    imported_outers: dict[str, str] = {}
+    conflicting_imports: set[str] = set()
+    for imported in _SINGLE_TYPE_IMPORT_RE.finditer(text):
+        target = imported.group("name").replace(".", "/")
+        simple = target.rsplit("/", 1)[-1]
+        if simple in imported_outers and imported_outers[simple] != target:
+            conflicting_imports.add(simple)
+        imported_outers[simple] = target
+    for simple in conflicting_imports:
+        imported_outers.pop(simple, None)
     whole_code = _java_code_mask(text)
     entries = {
         info.filename
@@ -4735,6 +4774,7 @@ def _normalize_shadowed_nested_static_method_owners(
                     readable_zip=readable_zip,
                     entries=entries,
                     class_cache=class_cache,
+                    imported_outers=imported_outers,
                 )
                 if resolved is None:
                     continue
@@ -4923,6 +4963,7 @@ def _normalize_shadowed_nested_static_method_owners(
                     readable_zip=readable_zip,
                     entries=entries,
                     class_cache=class_cache,
+                    imported_outers=imported_outers,
                 )
                 if resolved is None:
                     continue
