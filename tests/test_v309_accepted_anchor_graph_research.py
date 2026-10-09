@@ -61,6 +61,49 @@ class AcceptedAnchorGraphTests(unittest.TestCase):
         self.assertEqual(row["other_archive_classes_superset_anchor_set"], 3)
         self.assertEqual(row["other_unpaired_classes_superset_anchor_set"], 2)
 
+    def test_joint_graph_differentiates_incoming_superset_rivals(self):
+        inbound = {
+            "proposed": {"A"},
+            "rival.one": {"A", "B"},
+            "rival.two": {"A", "C"},
+            "unrelated": {"C"},
+            "paired": {"A", "D"},
+        }
+        outgoing = {
+            "proposed": {"P", "Q", "R"},
+            "rival.one": {"P", "Q"},
+            "rival.two": {"R"},
+        }
+        metrics, actual = graph._joint_outgoing_discrimination(
+            inbound, "proposed", {"paired"}, outgoing.__getitem__,
+        )
+        self.assertEqual(actual, {"P", "Q", "R"})
+        self.assertEqual(metrics["unpaired_incoming_superset_alternatives"], 2)
+        self.assertEqual(metrics["unpaired_alternatives_with_outgoing_superset"], 0)
+        self.assertEqual(
+            metrics["unpaired_alternatives_with_identical_outgoing_targets"], 0)
+        self.assertEqual(
+            metrics["maximum_outgoing_target_overlap_among_unpaired_alternatives"], 2)
+
+    def test_joint_graph_preserves_competing_outgoing_superset_veto(self):
+        inbound = {"proposed": {"A"}, "rival": {"A", "B"}}
+        outgoing = {
+            "proposed": {"X", "Y"},
+            "rival": {"X", "Y", "Z"},
+        }
+        metrics, _ = graph._joint_outgoing_discrimination(
+            inbound, "proposed", set(), outgoing.__getitem__)
+        self.assertEqual(metrics["unpaired_alternatives_with_outgoing_superset"], 1)
+        self.assertEqual(metrics["unpaired_alternatives_with_identical_outgoing_targets"], 0)
+
+    def test_joint_graph_empty_source_or_outgoing_is_not_positive_evidence(self):
+        with self.assertRaises(graph.V309AnchorGraphError):
+            graph._joint_outgoing_discrimination(
+                {"proposed": set()}, "proposed", set(), lambda _: {"A"})
+        with self.assertRaises(graph.V309AnchorGraphError):
+            graph._joint_outgoing_discrimination(
+                {"proposed": {"A"}}, "proposed", set(), lambda _: set())
+
     def test_no_inbound_accepted_anchors_fails_closed(self):
         with self.assertRaises(graph.V309AnchorGraphError):
             graph._summarize_incoming(
