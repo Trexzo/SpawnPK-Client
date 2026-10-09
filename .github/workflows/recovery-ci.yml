@@ -18,6 +18,18 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      # One-day public-source-only transfer into isolated local replay workspace.
+      - name: Export public exact anchor-graph source (Ubuntu)
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: v309-public-anchor-graph-exact
+          retention-days: 1
+          if-no-files-found: error
+          path: |
+            pyproject.toml
+            src/spk_recovery/
+            research/v309-field-recovery/
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
