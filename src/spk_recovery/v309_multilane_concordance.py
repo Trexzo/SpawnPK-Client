@@ -55,8 +55,23 @@ def _check_common_report(
         and isinstance(doc.get("summary"), dict),
         f"{kind}: missing noncanonical report authority",
     )
-    old = doc.get("old_sha256", doc.get("exact_clients", {}).get("v308_sha256"))
-    new = doc.get("new_sha256", doc.get("exact_clients", {}).get("v309_sha256"))
+    # Source research tools derive report_id from the COMPLETE body.
+    # Checking prefixes and cross-links without independently recomputing
+    # this digest would allow modified/stale source evidence to retain an
+    # apparently matching provenance ID.
+    body = {k: v for k, v in doc.items() if k != "report_id"}
+    canonical_bytes = json.dumps(
+        body, sort_keys=True, separators=(",", ":"),
+        ensure_ascii=(kind == "v309_pinned_class_structural_drift_research"),
+    ).encode("utf-8")
+    expected_id = prefix + hashlib.sha256(canonical_bytes).hexdigest()[:20].upper()
+    _expect(doc["report_id"] == expected_id,
+            f"{kind}: report ID does not authenticate actual report body")
+    pins = doc.get("exact_clients")
+    if not isinstance(pins, dict):
+        pins = {}
+    old = doc.get("old_sha256", pins.get("v308_sha256"))
+    new = doc.get("new_sha256", pins.get("v309_sha256"))
     _expect(
         isinstance(old, str) and isinstance(new, str)
         and old.lower() == exact["v308_sha256"].lower()
