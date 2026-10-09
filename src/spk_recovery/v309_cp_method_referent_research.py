@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 import zipfile
 
-from .bytecode_profile import BytecodeProfileError, profile_class_field_accesses
+from .bytecode_profile import BytecodeProfileError, _jvm_field_descriptor_end, profile_class_field_accesses
 from .classfile import parse_class
 from .descriptor_class_dependencies import build_descriptor_class_dependency_report
 from .descriptor_class_private_jar_replay import _read_json_exact, write_research_report_no_clobber
@@ -222,6 +222,12 @@ def _instruction_semantics(
                 len(array_type) - len(array_type.lstrip("["))
         ):
             raise V309CpMethodWitnessError("invalid multianewarray CP owner/dimensions")
+        try:
+            end, _ = _jvm_field_descriptor_end(array_type, 0)
+        except BytecodeProfileError as exc:
+            raise V309CpMethodWitnessError("unparseable multianewarray descriptor") from exc
+        if end != len(array_type):
+            raise V309CpMethodWitnessError("trailing multianewarray descriptor data")
         base.extend((
             _rename(array_type, old_owner=old_owner, new_owner=new_owner),
             dims,
