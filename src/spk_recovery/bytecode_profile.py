@@ -461,13 +461,20 @@ def _instruction_length(
             raise BytecodeProfileError("truncated tableswitch")
         low = struct.unpack_from(">i", code, base + 4)[0]
         high = struct.unpack_from(">i", code, base + 8)[0]
-        return 1 + padding + 12 + 4 * (high - low + 1)
+        if high < low:
+            raise BytecodeProfileError("tableswitch reversed case bounds")
+        count = high - low + 1
+        if count > (len(code) - base - 12) // 4:
+            raise BytecodeProfileError("tableswitch case table exceeds Code")
+        return 1 + padding + 12 + 4 * count
     if opcode == 0xAB:
         padding = (4 - ((offset + 1) % 4)) % 4
         base = offset + 1 + padding
         if base + 8 > len(code):
             raise BytecodeProfileError("truncated lookupswitch")
         pairs = struct.unpack_from(">i", code, base + 4)[0]
+        if pairs < 0 or pairs > (len(code) - base - 8) // 8:
+            raise BytecodeProfileError("lookupswitch invalid pair count")
         return 1 + padding + 8 + 8 * pairs
     if opcode == 0xC4:
         if offset + 1 >= len(code):
@@ -634,6 +641,9 @@ def _decoded_instructions(
     offset = 0
     while offset < len(code):
         opcode = code[offset]
+        length = _instruction_length(code, offset)
+        if length <= 0 or offset + length > len(code):
+            raise BytecodeProfileError(f"invalid instruction length at {offset}")
         row: dict[str, Any] = {
             "offset": offset,
             "opcode": f"0x{opcode:02x}",
@@ -791,11 +801,6 @@ def _decoded_instructions(
             cp_index = struct.unpack_from(">H", code, offset + 1)[0]
             row["type"] = _class_name(cp, cp_index)
 
-        length = _instruction_length(code, offset)
-        if length <= 0 or offset + length > len(code):
-            raise BytecodeProfileError(
-                f"invalid instruction length at {offset}"
-            )
         row["length"] = length
         result.append(row)
         offset += length
