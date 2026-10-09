@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 import zipfile
 
-from .bytecode_profile import BytecodeProfileError, profile_class_field_accesses
+from .bytecode_profile import BytecodeProfileError, _jvm_field_descriptor_end, profile_class_field_accesses
 from .classfile import parse_class
 from .descriptor_class_dependencies import build_descriptor_class_dependency_report
 from .descriptor_class_private_jar_replay import _read_json_exact, write_research_report_no_clobber
@@ -32,10 +32,7 @@ _CP_MEMBER = {"0xb2", "0xb3", "0xb4", "0xb5", "0xb6", "0xb7", "0xb8", "0xb9"}
 _CP_TYPES = {"0xbb", "0xbd", "0xc0", "0xc1"}
 _CP_CONSTANTS = {"0x12", "0x13", "0x14"}
 _UNSUPPORTED = {
-    "0xaa", "0xab",  # switch tables require full arms/padding proof
-    "0xa9",          # ret: legacy subroutine control flow
-    "0xbc",          # newarray atype not decoded by the existing profiler
-    "0xc5",          # multianewarray CP + dimensions not decoded
+    "0xa8", "0xa9", "0xc9", # legacy jsr / ret / jsr_w subroutine control
     "0xca", "0xfe", "0xff", # debugger/reserved opcodes
 }
 
@@ -211,6 +208,57 @@ def _instruction_semantics(
             raise V309CpMethodWitnessError("invalid invokedynamic reserved bytes")
         base.append(_indy_semantics(row, bootstrap,
             old_owner=old_owner, new_owner=new_owner))
+    elif opcode == "0xbc":
+        atype = row.get("array_primitive_atype")
+        if type(atype) is not int or not 4 <= atype <= 11:
+            raise V309CpMethodWitnessError("unresolved JVM primitive newarray type")
+        base.append(atype)
+    elif opcode == "0xc5":
+        array_type = row.get("type")
+        dims = row.get("array_dimensions")
+        if (
+            not isinstance(array_type, str) or not array_type.startswith("[")
+            or type(dims) is not int or not 1 <= dims <=
+                len(array_type) - len(array_type.lstrip("["))
+        ):
+            raise V309CpMethodWitnessError("invalid multianewarray CP owner/dimensions")
+        try:
+            end, _ = _jvm_field_descriptor_end(array_type, 0)
+        except BytecodeProfileError as exc:
+            raise V309CpMethodWitnessError("unparseable multianewarray descriptor") from exc
+        if end != len(array_type):
+            raise V309CpMethodWitnessError("trailing multianewarray descriptor data")
+        base.extend((
+            _rename(array_type, old_owner=old_owner, new_owner=new_owner),
+            dims,
+        ))
+    elif opcode == "0xaa":
+        low, high = row.get("switch_low"), row.get("switch_high")
+        default = row.get("switch_default_target_offset")
+        targets = row.get("switch_targets")
+        if (
+            type(low) is not int or type(high) is not int or high < low
+            or type(default) is not int or not isinstance(targets, list)
+            or len(targets) != high - low + 1
+            or not all(type(t) is int for t in targets)
+        ):
+            raise V309CpMethodWitnessError("missing or malformed tableswitch arms")
+        base.extend((low, high, default, tuple(targets)))
+    elif opcode == "0xab":
+        default = row.get("switch_default_target_offset")
+        pairs = row.get("switch_pairs")
+        if (
+            type(default) is not int or not isinstance(pairs, list)
+            or not all(
+                isinstance(pair, (list, tuple)) and len(pair) == 2
+                and all(type(value) is int for value in pair)
+                for pair in pairs
+            )
+            or any(pairs[i][0] >= pairs[i + 1][0]
+                   for i in range(len(pairs) - 1))
+        ):
+            raise V309CpMethodWitnessError("missing or unsorted lookupswitch arms")
+        base.extend((default, tuple((a, b) for a, b in pairs)))
     else:
         # Decoder-supplied immediate operands are included instead of dropping
         # branch/local/primitive distinctions. Unknown multi-byte operands veto.
@@ -255,10 +303,21 @@ def _method_semantics(
         signature.append(_instruction_semantics(row, bootstrap,
             old_owner=old_owner, new_owner=new_owner))
         offset += row["length"]
-        if row["opcode"] in _CP_MEMBER | _CP_TYPES | _CP_CONSTANTS | {"0xba"}:
+        if row["opcode"] in _CP_MEMBER | _CP_TYPES | _CP_CONSTANTS | {"0xba", "0xc5"}:
             cp_sites += 1
     if offset != method["code_length"]:
         raise V309CpMethodWitnessError("decoded Code length mismatch")
+    legal_targets = {r["offset"] for r in ins}
+    for decoded in ins:
+        if decoded["opcode"] not in ("0xaa", "0xab"):
+            continue
+        destinations = [decoded["switch_default_target_offset"]]
+        if decoded["opcode"] == "0xaa":
+            destinations.extend(decoded["switch_targets"])
+        else:
+            destinations.extend(target for _, target in decoded["switch_pairs"])
+        if any(dest not in legal_targets for dest in destinations):
+            raise V309CpMethodWitnessError("switch targets do not align with Code")
     normalized_handlers = []
     for row in handlers:
         if (
