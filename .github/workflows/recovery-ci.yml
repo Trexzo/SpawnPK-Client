@@ -35,3 +35,34 @@ jobs:
         run: python -m spk_recovery.cli --help
       - name: Repository hygiene
         run: python scripts/check_repo_hygiene.py
+      - name: Private replay launcher syntax (Windows only)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $Tokens = $null
+          $Errors = $null
+          $ScriptPath = Join-Path (Get-Location) 'scripts/Invoke-V309ExactPrivateFiveLaneReplay.ps1'
+          [System.Management.Automation.Language.Parser]::ParseFile($ScriptPath, [ref]$Tokens, [ref]$Errors) | Out-Null
+          if ($Errors.Count -ne 0) { throw "Private replay PowerShell parser found $($Errors.Count) errors" }
+      - name: Private replay fails closed without original JARs (Windows only)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ScriptPath = Join-Path (Get-Location) 'scripts/Invoke-V309ExactPrivateFiveLaneReplay.ps1'
+          $OutputRoot = Join-Path $env:RUNNER_TEMP 'spk-v309-private-negative-smoke'
+          $OldJar = Join-Path $env:RUNNER_TEMP 'deliberately-absent-old.jar'
+          $NewJar = Join-Path $env:RUNNER_TEMP 'deliberately-absent-new.jar'
+          if ((Test-Path $OldJar) -or (Test-Path $NewJar) -or (Test-Path $OutputRoot)) {
+            throw 'Negative smoke preimage not clean'
+          }
+          $Refused = $false
+          try {
+            & $ScriptPath -V308Jar $OldJar -V309Jar $NewJar -ReportDir $OutputRoot
+          }
+          catch {
+            if ($_.Exception.Message -notlike '*does not exist*') { throw }
+            $Refused = $true
+          }
+          if (-not $Refused -or (Test-Path $OutputRoot)) {
+            throw 'Private replay launcher did not fail closed before output'
+          }
