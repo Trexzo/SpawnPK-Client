@@ -98,7 +98,7 @@ class ParsedClass:
 
     def structural_sha256(self) -> str:
         import json
-        raw = json.dumps(self.structural_payload(), sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+        raw = json.dumps(self.structural_payload(), sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8", errors="surrogatepass")
         return hashlib.sha256(raw).hexdigest()
 
 
