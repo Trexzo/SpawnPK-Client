@@ -132,6 +132,7 @@ def build_v309_anchor_graph(
     old_jar: Path, new_jar: Path, frontier_path: Path,
     lineage_path: Path, global_report_path: Path,
 ) -> dict:
+    frontier_input_sha = sha256_file(frontier_path).lower()
     frontier = _read_json_exact(frontier_path)
     if (
         frontier.get("kind") != "v309_recovery_frontier"
@@ -244,6 +245,17 @@ def build_v309_anchor_graph(
         if sha256_file(jar).lower() != pins[build + "_sha256"].lower():
             raise V309AnchorGraphError("original private archive mutated during research")
 
+    # A correct initial pin must not be used to endorse a report if any
+    # protected input was concurrently replaced during the scan.
+    if (
+        sha256_file(frontier_path).lower() != frontier_input_sha
+        or sha256_file(lineage_path).lower() !=
+            frontier["files"]["class_lineage"]["sha256"].lower()
+        or sha256_file(global_report_path).lower() !=
+            frontier["files"]["global_field_usage"]["sha256"].lower()
+    ):
+        raise V309AnchorGraphError("protected input mutated during private replay")
+
     for cid in candidates:
         before, after = incoming_candidates[cid]["v308"], incoming_candidates[cid]["v309"]
         rows[cid]["same_accepted_anchor_class_ids"] = before == after
@@ -266,6 +278,12 @@ def build_v309_anchor_graph(
         "kind": "v309_accepted_anchor_full_archive_research",
         "state": "ANCHOR_GRAPH_ONLY_NO_CLASS_OR_FIELD_ACCEPTANCE",
         "canonical": False, "exact_clients": pins,
+        "source_frontier_sha256": frontier_input_sha,
+        "source_class_lineage_sha256":
+            frontier["files"]["class_lineage"]["sha256"].lower(),
+        "source_global_field_report_sha256":
+            frontier["files"]["global_field_usage"]["sha256"].lower(),
+        "source_global_field_report_id": usage["report_id"],
         "summary": {
             "accepted_anchor_class_pairs_verified": 1092,
             "proposed_unaccepted_class_pairs": 8,
