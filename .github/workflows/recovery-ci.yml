@@ -35,6 +35,19 @@ jobs:
         run: python -m spk_recovery.cli --help
       - name: Repository hygiene
         run: python scripts/check_repo_hygiene.py
+      # Temporary public-source-only handoff for off-network private-JAR replay.
+      # Deliberately excludes all client archives, generated outputs and .git.
+      - name: Export public v309 recovery source (Ubuntu only)
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: v309-public-offline-recovery-source
+          retention-days: 1
+          if-no-files-found: error
+          path: |
+            pyproject.toml
+            src/spk_recovery/
+            research/v309-field-recovery/
       - name: Private replay launcher syntax (Windows only)
         if: runner.os == 'Windows'
         shell: pwsh
