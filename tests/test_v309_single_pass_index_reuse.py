@@ -207,7 +207,7 @@ class PrivateIndexReuseTests(unittest.TestCase):
         self.old.write_bytes(self.old.read_bytes() + b"changed")
         with patch.object(rival, "validate_lineage"):
             with self.assertRaisesRegex(
-                rival.V309CpRivalWitnessError, "original client",
+                rival.V309CpRivalWitnessError, "exact JAR/lineage SHA drift",
             ):
                 rival.build_v309_cp_rival_witness(
                     self.frontier, self.global_report, self.lineage,
