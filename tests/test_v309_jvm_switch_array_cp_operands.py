@@ -186,6 +186,20 @@ class SyntheticArraySwitchNegativeTests(unittest.TestCase):
             with self.subTest(dimensions=dims), self.assertRaises(BytecodeProfileError):
                 _decoded_instructions(b"\xc5\x00\x02" + bytes((dims,)) + b"\xb1", cp2)
 
+    def test_malformed_multidimensional_array_descriptors_fail_closed(self):
+        raw = b"\xc5\x00\x02\x01\xb1"
+        for descriptor in ("[Q", "[[Ljava/lang/Foo;X", "[[V"):
+            with self.subTest(descriptor=descriptor):
+                cp = [None, (1, descriptor), (7, 1)]
+                with self.assertRaises(BytecodeProfileError):
+                    _decoded_instructions(raw, cp)
+                with self.assertRaises(V309CpMethodWitnessError):
+                    _instruction_semantics(
+                        {"opcode": "0xc5", "mnemonic": "multianewarray",
+                         "length": 4, "type": descriptor, "array_dimensions": 1},
+                        [], old_owner="a/A", new_owner="b/B",
+                    )
+
     def test_legacy_jsr_is_not_equated_to_supported_branch_code(self):
         for opcode, length in (("0xa8", 3), ("0xa9", 2), ("0xc9", 5)):
             with self.subTest(opcode=opcode):
