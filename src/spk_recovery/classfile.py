@@ -6,6 +6,8 @@ import io
 import struct
 from typing import Any
 
+from .modified_utf8 import ModifiedUtf8Error, decode_modified_utf8
+
 
 class ClassFormatError(ValueError):
     pass
@@ -96,7 +98,7 @@ class ParsedClass:
 
     def structural_sha256(self) -> str:
         import json
-        raw = json.dumps(self.structural_payload(), sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+        raw = json.dumps(self.structural_payload(), sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8", errors="surrogatepass")
         return hashlib.sha256(raw).hexdigest()
 
 
@@ -113,7 +115,10 @@ def parse_class(data: bytes) -> ParsedClass:
         tag = _u1(f)
         if tag == 1:
             n = _u2(f)
-            cp[i] = (tag, _take(f, n).decode("utf-8", errors="replace"))
+            try:
+                cp[i] = (tag, decode_modified_utf8(_take(f, n)))
+            except ModifiedUtf8Error as exc:
+                raise ClassFormatError(f"invalid constant-pool Modified UTF-8 #{i}") from exc
         elif tag == 3:
             cp[i] = (tag, struct.unpack(">i", _take(f, 4))[0])
         elif tag == 4:

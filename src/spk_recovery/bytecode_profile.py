@@ -5,6 +5,8 @@ import struct
 from typing import Any
 import zipfile
 
+from .modified_utf8 import ModifiedUtf8Error, decode_modified_utf8
+
 
 class BytecodeProfileError(ValueError):
     pass
@@ -131,7 +133,10 @@ def _constant_pool(r: _Reader) -> list[Any]:
     while i < count:
         tag = r.u1()
         if tag == 1:
-            cp[i] = (tag, r.take(r.u2()).decode("utf-8", "replace"))
+            try:
+                cp[i] = (tag, decode_modified_utf8(r.take(r.u2())))
+            except ModifiedUtf8Error as exc:
+                raise BytecodeProfileError(f"invalid constant-pool Modified UTF-8 #{i}") from exc
         elif tag in (3, 4):
             cp[i] = (tag, r.take(4))
         elif tag in (5, 6):
@@ -389,11 +394,66 @@ def _skip_attributes(
         r.take(r.u4())
 
 
+def _jvm_field_descriptor_end(desc: str, start: int, *, returns: bool = False) -> tuple[int, int]:
+    """Parse one JVM field/return type, returning end index and argument slots."""
+    i = start
+    if i >= len(desc):
+        raise BytecodeProfileError("truncated JVM method descriptor")
+    code = desc[i]
+    if code == "V" and returns:
+        return i + 1, 0
+    if code == "[":
+        while i < len(desc) and desc[i] == "[":
+            i += 1
+        if i >= len(desc):
+            raise BytecodeProfileError("missing JVM array component")
+        if desc[i] == "L":
+            end = desc.find(";", i + 1)
+            if end <= i + 1:
+                raise BytecodeProfileError("invalid JVM array object component")
+            return end + 1, 1
+        if desc[i] not in "BCDFIJSZ":
+            raise BytecodeProfileError("invalid JVM array component")
+        return i + 1, 1
+    if code == "L":
+        end = desc.find(";", i + 1)
+        if end <= i + 1:
+            raise BytecodeProfileError("invalid JVM object descriptor")
+        return end + 1, 1
+    if code in "BCFISZ":
+        return i + 1, 1
+    if code in "DJ":
+        return i + 1, 2
+    raise BytecodeProfileError("invalid JVM field descriptor type")
+
+
+def _invokeinterface_argument_slots(desc: str) -> int:
+    """JVM invokeinterface count includes receiver + wide primitive slots."""
+    if not isinstance(desc, str) or not desc.startswith("("):
+        raise BytecodeProfileError("invokeinterface requires method descriptor")
+    i = 1
+    count = 1
+    while i < len(desc) and desc[i] != ")":
+        i, slots = _jvm_field_descriptor_end(desc, i)
+        count += slots
+    if i >= len(desc) or desc[i] != ")":
+        raise BytecodeProfileError("unterminated JVM method argument descriptor")
+    i, _ = _jvm_field_descriptor_end(desc, i + 1, returns=True)
+    if i != len(desc) or count > 255:
+        raise BytecodeProfileError("invalid JVM method descriptor or slot count")
+    return count
+
+
 def _instruction_length(
     code: bytes,
     offset: int,
 ) -> int:
     opcode = code[offset]
+    # 0xCA..0xFF are not defined classfile Code instructions (reserved
+    # for debuggers/implementation use); treating them as one byte could
+    # silently misalign every later decoded CP reference.
+    if opcode >= 0xCA:
+        raise BytecodeProfileError(f"reserved JVM Code opcode 0x{opcode:02x}")
     if opcode == 0xAA:
         padding = (4 - ((offset + 1) % 4)) % 4
         base = offset + 1 + padding
@@ -412,7 +472,10 @@ def _instruction_length(
     if opcode == 0xC4:
         if offset + 1 >= len(code):
             raise BytecodeProfileError("truncated wide")
-        return 6 if code[offset + 1] == 0x84 else 4
+        nested = code[offset + 1]
+        if nested not in _LOCAL_INDEXED_OPS and nested != 0x84:
+            raise BytecodeProfileError("invalid JVM wide nested opcode")
+        return 6 if nested == 0x84 else 4
 
     if opcode in {
         0x10, 0x12,
@@ -676,6 +739,14 @@ def _decoded_instructions(
                 # count and a reserved zero byte.
                 row["invokeinterface_count"] = int(code[offset + 3])
                 row["invokeinterface_reserved"] = int(code[offset + 4])
+                if (
+                    row["invokeinterface_reserved"] != 0
+                    or row["invokeinterface_count"]
+                    != _invokeinterface_argument_slots(descriptor)
+                ):
+                    raise BytecodeProfileError(
+                        "invokeinterface argument slot count/reserved mismatch"
+                    )
         elif opcode == 0xBA:
             row["mnemonic"] = "invokedynamic"
             cp_index = struct.unpack_from(">H", code, offset + 1)[0]
