@@ -92,12 +92,12 @@ def _removed_invokestatic_continuity(old: dict, new: dict, *,
     if len(source_ops) < 5 or len(target_ops) < 5:
         raise V309MethodDeltaResearchError("method too short for 5-gram proof")
     source_grams = _opcode_grams(original)
-    rankings = sorted(
+    rankings = [
         (_dice(source_grams, _opcode_grams(method)), method)
         for method in new_methods
         if isinstance(method.get("instructions"), list)
         and method.get("name") not in ("<init>", "<clinit>")
-    )
+    ]
     best_score = _dice(source_grams, _opcode_grams(counterpart))
     other_scores = [
         score for score, method in rankings if method is not counterpart
