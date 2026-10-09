@@ -148,9 +148,34 @@ def fixtures():
 class ResearchConcordanceTests(unittest.TestCase):
     def setUp(self):
         self.data = fixtures()
+        self._seal(self.data)
 
-    def build(self, data=None):
-        d = self.data if data is None else data
+    @staticmethod
+    def _seal(d, *, rechain=True):
+        import hashlib
+        # Synthetic reports must use the same content-derived IDs as
+        # their real research producers; never bypass digest verification.
+        for name, prefix, escape in (
+            ("literal", "V309LITERAL_", False),
+            ("shape", "V309METHODSHAPE_", False),
+            ("cp_pair", "V309CPPAIR_", False),
+            ("structural", "V309STRUCTAUDIT_", True),
+            ("cp_rivals", "V309CPRIVALS_", False),
+        ):
+            if name == "cp_rivals" and rechain:
+                d[name]["source_cp_pair_report_id"] = d["cp_pair"]["report_id"]
+            doc = d[name]
+            body = {k: v for k, v in doc.items() if k != "report_id"}
+            raw = json.dumps(
+                body, sort_keys=True, separators=(",", ":"), ensure_ascii=escape,
+            ).encode("utf-8")
+            doc["report_id"] = prefix + hashlib.sha256(raw).hexdigest()[:20].upper()
+
+    def build(self, data=None, *, seal=True, rechain=True):
+        # Never modify caller-owned report objects during a review.
+        d = copy.deepcopy(self.data if data is None else data)
+        if seal:
+            self._seal(d, rechain=rechain)
         with patch.object(m, "validate_lineage"):
             with patch.object(m, "build_descriptor_class_dependency_report",
                               return_value=d["_deps"]):
@@ -210,7 +235,16 @@ class ResearchConcordanceTests(unittest.TestCase):
         d = copy.deepcopy(self.data)
         d["cp_rivals"]["source_cp_pair_report_id"] = "V309CPPAIR_OTHER"
         with self.assertRaisesRegex(m.V309ConcordanceError, "chain broken"):
-            self.build(d)
+            self.build(d, rechain=False)
+
+    def test_stale_source_report_id_cannot_represent_modified_report_body(self):
+        d = copy.deepcopy(self.data)
+        d["cp_pair"]["rows"][0]["unique_cp_semantic_method_matches"] = 997
+        with self.assertRaisesRegex(
+            m.V309ConcordanceError,
+            "report ID does not authenticate actual report body",
+        ):
+            self.build(d, seal=False)
 
     def test_duplicate_candidate_class_id_rejects_overlap(self):
         d = copy.deepcopy(self.data)
