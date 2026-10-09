@@ -75,11 +75,19 @@ class PrivateIndexReuseTests(unittest.TestCase):
             "summary": {
                 "reviewed_descriptor_class_pairs": 8,
                 "input_blocked_field_relationships": 26,
+                "unique_cp_method_research_matches": 0,
                 "class_identities_accepted": 0,
                 "member_identities_accepted": 0,
                 "accepted_frontier_unresolved": 143,
             },
-            "rows": [],
+            "rows": [
+                {"old_canonical_class_id": f"CLIENT_CLASS_{i + 1:06d}",
+                 "blocked_fields": (5 if i == 0 else 3),
+                 "unique_cp_semantic_method_matches": 0,
+                 "accepted_class_identifications": 0,
+                 "accepted_member_identifications": 0}
+                for i in range(8)
+            ],
         }
         self.pair["report_id"] = (
             "V309CPPAIR_" + rival._digest(self.pair)[:20].upper()
@@ -167,6 +175,44 @@ class PrivateIndexReuseTests(unittest.TestCase):
                 rival.build_v309_cp_rival_witness(
                     self.frontier, self.global_report, self.lineage,
                     self.old, self.new, precomputed_pairwise=tampered)
+
+    def test_forged_cp_parent_reassigned_class_group_is_rejected(self):
+        tampered = copy.deepcopy(self.pair)
+        tampered["rows"][1]["old_canonical_class_id"] = (
+            tampered["rows"][0]["old_canonical_class_id"]
+        )
+        tampered["report_id"] = "V309CPPAIR_" + rival._digest(
+            {k: v for k, v in tampered.items() if k != "report_id"}
+        )[:20].upper()
+        with self.common_patches():
+            with self.assertRaisesRegex(
+                rival.V309CpRivalWitnessError, "class/field group proof drift",
+            ):
+                rival.build_v309_cp_rival_witness(
+                    self.frontier, self.global_report, self.lineage,
+                    self.old, self.new,
+                    precomputed_old_index=self.old_index,
+                    precomputed_new_index=self.new_index,
+                    precomputed_pairwise=tampered,
+                )
+
+    def test_forged_cp_parent_witness_total_is_rejected(self):
+        tampered = copy.deepcopy(self.pair)
+        tampered["rows"][0]["unique_cp_semantic_method_matches"] = 1
+        tampered["report_id"] = "V309CPPAIR_" + rival._digest(
+            {k: v for k, v in tampered.items() if k != "report_id"}
+        )[:20].upper()
+        with self.common_patches():
+            with self.assertRaisesRegex(
+                rival.V309CpRivalWitnessError, "count conservation drift",
+            ):
+                rival.build_v309_cp_rival_witness(
+                    self.frontier, self.global_report, self.lineage,
+                    self.old, self.new,
+                    precomputed_old_index=self.old_index,
+                    precomputed_new_index=self.new_index,
+                    precomputed_pairwise=tampered,
+                )
 
     def test_reused_pair_mixed_original_build_shas_refused(self):
         broken = copy.deepcopy(self.pair)
