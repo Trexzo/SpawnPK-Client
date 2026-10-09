@@ -56,10 +56,8 @@ def decode_modified_utf8(data: bytes) -> str:
             raise ModifiedUtf8Error("invalid modified UTF-8 lead byte")
         utf16.extend(code_unit.to_bytes(2, "big"))
 
-    try:
-        # Reject lone surrogates instead of substituting a replacement
-        # character. A class requiring unsupported lone surrogate content
-        # is not eligible for exact identity-proof comparisons.
-        return utf16.decode("utf-16-be", errors="strict")
-    except UnicodeDecodeError as exc:
-        raise ModifiedUtf8Error("unpaired UTF-16 surrogate code unit") from exc
+    # JVM MUTF-8 preserves Java UTF-16 code units, including lone surrogate
+    # units in literal strings. Preserve them losslessly as Python surrogates
+    # (never U+FFFD), while combining well-formed pairs into Unicode scalars.
+    # Callers serializing such strings must escape or surrogatepass them.
+    return utf16.decode("utf-16-be", errors="surrogatepass")
