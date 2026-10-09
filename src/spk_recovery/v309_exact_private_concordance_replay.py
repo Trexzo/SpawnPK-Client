@@ -138,7 +138,10 @@ def run_v309_exact_private_concordance(
         frontier, report, lineage, old_jar, new_jar
     )
     cp_rivals = build_v309_cp_rival_witness(
-        frontier, report, lineage, old_jar, new_jar
+        frontier, report, lineage, old_jar, new_jar,
+        precomputed_old_index=old_index,
+        precomputed_new_index=new_index,
+        precomputed_pairwise=cp_pair,
     )
     concordance = build_v309_multilane_concordance(
         frontier, lineage, report,
