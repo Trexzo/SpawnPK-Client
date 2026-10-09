@@ -153,6 +153,10 @@ class ExactPrivateReplayOrchestrationTests(unittest.TestCase):
         self.assertEqual(calls["shape"].call_count, 1)
         self.assertEqual(calls["cp_pair"].call_count, 1)
         self.assertEqual(calls["cp_rivals"].call_count, 1)
+        reused = calls["cp_rivals"].call_args.kwargs
+        self.assertIs(reused["precomputed_old_index"], self.old_index)
+        self.assertIs(reused["precomputed_new_index"], self.new_index)
+        self.assertEqual(reused["precomputed_pairwise"], {"kind": "cp_pair"})
         self.assertEqual(calls["join"].call_count, 1)
         created = set(p.name for p in self.root.iterdir()) - set(before)
         self.assertEqual(created, {"new.json"})
