@@ -817,6 +817,9 @@ def _decoded_instructions(
                 or dimensions < 1 or dimensions > len(array_desc) - len(array_desc.lstrip("["))
             ):
                 raise BytecodeProfileError("invalid multianewarray class/dimensions")
+            descriptor_end, _ = _jvm_field_descriptor_end(array_desc, 0)
+            if descriptor_end != len(array_desc):
+                raise BytecodeProfileError("malformed multianewarray element descriptor")
             row["mnemonic"] = "multianewarray"
             row["type"] = array_desc
             row["array_dimensions"] = dimensions
