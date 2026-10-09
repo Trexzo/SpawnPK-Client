@@ -83,6 +83,7 @@ def fixtures():
         "summary": {
             "reviewed_descriptor_class_pairs": 8,
             "input_blocked_field_relationships": 26,
+            "unique_cp_method_research_matches": 24,
             "class_identities_accepted": 0,
             "member_identities_accepted": 0,
             "accepted_frontier_unresolved": 143,
@@ -90,6 +91,11 @@ def fixtures():
         "rows": [{
             "old_canonical_class_id": cid, "blocked_fields": blocked[cid],
             "unique_cp_semantic_method_matches": 3,
+            "old_eligible": 5, "new_eligible": 6,
+            "old_unsupported": 2, "new_unsupported": 3,
+            "old_without_cp_references": 1,
+            "new_without_cp_references": 2,
+            "ambiguous_duplicate_semantic_shapes": 0,
             "accepted_class_identifications": 0,
             "accepted_member_identifications": 0,
         } for cid in ids],
@@ -209,8 +215,50 @@ class ResearchConcordanceTests(unittest.TestCase):
     def test_three_cp_bearing_methods_required_even_when_other_lanes_agree(self):
         d = copy.deepcopy(self.data)
         d["cp_pair"]["rows"][0]["unique_cp_semantic_method_matches"] = 2
+        d["cp_pair"]["summary"]["unique_cp_method_research_matches"] = 23
+        d["cp_rivals"]["rows"][0]["state"] = "PROPOSED_PAIR_INSUFFICIENT_WITNESSES"
+        d["cp_rivals"]["rows"][0]["proposed_pair_unique_cp_method_matches"] = 2
         report = self.build(d)
         self.assertEqual(report["summary"]["supported_subset_reviewable"], 7)
+
+    def test_real_cp_coverage_is_aggregated_without_private_method_labels(self):
+        report = self.build()
+        summary = report["summary"]
+        self.assertEqual(summary["supported_cp_methods_v308"], 40)
+        self.assertEqual(summary["supported_cp_methods_v309"], 48)
+        self.assertEqual(summary["unsupported_cp_methods_v308"], 16)
+        self.assertEqual(summary["unsupported_cp_methods_v309"], 24)
+        self.assertEqual(summary["cp_free_methods_excluded_v308"], 8)
+        self.assertEqual(summary["cp_free_methods_excluded_v309"], 16)
+        self.assertEqual(summary["pairwise_unique_cp_method_witnesses"], 24)
+        self.assertEqual(summary["ambiguous_cp_method_fingerprint_groups"], 0)
+        self.assertTrue(all(x["old_supported_cp_methods"] == 5 for x in report["rows"]))
+        self.assertNotIn("do-not-export-this", json.dumps(report))
+
+    def test_pairwise_summary_count_discrepancy_must_fail_closed(self):
+        d = copy.deepcopy(self.data)
+        d["cp_pair"]["summary"]["unique_cp_method_research_matches"] = 25
+        with self.assertRaisesRegex(m.V309ConcordanceError, "summary and per-class"):
+            self.build(d)
+
+    def test_mutual_rival_approved_subsets_must_agree_with_pairwise_count(self):
+        d = copy.deepcopy(self.data)
+        d["cp_rivals"]["rows"][0]["proposed_pair_unique_cp_method_matches"] = 4
+        with self.assertRaisesRegex(m.V309ConcordanceError, "mutual-rival"):
+            self.build(d)
+
+    def test_invalid_cp_coverage_field_and_impossible_witness_count_fail_closed(self):
+        for key, value in (
+            ("old_unsupported", -1),
+            ("old_without_cp_references", True),
+            ("new_eligible", 1),
+            ("ambiguous_duplicate_semantic_shapes", "2"),
+        ):
+            with self.subTest(key=key):
+                d = copy.deepcopy(self.data)
+                d["cp_pair"]["rows"][0][key] = value
+                with self.assertRaisesRegex(m.V309ConcordanceError, "coverage accounting"):
+                    self.build(d)
 
     def test_structural_drift_is_a_hard_stop_not_weak_review_score(self):
         d = copy.deepcopy(self.data)
