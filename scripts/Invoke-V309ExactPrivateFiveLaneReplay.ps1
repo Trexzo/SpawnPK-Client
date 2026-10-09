@@ -48,6 +48,11 @@ if ($Frontier.kind -ne 'v309_recovery_frontier' -or
 }
 Require-ExactFile -Path $V308Jar -Expected $Pinned308 -Label 'Original v308 client'
 Require-ExactFile -Path $V309Jar -Expected $Pinned309 -Label 'Original v309 client'
+$ProtectedInputs = @($FrontierPath, $LineagePath, $GlobalPath)
+$ProtectedSHA = @{}
+foreach ($Item in $ProtectedInputs) {
+    $ProtectedSHA[$Item] = (Get-FileHash -LiteralPath $Item -Algorithm SHA256).Hash
+}
 
 $Command = Get-Command $Python -ErrorAction Stop
 & $Command.Source -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)'
@@ -89,6 +94,13 @@ finally {
     $env:PYTHONPATH = $OldPythonPath
 }
 if ($Exit -ne 0) { throw "Exact-private replay failed closed (exit $Exit)" }
+Require-ExactFile -Path $V308Jar -Expected $Pinned308 -Label 'Original v308 client after replay'
+Require-ExactFile -Path $V309Jar -Expected $Pinned309 -Label 'Original v309 client after replay'
+foreach ($Item in $ProtectedInputs) {
+    if ((Get-FileHash -LiteralPath $Item -Algorithm SHA256).Hash -ine $ProtectedSHA[$Item]) {
+        throw 'Protected repository research input changed during replay'
+    }
+}
 if (-not (Test-Path -LiteralPath $Output -PathType Leaf)) {
     throw 'Replay returned success without an aggregate output file'
 }
