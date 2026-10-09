@@ -153,6 +153,16 @@ def build_v309_accepted_owner_cp_research(
     ):
         raise V309AcceptedOwnerResearchError("expected pinned 143/26 research frontier")
     exact = frontier["exact_clients"]
+    validate_lineage(lineage)
+    accepted_builds = {row["build_id"]: row["sha256"] for row in lineage["builds"]}
+    if (
+        set(accepted_builds) != {"v308", "v309"}
+        or any(accepted_builds[v].lower() != exact[v + "_sha256"].lower()
+               for v in accepted_builds)
+        or global_report.get("summary", {}).get("descriptor_identity_guard_rejected") != 26
+        or len(global_report.get("review_outcomes", [])) != 143
+    ):
+        raise V309AcceptedOwnerResearchError("accepted class anchor provenance drift")
     for version, file in (("v308", old_jar), ("v309", new_jar)):
         if sha256_file(file).lower() != exact[version + "_sha256"].lower():
             raise V309AcceptedOwnerResearchError("exact original client SHA drift")
