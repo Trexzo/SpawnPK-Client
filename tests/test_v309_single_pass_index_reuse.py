@@ -142,9 +142,12 @@ class PrivateIndexReuseTests(unittest.TestCase):
                     no_manifest, "v308", full["sha256"], self.old,
                 )
 
-    def shapes(self, index, version, sha):
+    def shapes(self, index, version, sha, original_jar):
         self.assertEqual(sha,
                          self.frontier["exact_clients"][version + "_sha256"])
+        self.assertEqual(
+            original_jar, self.old if version == "v308" else self.new
+        )
         return {
             path[0 if version == "v308" else 1]: Counter({(1, "()V", 1): 3})
             for path in self.paths
