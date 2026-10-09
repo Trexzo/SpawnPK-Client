@@ -121,6 +121,45 @@ class AcceptedOwnerAliasResearchTests(unittest.TestCase):
                     rewrite_accepted_class_types(self.old, aliases)
 
 
+class PrivateCliBoundaryTests(unittest.TestCase):
+    def test_existing_report_is_never_overwritten(self):
+        import io
+        from contextlib import redirect_stdout
+        from spk_recovery.v309_accepted_owner_cp_research import main
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            report = root / "existing.json"
+            report.write_text("KEEP_PRIOR_REPORT", encoding="utf-8")
+            with redirect_stdout(io.StringIO()) as output:
+                status = main([
+                    "--v308-jar", str(root / "missing-old.jar"),
+                    "--v309-jar", str(root / "missing-new.jar"),
+                    "--out", str(report),
+                ])
+            self.assertEqual(status, 1)
+            self.assertEqual(report.read_text(encoding="utf-8"), "KEEP_PRIOR_REPORT")
+            self.assertIn("FAIL_CLOSED", output.getvalue())
+            self.assertNotIn(str(root), output.getvalue())
+
+    def test_missing_original_clients_cannot_create_research_output(self):
+        import io
+        from contextlib import redirect_stdout
+        from spk_recovery.v309_accepted_owner_cp_research import main
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            report = root / "new.json"
+            with redirect_stdout(io.StringIO()) as output:
+                status = main([
+                    "--v308-jar", str(root / "missing-old.jar"),
+                    "--v309-jar", str(root / "missing-new.jar"),
+                    "--out", str(report),
+                ])
+            self.assertEqual(status, 1)
+            self.assertFalse(report.exists())
+            self.assertIn("FAIL_CLOSED", output.getvalue())
+            self.assertNotIn(str(root), output.getvalue())
+
+
 @unittest.skipUnless(shutil.which("javac"), "Java compiler required")
 class RealJavaNecessaryPoolTests(unittest.TestCase):
     def test_incomplete_original_archive_manifest_fails_closed(self):
