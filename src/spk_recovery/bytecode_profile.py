@@ -5,6 +5,8 @@ import struct
 from typing import Any
 import zipfile
 
+from .modified_utf8 import ModifiedUtf8Error, decode_modified_utf8
+
 
 class BytecodeProfileError(ValueError):
     pass
@@ -131,7 +133,10 @@ def _constant_pool(r: _Reader) -> list[Any]:
     while i < count:
         tag = r.u1()
         if tag == 1:
-            cp[i] = (tag, r.take(r.u2()).decode("utf-8", "replace"))
+            try:
+                cp[i] = (tag, decode_modified_utf8(r.take(r.u2())))
+            except ModifiedUtf8Error as exc:
+                raise BytecodeProfileError(f"invalid constant-pool Modified UTF-8 #{i}") from exc
         elif tag in (3, 4):
             cp[i] = (tag, r.take(4))
         elif tag in (5, 6):
