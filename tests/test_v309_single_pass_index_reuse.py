@@ -95,6 +95,53 @@ class PrivateIndexReuseTests(unittest.TestCase):
         self.old_index = {"old": True}
         self.new_index = {"new": True}
 
+    def test_complete_original_entry_manifest_is_required(self):
+        # Even a cache claiming the exact SHA and correct CLASS COUNT must
+        # cover every named archive entry; equal counts are not sufficient.
+        names = [old for old, _ in self.paths]
+        full = {
+            "sha256": self.frontier["exact_clients"]["v308_sha256"],
+            "summary": {
+                "entry_count": len(names),
+                "class_count": len(names),
+                "class_parse_error_count": 0,
+            },
+            "entries": {name: {} for name in names},
+            "classes": {
+                name: {"internal_name": name[:-6], "methods": []}
+                for name in names
+            },
+        }
+        with patch.dict(rival._PINNED_CLASS_COUNTS, {"v308": len(names)}):
+            shapes = rival._indexed_shapes(
+                full, "v308", full["sha256"], self.old,
+            )
+            self.assertEqual(set(shapes), set(names))
+            impostor = copy.deepcopy(full)
+            missing = names[0]
+            impostor_name = "rs/Impostor.class"
+            impostor["entries"][impostor_name] = impostor["entries"].pop(missing)
+            impostor["classes"][impostor_name] = (
+                impostor["classes"].pop(missing)
+            )
+            impostor["classes"][impostor_name]["internal_name"] = "rs/Impostor"
+            # Same count, same declared old-JAR SHA: the actual central
+            # directory must veto the altered entry identity.
+            with self.assertRaisesRegex(
+                rival.V309CpRivalWitnessError, "entry identity drift",
+            ):
+                rival._indexed_shapes(
+                    impostor, "v308", full["sha256"], self.old,
+                )
+            no_manifest = copy.deepcopy(full)
+            no_manifest.pop("entries")
+            with self.assertRaisesRegex(
+                rival.V309CpRivalWitnessError, "complete class index",
+            ):
+                rival._indexed_shapes(
+                    no_manifest, "v308", full["sha256"], self.old,
+                )
+
     def shapes(self, index, version, sha):
         self.assertEqual(sha,
                          self.frontier["exact_clients"][version + "_sha256"])
