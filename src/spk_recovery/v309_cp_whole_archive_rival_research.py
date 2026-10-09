@@ -185,19 +185,41 @@ def _scan_direction(
 
 def _indexed_shapes(
     index: dict[str, Any], version: str, expected_sha: str,
+    original_jar: Path,
 ) -> dict[str, Counter]:
     classes = index.get("classes")
+    entries = index.get("entries")
     summary = index.get("summary")
     if (
         index.get("sha256", "").lower() != expected_sha.lower()
         or not isinstance(classes, dict)
+        or not isinstance(entries, dict)
         or not isinstance(summary, dict)
         or summary.get("class_count") != _PINNED_CLASS_COUNTS[version]
         or summary.get("class_parse_error_count") != 0
         or len(classes) != _PINNED_CLASS_COUNTS[version]
+        or summary.get("entry_count") != len(entries)
     ):
         raise V309CpRivalWitnessError(
             f"{version}: exact complete class index missing or drifted"
+        )
+    # The original archive's central directory is cheap to read: checking
+    # its COMPLETE entry-name multiset does not decompress/reparse classes.
+    # Class records must also cover exactly the archive's class entries.
+    try:
+        with zipfile.ZipFile(original_jar) as original:
+            names = original.namelist()
+    except (OSError, ValueError, zipfile.BadZipFile) as exc:
+        raise V309CpRivalWitnessError(
+            f"{version}: original archive entry manifest unavailable"
+        ) from exc
+    if (
+        len(names) != len(entries)
+        or set(names) != set(entries)
+        or set(classes) != {name for name in names if name.endswith(".class")}
+    ):
+        raise V309CpRivalWitnessError(
+            f"{version}: original archive/index entry identity drift"
         )
     ret: dict[str, Counter] = {}
     for entry, record in classes.items():
@@ -291,8 +313,8 @@ def build_v309_cp_rival_witness(
     new_index = (
         precomputed_new_index if supplied_indices else index_jar(new_jar)
     )
-    old_shapes = _indexed_shapes(old_index, "v308", pairwise["old_sha256"])
-    new_shapes = _indexed_shapes(new_index, "v309", pairwise["new_sha256"])
+    old_shapes = _indexed_shapes(old_index, "v308", pairwise["old_sha256"], old_jar)
+    new_shapes = _indexed_shapes(new_index, "v309", pairwise["new_sha256"], new_jar)
     deps = build_descriptor_class_dependency_report(global_report)
     if (
         deps["summary"]["blocking_old_class_identities"] != 8
