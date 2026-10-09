@@ -95,6 +95,39 @@ def _summarize_incoming(
     }
 
 
+
+def _joint_outgoing_discrimination(
+    incoming: dict[str, set[str]], proposed: str, paired: set[str],
+    outgoing_targets,
+) -> tuple[dict[str, int], set[str]]:
+    """Conservatively inspect every unpaired incoming-superset alternative."""
+    sources = incoming.get(proposed, set())
+    if not sources:
+        raise V309AnchorGraphError("candidate has no trusted incoming graph")
+    others = sorted(
+        name for name, witnesses in incoming.items()
+        if name != proposed and name not in paired and sources <= witnesses
+    )
+    proposed_outgoing = outgoing_targets(proposed)
+    if not proposed_outgoing:
+        raise V309AnchorGraphError("candidate has no trusted outgoing graph")
+    rival_outgoing = [outgoing_targets(name) for name in others]
+    return ({
+        "proposed_outgoing_accepted_targets": len(proposed_outgoing),
+        "unpaired_incoming_superset_alternatives": len(others),
+        "unpaired_alternatives_with_outgoing_superset": sum(
+            proposed_outgoing <= other for other in rival_outgoing
+        ),
+        "unpaired_alternatives_with_identical_outgoing_targets": sum(
+            proposed_outgoing == other for other in rival_outgoing
+        ),
+        "maximum_outgoing_target_overlap_among_unpaired_alternatives": max(
+            (len(proposed_outgoing & other) for other in rival_outgoing),
+            default=0,
+        ),
+    }, proposed_outgoing)
+
+
 def build_v309_anchor_graph(
     old_jar: Path, new_jar: Path, frontier_path: Path,
     lineage_path: Path, global_report_path: Path,
@@ -156,6 +189,9 @@ def build_v309_anchor_graph(
     incoming_candidates: dict[str, dict[str, set[str]]] = {
         cid: {} for cid in candidates
     }
+    outgoing_candidates: dict[str, dict[str, set[str]]] = {
+        cid: {} for cid in candidates
+    }
     rows = {cid: {"old_canonical_class_id": cid,
                    "blocked_fields": next(d["blocked_fields"] for d in deps
                                           if d["old_canonical_class_id"] == cid),
@@ -179,13 +215,32 @@ def build_v309_anchor_graph(
                     raise V309AnchorGraphError("anchor archive owner mismatch")
                 for name in _typed_references(data, profile) & available:
                     inbound[name].add(cid)
-            paired = {a[build]["internal_name"] for a in anchors.values()}
+            paired_ids = {
+                a[build]["internal_name"]: cid for cid, a in anchors.items()
+            }
+            paired = set(paired_ids)
+            def outbound(name: str) -> set[str]:
+                # Decode only proposed owners and unpaired classes that are
+                # genuinely compatible with their incoming anchor superset.
+                data = archive.read(name + ".class")
+                profile = profile_class_field_accesses(data)
+                if profile.get("internal_name") != name:
+                    raise V309AnchorGraphError("candidate/rival owner drift")
+                return {
+                    paired_ids[ref] for ref in _typed_references(data, profile)
+                    if ref in paired_ids
+                }
             for cid, target in candidates.items():
                 name = target[build]
                 if build == "v309" and name in paired:
                     raise V309AnchorGraphError("proposed class already canonically paired")
                 incoming_candidates[cid][build] = set(inbound.get(name, set()))
                 rows[cid][build] = _summarize_incoming(inbound, name, available, paired)
+                joint, outgoing = _joint_outgoing_discrimination(
+                    inbound, name, paired, outbound,
+                )
+                outgoing_candidates[cid][build] = outgoing
+                rows[cid][build]["joint_incoming_outgoing"] = joint
         if sha256_file(jar).lower() != pins[build + "_sha256"].lower():
             raise V309AnchorGraphError("original private archive mutated during research")
 
@@ -194,6 +249,17 @@ def build_v309_anchor_graph(
         rows[cid]["same_accepted_anchor_class_ids"] = before == after
         rows[cid]["old_only_anchor_identities"] = len(before - after)
         rows[cid]["new_only_anchor_identities"] = len(after - before)
+        old_targets = outgoing_candidates[cid]["v308"]
+        new_targets = outgoing_candidates[cid]["v309"]
+        rows[cid]["same_outgoing_accepted_target_identities"] = (
+            old_targets == new_targets
+        )
+        rows[cid]["old_only_outgoing_target_identities"] = len(
+            old_targets - new_targets
+        )
+        rows[cid]["new_only_outgoing_target_identities"] = len(
+            new_targets - old_targets
+        )
 
     body = {
         "schema_version": 1,
@@ -212,8 +278,9 @@ def build_v309_anchor_graph(
         "note": (
             "Complete original archives checked against decoded typed-reference "
             "neighborhoods of all pinned accepted anchor classes. Positive "
-            "neighborhood uniqueness is research only; existing CP rival "
-            "vetoes remain untouched. No private class paths or Code exported."
+            "neighborhood and accepted-target graph uniqueness is research "
+            "only; existing CP rival vetoes remain untouched. No private class "
+            "paths, CP members or Code exported."
         ),
     }
     canonical = json.dumps(body, ensure_ascii=False, sort_keys=True,
