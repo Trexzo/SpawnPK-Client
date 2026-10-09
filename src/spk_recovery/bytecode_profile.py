@@ -800,10 +800,70 @@ def _decoded_instructions(
             }[opcode]
             cp_index = struct.unpack_from(">H", code, offset + 1)[0]
             row["type"] = _class_name(cp, cp_index)
+        elif opcode == 0xBC:
+            # JVM newarray has one unsigned atype operand, not a CP index.
+            atype = int(code[offset + 1])
+            if not 4 <= atype <= 11:
+                raise BytecodeProfileError("invalid newarray primitive type")
+            row["mnemonic"] = "newarray"
+            row["array_primitive_atype"] = atype
+        elif opcode == 0xC5:
+            # JVM multianewarray: CONSTANT_Class array descriptor + dimensions.
+            cp_index = struct.unpack_from(">H", code, offset + 1)[0]
+            array_desc = _class_name(cp, cp_index)
+            dimensions = int(code[offset + 3])
+            if (
+                not isinstance(array_desc, str) or not array_desc.startswith("[")
+                or dimensions < 1 or dimensions > len(array_desc) - len(array_desc.lstrip("["))
+            ):
+                raise BytecodeProfileError("invalid multianewarray class/dimensions")
+            row["mnemonic"] = "multianewarray"
+            row["type"] = array_desc
+            row["array_dimensions"] = dimensions
+        elif opcode in (0xAA, 0xAB):
+            # Preserve *all* switch arms and the JVM's relative-to-opcode
+            # branch targets. A case/default collision or changed padding
+            # cannot masquerade as exact semantic Code equivalence.
+            padding = (4 - ((offset + 1) % 4)) % 4
+            if any(code[offset + 1:offset + 1 + padding]):
+                raise BytecodeProfileError("nonzero switch alignment padding")
+            base = offset + 1 + padding
+            default_delta = struct.unpack_from(">i", code, base)[0]
+            row["mnemonic"] = "tableswitch" if opcode == 0xAA else "lookupswitch"
+            row["switch_default_target_offset"] = offset + default_delta
+            if opcode == 0xAA:
+                low = struct.unpack_from(">i", code, base + 4)[0]
+                high = struct.unpack_from(">i", code, base + 8)[0]
+                deltas = struct.unpack_from(">" + "i" * (high - low + 1), code, base + 12)
+                row["switch_low"] = low
+                row["switch_high"] = high
+                row["switch_targets"] = [offset + delta for delta in deltas]
+            else:
+                n = struct.unpack_from(">i", code, base + 4)[0]
+                pairs = []
+                last_match = None
+                for index in range(n):
+                    match, delta = struct.unpack_from(">ii", code, base + 8 + 8 * index)
+                    if last_match is not None and match <= last_match:
+                        raise BytecodeProfileError("unsorted or duplicate lookupswitch match")
+                    pairs.append((match, offset + delta))
+                    last_match = match
+                row["switch_pairs"] = pairs
 
         row["length"] = length
         result.append(row)
         offset += length
+    valid_offsets = {r["offset"] for r in result}
+    for row in result:
+        if row["opcode"] not in ("0xaa", "0xab"):
+            continue
+        targets = [row["switch_default_target_offset"]]
+        if row["opcode"] == "0xaa":
+            targets.extend(row["switch_targets"])
+        else:
+            targets.extend(target for _, target in row["switch_pairs"])
+        if any(target not in valid_offsets for target in targets):
+            raise BytecodeProfileError("switch branch target is not an instruction boundary")
     return result
 
 
