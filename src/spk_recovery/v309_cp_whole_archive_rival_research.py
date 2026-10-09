@@ -154,14 +154,21 @@ def _scan_direction(
         if other is None:
             result["unsupported_target_classes"] += 1
             continue
-        if _unique_cp_matches(
-            source["fingerprints"], other["fingerprints"],
-        ) < _MIN_INDEPENDENT_METHODS:
-            continue
         if path == exact_proposed_path:
-            result["proposed_target_qualified"] = True
+            # Positive evidence requires distinct fingerprints occurring
+            # exactly once within EACH class; ambiguous duplicates never
+            # establish an identifiable method witness.
+            if _unique_cp_matches(
+                source["fingerprints"], other["fingerprints"],
+            ) >= _MIN_INDEPENDENT_METHODS:
+                result["proposed_target_qualified"] = True
         else:
-            result["qualified_rivals"] += 1
+            # Negative evidence is deliberately MORE conservative:
+            # duplicate CP-bearing method fingerprints still represent a
+            # competing owner. Never suppress a possible rival merely
+            # because its methods are ambiguous.
+            if sum((source["fingerprints"] & other["fingerprints"]).values()) >= _MIN_INDEPENDENT_METHODS:
+                result["qualified_rivals"] += 1
 
     result["exhaustive_supported_scan"] = True
     if result["unsupported_target_classes"]:
