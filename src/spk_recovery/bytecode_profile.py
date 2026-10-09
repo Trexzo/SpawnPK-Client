@@ -473,7 +473,7 @@ def _instruction_length(
         if offset + 1 >= len(code):
             raise BytecodeProfileError("truncated wide")
         nested = code[offset + 1]
-        if nested not in _LOCAL_INDEXED_OPS and nested not in (0x84, 0xA9):
+        if nested not in _LOCAL_INDEXED_OPS and nested != 0x84:
             raise BytecodeProfileError("invalid JVM wide nested opcode")
         return 6 if nested == 0x84 else 4
 
