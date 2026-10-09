@@ -275,21 +275,37 @@ def build_v309_multilane_concordance(
     out = []
     for cid in sorted(expected):
         witness_count = cp[cid].get("unique_cp_semantic_method_matches")
+        count_names = (
+            "old_eligible", "new_eligible",
+            "old_unsupported", "new_unsupported",
+            "old_without_cp_references", "new_without_cp_references",
+            "ambiguous_duplicate_semantic_shapes",
+        )
+        counts = {name: cp[cid].get(name) for name in count_names}
         _expect(
             _nonnegative(witness_count)
+            and all(_nonnegative(value) for value in counts.values())
+            and witness_count <= min(counts["old_eligible"], counts["new_eligible"])
             and cp[cid].get("accepted_class_identifications") == 0
             and cp[cid].get("accepted_member_identifications") == 0
             and rivals[cid].get("research_only") is True
             and rivals[cid].get("canonical_identity_accepted") is False,
-            "noncanonical CP candidate data malformed",
+            "noncanonical CP candidate data/coverage accounting malformed",
         )
         state = rivals[cid].get("state")
         _expect(isinstance(state, str) and state, "missing rival-owner analysis state")
+        proposed_observed = rivals[cid].get("proposed_pair_unique_cp_method_matches")
+        if state == "MUTUAL_WHOLE_ARCHIVE_SUPPORTED_SUBSET_RESEARCH_ONLY":
+            _expect(
+                _nonnegative(proposed_observed)
+                and proposed_observed == witness_count
+                and witness_count >= 3,
+                "mutual-rival supported subset disagrees with exact pairwise CP witnesses",
+            )
         viable = (
             (lit[cid] or shp[cid])
             and witness_count >= 3
             and state == "MUTUAL_WHOLE_ARCHIVE_SUPPORTED_SUBSET_RESEARCH_ONLY"
-            and rivals[cid].get("proposed_pair_unique_cp_method_matches", -1) >= 3
         )
         out.append({
             "old_canonical_class_id": cid,
@@ -297,6 +313,13 @@ def build_v309_multilane_concordance(
             "globally_unique_literal_lane": lit[cid],
             "whole_archive_method_shape_lane": shp[cid],
             "pairwise_supported_cp_witness_count": witness_count,
+            "old_supported_cp_methods": counts["old_eligible"],
+            "new_supported_cp_methods": counts["new_eligible"],
+            "old_unsupported_methods": counts["old_unsupported"],
+            "new_unsupported_methods": counts["new_unsupported"],
+            "old_cp_free_methods_excluded": counts["old_without_cp_references"],
+            "new_cp_free_methods_excluded": counts["new_without_cp_references"],
+            "ambiguous_cp_method_fingerprints": counts["ambiguous_duplicate_semantic_shapes"],
             "whole_archive_rival_research_state": state,
             "review_bucket": (
                 "SUPPORTED_SUBSET_ONLY_NEEDS_EXPLICIT_REVIEW"
@@ -306,6 +329,11 @@ def build_v309_multilane_concordance(
             "accepted_field_identities": 0,
         })
 
+    _expect(
+        cp_pair["summary"].get("unique_cp_method_research_matches") ==
+            sum(row["pairwise_supported_cp_witness_count"] for row in out),
+        "pairwise report summary and per-class CP witness counts disagree",
+    )
     summary = {
         "descriptor_class_groups": 8,
         "blocked_field_relationships": 26,
@@ -317,6 +345,14 @@ def build_v309_multilane_concordance(
             x["review_bucket"] == "BLOCKED_OR_INSUFFICIENT_NO_ACCEPTANCE"
             for x in out
         ),
+        "supported_cp_methods_v308": sum(x["old_supported_cp_methods"] for x in out),
+        "supported_cp_methods_v309": sum(x["new_supported_cp_methods"] for x in out),
+        "unsupported_cp_methods_v308": sum(x["old_unsupported_methods"] for x in out),
+        "unsupported_cp_methods_v309": sum(x["new_unsupported_methods"] for x in out),
+        "cp_free_methods_excluded_v308": sum(x["old_cp_free_methods_excluded"] for x in out),
+        "cp_free_methods_excluded_v309": sum(x["new_cp_free_methods_excluded"] for x in out),
+        "pairwise_unique_cp_method_witnesses": sum(x["pairwise_supported_cp_witness_count"] for x in out),
+        "ambiguous_cp_method_fingerprint_groups": sum(x["ambiguous_cp_method_fingerprints"] for x in out),
         "canonical_class_identities_accepted": 0,
         "canonical_field_identities_accepted": 0,
         "canonical_unresolved_field_relationships": 143,
