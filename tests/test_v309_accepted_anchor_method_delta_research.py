@@ -19,7 +19,7 @@ from spk_recovery.v309_accepted_anchor_method_delta_research import (
 def _method(name: str, *, owner: str | None = None, times: int = 1):
     opcodes = [
         "0x2a", "0x59", "0xb6", "0x2a",
-        *("0xb8" for _ in range(times)) if owner else (),
+        *(("0xb8" for _ in range(times)) if owner else ()),
         "0x57", "0x2a", "0x57", "0x03", "0xac",
     ]
     instructions = [
