@@ -131,9 +131,9 @@ def run_v309_exact_private_concordance(
         report, lineage, old_index, new_index
     )
 
-    # These two lanes deliberately use the existing strict code/CP profiler.
-    # #879's rival witness internally reproduces the #878 pair report; its
-    # exact provenance ID is checked by the final concordance joiner.
+    # These two lanes use the existing strict code/CP profiler.
+    # The rival witness revalidates and reuses the freshly computed CP pair
+    # and both class indexes, without repeating their expensive builders.
     cp_pair = build_v309_cp_method_research(
         frontier, report, lineage, old_jar, new_jar
     )
