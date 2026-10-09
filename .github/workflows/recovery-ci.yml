@@ -35,3 +35,12 @@ jobs:
         run: python -m spk_recovery.cli --help
       - name: Repository hygiene
         run: python scripts/check_repo_hygiene.py
+      - name: Private replay launcher syntax (Windows only)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $Tokens = $null
+          $Errors = $null
+          $ScriptPath = Join-Path (Get-Location) 'scripts/Invoke-V309ExactPrivateFiveLaneReplay.ps1'
+          [System.Management.Automation.Language.Parser]::ParseFile($ScriptPath, [ref]$Tokens, [ref]$Errors) | Out-Null
+          if ($Errors.Count -ne 0) { throw "Private replay PowerShell parser found $($Errors.Count) errors" }
