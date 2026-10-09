@@ -299,6 +299,41 @@ def build_v309_cp_rival_witness(
         or deps["summary"]["blocked_fields"] != 26
     ):
         raise V309CpRivalWitnessError("descriptor class queue changed")
+    # Cached pairwise evidence must cover the SAME eight canonical old
+    # class groups and same 26 blocked fields, not merely claim that count
+    # in the summary. Reject duplicate, omitted or reassigned field groups.
+    expected_groups = {
+        d["old_canonical_class_id"]: d["blocked_fields"]
+        for d in deps["class_dependencies"]
+    }
+    pair_rows = pairwise.get("rows")
+    if not isinstance(pair_rows, list) or len(pair_rows) != 8:
+        raise V309CpRivalWitnessError("CP parent report missing exact eight-class rows")
+    observed_groups = {}
+    observed_matches = 0
+    for candidate in pair_rows:
+        if not isinstance(candidate, dict):
+            raise V309CpRivalWitnessError("malformed CP parent candidate")
+        cid = candidate.get("old_canonical_class_id")
+        matches = candidate.get("unique_cp_semantic_method_matches")
+        if (
+            not isinstance(cid, str)
+            or cid not in expected_groups
+            or cid in observed_groups
+            or candidate.get("blocked_fields") != expected_groups[cid]
+            or type(matches) is not int or matches < 0
+            or candidate.get("accepted_class_identifications") != 0
+            or candidate.get("accepted_member_identifications") != 0
+        ):
+            raise V309CpRivalWitnessError("CP parent class/field group proof drift")
+        observed_groups[cid] = expected_groups[cid]
+        observed_matches += matches
+    if (
+        observed_groups != expected_groups
+        or pairwise["summary"].get("unique_cp_method_research_matches")
+            != observed_matches
+    ):
+        raise V309CpRivalWitnessError("CP parent row coverage/count conservation drift")
     classes = {x["logical_id"]: x for x in lineage["classes"]}
     cache: dict[tuple[str, str], dict[str, Any] | None] = {}
     scan_errors = 0
