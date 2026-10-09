@@ -215,22 +215,81 @@ def build_v309_cp_rival_witness(
     global_report: dict[str, Any],
     lineage: dict[str, Any],
     old_jar: Path, new_jar: Path,
+    *,
+    precomputed_old_index: dict[str, Any] | None = None,
+    precomputed_new_index: dict[str, Any] | None = None,
+    precomputed_pairwise: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    # Reuse the parent research gate for all pinned exact SHA/lineage,
-    # canonical old-entry fingerprints, descriptor groups, and proposal state.
-    pairwise = build_v309_cp_method_research(
-        frontier, global_report, lineage, old_jar, new_jar,
+    # Standalone CLI still computes independent exact private inputs.
+    # The one-process #883 runner may reuse exact objects it has JUST
+    # constructed from these same SHA-pinned original JARs.
+    supplied_indices = (
+        precomputed_old_index is not None or precomputed_new_index is not None
     )
+    if supplied_indices and (
+        precomputed_old_index is None or precomputed_new_index is None
+    ):
+        raise V309CpRivalWitnessError("both original client indexes required for reuse")
+    if precomputed_pairwise is not None:
+        # A prebuilt report must not bypass the original builder's accepted
+        # 143/26 frontier and exact-client SHA/lineage gates.
+        validate_lineage(lineage)
+        if (
+            frontier.get("kind") != "v309_recovery_frontier"
+            or frontier.get("state") != "ACCEPTED_INCOMPLETE"
+            or frontier.get("frontier", {}).get("unresolved") != 143
+            or global_report.get("kind") != "global_field_usage_identity_candidates"
+            or global_report.get("canonical") is not False
+            or global_report.get("summary", {}).get("descriptor_identity_guard_rejected") != 26
+            or len(global_report.get("review_outcomes", [])) != 143
+        ):
+            raise V309CpRivalWitnessError("original CP pair proof authority drift")
+        old_sha = sha256_file(old_jar)
+        new_sha = sha256_file(new_jar)
+        builds = {row["build_id"]: row["sha256"] for row in lineage["builds"]}
+        expected = frontier.get("exact_clients", {})
+        if (
+            not isinstance(expected, dict)
+            or set(builds) != {"v308", "v309"}
+            or old_sha.lower() != expected.get("v308_sha256", "").lower()
+            or new_sha.lower() != expected.get("v309_sha256", "").lower()
+            or builds["v308"].lower() != old_sha.lower()
+            or builds["v309"].lower() != new_sha.lower()
+            or global_report.get("old_sha256", "").lower() != old_sha.lower()
+            or global_report.get("new_sha256", "").lower() != new_sha.lower()
+        ):
+            raise V309CpRivalWitnessError("reused CP report exact JAR/lineage SHA drift")
+        body = {k: v for k, v in precomputed_pairwise.items() if k != "report_id"}
+        pair_id = "V309CPPAIR_" + _digest(body)[:20].upper()
+        if (
+            precomputed_pairwise.get("report_id") != pair_id
+            or precomputed_pairwise.get("old_sha256", "").lower() != old_sha.lower()
+            or precomputed_pairwise.get("new_sha256", "").lower() != new_sha.lower()
+            or precomputed_pairwise.get("frontier_id") != frontier.get("report_id")
+            or precomputed_pairwise.get("global_report_id") != global_report.get("report_id")
+        ):
+            raise V309CpRivalWitnessError("reused CP pair report full-body provenance drift")
+        pairwise = precomputed_pairwise
+    else:
+        pairwise = build_v309_cp_method_research(
+            frontier, global_report, lineage, old_jar, new_jar,
+        )
     if (
         pairwise.get("kind") != "v309_cp_method_referent_pairwise_research"
         or pairwise.get("canonical") is not False
         or pairwise.get("summary", {}).get("reviewed_descriptor_class_pairs") != 8
+        or pairwise["summary"].get("input_blocked_field_relationships") != 26
         or pairwise["summary"].get("class_identities_accepted") != 0
+        or pairwise["summary"].get("member_identities_accepted") != 0
         or pairwise["summary"].get("accepted_frontier_unresolved") != 143
     ):
         raise V309CpRivalWitnessError("exact CP pairwise baseline drift")
-    old_index = index_jar(old_jar)
-    new_index = index_jar(new_jar)
+    old_index = (
+        precomputed_old_index if supplied_indices else index_jar(old_jar)
+    )
+    new_index = (
+        precomputed_new_index if supplied_indices else index_jar(new_jar)
+    )
     old_shapes = _indexed_shapes(old_index, "v308", pairwise["old_sha256"])
     new_shapes = _indexed_shapes(new_index, "v309", pairwise["new_sha256"])
     deps = build_descriptor_class_dependency_report(global_report)
