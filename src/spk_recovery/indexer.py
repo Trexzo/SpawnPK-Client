@@ -81,4 +81,10 @@ def index_jar(path: Path) -> dict:
 
 def write_index(index: dict, out: Path) -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(index, indent=2, sort_keys=True, ensure_ascii=False), encoding="utf-8")
+    # Preserve ordinary non-ASCII output exactly as before. Only lone
+    # UTF-16 surrogate units get escaped (e.g. \\ud800) to valid JSON text.
+    # No silent replacement characters or pinned digest changes elsewhere.
+    out.write_text(
+        json.dumps(index, indent=2, sort_keys=True, ensure_ascii=False),
+        encoding="utf-8", errors="backslashreplace",
+    )
