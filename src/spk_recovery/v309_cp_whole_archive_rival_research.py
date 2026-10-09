@@ -20,6 +20,7 @@ from .classfile import _descriptor_shape
 from .descriptor_class_dependencies import build_descriptor_class_dependency_report
 from .descriptor_class_private_jar_replay import _read_json_exact, write_research_report_no_clobber
 from .indexer import index_jar, sha256_file
+from .lineage import validate_lineage
 from .v309_cp_method_referent_research import (
     V309CpMethodWitnessError,
     _method_semantics,
