@@ -20,6 +20,7 @@ from .classfile import _descriptor_shape
 from .descriptor_class_dependencies import build_descriptor_class_dependency_report
 from .descriptor_class_private_jar_replay import _read_json_exact, write_research_report_no_clobber
 from .indexer import index_jar, sha256_file
+from .lineage import validate_lineage
 from .v309_cp_method_referent_research import (
     V309CpMethodWitnessError,
     _method_semantics,
@@ -184,19 +185,41 @@ def _scan_direction(
 
 def _indexed_shapes(
     index: dict[str, Any], version: str, expected_sha: str,
+    original_jar: Path,
 ) -> dict[str, Counter]:
     classes = index.get("classes")
+    entries = index.get("entries")
     summary = index.get("summary")
     if (
         index.get("sha256", "").lower() != expected_sha.lower()
         or not isinstance(classes, dict)
+        or not isinstance(entries, dict)
         or not isinstance(summary, dict)
         or summary.get("class_count") != _PINNED_CLASS_COUNTS[version]
         or summary.get("class_parse_error_count") != 0
         or len(classes) != _PINNED_CLASS_COUNTS[version]
+        or summary.get("entry_count") != len(entries)
     ):
         raise V309CpRivalWitnessError(
             f"{version}: exact complete class index missing or drifted"
+        )
+    # The original archive's central directory is cheap to read: checking
+    # its COMPLETE entry-name multiset does not decompress/reparse classes.
+    # Class records must also cover exactly the archive's class entries.
+    try:
+        with zipfile.ZipFile(original_jar) as original:
+            names = original.namelist()
+    except (OSError, ValueError, zipfile.BadZipFile) as exc:
+        raise V309CpRivalWitnessError(
+            f"{version}: original archive entry manifest unavailable"
+        ) from exc
+    if (
+        len(names) != len(entries)
+        or set(names) != set(entries)
+        or set(classes) != {name for name in names if name.endswith(".class")}
+    ):
+        raise V309CpRivalWitnessError(
+            f"{version}: original archive/index entry identity drift"
         )
     ret: dict[str, Counter] = {}
     for entry, record in classes.items():
@@ -215,30 +238,124 @@ def build_v309_cp_rival_witness(
     global_report: dict[str, Any],
     lineage: dict[str, Any],
     old_jar: Path, new_jar: Path,
+    *,
+    precomputed_old_index: dict[str, Any] | None = None,
+    precomputed_new_index: dict[str, Any] | None = None,
+    precomputed_pairwise: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    # Reuse the parent research gate for all pinned exact SHA/lineage,
-    # canonical old-entry fingerprints, descriptor groups, and proposal state.
-    pairwise = build_v309_cp_method_research(
-        frontier, global_report, lineage, old_jar, new_jar,
+    # Standalone CLI still computes independent exact private inputs.
+    # The one-process #883 runner may reuse exact objects it has JUST
+    # constructed from these same SHA-pinned original JARs.
+    supplied_indices = (
+        precomputed_old_index is not None or precomputed_new_index is not None
     )
+    if supplied_indices and (
+        precomputed_old_index is None or precomputed_new_index is None
+    ):
+        raise V309CpRivalWitnessError("both original client indexes required for reuse")
+    if precomputed_pairwise is not None:
+        # A prebuilt report must not bypass the original builder's accepted
+        # 143/26 frontier and exact-client SHA/lineage gates.
+        validate_lineage(lineage)
+        if (
+            frontier.get("kind") != "v309_recovery_frontier"
+            or frontier.get("state") != "ACCEPTED_INCOMPLETE"
+            or frontier.get("frontier", {}).get("unresolved") != 143
+            or global_report.get("kind") != "global_field_usage_identity_candidates"
+            or global_report.get("canonical") is not False
+            or global_report.get("summary", {}).get("descriptor_identity_guard_rejected") != 26
+            or len(global_report.get("review_outcomes", [])) != 143
+        ):
+            raise V309CpRivalWitnessError("original CP pair proof authority drift")
+        old_sha = sha256_file(old_jar)
+        new_sha = sha256_file(new_jar)
+        builds = {row["build_id"]: row["sha256"] for row in lineage["builds"]}
+        expected = frontier.get("exact_clients", {})
+        if (
+            not isinstance(expected, dict)
+            or set(builds) != {"v308", "v309"}
+            or old_sha.lower() != expected.get("v308_sha256", "").lower()
+            or new_sha.lower() != expected.get("v309_sha256", "").lower()
+            or builds["v308"].lower() != old_sha.lower()
+            or builds["v309"].lower() != new_sha.lower()
+            or global_report.get("old_sha256", "").lower() != old_sha.lower()
+            or global_report.get("new_sha256", "").lower() != new_sha.lower()
+        ):
+            raise V309CpRivalWitnessError("reused CP report exact JAR/lineage SHA drift")
+        body = {k: v for k, v in precomputed_pairwise.items() if k != "report_id"}
+        pair_id = "V309CPPAIR_" + _digest(body)[:20].upper()
+        if (
+            precomputed_pairwise.get("report_id") != pair_id
+            or precomputed_pairwise.get("old_sha256", "").lower() != old_sha.lower()
+            or precomputed_pairwise.get("new_sha256", "").lower() != new_sha.lower()
+            or precomputed_pairwise.get("frontier_id") != frontier.get("report_id")
+            or precomputed_pairwise.get("global_report_id") != global_report.get("report_id")
+        ):
+            raise V309CpRivalWitnessError("reused CP pair report full-body provenance drift")
+        pairwise = precomputed_pairwise
+    else:
+        pairwise = build_v309_cp_method_research(
+            frontier, global_report, lineage, old_jar, new_jar,
+        )
     if (
         pairwise.get("kind") != "v309_cp_method_referent_pairwise_research"
         or pairwise.get("canonical") is not False
         or pairwise.get("summary", {}).get("reviewed_descriptor_class_pairs") != 8
+        or pairwise["summary"].get("input_blocked_field_relationships") != 26
         or pairwise["summary"].get("class_identities_accepted") != 0
+        or pairwise["summary"].get("member_identities_accepted") != 0
         or pairwise["summary"].get("accepted_frontier_unresolved") != 143
     ):
         raise V309CpRivalWitnessError("exact CP pairwise baseline drift")
-    old_index = index_jar(old_jar)
-    new_index = index_jar(new_jar)
-    old_shapes = _indexed_shapes(old_index, "v308", pairwise["old_sha256"])
-    new_shapes = _indexed_shapes(new_index, "v309", pairwise["new_sha256"])
+    old_index = (
+        precomputed_old_index if supplied_indices else index_jar(old_jar)
+    )
+    new_index = (
+        precomputed_new_index if supplied_indices else index_jar(new_jar)
+    )
+    old_shapes = _indexed_shapes(old_index, "v308", pairwise["old_sha256"], old_jar)
+    new_shapes = _indexed_shapes(new_index, "v309", pairwise["new_sha256"], new_jar)
     deps = build_descriptor_class_dependency_report(global_report)
     if (
         deps["summary"]["blocking_old_class_identities"] != 8
         or deps["summary"]["blocked_fields"] != 26
     ):
         raise V309CpRivalWitnessError("descriptor class queue changed")
+    # Cached pairwise evidence must cover the SAME eight canonical old
+    # class groups and same 26 blocked fields, not merely claim that count
+    # in the summary. Reject duplicate, omitted or reassigned field groups.
+    expected_groups = {
+        d["old_canonical_class_id"]: d["blocked_fields"]
+        for d in deps["class_dependencies"]
+    }
+    pair_rows = pairwise.get("rows")
+    if not isinstance(pair_rows, list) or len(pair_rows) != 8:
+        raise V309CpRivalWitnessError("CP parent report missing exact eight-class rows")
+    observed_groups = {}
+    observed_matches = 0
+    for candidate in pair_rows:
+        if not isinstance(candidate, dict):
+            raise V309CpRivalWitnessError("malformed CP parent candidate")
+        cid = candidate.get("old_canonical_class_id")
+        matches = candidate.get("unique_cp_semantic_method_matches")
+        if (
+            not isinstance(cid, str)
+            or cid not in expected_groups
+            or cid in observed_groups
+            or candidate.get("blocked_fields") != expected_groups[cid]
+            or type(matches) is not int or matches < 0
+            or candidate.get("accepted_class_identifications") != 0
+            or candidate.get("accepted_member_identifications") != 0
+        ):
+            raise V309CpRivalWitnessError("CP parent class/field group proof drift")
+        observed_groups[cid] = expected_groups[cid]
+        observed_matches += matches
+    if (
+        observed_groups != expected_groups
+        or pairwise["summary"].get("unique_cp_method_research_matches")
+            != observed_matches
+    ):
+        raise V309CpRivalWitnessError("CP parent row coverage/count conservation drift")
     classes = {x["logical_id"]: x for x in lineage["classes"]}
     cache: dict[tuple[str, str], dict[str, Any] | None] = {}
     scan_errors = 0
