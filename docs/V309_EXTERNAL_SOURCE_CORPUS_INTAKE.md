@@ -9,6 +9,7 @@ The independently supplied decompiled SpawnPK source ZIP is useful as an **unver
 - Auxiliary deob pipeline ZIP SHA256: `a4a5db25ee916885462a8b5efc946b9541154d2f0106df0b33b8ff58e27d17c7`.
 - Corpus declares Java build number 309. It includes 1,270 Java files (1,265 under `rs/`) and 427 resources, compared with 10,502 original client .class entries.
 - Exactly 28 source Java paths have unchanged path-equivalent original class entries. Paths alone **do not** prove class identities.
+- Cross-checked all **1,092** accepted v309 class-entry SHAs against the original JAR: **26** of those 28 direct-path original classes have preaccepted binary logical IDs. The two still-unaccepted direct-path originals are `rs/Client.class` and `rs/gui/Launcher.class`; all **15** documented Loot Tracker original classes remain outside the accepted v309 class-ID set. Even accepted *binary* class identity does **not** prove that the separately modified candidate Java source reconstructs its bytecode.
 - Its edited Loot Tracker documentation cites 15 original raw class names present in the exact v309 JAR, but document-proposed renames, one-to-many merges, and absent counterparts are **not** accepted mappings.
 - A local clean-source `javac --release 11 -proc:none` attempt **failed** on missing third-party code/packages; original client class bytecode was not used as a fallback. The candidate build references an absent `libs/vendored-unidentified.jar`.
 
