@@ -70,6 +70,20 @@ class WholeArchiveCpRivalTests(unittest.TestCase):
         self.assertEqual(outcome["state"], "RIVAL_CLASS_CP_WITNESS_VETO")
         self.assertEqual(outcome["qualified_rivals"], 1)
 
+    def test_ambiguous_duplicate_methods_still_count_against_rival_uniqueness(self):
+        # The rival's duplicated A does not provide unique positive method
+        # evidence, but A/B/C still describe a competing *possible* owner.
+        profiles = dict(self.profiles)
+        profiles["rival.class"] = self.cp_fingerprints(
+            self.keys[0], self.keys[0], self.keys[1], self.keys[2],
+        )
+        self.assertEqual(
+            _unique_cp_matches(self.source["fingerprints"],
+                               profiles["rival.class"]["fingerprints"]), 2)
+        outcome = self.scan(profiles=profiles)
+        self.assertEqual(outcome["state"], "RIVAL_CLASS_CP_WITNESS_VETO")
+        self.assertEqual(outcome["qualified_rivals"], 1)
+
     def test_unscannable_viable_rival_blocks_uniqueness(self):
         profiles = dict(self.profiles)
         profiles["rival.class"] = None
