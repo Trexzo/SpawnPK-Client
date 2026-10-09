@@ -31,6 +31,10 @@ class V309CpMethodWitnessError(ValueError):
 _CP_MEMBER = {"0xb2", "0xb3", "0xb4", "0xb5", "0xb6", "0xb7", "0xb8", "0xb9"}
 _CP_TYPES = {"0xbb", "0xbd", "0xc0", "0xc1"}
 _CP_CONSTANTS = {"0x12", "0x13", "0x14"}
+# JVM conditional branches + goto/goto_w whose signed destination operands
+# are decoded into absolute Code offsets. Legacy jsr/ret remain vetoed.
+_BRANCH_16 = {f"0x{op:02x}" for op in (*range(0x99, 0xA8), 0xC6, 0xC7)}
+_BRANCH_32 = {"0xc8"}
 _UNSUPPORTED = {
     "0xa8", "0xa9", "0xc9", # legacy jsr / ret / jsr_w subroutine control
     "0xca", "0xfe", "0xff", # debugger/reserved opcodes
@@ -232,6 +236,22 @@ def _instruction_semantics(
             _rename(array_type, old_owner=old_owner, new_owner=new_owner),
             dims,
         ))
+    elif opcode in _BRANCH_16 | _BRANCH_32:
+        # The decoder already resolves the exact signed 16/32-bit branch
+        # displacement. Never accept an opcode_XX multi-byte instruction
+        # on mnemonic alone or discard the target operand.
+        origin = row.get("offset")
+        target = row.get("branch_target_offset")
+        bits = 16 if opcode in _BRANCH_16 else 32
+        expected_length = 3 if bits == 16 else 5
+        if (
+            length != expected_length
+            or type(origin) is not int or origin < 0
+            or type(target) is not int
+            or not -(1 << (bits - 1)) <= target - origin < (1 << (bits - 1))
+        ):
+            raise V309CpMethodWitnessError("invalid exact JVM branch operand")
+        base.append(target)
     elif opcode == "0xaa":
         low, high = row.get("switch_low"), row.get("switch_high")
         default = row.get("switch_default_target_offset")
@@ -309,6 +329,11 @@ def _method_semantics(
         raise V309CpMethodWitnessError("decoded Code length mismatch")
     legal_targets = {r["offset"] for r in ins}
     for decoded in ins:
+        if decoded["opcode"] in _BRANCH_16 | _BRANCH_32:
+            if decoded.get("branch_target_offset") not in legal_targets:
+                raise V309CpMethodWitnessError(
+                    "branch target does not align with Code instruction"
+                )
         if decoded["opcode"] not in ("0xaa", "0xab"):
             continue
         destinations = [decoded["switch_default_target_offset"]]
