@@ -18,6 +18,26 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      # Research-only official public Maven dependency; NEVER source/project bytes.
+      - name: Resolve declared public Gson 2.11.0 dependency (Ubuntu only)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          curl --fail --location --silent --show-error --retry 2 --max-time 30 \
+            https://repo.maven.apache.org/maven2/com/google/code/gson/gson/2.11.0/gson-2.11.0.jar \
+            -o gson-2.11.0.jar
+          test "$(wc -c < gson-2.11.0.jar)" -eq 298435
+          sha256sum gson-2.11.0.jar > gson-2.11.0.sha256
+      - name: Upload declared public Gson dependency (Ubuntu only)
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-gson-2-11-0-compile-only
+          retention-days: 1
+          if-no-files-found: error
+          path: |
+            gson-2.11.0.jar
+            gson-2.11.0.sha256
       # Ephemeral public-source-only transfer; no proprietary JARs or Java.
       - name: Export exact public shadow research source (Ubuntu)
         if: runner.os == 'Linux'
