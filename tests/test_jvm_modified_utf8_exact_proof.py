@@ -30,18 +30,18 @@ class StrictModifiedUtf8Tests(unittest.TestCase):
         )
 
     def test_lone_utf16_surrogates_are_retained_as_distinct_exact_code_units(self):
-        self.assertEqual(decode_modified_utf8(b"\\xed\\xa0\\x80"), "\\ud800")
-        self.assertEqual(decode_modified_utf8(b"\\xed\\xb0\\x80"), "\\udc00")
+        self.assertEqual(decode_modified_utf8(b"\xed\xa0\x80"), "\ud800")
+        self.assertEqual(decode_modified_utf8(b"\xed\xb0\x80"), "\udc00")
         self.assertNotEqual(
-            decode_modified_utf8(b"\\xed\\xa0\\x80"),
-            decode_modified_utf8(b"\\xed\\xa0\\x81"),
+            decode_modified_utf8(b"\xed\xa0\x80"),
+            decode_modified_utf8(b"\xed\xa0\x81"),
         )
 
     def test_surrogate_json_and_structural_hash_are_lossless(self):
         import json
         from spk_recovery.indexer import write_index
         from spk_recovery.classfile import ParsedClass
-        surrogate = decode_modified_utf8(b"\\xed\\xa0\\x80")
+        surrogate = decode_modified_utf8(b"\xed\xa0\x80")
         obj = ParsedClass(
             name="Synthetic", major=55, minor=0, access=1,
             super_name="java/lang/Object", interfaces=[],
@@ -53,11 +53,11 @@ class StrictModifiedUtf8Tests(unittest.TestCase):
         self.assertEqual(len(obj.structural_sha256()), 64)
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "index.json"
-            write_index({"surrogate": surrogate, "normal": "caf\\u00e9"}, target)
+            write_index({"surrogate": surrogate, "normal": "caf\u00e9"}, target)
             content = target.read_text(encoding="utf-8")
-            self.assertIn(r"\\ud800", content)
+            self.assertIn(r"\ud800", content)
             self.assertEqual(json.loads(content)["surrogate"], surrogate)
-            self.assertEqual(json.loads(content)["normal"], "caf\\u00e9")
+            self.assertEqual(json.loads(content)["normal"], "caf\u00e9")
 
     def test_no_lossy_replacement_or_permissive_utf8(self):
         bad = (
