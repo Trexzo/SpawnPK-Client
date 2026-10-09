@@ -29,6 +29,36 @@ class StrictModifiedUtf8Tests(unittest.TestCase):
             decode_modified_utf8(b"\xed\xa0\xbd\xed\xb8\x80"), "\U0001f600"
         )
 
+    def test_lone_utf16_surrogates_are_retained_as_distinct_exact_code_units(self):
+        self.assertEqual(decode_modified_utf8(b"\\xed\\xa0\\x80"), "\\ud800")
+        self.assertEqual(decode_modified_utf8(b"\\xed\\xb0\\x80"), "\\udc00")
+        self.assertNotEqual(
+            decode_modified_utf8(b"\\xed\\xa0\\x80"),
+            decode_modified_utf8(b"\\xed\\xa0\\x81"),
+        )
+
+    def test_surrogate_json_and_structural_hash_are_lossless(self):
+        import json
+        from spk_recovery.indexer import write_index
+        from spk_recovery.classfile import ParsedClass
+        surrogate = decode_modified_utf8(b"\\xed\\xa0\\x80")
+        obj = ParsedClass(
+            name="Synthetic", major=55, minor=0, access=1,
+            super_name="java/lang/Object", interfaces=[],
+            utf8_strings=[], literal_strings=[surrogate],
+            numeric_constants=[], fields=[], methods=[], attributes=[],
+            inner_outer_name=None, inner_simple_name=None,
+            enclosing_class_name=None,
+        )
+        self.assertEqual(len(obj.structural_sha256()), 64)
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "index.json"
+            write_index({"surrogate": surrogate, "normal": "caf\\u00e9"}, target)
+            content = target.read_text(encoding="utf-8")
+            self.assertIn(r"\\ud800", content)
+            self.assertEqual(json.loads(content)["surrogate"], surrogate)
+            self.assertEqual(json.loads(content)["normal"], "caf\\u00e9")
+
     def test_no_lossy_replacement_or_permissive_utf8(self):
         bad = (
             b"\x00",                 # literal zero forbidden
@@ -37,8 +67,6 @@ class StrictModifiedUtf8Tests(unittest.TestCase):
             b"\xc2",                 # truncated two-byte
             b"\xe0\x80\x80",       # overlong three-byte
             b"\xe2\x82",            # truncated three-byte
-            b"\xed\xa0\x80",       # isolated high surrogate
-            b"\xed\xb0\x80",       # isolated low surrogate
             b"\xf0\x9f\x98\x80",  # four-byte UTF-8 is not JVM MUTF-8
             b"\x80",                 # orphan continuation
             b"\xff",
