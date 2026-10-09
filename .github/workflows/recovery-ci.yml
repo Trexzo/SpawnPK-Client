@@ -18,6 +18,18 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      # Temporary public-source-only export for exact-private local proof.
+      - name: Export exact public CP research source (Ubuntu only)
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: v309-accepted-owner-public-exact-source
+          retention-days: 1
+          if-no-files-found: error
+          path: |
+            pyproject.toml
+            src/spk_recovery/
+            research/v309-field-recovery/
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
