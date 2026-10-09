@@ -39,6 +39,12 @@ def _profiles():
         _method("main"),
         _method("unrelated", owner="somewhere/New"),
     ]}
+    # An unrelated member must not accidentally be an identical opcode
+    # fingerprint decoy for this synthetic similarity-ranking assertion.
+    new["methods"][1]["instructions"] = [
+        {"opcode": "0x00"} for _ in range(12)
+    ]
+    new["methods"][1]["code_length"] = 12
     return old, new
 
 
