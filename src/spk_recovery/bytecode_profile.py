@@ -1030,6 +1030,8 @@ def profile_class_field_accesses(
         instructions: list[dict[str, Any]] = []
         exception_handlers: list[dict[str, Any]] = []
         code_length = None
+        max_stack = None
+        max_locals = None
         signature: str | None = None
         signature_seen = False
         for _ in range(r.u2()):
@@ -1051,8 +1053,8 @@ def profile_class_field_accesses(
             if attr_name != "Code":
                 continue
             cr = _Reader(payload)
-            cr.u2()
-            cr.u2()
+            max_stack = cr.u2()
+            max_locals = cr.u2()
             code_length = cr.u4()
             code = cr.take(code_length)
             accesses = _field_accesses(code, cp)
@@ -1099,6 +1101,8 @@ def profile_class_field_accesses(
                 "descriptor": descriptor,
                 "access": access,
                 "code_length": code_length,
+                "max_stack": max_stack,
+                "max_locals": max_locals,
                 "signature": signature,
                 "field_accesses": accesses,
                 "method_invocations": invocations,
