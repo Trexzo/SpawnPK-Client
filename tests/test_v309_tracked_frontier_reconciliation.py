@@ -79,6 +79,32 @@ class TrackedV309FieldReconciliationTests(unittest.TestCase):
                         "ACCEPTED_FIELD_REAPPEARED_AS_UNRESOLVED",
                     )
 
+    def test_config_owner_has_no_accepted_v309_class_relation(self):
+        # Same obfuscated classfile path in both JARs is not an accepted
+        # identity. These fields cannot be promoted by the external-witness
+        # evaluator while the target owner is absent from canonical lineage.
+        owner = self.by_class["CLIENT_CLASS_000167"]
+        old_entries = [x for x in owner["lineage"] if x["build_id"] == "v308"]
+        new_entries = [x for x in owner["lineage"] if x["build_id"] == "v309"]
+        self.assertEqual(len(old_entries), 1)
+        self.assertEqual(new_entries, [])
+        path = old_entries[0]["entry_path"]
+        self.assertIn(
+            ("unmatched_old", path),
+            {(x["kind"], x.get("candidate")) for x in self.classes["unresolved"]
+             if x.get("kind") in ("unmatched_old", "unmatched_new")},
+        )
+        self.assertIn(
+            ("unmatched_new", path),
+            {(x["kind"], x.get("candidate")) for x in self.classes["unresolved"]
+             if x.get("kind") in ("unmatched_old", "unmatched_new")},
+        )
+        for member_id in ("CLIENT_FIELD_002195", "CLIENT_FIELD_002241", "CLIENT_FIELD_002299"):
+            with self.subTest(member_id=member_id):
+                field = self.by_member[member_id]
+                self.assertEqual(field["owner_logical_id"], "CLIENT_CLASS_000167")
+                self.assertEqual({x["build_id"] for x in field["lineage"]}, {"v308"})
+
     def test_old_research_attempt_to_promote_accepted_field_is_refused(self):
         # Construct a stale R10/R11-style review row using canonical values;
         # the research helper must not classify an already-assigned v309
