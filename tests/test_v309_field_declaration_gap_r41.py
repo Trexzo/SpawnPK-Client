@@ -58,6 +58,24 @@ class ExactPrivateFieldDeclarationAggregateTests(unittest.TestCase):
             d["shared_fields"],
         )
 
+    def test_only_some_missing_finals_have_literal_constant_evidence(self):
+        d = self.data
+        self.assertEqual(d["original_fields_with_constantvalue"], 33)
+        self.assertEqual(d["original_final_fields_without_constantvalue"], 8)
+        self.assertEqual(d["missing_final_fields_with_constantvalue"], 33)
+        self.assertEqual(d["missing_final_fields_without_constantvalue"], 7)
+        self.assertEqual(d["shared_final_modifier_mismatch_without_constantvalue"], 1)
+        self.assertEqual(
+            d["missing_final_fields_with_constantvalue"]
+            + d["missing_final_fields_without_constantvalue"],
+            d["missing_final_fields"],
+        )
+        self.assertEqual(
+            d["original_fields_with_constantvalue"]
+            + d["original_final_fields_without_constantvalue"],
+            d["original_final_fields"],
+        )
+
     def test_field_type_buckets_have_complete_inventories(self):
         d = self.data
         original, missing = d["original_field_type_counts"], d["missing_field_type_counts"]
