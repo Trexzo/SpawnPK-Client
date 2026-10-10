@@ -72,10 +72,20 @@ def run_decompiler(
     input_class_files: list[Path] | None = None,
     max_command_chars: int = 12000,
     max_batch_classes: int = 20,
+    timeout_seconds: int | None = None,
 ) -> dict[str, Any]:
     input_jar = input_jar.resolve()
     decompiler_jar = decompiler_jar.resolve()
     out_dir = out_dir.resolve()
+
+    # A bounded run must be opt-in so existing decompilation flows retain
+    # their historical behavior. Reject invalid timeouts before any output.
+    if timeout_seconds is not None and (
+        type(timeout_seconds) is not int
+        or timeout_seconds < 1
+        or timeout_seconds > 3600
+    ):
+        raise DecompilerError("timeout_seconds must be an integer from 1 to 3600")
 
     if not input_jar.is_file():
         raise DecompilerError(f"input JAR does not exist: {input_jar}")
@@ -210,12 +220,22 @@ def run_decompiler(
     stdout_parts: list[str] = []
     stderr_parts: list[str] = []
     for batch_index, cmd in enumerate(commands, start=1):
-        proc = subprocess.run(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
+        try:
+            proc = subprocess.run(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=timeout_seconds,
+            )
+        except subprocess.TimeoutExpired as exc:
+            # Subprocess timeouts can carry partially captured stdout/stderr
+            # with proprietary JVM coordinates. Never interpolate those
+            # attributes into a CLI or CI error message.
+            raise DecompilerError(
+                f"DECOMPILER_TIMEOUT engine={engine} "
+                f"batch={batch_index}/{len(commands)}"
+            ) from None
         stdout_parts.append(proc.stdout)
         stderr_parts.append(proc.stderr)
         if proc.returncode != 0:
