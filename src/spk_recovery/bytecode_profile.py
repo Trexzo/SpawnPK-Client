@@ -970,7 +970,10 @@ def _stackmap_type(
     if tag in kinds:
         return {"kind": kinds[tag]}
     if tag == 7:
-        return {"kind": "object", "class": _class_name(cp, reader.u2())}
+        class_index = reader.u2()
+        if not 0 < class_index < len(cp):
+            raise BytecodeProfileError("StackMapTable object type CP index out of range")
+        return {"kind": "object", "class": _class_name(cp, class_index)}
     if tag == 8:
         target = reader.u2()
         if target not in instruction_offsets or code[target] != 0xBB:
