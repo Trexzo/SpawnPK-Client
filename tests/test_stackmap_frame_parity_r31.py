@@ -81,7 +81,7 @@ class StackMapFrameUnitTests(unittest.TestCase):
         for bad, diagnostic in [
             ("000180", "reserved StackMapTable frame type"),
             ("00017f01", "frame not at instruction boundary"),
-            ("000101", "frame not at instruction boundary"),
+            ("000102", "frame not at instruction boundary"),
             ("00010000", "trailing bytes in StackMapTable"),
             ("00014009", "invalid StackMapTable verification type"),
             ("0001ff", "unexpected EOF"),
