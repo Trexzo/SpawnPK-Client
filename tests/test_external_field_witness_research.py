@@ -12,6 +12,7 @@ import zipfile
 from spk_recovery.external_field_witness_research import (
     ExternalWitnessError,
     _accepted_descriptor_identity,
+    _ops,
     build_external_field_witness_research,
 )
 from spk_recovery.indexer import index_jar
@@ -197,6 +198,34 @@ class ExternalFieldWitnessResearchTests(unittest.TestCase):
         self.assertIsNone(_accepted_descriptor_identity("[Lrs/unknown;", aliases))
         with self.assertRaises(ExternalWitnessError):
             _accepted_descriptor_identity("Lrs/malformed", aliases)
+
+    def test_non_cp_operand_differences_are_detected(self):
+        left = {"instructions": [
+            {"offset": 0, "opcode": "0x19", "local_index": 1, "length": 2},
+            {"offset": 2, "opcode": "0x99", "branch_target_offset": 9, "length": 3},
+            {"offset": 5, "opcode": "0x84", "local_index": 2, "increment": 1, "length": 3},
+        ]}
+        self.assertEqual(_ops(left), _ops(copy.deepcopy(left)))
+        for index, attribute, replacement in (
+            (0, "local_index", 2),
+            (1, "branch_target_offset", 10),
+            (2, "increment", -1),
+        ):
+            right = copy.deepcopy(left)
+            right["instructions"][index][attribute] = replacement
+            self.assertNotEqual(_ops(left), _ops(right))
+
+    def test_cp_symbolic_names_may_change_but_reference_kind_may_not(self):
+        left = {"instructions": [{
+            "offset": 3, "opcode": "0xb4", "length": 3, "mnemonic": "getfield",
+            "owner": "rs/old", "name": "c", "descriptor": "I",
+            "member_constant_pool_tag": 9,
+        }]}
+        right = copy.deepcopy(left)
+        right["instructions"][0].update({"owner": "rs/new", "name": "d"})
+        self.assertEqual(_ops(left), _ops(right))
+        right["instructions"][0]["member_constant_pool_tag"] = 10
+        self.assertNotEqual(_ops(left), _ops(right))
 
     def test_unmapped_object_descriptors_block_both_fields(self):
         with tempfile.TemporaryDirectory() as td:
