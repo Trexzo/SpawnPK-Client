@@ -11,6 +11,7 @@ import zipfile
 
 from spk_recovery.external_field_witness_research import (
     ExternalWitnessError,
+    _accepted_descriptor_identity,
     build_external_field_witness_research,
 )
 from spk_recovery.indexer import index_jar
@@ -18,20 +19,32 @@ from spk_recovery.indexer import index_jar
 
 @unittest.skipUnless(shutil.which("javac"), "javac required")
 class ExternalFieldWitnessResearchTests(unittest.TestCase):
-    def _jar(self, root: Path, tag: str, target: str, fields: tuple[str, str]) -> Path:
+    def _jar(self, root: Path, tag: str, target: str, fields: tuple[str, str], *, object_fields: bool = False) -> Path:
         src = root / (tag + "_src") / "rs"
         src.mkdir(parents=True)
-        (src / (target + ".java")).write_text(
-            "package rs; public class " + target + " { public int " +
-            fields[0] + "," + fields[1] +
-            "; public void set(int x,int y){" + fields[0] +
-            "=x;" + fields[1] + "=y;} } " +
-            "class p { static int get(" + target + " v) {return v." +
-            fields[0] + "+v." + fields[1] + ";} } " +
-            "class q { static int get(" + target + " v) {return v." +
-            fields[0] + "-v." + fields[1] + ";} } ",
-            encoding="utf-8",
-        )
+        if object_fields:
+            field_type = tag + "type"
+            source = (
+                "package rs; public class " + target + " { public " + field_type + " " +
+                fields[0] + "," + fields[1] +
+                "; public void set(" + field_type + " x," + field_type + " y){" +
+                fields[0] + "=x;" + fields[1] + "=y;} } " +
+                "class " + field_type + " {} " +
+                "class p { static Object get(" + target + " v) {return v." + fields[0] + ";} } " +
+                "class q { static Object get(" + target + " v) {return v." + fields[1] + ";} } "
+            )
+        else:
+            source = (
+                "package rs; public class " + target + " { public int " +
+                fields[0] + "," + fields[1] +
+                "; public void set(int x,int y){" + fields[0] +
+                "=x;" + fields[1] + "=y;} } " +
+                "class p { static int get(" + target + " v) {return v." +
+                fields[0] + "+v." + fields[1] + ";} } " +
+                "class q { static int get(" + target + " v) {return v." +
+                fields[0] + "-v." + fields[1] + ";} } "
+            )
+        (src / (target + ".java")).write_text(source, encoding="utf-8")
         classes = root / (tag + "_classes")
         classes.mkdir()
         subprocess.run(
@@ -44,9 +57,9 @@ class ExternalFieldWitnessResearchTests(unittest.TestCase):
                 z.write(p, p.relative_to(classes).as_posix())
         return jar
 
-    def _fixture(self, root: Path):
-        old = self._jar(root, "old", "a", ("c", "d"))
-        new = self._jar(root, "new", "b", ("e", "f"))
+    def _fixture(self, root: Path, *, object_fields: bool = False):
+        old = self._jar(root, "old", "a", ("c", "d"), object_fields=object_fields)
+        new = self._jar(root, "new", "b", ("e", "f"), object_fields=object_fields)
         oi, ni = index_jar(old), index_jar(new)
         classes = []
         for i, (ol, nl) in enumerate((("a", "b"), ("p", "p"), ("q", "q")), 1):
@@ -100,8 +113,11 @@ class ExternalFieldWitnessResearchTests(unittest.TestCase):
                 "source": "member_identity_candidates",
                 "candidate": {
                     "old_owner": "rs/a.class", "new_owner": "rs/b.class",
-                    "old": {"name": old_name, "descriptor": "I"},
-                    "new": {"name": new_name, "descriptor": "I"},
+                    "old": {"name": old_name, "descriptor": original["descriptor"]},
+                    "new": {"name": new_name, "descriptor": next(
+                        f["descriptor"] for f in ni["classes"]["rs/b.class"]["fields"]
+                        if f["name"] == new_name
+                    )},
                 },
             })
         for i, (ol, nl, method) in enumerate(
@@ -169,6 +185,27 @@ class ExternalFieldWitnessResearchTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             with self.assertRaises(ExternalWitnessError):
                 self._probe(self._fixture(Path(td)), min_independent_methods=1)
+
+    def test_descriptor_only_accepted_owner_aliases(self):
+        aliases = {"rs/a": "CLIENT_CLASS_000001"}
+        self.assertEqual(
+            _accepted_descriptor_identity("[[Lrs/a;", aliases),
+            "[[L@CLIENT_CLASS_000001;",
+        )
+        self.assertEqual(_accepted_descriptor_identity("I", aliases), "I")
+        self.assertIsNone(_accepted_descriptor_identity("Lrs/unknown;", aliases))
+        self.assertIsNone(_accepted_descriptor_identity("[Lrs/unknown;", aliases))
+        with self.assertRaises(ExternalWitnessError):
+            _accepted_descriptor_identity("Lrs/malformed", aliases)
+
+    def test_unmapped_object_descriptors_block_both_fields(self):
+        with tempfile.TemporaryDirectory() as td:
+            fixture = self._fixture(Path(td), object_fields=True)
+            report = self._probe(fixture)
+            self.assertEqual(len(report["candidates"]), 2)
+            self.assertTrue(all(c["status"] == "BLOCKED"
+                                for c in report["candidates"]))
+            self.assertEqual(report["accepted_identities"], 0)
 
     def test_tampered_jar_rejected(self):
         with tempfile.TemporaryDirectory() as td:
