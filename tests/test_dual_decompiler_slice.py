@@ -61,6 +61,12 @@ class DualDecompilerSliceTests(unittest.TestCase):
             "}\n",
             encoding="utf-8",
         )
+        (src / "SlowDecompiler.java").write_text(
+            "public class SlowDecompiler {"
+            "public static void main(String[] args) throws Exception {"
+            " Thread.sleep(5000); }}"
+            "\n", encoding="utf-8",
+        )
         (src / "FailDecompiler.java").write_text(
             "public class FailDecompiler {"
             "public static void main(String[] args) { "
@@ -70,7 +76,8 @@ class DualDecompilerSliceTests(unittest.TestCase):
         )
         proc = subprocess.run(
             ["javac", "-g:none", "-d", str(build), str(pkg / "A.java"),
-             str(src / "SyntheticDecompiler.java"), str(src / "FailDecompiler.java")],
+             str(src / "SyntheticDecompiler.java"), str(src / "FailDecompiler.java"),
+             str(src / "SlowDecompiler.java")],
             capture_output=True, text=True,
         )
         if proc.returncode:
@@ -83,10 +90,12 @@ class DualDecompilerSliceTests(unittest.TestCase):
         cls.cfr = cls.root / "fake-cfr.jar"
         cls.vine = cls.root / "fake-vineflower.jar"
         cls.fail = cls.root / "fake-failing.jar"
+        cls.slow = cls.root / "fake-slow.jar"
         for jar_path, main_class in (
             (cls.cfr, "SyntheticDecompiler"),
             (cls.vine, "SyntheticDecompiler"),
             (cls.fail, "FailDecompiler"),
+            (cls.slow, "SlowDecompiler"),
         ):
             manifest = cls.root / (jar_path.stem + ".mf")
             manifest.write_text(
@@ -107,13 +116,15 @@ class DualDecompilerSliceTests(unittest.TestCase):
         cls.tmp.cleanup()
 
     def _run(self, out: Path, *, original_sha=None, cfr_sha=None,
-             vine_sha=None, cfr=None, vine=None, original=None):
+             vine_sha=None, cfr=None, vine=None, original=None,
+             timeout_seconds=300):
         return run_targeted_dual_decompilation(
             original or self.original, cfr or self.cfr, vine or self.vine, out,
             original_sha256=original_sha or _digest(self.original),
             cfr_sha256=cfr_sha or _digest(cfr or self.cfr),
             vineflower_sha256=vine_sha or _digest(vine or self.vine),
             class_entry="p/A.class",
+            timeout_seconds=timeout_seconds,
         )
 
     def test_executes_both_backends_and_preserves_original(self):
@@ -123,6 +134,7 @@ class DualDecompilerSliceTests(unittest.TestCase):
             result = self._run(output)
             self.assertEqual(result["included_class_count"], 2)
             self.assertEqual(result["engines_executed"], 2)
+            self.assertEqual(result["timeout_seconds_per_engine"], 300)
             self.assertFalse(result["canonical_identity_accepted"])
             self.assertFalse(result["source_equivalence_certified"])
             self.assertEqual(set(result["engines"]), {"cfr", "vineflower"})
@@ -183,6 +195,39 @@ class DualDecompilerSliceTests(unittest.TestCase):
             self.assertTrue((root / "exact-private-slice.jar").is_file())
             self.assertTrue((root / "cfr" / "p" / "A.java").is_file())
             self.assertFalse((root / "private-research-manifest.json").exists())
+
+    def test_invalid_timeout_rejected_before_creating_output(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            for timeout in (0, -1, True, 3601, 1.5, "30", None):
+                with self.subTest(timeout=timeout):
+                    dest = root / "not-created"
+                    with self.assertRaisesRegex(
+                        DualDecompilerError, "INVALID_DUAL_DECOMPILER_TIMEOUT"
+                    ):
+                        self._run(dest, timeout_seconds=timeout)
+                    self.assertFalse(dest.exists())
+
+    def test_real_java_timeout_refuses_success_manifest(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d) / "private-timeout"
+            with self.assertRaisesRegex(
+                DualDecompilerError, "PRIVATE_DUAL_DECOMPILATION_FAILED"
+            ) as raised:
+                self._run(root, vine=self.slow, timeout_seconds=1)
+            self.assertNotIn("java", str(raised.exception).lower())
+            self.assertTrue((root / "cfr" / "p" / "A.java").is_file())
+            self.assertFalse((root / "private-research-manifest.json").exists())
+
+    def test_custom_timeout_kept_in_deterministic_manifest(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d) / "custom"
+            result = self._run(root, timeout_seconds=10)
+            self.assertEqual(result["engines_executed"], 2)
+            self.assertEqual(result["timeout_seconds_per_engine"], 10)
+            self.assertEqual(
+                json.loads((root / "private-research-manifest.json").read_text()), result
+            )
 
     def test_missing_decompiler_refused_before_writing(self):
         with tempfile.TemporaryDirectory() as d:

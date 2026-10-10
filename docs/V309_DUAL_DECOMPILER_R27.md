@@ -16,7 +16,10 @@ remain strictly local and untracked.
    Each receives a distinct private output directory.
 5. Verify both runs generated at least one Java file, fingerprint each
    generated source tree, and re-hash all three input JARs plus the slice.
-6. Only then write `private-research-manifest.json`. The manifest contains
+6. Enforce a bounded timeout **per engine** (300 seconds by default; select
+   1–3600 seconds with `--timeout-seconds`). A timed-out engine cannot
+   produce a success manifest; partial private outputs remain for inspection.
+7. Only then write `private-research-manifest.json`. The manifest contains
    SHA-256 evidence and aggregate counts, not original class coordinates,
    recovered Java, decompiler console text or proprietary member names.
 
@@ -24,7 +27,10 @@ The existing `spk_recovery.decompiler` runner requires runnable decompiler
 JARs. R27 does **not** supply or download third-party binaries. Users must
 obtain independently verified CFR/Vineflower executables themselves and pin
 the exact actual SHA-256 of each, not merely assume a version string proves
-the contents. Failure leaves the partial **private** output tree for diagnosis
+the contents. Each decompiler process is **bounded** (default 300 seconds); invalid
+limits are refused before any output directory is created. Timeout and
+subprocess failures cannot be reported as successful decompilations. A
+failure leaves the partial **private** output tree for diagnosis
 but does not publish a success manifest.
 
 ## One-command replay
@@ -42,7 +48,8 @@ python -m spk_recovery.dual_decompiler_slice `
   --class-entry 'example/Config.class' `
   --original-sha256 '<64-character original-JAR SHA256>' `
   --cfr-sha256 '<64-character CFR-JAR SHA256>' `
-  --vineflower-sha256 '<64-character Vineflower-JAR SHA256>'
+  --vineflower-sha256 '<64-character Vineflower-JAR SHA256>' `
+  --timeout-seconds 300
 ~~~
 
 Replace example paths and hashes with verified local values. The v309
