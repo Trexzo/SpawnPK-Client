@@ -151,6 +151,7 @@ def plan_missing_field_declarations(original: dict, candidate: dict,
     )
     declarations = []
     finals = 0
+    finals_with_constant_value = 0
     static_fields = 0
     kinds = {"primitive": 0, "array": 0, "reference": 0}
     for (name, descriptor), row in missing:
@@ -162,6 +163,8 @@ def plan_missing_field_declarations(original: dict, candidate: dict,
         modifiers, is_final = _modifiers(row["access"])
         kinds[kind] += 1
         finals += int(is_final)
+        if is_final and row["constant_value"] is not None:
+            finals_with_constant_value += 1
         static_fields += int(bool(row["access"] & 0x0008))
         declarations.append(
             ("    " + modifiers + " " if modifiers else "    ")
@@ -181,6 +184,8 @@ def plan_missing_field_declarations(original: dict, candidate: dict,
         "declarations_staged": len(declarations),
         "shared_metadata_differences_unmodified": len(changed),
         "final_fields_needing_initializer_review": finals,
+        "final_fields_with_exact_constant_value_evidence": finals_with_constant_value,
+        "final_fields_without_constant_value_evidence": finals - finals_with_constant_value,
         "static_fields_staged": static_fields,
         "java_type_counts": kinds,
         "source_compilation_certified": False,
