@@ -10,6 +10,8 @@ import tempfile
 import unittest
 from zipfile import ZipFile
 
+from spk_recovery.source_tree_fingerprint import fingerprint_java_source_tree
+
 from spk_recovery.source_candidate_replay import (
     SourceCandidateReplayError, compile_private_source_candidate,
 )
@@ -58,7 +60,7 @@ class SourceCandidateCompileReplayTests(unittest.TestCase):
 
     def _run(self, base: Path, *, old_code="return x + 1;",
              candidate_code="return x + 1;", out=None,
-             old_pin=None, source_pin=None, timeout=180):
+             old_pin=None, source_pin=None, tree_pin=None, timeout=180):
         original, root, source = self._fixture(
             base, original=old_code, candidate=candidate_code,
         )
@@ -66,6 +68,7 @@ class SourceCandidateCompileReplayTests(unittest.TestCase):
             original, root, source, out or base / "replay",
             original_sha256=old_pin or _digest(original),
             source_sha256=source_pin or _digest(source),
+            source_tree_sha256=tree_pin or fingerprint_java_source_tree(root)["source_tree_sha256"],
             class_entry="p/A.class", timeout_seconds=timeout,
         )
 
@@ -97,6 +100,7 @@ class SourceCandidateCompileReplayTests(unittest.TestCase):
                 return compile_private_source_candidate(
                     original, source_root, source, base / name,
                     original_sha256=_digest(original), source_sha256=_digest(source),
+                    source_tree_sha256=fingerprint_java_source_tree(source_root)["source_tree_sha256"],
                     class_entry="p/A.class",
                 )
             first, second = call("one"), call("two")
@@ -120,6 +124,7 @@ class SourceCandidateCompileReplayTests(unittest.TestCase):
                     args = dict(
                         original_sha256=_digest(old),
                         source_sha256=_digest(source),
+                        source_tree_sha256=fingerprint_java_source_tree(root)["source_tree_sha256"],
                         class_entry="p/A.class",
                     )
                     args.update(overrides)
@@ -143,6 +148,7 @@ class SourceCandidateCompileReplayTests(unittest.TestCase):
                 compile_private_source_candidate(
                     old, root, source, dest,
                     original_sha256=_digest(old), source_sha256=_digest(source),
+                    source_tree_sha256=fingerprint_java_source_tree(root)["source_tree_sha256"],
                     class_entry="p/A.class",
                 )
             self.assertEqual(marker.read_text(), "KEEP")
@@ -159,6 +165,7 @@ class SourceCandidateCompileReplayTests(unittest.TestCase):
                 compile_private_source_candidate(
                     old, root, source, dest,
                     original_sha256=_digest(old), source_sha256=_digest(source),
+                    source_tree_sha256=fingerprint_java_source_tree(root)["source_tree_sha256"],
                     class_entry="p/A.class",
                 )
             self.assertNotIn("SECRET_SOURCE_LITERAL", str(failure.exception))
@@ -180,6 +187,7 @@ class SourceCandidateCompileReplayTests(unittest.TestCase):
                 compile_private_source_candidate(
                     old, root, source, base / "out",
                     original_sha256=_digest(old), source_sha256=_digest(source),
+                    source_tree_sha256=fingerprint_java_source_tree(root)["source_tree_sha256"],
                     class_entry="p/A.class",
                 )
             self.assertFalse((base / "out" / "private-candidate-report.json").exists())
@@ -194,6 +202,7 @@ class SourceCandidateCompileReplayTests(unittest.TestCase):
                 compile_private_source_candidate(
                     old, root, source, base / "out",
                     original_sha256=_digest(old), source_sha256=_digest(source),
+                    source_tree_sha256=fingerprint_java_source_tree(root)["source_tree_sha256"],
                     class_entry="p/Wrong.class",
                 )
             self.assertFalse((base / "out" / "private-candidate-report.json").exists())
