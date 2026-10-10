@@ -23,9 +23,15 @@ changing only superclass, interface list, class-final modifier or JVM major
 version changes the corresponding evidence without altering method names.
 
 These observations do **not** establish semantic equivalence or accepted
-class lineage. Future class-wide parity work can incorporate this evidence
-alongside exact JVM fields, methods and StackMapTable, but **never**
-automatically promote canonical mappings from name or shape similarity.
+class lineage. The R32/R35 class-wide method and field matrix now **includes** a
+separate `class_header` result, enforcing that the required header evidence
+is present and valid before producing a class-wide report. It adds
+`class_header_exact` to aggregate CLI output so source candidates with
+matching methods/fields but different JVM inheritance cannot appear
+structurally complete.
+
+Neither this check nor any other source-recovery check may automatically
+promote canonical mappings from name or shape similarity.
 
 No SpawnPK binaries, decompiled Java or original private class paths are
 included in the repository or in hosted tests.
