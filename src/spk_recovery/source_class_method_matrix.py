@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 import re
 from typing import Any
@@ -65,6 +66,93 @@ def _methods(profile: dict) -> dict[tuple[str, str], dict]:
     return result
 
 
+def _fields(profile: dict) -> dict[tuple[str, str], dict]:
+    rows = profile.get("fields")
+    _require(isinstance(rows, list), "FIELD_INVENTORY_MISSING")
+    result: dict[tuple[str, str], dict] = {}
+    for row in rows:
+        _require(isinstance(row, dict), "INVALID_FIELD_DECLARATION")
+        name, descriptor = row.get("name"), row.get("descriptor")
+        _require(
+            isinstance(name, str) and bool(name)
+            and isinstance(descriptor, str) and bool(descriptor)
+            and (name, descriptor) not in result,
+            "INVALID_OR_DUPLICATE_FIELD_DECLARATION",
+        )
+        _require(
+            type(row.get("access")) is int and 0 <= row["access"] <= 65535,
+            "INVALID_FIELD_ACCESS",
+        )
+        _require(
+            row.get("signature") is None or isinstance(row.get("signature"), str),
+            "INVALID_FIELD_SIGNATURE",
+        )
+        _require("constant_value" in row, "MISSING_FIELD_CONSTANT_EVIDENCE")
+        result[(name, descriptor)] = row
+    return result
+
+
+def _field_constant(value: Any) -> Any:
+    if isinstance(value, float):
+        # Source class profiles currently expose parsed IEEE values, not
+        # original field ConstantValue raw payloads. Distinguish signed zero;
+        # reject NaN because payload bits could differ without being visible.
+        _require(not math.isnan(value), "UNSAFE_NAN_CONSTANT_VALUE")
+        return {"type": "float", "hex": value.hex()}
+    _require(
+        value is None or type(value) in (int, str),
+        "UNSUPPORTED_FIELD_CONSTANT_VALUE",
+    )
+    return value
+
+
+def _field_metadata(field: dict) -> dict[str, Any]:
+    return {
+        "access": field["access"],
+        "signature": field.get("signature"),
+        "constant": _field_constant(field["constant_value"]),
+    }
+
+
+def _compare_fields(
+    original: dict, candidate: dict, *, original_sha: str,
+) -> dict[str, Any]:
+    a, b = _fields(original), _fields(candidate)
+    counts = {
+        "shared_exact": 0,
+        "shared_metadata_difference": 0,
+        "missing_field": 0,
+        "extra_field": 0,
+    }
+    details = []
+    for name, descriptor in sorted(a.keys() | b.keys()):
+        old, new = a.get((name, descriptor)), b.get((name, descriptor))
+        if old is None:
+            state = "extra_field"
+        elif new is None:
+            state = "missing_field"
+        else:
+            state = (
+                "shared_exact"
+                if _field_metadata(old) == _field_metadata(new)
+                else "shared_metadata_difference"
+            )
+        counts[state] += 1
+        opaque_id = "FIELD_" + hashlib.sha256(json.dumps(
+            [original_sha, name, descriptor], separators=(",", ":")
+        ).encode("utf-8")).hexdigest().upper()[:20]
+        details.append({"field_id": opaque_id, "classification": state})
+    return {
+        "original_declared_field_count": len(a),
+        "candidate_declared_field_count": len(b),
+        "field_counts": counts,
+        "field_inventory_exact": (
+            len(a) == len(b) and counts["shared_exact"] == len(a)
+        ),
+        "field_rows": sorted(details, key=lambda d: d["field_id"]),
+    }
+
+
 def _private_stable_id(original_sha: str, name: str, descriptor: str) -> str:
     payload = json.dumps([original_sha, name, descriptor], separators=(",", ":"))
     return "METHOD_" + hashlib.sha256(payload.encode("utf-8")).hexdigest().upper()[:20]
@@ -76,6 +164,7 @@ def compare_class_method_profiles(original: dict, rebuilt: dict, *, original_sha
         "NO_ACCEPTED_OWNER_ALIAS",
     )
     a, b = _methods(original), _methods(rebuilt)
+    fields = _compare_fields(original, rebuilt, original_sha=original_sha)
     counts = {
         "instruction_parity": 0,
         "body_difference": 0,
@@ -125,6 +214,10 @@ def compare_class_method_profiles(original: dict, rebuilt: dict, *, original_sha
         "other_code_subattributes_and_runtime_unverified": True,
         "original_declared_method_count": len(a),
         "candidate_declared_method_count": len(b),
+        "class_signature_exact": (
+            original.get("signature") == rebuilt.get("signature")
+        ),
+        **fields,
         "counts": counts,
         "all_method_bodies_instruction_parity": (
             bool(a)
@@ -196,6 +289,10 @@ def main(argv: list[str] | None = None) -> int:
             "original_declared_method_count": report["original_declared_method_count"],
             "candidate_declared_method_count": report["candidate_declared_method_count"],
             "counts": report["counts"],
+            "original_declared_field_count": report["original_declared_field_count"],
+            "candidate_declared_field_count": report["candidate_declared_field_count"],
+            "field_counts": report["field_counts"],
+            "field_inventory_exact": report["field_inventory_exact"],
             "source_equivalence_certified": False,
         }, sort_keys=True))
     except (ClassMethodMatrixError, OSError, ValueError) as exc:
