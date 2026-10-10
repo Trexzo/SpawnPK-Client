@@ -71,6 +71,39 @@ class V309ExactLiteralEvidenceTests(unittest.TestCase):
         ):
             self.assertIs(d[key], False, key)
 
+    def test_private_augmented_r24_java_reduces_real_missing_fields(self):
+        proof = self.data["private_r24_source_augmentation"]
+        self.assertEqual(proof["original_field_declarations"], 126)
+        self.assertEqual(proof["candidate_fields_before"], 4)
+        self.assertEqual(proof["candidate_fields_after"], 37)
+        self.assertEqual(proof["original_fields_remaining_missing"], 89)
+        self.assertEqual(proof["fields_with_exact_original_metadata_after"], 36)
+        self.assertEqual(proof["fields_with_known_metadata_mismatch_after"], 1)
+        self.assertEqual(proof["exact_original_constantvalue_attributes_in_augmented_class"], 33)
+        self.assertEqual(proof["candidate_method_declarations_before"], 8)
+        self.assertEqual(proof["candidate_method_declarations_after"], 8)
+        self.assertEqual(proof["disassembly_opcode_sequences_unchanged"], 8)
+        self.assertEqual(proof["disassembly_resolved_operands_unchanged"], 8)
+        self.assertEqual(
+            proof["candidate_fields_after"] - proof["candidate_fields_before"],
+            proof["exact_original_constantvalue_attributes_in_augmented_class"],
+        )
+        self.assertEqual(
+            proof["original_field_declarations"] - proof["candidate_fields_after"],
+            proof["original_fields_remaining_missing"],
+        )
+        for key in ("classfile_sha256", "complete_private_candidate_jar_sha256",
+                    "private_augmented_java_source_sha256"):
+            self.assertRegex(proof[key], r"\A[0-9a-f]{64}\Z")
+        for key in (
+            "strict_r31_runtime_or_source_equivalence_recertified",
+            "missing_nonconstant_initializers_still_reconstructed",
+            "three_substantive_missing_methods_recovered",
+            "augmented_proprietary_java_published",
+            "original_client_binary_modified",
+        ):
+            self.assertIs(proof[key], False, key)
+
     def test_no_raw_original_constant_values_or_source_names(self):
         content = R42.read_text(encoding="utf-8")
         for sensitive in ("rs/f/a", "rs.f.a", '"field_name"',
