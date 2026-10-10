@@ -68,6 +68,7 @@ def run_targeted_dual_decompilation(
     original_jar: Path, cfr_jar: Path, vineflower_jar: Path, out_root: Path,
     *, original_sha256: str, cfr_sha256: str, vineflower_sha256: str,
     class_entry: str, java_command: str = "java",
+    timeout_seconds: int = 300,
 ) -> dict[str, Any]:
     """Preflight all three complete JAR pins before creating any output.
 
@@ -79,6 +80,13 @@ def run_targeted_dual_decompilation(
     cfr_jar = Path(cfr_jar).resolve()
     vineflower_jar = Path(vineflower_jar).resolve()
     out_root = Path(out_root).resolve()
+
+    # The dual-decompiler workflow is intentionally bounded by default.
+    # Validate before even reading input archives or creating private output.
+    _require(
+        type(timeout_seconds) is int and 1 <= timeout_seconds <= 3600,
+        "INVALID_DUAL_DECOMPILER_TIMEOUT",
+    )
 
     exact_pins = {
         "ORIGINAL": _verify_input(original_jar, original_sha256, "ORIGINAL"),
@@ -114,6 +122,7 @@ def run_targeted_dual_decompilation(
                 out_dir=dest,
                 clean_out=False,
                 java_command=java_command,
+                timeout_seconds=timeout_seconds,
             )
             tree_sha, file_count = _java_tree_digest(dest)
             _require(file_count == output["java_file_count"],
@@ -143,6 +152,7 @@ def run_targeted_dual_decompilation(
             "private_slice_sha256": slice_report["slice_sha256"],
             "included_class_count": slice_report["included_class_count"],
             "engines_executed": 2,
+            "timeout_seconds_per_engine": timeout_seconds,
             "engines": engines,
         }
         fingerprint = hashlib.sha256(json.dumps(
@@ -173,6 +183,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--cfr-sha256", required=True)
     parser.add_argument("--vineflower-sha256", required=True)
     parser.add_argument("--java-command", default="java")
+    parser.add_argument("--timeout-seconds", type=int, default=300,
+                        help="1-3600 seconds per engine (default: 300)")
     args = parser.parse_args(argv)
     try:
         result = run_targeted_dual_decompilation(
@@ -182,6 +194,7 @@ def main(argv: list[str] | None = None) -> int:
             vineflower_sha256=args.vineflower_sha256,
             class_entry=args.class_entry,
             java_command=args.java_command,
+            timeout_seconds=args.timeout_seconds,
         )
         # Never print generated source or class coordinates in a success report.
         print(json.dumps(result, indent=2, sort_keys=True))
