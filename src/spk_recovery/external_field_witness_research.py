@@ -13,7 +13,7 @@ from typing import Any
 from zipfile import ZipFile
 
 from .bytecode_profile import profile_class_field_accesses
-from .field_proof import _build, _class_entries, _descriptor_identity
+from .field_proof import _build, _class_entries
 from .indexer import sha256_file
 from .lineage import validate_lineage
 from .member_lineage import validate_member_lineage
@@ -106,6 +106,33 @@ def _ops(method: dict) -> list[tuple]:
     return [(row["offset"], row["opcode"]) for row in method.get("instructions", [])]
 
 
+
+def _accepted_descriptor_identity(descriptor: str, aliases: dict[str, str]) -> str | None:
+    """Normalize only accepted class IDs; never wildcard unknown rs/ types.
+
+    An unresolved class in a field descriptor has no cross-build identity
+    authority even when its raw obfuscated spelling happens to be equal.
+    """
+    out: list[str] = []
+    i = 0
+    while i < len(descriptor):
+        ch = descriptor[i]
+        if ch != "L":
+            out.append(ch)
+            i += 1
+            continue
+        semi = descriptor.find(";", i + 1)
+        _require(semi > i + 1, "INVALID_FIELD_DESCRIPTOR")
+        internal = descriptor[i + 1:semi]
+        if internal in aliases:
+            out.append("L@" + aliases[internal] + ";")
+        elif internal.startswith("rs/"):
+            return None
+        else:
+            out.append("L" + internal + ";")
+        i = semi + 1
+    return "".join(out)
+
 def _owner_accesses(method: dict, owner: str, aliases: dict[str, str]) -> list[tuple]:
     items = []
     for item in method.get("field_accesses", []):
@@ -113,7 +140,7 @@ def _owner_accesses(method: dict, owner: str, aliases: dict[str, str]) -> list[t
             continue
         items.append((
             item["name"], item["descriptor"], item["operation"], int(item["offset"]),
-            _descriptor_identity(item["descriptor"], aliases),
+            _accepted_descriptor_identity(item["descriptor"], aliases),
         ))
     return items
 
@@ -206,7 +233,7 @@ def build_external_field_witness_research(
                 veto_old.update((x[0], x[1]) for x in la)
                 continue
             for ordinal, (a, b) in enumerate(zip(la, ra)):
-                if a[2:] != b[2:]:
+                if a[4] is None or b[4] is None or a[2:] != b[2:]:
                     rejected.add(method_id)
                     veto_old.add((a[0], a[1]))
                     continue
