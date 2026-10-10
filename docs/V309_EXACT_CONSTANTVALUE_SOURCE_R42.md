@@ -54,6 +54,34 @@ Other declarations **remain without initializers**.
 Without `--emit-verified-constants`, the R41 default remains
 **declaration-only**, unchanged.
 
+## Actual R24 partial Java source expansion (private)
+
+Beyond the isolated literal-only class proof, the 33 exact declarations
+were added to a **separate private copy** of the R24 partial
+configuration Java source and its staged support files, then compiled
+with `javac --release 9 -g:none -proc:none`.
+
+| Measured category | R24 baseline | Augmented private candidate |
+| --- | ---: | ---: |
+| Candidate declared fields | 4 | **37** |
+| Candidate fields matching original JVM metadata | 3 | **36** |
+| Original fields still missing | 122 | **89** |
+| Known shared field metadata mismatches | 1 | 1 |
+| Candidate method declarations | 8 | 8 |
+
+All 33 original `ConstantValue` attributes matched those in the
+augmented compiled classfile. An independent disassembly comparison
+found identical opcode sequences and resolved operand displays across
+all eight existing candidate methods. This is **not** a current R31
+strict whole-method, frame or runtime-equivalence certification.
+
+The aggregate record pins the private expanded candidate's Java source,
+compiled class and complete candidate JAR by SHA-256. Neither the
+augmented proprietary Java nor any original literal values or names
+are stored in public GitHub. Three substantive original method bodies
+remain unrecovered, and the initializer assignments without a
+ConstantValue remain unimplemented.
+
 ## Evidence requirements and limits
 
 Synthetic Java regression tests separately compile original classes,
