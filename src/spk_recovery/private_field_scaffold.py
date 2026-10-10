@@ -85,8 +85,6 @@ def _modifiers(access: int) -> tuple[str, bool]:
     _require(len(visibility) <= 1, "FIELD_VISIBILITY_CONFLICT")
     _require(not (access & 0x0010 and access & 0x0040),
              "FINAL_AND_VOLATILE_CONFLICT")
-    _require(not (access & 0x0010 and access & 0x0080),
-             "FINAL_AND_TRANSIENT_CONFLICT")
     words = []
     for bit, label in (
         (0x0001, "public"), (0x0002, "private"),
