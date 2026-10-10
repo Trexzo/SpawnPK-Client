@@ -28,6 +28,11 @@ def _field(name: str, *, access=1, descriptor="I",
 def _profile(fields, signature=None):
     return {
         "internal_name": "p/A",
+        "class_access": 0x21,
+        "classfile_major": 53,
+        "classfile_minor": 0,
+        "super_name": "java/lang/Object",
+        "interfaces": [],
         "signature": signature,
         "fields": fields,
         "methods": [],

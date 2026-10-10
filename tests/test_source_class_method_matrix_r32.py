@@ -43,6 +43,11 @@ def _method(name: str, opcode: str) -> dict:
 def _profile(methods: list[dict], owner: str = "p/A") -> dict:
     return {
         "internal_name": owner,
+        "class_access": 0x21,
+        "classfile_major": 53,
+        "classfile_minor": 0,
+        "super_name": "java/lang/Object",
+        "interfaces": [],
         "signature": None,
         "fields": [],
         "methods": methods,
