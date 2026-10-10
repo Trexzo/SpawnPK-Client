@@ -1048,17 +1048,19 @@ def profile_class_field_accesses(
     r = _Reader(data)
     if r.u4() != 0xCAFEBABE:
         raise BytecodeProfileError("not a JVM class")
-    r.u2()
-    r.u2()
+    minor_version = r.u2()
+    major_version = r.u2()
     cp = _constant_pool(r)
 
-    r.u2()
+    class_access = r.u2()
     this_class = r.u2()
-    r.u2()
+    super_index = r.u2()
     internal_name = _class_name(cp, this_class)
+    super_name = None if super_index == 0 else _class_name(cp, super_index)
 
-    for _ in range(r.u2()):
-        r.u2()
+    interfaces = [_class_name(cp, r.u2()) for _ in range(r.u2())]
+    if len(interfaces) != len(set(interfaces)):
+        raise BytecodeProfileError("duplicate class interface declaration")
 
     fields = []
     for _ in range(r.u2()):
@@ -1254,6 +1256,11 @@ def profile_class_field_accesses(
 
     return {
         "internal_name": internal_name,
+        "class_access": class_access,
+        "classfile_major": major_version,
+        "classfile_minor": minor_version,
+        "super_name": super_name,
+        "interfaces": interfaces,
         "signature": class_signature,
         "fields": fields,
         "methods": methods,
