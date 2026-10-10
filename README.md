@@ -65,12 +65,32 @@ identity, modify `authority/`, or certify v309. After measuring exact witnesses,
 use separate reviewed canonical acceptance and regenerate all dependent evidence.
 **Do not commit JARs, complete indexes, or raw private outputs** to Git.
 
+### Current v309 source-recovery workflow in GitHub
+
+For bounded method and class reconstruction, use this supported **research-only**
+chain instead of accumulating separate private R24/R25/R26 scripts:
+
+1. [R26 exact-class slice](docs/V309_EXACT_CLASS_SLICE_R26.md) uses the
+   checksum-pinned original JAR to preserve the requested classfile bytes.
+2. [R27 dual-decompiler execution](docs/V309_DUAL_DECOMPILER_R27.md) feeds that
+   same private slice independently to pinned CFR and Vineflower executables,
+   generating private Java plus an aggregate, deterministic manifest.
+3. [R25 source-method parity](docs/V309_SOURCE_METHOD_PARITY_R25.md) compares
+   selected compiled candidate methods with original JVM instruction,
+   resolved constant-pool and supported bootstrap/exception evidence.
+
+These are **separate steps**: decompiler output is not equivalent reconstructed
+source by default, and instruction parity does not authorize canonical
+identity acceptance or release publication. Third-party decompiler executables
+must be independently supplied and hash-pinned; none is committed or silently
+downloaded. Never upload proprietary class slices or generated Java to CI.
+
 Older R0/R1 examples below intentionally document the historical v308 baseline.
 For new v309 work, start with the linked accepted frontier, not those examples.
 
 ## Recovered source in this repository
 
-Certified recovered Java source is published in this same GitHub repository, versioned by exact client build:
+The layout below is the **intended publication target** for certified Java source, versioned by exact client build; it is not a claim that the files exist today:
 
 ```text
 recovered-source/
@@ -81,7 +101,7 @@ recovered-source/
     provenance/*.json
 ```
 
-`recovered-source/v308/src/` becomes canonical only after Source Milestone 1 reports `publishable=true` and the publication bundle independently verifies. Raw/intermediate decompiler output is not committed.
+`recovered-source/v308/src/` becomes canonical only after Source Milestone 1 reports `publishable=true` and the publication bundle independently verifies. Raw/intermediate decompiler output is not committed. The current `recovered-source/` folder contains a README, not a published/certified v308 or v309 Java source tree; do not describe the uncommitted local candidate as a GitHub source release.
 
 ## What exists today
 
