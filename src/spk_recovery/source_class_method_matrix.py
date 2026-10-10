@@ -15,6 +15,7 @@ from typing import Any
 from zipfile import ZipFile, BadZipFile
 
 from .bytecode_profile import BytecodeProfileError, profile_jar_class
+from .class_header_evidence import ClassHeaderError, compare_class_headers
 from .source_method_parity import MethodParityError, compare_profiles
 
 
@@ -167,6 +168,10 @@ def compare_class_method_profiles(original: dict, rebuilt: dict, *, original_sha
         "signature" in original and "signature" in rebuilt,
         "CLASS_SIGNATURE_EVIDENCE_MISSING",
     )
+    try:
+        class_header = compare_class_headers(original, rebuilt)
+    except ClassHeaderError:
+        raise ClassMethodMatrixError("CLASS_HEADER_EVIDENCE_INVALID") from None
     a, b = _methods(original), _methods(rebuilt)
     fields = _compare_fields(original, rebuilt, original_sha=original_sha)
     counts = {
@@ -218,6 +223,7 @@ def compare_class_method_profiles(original: dict, rebuilt: dict, *, original_sha
         "other_code_subattributes_and_runtime_unverified": True,
         "original_declared_method_count": len(a),
         "candidate_declared_method_count": len(b),
+        "class_header": class_header,
         "class_signature_exact": (
             original.get("signature") == rebuilt.get("signature")
         ),
@@ -297,6 +303,7 @@ def main(argv: list[str] | None = None) -> int:
             "candidate_declared_field_count": report["candidate_declared_field_count"],
             "field_counts": report["field_counts"],
             "field_inventory_exact": report["field_inventory_exact"],
+            "class_header_exact": report["class_header"]["class_header_exact"],
             "source_equivalence_certified": False,
         }, sort_keys=True))
     except (ClassMethodMatrixError, OSError, ValueError) as exc:
