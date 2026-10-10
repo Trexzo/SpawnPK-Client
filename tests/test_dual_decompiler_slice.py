@@ -63,7 +63,9 @@ class DualDecompilerSliceTests(unittest.TestCase):
         )
         (src / "FailDecompiler.java").write_text(
             "public class FailDecompiler {"
-            "public static void main(String[] args) { System.exit(17); }}\n",
+            "public static void main(String[] args) { "
+            "System.err.println(\"SENSITIVE_ORIGINAL_CLASS_NAME\"); "
+            "System.exit(17); }}\n",
             encoding="utf-8",
         )
         proc = subprocess.run(
@@ -173,8 +175,11 @@ class DualDecompilerSliceTests(unittest.TestCase):
     def test_failed_engine_cannot_publish_success_report(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d) / "failure"
-            with self.assertRaisesRegex(DualDecompilerError, "PRIVATE_DUAL_DECOMPILATION_FAILED"):
+            with self.assertRaisesRegex(DualDecompilerError, "PRIVATE_DUAL_DECOMPILATION_FAILED") as caught:
                 self._run(root, vine=self.fail)
+            # The legacy decompiler exception includes its raw stderr,
+            # but this public-facing wrapper must not print private names.
+            self.assertNotIn("SENSITIVE_ORIGINAL_CLASS_NAME", str(caught.exception))
             self.assertTrue((root / "exact-private-slice.jar").is_file())
             self.assertTrue((root / "cfr" / "p" / "A.java").is_file())
             self.assertFalse((root / "private-research-manifest.json").exists())
