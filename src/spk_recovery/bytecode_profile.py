@@ -953,6 +953,91 @@ def profile_class_constant_pool_references(
     }
 
 
+
+def _stackmap_type(
+    reader: _Reader,
+    cp: list[Any],
+    *,
+    code: bytes,
+    instruction_offsets: set[int],
+) -> dict[str, Any]:
+    """Resolve verification types without trusting raw constant-pool indices."""
+    tag = reader.u1()
+    kinds = {
+        0: "top", 1: "integer", 2: "float", 3: "double",
+        4: "long", 5: "null", 6: "uninitialized_this",
+    }
+    if tag in kinds:
+        return {"kind": kinds[tag]}
+    if tag == 7:
+        return {"kind": "object", "class": _class_name(cp, reader.u2())}
+    if tag == 8:
+        target = reader.u2()
+        if target not in instruction_offsets or code[target] != 0xBB:
+            raise BytecodeProfileError("StackMapTable uninitialized target not new")
+        return {"kind": "uninitialized", "new_offset": target}
+    raise BytecodeProfileError("invalid StackMapTable verification type")
+
+
+def _stackmap_table(
+    payload: bytes,
+    cp: list[Any],
+    *,
+    code: bytes,
+    instructions: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Parse JVM StackMapTable frames with CP-renumbering-safe object types.
+
+    Preserve frame *encoding kinds* and offsets. A different yet JVM-valid
+    frame encoding is intentionally treated as different research evidence.
+    """
+    reader = _Reader(payload)
+    boundaries = {row["offset"] for row in instructions}
+    frames = []
+    previous_offset = -1
+
+    def read_type() -> dict[str, Any]:
+        return _stackmap_type(
+            reader, cp, code=code, instruction_offsets=boundaries,
+        )
+
+    for _ in range(reader.u2()):
+        frame_type = reader.u1()
+        frame: dict[str, Any] = {"frame_type": frame_type}
+        if frame_type <= 63:
+            delta = frame_type
+        elif 64 <= frame_type <= 127:
+            delta = frame_type - 64
+            frame["stack"] = [read_type()]
+        elif frame_type == 247:
+            delta = reader.u2()
+            frame["stack"] = [read_type()]
+        elif 248 <= frame_type <= 250:
+            delta = reader.u2()
+            frame["chopped_locals"] = 251 - frame_type
+        elif frame_type == 251:
+            delta = reader.u2()
+        elif 252 <= frame_type <= 254:
+            delta = reader.u2()
+            frame["appended_locals"] = [read_type() for _ in range(frame_type - 251)]
+        elif frame_type == 255:
+            delta = reader.u2()
+            frame["locals"] = [read_type() for _ in range(reader.u2())]
+            frame["stack"] = [read_type() for _ in range(reader.u2())]
+        else:
+            raise BytecodeProfileError("reserved StackMapTable frame type")
+        frame_offset = previous_offset + delta + 1
+        if frame_offset not in boundaries:
+            raise BytecodeProfileError("StackMapTable frame not at instruction boundary")
+        frame["bytecode_offset"] = frame_offset
+        previous_offset = frame_offset
+        frames.append(frame)
+
+    if reader.offset != len(payload):
+        raise BytecodeProfileError("trailing bytes in StackMapTable")
+    return frames
+
+
 def profile_class_field_accesses(
     data: bytes,
 ) -> dict[str, Any]:
@@ -1032,6 +1117,8 @@ def profile_class_field_accesses(
         code_length = None
         max_stack = None
         max_locals = None
+        stackmap_table_present = None
+        stackmap_frames: list[dict[str, Any]] | None = None
         signature: str | None = None
         signature_seen = False
         for _ in range(r.u2()):
@@ -1052,6 +1139,10 @@ def profile_class_field_accesses(
                 continue
             if attr_name != "Code":
                 continue
+            if code_length is not None:
+                raise BytecodeProfileError("duplicate method Code attribute")
+            stackmap_table_present = False
+            stackmap_frames = []
             cr = _Reader(payload)
             max_stack = cr.u2()
             max_locals = cr.u2()
@@ -1088,8 +1179,16 @@ def profile_class_field_accesses(
                 )
 
             for _ in range(cr.u2()):
-                cr.u2()
-                cr.take(cr.u4())
+                nested_name = _utf8(cp, cr.u2())
+                nested_payload = cr.take(cr.u4())
+                if nested_name == "StackMapTable":
+                    if stackmap_table_present:
+                        raise BytecodeProfileError("duplicate Code StackMapTable")
+                    stackmap_table_present = True
+                    stackmap_frames = _stackmap_table(
+                        nested_payload, cp,
+                        code=code, instructions=instructions,
+                    )
             if cr.offset != len(payload):
                 raise BytecodeProfileError(
                     f"trailing Code bytes in {name}{descriptor}"
@@ -1103,6 +1202,8 @@ def profile_class_field_accesses(
                 "code_length": code_length,
                 "max_stack": max_stack,
                 "max_locals": max_locals,
+                "stackmap_table_present": stackmap_table_present,
+                "stackmap_frames": stackmap_frames,
                 "signature": signature,
                 "field_accesses": accesses,
                 "method_invocations": invocations,
