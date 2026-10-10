@@ -183,7 +183,7 @@ class DualDecompilerSliceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d) / "absent"
             with self.assertRaisesRegex(DualDecompilerError, "VINEFLOWER_FILE_MISSING"):
-                self._run(root, vine=Path(d) / "missing.jar")
+                self._run(root, vine=Path(d) / "missing.jar", vine_sha="0" * 64)
             self.assertFalse(root.exists())
 
     def test_same_original_as_tool_rejected_before_writing(self):
