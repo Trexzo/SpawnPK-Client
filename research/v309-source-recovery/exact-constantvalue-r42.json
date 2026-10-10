@@ -40,5 +40,27 @@
     "private_original_source_and_literals_not_uploaded": true,
     "evidence_procedure": "independent private javap ConstantValue extraction, isolated javac --release 9 -g:none -proc:none and second javap field-descriptor/ConstantValue comparison"
   },
-  "github_r42_helper_replayed_against_exact_original": false
+  "github_r42_helper_replayed_against_exact_original": false,
+  "private_r24_source_augmentation": {
+    "provenance": "private literal-only source additions to independent copy of R24 Java; javac --release 9 -g:none -proc:none",
+    "original_field_declarations": 126,
+    "candidate_fields_before": 4,
+    "candidate_fields_after": 37,
+    "original_fields_remaining_missing": 89,
+    "fields_with_exact_original_metadata_after": 36,
+    "fields_with_known_metadata_mismatch_after": 1,
+    "exact_original_constantvalue_attributes_in_augmented_class": 33,
+    "candidate_method_declarations_before": 8,
+    "candidate_method_declarations_after": 8,
+    "disassembly_opcode_sequences_unchanged": 8,
+    "disassembly_resolved_operands_unchanged": 8,
+    "classfile_sha256": "dab4d37cffc99d42549ad536f7c5d8b4d1e93a7e751441b592b861234e05a973",
+    "complete_private_candidate_jar_sha256": "8298f2454a34a83689d9038a618f2afffc311f48ff93fe9264c3045098b3d97c",
+    "private_augmented_java_source_sha256": "d9f505d7f582e2c88b0bdd0ecce3ec3994c47dba83f2c7e1c0d16e15a241afd6",
+    "strict_r31_runtime_or_source_equivalence_recertified": false,
+    "missing_nonconstant_initializers_still_reconstructed": false,
+    "three_substantive_missing_methods_recovered": false,
+    "augmented_proprietary_java_published": false,
+    "original_client_binary_modified": false
+  }
 }
