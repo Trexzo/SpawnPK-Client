@@ -13,7 +13,7 @@ JAR path. For v309 the accepted frontier currently pins SHA-256
 
 ~~~powershell
 $env:PYTHONPATH = (Join-Path (Get-Location) "src")
-python -m spk_recovery.exact_class_slice "C:\private\client-v309.jar" "rs/f/a.class" "C:\private\config-v309-slice.jar" --original-sha256 "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38"
+python -m spk_recovery.exact_class_slice "C:\private\client-v309.jar" "example/Config.class" "C:\private\config-v309-slice.jar" --original-sha256 "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38"
 ~~~
 
 Pass `config-v309-slice.jar` as the `input_jar` to the existing
