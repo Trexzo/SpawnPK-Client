@@ -9,6 +9,18 @@ claim that private candidate source is a complete v309 implementation.
 
 ## Use
 
+Before compiling, fingerprint **every staged .java file**, including
+implicit compiler dependencies. The fingerprint is portable across
+workspaces because it hashes relative paths and source bytes:
+
+~~~powershell
+$env:PYTHONPATH = (Join-Path (Get-Location) 'src')
+python -m spk_recovery.source_tree_fingerprint 'C:\private\source-candidate-root'
+~~~
+
+Copy the reported `source_tree_sha256` into the replay command.
+Symlinked dependencies and changes to the source tree fail closed.
+
 From a local clone of `Trexzo/SpawnPK-Client` with Python 3.11+ and
 JDK 21 available:
 
@@ -22,6 +34,7 @@ python -m spk_recovery.source_candidate_replay `
   'C:\private\r33-new-output' `
   --original-sha256 '<actual original JAR SHA-256>' `
   --source-sha256 '<actual Config.java SHA-256>' `
+  --source-tree-sha256 '<actual staged Java tree SHA-256>' `
   --timeout-seconds 180
 ~~~
 
@@ -33,8 +46,10 @@ candidate-JAR bytes and aggregate matrix.
 
 ## Isolation and verification
 
-- Pins original full-client JAR and the entry Java source with SHA-256
-  before creating outputs, then verifies the same exact bytes afterwards.
+- Pins the original full-client JAR, entry Java source and **every** staged
+  Java-source file with SHA-256 before creating outputs and after compiling.
+  Paths and contents of all .java files contribute to the source-tree hash;
+  added, removed, edited or renamed dependencies change the fingerprint.
 - Compiles with `--release 9 -g:none -proc:none`, with a fresh **empty
   classpath**, and an explicit source path. The original client JAR is
   **not** used as a compiler dependency.
@@ -48,11 +63,10 @@ candidate-JAR bytes and aggregate matrix.
 - Will not publish a success report after failed compilation or matrix
   validation. Partial output may remain locally for diagnosis.
 
-Only the entry source file is directly SHA-pinned. Other .java files
-loaded implicitly through `-sourcepath` must be treated as additional
-**private candidate dependencies**; a complete provenance/closed-input
-proof for them is an independent future gate. This is therefore a bounded
-development aid, NOT final build reproducibility authority.
+All staged Java files loaded implicitly through `-sourcepath` are included
+in the closed source-tree witness. Full toolchain reproducibility is still
+an independent gate: the exact javac/JDK platform implementation and runtime
+dependencies are not certified merely by hashing the staged Java sources.
 
 ## Status and safety
 
