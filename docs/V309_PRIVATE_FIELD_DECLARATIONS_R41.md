@@ -24,7 +24,8 @@ already contains the one original integer-array declaration, but its
 `final` modifier differs.
 
 **ConstantValue boundary:** 33 of the 40 missing `final` fields have
-an exact original JVM `ConstantValue` attribute. The other 7 missing
+an exact original JVM `ConstantValue` attribute (32 JVM integer-backed
+attributes, including boolean encodings, and one JVM String). The other 7 missing
 finals have no such attribute, and the shared array-field `final`
 mismatch also has no `ConstantValue`. Across all 41 original final
 fields, this divides into **33 with literal constant evidence and 8
