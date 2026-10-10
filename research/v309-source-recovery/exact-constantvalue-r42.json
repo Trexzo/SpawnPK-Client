@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "kind": "v309_exact_private_constantvalue_initializer_frontier",
+  "original_client_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "candidate_class_sha256": "95b01c46903f64edcd628ade444d13cfdfb0ec671e16b372a28c83ca9231ef9f",
+  "stable_owner_id": "CLIENT_CLASS_000167",
+  "missing_static_final_fields": 40,
+  "missing_static_final_fields_with_constantvalue": 33,
+  "missing_static_final_fields_without_constantvalue": 7,
+  "shared_final_modifier_mismatch_without_constantvalue": 1,
+  "exact_constantvalue_declaration_type_counts": {
+    "boolean": 28,
+    "int": 4,
+    "string": 1
+  },
+  "original_constantvalue_attribute_kind_counts": {
+    "jvm_integer": 32,
+    "jvm_string": 1
+  },
+  "provenance": "exact-private original-v309 javap Code and field ConstantValue attribute inventory; no source literal values published",
+  "literal_source_staging_requires_exact_pinned_JAR_replay": true,
+  "literal_source_replay_executed_for_original_client": true,
+  "original_literals_published": false,
+  "initializer_semantics_of_nonconstant_fields_recovered": false,
+  "class_initializer_recovered": false,
+  "full_java_class_recompiled_from_all_fields": false,
+  "canonical_identity_accepted": false,
+  "source_equivalence_certified": false,
+  "private_exact_original_literal_replay": {
+    "status": "isolated_java9_compile_and_constantvalue_metadata_equality_verified",
+    "emitted_constant_field_declaration_count": 33,
+    "exact_original_to_recompiled_constantvalue_matches": 33,
+    "boolean_field_matches": 28,
+    "integer_field_matches": 4,
+    "string_field_matches": 1,
+    "java_release": 9,
+    "private_literal_source_sha256": "add8c14120afddb3bc603e42bd079d5f8dc201b4d05d6e5b16fdb95061fd1b84",
+    "private_compiled_class_sha256": "1689cc47305f42daf33943f383148768620decfa3022620f3ae6dcaa7e915147",
+    "isolated_literal_only_class_not_original_replacement": true,
+    "private_original_source_and_literals_not_uploaded": true,
+    "evidence_procedure": "independent private javap ConstantValue extraction, isolated javac --release 9 -g:none -proc:none and second javap field-descriptor/ConstantValue comparison"
+  },
+  "github_r42_helper_replayed_against_exact_original": false
+}
