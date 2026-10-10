@@ -20,7 +20,7 @@ from spk_recovery.indexer import index_jar
 
 @unittest.skipUnless(shutil.which("javac"), "javac required")
 class ExternalFieldWitnessResearchTests(unittest.TestCase):
-    def _jar(self, root: Path, tag: str, target: str, fields: tuple[str, str], *, object_fields: bool = False) -> Path:
+    def _jar(self, root: Path, tag: str, target: str, fields: tuple[str, str], *, object_fields: bool = False, new_only_external: bool = False) -> Path:
         src = root / (tag + "_src") / "rs"
         src.mkdir(parents=True)
         if object_fields:
@@ -45,6 +45,9 @@ class ExternalFieldWitnessResearchTests(unittest.TestCase):
                 "class q { static int get(" + target + " v) {return v." +
                 fields[0] + "-v." + fields[1] + ";} } "
             )
+        if new_only_external:
+            read_body = "return v." + fields[0] + ";" if tag == "new" else "return 0;"
+            source += " class r { static int read(" + target + " v) {" + read_body + "} }"
         (src / (target + ".java")).write_text(source, encoding="utf-8")
         classes = root / (tag + "_classes")
         classes.mkdir()
@@ -58,12 +61,18 @@ class ExternalFieldWitnessResearchTests(unittest.TestCase):
                 z.write(p, p.relative_to(classes).as_posix())
         return jar
 
-    def _fixture(self, root: Path, *, object_fields: bool = False):
-        old = self._jar(root, "old", "a", ("c", "d"), object_fields=object_fields)
-        new = self._jar(root, "new", "b", ("e", "f"), object_fields=object_fields)
+    def _fixture(self, root: Path, *, object_fields: bool = False,
+                 new_only_external: bool = False):
+        old = self._jar(root, "old", "a", ("c", "d"), object_fields=object_fields,
+                        new_only_external=new_only_external)
+        new = self._jar(root, "new", "b", ("e", "f"), object_fields=object_fields,
+                        new_only_external=new_only_external)
         oi, ni = index_jar(old), index_jar(new)
         classes = []
-        for i, (ol, nl) in enumerate((("a", "b"), ("p", "p"), ("q", "q")), 1):
+        class_pairs = [("a", "b"), ("p", "p"), ("q", "q")]
+        if new_only_external:
+            class_pairs.append(("r", "r"))
+        for i, (ol, nl) in enumerate(class_pairs, 1):
             entries = []
             for build, idx, name in (("v1", oi, ol), ("v2", ni, nl)):
                 path = "rs/" + name + ".class"
@@ -121,9 +130,10 @@ class ExternalFieldWitnessResearchTests(unittest.TestCase):
                     )},
                 },
             })
-        for i, (ol, nl, method) in enumerate(
-            (("a", "b", "set"), ("p", "p", "get"), ("q", "q", "get")), 1
-        ):
+        method_pairs = [("a", "b", "set"), ("p", "p", "get"), ("q", "q", "get")]
+        if new_only_external:
+            method_pairs.append(("r", "r", "read"))
+        for i, (ol, nl, method) in enumerate(method_pairs, 1):
             a = next(m for m in oi["classes"]["rs/" + ol + ".class"]["methods"]
                      if m["name"] == method)
             b = next(m for m in ni["classes"]["rs/" + nl + ".class"]["methods"]
@@ -235,6 +245,18 @@ class ExternalFieldWitnessResearchTests(unittest.TestCase):
             self.assertTrue(all(c["status"] == "BLOCKED"
                                 for c in report["candidates"]))
             self.assertEqual(report["accepted_identities"], 0)
+
+    def test_new_only_changed_method_field_access_vetoes_candidate(self):
+        with tempfile.TemporaryDirectory() as td:
+            fixture = self._fixture(Path(td), new_only_external=True)
+            report = self._probe(fixture)
+            statuses = {c["old"]["name"]: c["status"] for c in report["candidates"]}
+            # rs/r.read is an already paired method. It reads no target field
+            # in v1 but references rs/b.e in v2, so that new-only use must
+            # veto c -> e even though three other canonical methods align.
+            self.assertEqual(statuses["c"], "BLOCKED")
+            self.assertEqual(statuses["d"], "REVIEWABLE_EXTERNAL_ANCHORS")
+            self.assertGreaterEqual(len(report["disputed_method_ids"]), 1)
 
     def test_tampered_jar_rejected(self):
         with tempfile.TemporaryDirectory() as td:
