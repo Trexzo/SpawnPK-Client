@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "kind": "v309_private_original_field_dependency_reconstruction_frontier",
+  "stable_owner_id": "CLIENT_CLASS_000167",
+  "original_client_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "original_class_sha256": "2ef0c4ddefa771f33e884eb11626a1a13d7334a2ebe596deeb873444a357fc52",
+  "research_candidate_class_sha256": "95b01c46903f64edcd628ade444d13cfdfb0ec671e16b372a28c83ca9231ef9f",
+  "research_method": "R40 private read-only original JVM constant-pool field referent scan; not strict R40 class-matrix recertification",
+  "original_declared_fields": 126,
+  "candidate_declared_fields": 4,
+  "missing_candidate_fields": 122,
+  "unrecovered_substantive_method_count": 3,
+  "methods": [
+    {
+      "role": "class_initializer",
+      "original_code_bytes": 473,
+      "original_instruction_count": 213,
+      "original_self_field_reference_sites": 100,
+      "missing_candidate_field_reference_sites": 95,
+      "distinct_missing_candidate_field_dependencies": 89,
+      "reads_original_fields": 7,
+      "writes_original_fields": 93,
+      "recovered_body": false
+    },
+    {
+      "role": "unreconstructed_public_method",
+      "original_code_bytes": 1614,
+      "original_instruction_count": 697,
+      "original_self_field_reference_sites": 78,
+      "missing_candidate_field_reference_sites": 73,
+      "distinct_missing_candidate_field_dependencies": 42,
+      "reads_original_fields": 5,
+      "writes_original_fields": 73,
+      "recovered_body": false
+    },
+    {
+      "role": "save_dispatch_target_placeholder",
+      "original_code_bytes": 929,
+      "original_instruction_count": 364,
+      "original_self_field_reference_sites": 49,
+      "missing_candidate_field_reference_sites": 44,
+      "distinct_missing_candidate_field_dependencies": 41,
+      "reads_original_fields": 49,
+      "writes_original_fields": 0,
+      "recovered_body": false
+    }
+  ],
+  "method_priority_basis": "distinct missing-field dependencies only, not semantic complexity or runtime importance",
+  "original_binary_modified": false,
+  "private_client_source_published": false,
+  "canonical_owner_identity_accepted": false,
+  "automatic_source_recovery_performed": false,
+  "current_strict_recompiled_parity_of_unrecovered_methods_passed": false,
+  "source_equivalence_certified": false
+}
