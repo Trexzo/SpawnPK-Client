@@ -163,6 +163,10 @@ def compare_class_method_profiles(original: dict, rebuilt: dict, *, original_sha
         original.get("internal_name") == rebuilt.get("internal_name"),
         "NO_ACCEPTED_OWNER_ALIAS",
     )
+    _require(
+        "signature" in original and "signature" in rebuilt,
+        "CLASS_SIGNATURE_EVIDENCE_MISSING",
+    )
     a, b = _methods(original), _methods(rebuilt)
     fields = _compare_fields(original, rebuilt, original_sha=original_sha)
     counts = {
