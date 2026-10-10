@@ -52,5 +52,9 @@
   "original_final_fields_without_constantvalue": 8,
   "missing_final_fields_with_constantvalue": 33,
   "missing_final_fields_without_constantvalue": 7,
-  "shared_final_modifier_mismatch_without_constantvalue": 1
+  "shared_final_modifier_mismatch_without_constantvalue": 1,
+  "missing_final_constantvalue_type_counts": {
+    "jvm_integer": 32,
+    "jvm_string": 1
+  }
 }
