@@ -41,6 +41,18 @@ Counts are classified as:
 - `no_original_code`: original abstract/native or otherwise lacks Code
 - `candidate_has_no_code`: compiled candidate lacks expected Code
 
+**Field-inventory parity is a separate mandatory witness.** R35 now reports
+original and candidate field totals plus shared exact declarations, shared
+declarations with changed access/signature/ConstantValue metadata, missing
+fields and extra fields. Class generic signatures are compared independently.
+A method-complete candidate with missing or altered JVM fields remains
+**incomplete** and cannot be mistaken for a reconstructed class.
+
+Field metadata is compared by exact JVM name+descriptor; no auto-aliasing
+or inferred source field rename is performed. Signed-zero constants remain
+distinct, while potentially ambiguous NaN ConstantValue evidence fails
+closed. Private per-field IDs are opaque; raw names are not printed.
+
 An unsupported or incomplete method-body comparison fails the **whole**
 matrix rather than creating an apparent success. Method identifiers in the
 private output are one-way derived IDs: no raw obfuscated names/descriptors
@@ -53,7 +65,9 @@ field correctness, runtime correctness or source publication eligibility.
 The existing private seven-method configuration reconstruction has several
 unreconstructed methods. R32 can measure its method inventory and deviations
 in one deterministic pass, *once it is compiled as a separate candidate
-archive*. It does not accept `CLIENT_CLASS_000167` or the three unresolved
+archive*. Its field counts can now expose the known structural incompleteness
+of the private configuration source candidate even when individual methods
+match. It does not accept `CLIENT_CLASS_000167` or the three unresolved
 field candidates, nor does it modify `authority/` or canonical lineages.
 
 Original JARs, source candidate Java, generated classfiles and private

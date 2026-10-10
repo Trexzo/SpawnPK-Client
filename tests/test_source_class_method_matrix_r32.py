@@ -43,6 +43,8 @@ def _method(name: str, opcode: str) -> dict:
 def _profile(methods: list[dict], owner: str = "p/A") -> dict:
     return {
         "internal_name": owner,
+        "signature": None,
+        "fields": [],
         "methods": methods,
         "bootstrap_methods": [],
     }
