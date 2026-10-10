@@ -47,5 +47,10 @@
     "exact private original v309 classfile declaration scan",
     "private R37 compiled candidate classfile declaration scan",
     "research/v309-source-recovery/frontier.json"
-  ]
+  ],
+  "original_fields_with_constantvalue": 33,
+  "original_final_fields_without_constantvalue": 8,
+  "missing_final_fields_with_constantvalue": 33,
+  "missing_final_fields_without_constantvalue": 7,
+  "shared_final_modifier_mismatch_without_constantvalue": 1
 }
