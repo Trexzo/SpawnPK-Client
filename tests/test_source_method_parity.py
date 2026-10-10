@@ -31,6 +31,8 @@ def _profile(rows=None, *, handlers=None, bsm=None, owner="p/A") -> dict:
         "methods": [{
             "name": "value", "descriptor": "()I", "access": 1,
             "code_length": sum(x["length"] for x in rows),
+            "max_stack": 2,
+            "max_locals": 1,
             "instructions": rows,
             "exception_handlers": [] if handlers is None else handlers,
         }],
@@ -76,6 +78,40 @@ class SourceMethodParitySyntheticTests(unittest.TestCase):
         result = compare_profiles(a, b, "value", "()I")
         self.assertEqual(result["classification"], "BYTECODE_DIFFERENCE")
         self.assertFalse(result["checks"]["decoded_instructions_and_resolved_cp"])
+
+    def test_stack_local_limit_drift_is_not_instruction_parity(self):
+        original, candidate = _profile(), _profile()
+        candidate["methods"][0]["max_stack"] = 3
+        report = compare_profiles(original, candidate, "value", "()I")
+        self.assertEqual(report["classification"], "BYTECODE_DIFFERENCE")
+        self.assertFalse(report["checks"]["max_stack"])
+        self.assertTrue(report["checks"]["decoded_instructions_and_resolved_cp"])
+
+        candidate = _profile()
+        candidate["methods"][0]["max_locals"] = 2
+        report = compare_profiles(original, candidate, "value", "()I")
+        self.assertEqual(report["classification"], "BYTECODE_DIFFERENCE")
+        self.assertFalse(report["checks"]["max_locals"])
+
+    def test_missing_or_invalid_code_limits_fail_closed(self):
+        original = _profile()
+        for key in ("max_stack", "max_locals"):
+            for invalid in (None, -1, 65536, True, "2"):
+                with self.subTest(field=key, invalid=invalid):
+                    candidate = _profile()
+                    candidate["methods"][0][key] = invalid
+                    with self.assertRaisesRegex(
+                        MethodParityError, "MISSING_OR_INVALID_JVM_CODE_LIMIT"
+                    ):
+                        compare_profiles(original, candidate, "value", "()I")
+        for key in ("max_stack", "max_locals"):
+            with self.subTest(missing=key):
+                candidate = _profile()
+                del candidate["methods"][0][key]
+                with self.assertRaisesRegex(
+                    MethodParityError, "MISSING_OR_INVALID_JVM_CODE_LIMIT"
+                ):
+                    compare_profiles(original, candidate, "value", "()I")
 
     def test_changed_handler_is_detected(self):
         a = _profile(handlers=[{
