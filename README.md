@@ -94,6 +94,16 @@ downloaded. Never upload proprietary class slices or generated Java to CI.
 Older R0/R1 examples below intentionally document the historical v308 baseline.
 For new v309 work, start with the linked accepted frontier, not those examples.
 
+## Current v309 recovered-Java source status
+
+The [R37 verified private-source frontier](research/v309-source-recovery/frontier.json)
+records an exact-original v309 configuration class study: a recompiled
+seven-method instruction-level research slice, **four candidate fields
+against 126 original fields**, and explicit unresolved method, field and
+StackMapTable gaps. The research candidate is **not** a certified or
+published source tree. [Review the bounded evidence and next source
+blockers](docs/V309_PRIVATE_SOURCE_FRONTIER_R37.md).
+
 ## Recovered source in this repository
 
 The layout below is the **intended publication target** for certified Java source, versioned by exact client build; it is not a claim that the files exist today:
