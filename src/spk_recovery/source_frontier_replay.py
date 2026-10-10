@@ -13,7 +13,7 @@ import re
 from typing import Any
 from zipfile import BadZipFile, ZipFile
 
-from .bytecode_profile import BytecodeProfileError
+from .bytecode_profile import BytecodeProfileError, profile_jar_class
 from .source_class_method_matrix import (
     ClassMethodMatrixError,
     build_class_method_matrix,
@@ -137,6 +137,8 @@ def replay_frontier(
             candidate_sha256=candidate_sha256,
             class_entry=class_entry,
         )
+        original_profile = profile_jar_class(paths[0], class_entry)
+        candidate_profile = profile_jar_class(paths[1], class_entry)
     except (
         BadZipFile, OSError, BytecodeProfileError,
         ClassMethodMatrixError, KeyError, IndexError,
@@ -170,14 +172,8 @@ def replay_frontier(
         ),
         "exact_field_declaration_metadata": fields["shared_exact"],
         "changed_field_declaration_metadata": fields["shared_metadata_difference"],
-        "original_classfile_major": (
-            matrix["original_classfile_major"] if "original_classfile_major" in matrix
-            else None
-        ),
-        "candidate_classfile_major": (
-            matrix["candidate_classfile_major"] if "candidate_classfile_major" in matrix
-            else None
-        ),
+        "original_classfile_major": original_profile["classfile_major"],
+        "candidate_classfile_major": candidate_profile["classfile_major"],
         "class_access_flags_equal": header["checks"]["access_flags"],
         "superclass_equal": header["checks"]["direct_superclass"],
         "ordered_interfaces_equal": header["checks"]["ordered_interfaces"],
@@ -186,11 +182,6 @@ def replay_frontier(
         "method_declarations_missing": matrix["counts"]["missing_method"],
         "method_declarations_extra": matrix["counts"]["extra_method"],
     }
-    # The R36 matrix exposes equality and checks, but not original major
-    # and candidate major values. Do NOT manufacture those values.
-    if measured["original_classfile_major"] is None:
-        measured.pop("original_classfile_major")
-        measured.pop("candidate_classfile_major")
     core = {
         "schema_version": 1,
         "kind": "v309_private_recovery_frontier_replay",
