@@ -1,8 +1,8 @@
 """Fail-closed, read-only JVM source-method parity research.
 
-This is NOT a canonical identity proof or a full class/source equivalence
-checker. StackMapTable, annotations, implementation dependencies and several
-Code subattributes are not certified by the underlying bytecode profiler.
+This is NOT a canonical identity proof or full source equivalence. It
+compares resolved StackMapTable frames but does not certify JVM verifier
+semantics, annotations, implementation dependencies or other Code attributes.
 """
 from __future__ import annotations
 
@@ -230,6 +230,11 @@ def compare_profiles(
                 type(value) is int and 0 <= value <= 65535,
                 "MISSING_OR_INVALID_JVM_CODE_LIMIT",
             )
+        _require(
+            type(method.get("stackmap_table_present")) is bool
+            and isinstance(method.get("stackmap_frames"), list),
+            "STACKMAP_EVIDENCE_MISSING",
+        )
     old_ops = _normalized_instructions(original, old)
     new_ops = _normalized_instructions(candidate, new)
     for method in (old, new):
@@ -240,6 +245,12 @@ def compare_profiles(
         "code_length": old["code_length"] == new["code_length"],
         "max_stack": old["max_stack"] == new["max_stack"],
         "max_locals": old["max_locals"] == new["max_locals"],
+        "stackmap_table_present": (
+            old["stackmap_table_present"] == new["stackmap_table_present"]
+        ),
+        "resolved_stackmap_frames": (
+            old["stackmap_frames"] == new["stackmap_frames"]
+        ),
         "decoded_instructions_and_resolved_cp": old_ops == new_ops,
         "exception_handlers": (
             old["exception_handlers"] == new["exception_handlers"]
@@ -250,7 +261,9 @@ def compare_profiles(
         "research_only": True,
         "canonical_identity_accepted": False,
         "full_method_equivalence_certified": False,
-        "code_subattributes_and_stackmaps_unverified": True,
+        "code_subattributes_and_stackmaps_unverified": False,
+        "other_code_subattributes_unverified": True,
+        "stackmap_frame_semantics_unverified": True,
         "original_instruction_count": len(old_ops),
         "candidate_instruction_count": len(new_ops),
         "checks": tests,
