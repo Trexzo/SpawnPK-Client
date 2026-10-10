@@ -75,9 +75,15 @@ chain instead of accumulating separate private R24/R25/R26 scripts:
 2. [R27 dual-decompiler execution](docs/V309_DUAL_DECOMPILER_R27.md) feeds that
    same private slice independently to pinned CFR and Vineflower executables,
    generating private Java plus an aggregate, deterministic manifest.
-3. [R25 source-method parity](docs/V309_SOURCE_METHOD_PARITY_R25.md) compares
-   selected compiled candidate methods with original JVM instruction,
-   resolved constant-pool and supported bootstrap/exception evidence.
+3. [R33 isolated private source compilation](docs/V309_PRIVATE_SOURCE_COMPILE_REPLAY_R33.md)
+   compiles staged candidate Java with no original-client binary fallback,
+   checks SHA-256 input pins, and produces a private candidate class archive.
+4. [R31/R25 strict JVM method parity](docs/V309_SOURCE_METHOD_PARITY_R25.md)
+   compares decoded instructions, resolved references, handlers, stack/local
+   limits, and normalized StackMapTable metadata.
+5. [R32 class-wide method matrix](docs/V309_CLASS_METHOD_MATRIX_R32.md)
+   measures matching, changed, missing and extra methods in one pass.
+   R33 invokes this matrix after isolated compilation.
 
 These are **separate steps**: decompiler output is not equivalent reconstructed
 source by default, and instruction parity does not authorize canonical
