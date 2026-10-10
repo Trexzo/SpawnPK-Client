@@ -11,6 +11,9 @@ from spk_recovery.bytecode_profile import profile_class_field_accesses
 from spk_recovery.class_header_evidence import (
     ClassHeaderError, compare_class_headers,
 )
+from spk_recovery.source_class_method_matrix import (
+    ClassMethodMatrixError, compare_class_method_profiles,
+)
 
 
 def _header(**patch):
@@ -75,6 +78,34 @@ class HeaderUnitTests(unittest.TestCase):
             with self.subTest(missing=key):
                 with self.assertRaises(ClassHeaderError):
                     compare_class_headers(_header(), incomplete)
+
+    def test_matrix_reports_class_header_even_without_declared_methods(self):
+        original = {
+            **_header(), "signature": None, "fields": [],
+            "methods": [], "bootstrap_methods": [],
+        }
+        candidate = {
+            **_header(super_name="p/Alt"), "signature": None, "fields": [],
+            "methods": [], "bootstrap_methods": [],
+        }
+        report = compare_class_method_profiles(
+            original, candidate, original_sha="f" * 64,
+        )
+        self.assertFalse(report["class_header"]["class_header_exact"])
+        self.assertFalse(report["class_header"]["checks"]["direct_superclass"])
+        self.assertTrue(report["field_inventory_exact"])
+        self.assertFalse(report["whole_class_equivalence_certified"])
+        self.assertFalse(report["all_method_bodies_instruction_parity"])
+        self.assertNotIn("p/Alt", str(report))
+
+        broken = dict(candidate)
+        del broken["interfaces"]
+        with self.assertRaisesRegex(
+            ClassMethodMatrixError, "CLASS_HEADER_EVIDENCE_INVALID",
+        ):
+            compare_class_method_profiles(
+                original, broken, original_sha="f" * 64,
+            )
 
     def test_owner_alias_not_inferred(self):
         with self.assertRaisesRegex(ClassHeaderError, "NO_ACCEPTED_CLASS_OWNER_ALIAS"):
