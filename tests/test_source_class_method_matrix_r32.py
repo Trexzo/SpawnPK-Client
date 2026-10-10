@@ -100,7 +100,7 @@ class ClassMatrixSyntheticTests(unittest.TestCase):
     def test_invalid_method_body_refuses_whole_batch(self):
         original = _profile([_method("same", "0x04")])
         candidate = _profile([_method("same", "0x04")])
-        del candidate["methods"][0]["stackmap_frames"]
+        del candidate["methods"][0]["max_stack"]
         with self.assertRaisesRegex(ClassMethodMatrixError, "NON_EVALUABLE_METHOD_BODY"):
             compare_class_method_profiles(original, candidate, original_sha="a" * 64)
 
