@@ -21,6 +21,24 @@ FRONTIER = ROOT / "research" / "v309-field-recovery"
 FIELD_IDS = ("CLIENT_FIELD_002107", "CLIENT_FIELD_002108")
 
 
+def _validate_frontier_sha_pin(raw: bytes, expected: str) -> str:
+    """Allow only actual pinned CRLF bytes or Git's exact LF normalization.
+
+    The frontier manifest pins hashes generated on Windows from CRLF JSON,
+    while Git stores those same tracked text files with LF. Never replace
+    this check with a parsed-JSON equality or an unpinned hash update.
+    """
+    want = expected.lower()
+    if hashlib.sha256(raw).hexdigest() == want:
+        return "exact_raw_bytes"
+    if b"\r" in raw or not raw.endswith(b"\n"):
+        raise AssertionError("FRONTIER_SHA256_MISMATCH")
+    crlf = raw.replace(b"\n", b"\r\n")
+    if hashlib.sha256(crlf).hexdigest() != want:
+        raise AssertionError("FRONTIER_SHA256_MISMATCH")
+    return "verified_git_lf_to_pinned_crlf"
+
+
 class TrackedV309FieldReconciliationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -30,13 +48,28 @@ class TrackedV309FieldReconciliationTests(unittest.TestCase):
             record = cls.frontier["files"][role]
             path = ROOT / record["path"]
             raw = path.read_bytes()
-            if hashlib.sha256(raw).hexdigest().lower() != record["sha256"].lower():
-                raise AssertionError(f"FRONTIER_{role.upper()}_SHA256_MISMATCH")
+            _validate_frontier_sha_pin(raw, record["sha256"])
             cls.documents[role] = json.loads(raw)
         cls.classes = cls.documents["class_lineage"]
         cls.members = cls.documents["member_lineage"]
         cls.by_class = {x["logical_id"]: x for x in cls.classes["classes"]}
         cls.by_member = {x["member_id"]: x for x in cls.members["members"]}
+
+    def test_frontier_hash_rejects_tampered_json(self):
+        # A legitimate CRLF-vs-LF Git checkout must pass, but a single
+        # non-EOL byte change must still fail even after normalization.
+        for role in ("class_lineage", "member_lineage"):
+            with self.subTest(role=role):
+                record = self.frontier["files"][role]
+                raw = (ROOT / record["path"]).read_bytes()
+                self.assertIn(
+                    _validate_frontier_sha_pin(raw, record["sha256"]),
+                    ("exact_raw_bytes", "verified_git_lf_to_pinned_crlf"),
+                )
+                tampered = raw.replace(b'"schema_version"', b'"schema_Version"', 1)
+                self.assertNotEqual(tampered, raw)
+                with self.assertRaisesRegex(AssertionError, "FRONTIER_SHA256_MISMATCH"):
+                    _validate_frontier_sha_pin(tampered, record["sha256"])
 
     def test_tracked_authority_and_exact_client_hashes(self):
         self.assertEqual(self.frontier["state"], "ACCEPTED_INCOMPLETE")
