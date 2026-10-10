@@ -84,6 +84,7 @@ class StackMapFrameUnitTests(unittest.TestCase):
             ("000102", "frame not at instruction boundary"),
             ("00010000", "trailing bytes in StackMapTable"),
             ("00014009", "invalid StackMapTable verification type"),
+            ("00014007ffff", "object type CP index out of range"),
             ("0001ff", "unexpected EOF"),
         ]:
             with self.subTest(bad=bad):
