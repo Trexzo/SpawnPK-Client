@@ -51,6 +51,31 @@ StackMapTable frames, field declaration metadata and class headers.
 Any unsupported strict evidence aborts the worklist rather than
 presenting a partial report as a complete class recovery plan.
 
+## Exact-private v309 gap dependency measurement
+
+The repository now also records
+[the R40 original-field dependency aggregate](../research/v309-source-recovery/gap-priority-r40.json),
+measured read-only against the exact v309 class and the reproducible
+R24/R37 private Java candidate. Original client full-JAR and candidate
+class SHA pins are included in that record.
+
+| Unrecovered role | Original Code bytes | Original instruction count | Original own-field access sites | Access sites targeting missing candidate fields | Distinct missing field dependencies |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Class initializer | 473 | 213 | 100 | 95 | **89** |
+| Other unreconstructed public method | 1,614 | 697 | 78 | 73 | **42** |
+| Save-dispatch target, compile-only placeholder | 929 | 364 | 49 | 44 | **41** |
+
+The class initializer has the most distinct missing-field dependencies.
+However the public method has substantially more bytecode and the save
+target has behaviorally important callback wiring, so the table is
+**not** an implementation priority judgment independent of other evidence.
+
+The aggregate was measured using a separate strict private read-only
+constant-pool field-reference scan. It **has not** been labeled as a
+successful execution of the newly introduced R40 class-wide worklist
+or as fully recovered current-R31 Java method parity. No raw client
+identifiers or original classfile bytes are stored here.
+
 ## Interpretation for the v309 configuration candidate
 
 R37 measured 126 original fields against 4 candidate fields and 10
