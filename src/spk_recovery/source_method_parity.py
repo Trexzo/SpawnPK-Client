@@ -261,7 +261,10 @@ def compare_profiles(
         "research_only": True,
         "canonical_identity_accepted": False,
         "full_method_equivalence_certified": False,
-        "code_subattributes_and_stackmaps_unverified": False,
+        # Keep the legacy *combined* uncertainty flag conservative:
+        # parsing StackMapTable does not certify other Code attributes.
+        "code_subattributes_and_stackmaps_unverified": True,
+        "stackmap_frame_metadata_compared": True,
         "other_code_subattributes_unverified": True,
         "stackmap_frame_semantics_unverified": True,
         "original_instruction_count": len(old_ops),
