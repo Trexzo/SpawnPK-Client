@@ -20,8 +20,20 @@ Set PYTHONPATH to the src directory and run python -m spk_recovery.external_fiel
 
 Original JARs, the generated report, obfuscated class/member coordinates, the R10/R11 private research evidence and recovered proprietary source must remain outside the public repository.
 
-## Evidence and remaining gate
+## R12 authoritative frontier reconciliation (2026-10-10)
 
-The separate SHA-pinned private R10/R11 investigation found three canonical-method witnesses each for CLIENT_FIELD_002107 and CLIENT_FIELD_002108. Its local proof-design test uses a minimal, privately derived class-lineage projection and is not a certified replay of the full original canonical class-lineage artifacts. Full accepted authority and external method-provenance checks remain required before a future change to R3M could authorize mapping promotion.
+**Important correction:** The R10/R11 exact-private investigation used an older pre-promotion member-lineage snapshot with **303 unresolved entries**, not the tracked GitHub-first accepted v309 frontier. The later `research/v309-field-recovery/member-lineage.json` already records **both `CLIENT_FIELD_002107` and `CLIENT_FIELD_002108` as accepted in v309**, each with an explicit reviewed `MANUAL` relation. They are **not** among the 143 remaining unresolved items. The fact that the old private R10/R11 prototype called them pending must never cause a second promotion.
 
-These matches are not claims of reflection, native linkage, class-initialization, exception, or whole-program equivalence. The previously reported 143 unresolved v309 fields and 26 descriptor blockers were not recomputed. This PR accepts zero identities.
+The matching canonical class lineage is also tracked under `research/v309-field-recovery/class-lineage.json`; `research/v309-field-recovery/frontier.json` pins the complete files' SHA-256 values and both exact client JAR hashes.
+
+**Tracked-lineage EOL preflight:** The frontier SHA-256 pins were computed on the original Windows CRLF JSON. Git commits the same lineage JSON with LF-only line endings. The current Git blob's SHA-256 therefore differs from the pinned Windows hash even though recomputing SHA-256 after an **LF-to-CRLF line-ending-only** conversion matches the manifest exactly for both class and member lineage. R12 tests strictly allow only the original exact CRLF bytes or that single deterministic Git normalization; any changed JSON content remains rejected. Do not silently rewrite the tracked manifest to the LF hashes or disable the hash gate. This is the **ACCEPTED_INCOMPLETE** frontier, *not* an `authority/v309.json` final promotion.
+
+The hosted `tests/test_v309_tracked_frontier_reconciliation.py` checks the pinned frontier file hashes, both accepted field relationships and the explicit rejection of an attempted duplicate research proposal. For any further private work, use the current tracked frontier, not the old member-lineage. A replay of the R11 evaluator against current authority should **not** try to recreate either accepted relationship; only genuinely unresolved members are eligible.
+
+### What R11 still proves
+
+The earlier R10/R11 bytecode research measured three previously canonical-method witnesses per field using a deliberately minimal private class-lineage projection. That was useful to test the fail-closed evaluator, but **not** a formal full-lineage replay or independent justification to replace the existing accepted reviewed proofs. R11 itself has `canonical=false`, `mapping_mutation=false`, and `accepted_identities=0`. This research tool does not claim reflection, native linkage, initialization, exception or whole-program equivalence.
+
+**Next real parent-class blocker:** The R8 configuration-field candidates `CLIENT_FIELD_002195`, `CLIENT_FIELD_002241` and `CLIENT_FIELD_002299` belong to `CLIENT_CLASS_000167`. The tracked class lineage contains only its v308 entry and lists the raw same-path old/new classfiles as separate unmatched entries. The identical internal path is **not** a canonical cross-version owner relation. Consequently R11's exact canonical-owner gate must not analyze them as already paired; their class identity requires an independent proof and explicit acceptance before field transfer can be considered. Their changed initializer and the separate substituted synchronized callsite also remain behavioral questions.
+
+Additional v309 gaps still require fresh private-JAR measurement with *current* accepted lineage, appropriate formal proof and explicit review. The tracked 143 unresolved entries and 26 descriptor blockers are frontier figures rather than counts newly recalculated by R11/R12.
