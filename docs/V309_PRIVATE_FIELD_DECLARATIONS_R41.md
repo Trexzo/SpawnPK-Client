@@ -21,7 +21,16 @@ is cross-checked against the tracked R37 original/candidate fingerprints:
 The 122 missing field types are 97 booleans, 10 integers, 8 strings,
 6 project-defined object references and 1 boxed integer. The candidate
 already contains the one original integer-array declaration, but its
-`final` modifier differs. Of the four candidate declarations, three
+`final` modifier differs.
+
+**ConstantValue boundary:** 33 of the 40 missing `final` fields have
+an exact original JVM `ConstantValue` attribute. The other 7 missing
+finals have no such attribute, and the shared array-field `final`
+mismatch also has no `ConstantValue`. Across all 41 original final
+fields, this divides into **33 with literal constant evidence and 8
+without**. R41 counts the evidence but does not emit initializer code.
+A later independently reviewed tool could use the 33 exact constant
+values; the remaining 8 require initializer/assignment reconstruction. Of the four candidate declarations, three
 have exact JVM field metadata, while one is a known mismatch.
 
 ## Generate a private field declaration fragment
@@ -66,9 +75,13 @@ are not overwritten.
 The helper intentionally writes **no `= null`**, `= 0`, `= false` or
 other manufactured initializer. An original `static final` field can
 require a field `ConstantValue` or a particular `<clinit>` assignment.
-The 40 missing final declarations therefore require separate exact
-initializer recovery and manual review before attempting to compile the
-fragment into a source file. The one original candidate field with a
+The 33 missing finals with exact `ConstantValue` metadata can be
+treated as literal initializer candidates in a separate, verified recovery
+pass. The other 7 missing final declarations—and the shared candidate
+array field with a `final` modifier mismatch—still need explicit
+initializer/assignment recovery. R41 itself emits no initializers and
+requires manual review before attempting to compile the fragment into a
+source file. The one original candidate field with a
 `final` modifier mismatch also requires independent reconciliation.
 
 The source candidate's other unreconstructed methods and hundreds of
