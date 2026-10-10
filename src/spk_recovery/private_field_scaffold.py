@@ -97,6 +97,45 @@ def _modifiers(access: int) -> tuple[str, bool]:
     return " ".join(words), bool(access & 0x0010)
 
 
+def _exact_constant_literal(descriptor: str, value: Any) -> str:
+    """Encode ONLY exact JVM ConstantValue literals with safe Java spelling.
+
+    JVM booleans, bytes, chars and shorts have integer ConstantValue tags.
+    Unsupported floating payloads and non-ASCII source strings fail closed
+    rather than silently normalizing NaN bits or changing Java source text.
+    """
+    if descriptor == "Z":
+        _require(type(value) is int and value in (0, 1),
+                 "INVALID_OR_NON_BOOLEAN_CONSTANT_VALUE")
+        return "true" if value == 1 else "false"
+    if descriptor in ("B", "S", "C", "I"):
+        ranges = {
+            "B": (-128, 127), "S": (-32768, 32767),
+            "C": (0, 65535), "I": (-(2**31), 2**31 - 1),
+        }
+        low, high = ranges[descriptor]
+        _require(type(value) is int and low <= value <= high,
+                 "INTEGER_CONSTANT_VALUE_OUT_OF_RANGE")
+        literal = str(value)
+        return {
+            "B": "(byte) " + literal, "S": "(short) " + literal,
+            "C": "(char) " + literal, "I": literal,
+        }[descriptor]
+    if descriptor == "J":
+        _require(type(value) is int and -(2**63) <= value < 2**63,
+                 "LONG_CONSTANT_VALUE_OUT_OF_RANGE")
+        # Java has special lexical rules for the most negative long value.
+        return "(-9223372036854775807L - 1L)" if value == -(2**63) else str(value) + "L"
+    if descriptor == "Ljava/lang/String;":
+        _require(type(value) is str, "INVALID_STRING_CONSTANT_VALUE")
+        _require(all(32 <= ord(char) <= 126 for char in value),
+                 "STRING_CONSTANT_NEEDS_MANUAL_LITERAL_ENCODING")
+        return json.dumps(value, ensure_ascii=True)
+    # The current profile exposes Python floats, not exact JVM IEEE payloads.
+    # In particular, NaN payload bits must never be manufactured or lost.
+    raise FieldDeclarationScaffoldError("UNSUPPORTED_EXACT_CONSTANT_LITERAL_TYPE")
+
+
 def _fields(profile: dict) -> dict[tuple[str, str], dict[str, Any]]:
     rows = profile.get("fields")
     _require(isinstance(rows, list), "FIELD_INVENTORY_MISSING")
@@ -119,8 +158,11 @@ def _fields(profile: dict) -> dict[tuple[str, str], dict[str, Any]]:
 
 
 def plan_missing_field_declarations(original: dict, candidate: dict,
-                                    matrix: dict) -> dict[str, Any]:
+                                    matrix: dict, *,
+                                    emit_verified_constants: bool = False) -> dict[str, Any]:
     """Build source fragment in memory; callers keep it private, not GitHub."""
+    _require(type(emit_verified_constants) is bool,
+             "INVALID_CONSTANT_INITIALIZER_MODE")
     _require(
         original.get("internal_name") == candidate.get("internal_name")
         and type(original.get("internal_name")) is str,
@@ -152,6 +194,7 @@ def plan_missing_field_declarations(original: dict, candidate: dict,
     declarations = []
     finals = 0
     finals_with_constant_value = 0
+    initializer_literals_staged = 0
     static_fields = 0
     kinds = {"primitive": 0, "array": 0, "reference": 0}
     for (name, descriptor), row in missing:
@@ -166,15 +209,23 @@ def plan_missing_field_declarations(original: dict, candidate: dict,
         if is_final and row["constant_value"] is not None:
             finals_with_constant_value += 1
         static_fields += int(bool(row["access"] & 0x0008))
+        initializer = ""
+        if emit_verified_constants and is_final and row["constant_value"] is not None:
+            _require(bool(row["access"] & 0x0008),
+                     "EXACT_CONSTANT_MUST_BE_STATIC")
+            initializer = " = " + _exact_constant_literal(
+                descriptor, row["constant_value"],
+            )
+            initializer_literals_staged += 1
         declarations.append(
             ("    " + modifiers + " " if modifiers else "    ")
-            + java_type + " " + name + ";"
+            + java_type + " " + name + initializer + ";"
         )
     intro = (
         "// PRIVATE ORIGINAL-JVM FIELD DECLARATIONS — REVIEW-ONLY FRAGMENT\n"
         "// Do not commit; not a standalone class or a reconstructed initializer.\n"
-        "// No default values or source initializer behavior has been inferred.\n"
-        "// Especially: unassigned final fields may prevent javac compilation.\n\n"
+        "// Only exact ConstantValue literals are optional; never guessed.\n"
+        "// Fields without ConstantValue may still require JVM <clinit> recovery.\n\n"
     )
     body = intro + "\n".join(declarations) + "\n"
     return {
@@ -186,6 +237,9 @@ def plan_missing_field_declarations(original: dict, candidate: dict,
         "final_fields_needing_initializer_review": finals,
         "final_fields_with_exact_constant_value_evidence": finals_with_constant_value,
         "final_fields_without_constant_value_evidence": finals - finals_with_constant_value,
+        "verified_literal_initializer_mode_enabled": emit_verified_constants,
+        "verified_literal_initializers_staged": initializer_literals_staged,
+        "initializer_values_without_constantvalue_invented": False,
         "static_fields_staged": static_fields,
         "java_type_counts": kinds,
         "source_compilation_certified": False,
@@ -205,6 +259,7 @@ def _hash(path: Path) -> str:
 def scaffold_missing_fields(
     original_jar: Path, candidate_jar: Path, out_root: Path, *,
     original_sha256: str, candidate_sha256: str, class_entry: str,
+    emit_verified_constants: bool = False,
 ) -> dict[str, Any]:
     """Create private fragment and aggregate JSON, exclusively and atomically.
 
@@ -231,7 +286,10 @@ def scaffold_missing_fields(
         )
         old = profile_jar_class(original_jar, class_entry)
         rebuilt = profile_jar_class(candidate_jar, class_entry)
-        plan = plan_missing_field_declarations(old, rebuilt, matrix)
+        plan = plan_missing_field_declarations(
+            old, rebuilt, matrix,
+            emit_verified_constants=emit_verified_constants,
+        )
     except (ClassMethodMatrixError, BytecodeProfileError,
             OSError, KeyError, IndexError, ValueError):
         raise FieldDeclarationScaffoldError("PRIVATE_FIELD_EVIDENCE_UNEVALUABLE") from None
@@ -272,6 +330,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("output_root", type=Path)
     parser.add_argument("--original-sha256", required=True)
     parser.add_argument("--candidate-sha256", required=True)
+    parser.add_argument("--emit-verified-constants", action="store_true",
+                        help="Emit only exact JVM ConstantValue literals for missing static finals")
     args = parser.parse_args(argv)
     try:
         report = scaffold_missing_fields(
@@ -279,6 +339,7 @@ def main(argv: list[str] | None = None) -> int:
             original_sha256=args.original_sha256,
             candidate_sha256=args.candidate_sha256,
             class_entry=args.class_entry,
+            emit_verified_constants=args.emit_verified_constants,
         )
         # Do not print Java source, obfuscated names, or local file paths.
         print(json.dumps(report, indent=2, sort_keys=True))
