@@ -13,6 +13,7 @@ candidate. It never modifies either JAR or canonical lineage.
 - Resolved constant-pool member references, not raw CP numeric positions.
 - Resolved invokedynamic bootstrap handles and supported argument types.
 - Exception handler entries and method Code lengths.
+- JVM Code `max_stack` and `max_locals`, requiring exact valid unsigned-u2 values on both sides.
 
 Unsupported constants, opcodes, missing bootstrap references, malformed
 classfiles and changed input hashes are rejected instead of ignored.
