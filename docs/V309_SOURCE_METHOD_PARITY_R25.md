@@ -14,6 +14,7 @@ candidate. It never modifies either JAR or canonical lineage.
 - Resolved invokedynamic bootstrap handles and supported argument types.
 - Exception handler entries and method Code lengths.
 - JVM Code `max_stack` and `max_locals`, requiring exact valid unsigned-u2 values on both sides.
+- Normalized JVM `StackMapTable` presence and frame contents. Object verification types resolve to actual class names rather than raw constant-pool positions; missing or malformed frames fail closed.
 
 Unsupported constants, opcodes, missing bootstrap references, malformed
 classfiles and changed input hashes are rejected instead of ignored.
@@ -35,9 +36,10 @@ Keep original JARs, recovered Java and private coordinate tables out of GitHub.
 
 CANDIDATE_INSTRUCTION_PARITY is a research classification, NOT a certified
 source rebuild, class equivalence, runtime equivalence, or canonical identity.
-The underlying profiler does not expose every Code subattribute, including
-StackMapTable, so the report always marks these as unverified. It also does
-not prove callee behavior or class-initializer effects.
+The parser compares StackMapTable frame encodings and resolved verification
+types, but does **not** independently prove that the JVM would verify and run
+the methods equivalently. Other Code subattributes and annotations remain
+unverified. It also does not prove callee behavior or class-initializer effects.
 
 The blocked v309 CLIENT_CLASS_000167 identity and its three unresolved fields
 remain blocked. This tool has no R3M transfer path, no lineage mutation and
