@@ -78,6 +78,8 @@ class ExactFieldScaffoldJavacTests(unittest.TestCase):
             self.assertEqual(report["candidate_field_count"], 3)
             self.assertEqual(report["declarations_staged"], 3)
             self.assertEqual(report["final_fields_needing_initializer_review"], 1)
+            self.assertEqual(report["final_fields_with_exact_constant_value_evidence"], 1)
+            self.assertEqual(report["final_fields_without_constant_value_evidence"], 0)
             self.assertEqual(report["static_fields_staged"], 3)
             self.assertEqual(report["java_type_counts"],
                              {"primitive": 2, "array": 1, "reference": 0})
@@ -162,6 +164,8 @@ class ExactFieldScaffoldJavacTests(unittest.TestCase):
             report = self._run(old, candidate, root / "output")
             self.assertEqual(report["declarations_staged"], 0)
             self.assertEqual(report["final_fields_needing_initializer_review"], 0)
+            self.assertEqual(report["final_fields_with_exact_constant_value_evidence"], 0)
+            self.assertEqual(report["final_fields_without_constant_value_evidence"], 0)
             self.assertFalse(report["source_compilation_certified"])
 
 
