@@ -155,10 +155,11 @@ def run_targeted_dual_decompilation(
             json.dump(result, stream, indent=2, sort_keys=True, ensure_ascii=False)
             stream.write("\n")
         return result
-    except (ClassSliceError, DecompilerError, OSError) as exc:
-        raise DualDecompilerError(
-            "PRIVATE_DUAL_DECOMPILATION_FAILED: " + str(exc)
-        ) from exc
+    except (ClassSliceError, DecompilerError, OSError):
+        # Existing decompiler exceptions include subprocess stdout/stderr,
+        # which can reveal private class paths, members or generated source.
+        # This public-facing CLI must never echo those details.
+        raise DualDecompilerError("PRIVATE_DUAL_DECOMPILATION_FAILED") from None
 
 
 def main(argv: list[str] | None = None) -> int:
