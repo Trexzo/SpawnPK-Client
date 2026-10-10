@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "kind": "v309_private_source_field_declaration_frontier",
+  "evidence_scope": "exact v309 JVM declaration inventory versus reproducible private R24/R37 Java candidate",
+  "original_client_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "private_candidate_class_sha256": "95b01c46903f64edcd628ade444d13cfdfb0ec671e16b372a28c83ca9231ef9f",
+  "stable_class_id": "CLIENT_CLASS_000167",
+  "original_declared_fields": 126,
+  "original_static_fields": 126,
+  "original_final_fields": 41,
+  "candidate_declared_fields": 4,
+  "candidate_static_fields": 4,
+  "candidate_final_fields": 0,
+  "missing_original_fields": 122,
+  "missing_static_fields": 122,
+  "missing_final_fields": 40,
+  "missing_mutable_fields": 82,
+  "shared_fields": 4,
+  "shared_field_metadata_exact": 3,
+  "shared_field_metadata_different": 1,
+  "original_field_type_counts": {
+    "boolean": 100,
+    "int": 10,
+    "java_lang_string": 8,
+    "java_lang_integer": 1,
+    "int_array": 1,
+    "project_defined_reference": 6
+  },
+  "missing_field_type_counts": {
+    "boolean": 97,
+    "int": 10,
+    "java_lang_string": 8,
+    "java_lang_integer": 1,
+    "int_array": 0,
+    "project_defined_reference": 6
+  },
+  "interpretation": {
+    "reconstructable_declaration_shapes_from_JVM_metadata": true,
+    "missing_field_initializer_values_recovered": false,
+    "class_initializer_recovered": false,
+    "complete_compilable_source_recovered": false,
+    "current_strict_source_equivalence_certified": false,
+    "canonical_class_identity_accepted": false,
+    "private_original_field_names_published": false
+  },
+  "evidence": [
+    "exact private original v309 classfile declaration scan",
+    "private R37 compiled candidate classfile declaration scan",
+    "research/v309-source-recovery/frontier.json"
+  ],
+  "original_fields_with_constantvalue": 33,
+  "original_final_fields_without_constantvalue": 8,
+  "missing_final_fields_with_constantvalue": 33,
+  "missing_final_fields_without_constantvalue": 7,
+  "shared_final_modifier_mismatch_without_constantvalue": 1,
+  "missing_final_constantvalue_type_counts": {
+    "jvm_integer": 32,
+    "jvm_string": 1
+  }
+}
