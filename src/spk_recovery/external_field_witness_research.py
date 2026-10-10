@@ -219,6 +219,7 @@ def build_external_field_witness_research(
         observations: dict[tuple[str, str], list[tuple]] = defaultdict(list)
         rejected: set[str] = set()
         veto_old: set[tuple[str, str]] = set()
+        veto_new: set[tuple[str, str]] = set()
         method_pairs = 0
         for method_id, canonical_owner_id, left, right in _method_rows(
                 member_lineage, old_build_id, new_build_id):
@@ -244,11 +245,13 @@ def build_external_field_witness_research(
             if _ops(lm) != _ops(rm) or len(la) != len(ra):
                 rejected.add(method_id)
                 veto_old.update((x[0], x[1]) for x in la)
+                veto_new.update((x[0], x[1]) for x in ra)
                 continue
             for ordinal, (a, b) in enumerate(zip(la, ra)):
                 if a[4] is None or b[4] is None or a[2:] != b[2:]:
                     rejected.add(method_id)
                     veto_old.add((a[0], a[1]))
+                    veto_new.add((b[0], b[1]))
                     continue
                 observations[(a[0], a[1])].append((
                     method_id, canonical_owner_id, a[2], a[3], ordinal, b[0], b[1]
@@ -266,7 +269,8 @@ def build_external_field_witness_research(
         )
         wrong = any((r[5], r[6]) !=
                     (c["new"]["name"], c["new"]["descriptor"]) for r in hits)
-        has_disputed_method = old_key in veto_old
+        new_key = (c["new"]["name"], c["new"]["descriptor"])
+        has_disputed_method = old_key in veto_old or new_key in veto_new
         valid = (len(relevant_ids) >= min_independent_methods and not wrong
                  and not ambiguous and not has_disputed_method)
         proofs.append({
