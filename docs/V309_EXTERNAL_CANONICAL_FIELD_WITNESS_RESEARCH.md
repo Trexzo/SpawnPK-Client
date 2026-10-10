@@ -9,7 +9,7 @@ Existing R3M field_proof.py is unchanged: its strict canonical acceptance still 
 - Class and member lineage must validate; each profiled accepted class entry must match the recorded entry SHA-256.
 - Only unresolved seeded fields in an accepted owner class are considered; target field declarations and access flags must exist and not already belong to another canonical member.
 - Witness methods must have a genuine paired CLIENT_METHOD identity and consistent two-sided CLIENT_CLASS owner.
-- Entire JVM instruction opcode-and-offset lists must align; accessed field operation, offset, target-owner field ordinal and descriptor must align under only accepted class aliases.
+- Entire JVM instruction opcode-and-offset lists must align; accessed field operation, offset, target-owner field ordinal and descriptor must align under only accepted class aliases. **Any rs/ object type in a field descriptor without an accepted class alias vetoes the witness**; it is never normalized to an untrusted wildcard, even when the raw obfuscated name is the same in both builds.
 - At least two distinct accepted method IDs are required. Repeat accesses inside one method cannot satisfy the threshold.
 - Divergent field accesses are retained as negative vetoes; swapping equally typed candidate fields must not produce accepted evidence.
 - The result always has canonical=false, mapping_mutation=false and accepted_identities=0. Output files cannot be overwritten.
