@@ -104,7 +104,7 @@ class ExternalFieldWitnessResearchTests(unittest.TestCase):
                 "semantic_provenance": [],
                 "lineage": [{
                     "build_id": "v1", "owner_internal_name": "rs/a",
-                    "name": old_name, "descriptor": "I", "access": original["access"],
+                    "name": old_name, "descriptor": original["descriptor"], "access": original["access"],
                     "relation": "BASELINE", "confidence": 1.0, "provenance": [],
                 }],
             })
