@@ -102,8 +102,21 @@ def _find_method(profile: dict, record: dict) -> dict:
     return found
 
 
-def _ops(method: dict) -> list[tuple]:
-    return [(row["offset"], row["opcode"]) for row in method.get("instructions", [])]
+# Symbolic CP operands may be renamed independently of their bytecode.
+# Check every other decoder-owned instruction operand rather than only the
+# opcode/offset skeleton (which misses altered locals, branches and iinc).
+_SYMBOLIC_CP_FIELDS = frozenset({
+    "owner", "name", "descriptor", "constant_pool_index", "constant",
+    "type", "bootstrap_method_attr_index",
+})
+
+
+def _ops(method: dict) -> list[dict[str, Any]]:
+    return [
+        {key: value for key, value in row.items()
+         if key not in _SYMBOLIC_CP_FIELDS}
+        for row in method.get("instructions", [])
+    ]
 
 
 
