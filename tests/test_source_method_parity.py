@@ -33,6 +33,8 @@ def _profile(rows=None, *, handlers=None, bsm=None, owner="p/A") -> dict:
             "code_length": sum(x["length"] for x in rows),
             "max_stack": 2,
             "max_locals": 1,
+            "stackmap_table_present": False,
+            "stackmap_frames": [],
             "instructions": rows,
             "exception_handlers": [] if handlers is None else handlers,
         }],
@@ -68,7 +70,9 @@ class SourceMethodParitySyntheticTests(unittest.TestCase):
         self.assertEqual(result["classification"], "CANDIDATE_INSTRUCTION_PARITY")
         self.assertFalse(result["canonical_identity_accepted"])
         self.assertFalse(result["full_method_equivalence_certified"])
-        self.assertTrue(result["code_subattributes_and_stackmaps_unverified"])
+        self.assertFalse(result["code_subattributes_and_stackmaps_unverified"])
+        self.assertTrue(result["other_code_subattributes_unverified"])
+        self.assertTrue(result["stackmap_frame_semantics_unverified"])
         self.assertEqual(result, compare_profiles(a, b, "value", "()I"))
         self.assertNotIn("internal_name", result)
 
@@ -112,6 +116,35 @@ class SourceMethodParitySyntheticTests(unittest.TestCase):
                     MethodParityError, "MISSING_OR_INVALID_JVM_CODE_LIMIT"
                 ):
                     compare_profiles(original, candidate, "value", "()I")
+
+    def test_changed_stackmap_frames_are_detected(self):
+        original, candidate = _profile(), _profile()
+        frames = [{"frame_type": 64, "bytecode_offset": 0,
+                   "stack": [{"kind": "object", "class": "p/Node"}]}]
+        original["methods"][0]["stackmap_table_present"] = True
+        original["methods"][0]["stackmap_frames"] = copy.deepcopy(frames)
+        candidate["methods"][0]["stackmap_table_present"] = True
+        candidate["methods"][0]["stackmap_frames"] = copy.deepcopy(frames)
+        self.assertEqual(
+            compare_profiles(original, candidate, "value", "()I")["classification"],
+            "CANDIDATE_INSTRUCTION_PARITY",
+        )
+        candidate["methods"][0]["stackmap_frames"][0]["stack"][0]["class"] = "p/Other"
+        result = compare_profiles(original, candidate, "value", "()I")
+        self.assertFalse(result["checks"]["resolved_stackmap_frames"])
+        self.assertEqual(result["classification"], "BYTECODE_DIFFERENCE")
+
+    def test_stackmap_presence_and_missing_metadata_fail_closed(self):
+        original = _profile()
+        candidate = _profile()
+        candidate["methods"][0]["stackmap_table_present"] = True
+        report = compare_profiles(original, candidate, "value", "()I")
+        self.assertFalse(report["checks"]["stackmap_table_present"])
+        for field in ("stackmap_frames", "stackmap_table_present"):
+            candidate = _profile()
+            del candidate["methods"][0][field]
+            with self.assertRaisesRegex(MethodParityError, "STACKMAP_EVIDENCE_MISSING"):
+                compare_profiles(original, candidate, "value", "()I")
 
     def test_changed_handler_is_detected(self):
         a = _profile(handlers=[{
