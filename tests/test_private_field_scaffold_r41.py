@@ -171,10 +171,10 @@ class FieldDescriptorAndModiferTests(unittest.TestCase):
         self.assertEqual(descriptor_java_type("[[I"), ("int[][]", "array"))
         self.assertEqual(descriptor_java_type("Ljava/lang/String;"),
                          ("java.lang.String", "reference"))
-        self.assertEqual(descriptor_java_type("Lrs/f/a$b;"),
-                         ("rs.f.a$b", "reference"))
-        self.assertEqual(descriptor_java_type("[Lrs/f/a$b;"),
-                         ("rs.f.a$b[]", "array"))
+        self.assertEqual(descriptor_java_type("Ldemo/pkg/Outer$Nested;"),
+                         ("demo.pkg.Outer$Nested", "reference"))
+        self.assertEqual(descriptor_java_type("[Ldemo/pkg/Outer$Nested;"),
+                         ("demo.pkg.Outer$Nested[]", "array"))
 
     def test_invalid_jvm_descriptors_refused_instead_of_guessed(self):
         for broken in ("", "V", "(I)V", "Lbad", "Lbad//Name;", "[[",
