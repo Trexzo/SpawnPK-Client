@@ -223,6 +223,13 @@ def compare_profiles(
     )
     old = _exact_method(original, method_name, descriptor)
     new = _exact_method(candidate, method_name, descriptor)
+    for method in (old, new):
+        for key in ("max_stack", "max_locals"):
+            value = method.get(key)
+            _require(
+                type(value) is int and 0 <= value <= 65535,
+                "MISSING_OR_INVALID_JVM_CODE_LIMIT",
+            )
     old_ops = _normalized_instructions(original, old)
     new_ops = _normalized_instructions(candidate, new)
     for method in (old, new):
@@ -231,6 +238,8 @@ def compare_profiles(
     tests = {
         "access": old.get("access") == new.get("access"),
         "code_length": old["code_length"] == new["code_length"],
+        "max_stack": old["max_stack"] == new["max_stack"],
+        "max_locals": old["max_locals"] == new["max_locals"],
         "decoded_instructions_and_resolved_cp": old_ops == new_ops,
         "exception_handlers": (
             old["exception_handlers"] == new["exception_handlers"]
