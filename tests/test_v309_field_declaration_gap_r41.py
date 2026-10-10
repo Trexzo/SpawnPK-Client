@@ -63,6 +63,9 @@ class ExactPrivateFieldDeclarationAggregateTests(unittest.TestCase):
         self.assertEqual(d["original_fields_with_constantvalue"], 33)
         self.assertEqual(d["original_final_fields_without_constantvalue"], 8)
         self.assertEqual(d["missing_final_fields_with_constantvalue"], 33)
+        self.assertEqual(d["missing_final_constantvalue_type_counts"],
+                         {"jvm_integer": 32, "jvm_string": 1})
+        self.assertEqual(sum(d["missing_final_constantvalue_type_counts"].values()), 33)
         self.assertEqual(d["missing_final_fields_without_constantvalue"], 7)
         self.assertEqual(d["shared_final_modifier_mismatch_without_constantvalue"], 1)
         self.assertEqual(
