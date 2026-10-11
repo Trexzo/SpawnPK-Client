@@ -506,3 +506,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R53 — enum-helper-backed v309 String finals
 
 [R53's pinned original-v309 two-String helper operand-chain recovery](docs/V309_ENUM_HELPER_STRING_SOURCE_R53.md) stages private JVM source forms for two runtime-assigned String finals, leaving three String initializer expressions unresolved. Original nested-enum helper/runtime parity and full class initializer order remain separate vetoes.
+
+### R54 — exact conditional StringConcatFactory final-source forms
+
+[R54's original-v309 conditional String concat study](docs/V309_CONDITIONAL_CONCAT_STRING_SOURCE_R54.md) verifies two private enum-comparison/branch/StringConcatFactory source forms against exact bytecode and bootstrap recipes. Together with R53's separate two enum-helper forms, one dynamically initialized final String remains without a bounded source form; no original runtime or full initializer equivalence is claimed.
