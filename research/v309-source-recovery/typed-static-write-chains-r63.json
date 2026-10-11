@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "kind": "v309_original_large_method_typed_static_write_producer_pattern",
+  "original_client_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "stable_owner_id": "CLIENT_CLASS_000167",
+  "original_target_large_method_instructions": 697,
+  "original_target_large_method_static_writes": 78,
+  "original_exact_six_opcode_source_pattern": [
+    "aload_1",
+    "ldc",
+    "invokevirtual",
+    "invokestatic",
+    "invokevirtual",
+    "putstatic"
+  ],
+  "raw_exact_six_opcode_chain_sites": 37,
+  "all_37_chains_have_exact_input_output_JVM_descriptor_alignment": true,
+  "exact_static_boolean_result_chains": 32,
+  "exact_static_integer_result_chains": 5,
+  "original_remaining_static_write_sites_not_of_this_pattern": 41,
+  "original_lookup_call_consumes_string_and_returns_reference": true,
+  "original_static_conversion_call_consumes_exact_lookup_return_type": true,
+  "original_final_virtual_call_consumes_no_args_and_returns_target_primitive": true,
+  "private_literal_and_original_member_coordinates_publicly_released": false,
+  "original_local_slot_one_java_type_recovered": false,
+  "original_exception_handler_and_branch_admissibility_for_all_37_verified_by_r63_cli": false,
+  "private_actual_original_jar_replayed_against_r63_cli": false,
+  "original_source_expression_reconstructed_and_compiled": false,
+  "original_helper_method_behavior_proven": false,
+  "original_large_method_runtime_equivalent": false
+}
