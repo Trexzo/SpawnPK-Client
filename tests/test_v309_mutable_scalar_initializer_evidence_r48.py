@@ -49,20 +49,27 @@ class V309ScalarInitializerAggregateTests(unittest.TestCase):
         )
         self.assertEqual(d["unique_original_clinit_static_scalar_stores"], 80)
         self.assertEqual(
-            d["original_mutable_scalar_store_pairs_matched_after_recompile"], 80,
+            d["original_mutable_scalar_store_pairs_matched_after_recompile"], 78,
         )
+        self.assertEqual(d["original_mutable_scalar_branch_joined_stores_excluded"], 2)
+        self.assertEqual(d["original_mutable_scalar_fields_with_direct_literal_recovery"], 78)
+        self.assertEqual(d["original_mutable_scalar_fields_with_unrecovered_conditional_values"], 2)
+        self.assertFalse(d["full_original_scalar_initializer_values_recovered"])
         self.assertEqual(d["original_mutable_scalar_store_pairs_mismatched"], 0)
-        self.assertEqual(d["distinct_mutable_scalar_fields_with_exact_original_initial_store"], 80)
+        self.assertEqual(d["distinct_mutable_scalar_fields_with_exact_original_initial_store"], 78)
         self.assertEqual(
             d["original_mutable_scalar_assignment_type_counts"],
             {"boolean": 72, "integer": 6, "string": 2},
         )
         self.assertEqual(
             d["original_mutable_boolean_literal_breakdown"],
-            {"true": 31, "false": 41},
+            {"true": 31, "false": 39},
         )
-        self.assertEqual(31 + 41, 72)
-        self.assertEqual(72 + 6 + 2, 80)
+        self.assertEqual(d["original_recovered_mutable_scalar_assignment_type_counts"],
+                         {"boolean": 70, "integer": 6, "string": 2})
+        self.assertEqual(31 + 39, 70)
+        self.assertEqual(70 + 6 + 2, 78)
+        self.assertEqual(78 + 2, 80)
         self.assertEqual(
             d["private_candidate_field_declarations"]
             + d["original_owner_field_declarations_absent"], 126,
