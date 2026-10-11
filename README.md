@@ -526,3 +526,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R58 — complete-v309 initializer operand parity with conservative LDC normalization
 
 [R58's exact JVM operand checker](docs/V309_CLINIT_OPERAND_SEMANTIC_PARITY_R58.md) documents a private Java9 skeleton matching 93 static writes, 14 static-field reads, four helper calls, seven loaded constants and three StringConcatFactory recipes against the original v309 bytecode. Two literal loads compiled as `ldc_w` rather than `ldc`; the new checker permits only equal-valued constant-pool width differences, leaving strict R56 and all source/runtime equivalence gates unchanged.
+
+### R59 — full v309 owner field metadata source shell
+
+[R59's private original-owner Java shell](docs/V309_COMPLETE_OWNER_SOURCE_SHELL_R59.md) combines all **126 original field declarations** (including **33 exact JVM ConstantValue fields** and eight blank dynamic finals) with the R57 93-write initializer. An independently compiled Java9 private skeleton matched all 126 original field access/descriptor/ConstantValue/Signature tuples, while methods, nested enums, `InnerClasses` and runtime parity remain unverified.
