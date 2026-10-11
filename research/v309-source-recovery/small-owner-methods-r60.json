@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "kind": "v309_original_short_owner_method_jvm_source_form_partition",
+  "original_client_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "owner_stable_id": "CLIENT_CLASS_000167",
+  "original_jvm_methods": 10,
+  "original_non_clinit_methods": 9,
+  "short_method_sources_accounted_for": 6,
+  "source_form_counts": {
+    "default_constructor": 1,
+    "constant_false_boolean": 2,
+    "static_boolean_delegate": 1,
+    "two_branch_boolean_toggle": 1,
+    "array_element_writer": 1
+  },
+  "source_form_exact_jvm_instruction_counts": {
+    "default_constructor": 3,
+    "constant_false_boolean_each": 2,
+    "static_boolean_delegate": 2,
+    "two_branch_boolean_toggle": 20,
+    "array_element_writer": 41
+  },
+  "original_boolean_toggle_then_else_field_stores": 8,
+  "original_array_writer_indexed_integer_stores": 10,
+  "original_unrecovered_methods": 3,
+  "remaining_method_instruction_counts": [
+    4,
+    364,
+    697
+  ],
+  "original_source_bytes_published": false,
+  "original_full_method_source_equivalent": false,
+  "real_private_original_input_executed_via_r60_cli": false,
+  "helper_external_side_effects_equivalent": false,
+  "compiled_recovered_method_parity_certified": false,
+  "full_original_client_runtime_equivalence_certified": false,
+  "original_nested_enum_method_sources_equivalent": false
+}
