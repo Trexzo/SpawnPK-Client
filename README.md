@@ -514,3 +514,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R55 — original v309 external String-helper concat form
 
 [R55's bounded external-helper String initializer research](docs/V309_EXTERNAL_HELPER_CONCAT_SOURCE_R55.md) accounts for the fifth original dynamic-final String local expression form, after the independent R53/R54 measurements. Neither the external helper body nor complete source/runtime/JVM initializer parity is certified; source fragments remain private.
+
+### R56 — exact full-v309 JVM initializer order gate
+
+[R56's private original/recompiled Java acceptance verifier](docs/V309_COMPLETE_CLINIT_ORDER_R56.md) measures **all 93 original static-field writes and the 213-instruction initializer**, not just the eight dynamic-final expression forms. A private explicit field-alias map and compiled candidate are required; neither full opcode/store parity nor runtime equivalence is yet certified.
