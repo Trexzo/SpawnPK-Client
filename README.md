@@ -546,3 +546,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R63 — typed original static field value producer chains
 
 [R63's exact original-v309 primitive field-write operand witnesses](docs/V309_TYPED_STATIC_WRITE_CHAINS_R63.md) identify **37 typed six-op producer chains** among the 697-instruction method's 78 static writes: 32 boolean and five integer stores. This is private JVM dataflow evidence, not recovered original Java or runtime behavior; branch/handler admission and helper side effects remain separate gates.
+
+### R64 — 30 original null-guard boolean field sources
+
+[R64's v309 conditional-null boolean source study](docs/V309_NULL_GUARD_BOOLEAN_SOURCE_R64.md) verifies 30 JVM `ifnonnull`-guarded static Boolean assignments (14 true, 16 false) with no incoming branch/handler entries into their windows. Alongside R63's 37 typed producers, **67 of 78** local static-write shapes are bounded; 11 others and complete source/runtime/exception parity are not recovered.
