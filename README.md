@@ -530,3 +530,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R59 — full v309 owner field metadata source shell
 
 [R59's private original-owner Java shell](docs/V309_COMPLETE_OWNER_SOURCE_SHELL_R59.md) combines all **126 original field declarations** (including **33 exact JVM ConstantValue fields** and eight blank dynamic finals) with the R57 93-write initializer. An independently compiled Java9 private skeleton matched all 126 original field access/descriptor/ConstantValue/Signature tuples, while methods, nested enums, `InnerClasses` and runtime parity remain unverified.
+
+### R60 — six original v309 owner method source forms
+
+[R60's exact short-method source recovery](docs/V309_SHORT_OWNER_METHOD_SOURCE_R60.md) stages private Java source forms for the original constructor, two constant-false boolean methods, one boolean delegator, an eight-write two-branch flag toggle, and a ten-element integer-array writer. **Three original method bodies (4, 364, and 697 JVM instructions) remain unrecovered**, and runtime equivalence is not claimed.
