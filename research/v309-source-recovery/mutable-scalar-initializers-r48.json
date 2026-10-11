@@ -23,8 +23,8 @@
     "string": 2
   },
   "original_mutable_boolean_literal_breakdown": {
-    "true": 30,
-    "false": 40
+    "true": 31,
+    "false": 39
   },
   "distinct_mutable_scalar_fields_with_exact_original_initial_store": 78,
   "original_r24_method_disassemblies_preserved": 8,
