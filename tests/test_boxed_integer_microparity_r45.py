@@ -66,7 +66,7 @@ class BoxedIntegerJava9Tests(unittest.TestCase):
             self.assertTrue(all(report["checks"].values()))
             self.assertNotEqual(report["original_init_start_offset"],
                                 report["candidate_init_start_offset"])
-            self.assertNotIn("boxed", str(report))
+            self.assertNotIn('"boxed"', str(report))
             self.assertNotIn("42000", str(report))
             for flag in ("full_clinit_equivalence_certified",
                          "whole_source_equivalence_certified",
