@@ -230,6 +230,9 @@ def replay_nested_enum_source(
             )
             for entry in entries
         ]
+    except NestedEnumSourceParityError:
+        # Preserve specific fail-closed parity vetoes for regression tests.
+        raise
     except (BytecodeProfileError, OSError, KeyError, IndexError, ValueError):
         raise NestedEnumSourceParityError("ENUM_SOURCE_INPUT_UNEVALUABLE") from None
     for path, sha in ((Path(original_jar), original_sha256),
