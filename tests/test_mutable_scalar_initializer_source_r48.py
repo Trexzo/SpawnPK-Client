@@ -79,12 +79,14 @@ class ScalarInitializerPrivateReplayTests(unittest.TestCase):
             result = self._replay(old, new, out)
             self.assertEqual(result["original_mutable_scalar_field_count"], 5)
             self.assertEqual(result["literal_assignment_count"], 5)
+            self.assertEqual(result["conditional_store_fields_excluded"], 0)
+            self.assertTrue(result["all_original_scalar_field_initializers_recovered"])
             self.assertEqual(result["assignment_type_counts"],
                              {"boolean": 2, "integer": 1, "string": 2})
             self.assertTrue(
-                result["all_selected_assignments_have_immediate_literal_producers"]
+                result["all_staged_assignments_have_immediate_literal_producers"]
             )
-            self.assertTrue(result["selected_assignment_order_matches_original"])
+            self.assertTrue(result["staged_assignment_order_matches_original"])
             self.assertFalse(result["full_class_initializer_order_recovered"])
             self.assertFalse(result["source_equivalence_certified"])
             self.assertFalse(result["canonical_class_and_field_identities_accepted"])
@@ -120,6 +122,29 @@ class ScalarInitializerPrivateReplayTests(unittest.TestCase):
                 semantic_instructions(original_profile),
                 semantic_instructions(candidate_profile),
             )
+
+    def test_branch_join_excludes_conditional_bool_instead_of_guessing_false(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            original = self._jar(
+                root, "original",
+                'public static int number=3;'
+                'public static boolean flag='
+                '(System.getProperty("synthetic.setting") == null ? true : false);',
+            )
+            candidate = self._jar(
+                root, "candidate",
+                "public static int number; public static boolean flag;",
+            )
+            report = self._replay(original, candidate, root / "private")
+            self.assertEqual(report["original_mutable_scalar_field_count"], 2)
+            self.assertEqual(report["literal_assignment_count"], 1)
+            self.assertEqual(report["conditional_store_fields_excluded"], 1)
+            self.assertFalse(report["all_original_scalar_field_initializers_recovered"])
+            snippet = (root / "private" / "mutable-scalars-clinit.fragment.txt").read_text()
+            self.assertIn("number = 3;", snippet)
+            self.assertNotIn("flag =", snippet)
+            self.assertFalse(report["full_class_initializer_order_recovered"])
 
     def test_original_field_without_explicit_assignment_is_not_recovered(self):
         with tempfile.TemporaryDirectory() as tmp:
