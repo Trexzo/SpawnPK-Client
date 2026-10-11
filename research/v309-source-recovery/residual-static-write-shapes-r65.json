@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "kind": "v309_original_697_instruction_method_disjoint_78_static_write_opcode_shapes",
+  "original_client_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "stable_owner_id": "CLIENT_CLASS_000167",
+  "original_large_method_instructions": 697,
+  "original_large_method_exception_table_entries": 44,
+  "original_large_method_static_write_sites": 78,
+  "independently_measured_R63_typed_value_chains": 37,
+  "independently_measured_R64_boolean_null_guard_chains": 30,
+  "independently_measured_residual_static_write_sites": 11,
+  "residual_opcode_shape_counts": {
+    "boolean_extract_and_notify": 1,
+    "nullable_boolean_extra_call": 1,
+    "two_string_key_boolean_conversion": 1,
+    "nullable_integer_immediate": 1,
+    "nullable_string_literal": 1,
+    "string_lookup_and_static_convert": 1,
+    "direct_string_lookup": 1,
+    "indexed_reference_helper": 1,
+    "direct_boolean_literal": 1,
+    "direct_null_reference": 1,
+    "direct_static_reference_copy": 1
+  },
+  "original_residual_field_descriptor_bands": {
+    "boolean": 4,
+    "integer": 1,
+    "reference": 6
+  },
+  "all_78_static_write_sites_disjointly_partitioned_by_independent_original_disassembly": true,
+  "original_residual_source_names_or_literals_publicly_published": false,
+  "github_R65_cli_replayed_on_actual_private_original_v309": false,
+  "all_11_residual_site_cfg_handler_admissibility_rechecked_by_R65_cli": false,
+  "all_11_residual_original_java_expressions_recovered": false,
+  "original_remaining_exception_order_and_helper_side_effects_recovered": false,
+  "original_method_source_compilation_equivalence_certified": false,
+  "original_method_runtime_equivalence_certified": false
+}
