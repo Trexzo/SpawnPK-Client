@@ -180,8 +180,26 @@ def plan_exact_scalar_initializer_fragment(original: dict, candidate: dict) -> d
                     "CANDIDATE_SCALAR_ALREADY_INITIALIZED"
                 )
 
+    # A branch into a putstatic can bypass its textual predecessor.
+    # Such stores are NOT direct-constant assignments, even if an
+    # iconst instruction happens to sit at pc-1 (two v309 booleans do).
+    incoming_branch_targets = set()
+    for row in old_instr:
+        target = row.get("branch_target_offset")
+        if target is not None:
+            _need(type(target) is int,
+                  "INVALID_CLINIT_BRANCH_DESTINATION")
+            incoming_branch_targets.add(target)
+        if "switch_default_target_offset" in row:
+            incoming_branch_targets.add(row["switch_default_target_offset"])
+        if "switch_targets" in row:
+            incoming_branch_targets.update(row["switch_targets"])
+        if "switch_pairs" in row:
+            incoming_branch_targets.update(t for _, t in row["switch_pairs"])
+
     assignments = []
     seen = set()
+    conditional_skipped = 0
     counts = {"boolean": 0, "integer": 0, "string": 0}
     for insn in old_instr:
         if insn.get("opcode") != "0xb3" or insn.get("owner") != owner:
@@ -191,6 +209,11 @@ def plan_exact_scalar_initializer_fragment(original: dict, candidate: dict) -> d
             continue
         _need(key not in seen, "ORIGINAL_SCALAR_ASSIGNED_MORE_THAN_ONCE")
         seen.add(key)
+        if insn["offset"] in incoming_branch_targets:
+            conditional_skipped += 1
+            # Deliberately DO NOT infer any Java literal or source
+            # expression for a control-flow-joined store.
+            continue
         index = by_offset[insn["offset"]]
         _need(index > 0, "SCALAR_STORE_WITHOUT_DIRECT_VALUE_PRODUCER")
         before = old_instr[index - 1]
@@ -205,7 +228,7 @@ def plan_exact_scalar_initializer_fragment(original: dict, candidate: dict) -> d
         assignments.append((insn["offset"], name, literal))
         counts[kind] += 1
     _need(
-        len(assignments) == len(selected)
+        len(assignments) + conditional_skipped == len(selected)
         and seen == set(selected),
         "ORIGINAL_MUTABLE_SCALAR_INITIALIZATION_MISSING",
     )
@@ -223,10 +246,14 @@ def plan_exact_scalar_initializer_fragment(original: dict, candidate: dict) -> d
         "snippet": snippet,
         "original_mutable_scalar_field_count": len(selected),
         "literal_assignment_count": len(assignments),
+        "conditional_store_fields_excluded": conditional_skipped,
+        "scalar_fields_without_proven_single_constant": conditional_skipped,
         "assignment_type_counts": counts,
         "original_clinit_code_bytes": original_init["code_length"],
-        "all_selected_assignments_have_immediate_literal_producers": True,
-        "selected_assignment_order_matches_original": True,
+        "all_staged_assignments_have_immediate_literal_producers": True,
+        "staged_assignment_order_matches_original": True,
+        "all_original_scalar_field_initializers_recovered":
+            conditional_skipped == 0,
         "full_class_initializer_order_recovered": False,
         "other_class_initializer_operations_recovered": False,
         "later_runtime_field_writes_recovered": False,
