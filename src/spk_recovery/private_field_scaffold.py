@@ -159,10 +159,15 @@ def _fields(profile: dict) -> dict[tuple[str, str], dict[str, Any]]:
 
 def plan_missing_field_declarations(original: dict, candidate: dict,
                                     matrix: dict, *,
-                                    emit_verified_constants: bool = False) -> dict[str, Any]:
+                                    emit_verified_constants: bool = False,
+                                    scalar_declarations_only: bool = False) -> dict[str, Any]:
     """Build source fragment in memory; callers keep it private, not GitHub."""
     _require(type(emit_verified_constants) is bool,
              "INVALID_CONSTANT_INITIALIZER_MODE")
+    _require(type(scalar_declarations_only) is bool,
+             "INVALID_SCALAR_SELECTION_MODE")
+    _require(not (scalar_declarations_only and emit_verified_constants),
+             "SCALAR_ONLY_AND_CONSTANT_MODE_ARE_INCOMPATIBLE")
     _require(
         original.get("internal_name") == candidate.get("internal_name")
         and type(original.get("internal_name")) is str,
@@ -174,23 +179,35 @@ def plan_missing_field_declarations(original: dict, candidate: dict,
              "STRICT_MATRIX_AUTHORITY_UNEXPECTED")
     orig, cand = _fields(original), _fields(candidate)
     candidate_names = {name for name, _ in cand}
-    missing = [(key, row) for key, row in orig.items() if key not in cand]
+    missing_all = [(key, row) for key, row in orig.items() if key not in cand]
     changed = [
         key for key in orig.keys() & cand.keys()
         if any(orig[key].get(x) != cand[key].get(x)
                for x in ("access", "signature", "constant_value"))
     ]
     _require(
-        len(missing) == matrix["field_counts"]["missing_field"]
+        len(missing_all) == matrix["field_counts"]["missing_field"]
         and len(changed) == matrix["field_counts"]["shared_metadata_difference"]
         and len(orig) == matrix["original_declared_field_count"]
         and len(cand) == matrix["candidate_declared_field_count"],
         "FIELD_MATRIX_COUNTS_DISAGREE",
     )
     _require(
-        not any(name in candidate_names for (name, _), _ in missing),
+        not any(name in candidate_names for (name, _), _ in missing_all),
         "JAVA_FIELD_NAME_COLLISION_WITH_DIFFERENT_DESCRIPTOR",
     )
+    # Narrow mode stages *declarations*, not runtime-equivalent defaults.
+    # Only mutable/static JVM boolean, integer and java.lang.String fields
+    # require no dependent source types and can compile without assignments.
+    missing = [
+        (key, row) for key, row in missing_all
+        if not scalar_declarations_only or (
+            row["access"] == 0x0009
+            and key[1] in ("Z", "I", "Ljava/lang/String;")
+            and row["signature"] is None
+            and row["constant_value"] is None
+        )
+    ]
     declarations = []
     finals = 0
     finals_with_constant_value = 0
@@ -230,6 +247,14 @@ def plan_missing_field_declarations(original: dict, candidate: dict,
     body = intro + "\n".join(declarations) + "\n"
     return {
         "snippet": body,
+        "selection_mode": (
+            "mutable_static_scalar_declarations_only"
+            if scalar_declarations_only else "all_missing_fields"
+        ),
+        "total_missing_field_declarations": len(missing_all),
+        "filtered_original_fields_not_staged":
+            len(missing_all) - len(missing),
+        "mutable_scalar_initializer_semantics_recovered": False,
         "original_field_count": len(orig),
         "candidate_field_count": len(cand),
         "declarations_staged": len(declarations),
@@ -260,6 +285,7 @@ def scaffold_missing_fields(
     original_jar: Path, candidate_jar: Path, out_root: Path, *,
     original_sha256: str, candidate_sha256: str, class_entry: str,
     emit_verified_constants: bool = False,
+    scalar_declarations_only: bool = False,
 ) -> dict[str, Any]:
     """Create private fragment and aggregate JSON, exclusively and atomically.
 
@@ -289,6 +315,7 @@ def scaffold_missing_fields(
         plan = plan_missing_field_declarations(
             old, rebuilt, matrix,
             emit_verified_constants=emit_verified_constants,
+            scalar_declarations_only=scalar_declarations_only,
         )
     except (ClassMethodMatrixError, BytecodeProfileError,
             OSError, KeyError, IndexError, ValueError):
@@ -332,6 +359,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--candidate-sha256", required=True)
     parser.add_argument("--emit-verified-constants", action="store_true",
                         help="Emit only exact JVM ConstantValue literals for missing static finals")
+    parser.add_argument("--scalar-declarations-only", action="store_true",
+                        help="Stage only missing mutable static boolean/int/String declarations; NO initializers")
     args = parser.parse_args(argv)
     try:
         report = scaffold_missing_fields(
@@ -340,6 +369,7 @@ def main(argv: list[str] | None = None) -> int:
             candidate_sha256=args.candidate_sha256,
             class_entry=args.class_entry,
             emit_verified_constants=args.emit_verified_constants,
+            scalar_declarations_only=args.scalar_declarations_only,
         )
         # Do not print Java source, obfuscated names, or local file paths.
         print(json.dumps(report, indent=2, sort_keys=True))
