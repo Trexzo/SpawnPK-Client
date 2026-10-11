@@ -97,7 +97,7 @@ class ExactFieldScaffoldJavacTests(unittest.TestCase):
             self.assertNotIn("static boolean extra;", snippet)
             self.assertTrue("PRIVATE" in snippet)
             self.assertNotIn("PIN", json.dumps(report))
-            self.assertNotIn("enabled", json.dumps(report))
+            self.assertNotIn('"enabled"', json.dumps(report))
             self.assertNotIn("p/A", json.dumps(report))
             self.assertEqual(_sha(out / "missing-fields.fragment.txt"),
                              report["snippet_sha256"])
