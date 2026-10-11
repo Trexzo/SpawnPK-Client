@@ -46,6 +46,39 @@ class PrivateV309ArrayInitializerProofTests(unittest.TestCase):
         self.assertEqual(d["prototype_normalized_method_disassemblies_unchanged"], 8)
         self.assertEqual(d["original_remaining_field_declarations_still_missing"], 122)
 
+    def test_private_combined_r42_r44_java_has_all_37_fields_exact(self):
+        d = self.data["private_combined_r42_r44_candidate"]
+        self.assertEqual(d["java_compile_release"], 9)
+        self.assertEqual(d["original_field_declarations"], 126)
+        self.assertEqual(d["combined_candidate_field_declarations"], 37)
+        self.assertEqual(d["combined_candidate_exact_field_metadata_matches"], 37)
+        self.assertEqual(d["combined_candidate_changed_field_metadata"], 0)
+        self.assertEqual(d["missing_original_field_declarations"], 89)
+        self.assertEqual(d["original_constantvalue_attributes_matching_candidate"], 33)
+        self.assertEqual(d["original_int_array_allocation_opcode_sequence_matches"], 3)
+        self.assertEqual(d["candidate_method_declarations"], 8)
+        self.assertEqual(d["candidate_method_disassemblies_unchanged_from_r24"], 8)
+        for key in (
+            "private_combined_java_source_sha256",
+            "private_combined_class_sha256",
+            "private_combined_jar_sha256",
+        ):
+            self.assertRegex(d[key], r"\A[0-9a-f]{64}\Z")
+        self.assertEqual(
+            d["combined_candidate_field_declarations"]
+            + d["missing_original_field_declarations"],
+            d["original_field_declarations"],
+        )
+        for key in (
+            "original_clinit_method_parity_certified",
+            "full_jvm_stackmap_method_parity_certified",
+            "original_binary_modified",
+            "original_client_source_published",
+            "original_private_jvm_identifiers_published",
+        ):
+            self.assertIs(d[key], False, key)
+        self.assertTrue(d["three_substantive_unrecovered_methods_remain"])
+
     def test_not_a_complete_source_or_combined_r42_rebuild(self):
         for key in (
             "original_clinit_fully_reconstructed",
