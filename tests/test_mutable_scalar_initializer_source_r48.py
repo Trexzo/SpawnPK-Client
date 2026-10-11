@@ -94,7 +94,7 @@ class ScalarInitializerPrivateReplayTests(unittest.TestCase):
                 'place = "ORIGINAL";', 'blank = "";',
             ):
                 self.assertIn(expected, fragment)
-            self.assertNotIn("on", json.dumps(result))
+            self.assertNotIn('"on"', json.dumps(result))
             self.assertNotIn("ORIGINAL", json.dumps(result))
             self.assertEqual(
                 _sha(out / "mutable-scalars-clinit.fragment.txt"),
