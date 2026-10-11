@@ -54,10 +54,20 @@ matrix. It creates only a new **private** output directory:
 - `boolean-join-aggregate.json` — counts, pins and non-acceptance flags,
   with no private field names or condition literals.
 
-A successful **synthetic** test does not establish that either of the
-real two v309 branch-joined stores matches this exact diamond.
-The GitHub tool has **not** yet been replayed against the private v309
-JAR. Even a real matching witness would recover **possible stored
+A separate **read-only, original-binary** analysis now confirms that
+**both** of the R48-excluded original-v309 boolean stores do match this
+narrow five-instruction diamond. This was observed directly using
+SHA-256-pinned v309 bytecode and `javap -c -p`, with complete incoming
+branch-edge enumeration, no exception-table coverage, and unique original
+owner identification from JVM structural counts. One uses an
+`if_acmpne` comparison of two static references; the other uses
+`ifne` after reading a static boolean. Both have the original
+fallthrough value `true` and branch-taken value `false`.
+See the [bounded aggregate original-v309 measurement](../research/v309-source-recovery/boolean-join-shape-r50.json).
+
+**This original-binary measurement is distinct from the new R50 GitHub
+CLI**: that exact CLI has **not** yet been replayed on the private original
+and candidate JAR pair. Hosted CI still tests synthetic Java only. Even a real matching witness would recover **possible stored
 boolean values and immediate local branch structure only**, not the
 predicate, exact Java initializer expression, full `<clinit>` side-effect
 order, later runtime writes, complete class source, or canonical identity.
