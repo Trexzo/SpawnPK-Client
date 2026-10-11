@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "kind": "v309_original_class_initializer_order_witness_frontier",
+  "original_client_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "stable_owner_id": "CLIENT_CLASS_000167",
+  "original_owner_declared_fields": 126,
+  "original_classfile_major_version": 53,
+  "original_clinit_instruction_count": 213,
+  "original_clinit_putstatic_count": 93,
+  "original_clinit_getstatic_count": 14,
+  "original_clinit_invokestatic_count": 4,
+  "original_clinit_invokedynamic_count": 3,
+  "original_clinit_explicit_branch_edge_count": 8,
+  "original_clinit_control_flow_instruction_counts": {
+    "if_acmpne": 3,
+    "ifne": 1,
+    "goto": 4
+  },
+  "original_static_final_without_constantvalue_count": 8,
+  "original_dynamic_final_initialization_form_counts": {
+    "array": 1,
+    "boxed_integer": 1,
+    "enum_reference": 1,
+    "enum_static_string_helper": 2,
+    "enum_conditional_string_concat": 2,
+    "external_helper_string_concat": 1
+  },
+  "original_full_initializer_opcode_offset_projection_sha256": "d1201ac8e9d70b7d05e5c57994288b60a5b386453ffdae473b7ac2782cb00972",
+  "private_alias_map_and_recompiled_candidate_supplied": false,
+  "github_r56_private_original_candidate_pair_replayed": false,
+  "all_93_putstatic_mapped_equal_in_recompiled_candidate": false,
+  "full_213_opcode_sequence_equal_in_recompiled_candidate": false,
+  "full_branch_ordinal_topology_equal_in_recompiled_candidate": false,
+  "constant_pool_arguments_and_helper_side_effects_equivalent": false,
+  "complete_original_source_equivalent": false,
+  "runtime_equivalent": false,
+  "canonical_aliases_accepted": false,
+  "private_jar_or_source_published": false
+}
