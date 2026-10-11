@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "kind": "v309_private_nested_enum_java_source_parity_frontier",
+  "original_client_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "owner_stable_id": "CLIENT_CLASS_000167",
+  "source_model": "private Java9 nested enum declarations with exact JVM original runtime names/ordinals/constructor values, compiled without client binary classpath",
+  "original_stable_nested_enum_class_count": 4,
+  "source_candidate_nested_enum_class_count": 3,
+  "recovered_enum_runtime_constant_records": 14,
+  "original_enum_methods_compared": 16,
+  "normalized_original_vs_compiled_method_instruction_sequences_equal": 16,
+  "permitted_normalizations": [
+    "enum constant field identifier alias by original declaration order, guarded by original and candidate initializer instruction sequence",
+    "compiler-generated values-array field identifier alias",
+    "private generated values-helper method identifier alias",
+    "constant-pool indexing and JVM instruction label/branch offset presentation only"
+  ],
+  "private_candidate_java_source_sha256": "9c38c284ff57fdea628a69d509735b8db7f9fdff67c5482cbb125461df25bb85",
+  "enum_candidates": [
+    {
+      "candidate_id": "ENUM_SOURCE_01",
+      "original_class_sha256": "86ee7a024bade8de10ac00e18812919b9703925b6c5a6c89e74a489339ab800d",
+      "candidate_class_sha256": "d58ca90d75fc045343b9408821be60e61a74fc6216764cbb1812f804c22bb2f8",
+      "constant_count": 5,
+      "original_method_count": 5,
+      "normalized_method_instruction_matches": 5
+    },
+    {
+      "candidate_id": "ENUM_SOURCE_02",
+      "original_class_sha256": "7602671538d7d7e42139e93667f9b6134cdc70b1376b6536a52f69f67c64a29f",
+      "candidate_class_sha256": "b01416bfedcaa1637601f63faf38a9442c3591986a103d28384278223c7a1d8d",
+      "constant_count": 3,
+      "original_method_count": 6,
+      "normalized_method_instruction_matches": 6
+    },
+    {
+      "candidate_id": "ENUM_SOURCE_03",
+      "original_class_sha256": "1049f7db1f6841a0720c11f0feba46c54d4b64d327ccef26c5dec5f514c23eef",
+      "candidate_class_sha256": "45ccd58a34d9837be76843b1c4bebc52d39750b301a014fc274aaa6d6b597319",
+      "constant_count": 6,
+      "original_method_count": 5,
+      "normalized_method_instruction_matches": 5
+    }
+  ],
+  "remaining_nested_enum_source_with_parent_simple_name_collision": 1,
+  "original_enum_fields_exact_binary_names_recovered": false,
+  "original_nested_enum_innerclasses_attribute_parity_verified": false,
+  "original_enum_classfile_binary_equality_claimed": false,
+  "source_equivalence_certified": false,
+  "runtime_equivalence_certified": false,
+  "canonical_class_or_field_identity_accepted": false,
+  "public_original_client_source_published": false,
+  "github_r49_parser_replayed_against_exact_original": false,
+  "evidence_method": "private original-v309 javap disassembly normalized against independent javac --release 9 candidate; GitHub R49 strict parser still requires independent exact-JAR private replay"
+}
