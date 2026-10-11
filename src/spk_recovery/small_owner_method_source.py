@@ -196,7 +196,9 @@ def _array_writer(method: dict, owner: str, fields: dict,
     if (method.get("access") != 0x0009
             or method.get("descriptor") != "()V"):
         return None
-    _no_exception_handlers(method)
+    handlers = method.get("exception_handlers")
+    if not isinstance(handlers, list) or handlers:
+        return None
     rows = _instructions(method)
     if (len(rows) < 5 or (len(rows) - 1) % 4
             or rows[-1].get("opcode") != "0xb1"
