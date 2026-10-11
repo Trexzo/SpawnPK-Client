@@ -136,6 +136,49 @@ class NestedEnumClosureTests(unittest.TestCase):
             self.assertIn("Outer", result.stderr)
             self.assertIn("already defined", result.stderr)
 
+    def test_top_level_dollar_named_enum_is_only_a_type_shell(self):
+        # Java permits a top-level type with a dollar-sign in the simple
+        # name; its binary descriptor can therefore match an obfuscated
+        # owner-nested type even though InnerClasses/source nesting is NOT
+        # certified by that descriptor.
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            src = root / "source" / "p"
+            classes = root / "classes"
+            src.mkdir(parents=True)
+            classes.mkdir()
+            (src / "Outer.java").write_text(
+                "package p; public class Outer {"
+                " public static Outer$Inner current;"
+                " public static final Outer$Inner initial = Outer$Inner.A;"
+                "}",
+                encoding="utf-8",
+            )
+            (src / "Outer$Inner.java").write_text(
+                "package p; public enum Outer$Inner { A, B }",
+                encoding="utf-8",
+            )
+            compiled = subprocess.run(
+                ["javac", "--release", "9", "-g:none", "-proc:none",
+                 "-d", str(classes),
+                 str(src / "Outer.java"), str(src / "Outer$Inner.java")],
+                capture_output=True, text=True,
+            )
+            self.assertEqual(compiled.returncode, 0, compiled.stderr)
+            from spk_recovery.bytecode_profile import profile_class_field_accesses
+            profile = profile_class_field_accesses(
+                (classes / "p" / "Outer.class").read_bytes()
+            )
+            fields = {(r["name"], r["descriptor"]): r
+                      for r in profile["fields"]}
+            self.assertEqual(len(fields), 2)
+            self.assertIn(("current", "Lp/Outer$Inner;"), fields)
+            self.assertIn(("initial", "Lp/Outer$Inner;"), fields)
+            self.assertTrue(fields[("initial", "Lp/Outer$Inner;")]["access"] & 0x0010)
+            self.assertTrue((classes / "p" / "Outer$Inner.class").exists())
+            # No claim that these generated shell binaries match original
+            # nested enum method bodies or InnerClasses attributes.
+
     def test_wrong_previous_jar_pin_fails_closed(self):
         with tempfile.TemporaryDirectory() as d:
             old, previous, candidate = self._pair(Path(d))
