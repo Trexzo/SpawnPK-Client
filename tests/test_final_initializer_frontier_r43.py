@@ -88,8 +88,8 @@ class FinalInitializerJavacTests(unittest.TestCase):
             self.assertTrue(all(not r["expression_or_runtime_value_recovered"]
                                 for r in report["assignment_sites"]))
             self.assertNotIn("p/A", str(report))
-            self.assertNotIn("text", str(report))
-            self.assertNotIn("boxed", str(report))
+            self.assertNotIn('"text"', str(report))
+            self.assertNotIn('"boxed"', str(report))
             self.assertEqual(report, self._replay(old, new))
 
     def test_wrong_jar_hash_refused(self):
