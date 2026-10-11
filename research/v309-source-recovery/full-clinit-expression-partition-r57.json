@@ -28,5 +28,11 @@
   "compiled_candidate_r56_complete_order_pass": false,
   "original_authorial_source_equivalence_certified": false,
   "jvm_bootstrap_operands_and_dependency_runtime_parity_certified": false,
-  "private_original_class_names_strings_literals_published": false
+  "private_original_class_names_strings_literals_published": false,
+  "independent_private_full_initializer_javap_assembly_sha256": "4d75d9a926f5e29f425166863451f79592241fdb0555e3e54504ac2a85cf403e",
+  "independent_private_javap_assembly_source_count": 93,
+  "independent_private_javap_assembly_instruction_coverage": 213,
+  "independent_private_javap_assembly_explicit_branch_coverage": 8,
+  "independent_javap_fragment_provenance": "Independent, read-only javap -c/-v parse of exact whole-JAR SHA-256 pinned original v309, grouped in instruction order at each original putstatic, with original bootstrap recipes. Hash covers private UTF-8 Java expression fragment; not the GitHub R57 module output. Never published private source.",
+  "github_r57_private_original_jar_replay_hash_matches_independent_assembly": false
 }
