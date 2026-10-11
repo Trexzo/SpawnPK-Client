@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "kind": "v309_original_four_instruction_lambda_metafactory_consumer_boundary",
+  "original_client_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "stable_owner_id": "CLIENT_CLASS_000167",
+  "original_jvm_method_inventory": 10,
+  "short_methods_with_R60_bounded_source_forms": 6,
+  "original_distinct_four_instruction_lambda_boundary_methods": 1,
+  "lambda_boundary_instructions": 4,
+  "verified_opcode_sequence": [
+    "ldc",
+    "invokedynamic",
+    "invokestatic",
+    "return"
+  ],
+  "invokedynamic_bootstrap_owner": "java/lang/invoke/LambdaMetafactory",
+  "invokedynamic_bootstrap_method": "metafactory",
+  "lambda_factory_method_handle_reference_kind": "REF_invokeStatic",
+  "invokedynamic_returns_functional_interface": true,
+  "consumer_declared_with_string_and_exact_factory_interface_parameters": true,
+  "literal_string_operand_original_jvm_type_verified": true,
+  "original_full_complex_methods_remaining": 2,
+  "remaining_complex_method_instruction_counts": [
+    364,
+    697
+  ],
+  "private_original_four_op_lambda_witness_hash_generated_by_new_github_cli": false,
+  "github_r61_private_original_jar_replay_verified": false,
+  "lambda_implementation_method_body_reconstructed": false,
+  "consumer_method_implementation_recovered": false,
+  "original_bootstrap_method_execution_equivalent": false,
+  "original_remaining_complex_method_sources_recovered": false,
+  "full_original_class_source_or_runtime_equivalence_certified": false,
+  "private_original_members_literals_or_binary_published": false
+}
