@@ -98,7 +98,7 @@ class ClinitOrderWitnessTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             a, b, aliases = self._case(
-                root, "public static int second=first+4;"
+                root, "public static int second=4;"
                       "public static int first=3;",
             )
             with self.assertRaisesRegex(
