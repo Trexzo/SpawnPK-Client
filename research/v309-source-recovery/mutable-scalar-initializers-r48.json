@@ -4,10 +4,10 @@
   "original_client_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
   "stable_owner_id": "CLIENT_CLASS_000167",
   "independently_reproduced_r24_baseline_owner_sha256": "95b01c46903f64edcd628ade444d13cfdfb0ec671e16b372a28c83ca9231ef9f",
-  "private_recompiled_owner_source_sha256": "502f54a8829a9a011817574663c208d5590f9cfd1ace18859a0c217dd6335ddd",
-  "private_recompiled_owner_class_sha256": "0bc5879aeae526a611c1c8c12a86bed4b2c38ae66e8d4c74ff60dfc85fc60b25",
-  "private_recompiled_candidate_jar_sha256": "d6917217b9eed6a56cc7632ffb3ac18943773a32d45ca8dd7519ce2639f3285a",
-  "evidence_procedure": "Private exact original v309 javap Code+constant pool pairs; compile independent R24-based Java9 candidate with 80 ordered scalar writes; compare original and rebuilt constant-producing opcodes plus putstatic field metadata; candidate complete JAR generated with deterministic ZIP entries",
+  "private_recompiled_owner_source_sha256": "b643a7bc10adceb4064687579e1f0173445cb3ef71ef416b9d8a95ad0e7907c1",
+  "private_recompiled_owner_class_sha256": "ffbc37ee025b21042a4a41750ef3460c0f1283a1d7ff1e6c87a2e85ece531424",
+  "private_recompiled_candidate_jar_sha256": "c119b672f3028f87450a0dc87c788e64638c86b3201e8f678189926ced7218bf",
+  "evidence_procedure": "Exact original v309 javap class-init Code and constant pool, explicit branch-target identification and exclusion of two control-flow-joined stores; Java9 compilation with only 78 direct scalar literal stores; compare JVM opcode, values and putstatic field metadata for those 78. Independent original R24 baseline reproduced; not full clinit equivalence.",
   "target_java_release": 9,
   "original_owner_field_declarations": 126,
   "private_candidate_field_declarations": 120,
@@ -15,7 +15,7 @@
   "original_owner_field_declarations_absent": 6,
   "original_mutable_scalar_fields_examined": 80,
   "unique_original_clinit_static_scalar_stores": 80,
-  "original_mutable_scalar_store_pairs_matched_after_recompile": 80,
+  "original_mutable_scalar_store_pairs_matched_after_recompile": 78,
   "original_mutable_scalar_store_pairs_mismatched": 0,
   "original_mutable_scalar_assignment_type_counts": {
     "boolean": 72,
@@ -23,10 +23,10 @@
     "string": 2
   },
   "original_mutable_boolean_literal_breakdown": {
-    "true": 31,
-    "false": 41
+    "true": 30,
+    "false": 40
   },
-  "distinct_mutable_scalar_fields_with_exact_original_initial_store": 80,
+  "distinct_mutable_scalar_fields_with_exact_original_initial_store": 78,
   "original_r24_method_disassemblies_preserved": 8,
   "original_nested_enum_type_shells_still_unverified": 3,
   "original_dynamic_final_fields_still_missing": 6,
@@ -40,5 +40,14 @@
   "canonical_owner_or_field_identity_accepted": false,
   "private_java_classfiles_or_original_values_published": false,
   "original_client_binary_modified": false,
-  "github_r48_cli_executed_against_original_v309": false
+  "github_r48_cli_executed_against_original_v309": false,
+  "original_mutable_scalar_branch_joined_stores_excluded": 2,
+  "original_mutable_scalar_fields_with_direct_literal_recovery": 78,
+  "original_mutable_scalar_fields_with_unrecovered_conditional_values": 2,
+  "original_recovered_mutable_scalar_assignment_type_counts": {
+    "boolean": 70,
+    "integer": 6,
+    "string": 2
+  },
+  "full_original_scalar_initializer_values_recovered": false
 }
