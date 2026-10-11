@@ -534,3 +534,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R60 — six original v309 owner method source forms
 
 [R60's exact short-method source recovery](docs/V309_SHORT_OWNER_METHOD_SOURCE_R60.md) stages private Java source forms for the original constructor, two constant-false boolean methods, one boolean delegator, an eight-write two-branch flag toggle, and a ten-element integer-array writer. **Three original method bodies (4, 364, and 697 JVM instructions) remain unrecovered**, and runtime equivalence is not claimed.
+
+### R61 — original LambdaMetafactory invocation boundary
+
+[R61's exact v309 four-op LambdaMetafactory witness](docs/V309_LAMBDA_BOUNDARY_R61.md) proves the original String literal, functional-interface factory and static consumer invocation shape without fabricating the lambda implementation. After R60's six short source forms, **two substantial owner methods (364 and 697 JVM instructions) remain unrecovered**; all runtime equivalence claims remain false.
