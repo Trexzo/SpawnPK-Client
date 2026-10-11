@@ -174,6 +174,8 @@ def verify_nested_enum_closure(
                 original_jar=original, previous_jar=previous,
                 original_sha256=original_sha256,
             )
+    except NestedEnumClosureError:
+        raise
     except (BadZipFile, BytecodeProfileError, OSError, ValueError,
             KeyError, IndexError):
         raise NestedEnumClosureError(
