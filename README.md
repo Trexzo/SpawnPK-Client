@@ -494,3 +494,7 @@ Useful starting points:
 ### R50 — strict boolean initializer branch witnesses
 
 [R50's private v309 conditional-boolean join probe](docs/V309_CONDITIONAL_BOOLEAN_JOIN_R50.md) checks local control-flow diamonds for the two R48-excluded boolean stores without fabricating original predicates or claiming complete Java/runtime equivalence. The actual original-v309 replay remains outstanding; hosted tests use synthetic Java only.
+
+### R51 — bounded boolean predicate source forms
+
+The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE_R51.md) stages private Java expression candidates for exactly two independently observed JVM patterns: static-reference identity equality and static-boolean negation. The full original dependencies, class initializer and source/runtime equivalence remain unverified; no private source is in GitHub.

@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "kind": "private_v309_two_conditional_boolean_predicate_source_form_recovery",
+  "original_client_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "owner_stable_id": "CLIENT_CLASS_000167",
+  "original_branch_join_shapes": 2,
+  "original_predicate_form_shapes": [
+    {
+      "kind": "reference_identity_equality",
+      "referenced_static_field_count": 2,
+      "field_reference_descriptors_identical": true,
+      "source_expression_semantics": "refA == refB"
+    },
+    {
+      "kind": "boolean_negation",
+      "referenced_static_field_count": 1,
+      "source_field_descriptor": "Z",
+      "source_expression_semantics": "!original_boolean"
+    }
+  ],
+  "private_jvm_derived_source_fragment_sha256": "0931461986eb033c3133b92046e5b0ca9dd606f49057c7d77e7f39a607ec1e6b",
+  "observed_on_exact_original_using_read_only_javap": true,
+  "synthetic_java9_javac_expression_opcode_shape_reproduced": true,
+  "source_fragment_includes_real_private_field_identifiers": true,
+  "source_fragment_published": false,
+  "original_private_source_recompiled_against_full_dependencies": false,
+  "github_r51_cli_replayed_against_private_original_candidate_pair": false,
+  "original_candidate_method_bytecode_parity_verified_by_r51": false,
+  "original_complete_clinit_order_reconstructed": false,
+  "original_java_source_equivalence_certified": false,
+  "original_runtime_equivalence_certified": false,
+  "canonical_owner_and_field_identity_accepted": false,
+  "private_fragment_sha256_calculation": "Reproduced independently from SHA-256-matching original-v309 javap: read both exact getstatic producer chains and target putstatic fields, then serialize in the R51 CLI Java source-fragment format and SHA-256 hash the resulting private UTF-8 bytes.",
+  "private_fragment_sha256_independently_recomputed_from_original": true
+}
