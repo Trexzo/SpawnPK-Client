@@ -49,6 +49,44 @@ class V309NestedEnumRecoveryClosureEvidenceTests(unittest.TestCase):
         for digest in fingerprints:
             self.assertRegex(digest, r"\A[0-9a-f]{64}\Z")
 
+    def test_private_type_only_compilation_has_121_exact_parent_fields(self):
+        p = self.data["private_type_only_compiler_shell_proof"]
+        self.assertEqual(p["compiler_target_release"], 9)
+        self.assertEqual(p["original_v309_classfile_field_declarations"], 126)
+        self.assertEqual(p["previous_R46_candidate_field_declarations"], 115)
+        self.assertEqual(p["new_candidate_parent_field_declarations"], 121)
+        self.assertEqual(p["parent_field_declarations_matching_original_metadata"], 121)
+        self.assertEqual(p["original_parent_field_declarations_still_missing"], 5)
+        self.assertEqual(
+            p["new_candidate_parent_field_declarations"]
+            + p["original_parent_field_declarations_still_missing"],
+            p["original_v309_classfile_field_declarations"],
+        )
+        self.assertEqual(
+            p["new_candidate_parent_field_declarations"]
+            - p["previous_R46_candidate_field_declarations"],
+            self.data["absent_fields_with_nested_enum_types"],
+        )
+        self.assertEqual(p["project_enum_type_shell_source_files"], 4)
+        self.assertEqual(p["project_enum_type_shell_classfiles"], 4)
+        self.assertEqual(p["project_enum_source_methods_recovered"], 0)
+        self.assertEqual(p["direct_enum_field_constant_assignment_opcode_matches"], 2)
+        self.assertEqual(p["preserved_existing_parent_method_disassemblies"], 8)
+        self.assertEqual(p["missing_field_type_category"], "dynamic final java.lang.String")
+        for key in (
+            "private_parent_source_sha256",
+            "private_recompiled_parent_class_sha256",
+            "private_candidate_jar_sha256",
+        ):
+            self.assertRegex(p[key], r"\A[0-9a-f]{64}\Z")
+        for key in (
+            "original_enum_innerclasses_attributes_proven_equal",
+            "enum_shells_have_original_runtime_behavior",
+            "source_identity_or_runtime_equivalence_certified",
+            "private_original_or_generated_enum_sources_published",
+        ):
+            self.assertIs(p[key], False, key)
+
     def test_provenance_does_not_imply_java_source_recovered(self):
         d = self.data
         for key in (
