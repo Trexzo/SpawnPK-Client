@@ -522,3 +522,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R57 — assemble all 93 original JVM initializer assignments in order
 
 [R57 whole ordered-initializer source reconstruction](docs/V309_COMPLETE_ORDERED_CLINIT_SOURCE_R57.md) builds a **private-only Java initializer fragment** by exhaustively accounting for all 213 original-v309 `<clinit>` instructions (84 two-op stores, nine complex stores, one `return`). It does not claim successful private compilation, original source authorship, or runtime equivalence; R56 and separate constant-pool/helper parity gates remain mandatory.
+
+### R58 — complete-v309 initializer operand parity with conservative LDC normalization
+
+[R58's exact JVM operand checker](docs/V309_CLINIT_OPERAND_SEMANTIC_PARITY_R58.md) documents a private Java9 skeleton matching 93 static writes, 14 static-field reads, four helper calls, seven loaded constants and three StringConcatFactory recipes against the original v309 bytecode. Two literal loads compiled as `ldc_w` rather than `ldc`; the new checker permits only equal-valued constant-pool width differences, leaving strict R56 and all source/runtime equivalence gates unchanged.
