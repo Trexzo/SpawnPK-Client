@@ -18,7 +18,7 @@
       "source_expression_semantics": "!original_boolean"
     }
   ],
-  "private_jvm_derived_source_fragment_sha256": "a5ee213174e7d7e970620b72ef8345d591aaf6ed865091f4d99b181857e0fbc6",
+  "private_jvm_derived_source_fragment_sha256": "0931461986eb033c3133b92046e5b0ca9dd606f49057c7d77e7f39a607ec1e6b",
   "observed_on_exact_original_using_read_only_javap": true,
   "synthetic_java9_javac_expression_opcode_shape_reproduced": true,
   "source_fragment_includes_real_private_field_identifiers": true,
@@ -29,5 +29,7 @@
   "original_complete_clinit_order_reconstructed": false,
   "original_java_source_equivalence_certified": false,
   "original_runtime_equivalence_certified": false,
-  "canonical_owner_and_field_identity_accepted": false
+  "canonical_owner_and_field_identity_accepted": false,
+  "private_fragment_sha256_calculation": "Reproduced independently from SHA-256-matching original-v309 javap: read both exact getstatic producer chains and target putstatic fields, then serialize in the R51 CLI Java source-fragment format and SHA-256 hash the resulting private UTF-8 bytes.",
+  "private_fragment_sha256_independently_recomputed_from_original": true
 }
