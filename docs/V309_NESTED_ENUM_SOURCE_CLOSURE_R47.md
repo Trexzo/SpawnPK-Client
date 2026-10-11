@@ -12,6 +12,14 @@ Identical binary classfiles across two releases do not prove an older decompiled
 
 One nested enum has the same simple name as its enclosing class. JVM binary class names permit this after obfuscation, but Java source of the shape `class Example { enum Example { X } }` fails with javac because the inner type redeclares the enclosing type's name. Synthetic Java 9 tests prove this negative case. A reviewed, reversible compiler-name/bytecode transformation with exact binary identity proof is needed before source recovery can claim this enum. The helper detects the collision but never invents or accepts a mapping.
 
+## Separate private compiler experiment — parent reached 121 fields
+
+I also compiled a **separate private** revision of the R46 Java source using four top-level Java enum **type-only shells** with dollar signs in their names. These deliberately reproduce the required parent-field JVM reference descriptors, but **do not reconstruct the original nested enum member methods, initialization or InnerClasses attributes**. To avoid the original source-name shadowing issue, the method reference to the parent class was qualified explicitly in this private compiler experiment.
+
+With `javac --release 9 -g:none -proc:none`, the parent compiled to **121 original-matching field declarations out of 121 candidate fields**, leaving only five original String declarations absent. The pre-existing eight reconstructed candidate method opcode/resolved-operand disassemblies were preserved. The initial two-opcode original assignment from an enum constant to the parent static-final field was also reproduced. This is **parent field metadata and a short assignment-site match only**, not source recovery of the four enum implementations.
+
+The aggregate R47 record includes SHA-256 pins for the private revised parent source, compiled parent class and candidate JAR. None of these private files is uploaded. A synthetic Java9 regression proves that a top-level dollar-named enum can supply the exact parent descriptor without claiming to reproduce the original nested JVM class semantics.
+
 ## Local exact-private replay
 
 From the cloned repository root, with Python 3.11+ and independently verified complete JAR SHA-256 values:
@@ -35,6 +43,6 @@ The private report contains only opaque nested IDs, class SHA-256 values, missin
 
 ## Next source recovery gate
 
-Recover the four nested enum Java implementations, their constants, members, static initialization and dependencies; correctly handle the Java name collision without publishing unreviewed source stubs. Then stage the six typed fields, compile the reconstructed source without an original client classpath, and compare exact JVM field metadata. The five absent String declarations, original mutable initialization semantics, and three substantive unrecovered methods remain distinct blockers.
+Recover the four original nested enum Java implementations, constants, methods, static initialization, InnerClasses metadata and dependencies; correctly handle the Java source-name collision. The private **type-only shells** have already demonstrated six correct parent field descriptors, but those shell enum implementations are not recovered original source and are not production-ready. The five absent String declarations, original mutable initialization semantics, and three substantive unrecovered methods remain distinct blockers.
 
 **No original nested enum Java source, original classfile, source alias or runtime-equivalence certificate has been produced by this PR.** Original and candidate JARs and detailed private reports stay out of GitHub and hosted CI; tests use synthetic Java only.
