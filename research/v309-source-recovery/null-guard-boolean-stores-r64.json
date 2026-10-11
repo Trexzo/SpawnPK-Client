@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "kind": "v309_original_nullable_boolean_assignment_local_source_shapes",
+  "original_client_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "stable_owner_id": "CLIENT_CLASS_000167",
+  "original_large_method_jvm_instructions": 697,
+  "original_large_method_static_writes": 78,
+  "original_exact_null_boolean_six_instruction_windows": 30,
+  "window_opcode_prefix": [
+    "aload_1",
+    "ldc",
+    "invokevirtual",
+    "ifnonnull"
+  ],
+  "window_opcode_suffix": [
+    "iconst_0_or_iconst_1",
+    "putstatic"
+  ],
+  "original_true_literal_stores_when_lookup_is_null": 14,
+  "original_false_literal_stores_when_lookup_is_null": 16,
+  "original_lookups_return_reference_types": true,
+  "original_jvm_null_branch_destination_beyond_putstatic": true,
+  "original_none_of_30_windows_have_incoming_branch_or_handler_to_interior": true,
+  "original_post_store_next_opcode_counts": {
+    "goto": 29,
+    "getstatic": 1
+  },
+  "original_remaining_static_writes_after_r63_and_r64_raw_shape_partition": 11,
+  "private_original_literals_or_member_names_publicly_exposed": false,
+  "github_r64_cli_replayed_on_private_original_client": false,
+  "original_local_slot_1_java_type_recovered": false,
+  "full_java_try_catch_nesting_and_control_flow_recovered": false,
+  "original_30_conditional_statements_compiled_and_replayed": false,
+  "original_method_exception_side_effects_and_behavior_equivalent": false,
+  "original_entire_client_runtime_equivalent": false
+}
