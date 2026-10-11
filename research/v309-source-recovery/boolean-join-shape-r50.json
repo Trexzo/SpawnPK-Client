@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "kind": "v309_private_original_boolean_branch_join_shape_measurement",
+  "original_client_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "stable_owner_id": "CLIENT_CLASS_000167",
+  "owner_identified_by_exact_classfile_structure": {
+    "classfile_major": 53,
+    "access_flags": "0x0031",
+    "field_declarations": 126,
+    "method_declarations": 10,
+    "matching_original_class_count": 1
+  },
+  "read_only_evidence": "Independently inspected original exact-v309 JVM <clinit> using local javap -c -p. Enumerated every branch destination and putstatic. Two branch-targeted putstatic stores have contiguous conditional branch, opposite iconst values, goto, opposite iconst and putstatic; only the expected two incoming edges enter each five-instruction window. No exception table.",
+  "original_clinit_instruction_count": 213,
+  "branch_targeted_putstatic_stores": 2,
+  "branch_join_short_diamonds_exactly_matching_shape": 2,
+  "local_conditional_branches": [
+    {
+      "index": 1,
+      "predicate_branch_opcode": "if_acmpne",
+      "fallthrough_boolean": true,
+      "branch_taken_boolean": false,
+      "read_of_static_references_immediately_before_branch": 2,
+      "exclusive_expected_incoming_edges": true
+    },
+    {
+      "index": 2,
+      "predicate_branch_opcode": "ifne",
+      "fallthrough_boolean": true,
+      "branch_taken_boolean": false,
+      "read_of_static_boolean_immediately_before_branch": 1,
+      "exclusive_expected_incoming_edges": true
+    }
+  ],
+  "original_handler_regions_overlapping_diamonds": 0,
+  "original_predicate_field_identity_published": false,
+  "original_java_predicate_expressions_compiled": false,
+  "github_r50_strict_parser_replayed_on_original_candidate_pair": false,
+  "original_candidate_jar_class_structure_verified_by_r50": false,
+  "branch_values_and_edges_independently_observed": true,
+  "original_class_initializer_complete": false,
+  "original_source_equivalence_certified": false,
+  "runtime_equivalence_certified": false,
+  "canonical_identity_accepted": false,
+  "original_binaries_or_source_published": false
+}
