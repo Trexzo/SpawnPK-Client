@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path
 import shutil
 import subprocess
@@ -78,7 +79,7 @@ class LambdaBoundaryTests(unittest.TestCase):
             self.assertFalse(report["runtime_equivalence_certified"])
             self.assertEqual(len(report["original_four_op_private_witness_sha256"]), 64)
             self.assertTrue((root / "out" / "lambda-boundary.aggregate.json").is_file())
-            self.assertNotIn("original", str(report))
+            self.assertNotIn('"original"', json.dumps(report))
             self.assertNotIn("p/Consumer", str(report))
 
     def test_invalid_consumer_descriptor_is_explicit_veto(self):
