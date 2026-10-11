@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "kind": "v309_private_nested_enum_source_recovery_frontier",
+  "pinned_original_v309_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "pinned_previous_v308_jar_sha256": "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6",
+  "private_R46_candidate_jar_sha256": "2c877f27bf1b104fa388f5019239496c0eaa854f2987732ac5cb24d3cfb1ed8d",
+  "owner_stable_id": "CLIENT_CLASS_000167",
+  "private_candidate_field_declarations": 115,
+  "original_field_declarations": 126,
+  "original_fields_absent_from_candidate": 11,
+  "absent_fields_with_nested_enum_types": 6,
+  "distinct_original_nested_enum_classfiles": 4,
+  "nested_enum_classfiles_byte_identical_v308_v309": 4,
+  "distinct_nested_enum_source_name_collisions_with_parent": 1,
+  "nested_enum_field_reference_multiplicity": [
+    1,
+    1,
+    1,
+    3
+  ],
+  "original_nested_enum_class_sha256": [
+    "a2b590461bcacc7bc287c9d8835a805a10e80c8626a2ac98b2bb05bd0a15e972",
+    "86ee7a024bade8de10ac00e18812919b9703925b6c5a6c89e74a489339ab800d",
+    "7602671538d7d7e42139e93667f9b6134cdc70b1376b6536a52f69f67c64a29f",
+    "1049f7db1f6841a0720c11f0feba46c54d4b64d327ccef26c5dec5f514c23eef"
+  ],
+  "original_nested_enum_java_source_recovered": false,
+  "original_nested_enum_classfile_bytes_published": false,
+  "original_class_direct_field_reference_descriptors_published": false,
+  "original_nested_enum_binary_to_source_mapping_accepted": false,
+  "no_real_nested_enum_source_compilation_claimed": true,
+  "exact_original_nested_dependency_observation_method": "private pinned v309 original JVM field descriptor inventory, pinned v308/v309 byte-for-byte nested-class comparison, not execution of public GitHub R47 CLI",
+  "github_R47_cli_executed_against_private_original": false,
+  "original_client_binary_modified": false,
+  "client_runtime_equivalence_certified": false,
+  "source_equivalence_certified": false
+}
