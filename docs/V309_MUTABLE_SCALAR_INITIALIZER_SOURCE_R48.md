@@ -15,18 +15,19 @@ a separate Java 9 candidate containing the 120 original field declaration
 shapes from R42–R47, including **three explicitly unverified nested enum
 type shells**. Using the exact-original v309 constant-pool and
 `<clinit>` disassembly, I staged the original scalar assignments in the
-original bytecode store order.
+original bytecode store order **for 78 unambiguous stores only**. Two boolean stores are control-flow joins where a branch can bypass the immediately preceding constant; those assignments are deliberately withheld.
 
 | Original mutable scalar field type | Verified literal-to-store pairs |
 | --- | ---: |
-| Booleans | **72** (31 true, 41 false) |
-| Integers | **6** |
-| Strings | **2** |
-| **Total** | **80 / 80** |
+| Direct boolean literal stores | **70** (31 true, 39 false) |
+| Direct integer literal stores | **6** |
+| Direct String literal stores | **2** |
+| Conditional boolean stores excluded | **2** |
+| **Direct original literal stores recovered** | **78 / 80** |
 
 The generated private Java was compiled with
 `javac --release 9 -g:none -proc:none`. Direct original-vs-candidate
-JVM disassembly comparison verified **80/80 matching immediate literal
+JVM disassembly comparison verified **78/78 matching non-branch-joined immediate literal
 producer opcodes, values and target `putstatic` field descriptors**,
 without relying on matching original bytecode offsets or constant-pool
 indices.
@@ -38,7 +39,7 @@ are in [the R48 aggregate evidence](../research/v309-source-recovery/mutable-sca
 No original private values, field names, JVM disassembly, Java source or
 candidate binaries have been uploaded.
 
-**Important:** 80 exact individual initial assignments do not reconstruct
+**Important:** 78 exact individual initial assignments do not reconstruct
 the full `<clinit>`. Other field writes, nested-enum initialization,
 dynamic-final expressions, invokedynamic calls and their relative
 side effects remain unresolved. Later writes to the same mutable
@@ -63,12 +64,14 @@ python -m spk_recovery.mutable_scalar_initializer_source `
 Paths/class entries/hashes are placeholders, **not accepted mappings**.
 The tool verifies both whole-JAR SHA-256 inputs, strict class method/field
 matrix, original and candidate owner identity, and exact public/static
-boolean/int/String field declarations. It then checks, **for every**
-matching scalar field:
+boolean/int/String field declarations. It then checks, **for each**
+original matching scalar field:
 
 1. Original `<clinit>` has **exactly one** own-field `putstatic`.
-2. The instruction immediately before the store is an adjacent
-   supported JVM integer/boolean or String literal producer.
+2. Branch and switch targets **must not enter directly at the store**;
+   otherwise that conditional field is excluded from literal recovery.
+   For a safe store, the immediately preceding instruction is an
+   adjacent supported JVM integer/boolean or String literal producer.
 3. JVM integer ranges, boolean 0/1 encoding and String CP tag are valid.
 4. The candidate does not already assign the target field in its
    own `<clinit>`.
@@ -87,8 +90,8 @@ Hosted CI uses synthetic independently compiled Java9 classes; it
 proves exact literal/store-sequence replay, wrong-pin rejection,
 no overwrite, duplicate-assignment refusal and honest behavior claims.
 
-The private original-v309 evidence independently supports the 80/80
-result, but **running the GitHub R48 CLI itself against private
+The private original-v309 evidence independently supports **78/80 direct-store recoveries and two
+conditional stores deliberately withheld**, but **running the GitHub R48 CLI itself against private
 original-v309 input is still a separate verification step**.
 
 R47's nested enum shells remain non-equivalent to the original enum
