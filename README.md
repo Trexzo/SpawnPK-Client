@@ -510,3 +510,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R54 — exact conditional StringConcatFactory final-source forms
 
 [R54's original-v309 conditional String concat study](docs/V309_CONDITIONAL_CONCAT_STRING_SOURCE_R54.md) verifies two private enum-comparison/branch/StringConcatFactory source forms against exact bytecode and bootstrap recipes. Together with R53's separate two enum-helper forms, one dynamically initialized final String remains without a bounded source form; no original runtime or full initializer equivalence is claimed.
+
+### R55 — original v309 external String-helper concat form
+
+[R55's bounded external-helper String initializer research](docs/V309_EXTERNAL_HELPER_CONCAT_SOURCE_R55.md) accounts for the fifth original dynamic-final String local expression form, after the independent R53/R54 measurements. Neither the external helper body nor complete source/runtime/JVM initializer parity is certified; source fragments remain private.
