@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "kind": "v309_original_static_final_clinit_assignment_frontier",
+  "original_client_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "original_owner_stable_id": "CLIENT_CLASS_000167",
+  "private_r24_compiled_candidate_class_sha256": "95b01c46903f64edcd628ade444d13cfdfb0ec671e16b372a28c83ca9231ef9f",
+  "source": "private original v309 javap -p -c field declarations and clinit putstatic matching; aggregate cross-checked with R41/R42",
+  "original_final_field_declarations": 41,
+  "original_final_fields_with_constantvalue": 33,
+  "original_final_fields_without_constantvalue": 8,
+  "original_clinit_code_bytes": 473,
+  "exact_original_final_field_clinit_putstatic_sites": 8,
+  "original_final_field_with_no_constantvalue_write_count_each": 1,
+  "type_counts": {
+    "string": 5,
+    "int_array": 1,
+    "boxed_integer": 1,
+    "other_reference": 1
+  },
+  "r24_candidate_status_counts": {
+    "missing": 7,
+    "present_metadata_difference": 1,
+    "present_same_metadata": 0
+  },
+  "source_expressions_reconstructed": 0,
+  "original_clinit_method_reconstructed": false,
+  "source_equivalence_certified": false,
+  "runtime_initializer_equivalence_certified": false,
+  "canonical_identity_accepted": false,
+  "original_client_binary_modified": false,
+  "private_jvm_field_names_or_values_published": false,
+  "github_r43_tool_replayed_against_private_original": false
+}
