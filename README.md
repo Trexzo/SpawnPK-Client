@@ -518,3 +518,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R56 — exact full-v309 JVM initializer order gate
 
 [R56's private original/recompiled Java acceptance verifier](docs/V309_COMPLETE_CLINIT_ORDER_R56.md) measures **all 93 original static-field writes and the 213-instruction initializer**, not just the eight dynamic-final expression forms. A private explicit field-alias map and compiled candidate are required; neither full opcode/store parity nor runtime equivalence is yet certified.
+
+### R57 — assemble all 93 original JVM initializer assignments in order
+
+[R57 whole ordered-initializer source reconstruction](docs/V309_COMPLETE_ORDERED_CLINIT_SOURCE_R57.md) builds a **private-only Java initializer fragment** by exhaustively accounting for all 213 original-v309 `<clinit>` instructions (84 two-op stores, nine complex stores, one `return`). It does not claim successful private compilation, original source authorship, or runtime equivalence; R56 and separate constant-pool/helper parity gates remain mandatory.
