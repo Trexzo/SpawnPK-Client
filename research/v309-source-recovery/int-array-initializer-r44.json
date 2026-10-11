@@ -27,5 +27,27 @@
   "original_client_modified": false,
   "augmented_private_java_uploaded": false,
   "github_R44_verifier_executed_against_original_client": false,
-  "evidence": "private original v309 javap -p -c and isolated R24 source compile plus opcode/resolved-operand comparison, not GitHub R44 parser replay"
+  "evidence": "private original v309 javap -p -c and isolated R24 source compile plus opcode/resolved-operand comparison, not GitHub R44 parser replay",
+  "private_combined_r42_r44_candidate": {
+    "provenance": "R24 private Java + exact 33 original JVM ConstantValue-backed declarations + original int[] field corrected to static final new int[10]",
+    "java_compile_release": 9,
+    "original_field_declarations": 126,
+    "combined_candidate_field_declarations": 37,
+    "combined_candidate_exact_field_metadata_matches": 37,
+    "combined_candidate_changed_field_metadata": 0,
+    "missing_original_field_declarations": 89,
+    "original_constantvalue_attributes_matching_candidate": 33,
+    "original_int_array_allocation_opcode_sequence_matches": 3,
+    "candidate_method_declarations": 8,
+    "candidate_method_disassemblies_unchanged_from_r24": 8,
+    "private_combined_java_source_sha256": "8b4635c83abe1d5c0731269fc95c1cd3a860b4ed72f38550db8636e7c31e361f",
+    "private_combined_class_sha256": "b0d6320d1071046e3fe3da96c769a59fc7dfdb1b3dbf0e828cc33fb59e84405d",
+    "private_combined_jar_sha256": "5eb86a0d6e57617a27ab6d8ca9019f06aff06b46f203f21cc8d803935ed23158",
+    "original_clinit_method_parity_certified": false,
+    "three_substantive_unrecovered_methods_remain": true,
+    "full_jvm_stackmap_method_parity_certified": false,
+    "original_binary_modified": false,
+    "original_client_source_published": false,
+    "original_private_jvm_identifiers_published": false
+  }
 }
