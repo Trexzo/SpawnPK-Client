@@ -33,5 +33,27 @@
   "github_R47_cli_executed_against_private_original": false,
   "original_client_binary_modified": false,
   "client_runtime_equivalence_certified": false,
-  "source_equivalence_certified": false
+  "source_equivalence_certified": false,
+  "private_type_only_compiler_shell_proof": {
+    "original_v309_classfile_field_declarations": 126,
+    "previous_R46_candidate_field_declarations": 115,
+    "new_candidate_parent_field_declarations": 121,
+    "parent_field_declarations_matching_original_metadata": 121,
+    "original_parent_field_declarations_still_missing": 5,
+    "missing_field_type_category": "dynamic final java.lang.String",
+    "compiler_target_release": 9,
+    "project_enum_type_shell_source_files": 4,
+    "project_enum_type_shell_classfiles": 4,
+    "project_enum_source_methods_recovered": 0,
+    "original_enum_innerclasses_attributes_proven_equal": false,
+    "enum_shells_have_original_runtime_behavior": false,
+    "direct_enum_field_constant_assignment_opcode_matches": 2,
+    "preserved_existing_parent_method_disassemblies": 8,
+    "private_parent_source_sha256": "770e5346e51311f6318874df5516bb50aa99dad8647d3cee66d6d590485efed9",
+    "private_recompiled_parent_class_sha256": "545793ff398e1c4e9215351e9840defa40a8fb96d27db1c19482aadf31ad2a54",
+    "private_candidate_jar_sha256": "5e9b5c071ea51e1971fc317f8a8c944b62c180a06457689bcc4d2cbea96e0ea4",
+    "source_identity_or_runtime_equivalence_certified": false,
+    "private_original_or_generated_enum_sources_published": false,
+    "mechanism": "private flat Java top-level dollar-named enum type-only shells producing exact parent JVM field descriptors, NOT original nested enum Java source recovery"
+  }
 }
