@@ -179,7 +179,7 @@ class ScalarInitializerPrivateReplayTests(unittest.TestCase):
             root = Path(tmp)
             old, _ = self._pair(root)
             new = self._jar(
-                root, "candidate",
+                root, "candidate-preinitialized",
                 "public static int number=5;"
                 "public static boolean on; public static boolean off;"
                 "public static String place; public static String blank;",
