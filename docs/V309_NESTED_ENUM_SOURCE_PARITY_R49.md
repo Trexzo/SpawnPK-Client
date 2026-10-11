@@ -47,6 +47,29 @@ owner. Java rejects declaring that nested enum verbatim, as R47's
 compiler test demonstrates; it remains unrecovered in valid original
 source form. No fabricated workaround is promoted.
 
+**Separate fourth-enum flat-dollar prototype:** I independently wrote a
+private top-level Java `enum` whose legal identifier contains a dollar
+sign so its compiled JVM *internal class name* equals the original
+nested enum's binary owner. It reconstructed the original two runtime
+constant records and **9/9 normalized method instruction sequences**.
+
+This is a **source prototype, not exact nested source**. The flattened
+Java declaration omits the original `InnerClasses` attribute for the
+nested enum, and two hand-written static accessor methods have different
+`ACC_SYNTHETIC` access bits from the original compiler-generated
+accessors. Furthermore, enum constant field identifiers remain
+semantically named rather than the original obfuscated JVM identifiers.
+The separate [R49 collision proof](../research/v309-source-recovery/flat-enum-collision-r49.json)
+pins private source/class hashes, records the two concrete metadata
+vetoes, and **explicitly forbids** source/runtime identity acceptance.
+
+Across the three strictly nested Java candidates plus this **flat
+collision workaround**, all four original enum classes have private
+Java source prototypes and **25/25 instruction bodies** matched after
+documented name normalization. This does **not** mean 25 complete
+method/class equivalence certifications; the fourth remains rejected
+by the stricter R49 comparison gate.
+
 ## GitHub replay for an independently compiled candidate
 
 The R49 comparator validates exact-original and candidate **whole-JAR
