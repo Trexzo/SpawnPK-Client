@@ -542,3 +542,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R62 — original 697-instruction method CFG and exception/write atlas
 
 [R62's private large-method JVM CFG atlas](docs/V309_LARGE_METHOD_CFG_R62.md) inventories the original v309 owner method's **78 static writes, 44 exception handlers and 120 explicit branches** without guessing source-level try/catch or value expressions. The separate 364-instruction method has 46 invokedynamic sites. Both remain unreconstructed, with original private identifiers/bytecode retained only in private outputs.
+
+### R63 — typed original static field value producer chains
+
+[R63's exact original-v309 primitive field-write operand witnesses](docs/V309_TYPED_STATIC_WRITE_CHAINS_R63.md) identify **37 typed six-op producer chains** among the 697-instruction method's 78 static writes: 32 boolean and five integer stores. This is private JVM dataflow evidence, not recovered original Java or runtime behavior; branch/handler admission and helper side effects remain separate gates.
