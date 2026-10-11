@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "kind": "v309_private_original_compiled_full_owner_field_metadata_and_initializer_shell",
+  "original_complete_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "private_full_field_metadata_candidate_jar_sha256": "0ab34731107a07abc0847954216459c53cfae4cbda0f8b3340d4040c71b1a556",
+  "stable_original_owner_id": "CLIENT_CLASS_000167",
+  "javac_compile_mode": "--release 9 -g:none -proc:none",
+  "owner_classfile_major": 53,
+  "owner_class_access_flags_hex": "0031",
+  "original_declared_field_count": 126,
+  "private_candidate_declared_field_count": 126,
+  "original_static_final_count": 41,
+  "original_constantvalue_fields": 33,
+  "original_constantvalue_breakdown": {
+    "boolean": 28,
+    "integer": 4,
+    "string": 1
+  },
+  "original_static_final_blank_dynamic_fields": 8,
+  "original_mutable_static_fields": 85,
+  "original_fields_with_generic_signature": 0,
+  "all_126_field_names_descriptors_access_flags_constantvalues_and_signatures_match_exactly": true,
+  "original_and_candidate_clinit_instruction_count": 213,
+  "original_and_candidate_ordered_putstatic_count": 93,
+  "all_93_original_and_candidate_putstatic_field_targets_match_exactly_in_order": true,
+  "all_eight_branch_destination_ordinals_equal": true,
+  "only_opcode_width_differences": {
+    "ldc_to_ldc_w": 2
+  },
+  "other_211_opcodes_identical": true,
+  "original_all_method_bodies_restored": false,
+  "original_nested_enum_innerclasses_and_method_bodies_restored": false,
+  "complete_original_source_equivalence_certified": false,
+  "runtime_equivalence_certified": false,
+  "strict_r56_raw_opcode_gate_pass": false,
+  "github_r59_full_shell_cli_replayed_against_private_original": false,
+  "private_original_strings_field_names_or_source_published": false,
+  "provenance": "Local independent original-v309 whole SHA256-pinned javap -constants field declaration recovery and javac Java9 compile-only private owner skeleton, plus read-only classfile ConstantValue/signature/access parsing. Synthetic flattened enum/helper dependencies remain; no original binary/source published."
+}
