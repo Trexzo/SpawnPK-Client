@@ -550,3 +550,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R64 — 30 original null-guard boolean field sources
 
 [R64's v309 conditional-null boolean source study](docs/V309_NULL_GUARD_BOOLEAN_SOURCE_R64.md) verifies 30 JVM `ifnonnull`-guarded static Boolean assignments (14 true, 16 false) with no incoming branch/handler entries into their windows. Alongside R63's 37 typed producers, **67 of 78** local static-write shapes are bounded; 11 others and complete source/runtime/exception parity are not recovered.
+
+### R65 — exact original residual static-write site inventory
+
+[R65's disjoint 78-site original JVM static-write atlas](docs/V309_RESIDUAL_STATIC_WRITE_ATLAS_R65.md) joins R63's 37 typed producer windows, R64's 30 null-guarded Boolean windows, and **11 independently measured remaining opcode shapes**. Each remaining write is tracked privately with original JVM operands and exception-region indices; no complete original Java source or runtime behavior is certified.
