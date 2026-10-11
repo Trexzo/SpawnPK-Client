@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "v309_private_mutable_scalar_declaration_recovery",
+  "original_client_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "stable_owner_id": "CLIENT_CLASS_000167",
+  "prior_private_combined_r45_candidate_class_sha256": "9bc1a237b090562be23e3e75c88330dc04749debf9655b839b8a8e8054c174c6",
+  "expanded_private_java_source_sha256": "b1cf985ab18d8c3395c30c7afa1c21fe5c8619c2cb60514ab14891dae4597372",
+  "expanded_private_compiled_class_sha256": "fa74d99d0769a232c175012cff92b989110a9da4300423f18e8e6e31aa43c9c6",
+  "expanded_private_compiled_jar_sha256": "2c877f27bf1b104fa388f5019239496c0eaa854f2987732ac5cb24d3cfb1ed8d",
+  "compiler_release": 9,
+  "original_declared_fields": 126,
+  "previous_candidate_field_declarations": 38,
+  "newly_staged_mutable_scalar_declarations": 77,
+  "recovered_declaration_type_counts": {
+    "boolean": 69,
+    "int": 6,
+    "string": 2
+  },
+  "candidate_field_declarations_after": 115,
+  "candidate_fields_with_exact_original_jvm_metadata_after": 115,
+  "original_field_declarations_still_missing": 11,
+  "remaining_missing_field_type_counts": {
+    "string": 5,
+    "project_defined_reference": 6
+  },
+  "remaining_missing_project_defined_mutable_fields": 5,
+  "remaining_missing_project_defined_final_fields": 1,
+  "remaining_missing_dynamic_final_string_fields": 5,
+  "candidate_method_declarations_before": 8,
+  "candidate_method_declarations_after": 8,
+  "candidate_method_disassemblies_unchanged": 8,
+  "original_mutable_scalar_clinit_initializers_reconstructed": false,
+  "original_clinit_full_method_equivalence_certified": false,
+  "three_substantive_original_method_bodies_recovered": false,
+  "full_class_runtime_semantic_equivalence_certified": false,
+  "source_equivalence_certified": false,
+  "canonical_identity_accepted": false,
+  "original_binary_modified": false,
+  "private_augmented_java_or_classfile_published": false,
+  "github_R46_cli_replayed_against_exact_original": false,
+  "evidence_procedure": "private exact-original javap -v field inventory, Java9 compile of R45 source plus 77 static mutable JVM scalar declarations, direct field metadata and normalized method disassembly comparison"
+}
