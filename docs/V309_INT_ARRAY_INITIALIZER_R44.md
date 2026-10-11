@@ -33,10 +33,24 @@ The original client remains unchanged. Both private baseline and updated
 candidate class SHA-256 values, plus a source SHA-256, are recorded in
 [the aggregate R44 proof](../research/v309-source-recovery/int-array-initializer-r44.json).
 
-**Scope distinction:** This is a standalone R24 four-field candidate
-with one field repaired. The R42 33-literal/37-field expanded source
-was not additionally merged into this exact private R44 prototype.
-Do not claim a measured 37-of-37 combined source rebuild yet.
+**Combined private R42 + R44 source proof:** I also independently
+combined the original 33 verified ConstantValue-backed declarations
+with the repaired array field in a separate private copy of the R24
+Java source, then compiled all four private Java files under Java 9
+bytecode rules. Direct original-vs-recompiled JVM field inspection found
+**37 matching declarations out of 37, zero metadata mismatches**, and
+**89 original field declarations still absent**. All 33 original literal
+ConstantValue attributes matched the new combined class. All eight
+existing R24 method opcode/resolved-operand disassemblies remained
+identical. A deterministic four-class candidate JAR was built and
+SHA-256 pinned; class/source/JAR fingerprints appear in the aggregate
+R44 proof file. The actual private Java and generated classfiles are
+**not** in GitHub.
+
+This **does not** reconstruct the other original static initialization,
+the three missing substantive method bodies, or certify R31 full method
+and frame parity. The small exact array allocation is one verified
+source-level improvement, not a complete original-v309 class.
 
 ## Run the verifier locally
 
@@ -69,12 +83,11 @@ allocation-expression suffix fails closed.
 
 Micro-parity validates **only this allocation fragment**, not the full
 class-initialization method, missing dependencies, stack-map verifier
-behavior, method call graph or runtime semantics. The private R24 source
-still lacks 122 original field declarations and three substantive
-method bodies. R42 addresses 33 literal fields independently; the next
-step is to combine exact R42 literal declarations and R44 array
-initialization into a single private Java source revision, then
-measure it against the original with R31/R32/R35/R36.
+behavior, method call graph or runtime semantics. The combined private R42+R44 source now has **37/37 candidate
+fields matching original metadata**, but still lacks **89** original
+field declarations and three substantive method bodies. The next
+step is to recover the remaining `<clinit>` assignments and measure
+full method/frame parity against the original using R31/R32/R35/R36.
 
 Public GitHub includes generic tooling, synthetic javac tests and
 aggregate cryptographic evidence only. No original client JAR, raw
