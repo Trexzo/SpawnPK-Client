@@ -490,3 +490,7 @@ Useful starting points:
 - `docs/CROSS_VERSION_BACKTEST.md`
 - `docs/CROSS_VERSION_SOURCE_DELTA.md`
 - `docs/CROSS_VERSION_JAVAC_FRONTIER.md`
+
+### R50 — strict boolean initializer branch witnesses
+
+[R50's private v309 conditional-boolean join probe](docs/V309_CONDITIONAL_BOOLEAN_JOIN_R50.md) checks local control-flow diamonds for the two R48-excluded boolean stores without fabricating original predicates or claiming complete Java/runtime equivalence. The actual original-v309 replay remains outstanding; hosted tests use synthetic Java only.
