@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "v309_original_two_complex_owner_methods_cfg_frontier",
+  "original_client_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "stable_owner_id": "CLIENT_CLASS_000167",
+  "large_method_count": 2,
+  "largest_method": {
+    "jvm_instructions": 697,
+    "opcode_sequence_sha256": "0b9485f4050396d47c5dbc928272e2faa98da499f531f60fa2bfb769c490b09c",
+    "static_field_writes": 78,
+    "explicit_conditional_and_unconditional_branches": 120,
+    "exception_handler_entries": 44,
+    "opcode_counts": {
+      "goto": 77,
+      "ifnonnull": 33,
+      "ifnull": 6,
+      "ifeq": 2,
+      "ifne": 1,
+      "if_icmpge": 1,
+      "putstatic": 78,
+      "invokestatic": 47,
+      "invokevirtual": 132,
+      "invokespecial": 3,
+      "invokeinterface": 5,
+      "invokedynamic": 2
+    }
+  },
+  "other_large_method": {
+    "jvm_instructions": 364,
+    "opcode_sequence_sha256": "81ce17aadd130325ee6799b0fc831efb72d8ca012e5b6e01bbde8fa9a9cc5a74",
+    "static_field_writes": 0,
+    "exception_handler_entries": 1,
+    "explicit_conditional_and_unconditional_branches": 9,
+    "opcode_counts": {
+      "invokedynamic": 46,
+      "invokevirtual": 102,
+      "invokestatic": 4,
+      "invokespecial": 3,
+      "invokeinterface": 3
+    }
+  },
+  "jvm_opcode_counts_measured_from_exact_original": true,
+  "private_exact_method_name_descriptor_publicly_published": false,
+  "private_cfg_atlas_generated_by_r62_cli_on_original_client": false,
+  "original_method_java_try_catch_sources_recovered": false,
+  "original_method_static_field_write_value_expressions_recovered": false,
+  "original_dependency_method_bodies_verified": false,
+  "runtime_equivalence_certified": false,
+  "original_jar_or_method_strings_published": false
+}
