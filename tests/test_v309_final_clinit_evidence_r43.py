@@ -7,7 +7,6 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1] / "research" / "v309-source-recovery"
 R43 = ROOT / "final-clinit-assignment-frontier-r43.json"
-R42 = ROOT / "exact-constantvalue-r42.json"
 R41 = ROOT / "field-declaration-gap-r41.json"
 
 
@@ -15,14 +14,13 @@ class V309FinalClinitEvidenceTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.d = json.loads(R43.read_text(encoding="utf-8"))
-        cls.r42 = json.loads(R42.read_text(encoding="utf-8"))
         cls.r41 = json.loads(R41.read_text(encoding="utf-8"))
 
     def test_exact_input_fingerprints_and_existing_final_inventories(self):
-        d, p, f = self.d, self.r42, self.r41
+        d, f = self.d, self.r41
         self.assertEqual(d["schema_version"], 1)
-        self.assertEqual(d["original_owner_stable_id"], p["stable_owner_id"])
-        self.assertEqual(d["original_client_jar_sha256"], p["original_client_sha256"])
+        self.assertEqual(d["original_owner_stable_id"], f["stable_class_id"])
+        self.assertEqual(d["original_client_jar_sha256"], f["original_client_jar_sha256"])
         self.assertEqual(
             d["private_r24_compiled_candidate_class_sha256"],
             f["private_candidate_class_sha256"],
