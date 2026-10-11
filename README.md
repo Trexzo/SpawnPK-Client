@@ -502,3 +502,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R52 — original nested-enum final reference source form
 
 [R52's exact JVM enum-final initializer witness](docs/V309_ENUM_FINAL_REFERENCE_SOURCE_R52.md) documents a directly verified `getstatic`/`putstatic` source form for one original v309 owner field. The referenced enum's source naming collision and runtime parity remain unresolved; five dynamic-final String initializer expressions are still outstanding.
+
+### R53 — enum-helper-backed v309 String finals
+
+[R53's pinned original-v309 two-String helper operand-chain recovery](docs/V309_ENUM_HELPER_STRING_SOURCE_R53.md) stages private JVM source forms for two runtime-assigned String finals, leaving three String initializer expressions unresolved. Original nested-enum helper/runtime parity and full class initializer order remain separate vetoes.
