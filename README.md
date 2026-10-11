@@ -498,3 +498,7 @@ Useful starting points:
 ### R51 — bounded boolean predicate source forms
 
 The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE_R51.md) stages private Java expression candidates for exactly two independently observed JVM patterns: static-reference identity equality and static-boolean negation. The full original dependencies, class initializer and source/runtime equivalence remain unverified; no private source is in GitHub.
+
+### R52 — original nested-enum final reference source form
+
+[R52's exact JVM enum-final initializer witness](docs/V309_ENUM_FINAL_REFERENCE_SOURCE_R52.md) documents a directly verified `getstatic`/`putstatic` source form for one original v309 owner field. The referenced enum's source naming collision and runtime parity remain unresolved; five dynamic-final String initializer expressions are still outstanding.

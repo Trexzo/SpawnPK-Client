@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "kind": "v309_original_static_final_nested_enum_direct_reference_source_form",
+  "original_client_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "stable_owner_id": "CLIENT_CLASS_000167",
+  "owner_declared_fields": 126,
+  "original_static_final_without_constantvalue_total": 8,
+  "original_dynamic_finals_previously_recovered_under_r44_r45": {
+    "int_array": 1,
+    "boxed_integer": 1
+  },
+  "remaining_dynamic_final_fields": {
+    "strings": 5,
+    "nested_enum_references": 1
+  },
+  "original_enum_reference_direct_getstatic_putstatic_pairs": 1,
+  "original_enum_reference_store_at_class_initializer_start": true,
+  "original_enum_source_referenced_type_previously_verified_as_nested_enum_under_r47": true,
+  "direct_reference_producer_descriptor_equals_target_descriptor": true,
+  "direct_reference_field_jvm_enum_access_flags_verified": true,
+  "local_branch_target_enters_micro_slice": false,
+  "original_jvm_exception_handler_overlaps_micro_slice": false,
+  "private_jvm_derived_source_fragment_sha256": "2e53e2814ef187c6d11d9148b0025bad45ee7c26e490772ab3f08f618c18b355",
+  "private_fragment_hash_method": "Independently reconstruct exact private `static { target = nested.EnumConstant; }` fragment in R52 text format from SHA-pinned original-v309 javap direct producer+store pair; hash UTF-8 fragment, retaining original private member names only locally.",
+  "github_r52_cli_replayed_against_original_v309": false,
+  "nested_enum_original_source_equivalence_certified": false,
+  "enum_reference_java_compilation_against_original_enum_source_certified": false,
+  "source_name_collision_resolved": false,
+  "original_classfile_or_runtime_equivalence_certified": false,
+  "five_remaining_string_initializer_sources_recovered": false,
+  "canonical_owner_or_field_identity_accepted": false,
+  "private_original_java_or_client_bytes_published": false
+}
