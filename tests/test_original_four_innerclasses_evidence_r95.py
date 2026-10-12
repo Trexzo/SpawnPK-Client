@@ -14,6 +14,9 @@ class OriginalQuartetEvidenceTests(unittest.TestCase):
                          [960,1010,1039,1165])
         self.assertTrue(a["each_nested_enum_ACC_PUBLIC_ACC_FINAL_ACC_SUPER_ACC_ENUM"])
         self.assertTrue(a["each_original_nested_enum_InnerClasses_attribute_present"])
+        self.assertEqual(a["original_owner_InnerClasses_attribute_entries"],6)
+        self.assertTrue(a["original_owner_four_nested_enum_entries_present"])
+        self.assertEqual(a["original_owner_other_referenced_inner_entries"],2)
         self.assertTrue(a["original_binary_read_only_javap_independently_verified"])
         for key in (
             "all_four_nested_source_implementations_exactly_recompiled",

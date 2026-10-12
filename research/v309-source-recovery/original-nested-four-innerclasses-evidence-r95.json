@@ -19,5 +19,8 @@
   "fourth_flattened_source_workaround_exact_nested_metadata_accepted": false,
   "original_nested_enum_helper_and_callback_runtime_equivalent": false,
   "original_client_runtime_equivalence_certified": false,
-  "original_binary_or_private_member_identifiers_published": false
+  "original_binary_or_private_member_identifiers_published": false,
+  "original_owner_InnerClasses_attribute_entries": 6,
+  "original_owner_four_nested_enum_entries_present": true,
+  "original_owner_other_referenced_inner_entries": 2
 }
