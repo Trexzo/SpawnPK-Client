@@ -1,0 +1,9 @@
+R89: combine recovered original v309 R59 owner shell with R80/R85 method bodies
+
+R59 already reconstructs the exact original 126 field declarations and original ordered static initializer source shell. R80 and R85 reconstruct the private source bodies of the 697-instruction settings loader and 364-instruction settings saver. R89 combines those THREE existing private source artifacts, never inventing missing Java behavior.
+
+All inputs are SHA256-validated against each generated private aggregate and the same whole-file-pinned original JAR. The R59 source shell is preserved intact except for inserting the two original named and access-verified method declarations before its final class brace. The tool requires the original class access, 126 fields, method 697/364 JVM instruction counts, exact original public-static/private-static method flags and complete source artifacts from R59/R80/R85. It writes a new private owner Java source candidate with an aggregate-only SHA/count report.
+
+Command: python -m spk_recovery.private_complete_owner_assembly ORIGINAL_JAR ORIGINAL_OWNER.class ORIGINAL_LOADER ORIGINAL_SAVER R59_OWNER_SHELL.private.java.txt R59_AGGREGATE.json R80_BODY.private.java.txt R80_AGGREGATE.json R85_BODY.private.java.txt R85_AGGREGATE.json NEW_PRIVATE_OUTPUT --original-sha256 ORIGINAL_COMPLETE_JAR_SHA256
+
+The resulting source is a research candidate, NOT an accepted compiled owner. Next: provide original/synthetic dependency source separately and run R87 for both JVM methods, R88 for all owner declarations, and the existing R58 initializer parity checker. The other original methods, nested enum source metadata, helper side effects and whole-client runtime remain separately unverified. Original client, member names, config keys and private source never enter GitHub.
