@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "kind": "v309_original_direct_boolean_protected_empty_catch_source_forms",
+  "original_client_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "stable_owner_id": "CLIENT_CLASS_000167",
+  "original_local_typed_exception_handlers": 42,
+  "original_R67_conditional_primitive_protected_regions": 29,
+  "original_R68_direct_six_instruction_boolean_protected_regions": 2,
+  "original_local_exception_regions_after_R67_R68_without_java_source": 11,
+  "direct_original_six_opcodes": [
+    "aload_1",
+    "ldc",
+    "invokevirtual",
+    "invokestatic",
+    "invokevirtual",
+    "putstatic"
+  ],
+  "both_original_conversion_return_types": "java/lang/Boolean",
+  "both_original_unboxing_methods": "booleanValue():Z",
+  "original_exact_both_direct_handlers_have_only_caught_exception_astore": true,
+  "original_exact_both_direct_handler_goto_bypasses_catch": true,
+  "original_exact_direct_regions_reuse_original_jvm_string_and_member_coordinates": true,
+  "private_R68_original_v309_cli_replay_verified": false,
+  "original_local_slot_one_java_type_recovered": false,
+  "original_full_697_instruction_method_source_reconstructed": false,
+  "original_helper_method_implementation_equivalent": false,
+  "original_method_runtime_equivalent": false,
+  "original_client_private_binary_or_literal_keys_published": false
+}

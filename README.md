@@ -562,3 +562,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R67 — 29 original v309 empty-catch conditional primitive Java source blocks
 
 [R67's original protected-source reconstruction](docs/V309_EMPTY_EXCEPTION_PRIMITIVE_SOURCE_R67.md) stages **29 private Java `try/catch(Exception)` primitive assignment blocks** (26 Boolean, three integer). Their branches reuse exact original key/method/target identities while preserving repeated non-null lookup calls. All 42 original local `Exception` handlers have empty bodies; **13 other local protected ranges and both outer I/O handlers** remain unreconstructed. Synthetic Java9 recompilation is compared using the R66 CFG gate; full original method/runtime parity is not claimed.
+
+### R68 — two direct v309 protected Boolean sources
+
+[R68's private direct typed source reconstruction](docs/V309_DIRECT_EMPTY_EXCEPTION_SOURCE_R68.md) adds two exact original six-JVM-instruction Boolean assignment statements with empty local `Exception` catches. Combined with R67's 29 conditional primitive regions, this accounts for **31/42 local protected Java source forms**. Eleven other local regions, the outer I/O flow, original method compilation and runtime parity remain open.
