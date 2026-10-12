@@ -234,6 +234,32 @@ class PostJavacAllOriginalOwnerGateTests(unittest.TestCase):
         self.assertNotIn("R94-postimage", self.events)
         self.assertFalse(self.output.exists())
 
+    def test_missing_original_code_nontransfer_provenance_vetoes(self):
+        def missing(*args, **kw):
+            result = self.enum_gate(*args, **kw)
+            result.pop("original_lookups_method_code_bytes_transferred")
+            return result
+        self.mocks(enum=missing)
+        with self.assertRaisesRegex(
+            gate.PostJavacCompleteOwnerAcceptanceError,
+            "FINAL_FOUR_ENUM_R95_ACCEPTANCE_FLAGS_INCOMPLETE"):
+            self.accept()
+        self.assertNotIn("R94-postimage", self.events)
+        self.assertFalse(self.output.exists())
+
+    def test_original_code_transfer_claim_vetoes(self):
+        def forbidden(*args, **kw):
+            result = self.enum_gate(*args, **kw)
+            result["original_lookups_method_code_bytes_transferred"] = True
+            return result
+        self.mocks(enum=forbidden)
+        with self.assertRaisesRegex(
+            gate.PostJavacCompleteOwnerAcceptanceError,
+            "FINAL_FOUR_ENUM_R95_ACCEPTANCE_FLAGS_INCOMPLETE"):
+            self.accept()
+        self.assertNotIn("R94-postimage", self.events)
+        self.assertFalse(self.output.exists())
+
     def test_changed_final_postimage_hash_cannot_reach_r94(self):
         def wrong(*args, **kw):
             v = self.enum_gate(*args, **kw)
