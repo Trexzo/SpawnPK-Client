@@ -29,10 +29,14 @@ class OriginalFourthEnumPrivateEmitterTests(unittest.TestCase):
     def sha(path):
         return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
-    def fixture(self, *, bad_literal=False, drop_fourth=False):
+    def fixture(self, *, bad_literal=False, drop_fourth=False,
+                reverse_accessor_order=False):
         src = self.root / "src" / "p" / "Owner.java"
         src.parent.mkdir(parents=True, exist_ok=True)
         string_literal = '"line\\nunsafe"' if bad_literal else '"https://example.invalid"'
+        first_access, second_access = (
+            ("b", "a") if reverse_accessor_order else ("a", "b")
+        )
         text = (
             "package p; public final class Owner {"
             "public enum Placeholder {"
@@ -45,8 +49,8 @@ class OriginalFourthEnumPrivateEmitterTests(unittest.TestCase):
             "}"
             "public enum One{C,D}public enum Two{E,F}"
             "public enum Three{G,H}"
-            "public static String x(Placeholder e){return e.a;}"
-            "public static String y(Placeholder e){return e.b;}"
+            "public static String x(Placeholder e){return e." + first_access + ";}"
+            "public static String y(Placeholder e){return e." + second_access + ";}"
             "}"
         )
         src.write_text(text, encoding="utf-8")
@@ -79,6 +83,7 @@ class OriginalFourthEnumPrivateEmitterTests(unittest.TestCase):
         self.assertTrue(proof["original_six_initializer_literal_values_preserved"])
         self.assertTrue(proof["original_two_private_string_field_identifiers_preserved"])
         self.assertTrue(proof["original_two_getter_to_field_relations_preserved"])
+        self.assertTrue(proof["original_synthetic_accessor_field_order_preserved"])
         self.assertFalse(proof["R95_original_nested_enum_parity_certified"])
         self.assertFalse(proof["whole_client_runtime_equivalence_certified"])
         self.assertTrue((self.out / "private-java9-source-candidate.jar").is_file())
@@ -88,6 +93,14 @@ class OriginalFourthEnumPrivateEmitterTests(unittest.TestCase):
             self.assertEqual(
                 set(z.namelist()),
                 {"p/Owner.class", "p/Owner$ReconstructedEnum.class"})
+
+    def test_original_synthetic_accessor_order_not_field_declaration_order(self):
+        # The two original synthetic accessors can read their private fields
+        # in the reverse order of the field table; preserve method order.
+        pin = self.fixture(reverse_accessor_order=True)
+        proof = self.replay(pin=pin)
+        self.assertTrue(proof["original_synthetic_accessor_field_order_preserved"])
+        self.assertEqual(proof["original_enum_methods_compiled_and_shapes_matched"], 9)
 
     def test_wrong_original_complete_jar_sha_vetoes_and_no_output(self):
         self.fixture()
