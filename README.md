@@ -570,3 +570,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R69 — exact v309 Properties initialization type and FileInputStream loading prefix
 
 [R69's original 24-instruction Properties load source recovery](docs/V309_PROPERTIES_LOAD_PREFIX_R69.md) proves that the original settings method constructs one `java.util.Properties` in JVM local slot 1, loads it via a `FileInputStream`, closes the stream, and makes 82 unary plus one two-argument `getProperty` calls. This resolves R67/R68's source receiver type, while outer `IOException` catch structure and whole-method/runtime equivalence remain unverified.
+
+### R70 — original v309 outer IOException Java source envelope
+
+[R70's exact original two-range IOException source recovery](docs/V309_OUTER_IO_EXCEPTION_SOURCE_R70.md) preserves the R69 File/Properties prefix and original `IOException.printStackTrace()` catch behavior. Java9 recompilation reproduces **both original protected-range split boundaries around the early return** without a bytecode patch. The 697-instruction method's middle, remaining 11 local source regions and runtime parity are still unrecovered.
