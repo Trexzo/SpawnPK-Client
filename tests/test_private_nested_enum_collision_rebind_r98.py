@@ -28,7 +28,7 @@ class EnumNameCollisionRebindTests(unittest.TestCase):
         self.candidate = self.root / "compiled-private-fixture.jar"
         self.out = self.root / "accept"
 
-    def compile(self, extra=""):
+    def compile(self, extra="", *, build_original=True):
         source = (
             "package p; public final class Owner {"
             "public enum Placeholder { ALPHA(1), BETA(2); "
@@ -48,14 +48,16 @@ class EnumNameCollisionRebindTests(unittest.TestCase):
             for p in self.classes.rglob("*.class"):
                 z.write(p, p.relative_to(self.classes).as_posix())
 
-        # Synthetic-only baseline: make a colliding JVM identity independently,
-        # so end-to-end R95 can compare an original/candidate with identical code.
-        with ZipFile(self.candidate) as zin, ZipFile(self.original, "w") as out:
-            for info in zin.infolist():
-                data, _ = rebind_classfile(zin.read(info), "p/Owner", "Placeholder")
-                name = (info.filename.replace("Owner$Placeholder.class",
-                                              "Owner$Owner.class"))
-                out.writestr(name, data)
+        # Only positive/equivalence fixtures require a fabricated synthetic
+        # original. Negative malformed-input probes must not run acceptance
+        # tooling while constructing that fixture.
+        if build_original:
+            with ZipFile(self.candidate) as zin, ZipFile(self.original, "w") as out:
+                for info in zin.infolist():
+                    data, _ = rebind_classfile(zin.read(info), "p/Owner", "Placeholder")
+                    name = (info.filename.replace("Owner$Placeholder.class",
+                                                  "Owner$Owner.class"))
+                    out.writestr(name, data)
 
     @staticmethod
     def digest(path):
@@ -119,7 +121,7 @@ class EnumNameCollisionRebindTests(unittest.TestCase):
         self.assertFalse(self.out.exists())
 
     def test_candidate_literal_reusing_surrogate_name_vetoes_rewrite(self):
-        self.compile('public String debug(){return "Placeholder";}')
+        self.compile('public String debug(){return "Placeholder";}', build_original=False)
         with ZipFile(self.candidate) as z:
             raw = z.read("p/Owner$Placeholder.class")
         with self.assertRaisesRegex(CollisionRebindError,
