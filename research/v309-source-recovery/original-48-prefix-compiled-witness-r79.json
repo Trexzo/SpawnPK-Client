@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "kind": "independent_original_v309_java9_private_48_prefix_recompilation",
+  "original_complete_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "stable_owner_id": "CLIENT_CLASS_000167",
+  "original_jvm_prefix_instruction_count": 48,
+  "candidate_java_release": 9,
+  "candidate_jvm_prefix_instruction_count": 48,
+  "exact_first_48_instruction_ordinal_and_byte_offset_parity": true,
+  "exact_first_48_opcode_parity": true,
+  "checked_string_member_field_and_type_operand_parity": true,
+  "original_to_candidate_prefix_difference_count": 0,
+  "original_prefix_static_field_assignments": 4,
+  "real_original_compared_via_independent_local_javap": true,
+  "private_original_java_source_not_published": true,
+  "original_preflight_helper_side_effect_equivalence_certified": false,
+  "whole_697_instruction_method_compiled": false,
+  "all_original_44_exception_handler_parity_passed": false,
+  "complete_client_runtime_equivalence_certified": false,
+  "generic_R79_private_cli_original_JAR_replayed": false
+}
