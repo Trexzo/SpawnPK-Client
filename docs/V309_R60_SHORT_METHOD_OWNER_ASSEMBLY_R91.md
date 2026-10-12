@@ -1,0 +1,7 @@
+R91 — integrate six R60 exact short original owner methods into R89 private owner source
+
+The pinned original v309 owner has ten declared methods. R59/R89 preserve the one original class initializer. R80 and R85 recover the two large settings loader/saver method bodies, and R60 already proved exact source forms for six ordinary methods (constructor, two Boolean false constants, a Boolean delegate, a two-branch toggle and ten-element integer array writer). R91 joins R60 into R89 without inventing bodies, resulting in nine of ten original declared methods' Java source forms inside the private owner candidate.
+
+R91 checks the original owner 126-field/ten-method profile, R89 and R60 private source SHA256 against their original-JAR pinned aggregates, and regenerates the R60 source directly from the pinned original bytecode and referenced helper class profiles. Exact fragment equality is required, so a forged six-method text cannot be substituted. It then inserts the six original bounded method bodies before the R89 class closing brace.
+
+The one original method not recovered has four JVM instructions: load constant; invokedynamic; invokestatic; return. R91 does NOT default, stub or invent it. The joined Java candidate still must compile and pass the R90 initializer/field + dual-method parity gate, then independent parity for all remaining methods and original nested-class/helper behavior. No full owner/runtime equivalence is claimed. Private source, JAR, identifiers and settings literals stay outside GitHub.
