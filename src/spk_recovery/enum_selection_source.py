@@ -129,6 +129,12 @@ def _parse_36(profile: dict, body: list[dict], endjump: dict,
             or load_text3["opcode"] != "0x2d"
             or load_prefix.get("opcode") != "0x19"
             or load_suffix.get("opcode") != "0x19"
+            # Original local4/local5 correspond to the first/second split.
+            # Checking only opcodes permits swapped values with identical CFG.
+            or store_first.get("local_index") != 4
+            or store_second.get("local_index") != 5
+            or load_prefix.get("local_index") != 4
+            or load_suffix.get("local_index") != 5
             or zero["opcode"] != "0x03"
             or one["opcode"] != "0x04"):
         return None
@@ -281,7 +287,7 @@ def replay_private_final_enum(
     _need(_digest(jar)==original_sha256.lower(),
           "ORIGINAL_JAR_CHANGED_DURING_SOURCE_PROOF")
     sites=proof.pop("private_original_final_enum_regions")
-    _need(sites,"NO_EXACT_FINAL_ENUM_SOURCE_REGION")
+    _need(len(sites) == 1,"EXPECTED_SINGLE_EXACT_FINAL_ENUM_SOURCE_REGION")
     src="".join(x["private_generated_java_source"] for x in sites)
     raw=json.dumps(sites,indent=2,sort_keys=True)+"\n"
     report={

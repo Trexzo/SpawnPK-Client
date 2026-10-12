@@ -135,6 +135,32 @@ class FinalEnumSelectionSourceTests(unittest.TestCase):
             result=plan_private_final_enum_source(profile,"restore",self.METHOD)
             self.assertEqual(result["exact_original_36_op_final_enum_regions"],0)
 
+    def test_split_local_slot_pairings_fail_closed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            jar=self._compile(root,"original","Owner",self._body())
+            profile=self._profile(jar,"Owner")
+            method=next(m for m in profile["methods"] if m["name"]=="restore")
+            indexed_loads=[r for r in method["instructions"]
+                           if r.get("opcode")=="0x19"]
+            self.assertEqual([r["local_index"] for r in indexed_loads],[5,4])
+            # Re-read the prefix instead of the suffix: same opcode/CFG,
+            # but a materially different Java expression.
+            indexed_loads[0]["local_index"]=4
+            self.assertEqual(
+                plan_private_final_enum_source(profile,"restore",self.METHOD)
+                ["exact_original_36_op_final_enum_regions"],0)
+            profile=self._profile(jar,"Owner")
+            method=next(m for m in profile["methods"] if m["name"]=="restore")
+            indexed_stores=[r for r in method["instructions"]
+                            if r.get("opcode")=="0x3a"]
+            self.assertEqual([r["local_index"] for r in indexed_stores],[4,5])
+            # Overwrite the first split result rather than preserving both.
+            indexed_stores[0]["local_index"]=5
+            self.assertEqual(
+                plan_private_final_enum_source(profile,"restore",self.METHOD)
+                ["exact_original_36_op_final_enum_regions"],0)
+
     def test_pin_and_output_collision_preserve_original(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp)
