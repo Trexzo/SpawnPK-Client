@@ -566,3 +566,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R68 — two direct v309 protected Boolean sources
 
 [R68's private direct typed source reconstruction](docs/V309_DIRECT_EMPTY_EXCEPTION_SOURCE_R68.md) adds two exact original six-JVM-instruction Boolean assignment statements with empty local `Exception` catches. Combined with R67's 29 conditional primitive regions, this accounts for **31/42 local protected Java source forms**. Eleven other local regions, the outer I/O flow, original method compilation and runtime parity remain open.
+
+### R69 — exact v309 Properties initialization type and FileInputStream loading prefix
+
+[R69's original 24-instruction Properties load source recovery](docs/V309_PROPERTIES_LOAD_PREFIX_R69.md) proves that the original settings method constructs one `java.util.Properties` in JVM local slot 1, loads it via a `FileInputStream`, closes the stream, and makes 82 unary plus one two-argument `getProperty` calls. This resolves R67/R68's source receiver type, while outer `IOException` catch structure and whole-method/runtime equivalence remain unverified.
