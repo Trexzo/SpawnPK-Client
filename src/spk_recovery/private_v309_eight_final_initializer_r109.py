@@ -48,6 +48,16 @@ def _private_bootstrap(profile, row):
     need(len(matches) == 1 and
          isinstance(matches[0].get("bootstrap_method"), dict),
          "EXACT_ORIGINAL_INDY_BOOTSTRAP_NOT_UNIQUE")
+    handle = matches[0]["bootstrap_method"]
+    args = matches[0].get("arguments")
+    need(handle.get("owner") == "java/lang/invoke/StringConcatFactory"
+         and handle.get("name") == "makeConcatWithConstants"
+         and isinstance(args, list) and len(args) == 1
+         and isinstance(args[0], dict) and args[0].get("kind") == "string"
+         and type(args[0].get("value")) is str
+         and args[0]["value"].count("\x01") == 1
+         and "\x02" not in args[0]["value"],
+         "ORIGINAL_SINGLE_ARGUMENT_STRING_CONCAT_BOOTSTRAP_NOT_EXACT")
     return matches[0]
 
 
@@ -221,6 +231,25 @@ def original_eight_final_write_proof(profile):
     }
     found = {k: sum(x["source_recipe_kind"] == k for x in snapshots)
              for k in classifications}
+    concat = [
+        x for x in snapshots if x["original_indy_bootstraps"]
+    ]
+    need(len(concat) == 3,
+         "EXACT_THREE_ORIGINAL_STRING_CONCAT_SITES_REQUIRED")
+    conditional = [
+        x for x in concat
+        if x["source_recipe_kind"] == "conditional_enum_comparison_concat"
+    ]
+    helper_concat = [
+        x for x in concat
+        if x["source_recipe_kind"] == "static_string_helper_concat"
+    ]
+    need(len(conditional) == 2 and len(helper_concat) == 1
+         and conditional[0]["original_indy_bootstraps"][0]["index"]
+             == conditional[1]["original_indy_bootstraps"][0]["index"]
+         and conditional[0]["original_indy_bootstraps"][0]["index"]
+             != helper_concat[0]["original_indy_bootstraps"][0]["index"],
+         "TWO_CONDITIONAL_ONE_HELPER_CONCAT_BOOTSTRAP_IDS_NOT_EXACT")
     need(found == classifications,
          "ORIGINAL_EIGHT_FINAL_RHS_RECIPE_DISTRIBUTION_CHANGED")
     return snapshots, {
