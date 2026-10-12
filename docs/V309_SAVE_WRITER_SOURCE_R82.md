@@ -1,0 +1,18 @@
+# R82 — original v309 364-instruction settings-save method: 42 exact bounded Java writer forms
+
+The original SHA-256-pinned v309 owner has a separate **364-JVM-instruction private static settings-save method** with one typed `java.lang.Exception` handler. Its exact `BufferedWriter` call inventory comprises **47 `write(String)`** and **48 `newLine()`** calls; 46 JVM `invokedynamic` sites and 102 `invokevirtual` calls occur in the complete method.
+
+Independent read-only original disassembly identified **41 direct** original static-field → `StringConcatFactory.makeConcatWithConstants` → `BufferedWriter.write` → `newLine` source forms, plus **one** nested enum `.name()` form. Direct original static-field types split into **35 boolean, five int, one String**. The other **five** write calls belong to more complex array-loop, list-filter and conditional enum code, deliberately not guessed.
+
+The source recovery CLI `spk_recovery.properties_save_writer_source` accepts only the original complete-JAR SHA256-pinned class and the unique private method. It verifies exact six- and seven-JVM-instruction source blocks, typed `getstatic` signatures and same-owner declarations, `StringConcatFactory` bootstrap owner/member/ref-kind, one dynamic string slot and exact original printable key prefix, and both real `BufferedWriter` call signatures. It forbids unrelated jumps into fragment interiors and preserves original source order. Bounded original-key/member-backed Java writer statements are emitted into a **new private local output**, with public-safe aggregate counts/hashes only. Synthetic regression tests reject changed concat recipe, source field flags, called writer member, descriptor and incoming branch.
+
+Private replay (replace private class/method placeholders with actual original JVM coordinates):
+
+    python -m spk_recovery.properties_save_writer_source ORIGINAL_V309_JAR PRIVATE_OWNER.class PRIVATE_SAVE_METHOD "()V" NEW_PRIVATE_OUTPUT --original-sha256 ORIGINAL_WHOLE_JAR_SHA256
+
+**Limits:** these are bounded statement-source patterns only. The real generic R82 CLI has NOT been end-to-end replayed against the original JAR, despite independently measured original counts. The five exceptional write cases, buffered stream construction/close, array index control flow, external enum-list tests, Paths/Files copy-delete and the enclosing exception catch are not reconstructed here. No 364-op method recompiled, no method side-effect or runtime parity certified; original binary, member identities, literal keys and extracted private Java stay unpublished.
+## Independent original v309 JAR aggregate verification
+
+The exact SHA-256-pinned original JAR is available in the user's private Library. Read-only direct JVM inspection independently confirmed the complete **364-op** settings-save method, **46 invokedynamic sites (45 distinct referenced bootstrap indices)**, **102 invokevirtual** calls, **47 BufferedWriter.write** calls, **48 newLine** calls and **one** original Exception handler. The repetitive bounded forms split into **41** direct source-field writers (35 Boolean, five int, one String) plus **one** enum-name writer. Exactly **five write calls remain outside those two repetitive groups**: indexed array serialization, three List-based enum flags and a conditional enum write. Aggregate-only counts and no-parity flags are stored in `research/v309-source-recovery/original-save-writer-patterns-r82.json`.
+
+This is an independent bytecode audit; the generic R82 Python CLI has NOT been replayed against the original private JAR, and no complete save-method Java source or runtime parity is claimed. The private original literal keys, member identities, binary and method bytecode are not published.
