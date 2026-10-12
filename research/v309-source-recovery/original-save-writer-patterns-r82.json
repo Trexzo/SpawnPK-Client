@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "kind": "v309_exact_original_364_op_settings_save_writer_source_shape_witness",
+  "original_complete_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "stable_owner_id": "CLIENT_CLASS_000167",
+  "original_private_static_save_method_jvm_instructions": 364,
+  "original_invokedynamic_sites": 46,
+  "original_unique_invokedynamic_bootstrap_refs": 45,
+  "original_invokevirtual_sites": 102,
+  "original_method_exception_table_entries": 1,
+  "original_method_single_catch_type": "java/lang/Exception",
+  "original_BufferedWriter_write_calls": 47,
+  "original_BufferedWriter_newLine_calls": 48,
+  "original_exact_simple_field_concat_write_newline_regions": 41,
+  "original_exact_enum_name_concat_write_newline_regions": 1,
+  "original_direct_writer_boolean_field_sources": 35,
+  "original_direct_writer_integer_field_sources": 5,
+  "original_direct_writer_String_field_sources": 1,
+  "original_bounded_source_forms_total": 42,
+  "other_write_calls_not_reconstructed": 5,
+  "other_write_families": [
+    "one indexed array loop",
+    "three external enum List-filter literal cases",
+    "one conditional enum reference write"
+  ],
+  "exact_original_method_opcode_counts_independently_readonly_verified": true,
+  "generic_R82_cli_replayed_on_private_original_jar": false,
+  "complete_364_op_original_save_method_java_compiled": false,
+  "all_original_bootstrap_and_operand_candidate_parity_passed": false,
+  "original_filesystem_write_copy_delete_side_effect_parity_passed": false,
+  "full_client_runtime_equivalence_certified": false,
+  "original_private_keys_member_names_or_binary_published": false
+}
