@@ -13,7 +13,9 @@ from zipfile import ZipFile
 from .clinit_store_order_witness import _verified_class
 from .bytecode_profile import profile_jar_class
 from .mutable_scalar_initializer_source import _digest
-from .small_owner_method_source import plan_small_original_owner_methods
+from .small_owner_method_source import (
+    plan_small_original_owner_methods, _private_external_field_owners,
+)
 
 class ShortOwnerAssemblyError(ValueError):
     pass
@@ -94,12 +96,7 @@ def assemble_nine_methods(
     r60=aggregate(r60_aggregate,original_sha256,
                   "private_short_method_fragment_sha256",short_sha)
     with ZipFile(jar) as z:
-        owner=original["internal_name"]
-        owners={r.get("owner") for method in original["methods"]
-                if method.get("name")!="<clinit>"
-                for r in method.get("instructions",[])
-                if r.get("opcode") in ("0xb2","0xb3")
-                and r.get("owner")!=owner}
+        owners=_private_external_field_owners(original)
         need(all(isinstance(o,str) and z.namelist().count(o+".class")==1
                  for o in owners),
              "R60_EXTERNAL_FIELD_OWNER_BINARY_NOT_UNIQUE")
