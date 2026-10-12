@@ -594,3 +594,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R75 — exact original external enum/List protected fallback source
 
 [R75's 23-op original v309 enum/List/Boolean protected source](docs/V309_ENUM_LIST_FALLBACK_SOURCE_R75.md) preserves the null branch's ordered external Boolean writes and two enum `List.add` side effects, then the non-null repeated-lookup Boolean assignment. Bounded local JVM-backed source patterns reach **41/42 original protected regions**; the final 36-op region and complete method/runtime parity remain unrecovered.
+
+### R76 — last original 36-op enum selector protected source form
+
+[R76's exact original enum/String selector Java source](docs/V309_FINAL_ENUM_SELECTOR_SOURCE_R76.md) preserves the two `Properties` lookups, two separate `String.split` calls, original enum-name comparison, and ordered enum-reference writes. This supplies bounded JVM-backed source **patterns** for all **42/42 local Exception-protected regions**. Crucially, the complete **697-instruction method has not been assembled, compiled, or certified**, nor have all 44 handlers, nested-enum source names, helpers or client runtime behavior passed parity.
