@@ -163,25 +163,29 @@ class OriginalLookupEnumStackMapTests(unittest.TestCase):
         probe_dir.mkdir()
         code = probe_dir / "Probe.java"
         code.write_text(
-            'package p;public class Probe{public static void main(String[]x){'
-            'if(Owner.Two.parse("b")!=Owner.Two.B)throw new Error("lookup");'
-            'if(Owner.Two.parse("INVALID")!=Owner.Two.A)throw new Error("fallback");'
-            'if(Owner.Surrogate.ALPHA.first()==null)throw new Error("getter");'
+            'package p;public class Probe{public static void main(String[]x)'
+            'throws Exception {'
+            'Class<?> t=Class.forName("p.Owner$Two");'
+            'Class<?> e=Class.forName("p.Owner$Owner");'
+            'Object b=Enum.valueOf((Class)t,"B");'
+            'Object a=Enum.valueOf((Class)e,"ALPHA");'
+            'java.lang.reflect.Method lookup=t.getMethod("parse",String.class);'
+            'if(!lookup.invoke(null,"b").equals(b))throw new Error("lookup");'
+            'if(!lookup.invoke(null,"INVALID").equals(Enum.valueOf((Class)t,"A")))'
+            'throw new Error("fallback");'
+            'if(!e.getMethod("first").invoke(a).equals("One"))'
+            'throw new Error("getter");'
             '}}', encoding="utf-8")
         compile = subprocess.run(
             ["javac", "--release", "9", "-proc:none",
-             "-cp", str(self.candidate), "-d", str(probe_dir), str(code)],
+             "-d", str(probe_dir), str(code)],
             capture_output=True, text=True)
         self.assertEqual(compile.returncode, 0, compile.stderr)
-        # After binary rename the Source-legal Surrogate name is intentionally
-        # absent. Exercise only metadata-safe reflection to check execution.
         actual = self.output / "all-four-R95-after-StackMap.private.jar"
         runtime = subprocess.run(
             ["java", "-cp", str(probe_dir) + os.pathsep + str(actual), "p.Probe"],
             capture_output=True, text=True)
-        # Probe compiled against Surrogate but R105 rebinds to Owner$Owner:
-        # it is expected to fail class resolution, not establish runtime.
-        self.assertNotEqual(runtime.returncode, 0)
+        self.assertEqual(runtime.returncode, 0, runtime.stderr)
 
     def test_original_frame_must_be_full_not_chop(self):
         self.fixture(skip_frame_inflation=True)
