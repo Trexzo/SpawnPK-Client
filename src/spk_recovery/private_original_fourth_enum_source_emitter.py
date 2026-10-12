@@ -141,12 +141,26 @@ def source_parts(original, surrogate_simple):
          and surrogate_simple not in labels
          and all(surrogate_simple != name for name, _ in getters),
          "SURROGATE_OR_SOURCE_FIELD_ENUM_NAME_COLLISION")
+    # Preserve the original *declaration order* of the two compiler-generated
+    # accessors. The original enum's field declarations can have a different
+    # order; generating outer-class reads in field order silently reverses
+    # the original accessor JVM getfield targets even when opcodes match.
+    access_signature = "(L" + owner + ";)Ljava/lang/String;"
+    accessor_order = [
+        m["instructions"][1].get("name") for m in original["methods"]
+        if m.get("access") == 0x1008
+        and m.get("descriptor") == access_signature
+    ]
+    need(len(accessor_order) == 2
+         and set(accessor_order) == set(ordered_fields)
+         and len(set(accessor_order)) == 2,
+         "ORIGINAL_TWO_SYNTHETIC_ACCESSOR_FIELD_ORDER_NOT_UNIQUE")
     pkg = ".".join(outer.split("/")[:-1])
-    return outer, outer_simple, pkg, labels, ordered_fields, getters
+    return outer, outer_simple, pkg, labels, ordered_fields, getters, accessor_order
 
 
 def private_java_source(original, surrogate_simple="ReconstructedEnum"):
-    outer, outer_simple, package, labels, fields, getters = source_parts(
+    outer, outer_simple, package, labels, fields, getters, accessor_order = source_parts(
         original, surrogate_simple)
     lines = []
     if package:
@@ -168,9 +182,9 @@ def private_java_source(original, surrogate_simple="ReconstructedEnum"):
     lines.extend([
         "  }",
         "  public static String r101ProbeA(" + surrogate_simple
-        + " x) { return x." + fields[0] + "; }",
+        + " x) { return x." + accessor_order[0] + "; }",
         "  public static String r101ProbeB(" + surrogate_simple
-        + " x) { return x." + fields[1] + "; }",
+        + " x) { return x." + accessor_order[1] + "; }",
         "}",
         "",
     ])
@@ -271,6 +285,21 @@ def compile_private_original_enum_source(
                         and m.get("access") == 0x0001]
         need(orig_getters == cand_getters,
              "ORIGINAL_TWO_GETTER_FIELD_RELATIONSHIPS_CHANGED")
+        original_access_order = [
+            m["instructions"][1].get("name") for m in original["methods"]
+            if m.get("access") == 0x1008
+            and m.get("descriptor") ==
+                "(L" + original["internal_name"] + ";)Ljava/lang/String;"
+        ]
+        candidate_access_order = [
+            m["instructions"][1].get("name") for m in candidate["methods"]
+            if m.get("access") == 0x1008
+            and m.get("descriptor") ==
+                "(L" + candidate["internal_name"] + ";)Ljava/lang/String;"
+        ]
+        need(original_access_order == candidate_access_order
+             and len(original_access_order) == 2,
+             "ORIGINAL_SYNTHETIC_ACCESSOR_PRIVATE_FIELD_ORDER_CHANGED")
         need(digest(jar) == original_sha256.lower(),
              "PINNED_ORIGINAL_JAR_CHANGED_DURING_COMPILATION")
         result = {
@@ -284,6 +313,7 @@ def compile_private_original_enum_source(
             "original_six_initializer_literal_values_preserved": True,
             "original_two_private_string_field_identifiers_preserved": True,
             "original_two_getter_to_field_relations_preserved": True,
+            "original_synthetic_accessor_field_order_preserved": True,
             "R95_original_nested_enum_parity_certified": False,
             "R97_whole_owner_source_acceptance_certified": False,
             "original_authorial_source_identity_proven": False,
