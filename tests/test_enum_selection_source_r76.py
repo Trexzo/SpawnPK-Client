@@ -121,7 +121,7 @@ class FinalEnumSelectionSourceTests(unittest.TestCase):
             method=next(m for m in profile["methods"] if m["name"]=="restore")
             regexes=[r for r in method["instructions"]
                      if r.get("opcode")=="0x12"
-                     and r.get("constant")=="\\\\."]
+                     and r.get("constant")=="\\."]
             self.assertEqual(len(regexes),2)
             regexes[-1]["constant"]="forged"
             result=plan_private_final_enum_source(profile,"restore",self.METHOD)
