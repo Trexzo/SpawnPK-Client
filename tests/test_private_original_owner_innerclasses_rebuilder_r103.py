@@ -162,6 +162,16 @@ class OriginalOwnerSixInnerClassesTests(unittest.TestCase):
         ):
             replace_owner_innerclasses(raw, "p/Owner", table[:5])
 
+    def test_wrong_classfile_under_owner_archive_name_is_rejected(self):
+        self.compile()
+        with ZipFile(self.original) as original, ZipFile(self.candidate) as candidate:
+            table = symbolic_innerclasses_table(original.read("p/Owner.class"))
+            spoof = candidate.read("p/Owner$Surrogate.class")
+        with self.assertRaisesRegex(
+            OriginalOwnerInnerClassesError, "CANDIDATE_OWNER_INTERNAL_NAME_MISMATCH"
+        ):
+            replace_owner_innerclasses(spoof, "p/Owner", table)
+
     def test_existing_output_is_not_overwritten(self):
         self.compile()
         self.out.mkdir()
