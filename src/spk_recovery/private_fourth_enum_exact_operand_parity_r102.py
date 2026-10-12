@@ -219,10 +219,32 @@ def exact_fourth_enum_operands(original, candidate):
         helper_alias[source] = dest
     need(len(helper_alias) == 3,
          "EXPECTED_ONE_VALUES_HELPER_TWO_SYNTHETIC_ACCESSOR_ALIASES")
+    # A method inventory maps accessors by the fields they read, but the
+    # *ordered* original accessor field targets must also be preserved.
+    # The first actual-v309 surrogate was opcode-identical yet reversed
+    # those two reads; do not accept it as an exact source reconstruction.
+    def ordered_accessor_targets(profile):
+        owner = profile["internal_name"]
+        return [
+            m["instructions"][1].get("name")
+            for m in profile["methods"]
+            if m.get("access") == 0x1008
+            and m.get("descriptor") ==
+                "(L" + owner + ";)Ljava/lang/String;"
+        ]
+    need(ordered_accessor_targets(original) ==
+         ordered_accessor_targets(candidate),
+         "ORIGINAL_SYNTHETIC_ACCESSOR_TARGET_ORDER_CHANGED")
     matched = 0
     operand_rows = 0
     for role in sorted(roles_a):
         left, right = roles_a[role], roles_b[role]
+        # Getter names, the standard enum entry points, constructors and
+        # initializer are original JVM identities. Only the one compiler
+        # values-helper and two synthetic accessor *names* are aliased.
+        if role != "values_helper" and not role.startswith("accessor:"):
+            need(left["name"] == right["name"],
+                 "ORIGINAL_NON_GENERATED_ENUM_METHOD_NAME_CHANGED")
         need(left["access"] == right["access"] and
              left.get("signature") == right.get("signature") and
              left["descriptor"] == _rename_type(
