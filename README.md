@@ -574,3 +574,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R70 — original v309 outer IOException Java source envelope
 
 [R70's exact original two-range IOException source recovery](docs/V309_OUTER_IO_EXCEPTION_SOURCE_R70.md) preserves the R69 File/Properties prefix and original `IOException.printStackTrace()` catch behavior. Java9 recompilation reproduces **both original protected-range split boundaries around the early return** without a bytecode patch. The 697-instruction method's middle, remaining 11 local source regions and runtime parity are still unrecovered.
+
+### R71 — five additional original v309 protected List/int/String Java source forms
+
+[R71's exact other empty-catch source recovery](docs/V309_OTHER_PROTECTED_SOURCE_R71.md) adds three original guarded `List.add` regions, one nullable Integer conversion and one String default/second-lookup block. This brings **36 of the original 42 local Exception-protected source regions** into bounded Java source form. Six complex regions, full original method compilation and runtime equivalence remain unresolved.
