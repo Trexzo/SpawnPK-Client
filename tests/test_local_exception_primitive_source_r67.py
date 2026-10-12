@@ -92,7 +92,7 @@ class OriginalLocalExceptionPrimitiveSourceTests(unittest.TestCase):
                 private_dir, original_sha256=self._sha(original),
             )
             self.assertEqual(report["original_local_exception_handlers"], 5)
-            self.assertEqual(report["exact_conditional_boolean_try_catch_regions"], 5)
+            self.assertEqual(report["exact_conditional_primitive_try_catch_regions"], 5)
             self.assertEqual(report["conditional_boolean_regions"], 2)
             self.assertEqual(report["conditional_integer_regions"], 3)
             self.assertEqual(report["conditional_true_default_regions"], 1)
@@ -147,7 +147,7 @@ class OriginalLocalExceptionPrimitiveSourceTests(unittest.TestCase):
             result = plan_private_local_exception_primitive_sources(
                 profile, "restore", self.METHOD
             )
-            self.assertEqual(result["exact_conditional_boolean_try_catch_regions"], 4)
+            self.assertEqual(result["exact_conditional_primitive_try_catch_regions"], 4)
             profile = self._profile(original, "Owner")
             method = next(m for m in profile["methods"] if m["name"] == "restore")
             pc = method["exception_handlers"][0]["handler_pc"]
@@ -156,7 +156,7 @@ class OriginalLocalExceptionPrimitiveSourceTests(unittest.TestCase):
             result = plan_private_local_exception_primitive_sources(
                 profile, "restore", self.METHOD
             )
-            self.assertEqual(result["exact_conditional_boolean_try_catch_regions"], 4)
+            self.assertEqual(result["exact_conditional_primitive_try_catch_regions"], 4)
 
     def test_pin_and_existing_output_fail_closed(self):
         with tempfile.TemporaryDirectory() as tmp:
