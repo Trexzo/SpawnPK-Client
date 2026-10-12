@@ -87,7 +87,10 @@ def _class_structure(class_data):
     r.take(8)
     cp = _constant_pool(r)
     cp_end = r.offset
-    r.take(6)  # access, this, super
+    r.u2()  # access
+    this_index = r.u2()
+    internal_name = _class_name(cp, this_index)
+    r.u2()  # super
     r.take(2 * r.u2())  # interfaces
     for _ in range(2):
         for __ in range(r.u2()):
@@ -105,7 +108,7 @@ def _class_structure(class_data):
     need(r.offset == len(class_data), "CANDIDATE_CLASSFILE_TRAILING_BYTES")
     need(sum(n == "InnerClasses" for _, n, _ in attributes) <= 1,
          "DUPLICATE_CANDIDATE_OWNER_INNERCLASSES")
-    return cp, cp_end, attributes_offset, attributes
+    return cp, cp_end, attributes_offset, attributes, internal_name
 
 
 def replace_owner_innerclasses(class_data, owner, original_table):
@@ -115,7 +118,8 @@ def replace_owner_innerclasses(class_data, owner, original_table):
     """
     need(_safe_internal(owner), "UNSAFE_ORIGINAL_OWNER_NAME")
     _validate_table(original_table, owner)
-    cp, cp_end, attributes_offset, attributes = _class_structure(class_data)
+    cp, cp_end, attributes_offset, attributes, candidate_name = _class_structure(class_data)
+    need(candidate_name == owner, "CANDIDATE_OWNER_INTERNAL_NAME_MISMATCH")
     names = {i: _utf8(cp, i) for i in range(1, len(cp))
              if cp[i] is not None and cp[i][0] == 1}
     classes = {i: _class_name(cp, i) for i in range(1, len(cp))
@@ -194,7 +198,8 @@ def replace_owner_innerclasses(class_data, owner, original_table):
             "REBUILT_JVM_SYMBOLIC_TABLE_NOT_REPLAYABLE") from exc
     # Check classfile body containing all existing field/method bytecode was
     # copied without modification. Original classfile itself is never copied.
-    next_cp, next_cp_end, next_attr_offset, _ = _class_structure(changed)
+    _, next_cp_end, next_attr_offset, _, revised_name = _class_structure(changed)
+    need(revised_name == owner, "REBUILT_OWNER_INTERNAL_NAME_CHANGED")
     need(changed[next_cp_end:next_attr_offset] ==
          class_data[cp_end:attributes_offset] and
          changed[:8] == class_data[:8],
