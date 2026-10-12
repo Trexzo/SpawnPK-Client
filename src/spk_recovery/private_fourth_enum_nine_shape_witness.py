@@ -177,7 +177,7 @@ def replay_private_fourth_enum_shapes(
          "ORIGINAL_AND_CANDIDATE_JARS_MUST_DIFFER")
     for entry in (original_entry, surrogate_entry):
         need(isinstance(entry, str) and entry.endswith(".class")
-             and "\" not in entry and not entry.startswith("/")
+             and "\\" not in entry and not entry.startswith("/")
              and all(x not in ("", ".", "..") for x in entry.split("/")),
              "UNSAFE_ENUM_CLASS_ENTRY")
     with ZipFile(original_jar) as a, ZipFile(candidate_jar) as b:
