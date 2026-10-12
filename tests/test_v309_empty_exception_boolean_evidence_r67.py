@@ -21,16 +21,21 @@ class OriginalEmptyCatchBooleanEvidenceTests(unittest.TestCase):
             "original_42_local_exception_handlers_have_single_astore_then_fallthrough_empty_catch"
         ])
         self.assertEqual(e[
-            "original_exact_thirteen_instruction_conditional_boolean_protected_regions"
-        ], 28)
-        self.assertEqual(e["original_boolean_protected_regions_false_when_null"], 15)
+            "original_exact_thirteen_instruction_conditional_primitive_protected_regions"
+        ], 29)
+        self.assertEqual(e["original_boolean_protected_regions_false_when_null"], 13)
         self.assertEqual(e["original_boolean_protected_regions_true_when_null"], 13)
-        self.assertTrue(e["exact_original_lookup_string_equal_across_both_branches_in_all_28"])
-        self.assertTrue(e["exact_original_lookup_virtual_member_equal_across_both_branches_in_all_28"])
-        self.assertTrue(e["exact_original_static_boolean_field_equal_across_both_branches_in_all_28"])
-        self.assertTrue(e["exact_original_all_28_gotos_bypass_catch_handler"])
+        self.assertEqual(e["original_conditional_boolean_protected_regions"], 26)
+        self.assertEqual(e["original_conditional_integer_protected_regions"], 3)
+        self.assertEqual(e["original_integer_protected_regions_zero_on_null"], 2)
+        self.assertEqual(e["original_integer_protected_regions_bipush_on_null"], 1)
+        self.assertTrue(e["original_exact_all_29_typed_boxed_unboxing_descriptors_align"])
+        self.assertTrue(e["original_exact_all_29_lookup_keys_identical_across_branches"])
+        self.assertTrue(e["original_exact_all_29_lookup_methods_identical_across_branches"])
+        self.assertTrue(e["original_exact_all_29_static_target_fields_identical_across_branches"])
+        self.assertTrue(e["exact_original_all_29_gotos_bypass_catch_handler"])
         self.assertTrue(e["exact_original_nonnull_branch_repeats_virtual_lookup"])
-        self.assertEqual(e["other_exception_local_regions_not_source_reconstructed"], 14)
+        self.assertEqual(e["other_exception_local_regions_not_source_reconstructed"], 13)
         for flag in (
             "global_io_handler_java_source_reconstructed",
             "github_r67_original_private_jar_cli_replay_verified",
