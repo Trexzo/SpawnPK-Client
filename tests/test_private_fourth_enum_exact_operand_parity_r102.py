@@ -104,6 +104,28 @@ class OriginalFourthEnumExactOperandTests(unittest.TestCase):
                                     "EXACT_RESOLVED_OPERAND_MISMATCH"):
             exact_fourth_enum_operands(self.o, bad)
 
+    def test_original_non_generated_getter_name_cannot_be_aliased(self):
+        bad = copy.deepcopy(self.c)
+        getter = next(m for m in bad["methods"]
+                      if m.get("descriptor") == "()Ljava/lang/String;")
+        getter["name"] = "unreviewedGetter"
+        with self.assertRaisesRegex(FourthEnumExactOperandError,
+                                    "NON_GENERATED_ENUM_METHOD_NAME_CHANGED"):
+            exact_fourth_enum_operands(self.o, bad)
+
+    def test_two_original_synthetic_accessor_targets_must_keep_order(self):
+        bad = copy.deepcopy(self.c)
+        indices = [i for i, m in enumerate(bad["methods"])
+                   if m.get("access") == 0x1008]
+        self.assertEqual(len(indices), 2)
+        i, j = indices
+        bad["methods"][i], bad["methods"][j] = (
+            bad["methods"][j], bad["methods"][i]
+        )
+        with self.assertRaisesRegex(FourthEnumExactOperandError,
+                                    "SYNTHETIC_ACCESSOR_TARGET_ORDER_CHANGED"):
+            exact_fourth_enum_operands(self.o, bad)
+
     def test_changed_private_data_field_identity_is_not_aliased(self):
         bad = copy.deepcopy(self.c)
         field = next(f for f in bad["fields"]
