@@ -590,3 +590,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R74 — exact v309 Boolean helper callback protected sources
 
 [R74's original 15/19-op protected Boolean helper source forms](docs/V309_BOOLEAN_HELPER_PROTECTED_SOURCE_R74.md) preserve same-owner and external static `(Z)V` callback order, including the external callback **before** the field write on both paths. Bounded local source forms reach **40/42 original Exception-protected regions**; the 23- and 36-instruction bodies, full method compilation and runtime semantics are not certified.
+
+### R75 — exact original external enum/List protected fallback source
+
+[R75's 23-op original v309 enum/List/Boolean protected source](docs/V309_ENUM_LIST_FALLBACK_SOURCE_R75.md) preserves the null branch's ordered external Boolean writes and two enum `List.add` side effects, then the non-null repeated-lookup Boolean assignment. Bounded local JVM-backed source patterns reach **41/42 original protected regions**; the final 36-op region and complete method/runtime parity remain unrecovered.
