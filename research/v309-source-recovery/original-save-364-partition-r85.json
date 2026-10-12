@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "kind": "independent_original_v309_364_op_save_method_instruction_partition",
+  "whole_original_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "stable_owner_id": "CLIENT_CLASS_000167",
+  "original_save_jvm_instructions": 364,
+  "original_file_writer_constructor_prefix": 20,
+  "original_41_regular_six_op_writers": 246,
+  "original_one_regular_seven_op_enum_writer": 7,
+  "original_indexed_array_writer_loop": 23,
+  "original_three_list_filter_writers": 27,
+  "original_conditional_enum_writer": 11,
+  "original_post_array_standalone_newline_instructions": 2,
+  "original_file_copy_delete_close_and_exception_tail": 28,
+  "original_BufferedWriter_write_calls": 47,
+  "original_BufferedWriter_newLine_calls": 48,
+  "original_Exception_handler_table_entries": 1,
+  "original_standalone_newline_at_bytecode_offsets": [
+    380,
+    381
+  ],
+  "original_indexed_array_goto_target_offset": 337,
+  "exact_original_save_method_opcode_and_IO_boundaries_independently_inspected": true,
+  "generic_R82_to_R85_CLI_original_binary_replay_passed": false,
+  "complete_original_364_op_Java_method_compiled": false,
+  "all_candidate_operand_CFG_exception_parity_passed": false,
+  "original_runtime_equivalence_certified": false,
+  "original_private_members_keys_source_binary_uploaded": false
+}
