@@ -1,4 +1,4 @@
-"""R96: one private Java 9 candidate must pass R90, R94 and R95.
+"""R97: one private Java 9 candidate must pass R90, R94 and R95.
 
 Fail closed: no accepted candidate or summary is published when any original
 method, initializer, field or nested enum comparison fails. Passing these
