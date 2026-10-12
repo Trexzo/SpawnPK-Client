@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "kind": "v309_original_empty_exception_catch_boolean_source_region_proof",
+  "original_client_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "stable_owner_id": "CLIENT_CLASS_000167",
+  "original_large_method_instructions": 697,
+  "original_large_method_exception_handler_count": 44,
+  "original_exception_handler_type_counts": {
+    "java/lang/Exception": 42,
+    "java/io/IOException": 2
+  },
+  "original_42_local_exception_handlers_have_single_astore_then_fallthrough_empty_catch": true,
+  "original_exact_thirteen_instruction_conditional_boolean_protected_regions": 28,
+  "original_boolean_protected_regions_false_when_null": 15,
+  "original_boolean_protected_regions_true_when_null": 13,
+  "exact_original_lookup_string_equal_across_both_branches_in_all_28": true,
+  "exact_original_lookup_virtual_member_equal_across_both_branches_in_all_28": true,
+  "exact_original_static_boolean_field_equal_across_both_branches_in_all_28": true,
+  "exact_original_all_28_gotos_bypass_catch_handler": true,
+  "exact_original_nonnull_branch_repeats_virtual_lookup": true,
+  "other_exception_local_regions_not_source_reconstructed": 14,
+  "global_io_handler_java_source_reconstructed": false,
+  "github_r67_original_private_jar_cli_replay_verified": false,
+  "original_local_slot_one_java_type_recovered": false,
+  "whole_original_697_instruction_method_compiled": false,
+  "method_helper_side_effects_and_exception_parity_certified": false,
+  "entire_client_source_or_runtime_equivalent": false,
+  "private_original_field_names_literal_keys_and_jar_published": false
+}
