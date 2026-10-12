@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "kind": "original_v309_11_op_dual_reference_boolean_empty_catch_java_source",
+  "original_whole_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "stable_owner_id": "CLIENT_CLASS_000167",
+  "original_local_exception_protected_regions": 42,
+  "original_R67_R68_R71_bounded_protected_regions": 36,
+  "original_R72_reference_and_boolean_two_write_protected_regions": 1,
+  "original_R72_protected_instruction_count": 11,
+  "original_R72_exact_jvm_opcodes": [
+    "aload_1",
+    "ldc",
+    "invokevirtual",
+    "invokestatic",
+    "putstatic",
+    "aload_1",
+    "ldc",
+    "invokevirtual",
+    "invokestatic",
+    "invokevirtual",
+    "putstatic"
+  ],
+  "original_R72_first_static_write_type": "original_nested_reference_enum_descriptor",
+  "original_R72_second_static_write_type": "boolean",
+  "original_R72_first_conversion_result_equals_target_field_descriptor": true,
+  "original_R72_second_conversion_return": "java/lang/Boolean",
+  "original_R72_second_unboxing": "java/lang/Boolean.booleanValue:()Z",
+  "original_R72_protected_exception_catch_empty_and_normal_goto_skips_handler": true,
+  "total_original_local_source_regions_bounded_after_R72": 37,
+  "original_local_exception_regions_remaining": 5,
+  "remaining_original_protected_instruction_lengths": [
+    22,
+    15,
+    19,
+    23,
+    36
+  ],
+  "original_exact_nested_enum_java_source_name_collision_resolved": false,
+  "original_R72_generic_private_JAR_CLI_replayed": false,
+  "complete_original_697_instruction_method_compiled": false,
+  "real_original_helper_side_effect_and_runtime_parity": false,
+  "original_binary_strings_or_member_names_published": false
+}
