@@ -1,0 +1,13 @@
+# R86 — fail-closed private Java 9 compile plus R66/R81 acceptance gate
+
+R85 independently demonstrated that a private Java 9 settings-save source candidate can recompile into all 364 original JVM opcodes, offsets, nine branches, original catch range and checked operands when synthetic compile-only dependencies are supplied. **R86 makes a reproducible private acceptance boundary**, using the *actual* pre-existing R66 and R81 algorithms, instead of declaring success solely from a `javap` diff.
+
+The tool consumes a caller-provided **complete private Java source directory** (not uncompiled R80/R85 method text by itself), original JAR and whole-file SHA-256 pin, unique original/candidate class/method descriptors and private field/method alias file. It invokes `javac --release 9 -g:none -proc:none -encoding UTF-8` in an isolated temporary directory with annotation processing disabled. It then packages compiled classes into a temporary private JAR and requires R66 whole-method exact opcode/CFG/typed exception/static writes followed by R81 exact parsed JVM operand, LDC, owner field/member and invokedynamic bootstrap semantics. The compiled candidate JAR and an aggregate-private result are written **only if every check passes**; nothing is written on a failed compilation, wrong original SHA, source anomaly, or mismatch. Java source code and compiler errors are never published.
+
+Example local command:
+
+    python -m spk_recovery.private_java9_compile_acceptance ORIGINAL_JAR ORIGINAL_OWNER.class ORIGINAL_METHOD "()V" PRIVATE_COMPLETE_JAVA_SOURCE_ROOT CANDIDATE_OWNER.class CANDIDATE_METHOD "()V" PRIVATE_ALIAS.json NEW_PRIVATE_OUTPUT --original-sha256 ORIGINAL_COMPLETE_SHA256
+
+Optional `--compile-classpath PRIVATE_FILTERED_CLASSPATH` is supported for source dependencies. The original binary is never edited or overwritten. Java source and bytecode stay local, and no candidate JAR or original source enters GitHub. The tool deliberately never generates or assumes missing nested enum/field/helper implementations; those remain explicit private inputs.
+
+**Strict nonclaims:** Even a successful R66+R81 whole-method pass cannot prove recovered original authorial Java source, exact full owner field/init/nested metadata, genuine external helper implementations, real configuration files, original File/Paths side effects, or full client runtime equivalence. Actual private original-v309-JAR replay using the new R86 tool and the assembled candidate source directory remains a separate pending gate. Tests compile synthetic Java 9 on both hosted platforms, pass exact identity and reject changed original literals and mismatched whole-JAR SHA without output.
