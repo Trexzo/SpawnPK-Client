@@ -154,7 +154,7 @@ class OriginalFourthEnumMemberRenamingTests(unittest.TestCase):
             'java.lang.reflect.Method n=o.getMethod("readY",e);'
             'if(!m.invoke(null,a).equals("One"))throw new Error("x");'
             'if(!n.invoke(null,b).equals("Four"))throw new Error("y");'
-            '}', encoding="utf-8")
+            '}}', encoding="utf-8")
         cp = self.root / "probe-classes"
         cp.mkdir()
         p = subprocess.run(
