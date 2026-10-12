@@ -187,13 +187,24 @@ def rebind_private_fourth_enum(
     with ZipFile(original_jar) as original, ZipFile(candidate_jar) as candidate:
         orig_names = original.namelist()
         cand_names = candidate.namelist()
+        # R95's nested_entries rejects an incomplete quartet with its own
+        # exception type. Normalize that rejection here so the R98 CLI and
+        # negative tests fail closed with the documented R98 error code.
         need(len(orig_names) == len(set(orig_names))
              and len(cand_names) == len(set(cand_names))
              and orig_names.count(owner_entry) == 1
              and cand_names.count(owner_entry) == 1
-             and exact_entry in nested_entries(orig_names, owner_entry)
-             and surrogate_entry in nested_entries(cand_names, owner_entry)
              and exact_entry not in cand_names,
+             "REQUIRED_EXACT_ORIGINAL_COLLISION_OR_SURROGATE_MISSING")
+        try:
+            original_nested = nested_entries(orig_names, owner_entry)
+            candidate_nested = nested_entries(cand_names, owner_entry)
+        except FourNestedEnumAcceptanceError as exc:
+            raise CollisionRebindError(
+                "REQUIRED_EXACT_ORIGINAL_COLLISION_OR_SURROGATE_MISSING"
+            ) from exc
+        need(exact_entry in original_nested
+             and surrogate_entry in candidate_nested,
              "REQUIRED_EXACT_ORIGINAL_COLLISION_OR_SURROGATE_MISSING")
         target = (owner, owner, outer_simple)
         original_ic = symbolic_innerclasses_table(original.read(owner_entry))
