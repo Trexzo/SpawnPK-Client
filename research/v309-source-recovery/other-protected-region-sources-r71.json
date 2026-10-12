@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "kind": "v309_exact_other_empty_exception_protected_java_source_shapes",
+  "original_client_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "stable_original_owner_id": "CLIENT_CLASS_000167",
+  "original_697_instruction_owner_method_local_exception_regions": 42,
+  "previously_bounded_R67_conditional_primitive_regions": 29,
+  "previously_bounded_R68_direct_boolean_regions": 2,
+  "original_R71_three_list_add_guarded_regions": 3,
+  "original_R71_one_integer_conversion_guarded_region": 1,
+  "original_R71_one_nullable_string_default_region": 1,
+  "original_R71_total_protected_source_forms": 5,
+  "original_total_bounded_local_source_regions_after_R71": 36,
+  "original_local_exception_regions_not_source_reconstructed_after_R71": 6,
+  "original_protected_region_opcode_lengths": {
+    "guarded_list_add": 8,
+    "guarded_integer_conversion": 10,
+    "nullable_string_default": 11
+  },
+  "original_six_remaining_local_body_instruction_lengths": [
+    11,
+    22,
+    15,
+    19,
+    23,
+    36
+  ],
+  "original_R71_all_five_exception_handlers_single_astore_and_no_catch_body": true,
+  "original_R71_all_five_branch_targets_meet_protected_range_boundaries": true,
+  "original_R71_properties_getProperty_string_receiver_proven_from_R69": true,
+  "private_original_literal_and_member_values_published": false,
+  "github_R71_complete_original_private_JAR_replayed": false,
+  "original_697_instruction_method_compiled": false,
+  "original_full_exception_and_helper_side_effect_parity": false,
+  "original_client_runtime_equivalence_certified": false
+}
