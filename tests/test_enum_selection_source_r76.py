@@ -94,7 +94,8 @@ class FinalEnumSelectionSourceTests(unittest.TestCase):
             self.assertIn("result = null",fragment)
             self.assertIn("current = p.Choice.valueOf(originalPrefix)",fragment)
             self.assertIn("result = current",fragment)
-            rebuild=self._compile(root,"candidate","Recompiled",fragment)
+            # The original-qualified static read p.Owner.selected must retain its declaring owner.
+            rebuild=self._compile(root,"candidate","Owner",fragment)
             aliases=[
                 {"original":{"name":f,"descriptor":"Lp/Choice;"},
                  "candidate":{"name":f,"descriptor":"Lp/Choice;"}}
@@ -102,7 +103,7 @@ class FinalEnumSelectionSourceTests(unittest.TestCase):
             ]
             matched=compare_large_method_cfg(
                 self._profile(original,"Owner"),"restore",self.METHOD,
-                self._profile(rebuild,"Recompiled"),"restore",self.METHOD,
+                self._profile(rebuild,"Owner"),"restore",self.METHOD,
                 aliases)
             self.assertEqual(matched["ordered_typed_exception_table_entries"],1)
             self.assertEqual(matched["ordered_static_field_writes"],3)
