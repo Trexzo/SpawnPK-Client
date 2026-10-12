@@ -83,12 +83,21 @@ def nested_entries(names,owner_entry):
 
 def check_four_nested_enums(
     original_profiles,candidate_profiles,original_tables,candidate_tables,
-    original_sha256,
+    original_sha256, original_owner_table, candidate_owner_table,
 ):
     keys=set(original_profiles)
     need(len(keys)==4 and keys==set(candidate_profiles)
          and keys==set(original_tables)==set(candidate_tables),
          "FOUR_NESTED_ENUM_INPUT_IDENTITIES_NOT_EXACT")
+    need(isinstance(original_owner_table, tuple)
+         and isinstance(candidate_owner_table, tuple)
+         and bool(original_owner_table),
+         "ORIGINAL_OWNER_INNERCLASSES_ATTRIBUTE_MISSING")
+    need(original_owner_table==candidate_owner_table,
+         "ORIGINAL_OWNER_INNERCLASSES_METADATA_DIFFER")
+    need({entry[:-6] for entry in keys}.issubset(
+         {row[0] for row in original_owner_table}),
+         "ORIGINAL_OWNER_INNERCLASSES_MISSING_NESTED_IDENTITIES")
     count=0
     methods=0
     for entry in sorted(keys):
@@ -113,6 +122,7 @@ def check_four_nested_enums(
         "original_nested_enum_constants_with_alias_review":count,
         "original_nested_enum_method_bodies_compared":methods,
         "symbolic_InnerClasses_tables_identical_all_four":True,
+        "original_candidate_owner_InnerClasses_tables_identical":True,
         "original_nested_enum_compiler_generated_aliases_permitted":True,
         "canonical_alias_free_obfuscated_enum_field_identity_proven":False,
         "original_external_helper_behavior_proven":False,
@@ -146,8 +156,11 @@ def replay_private_four_enum_gate(
             profiles_b={k:profile_jar_class(candidate_jar,k) for k in entries}
             attrs_a={k:symbolic_innerclasses_table(a.read(k)) for k in entries}
             attrs_b={k:symbolic_innerclasses_table(b.read(k)) for k in entries}
+            original_owner_table=symbolic_innerclasses_table(a.read(owner_entry))
+            candidate_owner_table=symbolic_innerclasses_table(b.read(owner_entry))
         proof=check_four_nested_enums(
-            profiles_a,profiles_b,attrs_a,attrs_b,original_sha256)
+            profiles_a,profiles_b,attrs_a,attrs_b,original_sha256,
+            original_owner_table,candidate_owner_table)
     except (BytecodeProfileError,ValueError,KeyError,IndexError,
             TypeError,EOFError) as e:
         if isinstance(e,FourNestedEnumAcceptanceError):raise
