@@ -586,3 +586,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R73 — original indexed Properties integer-array source loop
 
 [R73's exact 22-op indexed original Java source recovery](docs/V309_INDEXED_PROPERTIES_ARRAY_SOURCE_R73.md) reconstructs a `for` loop that conditionally assigns original `int[]` elements from indexed `Properties.getProperty(String)` keys, with **both dynamic keys checked against the same original StringConcatFactory bootstrap recipe**. This raises bounded local protected source forms to **38/42**; four harder regions, full 697-op compilation and runtime behavior remain unverified.
+
+### R74 — exact v309 Boolean helper callback protected sources
+
+[R74's original 15/19-op protected Boolean helper source forms](docs/V309_BOOLEAN_HELPER_PROTECTED_SOURCE_R74.md) preserve same-owner and external static `(Z)V` callback order, including the external callback **before** the field write on both paths. Bounded local source forms reach **40/42 original Exception-protected regions**; the 23- and 36-instruction bodies, full method compilation and runtime semantics are not certified.
