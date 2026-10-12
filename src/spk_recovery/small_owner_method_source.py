@@ -285,6 +285,33 @@ def plan_small_original_owner_methods(
     }
 
 
+def _private_external_field_owners(original: dict) -> set[str]:
+    """Only bundled client dependencies require a client-JAR class entry.
+
+    The v309 saver reads java/nio/file/StandardCopyOption.REPLACE_EXISTING.
+    Requiring that JDK class to be inside the original game JAR previously
+    blocked all R60 private replay. Leave JDK references external to the
+    JAR; _typed_field still fails closed if a short-source form needs an
+    undeclared non-JDK static field.
+    """
+    owner = original.get("internal_name")
+    _require(type(owner) is str and owner, "ORIGINAL_OWNER_UNRESOLVED")
+    refs = set()
+    for m in original.get("methods", []):
+        if m.get("name") == "<clinit>":
+            continue
+        for row in m.get("instructions", []):
+            if row.get("opcode") not in ("0xb2", "0xb3"):
+                continue
+            other = row.get("owner")
+            _require(type(other) is str and other,
+                     "ORIGINAL_EXTERNAL_STATIC_FIELD_OWNER_UNRESOLVED")
+            if other == owner or other.startswith(("java/", "javax/", "jdk/")):
+                continue
+            refs.add(other)
+    return refs
+
+
 def private_short_method_source(
     jar_path: Path, owner_entry: str, out_dir: Path, *,
     original_sha256: str,
@@ -310,15 +337,7 @@ def private_short_method_source(
             _require(names.count(owner_entry) == 1,
                      "ORIGINAL_OWNER_CLASS_ENTRY_NOT_UNIQUE")
             original = profile_jar_class(jar, owner_entry)
-            owner = original["internal_name"]
-            refs = {
-                r.get("owner")
-                for m in original.get("methods", [])
-                if m.get("name") != "<clinit>"
-                for r in m.get("instructions", [])
-                if r.get("opcode") in ("0xb2", "0xb3")
-                and r.get("owner") != owner
-            }
+            refs = _private_external_field_owners(original)
             _require(all(type(x) is str
                          and names.count(x + ".class") == 1 for x in refs),
                      "ORIGINAL_EXTERNAL_FIELD_CLASS_ENTRY_NOT_UNIQUE")
