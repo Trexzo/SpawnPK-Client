@@ -176,8 +176,8 @@ def rebind_member_references(
         need(this == target_owner, "SYNTHETIC_METHOD_CLASS_OWNER_MISMATCH")
         found = []
         for method in methods:
-            if method["access"] != 0x1008 or
-               method["descriptor"] != expected_descriptor:
+            if (method["access"] != 0x1008 or
+                    method["descriptor"] != expected_descriptor):
                 continue
             if method["name"] not in name_aliases:
                 continue
