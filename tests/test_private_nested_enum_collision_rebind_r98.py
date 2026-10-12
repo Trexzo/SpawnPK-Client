@@ -75,8 +75,11 @@ class EnumNameCollisionRebindTests(unittest.TestCase):
         self.assertFalse(result["java_authorial_source_identity_proven"])
         self.assertFalse(result["whole_client_runtime_equivalence_certified"])
         rebound = self.out / "candidate-rebound.private.jar"
-        self.assertEqual(self.digest(rebound), self.digest(self.original))
-        with ZipFile(rebound) as z:
+        # ZIP entry timestamps may change; require exact classfile bytes instead.
+        with ZipFile(rebound) as z, ZipFile(self.original) as original:
+            self.assertEqual(set(z.namelist()), set(original.namelist()))
+            for name in original.namelist():
+                self.assertEqual(z.read(name), original.read(name))
             self.assertIn("p/Owner$Owner.class", z.namelist())
             self.assertNotIn("p/Owner$Placeholder.class", z.namelist())
 
