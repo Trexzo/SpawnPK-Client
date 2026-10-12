@@ -108,7 +108,7 @@ class OtherProtectedSourceR71Tests(unittest.TestCase):
                 aliases,
             )
             self.assertEqual(parity["ordered_typed_exception_table_entries"], 5)
-            self.assertEqual(parity["ordered_static_field_writes"], 2)
+            self.assertEqual(parity["ordered_static_field_writes"], 3)
             self.assertTrue(parity["exact_branch_target_instruction_ordinals"])
             self.assertFalse(parity["runtime_equivalence_certified"])
             public = (out / "other-protected-source.aggregate.json").read_text()
