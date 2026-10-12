@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "kind": "v309_original_indexed_properties_array_loop_bootstrap_recovery",
+  "original_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "stable_owner_id": "CLIENT_CLASS_000167",
+  "original_protected_jvm_instruction_count": 22,
+  "original_invokedynamic_site_count": 2,
+  "original_invokedynamic_descriptor": "(I)Ljava/lang/String;",
+  "original_both_invokedynamic_bootstrap_index": 46,
+  "original_bootstrap_owner": "java/lang/invoke/StringConcatFactory",
+  "original_bootstrap_method": "makeConcatWithConstants",
+  "original_bootstrap_recipe_form": "private_constant_prefix_followed_by_one_dynamic_int",
+  "original_two_same_recipe": true,
+  "original_getProperty_String_calls": 2,
+  "original_array_element_store_opcode": "iastore",
+  "original_loop_writes_to_existing_int_array": true,
+  "remaining_complex_local_regions_after_R73": 4,
+  "original_private_key_prefix_published": false,
+  "generic_original_v309_R73_replay_completed": false,
+  "generated_original_complete_java_loop_source_compiled": false,
+  "whole_original_697_method_compiled": false,
+  "runtime_equivalence_certified": false
+}
