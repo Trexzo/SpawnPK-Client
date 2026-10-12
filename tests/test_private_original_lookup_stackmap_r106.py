@@ -96,6 +96,7 @@ class OriginalJava9EnumStackmapTests(unittest.TestCase):
             "}}", encoding="utf-8")
         proc = subprocess.run(
             ["javac", "--release", "9", "-proc:none",
+             "-cp", str(self.root / "patched"),
              "-d", str(self.root / "patched"), str(probe)],
             capture_output=True, text=True)
         self.assertEqual(proc.returncode, 0, proc.stderr)
