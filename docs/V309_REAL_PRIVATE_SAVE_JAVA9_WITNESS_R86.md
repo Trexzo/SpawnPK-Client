@@ -1,0 +1,9 @@
+# R86 independent Java 9 exact-save-method operand witness
+
+A new **private** source generator was exercised locally against the exact SHA-256-pinned original v309 client JAR. It read the 364-instruction settings-save bytecode and independently reconstructed all 47 writer regions, array separator and original file/exception envelope into six private Java source files (one original-named owner plus synthetic external enum/helper types). Java 9 compilation completed.
+
+A read-only `javap -v -c -p` original-versus-private-candidate comparison checked the **364 JVM instruction ordinal positions, opcodes, byte offsets and normalized constant/member/type operands** and found **zero differences**. Its 46 original `invokedynamic` string-concat bootstrap recipes, nine explicit branch instructions, and typed exception table also matched. The public-safe aggregate hashes and counts live in `research/v309-source-recovery/private-save-java9-recompiled-canonical-operands-r86.json`.
+
+**Do not conflate witnesses.** This independent local compiler probe is **not yet** a run of the repository's actual `spk_recovery.private_java9_compile_acceptance` CLI; R66/R81 tool replay against this private compiled JAR is not claimed. The candidate intentionally uses *synthetic compile-only external classes and enums*; full owner initialization, nested metadata, dependencies and game/client runtime behavior have not been certified. No private Java source, original class/member names, configuration keys, generated JAR or original client binary are committed to GitHub.
+
+Next acceptance: replay the exact R86 tool locally with its pinned original JAR, complete private source root, explicit alias JSON and a newly created output directory. Confirm original/candidate R66+R81 results and maintain separate runtime false gates.
