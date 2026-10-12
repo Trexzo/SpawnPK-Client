@@ -50,7 +50,7 @@ class OtherProtectedSourceR71Tests(unittest.TestCase):
             "public static java.util.List<Object> LIST = new java.util.ArrayList<>();"
             "public static final Object A = new Object(), B = new Object(), C = new Object();"
             "public static int count; public static String title;"
-            "public static void restore(Object ignored, "
+            "public static void restore(Object unusedParameter, "
             "java.util.Properties originalLocalSlot1, int arg2) {"
             + body + "}"
             "}", encoding="utf-8",
