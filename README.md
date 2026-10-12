@@ -578,3 +578,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R71 — five additional original v309 protected List/int/String Java source forms
 
 [R71's exact other empty-catch source recovery](docs/V309_OTHER_PROTECTED_SOURCE_R71.md) adds three original guarded `List.add` regions, one nullable Integer conversion and one String default/second-lookup block. This brings **36 of the original 42 local Exception-protected source regions** into bounded Java source form. Six complex regions, full original method compilation and runtime equivalence remain unresolved.
+
+### R72 — original v309 dual reference/Boolean protected source
+
+[R72's exact original two-static-write empty-catch source recovery](docs/V309_DUAL_REFERENCE_BOOLEAN_SOURCE_R72.md) reconstructs one 11-instruction protected region that assigns an original nested-reference field and then a Boolean field from two separate `Properties` lookups. This brings bounded local JVM-backed Java source forms to **37/42**; five more complex local regions and original whole-method/runtime parity remain unresolved.
