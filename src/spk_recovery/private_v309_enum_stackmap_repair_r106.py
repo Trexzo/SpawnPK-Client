@@ -208,13 +208,17 @@ def normalize_one_enum_stackmap(classfile, method_name, method_descriptor,
         _extract_lookup_stackmap(original_classfile,
                                  method_descriptor, method_name))
     old_cp_index = _frame_shape_only(orig_frame, "full")
-    need(orig_cp[old_cp_index][0] == 7,
-         "ORIGINAL_APPEND_VERIFICATION_TYPE_NOT_REFERENCE")
+    need(orig_cp[old_cp_index][0] == 7 and
+         _class_name(orig_cp, old_cp_index) ==
+             "[" + method_descriptor.split(")", 1)[1],
+         "ORIGINAL_APPEND_VERIFICATION_TYPE_NOT_SELF_ARRAY")
     candidate_frame, cand_code, cand_stack, cand_locals, cand_cp = (
         _extract_lookup_stackmap(classfile,
                                  method_descriptor, method_name))
     cand_cp_index = _frame_shape_only(candidate_frame, "chop")
     need(cand_cp[cand_cp_index][0] == 7
+         and _class_name(cand_cp, cand_cp_index) ==
+             "[" + method_descriptor.split(")", 1)[1]
          and orig_stack == cand_stack
          and orig_locals == cand_locals
          and len(orig_code) == len(cand_code),
@@ -225,7 +229,6 @@ def normalize_one_enum_stackmap(classfile, method_name, method_descriptor,
     for access, name, desc, raw, attrs, offset in methods:
         header = _Reader(raw)
         header_bytes = header.take(8)
-        need(header.u2() >= 0, "BAD_METHOD_ATTRIBUTES") if False else None
         rebuilt.extend(header_bytes)
         for attr_idx, attr_name, data in attrs:
             if (name == method_name and desc == method_descriptor
