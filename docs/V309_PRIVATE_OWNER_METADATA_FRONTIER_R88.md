@@ -1,0 +1,12 @@
+R88 — original-v309 complete owner metadata frontier
+
+R87 verifies both settings load/save method bodies in one Java9 compiled candidate. R88 measures what remains at the CLASS level, without treating method-level identity as full original owner reconstruction. With complete-SHA-pinned original and candidate JARs, it compares original owner identity, classfile major, superclass, access, signature and interfaces; exact name+type declaration sets, access flags, field generic signatures and constant values; method declaration names/descriptors/access/signatures; presence of the static class initializer; and original/candidate nested class archive entries.
+
+The output includes a private detailed list of missing, additional, and mismatched declarations for recovery and an aggregate-only count report, with no obfuscated names, keys or original source exposed in aggregate logs. The original and candidate JARs are read-only. The tool DOES NOT assert that matching method declarations have matching implementations or that static initialization, nested enum implementation, helper side effects or the game client runtime is equivalent.
+
+Usage: python -m spk_recovery.private_owner_metadata_frontier ORIGINAL_JAR CANDIDATE_JAR ORIGINAL_OWNER.class CANDIDATE_OWNER.class NEW_PRIVATE_OUTPUT --original-sha256 ORIGINAL_SHA256 --candidate-sha256 CANDIDATE_SHA256
+
+The independently compiled dual-method scaffold comparison indicates the remaining field/method metadata frontier, but generic R88 has not yet been privately replayed with the original v309 binary. Hosted tests cover exact count reconciliation, absent static initializer, missing nested class, declaration flag drift, unexpected new members, duplicate declarations and wrong owner identity. No private JAR, recovered source or original identifiers are uploaded.
+## Relationship to R59
+
+The original owner field/initializer source is **already recovered as a private source shell in R59** (126 original field declarations, 93 ordered initializer assignments and a separately compiled Java9 structural witness). The 80-field deficit measured in R88 refers ONLY to the temporary R87 compile-only dual-method owner candidate, not to 80 entirely unknown field identities in the project. The practical next integration is to combine R59's original-field-and-initializer shell with the R80/R85 loader/saver method bodies, then rerun both-method R66+R81 gates and the R88 declaration comparison. Five original owner methods and nested type implementation boundaries still require independent review.
