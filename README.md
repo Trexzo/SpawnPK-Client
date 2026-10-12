@@ -554,3 +554,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R65 — exact original residual static-write site inventory
 
 [R65's disjoint 78-site original JVM static-write atlas](docs/V309_RESIDUAL_STATIC_WRITE_ATLAS_R65.md) joins R63's 37 typed producer windows, R64's 30 null-guarded Boolean windows, and **11 independently measured remaining opcode shapes**. Each remaining write is tracked privately with original JVM operands and exception-region indices; no complete original Java source or runtime behavior is certified.
+
+### R66 — strict original/candidate JVM exception and control-flow acceptance gate
+
+[R66's compiled large-method comparison](docs/V309_LARGE_METHOD_CFG_PARITY_R66.md) requires exact instruction-ordinal branch topology, exact **ordered typed exception tables** and all explicitly mapped original static-field writes when comparing whole-SHA-pinned original and recovered-candidate JARs. The 697-instruction/44-handler and 364-instruction/1-handler original methods have **no certified compiled private candidate yet**; runtime and operand parity remain separate gates.
