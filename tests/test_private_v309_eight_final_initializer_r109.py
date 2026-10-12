@@ -24,7 +24,7 @@ class OriginalFinalAssignmentShapeTests(unittest.TestCase):
                 "name": "makeConcatWithConstants",
                 "descriptor": "test",
             },
-            "arguments": [{"kind": "string", "value": "prefix"}],
+            "arguments": [{"kind": "string", "value": "prefix\x01suffix"}],
         }
         for i in range(85):
             name = "mutable" + str(i)
@@ -64,10 +64,10 @@ class OriginalFinalAssignmentShapeTests(unittest.TestCase):
             return ins("0xb2", owner=self.enum, name="ALPHA",
                        descriptor="L" + self.enum + ";")
 
-        def concat():
+        def concat(index=0):
             return ins("0xba", name="makeConcatWithConstants",
                        descriptor="(Ljava/lang/String;)Ljava/lang/String;",
-                       bootstrap_method_attr_index=0)
+                       bootstrap_method_attr_index=index)
 
         def ldc_string(value):
             return ins("0x12", constant_pool_tag=8, constant=value)
@@ -104,7 +104,7 @@ class OriginalFinalAssignmentShapeTests(unittest.TestCase):
 
         ins("0xb8", owner="p/Helper", name="header",
             descriptor="()Ljava/lang/String;")
-        concat()
+        concat(1)
         store(6)
 
         ins("0x12", constant_pool_tag=3, constant=450)
@@ -123,7 +123,16 @@ class OriginalFinalAssignmentShapeTests(unittest.TestCase):
                 "name": "<clinit>", "descriptor": "()V",
                 "access": 8, "instructions": self.rows,
             }],
-            "bootstrap_methods": [self.bootstrap],
+            "bootstrap_methods": [
+                self.bootstrap,
+                {
+                    **self.bootstrap,
+                    "index": 1,
+                    "arguments": [{
+                        "kind": "string", "value": "\x01_suffix",
+                    }],
+                },
+            ],
         }
 
     def proof(self, profile=None):
@@ -172,6 +181,26 @@ class OriginalFinalAssignmentShapeTests(unittest.TestCase):
         with self.assertRaisesRegex(
             OriginalEightFinalInitializerError,
             "EXACT_ORIGINAL_INDY_BOOTSTRAP_NOT_UNIQUE",
+        ):
+            self.proof(bad)
+
+    def test_arbitrary_bootstrap_must_not_be_accepted_as_string_concat(self):
+        bad = deepcopy(self.profile)
+        bad["bootstrap_methods"][0]["arguments"][0]["value"] = "missing-marker"
+        with self.assertRaisesRegex(
+            OriginalEightFinalInitializerError,
+            "ORIGINAL_SINGLE_ARGUMENT_STRING_CONCAT_BOOTSTRAP_NOT_EXACT",
+        ):
+            self.proof(bad)
+
+    def test_conditional_and_helper_indy_must_use_distinct_bootstraps(self):
+        bad = deepcopy(self.profile)
+        dyn = [r for r in bad["methods"][0]["instructions"]
+               if r["opcode"] == "0xba"]
+        dyn[-1]["bootstrap_method_attr_index"] = 0
+        with self.assertRaisesRegex(
+            OriginalEightFinalInitializerError,
+            "TWO_CONDITIONAL_ONE_HELPER_CONCAT_BOOTSTRAP_IDS_NOT_EXACT",
         ):
             self.proof(bad)
 
