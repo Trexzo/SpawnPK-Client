@@ -1,0 +1,9 @@
+R87 — one private Java9 compilation, two original-v309 method acceptance gates
+
+R86 can compile private Java 9 source and compare one original method under R66 structural and R81 semantic JVM operand parity. R87 requires BOTH the 697-instruction settings loader and 364-instruction saver to pass those gates against one compiled candidate JAR. Each method uses its OWN exact field/method alias JSON, because their static-write inventories differ. Original and candidate identities must be distinct for load versus save. The private CLI strictly requires original counts 697 and 364.
+
+The private source tree, original client SHA and aliases are inputs, not committed evidence. The tool compiles once into an isolated temporary directory, verifies the saver from the same compiled candidate, rechecks both binary pins and source digest, and atomically moves the private candidate JAR plus aggregate result into a new output directory ONLY after both methods pass. A failing loader, failing saver or changed string constant produces no final output.
+
+Usage: python -m spk_recovery.private_dual_method_java9_acceptance ORIGINAL_JAR ORIGINAL_OWNER.class ORIGINAL_LOAD_METHOD "()V" ORIGINAL_SAVE_METHOD "()V" PRIVATE_JAVA_SOURCE_DIR CANDIDATE_OWNER.class CANDIDATE_LOAD_METHOD "()V" CANDIDATE_SAVE_METHOD "()V" PRIVATE_LOAD_ALIASES.json PRIVATE_SAVE_ALIASES.json NEW_OUTPUT --original-sha256 ORIGINAL_SHA256
+
+Hosted tests compile Java9 two-method fixtures and reject independent loader/saver mutations, invalid original SHA and wrong expected instruction counts. Synthetic tests pass shorter counts to the Python API; the CLI always requires the full v309 counts. Not a full-owner, helper, nested enum, configuration, file-side-effect or runtime equivalence certificate. This generic R87 tool has not been replayed on the private original v309 binary and reconstructed dual-method source.
