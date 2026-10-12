@@ -66,11 +66,33 @@ class FourNestedEnumTests(unittest.TestCase):
                 entries=nested_entries(z.namelist(),"p/Owner.class")
                 profiles={key:profile_jar_class(jar,key) for key in entries}
                 attrs={key:symbolic_innerclasses_table(z.read(key)) for key in entries}
+                owner_attrs=symbolic_innerclasses_table(z.read("p/Owner.class"))
             wrong=dict(attrs)
             wrong[entries[0]]=()
             with self.assertRaisesRegex(FourNestedEnumAcceptanceError,
                                         "ORIGINAL_INNERCLASSES_METADATA_DIFFER"):
-                check_four_nested_enums(profiles,profiles,attrs,wrong,sha)
+                check_four_nested_enums(profiles,profiles,attrs,wrong,sha,owner_attrs,owner_attrs)
+    def test_original_owner_innerclasses_omission_rejected_even_if_four_inner_classfiles_match(self):
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td);jar,sha=self.fixture(root)
+            with ZipFile(jar) as z:
+                entries=nested_entries(z.namelist(),"p/Owner.class")
+                profiles={key:profile_jar_class(jar,key) for key in entries}
+                attrs={key:symbolic_innerclasses_table(z.read(key)) for key in entries}
+                original_owner_table=symbolic_innerclasses_table(z.read("p/Owner.class"))
+            self.assertTrue(original_owner_table)
+            with self.assertRaisesRegex(FourNestedEnumAcceptanceError,
+                                        "ORIGINAL_OWNER_INNERCLASSES_METADATA_DIFFER"):
+                check_four_nested_enums(profiles,profiles,attrs,attrs,sha,
+                                        original_owner_table,())
+            with self.assertRaisesRegex(FourNestedEnumAcceptanceError,
+                                        "ORIGINAL_OWNER_INNERCLASSES_MISSING_NESTED_IDENTITIES"):
+                check_four_nested_enums(profiles,profiles,attrs,attrs,sha,
+                                        (("java/lang/invoke/MethodHandles$Lookup",
+                                          "java/lang/invoke/MethodHandles","Lookup",0),),
+                                        (("java/lang/invoke/MethodHandles$Lookup",
+                                          "java/lang/invoke/MethodHandles","Lookup",0),))
+
     def test_tampered_enum_method_veto(self):
         with tempfile.TemporaryDirectory() as td:
             import copy
@@ -79,6 +101,7 @@ class FourNestedEnumTests(unittest.TestCase):
                 entries=nested_entries(z.namelist(),"p/Owner.class")
                 profiles={key:profile_jar_class(jar,key) for key in entries}
                 attrs={key:symbolic_innerclasses_table(z.read(key)) for key in entries}
+                owner_attrs=symbolic_innerclasses_table(z.read("p/Owner.class"))
             bad=copy.deepcopy(profiles)
             entry=entries[0]
             target=next(m for m in bad[entry]["methods"]
@@ -86,7 +109,7 @@ class FourNestedEnumTests(unittest.TestCase):
             target["instructions"][0]["opcode"]="0x00"
             with self.assertRaisesRegex(FourNestedEnumAcceptanceError,
                                         "R49_ONE_OR_MORE"):
-                check_four_nested_enums(profiles,bad,attrs,attrs,sha)
+                check_four_nested_enums(profiles,bad,attrs,attrs,sha,owner_attrs,owner_attrs)
 
 if __name__=="__main__":
     unittest.main()
