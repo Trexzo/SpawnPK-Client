@@ -582,3 +582,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R72 — original v309 dual reference/Boolean protected source
 
 [R72's exact original two-static-write empty-catch source recovery](docs/V309_DUAL_REFERENCE_BOOLEAN_SOURCE_R72.md) reconstructs one 11-instruction protected region that assigns an original nested-reference field and then a Boolean field from two separate `Properties` lookups. This brings bounded local JVM-backed Java source forms to **37/42**; five more complex local regions and original whole-method/runtime parity remain unresolved.
+
+### R73 — original indexed Properties integer-array source loop
+
+[R73's exact 22-op indexed original Java source recovery](docs/V309_INDEXED_PROPERTIES_ARRAY_SOURCE_R73.md) reconstructs a `for` loop that conditionally assigns original `int[]` elements from indexed `Properties.getProperty(String)` keys, with **both dynamic keys checked against the same original StringConcatFactory bootstrap recipe**. This raises bounded local protected source forms to **38/42**; four harder regions, full 697-op compilation and runtime behavior remain unverified.
