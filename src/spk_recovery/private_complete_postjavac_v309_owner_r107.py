@@ -150,14 +150,15 @@ def accept_private_v309_postjavac_owner(
                 original_jar, source_jar, owner_entry,
                 surrogate_simple, root / "r106",
                 original_sha256=original_sha256, candidate_sha256=source_pin)
-        except (VerifiedEnumStackMapError, ValueError, OSError) as exc:
+        except (VerifiedEnumStackMapError, ValueError, OSError,
+                IndexError, KeyError, TypeError) as exc:
             raise PostJavacCompleteOwnerAcceptanceError(
                 "R106_R105_R104_R95_FOUR_ENUM_SOURCE_NOT_ACCEPTED") from exc
         need(enums.get("original_four_nested_enums_R95_accepted") is True and
              enums.get("original_case_insensitive_lookup_method_frames_identical")
              is True and
              enums.get("candidate_method_code_bytes_preserved") is True and
-             enums.get("original_lookups_method_code_bytes_transferred") is not True,
+             enums.get("original_lookups_method_code_bytes_transferred") is False,
              "FINAL_FOUR_ENUM_R95_ACCEPTANCE_FLAGS_INCOMPLETE")
         final_jar = root / "r106" / "all-four-R95-after-StackMap.private.jar"
         final_pin = enums.get("r95_accepted_candidate_sha256")
@@ -175,7 +176,8 @@ def accept_private_v309_postjavac_owner(
                 original_jar, final_jar, owner_entry, owner_entry,
                 root / "r94", original_sha256=original_sha256,
                 candidate_sha256=final_pin)
-        except (AllOwnerMethodsParityError, ValueError, OSError) as exc:
+        except (AllOwnerMethodsParityError, ValueError, OSError,
+                IndexError, KeyError, TypeError) as exc:
             raise PostJavacCompleteOwnerAcceptanceError(
                 "R94_FINAL_NINE_OWNER_METHODS_NOT_EXACT") from exc
         need(methods.get(
