@@ -234,7 +234,7 @@ def plan_private_local_exception_primitive_sources(
         "private_local_region_sources": accepted,
         "private_source_fragments": "".join(fragments),
         "original_local_exception_handlers": len(original_local_handlers),
-        "exact_conditional_boolean_try_catch_regions": len(accepted),
+        "exact_conditional_primitive_try_catch_regions": len(accepted),
         "other_exception_local_regions_not_reconstructed":
             len(original_local_handlers) - len(accepted),
         "conditional_boolean_regions": sum(
