@@ -558,3 +558,7 @@ The [R51 v309 predicate source-form research](docs/V309_BOOLEAN_PREDICATE_SOURCE
 ### R66 — strict original/candidate JVM exception and control-flow acceptance gate
 
 [R66's compiled large-method comparison](docs/V309_LARGE_METHOD_CFG_PARITY_R66.md) requires exact instruction-ordinal branch topology, exact **ordered typed exception tables** and all explicitly mapped original static-field writes when comparing whole-SHA-pinned original and recovered-candidate JARs. The 697-instruction/44-handler and 364-instruction/1-handler original methods have **no certified compiled private candidate yet**; runtime and operand parity remain separate gates.
+
+### R67 — 29 original v309 empty-catch conditional primitive Java source blocks
+
+[R67's original protected-source reconstruction](docs/V309_EMPTY_EXCEPTION_PRIMITIVE_SOURCE_R67.md) stages **29 private Java `try/catch(Exception)` primitive assignment blocks** (26 Boolean, three integer). Their branches reuse exact original key/method/target identities while preserving repeated non-null lookup calls. All 42 original local `Exception` handlers have empty bodies; **13 other local protected ranges and both outer I/O handlers** remain unreconstructed. Synthetic Java9 recompilation is compared using the R66 CFG gate; full original method/runtime parity is not claimed.
