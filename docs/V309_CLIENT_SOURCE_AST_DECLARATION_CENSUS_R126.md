@@ -8,6 +8,12 @@ The preliminary external v309 decompiled source workspace contains **1,271 clien
 
 R126 introduces an independently SHA-pinned, **read-only source AST inventory**. It is deliberately separate from the R125 class/package/Windows naming plan, as matching spellings cannot be silently elevated to verified semantic lineage.
 
+## Private exact-input source AST baseline, 2026-10-13
+
+Ran the same `JavacTask.parse()` / top-level-and-member-ClassTree census logic directly against the user-supplied ZIP (SHA256 `2f9903b5eb9c89eb736f806e0cbd0aa468e4cd2408eb436ec3fd03d3094e4536`) and compared named `rs/` declarations against the separately verified original-v309 client binary (SHA256 `ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38`). Results: **1,271 source Java files**, **1,321 named AST types**, **1,316 `rs/` named types**, **zero Java syntax parse errors**, and **zero duplicate declared named types**. The actual original contains **1,159 `rs/` classfiles**; only **28** source name spellings overlap. Accordingly, **1,288** declared `rs/` source type spellings are not exact original names, and **1,131** original `rs/` classfile names lack a same-spelled AST named declaration (including compiler-generated/local types by design).
+
+**Interpretation:** The decompiler source is parseable and substantial, but already renamed/reorganized; source filename or AST name equality is *not* a usable acceptance mechanism for most classes. These are aggregate results from a private read-only JDK AST reproduction, not a full execution of the packaged R126 CLI on hosted CI, not semantic matching, and not a successful full `javac` build. Original client binaries and source contents remain private.
+
 ## Implementation
 
 Input: an exact private decompiled-source ZIP and an **independently** SHA-256-pinned original v309 client JAR. The ZIP is validated for entry counts, duplicate paths, traversal, symlinks, UTF-8, max source size and Windows path-case collisions before any source is staged.
