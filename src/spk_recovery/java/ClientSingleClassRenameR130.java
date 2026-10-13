@@ -82,6 +82,7 @@ public final class ClientSingleClassRenameR130 {
                 && !Files.exists(output),
                 "R130_EXPECTED_SINGLE_SOURCE_FILE_OR_DESTINATION_OCCUPIED");
         String text = Files.readString(input, StandardCharsets.UTF_8);
+        final String oldText = text;
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         require(compiler != null, "R130_JDK_REQUIRED");
         DiagnosticCollector<JavaFileObject> diagnostics =
@@ -158,9 +159,9 @@ public final class ClientSingleClassRenameR130 {
                             "\\b(" + Pattern.quote(oldName)
                             + ")\\s*\\(");
                         long at = uniqueToken(
-                            text, (int) first, (int) last, constructor,
+                            oldText, (int) first, (int) last, constructor,
                             "R130_AMBIGUOUS_OR_MISSING_CONSTRUCTOR_TOKEN");
-                        mark(edits, text, at, at + oldName.length(),
+                        mark(edits, oldText, at, at + oldName.length(),
                              oldName, newName);
                     }
                     return super.visitMethod(node, unused);
@@ -172,7 +173,7 @@ public final class ClientSingleClassRenameR130 {
                     if (target.equals(symbol)) {
                         long begin = positions.getStartPosition(unit, node);
                         long end = positions.getEndPosition(unit, node);
-                        mark(edits, text, begin, end, oldName, newName);
+                        mark(edits, oldText, begin, end, oldName, newName);
                     }
                     return super.visitIdentifier(node, unused);
                 }
@@ -182,7 +183,7 @@ public final class ClientSingleClassRenameR130 {
                     Element symbol = trees.getElement(getCurrentPath());
                     if (target.equals(symbol)) {
                         long end = positions.getEndPosition(unit, node);
-                        mark(edits, text, end - oldName.length(), end,
+                        mark(edits, oldText, end - oldName.length(), end,
                              oldName, newName);
                     }
                     return super.visitMemberSelect(node, unused);
