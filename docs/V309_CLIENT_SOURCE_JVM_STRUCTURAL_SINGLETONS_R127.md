@@ -8,6 +8,22 @@ R127 adds a **strictly nonauthoritative, class-shape candidate queue**. The priv
 
 The matcher considers **top-level `rs/` classes and interfaces only**: excludes named nested binary classes, enums, annotations, compiler-generated local/anonymous classes and extra JVM synthetic/bridge methods from automatic proposals because their source signatures often cannot be compared without javac lowering evidence. If a structural fingerprint occurs **exactly once** in all eligible source declarations and **exactly once** in all eligible original JVM classfiles, it yields a private *review candidate*. If any fingerprint is duplicated on either side, it yields **no** match.
 
+## Actual private v309 structural dry run, 2026-10-13
+
+A separate, local read-only implementation of the same AST/JVM structural-shape algorithm was run against the exact user-supplied decompiled source ZIP (SHA-256 `2f9903b5eb9c89eb736f806e0cbd0aa468e4cd2408eb436ec3fd03d3094e4536`) and pinned v309 client JAR (`ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38`). Neither was executed. The compiler AST parser returned **1,321 named source declarations and zero syntax errors**; original classfiles parsed: **1,159 under `rs/`**.
+
+| Structural metric | Count |
+|---|---:|
+| Eligible top-level source classes/interfaces | **1,175** |
+| Eligible top-level original `rs/` classes/interfaces | **1,032** |
+| Structural signature buckets seen on both sides | **549** |
+| Structurally unique source/original singleton candidates | **501** |
+| Of those, differently named source/JVM classes | **486** |
+| Uniquely matching candidates with identical names | **15** |
+| Shared buckets rejected due to ambiguity | **48** |
+
+**Scope and caution:** These figures are from a private local dry run reproducing the matching primitives; GitHub Actions runs strictly synthetic tests and no complete official R127 original-v309 private CLI acceptance is being claimed. The 501 candidate shapes are a *valuable prioritization queue*, **not 501 recovered/deobfuscated original class identities**. Uniqueness is limited to this pair of inventories and class-shape profile; independent original-bytecode verification and semantic review are mandatory before lineage acceptance or source rewrite. Private name-pair proposals and source files were not published.
+
 ## Acceptance boundary
 
 An exact and unique field/method descriptor shape is **not proof of class identity**, and matching primitive types/staticness cannot establish method bodies, callback behavior, constant pools, opcode parity or semantic naming. Structural coincidences remain possible even for singleton shapes. R127 reports **`candidate_proposals_are_identity_accepted=false`**, **`source_files_rewritten_or_built=false`**, and **`whole_client_deobfuscation_complete=false`** always. No candidate may be fed directly to canonical lineage or rewritten Java without corroborating original-JVM method/callsite fingerprints, stable logical IDs and review.
