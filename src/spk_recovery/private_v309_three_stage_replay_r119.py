@@ -147,7 +147,10 @@ def replay_source_owner(original_jar, source_compiled_jar, owner_entry,
         }
         stage = root / "accepted"
         stage.mkdir()
-        shutil.copyfile(final_jar, stage / "candidate.private.jar")
+        staged_jar = stage / "candidate.private.jar"
+        shutil.copyfile(final_jar, staged_jar)
+        require(sha_matches(staged_jar, final_sha),
+                "PRIVATE_ACCEPTED_COPY_FINAL_SHA256_MISMATCH")
         (stage / "original-v309-r119.aggregate.json").write_text(
             json.dumps(report, sort_keys=True, indent=2) + "\n",
             encoding="utf-8",
