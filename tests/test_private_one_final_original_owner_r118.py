@@ -259,3 +259,58 @@ class OriginalOwnerAllFinalGateR118Tests(unittest.TestCase):
             self.accept()
         self.assertEqual(self.calls,[])
         self.assertFalse(self.destination.exists())
+
+    def test_loader_uninitialized_reference_resolves_candidate_pc_index(self):
+        # javac can widen earlier LDCs, shifting NEW and StackMap bytecode PCs.
+        # Both sides must resolve uninitialized NEW from their OWN offset table.
+        original_ins=[{"offset":i,"opcode":"0xbb" if i==20 else "0x00"}
+                      for i in range(697)]
+        candidate_ins=[{"offset":i+(1 if i>=10 else 0),
+                        "opcode":"0xbb" if i==20 else "0x00"}
+                       for i in range(697)]
+        def frames(ins):
+            result=[]
+            for i in range(30,191):
+                row={"bytecode_offset":ins[i]["offset"],
+                     "frame_type":255 if i==30 else 251}
+                if i==30:
+                    row["locals"]=[{"kind":"uninitialized",
+                                   "new_offset":ins[20]["offset"]}]
+                result.append(row)
+            return result
+        original_loader={"name":"load","descriptor":"()V","access":9,
+                         "stackmap_table_present":True,
+                         "instructions":original_ins,
+                         "stackmap_frames":frames(original_ins)}
+        candidate_loader={"name":"load","descriptor":"()V","access":9,
+                          "stackmap_table_present":True,
+                          "instructions":candidate_ins,
+                          "stackmap_frames":frames(candidate_ins)}
+        original={"methods":[original_loader]}
+        candidate={"methods":[candidate_loader]}
+        operand_proof={
+            "original_instructions_with_all_semantic_operands_compared":697,
+            "original_explicit_branches":120,
+            "original_ordered_typed_exception_entries":44,
+            "original_ordered_static_writes":78,
+            "all_parsed_JVM_operands_equal_with_private_aliases":True,
+        }
+        saver_proof={
+            "original_saver_R66_R81_all_operands_passed":True,
+            "original_saver_jvm_StackMapTable_frames_equal":10,
+        }
+        with patch.object(gate,"unique_unrecovered",
+                          return_value={697:original_loader}), \
+             patch.object(gate,"original_saver_method_profile_proof",
+                          return_value=saver_proof), \
+             patch.object(gate,"compare_all_method_operands",
+                          return_value=operand_proof):
+            self.assertTrue(gate.exact_original_large_methods_before_or_after(
+                original,candidate))
+            corrupted=deepcopy(candidate)
+            corrupted["methods"][0]["stackmap_frames"][0]["locals"][0][
+                "new_offset"]=candidate_ins[21]["offset"]
+            with self.assertRaises(gate.LoaderSymbolicFramesR117Error):
+                gate.exact_original_large_methods_before_or_after(
+                    original,corrupted)
+
