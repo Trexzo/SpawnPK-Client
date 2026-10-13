@@ -9,6 +9,7 @@ import argparse
 from collections import Counter
 import hashlib
 import json
+import re
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -61,6 +62,60 @@ def safe_entries(path):
                 if name != root and not name.endswith("/")}
         return {rel: hashlib.sha256(archive.read(real)).hexdigest()
                 for rel, real in rels.items()}
+
+
+def internal_outgoing_packet_lengths(path):
+    """Compare server length table with its own decompiled client, not original."""
+    client_rel = "client/src/main/java/rs/io/IncomingPacketLengths.java"
+    server_rel = "server/core/src/main/java/rs/server/net/codec/OutgoingPacketLengths.java"
+    with ZipFile(path) as archive:
+        names = archive.namelist()
+
+        def lookup(relative):
+            matching = [name for name in names if name.endswith("/" + relative)]
+            if len(matching) != 1:
+                return None
+            info = archive.getinfo(matching[0])
+            require(info.file_size <= 2_000_000, "PROTOCOL_SOURCE_EXCEEDS_LIMIT")
+            return archive.read(matching[0]).decode("utf-8")
+
+        client = lookup(client_rel)
+        server = lookup(server_rel)
+    if client is None or server is None:
+        return {
+            "available": False, "equal": False,
+            "client_values": 0, "server_values": 0, "mismatches": None,
+        }
+    pairs = re.findall(
+        r"(?<!\w)incomingLengths\[(\d+)\]\s*=\s*(-?\d+)\s*;", client
+    )
+    source = {int(k): int(v) for k, v in pairs}
+    match = re.search(r"INCOMING_LENGTHS\s*=\s*\{([^{}]*)\}", server, re.S)
+    if not match:
+        return {
+            "available": True, "equal": False,
+            "client_values": len(source), "server_values": 0,
+            "mismatches": None,
+        }
+    values = [
+        int(n) for n in re.findall(
+            r"(?<!\w)-?\d+",
+            re.sub(r"//[^\n]*", "", match.group(1)),
+        )
+    ]
+    complete = (
+        len(pairs) == 257 and len(source) == 257
+        and set(source) == set(range(257)) and len(values) == 257
+    )
+    mismatch = (
+        sum(source[i] != values[i] for i in range(257))
+        if complete else None
+    )
+    return {
+        "available": True, "equal": bool(complete and mismatch == 0),
+        "client_values": len(source), "server_values": len(values),
+        "mismatches": mismatch,
+    }
 
 
 def audit(uploaded_archive, baseline_archive):
@@ -119,6 +174,8 @@ def audit(uploaded_archive, baseline_archive):
         "build_inputs_present": {
             key: value in current for key, value in expected.items()
         },
+        "internal_server_outgoing_length_table":
+            internal_outgoing_packet_lengths(uploaded_archive),
         "original_v309_parity_certified": False,
         "server_original_source_certified": False,
         "source_executed": False,
