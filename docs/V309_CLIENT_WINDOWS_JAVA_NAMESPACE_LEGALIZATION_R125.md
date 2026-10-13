@@ -22,7 +22,7 @@ python -m spk_recovery.private_client_namespace_legalizer_r125 PRIVATE_ORIGINAL_
 
 The original SHA pin defaults to exact v309 `ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38`. For synthetic fixtures only, `--original-sha256` can select a different explicit pin.
 
-By default the report includes only SHA pins, operation counts and the mapping digest. Add `--private-identifiers` **only for a local private output** when the subsequent, separately approved source-remapper needs the full mapping table. Do not commit that output, client JAR, original-derived source, full original class index or local asset/settings data to this repository.
+**Existing bytecode remapper bridge:** after local review, use `--private-identifiers --private-bytecode-plan NEW_PRIVATE_R8R_PLAN.json` with a second fresh private output path. R125 independently regenerates and checks the original-JAR collision report ID and runs the existing `collision_bytecode_remap._expanded_mappings` nested-family validator. It refuses any disagreement between the names its solver certified and names the established R8R whole-JAR remapper would actually use. The optional plan uses the established private R8R schema and is an **input to separately verified bytecode remapping**, not a rewritten JAR or Java source. Do not publish the identifier-bearing private plan.\n\nBy default the report includes only SHA pins, operation counts and the mapping digest. Add `--private-identifiers` **only for a local private output** when the subsequent, separately approved source-remapper needs the full mapping table. Do not commit that output, client JAR, original-derived source, full original class index or local asset/settings data to this repository.
 
 ## What comes next
 
