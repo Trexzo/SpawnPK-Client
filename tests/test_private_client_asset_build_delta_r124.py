@@ -112,9 +112,10 @@ class PrivateClientAssetDeltaR124Tests(unittest.TestCase):
     def test_reject_duplicate_member(self):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)
-            self.build(additions=[
-                (".spawnpk-data/client.jar", self.newjar)
-            ])
+            with ZipFile(self.path, "w") as z:
+                z.writestr(".spawnpk-data/client-v308.jar", self.oldjar)
+                z.writestr(".spawnpk-data/client.jar", self.newjar)
+                z.writestr(".spawnpk-data/client.jar", self.newjar)
         with self.assertRaisesRegex(
                 PrivateClientAssetDeltaR124Error,
                 "DUPLICATE_ARCHIVE_MEMBER"):
