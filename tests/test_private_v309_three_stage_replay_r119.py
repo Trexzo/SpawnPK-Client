@@ -46,6 +46,8 @@ class PrivateThreeStageReplayR119Tests(unittest.TestCase):
                     "0" * 64 if mismatch == "R116" else gate.digest(jar),
                 "original_saver_R66_R81_operands_and_handlers_passed": True,
                 "original_saver_StackMapTable_frames_exact": 10,
+                "candidate_saver_Code_bytes_preserved": True,
+                "saver_original_executable_Code_transferred": False,
             }
 
         def loader(original, candidate, owner_entry, dest, **kwargs):
@@ -63,6 +65,7 @@ class PrivateThreeStageReplayR119Tests(unittest.TestCase):
                 "original_loader_161_frame_ordinals_and_verification_states_equal": True,
                 "candidate_697_executable_Code_bytes_preserved": True,
                 "original_saver_364_R113_all_operands_10_frames_exact": True,
+                "original_executable_Code_bytes_transferred": False,
             }
 
         def owner(original, candidate, owner_entry, surrogate, dest, **kwargs):
