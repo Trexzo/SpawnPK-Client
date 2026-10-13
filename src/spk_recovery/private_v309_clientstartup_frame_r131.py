@@ -21,6 +21,9 @@ ORIGINAL_V309 = (
     "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38"
 )
 ORIGINAL_EQUALS_STACKMAP = bytes.fromhex("00030708f9000e")
+PROVEN_SOURCE_OWNERS = frozenset((
+    OWNER, "rs/runelite/events/MenuOpened",
+))
 
 
 class VerifiedClientStartUpR131Error(ValueError):
@@ -138,7 +141,10 @@ def _stackmap(raw):
 
 
 def rebind_clientstartup_stackmap(private_java9_class, fresh_output_class, *,
-                                  compiled_class_sha256):
+                                  compiled_class_sha256,
+                                  expected_owner=OWNER):
+    need(expected_owner in PROVEN_SOURCE_OWNERS,
+         "R132_UNVERIFIED_OR_UNSUPPORTED_EVENT_CLASS_OWNER")
     input_file = Path(private_java9_class)
     output = Path(fresh_output_class)
     need(input_file.is_file() and not input_file.is_symlink()
@@ -154,7 +160,7 @@ def rebind_clientstartup_stackmap(private_java9_class, fresh_output_class, *,
     except ClassFormatError as exc:
         raise VerifiedClientStartUpR131Error(
             "R131_SOURCE_PREIMAGE_CLASSFILE_INVALID") from exc
-    need(before_class.name == OWNER and before_class.major == 53
+    need(before_class.name == expected_owner and before_class.major == 53
          and len(before_class.methods) == 5
          and not before_class.fields,
          "R131_EXPECTED_V309_STANDALONE_OWNER_INVENTORY_REQUIRED")
@@ -215,11 +221,13 @@ def main(argv=None):
     parser.add_argument("private_source_compiled_class")
     parser.add_argument("fresh_output_class")
     parser.add_argument("--compiled-class-sha256", required=True)
+    parser.add_argument("--expected-owner", default=OWNER)
     args = parser.parse_args(argv)
     try:
         report = rebind_clientstartup_stackmap(
             args.private_source_compiled_class, args.fresh_output_class,
-            compiled_class_sha256=args.compiled_class_sha256)
+            compiled_class_sha256=args.compiled_class_sha256,
+            expected_owner=args.expected_owner)
         print(json.dumps(report, sort_keys=True))
     except Exception:
         parser.error("R131_V309_JAVA_SOURCE_STACKMAP_GATE_NOT_ACCEPTED")
