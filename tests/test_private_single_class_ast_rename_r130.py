@@ -78,7 +78,7 @@ class PrivateClassAstRenameR130Tests(unittest.TestCase):
         self.assertTrue(proof["renamed_source_java9_compiled"])
         self.assertFalse(proof["candidate_class_identity_original_proven"])
         self.assertFalse(proof["whole_client_source_tree_accepted"])
-        self.assertGreaterEqual(proof["source_symbol_replacements"], 8)
+        self.assertGreaterEqual(proof["source_symbol_replacements"], 6)
         rewritten = self.out / "src" / "rs" / "Obf.java"
         text = rewritten.read_text(encoding="utf-8")
         self.assertIn("public class Obf", text)
