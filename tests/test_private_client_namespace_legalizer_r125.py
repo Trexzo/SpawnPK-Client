@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import shutil
+import subprocess
 import tempfile
 import unittest
 import warnings
@@ -28,6 +30,88 @@ class ClientNamespaceLegalizationR125Tests(unittest.TestCase):
             for name, value in entries:
                 archive.writestr(name, value)
         return hashlib.sha256(self.jar.read_bytes()).hexdigest()
+
+    @unittest.skipUnless(shutil.which("javac"),
+                         "JDK required for real synthetic classfile rewrites")
+    def test_synthetic_javac9_class_package_remap_end_to_end(self):
+        from spk_recovery.collision_bytecode_remap import transform_collision_jar
+        from spk_recovery.classfile import parse_class
+        from spk_recovery.namespace_collision import analyze_namespace_collisions
+
+        sources = [
+            ("outer", "rs/a.java",
+             "package rs; public class a { public int a() { return 1; } }",
+             "rs/a.class"),
+            ("descendant", "rs/a/Child.java",
+             "package rs.a; public class Child { public int child() "
+             "{ return 2; } }",
+             "rs/a/Child.class"),
+        ]
+        blobs = {}
+        for directory, rel, body, entry in sources:
+            srcdir = self.root / directory
+            javafile = srcdir / rel
+            javafile.parent.mkdir(parents=True, exist_ok=True)
+            javafile.write_text(body, encoding="utf-8")
+            output = srcdir / "classes"
+            output.mkdir()
+            subprocess.run(
+                [shutil.which("javac"), "--release", "9", "-g:none",
+                 "-proc:none", "-d", str(output), str(javafile)],
+                capture_output=True, check=True)
+            blobs[entry] = (output / entry).read_bytes()
+        expected = self.make(sorted(blobs.items()))
+        private = derive_private_bytecode_remap_plan(
+            self.jar, expected_sha=expected)
+        plan = self.root / "remap-private.json"
+        plan.write_text(json.dumps(private), encoding="utf-8")
+        target = self.root / "mapped-client.private.jar"
+        proof = transform_collision_jar(self.jar, plan, target)
+        self.assertEqual(proof["summary"]["input_class_count"], 2)
+        self.assertEqual(proof["summary"]["post_collision_edge_count"], 0)
+        collisions = analyze_namespace_collisions(target)
+        self.assertEqual(collisions["summary"]["collision_edge_count"], 0)
+        with ZipFile(target) as archive:
+            members = set(archive.namelist())
+            self.assertIn("rs/a/Child.class", members)
+            self.assertNotIn("rs/a.class", members)
+            self.assertEqual(len(members), 2)
+            for name in members:
+                self.assertEqual(parse_class(archive.read(name)).name,
+                                 name[:-6])
+
+    @unittest.skipUnless(shutil.which("javac"),
+                         "JDK required for real synthetic classfile rewrites")
+    def test_synthetic_javac9_windows_case_only_remap_end_to_end(self):
+        from spk_recovery.collision_bytecode_remap import transform_collision_jar
+        sources = []
+        for label in ("A", "a"):
+            workspace = self.root / ("case-" + label)
+            source = workspace / "rs" / (label + ".java")
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "package rs; public class " + label +
+                " { public static int flag() { return 1; } }",
+                encoding="utf-8")
+            binary = workspace / "classes"
+            binary.mkdir()
+            subprocess.run(
+                [shutil.which("javac"), "--release", "9", "-g:none",
+                 "-proc:none", "-d", str(binary), str(source)],
+                capture_output=True, check=True)
+            sources.append(("rs/" + label + ".class",
+                            (binary / "rs" / (label + ".class")).read_bytes()))
+        expected = self.make(sources)
+        plan = derive_private_bytecode_remap_plan(
+            self.jar, expected_sha=expected)
+        output_plan = self.root / "case-remap.json"
+        output_plan.write_text(json.dumps(plan), encoding="utf-8")
+        output = self.root / "case-remapped.jar"
+        transform_collision_jar(self.jar, output_plan, output)
+        with ZipFile(output) as archive:
+            names = {x for x in archive.namelist() if x.endswith(".class")}
+        self.assertEqual(len(names), 2)
+        self.assertEqual(case_groups({x[:-6] for x in names}), [])
 
     def test_original_like_namespace_is_bijective_and_windows_safe(self):
         names = {
