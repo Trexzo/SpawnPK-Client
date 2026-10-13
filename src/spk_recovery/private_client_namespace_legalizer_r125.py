@@ -229,6 +229,8 @@ def plan_client_namespaces(original, *, include_identifiers=False,
 
     _validate_final(current, original)
     renamed = [(k, v) for k, v in sorted(current.items()) if k != v]
+    original_packages = package_prefixes(original)
+    original_package_casefold = {p.casefold() for p in original_packages}
     public = {
         "schema_version": 1,
         "kind": "private_client_windows_and_java_namespace_legalization_r125",
@@ -241,11 +243,11 @@ def plan_client_namespaces(original, *, include_identifiers=False,
         "renamed_game_rs_classfile_count":
             sum(old.startswith("rs/") for old, _ in renamed),
         "java_package_case_conflicts_before":
-            len(case_groups(package_prefixes(original))),
+            len(case_groups(original_packages)),
         "windows_class_case_conflicts_before":
             len(case_groups(original)),
         "class_package_shadows_before":
-            sum(c.casefold() in {p.casefold() for p in package_prefixes(original)}
+            sum(c.casefold() in original_package_casefold
                 for c in original),
         "remediation_operations": counts,
         "mapped_paths_unique_after_casefold": True,
