@@ -20,7 +20,7 @@ from spk_recovery.whole_method_operand_parity import (
 def fake_method(count, name):
     return {
         "name": name, "descriptor": "()V", "access": 10 if count == 364 else 9,
-        "instructions": [{"opcode": "0xb1"} for _ in range(count)],
+        "instructions": [{"opcode": "0xb1", "offset": i} for i in range(count)],
         "exception_handlers": [
             {"start_pc": 0, "end_pc": 920, "handler_pc": 923,
              "catch_type": "java/lang/Exception"}
