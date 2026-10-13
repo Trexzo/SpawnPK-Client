@@ -202,3 +202,19 @@ class PrivateThreeStageReplayR119Tests(unittest.TestCase):
                 source_sha256=self.candidate_pin)
         self.assertEqual(self.events, [])
         self.assertFalse(self.out.exists())
+
+    def test_tampered_final_staging_copy_never_promotes(self):
+        self.mocked()
+        real_copy = gate.shutil.copyfile
+        def corrupted_copy(source, destination):
+            result = real_copy(source, destination)
+            Path(destination).write_bytes(b"tampered post-copy")
+            return result
+        with patch.object(gate.shutil, "copyfile", corrupted_copy):
+            with self.assertRaisesRegex(
+                    gate.PrivateThreeStageReplayR119Error,
+                    "PRIVATE_ACCEPTED_COPY_FINAL_SHA256_MISMATCH"):
+                self.replay()
+        self.assertEqual(self.events, ["R116", "R117", "R118"])
+        self.assertFalse(self.out.exists())
+
