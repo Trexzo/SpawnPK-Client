@@ -24,7 +24,7 @@ The v308 and v309 JARs contain 1,103 common `rs/` class paths, of which **934 ar
 
 - **10,778** non-directory files under `.spawnpk/`, including **9,129** numerically named `raw/` resources and about **1,580** sprite files.
 - Separate indexed asset data for the standard and OSRS caches (`main_file_cache.dat`, `main_file_osrs.dat` and `.idx*` files), additional `loc`, `obj`, `flo`, config, YAML and MIDI sources.
-- **37** files under `.spawnpk-data/` aside from the two pinned client JARs contain local runtime/profile/settings/log data and are categorically excluded from all public source releases and R124 report output.
+- **31** regular files under `.spawnpk-data/` aside from the two pinned client JARs (plus six directory entries) contain local runtime/profile/settings/log data and are categorically excluded from all public source releases and R124 report output.
 - The ZIP also contains an auxiliary `AllInOneZipper.jar`, which is **not** trusted or executed.
 - These assets support the offline client build/startup path, but the ZIP alone does not prove all dynamically fetched assets or resource loading behaviors are covered.
 
