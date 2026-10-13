@@ -90,9 +90,17 @@ def compile_private_java9_owner(source_root, owner_entry, surrogate_simple,
         stage = Path(td)
         classes = stage / "classes"
         classes.mkdir()
+        empty_dependencies = stage / "empty-dependencies"
+        empty_dependencies.mkdir()
+        # Javac defaults classpath and sourcepath to the working directory.
+        # Close both implicit lookup lanes: every non-JDK dependency must be
+        # present as an explicitly selected Java source, never a binary stub.
         command = [
             javac_bin, "--release", "9", "-g:none", "-proc:none",
-            "-encoding", "UTF-8", "-d", str(classes),
+            "-encoding", "UTF-8",
+            "-classpath", str(empty_dependencies),
+            "-sourcepath", str(empty_dependencies),
+            "-d", str(classes),
             *[str(path) for _,path in sources],
         ]
         try:
