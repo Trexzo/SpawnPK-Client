@@ -6,7 +6,7 @@ from pathlib import Path
 from zipfile import ZipFile, ZipInfo
 
 from spk_recovery.private_source_archive_delta_r123 import (
-    audit, safe_entries, PrivateArchiveDeltaError,
+    audit, safe_entries, internal_outgoing_packet_lengths, PrivateArchiveDeltaError,
 )
 
 
@@ -73,6 +73,45 @@ class ArchiveDeltaR123Tests(unittest.TestCase):
         with self.assertRaisesRegex(
                 PrivateArchiveDeltaError, "ZIP_SYMLINK_NOT_ALLOWED"):
             safe_entries(self.upload)
+
+    def test_complete_257_packet_lengths_match_own_decompiler(self):
+        client = "\n".join(
+            f"incomingLengths[{i}] = {i % 7};" for i in range(257)
+        )
+        server = (
+            "private static final int[] INCOMING_LENGTHS = {"
+            + ",".join(str(i % 7) for i in range(257)) + "};"
+        )
+        self.make(self.upload, [
+            ("root/client/src/main/java/rs/io/IncomingPacketLengths.java",
+             client),
+            ("root/server/core/src/main/java/rs/server/net/codec/"
+             "OutgoingPacketLengths.java", server),
+        ])
+        proof = internal_outgoing_packet_lengths(self.upload)
+        self.assertTrue(proof["equal"])
+        self.assertEqual(proof["client_values"], 257)
+        self.assertEqual(proof["server_values"], 257)
+        self.assertEqual(proof["mismatches"], 0)
+
+    def test_changed_packet_length_is_not_original_parity(self):
+        client = "\n".join(
+            f"incomingLengths[{i}] = 0;" for i in range(257)
+        )
+        server = (
+            "private static final int[] INCOMING_LENGTHS = {"
+            + ",".join("1" if i == 81 else "0" for i in range(257))
+            + "};"
+        )
+        self.make(self.upload, [
+            ("root/client/src/main/java/rs/io/IncomingPacketLengths.java",
+             client),
+            ("root/server/core/src/main/java/rs/server/net/codec/"
+             "OutgoingPacketLengths.java", server),
+        ])
+        proof = internal_outgoing_packet_lengths(self.upload)
+        self.assertFalse(proof["equal"])
+        self.assertEqual(proof["mismatches"], 1)
 
     def test_missing_client_baseline_veto(self):
         self.make(self.upload, [
