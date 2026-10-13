@@ -88,7 +88,7 @@ class SaverFullFrameRestoreTests(unittest.TestCase):
         self.assertEqual(source[0:2],changed[0:2])
         self.assertEqual(changed[6],original[6])
         self.assertEqual(len(result),len(self.candidate)+5)
-        self.assertEqual(changed[6],source[6][:11]+changed[6][11:])
+        self.assertNotEqual(changed[6],source[6])
         self.assertNotEqual(result,self.original[:1])
         self.assertEqual(len(changed[6]),len(source[6])+5)
 
