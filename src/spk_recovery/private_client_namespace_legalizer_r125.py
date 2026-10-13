@@ -101,9 +101,13 @@ def case_groups(names):
 def _invalid_java_identifiers(classes):
     failures = set()
     for name in classes:
-        for segment in name.split("/"):
-            # '$' can appear in JVM nested binary names. The actual source
-            # declaration arrangement is separately verified at javac time.
+        segments = name.split("/")
+        for index, segment in enumerate(segments):
+            # The JVM retains package-info.class as package metadata, not
+            # a source-declarable Java type. Preserve that exact entry.
+            if index == len(segments) - 1 and segment in (
+                    "package-info", "module-info"):
+                continue
             if not _IDENT.fullmatch(segment) or segment in _JAVA_RESERVED:
                 failures.add(name)
     return failures
@@ -113,7 +117,10 @@ def _fresh(current, old, suffix, *, cls_name):
     # Keep the parent package for class renames; keep the parent of the
     # conflicting package segment for package renames.
     parent, sep, simple = old.rpartition("/")
-    base = simple + "__" + suffix + "_" + digest(old)[:12]
+    java_simple = re.sub(r"[^A-Za-z0-9_$]", "_", simple)
+    if not java_simple or not re.match(r"[A-Za-z_$]", java_simple[0]):
+        java_simple = "_" + java_simple
+    base = java_simple + "__" + suffix + "_" + digest(old)[:12]
     candidate = (parent + "/" if sep else "") + base
     live = set(current.values())
     prefixes = package_prefixes(live)
@@ -167,18 +174,52 @@ def plan_client_namespaces(original, *, include_identifiers=False,
                     and all(p and p not in (".", "..") for p in x.split("/"))
                     for x in original),
             "UNSAFE_OR_EMPTY_ORIGINAL_CLASS_IDENTITY_SET")
-    require(not _invalid_java_identifiers(original),
-            "ORIGINAL_JVM_CLASS_NAME_NOT_DIRECTLY_JAVA_LEGAL")
     current = {name: name for name in sorted(original)}
     reasons = defaultdict(set)
     counts = {
+        "java_illegal_package_segments_fixed": 0,
+        "java_illegal_type_names_fixed": 0,
         "windows_package_case_conflicts_fixed": 0,
         "java_type_package_shadow_conflicts_fixed": 0,
         "windows_class_filename_conflicts_fixed": 0,
     }
     limit = 2 * len(original) + 100
 
-    # First legalize directory identities: a Windows source checkout may not
+    # JVM classfiles may use Java keywords as names (e.g. /do.class).
+    # Package metadata package-info.class is not a class declaration and
+    # must remain unchanged. Legalize only invalid user-type names and
+    # illegal package path segments, preserving binary-name families.
+    for _ in range(limit):
+        packages = sorted(package_prefixes(current.values()),
+                          key=lambda p: (p.count("/"), p))
+        invalid = [p for p in packages
+                   if (not _IDENT.fullmatch(p.rsplit("/", 1)[-1])
+                       or p.rsplit("/", 1)[-1] in _JAVA_RESERVED)]
+        if not invalid:
+            break
+        old = invalid[0]
+        new = _fresh(current, old, "PkgLegal", cls_name=False)
+        _replace_family(current, old, new, is_package=True,
+                        reasons=reasons, reason="java_illegal_package_name")
+        counts["java_illegal_package_segments_fixed"] += 1
+    else:
+        raise ClientNamespaceLegalizationError(
+            "JAVA_PACKAGE_IDENTIFIER_FIX_DID_NOT_CONVERGE")
+
+    for _ in range(limit):
+        bad = sorted(_invalid_java_identifiers(current.values()))
+        if not bad:
+            break
+        old = bad[0]
+        new = _fresh(current, old, "TypeLegal", cls_name=True)
+        _replace_family(current, old, new, is_package=False,
+                        reasons=reasons, reason="java_illegal_type_name")
+        counts["java_illegal_type_names_fixed"] += 1
+    else:
+        raise ClientNamespaceLegalizationError(
+            "JAVA_CLASS_IDENTIFIER_FIX_DID_NOT_CONVERGE")
+
+    # Next legalize directory identities: a Windows source checkout may not
     # represent rs/A/... alongside rs/a/..., even if final leaf names differ.
     for _ in range(limit):
         groups = case_groups(package_prefixes(current.values()))
