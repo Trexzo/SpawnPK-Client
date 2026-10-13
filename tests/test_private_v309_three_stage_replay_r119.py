@@ -218,3 +218,51 @@ class PrivateThreeStageReplayR119Tests(unittest.TestCase):
         self.assertEqual(self.events, ["R116", "R117", "R118"])
         self.assertFalse(self.out.exists())
 
+    def test_saver_executable_original_code_copy_claim_rejected(self):
+        self.mocked()
+        accepted = gate.normalize_saver_then_require_original_r113
+        def transferred(*args, **kwargs):
+            proof = accepted(*args, **kwargs)
+            proof["saver_original_executable_Code_transferred"] = True
+            return proof
+        with patch.object(gate, "normalize_saver_then_require_original_r113",
+                          transferred):
+            with self.assertRaisesRegex(
+                    gate.PrivateThreeStageReplayR119Error,
+                    "R116_SAVER_POSTIMAGE_UNVERIFIED"):
+                self.replay()
+        self.assertEqual(self.events, ["R116"])
+        self.assertFalse(self.out.exists())
+
+    def test_loader_executable_original_code_copy_claim_rejected(self):
+        self.mocked()
+        accepted = gate.normalize_original_161_frames_then_require_large_R81
+        def transferred(*args, **kwargs):
+            proof = accepted(*args, **kwargs)
+            proof["original_executable_Code_bytes_transferred"] = True
+            return proof
+        with patch.object(gate, "normalize_original_161_frames_then_require_large_R81",
+                          transferred):
+            with self.assertRaisesRegex(
+                    gate.PrivateThreeStageReplayR119Error,
+                    "R117_LOADER_POSTIMAGE_UNVERIFIED"):
+                self.replay()
+        self.assertEqual(self.events, ["R116", "R117"])
+        self.assertFalse(self.out.exists())
+
+    def test_final_runtime_equivalence_claim_must_be_false(self):
+        self.mocked()
+        accepted = gate.accept_one_final_v309_source_compiled_owner
+        def overclaim(*args, **kwargs):
+            proof = accepted(*args, **kwargs)
+            proof["whole_original_client_runtime_equivalence_certified"] = True
+            return proof
+        with patch.object(gate, "accept_one_final_v309_source_compiled_owner",
+                          overclaim):
+            with self.assertRaisesRegex(
+                    gate.PrivateThreeStageReplayR119Error,
+                    "R118_FINAL_OWNER_OR_ENUM_PARITY_UNVERIFIED"):
+                self.replay()
+        self.assertEqual(self.events, ["R116", "R117", "R118"])
+        self.assertFalse(self.out.exists())
+
