@@ -101,7 +101,7 @@ class PrivateClassAstRenameR130Tests(unittest.TestCase):
         self.assertFalse(result["original_game_class_parity_accepted"])
 
     def test_java_helper_success_line_endings_are_platform_independent(self):
-        for terminator in ("\\n", "\\r\\n", "\\r"):
+        for terminator in ("\n", "\r\n", "\r"):
             with self.subTest(terminator=repr(terminator)):
                 raw = (
                     "R130_AST_SOURCE_CLASS_REWRITE_PASS" + terminator +
@@ -111,9 +111,9 @@ class PrivateClassAstRenameR130Tests(unittest.TestCase):
 
     def test_duplicate_java_helper_success_count_is_rejected(self):
         raw = (
-            b"R130_AST_SOURCE_CLASS_REWRITE_PASS\\r\\n"
-            b"source_symbol_replacements=6\\r\\n"
-            b"source_symbol_replacements=9\\r\\n")
+            b"R130_AST_SOURCE_CLASS_REWRITE_PASS\r\n"
+            b"source_symbol_replacements=6\r\n"
+            b"source_symbol_replacements=9\r\n")
         with self.assertRaisesRegex(
                 PrivateSingleClassRenameR130Error,
                 "CLASS_DECLARATION_OR_CONSTRUCTOR_NOT_REWRITTEN"):
