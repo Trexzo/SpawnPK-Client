@@ -20,6 +20,16 @@ The uploaded private `.spawnpk` archive was opened **read-only** with no executi
 
 The v308 and v309 JARs contain 1,103 common `rs/` class paths, of which **934 are byte-identical**; this establishes a meaningful baseline for automated carry-forward. Unlike v307 → v308, however, the v308 → v309 update is **not a one-class change**. Renames and classfile-level churn require structural/semantic matching and member mapping; blindly copying identically *named* Java source into a new build is not enough. Unchanged binary classfile identity is a reusable proof, **not** final recompilation or runtime acceptance.
 
+## First all-source Java compilation research
+
+A strictly **client-only** compilation preflight was run on the existing uploaded **1,271 Java source files** with installed `javac 21 --release 11 -proc:none -implicit:none`. It used a newly made **private dependency-only JAR** containing exactly **9,343 non-`rs/` classfiles** from the SHA-pinned original; **zero** original game/client `rs/` classes were allowed on the compiler classpath or copied into its output. The original JAR was read, **not executed**.
+
+Current result: **exit code 1 and zero emitted .class files**. The compiler produced 2,777 diagnostic lines, including 466 `cannot find symbol` error occurrences, 54 missing-Lombok import occurrences, several generated-constructor mismatches and absent Gson imports. These counts describe one deliberately restricted preflight, **not** a complete diagnostic classification or evidence that those failures are individually irreducible. Gson/Lombok are separately declared by the candidate's Gradle project but were not available in this local isolated compilation; no third-party dependency download was attempted. This was a diagnostic run, not a ready client build.
+
+A different and deeper obstruction is the original JAR's deliberate obfuscated **Java package/type-name collision**: e.g. both `gnu/trove/f.class` and Java classes underneath `gnu/trove/f/...` exist simultaneously. Such binaries are valid JVM archive members but javac may resolve an import as a type rather than a package. The original-v309 JAR has **173 shadowing class/type prefixes affecting 3,879 descendant classfiles**, of which **88 shadowing class names and 939 descendants are under `rs/`**. This is not solved by adding an arbitrary binary dependency JAR; compiler-safe, consistent class/package renaming must be performed across source and dependency interfaces, with original-to-remapped identity proof.
+
+The R124 scanner independently inventories these conflict counts for both pinned builds. It **does not auto-remap**. The recommended next solver lane is a deterministic namespace-collision resolver using stable logical class IDs and a JVM descriptor/reference-aware whole-JAR/source remapper, followed by another **zero-project-binary-fallback** compilation checkpoint.
+
 ## Actual private runtime assets in uploaded archive
 
 - **10,778** non-directory files under `.spawnpk/`, including **9,129** numerically named `raw/` resources and about **1,580** sprite files.
