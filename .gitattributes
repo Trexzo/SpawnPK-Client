@@ -1,3 +1,4 @@
 # Original-source research must retain byte-identical checkout hashes across OS.
 # Extend this to each newly introduced per-build provisional source snapshot.
 source-candidates/v309/src/rs/runelite/events/ClientStartUp.java text eol=lf
+source-candidates/v309/src/rs/runelite/events/MenuOpened.java text eol=lf
