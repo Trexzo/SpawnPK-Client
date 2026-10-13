@@ -8,7 +8,7 @@ from spk_recovery.bytecode_profile import _stackmap_table
 from spk_recovery.private_v309_loader_symbolic_frames_r117 import (
     LoaderSymbolicFramesR117Error,
     category, frames_at_ordinals, semantic_frame,
-    encode_original_states_at_candidate_pcs,
+    encode_original_states_at_candidate_pcs, require_original_states_at_candidate_pcs,
 )
 
 
@@ -105,7 +105,7 @@ class Original161FrameMetadataTests(unittest.TestCase):
         changed["stackmap_frames"][3]["bytecode_offset"]+=1
         with self.assertRaisesRegex(
                 LoaderSymbolicFramesR117Error,
-                "JVM_FRAME_OFFSET_NOT_AT_VALID_INSTRUCTION_BOUNDARY"):
+                "JVM_FRAME_OFFSET_NOT_AT_INSTRUCTION_BOUNDARY"):
             encode_original_states_at_candidate_pcs(
                 self.orig,changed,self.cp)
 
@@ -160,3 +160,35 @@ class Original161FrameMetadataTests(unittest.TestCase):
         self.assertEqual(
             semantic_frame(original,old_index,candidate)[3],
             [{"kind":"uninitialized","new_offset":25}])
+
+    def test_repaired_original_states_use_candidate_new_offsets(self):
+        # 697 instructions; javac widening shifts PC offsets, not ordinal identities.
+        old_rows=[{"offset":i*4,"opcode":"0xbb" if i==20 else "0x00"}
+                  for i in range(697)]
+        new_rows=[{"offset":i*5,"opcode":"0xbb" if i==20 else "0x00"}
+                  for i in range(697)]
+        def method(rows):
+            frames=[]
+            for ordinal in range(30,191):
+                record={"bytecode_offset":rows[ordinal]["offset"],
+                        "frame_type":255 if ordinal==30 else 251}
+                if ordinal==30:
+                    record["locals"]=[{"kind":"uninitialized",
+                                      "new_offset":rows[20]["offset"]}]
+                frames.append(record)
+            return {"instructions":rows,"stackmap_table_present":True,
+                    "stackmap_frames":frames}
+        original,candidate=method(old_rows),method(new_rows)
+        self.assertTrue(require_original_states_at_candidate_pcs(original,candidate))
+        # This was the R117 bug: using original offsets on both sides.
+        _,original_index=frames_at_ordinals(original)
+        with self.assertRaises(LoaderSymbolicFramesR117Error):
+            semantic_frame(candidate["stackmap_frames"][0],
+                           original_index,candidate["instructions"])
+        damaged=deepcopy(candidate)
+        damaged["stackmap_frames"][0]["locals"][0]["new_offset"]=new_rows[21]["offset"]
+        with self.assertRaisesRegex(
+                LoaderSymbolicFramesR117Error,
+                "CANDIDATE_UNINITIALIZED_NEW_OPCODE_CHANGED"):
+            require_original_states_at_candidate_pcs(original,damaged)
+

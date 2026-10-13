@@ -111,6 +111,20 @@ def semantic_frame(frame, original_index, new_instr):
     )
 
 
+def require_original_states_at_candidate_pcs(original_method, candidate_method):
+    """Require 161 symbolic states; resolve each uninitialized NEW in its own PC space."""
+    original_ord,original_index=frames_at_ordinals(original_method)
+    candidate_ord,candidate_index=frames_at_ordinals(candidate_method)
+    need(original_ord==candidate_ord,
+         "REBUILT_ORIGINAL_161_FRAME_ORDINALS_DIFFERENT")
+    for old,new in zip(original_method["stackmap_frames"],
+                       candidate_method["stackmap_frames"]):
+        need(semantic_frame(old,original_index,candidate_method["instructions"])
+             ==semantic_frame(new,candidate_index,candidate_method["instructions"]),
+             "ORIGINAL_LOADER_FRAME_VERIFICATION_SEMANTICS_NOT_RESTORED")
+    return True
+
+
 def _verification_bytes(verification_type, cp_to_class, old_offsets, new_instr):
     kind = verification_type.get("kind")
     values = {
@@ -367,14 +381,7 @@ def normalize_original_161_frames_then_require_large_R81(
              and final_loader.get(
                 "original_instructions_with_all_semantic_operands_compared")==697,
              "ORIGINAL_BOTH_LARGE_METHOD_R81_AFTER_STACKMAP_FAILED")
-        original_ord,original_offsets=frames_at_ordinals(old)
-        final_ord,_=frames_at_ordinals(fixed[0])
-        need(original_ord==final_ord,
-             "REBUILT_ORIGINAL_161_FRAME_ORDINALS_DIFFERENT")
-        for a,b in zip(old["stackmap_frames"],fixed[0]["stackmap_frames"]):
-            need(semantic_frame(a,original_offsets,fixed[0]["instructions"])
-                 == semantic_frame(b,original_offsets,fixed[0]["instructions"]),
-                 "ORIGINAL_LOADER_FRAME_VERIFICATION_SEMANTICS_NOT_RESTORED")
+        require_original_states_at_candidate_pcs(old,fixed[0])
 
         report={
             "schema_version":1,
