@@ -85,8 +85,10 @@ class ClientNamespaceLegalizationR125Tests(unittest.TestCase):
     def test_synthetic_javac9_windows_case_only_remap_end_to_end(self):
         from spk_recovery.collision_bytecode_remap import transform_collision_jar
         sources = []
-        for label in ("A", "a"):
-            workspace = self.root / ("case-" + label)
+        for index, label in enumerate(("A", "a")):
+            # On Windows, case-A and case-a are the SAME directory.
+            # Distinct numeric roots keep each javac source fixture isolated.
+            workspace = self.root / ("case-" + str(index))
             source = workspace / "rs" / (label + ".java")
             source.parent.mkdir(parents=True)
             source.write_text(
