@@ -6,6 +6,7 @@ from pathlib import Path
 import shutil
 import tempfile
 import unittest
+import subprocess
 
 from spk_recovery.private_v309_source_build_witness_r120 import (
     PrivateJava9BuildWitnessR120Error,
@@ -87,6 +88,31 @@ class PrivateJava9BuildWitnessR120Tests(unittest.TestCase):
 
     def test_compilation_failure_is_sanitized(self):
         self.write_source(valid=False)
+        with self.assertRaisesRegex(
+                PrivateJava9BuildWitnessR120Error,
+                "JAVA9_SOURCE_COMPILE_FAILED"):
+            self.build()
+        self.assertFalse(self.dest.exists())
+
+    def test_binary_dependency_in_source_root_cannot_satisfy_javac(self):
+        # A precompiled dependency in javac's current directory would
+        # incorrectly resolve with its default classpath. Source-only
+        # builds must reject it even though the binary is well-formed.
+        binary_source=self.root/"BinaryOnly.java"
+        binary_source.write_text(
+            "package p; public final class BinaryOnly "
+            "{ public static void magic() {} }\n",
+            encoding="utf-8")
+        subprocess.run(
+            [shutil.which("javac"),"--release","9","-d",
+             str(self.src),str(binary_source)],
+            check=True,capture_output=True)
+        self.assertTrue((self.src/"p"/"BinaryOnly.class").is_file())
+        self.owner.write_text(
+            self.source().replace("public static void m0() {}",
+                                  "public static void m0() "
+                                  "{ BinaryOnly.magic(); }"),
+            encoding="utf-8")
         with self.assertRaisesRegex(
                 PrivateJava9BuildWitnessR120Error,
                 "JAVA9_SOURCE_COMPILE_FAILED"):
