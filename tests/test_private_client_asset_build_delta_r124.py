@@ -12,6 +12,7 @@ from spk_recovery.private_client_asset_build_delta_r124 import (
     PrivateClientAssetDeltaR124Error,
     inventory_private_original_assets,
     _package_type_collisions,
+    _case_insensitive_class_path_collisions,
 )
 
 
@@ -91,6 +92,20 @@ class PrivateClientAssetDeltaR124Tests(unittest.TestCase):
             result["game_rs_descendant_classfiles_affected"], 2)
         self.assertTrue(result["java_source_namespace_remapping_required"])
         self.assertFalse(result["automatically_remapped"])
+
+    def test_windows_casefold_source_path_collisions(self):
+        evidence = _case_insensitive_class_path_collisions({
+            "rs/A.class", "rs/a.class",
+            "rs/Foo.class", "rs/foo.class",
+            "gnu/F.class", "gnu/f.class",
+            "rs/Stable.class",
+        })
+        self.assertEqual(evidence["casefold_class_path_conflict_groups"], 3)
+        self.assertEqual(evidence["affected_classfiles"], 6)
+        self.assertEqual(evidence["game_rs_conflict_groups"], 2)
+        self.assertEqual(evidence["game_rs_affected_classfiles"], 4)
+        self.assertTrue(evidence["windows_source_path_legalization_required"])
+        self.assertFalse(evidence["automatically_renamed"])
 
     def test_manifest_hash_reproducible(self):
         a = self.build()["runtime_asset_sha256_manifest"]
