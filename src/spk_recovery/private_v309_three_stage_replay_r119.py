@@ -83,7 +83,9 @@ def replay_source_owner(original_jar, source_compiled_jar, owner_entry,
         saver_sha = saver.get("saver_frame_normalized_candidate_sha256")
         require(sha_matches(saver_jar, saver_sha)
                 and saver.get("original_saver_R66_R81_operands_and_handlers_passed") is True
-                and saver.get("original_saver_StackMapTable_frames_exact") == 10,
+                and saver.get("original_saver_StackMapTable_frames_exact") == 10
+                and saver.get("candidate_saver_Code_bytes_preserved") is True
+                and saver.get("saver_original_executable_Code_transferred") is False,
                 "R116_SAVER_POSTIMAGE_UNVERIFIED")
 
         r117dir = root / "r117"
@@ -99,7 +101,8 @@ def replay_source_owner(original_jar, source_compiled_jar, owner_entry,
                     "original_loader_161_frame_ordinals_and_verification_states_equal") is True
                 and loader.get("candidate_697_executable_Code_bytes_preserved") is True
                 and loader.get(
-                    "original_saver_364_R113_all_operands_10_frames_exact") is True,
+                    "original_saver_364_R113_all_operands_10_frames_exact") is True
+                and loader.get("original_executable_Code_bytes_transferred") is False,
                 "R117_LOADER_POSTIMAGE_UNVERIFIED")
 
         r118dir = root / "r118"
