@@ -1,26 +1,26 @@
 package rs.runelite.events;
 
 public class ClientStartUp {
-   public boolean equals(Object var1) {
-      if (var1 == this) {
+   public boolean equals(Object other) {
+      if (other == this) {
          return true;
-      } else if (!(var1 instanceof ClientStartUp)) {
+      } else if (!(other instanceof ClientStartUp)) {
          return false;
       } else {
-         ClientStartUp var2 = (ClientStartUp)var1;
-         if (!var2.canEqual(this)) {
+         ClientStartUp otherClient = (ClientStartUp)other;
+         if (!otherClient.canEqual(this)) {
             return false;
          }
          return true;
       }
    }
 
-   protected boolean canEqual(Object var1) {
-      return var1 instanceof ClientStartUp;
+   protected boolean canEqual(Object other) {
+      return other instanceof ClientStartUp;
    }
 
    public int hashCode() {
-      boolean var1 = true;
+      boolean ignored = true;
       return 1;
    }
 
