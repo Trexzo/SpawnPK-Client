@@ -221,10 +221,21 @@ class OriginalFinalAssignmentShapeTests(unittest.TestCase):
         bad = deepcopy(self.profile)
         rows = bad["methods"][0]["instructions"]
         row = next(r for r in rows if r.get("name") == "final0")
+        row["opcode"] = "0x00"
+        with self.assertRaisesRegex(
+            OriginalEightFinalInitializerError,
+            "ORIGINAL_OWNER_93_STATIC_WRITES_REQUIRED",
+        ):
+            self.proof(bad)
+
+    def test_wrong_descriptor_for_static_field_target_rejected(self):
+        bad = deepcopy(self.profile)
+        row = next(r for r in bad["methods"][0]["instructions"]
+                   if r.get("name") == "final0")
         row["name"] = "mutable0"
         with self.assertRaisesRegex(
             OriginalEightFinalInitializerError,
-            "ORIGINAL_OWNER_STATIC_FIELD_ASSIGNED_MORE_THAN_ONCE",
+            "UNKNOWN_ORIGINAL_STATIC_FIELD_WRITE_TARGET",
         ):
             self.proof(bad)
 
