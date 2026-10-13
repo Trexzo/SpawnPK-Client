@@ -57,7 +57,10 @@ def original_like_source_files(root):
 
 def compile_private_java9_owner(source_root, owner_entry, surrogate_simple,
                                 new_private_output, *, javac="javac"):
-    root = Path(source_root).resolve()
+    supplied_root = Path(source_root)
+    need(not supplied_root.is_symlink(),
+         "SOURCE_TREE_SYMLINK_NOT_ALLOWED")
+    root = supplied_root.resolve()
     output = Path(new_private_output)
     need(not output.exists() and not output.is_symlink()
          and output.parent.is_dir() and not output.parent.is_symlink(),
