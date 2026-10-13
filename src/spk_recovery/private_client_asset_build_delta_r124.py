@@ -93,6 +93,33 @@ def _delta(old, new, paths):
     }
 
 
+
+def _package_type_collisions(classfile_paths):
+    """Types shadowing JVM packages; valid bytecode but ambiguous Java imports."""
+    names = {p[:-6] for p in classfile_paths if p.endswith(".class")}
+    shadowing = set()
+    descendants = set()
+    rs_descendants = set()
+    for name in names:
+        parts = name.split("/")
+        for index in range(1, len(parts)):
+            prefix = "/".join(parts[:index])
+            if prefix in names:
+                shadowing.add(prefix)
+                descendants.add(name)
+                if name.startswith("rs/") and prefix.startswith("rs/"):
+                    rs_descendants.add(name)
+    return {
+        "class_names_shadowing_package_names": len(shadowing),
+        "descendant_classfiles_affected": len(descendants),
+        "game_rs_shadowing_class_names":
+            sum(p.startswith("rs/") for p in shadowing),
+        "game_rs_descendant_classfiles_affected": len(rs_descendants),
+        "java_source_namespace_remapping_required": bool(shadowing),
+        "automatically_remapped": False,
+    }
+
+
 def inventory_private_original_assets(bundle, *, expected=None):
     expected = expected if expected is not None else {"v308": V308, "v309": V309}
     source = Path(bundle)
@@ -158,6 +185,11 @@ def inventory_private_original_assets(bundle, *, expected=None):
                 **{key: _delta(old, new, region)
                    for key, region in regions.items()},
                 "all_classes": total_diff,
+            },
+            "java_namespace_collisions": {
+                version: _package_type_collisions(
+                    originals[version]["classes"])
+                for version in ("v308", "v309")
             },
             "runtime_asset_files": len(selected),
             "runtime_asset_total_bytes": sum(x.file_size for x in selected),
