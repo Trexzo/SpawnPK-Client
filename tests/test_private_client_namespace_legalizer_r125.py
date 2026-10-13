@@ -266,11 +266,43 @@ class ClientNamespaceLegalizationR125Tests(unittest.TestCase):
                 "ORIGINAL_JAR_SYMLINK_REJECTED"):
             original_class_inventory(self.jar, actual)
 
-    def test_unsafe_jvm_identifier_not_published_as_compilable(self):
-        with self.assertRaisesRegex(
-                ClientNamespaceLegalizationError,
-                "ORIGINAL_JVM_CLASS_NAME_NOT_DIRECTLY_JAVA_LEGAL"):
-            plan_client_namespaces({"rs/enum"})
+    def test_jvm_java_keyword_class_name_gets_safe_alias(self):
+        result = plan_client_namespaces(
+            {"rs/enum", "gnu/trove/a/do", "gnu/trove/a/do$Nested"},
+            include_identifiers=True)
+        rows = {r["old_internal_name"]: r["new_internal_name"]
+                for r in result["remaps"]}
+        self.assertIn("rs/enum", rows)
+        self.assertIn("gnu/trove/a/do", rows)
+        self.assertEqual(rows["gnu/trove/a/do$Nested"],
+                         rows["gnu/trove/a/do"] + "$Nested")
+        self.assertTrue(result["mapped_paths_unique_after_casefold"])
+        self.assertGreater(result["remediation_operations"][
+            "java_illegal_type_names_fixed"], 0)
+
+    def test_java_keyword_package_segment_is_legalized(self):
+        result = plan_client_namespaces(
+            {"rs/for/SomeType", "rs/for/OtherType"},
+            include_identifiers=True)
+        rows = {r["old_internal_name"]: r["new_internal_name"]
+                for r in result["remaps"]}
+        self.assertIn("rs/for/SomeType", rows)
+        self.assertEqual(
+            rows["rs/for/SomeType"].rsplit("/", 1)[0],
+            rows["rs/for/OtherType"].rsplit("/", 1)[0])
+        self.assertNotIn("/for/", rows["rs/for/SomeType"])
+        self.assertGreater(result["remediation_operations"][
+            "java_illegal_package_segments_fixed"], 0)
+
+    def test_package_info_metadata_kept_in_original_package(self):
+        result = plan_client_namespaces(
+            {"org/lwjgl/package-info", "org/lwjgl/System",
+             "gnu/trove/a/do"}, include_identifiers=True)
+        rows = {r["old_internal_name"]: r["new_internal_name"]
+                for r in result["remaps"]}
+        self.assertNotIn("org/lwjgl/package-info", rows)
+        self.assertIn("gnu/trove/a/do", rows)
+
 
     def test_public_plan_never_claims_source_or_runtime_recovery(self):
         report = plan_client_namespaces({"rs/a", "rs/a/Child"})
