@@ -12,6 +12,7 @@ from zipfile import ZipFile, ZipInfo
 from spk_recovery.private_client_namespace_legalizer_r125 import (
     ClientNamespaceLegalizationError, original_class_inventory,
     plan_client_namespaces, package_prefixes, case_groups,
+    derive_private_bytecode_remap_plan,
 )
 
 
@@ -107,6 +108,42 @@ class ClientNamespaceLegalizationR125Tests(unittest.TestCase):
                 ClientNamespaceLegalizationError,
                 "ORIGINAL_CLIENT_JAR_SHA256_MISMATCH"):
             original_class_inventory(self.jar, "0" * 64)
+
+    def test_legacy_bytecode_remapper_adapter_is_hash_pinned(self):
+        from spk_recovery.collision_bytecode_remap import (
+            _load_plan, _expanded_mappings,
+        )
+        expected = self.make([
+            ("rs/f.class", b"original-synthetic"),
+            ("rs/f/Child.class", b"second-synthetic"),
+            ("rs/f$Inner.class", b"nested-synthetic"),
+            ("rs/Independent.class", b"unaffected"),
+        ])
+        mapped = derive_private_bytecode_remap_plan(
+            self.jar, expected_sha=expected)
+        self.assertEqual(mapped["kind"],
+                         "class_package_namespace_collision_plan")
+        self.assertTrue(mapped["identifiers_included"])
+        self.assertEqual(mapped["readable_jar_sha256"], expected)
+        self.assertFalse(mapped["r125_source_names_rewritten"])
+        plan_path = self.root / "private-remap.json"
+        plan_path.write_text(json.dumps(mapped), encoding="utf-8")
+        loaded = _load_plan(plan_path)
+        expanded, nested = _expanded_mappings(
+            {"rs/f", "rs/f/Child", "rs/f$Inner", "rs/Independent"},
+            loaded)
+        self.assertEqual(nested, 0)
+        self.assertEqual(expanded["rs/f$Inner"],
+                         expanded["rs/f"] + "$Inner")
+        self.assertNotIn("rs/Independent", expanded)
+
+    def test_adapter_rejects_wrong_original_pin(self):
+        self.make([("rs/f.class", b"synthetic")])
+        with self.assertRaisesRegex(
+                ClientNamespaceLegalizationError,
+                "ORIGINAL_CLIENT_JAR_SHA256_MISMATCH"):
+            derive_private_bytecode_remap_plan(
+                self.jar, expected_sha="0" * 64)
 
     def test_zip_slip_rejected(self):
         actual = self.make([
