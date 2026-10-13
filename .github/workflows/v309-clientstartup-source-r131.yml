@@ -2,6 +2,7 @@ name: V309 recovered ClientStartUp source class evidence
 on:
   pull_request:
     paths:
+      - ".gitattributes"
       - "source-candidates/v309/src/rs/runelite/events/ClientStartUp.java"
       - "src/spk_recovery/private_v309_clientstartup_frame_r131.py"
       - "tests/test_private_v309_clientstartup_recovered_source_r131.py"
