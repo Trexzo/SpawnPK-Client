@@ -11,6 +11,7 @@ from zipfile import ZipFile
 from spk_recovery.private_single_class_ast_rename_r130 import (
     PrivateSingleClassRenameR130Error,
     rename_private_single_source_class,
+    _verified_helper_replacements,
 )
 from spk_recovery.private_v309_java9_source_class_matrix_r129 import (
     compile_and_compare_private_class,
@@ -98,6 +99,25 @@ class PrivateClassAstRenameR130Tests(unittest.TestCase):
         self.assertTrue(result["field_inventory_exact"])
         self.assertTrue(result["all_matrix_checks_exact"])
         self.assertFalse(result["original_game_class_parity_accepted"])
+
+    def test_java_helper_success_line_endings_are_platform_independent(self):
+        for terminator in ("\\n", "\\r\\n", "\\r"):
+            with self.subTest(terminator=repr(terminator)):
+                raw = (
+                    "R130_AST_SOURCE_CLASS_REWRITE_PASS" + terminator +
+                    "source_symbol_replacements=6" + terminator
+                ).encode("utf-8")
+                self.assertEqual(_verified_helper_replacements(raw), 6)
+
+    def test_duplicate_java_helper_success_count_is_rejected(self):
+        raw = (
+            b"R130_AST_SOURCE_CLASS_REWRITE_PASS\\r\\n"
+            b"source_symbol_replacements=6\\r\\n"
+            b"source_symbol_replacements=9\\r\\n")
+        with self.assertRaisesRegex(
+                PrivateSingleClassRenameR130Error,
+                "CLASS_DECLARATION_OR_CONSTRUCTOR_NOT_REWRITTEN"):
+            _verified_helper_replacements(raw)
 
     def test_wrong_sha_refuses_even_valid_source(self):
         with self.assertRaisesRegex(
