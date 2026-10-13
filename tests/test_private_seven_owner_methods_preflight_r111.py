@@ -24,9 +24,12 @@ class SevenOriginalOwnerMethodsSourceTests(TestCase):
             },
             "arguments": [
                 {"kind": "method_type", "descriptor": "()V"},
-                {"kind": "method_handle", "reference_kind": 6,
-                 "owner": "p/Owner", "name": "g",
-                 "descriptor": "()V"},
+                {"kind": "method_handle",
+                 "method_handle": {
+                     "reference_kind": 6, "target_kind": "method",
+                     "owner": "p/Owner", "name": "g",
+                     "descriptor": "()V",
+                 }},
                 {"kind": "method_type", "descriptor": "()V"},
             ],
         }]
@@ -162,7 +165,7 @@ class SevenOriginalOwnerMethodsSourceTests(TestCase):
 
     def test_callback_original_method_handle_change_rejected(self):
         wrong = deepcopy(self.candidate)
-        wrong["bootstrap_methods"][0]["arguments"][1]["name"] = "unrelated"
+        wrong["bootstrap_methods"][0]["arguments"][1]["method_handle"]["name"] = "unrelated"
         with self.assertRaisesRegex(
             gate.SevenOwnerMethodsSourceError,
             "ORIGINAL_CALLBACK_LAMBDA_BOOTSTRAP_OR_TARGET_NOT_EXACT",
