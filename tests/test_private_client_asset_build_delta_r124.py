@@ -11,6 +11,7 @@ from zipfile import ZipFile, ZipInfo
 from spk_recovery.private_client_asset_build_delta_r124 import (
     PrivateClientAssetDeltaR124Error,
     inventory_private_original_assets,
+    _package_type_collisions,
 )
 
 
@@ -74,6 +75,22 @@ class PrivateClientAssetDeltaR124Tests(unittest.TestCase):
         self.assertNotIn("accountid", json.dumps(result))
         self.assertFalse(result["full_deobfuscated_source_tree_accepted"])
         self.assertFalse(result["runtime_equivalence_proven"])
+
+    def test_obfuscated_type_package_collision_frontier(self):
+        result = _package_type_collisions({
+            "rs/p.class", "rs/p/Child.class",
+            "rs/p/f/Other.class", "rs/q.class",
+            "gnu/trove/f.class", "gnu/trove/f/b.class",
+            "gnu/trove/f/b/cc.class",
+        })
+        self.assertEqual(
+            result["class_names_shadowing_package_names"], 3)
+        self.assertEqual(result["descendant_classfiles_affected"], 4)
+        self.assertEqual(result["game_rs_shadowing_class_names"], 1)
+        self.assertEqual(
+            result["game_rs_descendant_classfiles_affected"], 2)
+        self.assertTrue(result["java_source_namespace_remapping_required"])
+        self.assertFalse(result["automatically_remapped"])
 
     def test_manifest_hash_reproducible(self):
         a = self.build()["runtime_asset_sha256_manifest"]
