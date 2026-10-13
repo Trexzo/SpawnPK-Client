@@ -105,7 +105,7 @@ class Original161FrameMetadataTests(unittest.TestCase):
         changed["stackmap_frames"][3]["bytecode_offset"]+=1
         with self.assertRaisesRegex(
                 LoaderSymbolicFramesR117Error,
-                "JVM_FRAME_OFFSET_NOT_AT_VALID_INSTRUCTION_BOUNDARY"):
+                "JVM_FRAME_OFFSET_NOT_AT_INSTRUCTION_BOUNDARY"):
             encode_original_states_at_candidate_pcs(
                 self.orig,changed,self.cp)
 
