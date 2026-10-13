@@ -276,12 +276,66 @@ def plan_client_namespaces(original, *, include_identifiers=False,
     return public
 
 
+
+def derive_private_bytecode_remap_plan(original_jar, *, expected_sha=CANONICAL_V309):
+    """Bridge private R125 mapping to existing fail-closed R8R JAR rewrite.
+
+    Generates a PRIVATE identifier-bearing plan; does not execute or modify
+    original classes, source, resources or the input JAR.
+    """
+    from .namespace_collision import analyze_namespace_collisions
+    from .collision_bytecode_remap import (
+        CollisionBytecodeRemapError, _expanded_mappings,
+    )
+
+    classes = original_class_inventory(original_jar, expected_sha)
+    proof = plan_client_namespaces(
+        classes, include_identifiers=True,
+        original_jar_sha256=expected_sha)
+    remaps = [
+        {"old_internal_name": row["old_internal_name"],
+         "new_internal_name": row["new_internal_name"],
+         "r125_reasons": row["reasons"]}
+        for row in proof["remaps"]
+    ]
+    try:
+        expanded, _ = _expanded_mappings(classes, {"remaps": remaps})
+    except CollisionBytecodeRemapError as exc:
+        raise ClientNamespaceLegalizationError(
+            "INCOMPATIBLE_WITH_EXISTING_NESTED_BYTECODE_REMAPPER") from exc
+    mapped = {old: expanded.get(old, old) for old in classes}
+    _validate_final(mapped, classes)
+    named = {row["old_internal_name"]: row["new_internal_name"]
+             for row in remaps}
+    require(all(mapped[key] == named.get(key, key) for key in classes),
+            "EXISTING_BYTECODE_REMAPPER_EXPANSION_CHANGED_NAMESPACE_PROOF")
+    collision = analyze_namespace_collisions(
+        Path(original_jar), include_identifiers=False)
+    require(collision["readable_jar_sha256"] == expected_sha,
+            "REMAP_COLLISION_AUTHORITY_JAR_SHA_MISMATCH")
+    return {
+        "schema_version": 1,
+        "kind": "class_package_namespace_collision_plan",
+        "identifiers_included": True,
+        "plan_id": "JNSPLAN_R125_" +
+            digest(proof["private_mapping_sha256"] + expected_sha)[:20].upper(),
+        "collision_report_id": collision["report_id"],
+        "readable_jar_sha256": expected_sha,
+        "r125_source_plan_mapping_sha256": proof["private_mapping_sha256"],
+        "r125_windows_legalization_verified": True,
+        "r125_source_names_rewritten": False,
+        "r125_original_binary_parity_proven": False,
+        "remaps": remaps,
+    }
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("private_original_client_jar")
     parser.add_argument("fresh_private_output_json")
     parser.add_argument("--original-sha256", default=CANONICAL_V309)
     parser.add_argument("--private-identifiers", action="store_true")
+    parser.add_argument("--private-bytecode-plan")
     args = parser.parse_args(argv)
     out = Path(args.fresh_private_output_json)
     try:
@@ -293,6 +347,21 @@ def main(argv=None):
         report = plan_client_namespaces(
             classes, include_identifiers=args.private_identifiers,
             original_jar_sha256=args.original_sha256)
+        if args.private_bytecode_plan:
+            require(args.private_identifiers,
+                    "BYTECODE_REMAP_REQUIRES_PRIVATE_IDENTIFIERS")
+            companion = Path(args.private_bytecode_plan)
+            require(companion != out and not companion.exists()
+                    and not companion.is_symlink()
+                    and companion.parent.is_dir()
+                    and not companion.parent.is_symlink(),
+                    "FRESH_PRIVATE_REMAP_PLAN_PATH_REQUIRED")
+            bytecode_plan = derive_private_bytecode_remap_plan(
+                args.private_original_client_jar,
+                expected_sha=args.original_sha256)
+            companion.write_text(
+                json.dumps(bytecode_plan, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8")
         out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n",
                        encoding="utf-8")
         print("CLIENT_JAVA_NAMESPACE_LEGALIZATION_R125_PASS")
