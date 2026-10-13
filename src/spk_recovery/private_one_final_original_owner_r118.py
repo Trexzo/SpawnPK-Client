@@ -130,7 +130,7 @@ def exact_original_large_methods_before_or_after(original, candidate):
          "ORIGINAL_LOADER_161_FRAME_ORDINALS_DIFFERENT")
     for old,new in zip(loader["stackmap_frames"],matches[0]["stackmap_frames"]):
         need(semantic_frame(old,old_index,matches[0]["instructions"])
-             ==semantic_frame(new,old_index,matches[0]["instructions"]),
+             ==semantic_frame(new,new_index,matches[0]["instructions"]),
              "ORIGINAL_LOADER_FRAME_VERIFICATION_STATE_DIFFERS")
     return True
 
