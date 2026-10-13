@@ -47,6 +47,24 @@ def _java_owner(internal):
     return internal.rsplit("/", 1)
 
 
+
+def _verified_helper_replacements(stdout):
+    """Line-ending independent; require one exact Java-helper pass/counter."""
+    try:
+        lines = stdout.decode("utf-8", errors="strict").splitlines()
+    except UnicodeDecodeError as exc:
+        raise PrivateSingleClassRenameR130Error(
+            "TRUSTED_JAVA_HELPER_OUTPUT_INVALID_UTF8") from exc
+    need(lines.count("R130_AST_SOURCE_CLASS_REWRITE_PASS") == 1,
+         "TRUSTED_JAVA_HELPER_NO_SUCCESS_MARKER")
+    values = [line.partition("=")[2] for line in lines
+              if line.startswith("source_symbol_replacements=")]
+    need(len(values) == 1 and values[0].isascii() and values[0].isdecimal()
+         and 2 <= int(values[0]) <= 5000,
+         "CLASS_DECLARATION_OR_CONSTRUCTOR_NOT_REWRITTEN")
+    return int(values[0])
+
+
 def rename_private_single_source_class(source_root, fresh_private_output, *,
                                        original_java_owner, intended_jvm_owner,
                                        source_sha256, javac="javac", java="java"):
@@ -114,12 +132,7 @@ def rename_private_single_source_class(source_root, fresh_private_output, *,
                     "PRIVATE_AST_SOURCE_REWRITE_NOT_COMPLETED") from exc
             need(result.returncode == 0,
                  "PRIVATE_AST_SOURCE_SYMBOL_REWRITE_REJECTED")
-        stdout = result.stdout.decode("utf-8")
-        need("R130_AST_SOURCE_CLASS_REWRITE_PASS" in stdout,
-             "TRUSTED_JAVA_HELPER_NO_SUCCESS_MARKER")
-        count = re.search(r"(?m)^source_symbol_replacements=(\d+)$", stdout)
-        need(count is not None and 2 <= int(count.group(1)) <= 5000,
-             "CLASS_DECLARATION_OR_CONSTRUCTOR_NOT_REWRITTEN")
+        replacement_count = _verified_helper_replacements(result.stdout)
         target = staged / (intended_jvm_owner + ".java")
         need(target.is_file() and not stage_source.exists(),
              "REWRITTEN_SOURCE_FILE_IDENTITY_MISMATCH")
@@ -151,7 +164,7 @@ def rename_private_single_source_class(source_root, fresh_private_output, *,
             "kind": "private_v309_single_java_ast_class_rename_r130",
             "source_java_original_sha256": source_sha256,
             "independently_renamed_java_source_sha256": posthash,
-            "source_symbol_replacements": int(count.group(1)),
+            "source_symbol_replacements": replacement_count,
             "jvm_source_compiler_release": 9,
             "project_binary_fallback_used": False,
             "private_original_source_unchanged": True,
