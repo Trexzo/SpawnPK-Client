@@ -120,6 +120,30 @@ def _package_type_collisions(classfile_paths):
     }
 
 
+
+def _case_insensitive_class_path_collisions(classfile_paths):
+    """Detect distinct JVM class paths overwriting on Windows/NTFS."""
+    collision_groups = {}
+    for path in classfile_paths:
+        if path.endswith(".class"):
+            collision_groups.setdefault(path.casefold(), []).append(path)
+    duplicate_groups = [group for group in collision_groups.values()
+                        if len(group) > 1]
+    rs_groups = [group for group in duplicate_groups
+                 if any(path.startswith("rs/") for path in group)]
+    return {
+        "casefold_class_path_conflict_groups": len(duplicate_groups),
+        "affected_classfiles": sum(map(len, duplicate_groups)),
+        "game_rs_conflict_groups": len(rs_groups),
+        "game_rs_affected_classfiles": sum(
+            sum(path.startswith("rs/") for path in group)
+            for group in rs_groups
+        ),
+        "windows_source_path_legalization_required": bool(duplicate_groups),
+        "automatically_renamed": False,
+    }
+
+
 def inventory_private_original_assets(bundle, *, expected=None):
     expected = expected if expected is not None else {"v308": V308, "v309": V309}
     source = Path(bundle)
@@ -188,6 +212,11 @@ def inventory_private_original_assets(bundle, *, expected=None):
             },
             "java_namespace_collisions": {
                 version: _package_type_collisions(
+                    originals[version]["classes"])
+                for version in ("v308", "v309")
+            },
+            "windows_class_path_collisions": {
+                version: _case_insensitive_class_path_collisions(
                     originals[version]["classes"])
                 for version in ("v308", "v309")
             },
