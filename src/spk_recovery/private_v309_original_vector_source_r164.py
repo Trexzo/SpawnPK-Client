@@ -49,7 +49,7 @@ def verify_original_vector_java(original_jar, vector_java_zip, *,
             sha_file(vector_java_zip)==vector_source_sha256,
             "R164_PINNED_ORIGINAL_OR_JAVA_SOURCE_HASH_MISMATCH")
     require(1<=expected_methods<=32 and 1<=expected_fields<=32
-            and expected_instructions>0 and original_owner.count("/")>=2
+            and expected_instructions>0 and original_owner.count("/")>=1
             and all(p and p.replace("_","").isalnum()
                     for p in original_owner.split("/")),
             "R164_UNSAFE_ORIGINAL_VECTOR_OWNER_OR_BOUNDS")
