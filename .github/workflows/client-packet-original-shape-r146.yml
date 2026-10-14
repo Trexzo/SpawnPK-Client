@@ -1,0 +1,36 @@
+name: V309 original Packet Java structural identity R146 smoke
+on:
+  pull_request:
+    paths:
+      - "src/spk_recovery/private_v309_packet_original_source_shape_r146.py"
+      - "src/spk_recovery/java/PrivatePacketStructuralSourceR146.java"
+      - "tests/test_private_v309_packet_original_source_shape_r146.py"
+      - ".github/workflows/client-packet-original-shape-r146.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: client-packet-r146-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install v309 recovery package
+        run: python -m pip install -e .
+      - name: Test original classfile versus recovered Java member shapes and literal constants
+        run: python -m unittest discover -s tests -p "test_private_v309_packet_original_source_shape_r146.py" -v
+      - name: Python syntax verification
+        run: python -m compileall -q src/spk_recovery/private_v309_packet_original_source_shape_r146.py
