@@ -44,7 +44,8 @@ def require(value, reason):
 
 
 def _exact_selection(selection, *, allow_euler_method_bodies=False,
-                     allow_transform_projection_method=False):
+                     allow_transform_projection_method=False,
+                     allow_matrix_string_method=False):
     data = Path(selection).read_bytes()
     require(len(data) <= 32768, "R153_SELECTION_NOT_BOUNDED")
     try:
@@ -53,7 +54,8 @@ def _exact_selection(selection, *, allow_euler_method_bodies=False,
         raise PrivateMatrixLoaderR153Error("R153_SELECTION_NOT_JSON") from exc
     selected = _method_list(values, allow_constructor_methods=True)
     expected = (2 + (2 if allow_euler_method_bodies else 0) +
-                (1 if allow_transform_projection_method else 0))
+                (1 if allow_transform_projection_method else 0) +
+                (1 if allow_matrix_string_method else 0))
     require(len(selected) == expected
             and sum(x[0] == "<init>" for x in selected) == 1,
             "R155_BOUNDED_EXACT_MEMBER_SELECTION_REQUIRED")
@@ -64,13 +66,17 @@ def _exact_selection(selection, *, allow_euler_method_bodies=False,
     decoder = decoders[0]
     other = [x for x in selected if x not in (constructor, decoder)]
     eulers = [m for m in other if m[1] == "()[F"]
-    projections = [m for m in other if m[1] != "()[F"]
+    strings = [m for m in other
+               if m == ("toString", "()Ljava/lang/String;")]
+    projections = [m for m in other
+                   if m[1] != "()[F" and m not in strings]
     require(len(eulers) == (2 if allow_euler_method_bodies else 0)
+            and len(strings) == (1 if allow_matrix_string_method else 0)
             and len(projections) == (1 if allow_transform_projection_method else 0)
             and all(m[0] not in ("<init>", "<clinit>") for m in other)
             and all(re.fullmatch(r"(L[A-Za-z0-9_$/]+;)V", p[1])
                     for p in projections),
-            "R155_ONLY_EULER_AND_EXACT_ONE_TRANSFORM_PROJECTION_ALLOWED")
+            "R156_ONLY_EULER_TRANSFORM_AND_STRING_EXACT_SELECTION")
     require(constructor[1] == decoder[1] and
             re.fullmatch(r"\(L([A-Za-z0-9_$]+/)*[A-Za-z0-9_$]+;Z\)V",
                          constructor[1]) is not None,
@@ -117,7 +123,8 @@ def verify_private_original_matrix_packet_loader(
         matrix_source_sha256, support_source_sha256, selection_sha256,
         original_owner="com/a/b/a/b",
         allow_euler_method_bodies=False,
-        allow_transform_projection_method=False):
+        allow_transform_projection_method=False,
+        allow_matrix_string_method=False):
     inputs = [
         (original_jar, original_sha256),
         (private_matrix_java_zip, matrix_source_sha256),
@@ -133,7 +140,8 @@ def verify_private_original_matrix_packet_loader(
     selected = _exact_selection(
         private_selection_json,
         allow_euler_method_bodies=allow_euler_method_bodies,
-        allow_transform_projection_method=allow_transform_projection_method)
+        allow_transform_projection_method=allow_transform_projection_method,
+        allow_matrix_string_method=allow_matrix_string_method)
     matrix_java = source_members(private_matrix_java_zip, matrix_source_sha256)
     helpers = source_members(private_source_only_support_zip,
                              support_source_sha256)
@@ -188,6 +196,29 @@ def verify_private_original_matrix_packet_loader(
                 ),
                 "R154_ORIGINAL_EULER_METHODS_NOT_EXACT_TWO_MATH_ONLY")
     provided_owners = {name[:-5] for name, _ in helpers}
+    if allow_matrix_string_method:
+        require(allow_euler_method_bodies,
+                "R156_MATRIX_STRING_REQUIRES_TWO_PROVEN_EULER_READERS")
+        strings = [
+            m for m in original_profile["methods"]
+            if m["name"] == "toString"
+            and m["descriptor"] == "()Ljava/lang/String;"
+        ]
+        require(len(strings) == 1 and
+                (strings[0]["access"] & 0x0007) == 1 and
+                strings[0]["code_length"] >= 55,
+                "R156_ORIGINAL_PUBLIC_MATRIX_STRING_NOT_FOUND")
+        callsites = {
+            (call["owner"], call["name"], call["descriptor"])
+            for call in strings[0]["method_invocations"]
+        }
+        require(
+            (original_owner, "c", "()[F") in callsites
+            and (original_owner, "d", "()[F") in callsites
+            and ("java/lang/Math", "sqrt", "(D)D") in callsites
+            and any(owner == "java/lang/StringBuilder"
+                    for owner, _, _ in callsites),
+            "R156_ORIGINAL_MATRIX_STRING_CALLGRAPH_NOT_PROVEN")
     if allow_transform_projection_method:
         projected = [m for m in selected
                      if m[0] != "<init>" and m[1] not in
@@ -281,7 +312,8 @@ def verify_private_original_matrix_packet_loader(
     require(built_profile["internal_name"] == original_owner
             and checks["verified_selected_method_count"] ==
                 (2 + (2 if allow_euler_method_bodies else 0) +
-                 (1 if allow_transform_projection_method else 0))
+                 (1 if allow_transform_projection_method else 0) +
+                 (1 if allow_matrix_string_method else 0))
             and checks["verified_constructor_count"] == 1
             and checks["core_method_bytecode_differences"] == 0,
             "R153_SELECTED_ORIGINAL_MATRIX_METHOD_BODY_NOT_VERIFIED")
@@ -305,6 +337,9 @@ def verify_private_original_matrix_packet_loader(
         "transform_projection_method_checked":
             1 if allow_transform_projection_method else 0,
         "transform_projection_requires_explicit_opt_in": True,
+        "matrix_string_method_checked":
+            1 if allow_matrix_string_method else 0,
+        "matrix_string_method_requires_explicit_opt_in": True,
         "support_transform_type_field_values_accepted": False,
         "support_class_bodies_original_equivalence_accepted": False,
         "support_class_bodies_executed": False,
@@ -339,6 +374,8 @@ def main(argv=None):
     p.add_argument("--allow-euler-method-bodies", action="store_true")
     p.add_argument("--allow-transform-projection-method",
                    action="store_true")
+    p.add_argument("--allow-matrix-string-method",
+                   action="store_true")
     a = p.parse_args(argv)
     dest = Path(a.fresh_private_sanitized_report_json)
     try:
@@ -356,7 +393,8 @@ def main(argv=None):
             selection_sha256=a.selection_sha256,
             original_owner=a.original_owner,
             allow_euler_method_bodies=a.allow_euler_method_bodies,
-            allow_transform_projection_method=a.allow_transform_projection_method)
+            allow_transform_projection_method=a.allow_transform_projection_method,
+            allow_matrix_string_method=a.allow_matrix_string_method)
         dest.write_text(json.dumps(
             results, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         print("R153_ORIGINAL_PACKET_DEPENDENT_MATRIX_JAVA_METHODS_PROVEN")
