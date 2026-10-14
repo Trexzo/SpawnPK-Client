@@ -76,10 +76,11 @@ def extract_jvm_call_edges(original_jar, *,
                 need(((info.external_attr >> 16) & 0o170000) != 0o120000,
                      "JAR_SYMLINK_REJECTED")
             targets = sorted(
-                info for info in infos
-                if info.filename.startswith("rs/")
-                and info.filename.endswith(".class") and not info.is_dir()
-            , key=lambda item: item.filename)
+                (info for info in infos
+                 if info.filename.startswith("rs/")
+                 and info.filename.endswith(".class")
+                 and not info.is_dir()),
+                key=lambda item: item.filename)
             need(bool(targets) and len(targets) <= 10000,
                  "ORIGINAL_RS_CLASS_COUNT_INVALID")
             for info in targets:
