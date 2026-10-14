@@ -94,6 +94,54 @@ class R145OriginalLinkedClassSourceBridge(unittest.TestCase):
         self.assertFalse(report["original_method_bytecode_equivalence_verified"])
         self.assertFalse(report["whole_client_source_compilation_accepted"])
 
+    def test_exact_binary_cross_version_reuse_is_proof_only_not_semantics(self):
+        report = compare_private_linked_owner_source(
+            self.source, self.jar, self.donor,
+            source_sha256=self.sha(self.source),
+            original_sha256=self.sha(self.jar),
+            donor_sha256=self.sha(self.donor),
+            cross_version_original_jar=self.jar,
+            cross_version_sha256=self.sha(self.jar))
+        self.assertTrue(report["cross_version_original_checked"])
+        self.assertTrue(report["cross_version_original_owner_class_byte_identical"])
+        self.assertEqual(64, len(
+            report["cross_version_original_owner_class_sha256"]))
+        self.assertFalse(report[
+            "cross_version_source_semantic_name_carry_forward_accepted"])
+        self.assertFalse(report["original_method_bytecode_equivalence_verified"])
+
+    def test_changed_cross_version_owner_class_is_not_reused(self):
+        from zipfile import ZipFile
+        previous = self.root / "previous-different.jar"
+        with ZipFile(self.jar) as original, ZipFile(previous, "w") as output:
+            for member in original.namelist():
+                payload = original.read(member)
+                if member == "ext/Bridge.class":
+                    # Header remains valid for a nonexecuted negative fixture.
+                    payload = payload[:-1] + bytes([payload[-1] ^ 1])
+                output.writestr(member, payload)
+        report = compare_private_linked_owner_source(
+            self.source, self.jar, self.donor,
+            source_sha256=self.sha(self.source),
+            original_sha256=self.sha(self.jar),
+            donor_sha256=self.sha(self.donor),
+            cross_version_original_jar=previous,
+            cross_version_sha256=self.sha(previous))
+        self.assertTrue(report["cross_version_original_checked"])
+        self.assertFalse(report["cross_version_original_owner_class_byte_identical"])
+        self.assertFalse(report[
+            "cross_version_source_semantic_name_carry_forward_accepted"])
+
+    def test_cross_version_original_sha_guard_rejects_mismatch(self):
+        with self.assertRaises(PrivateClientSourceBridgeR145Error):
+            compare_private_linked_owner_source(
+                self.source, self.jar, self.donor,
+                source_sha256=self.sha(self.source),
+                original_sha256=self.sha(self.jar),
+                donor_sha256=self.sha(self.donor),
+                cross_version_original_jar=self.jar,
+                cross_version_sha256="0" * 64)
+
     def test_unlinked_external_donor_rejected(self):
         other = self.zip_java("unlinked-donor.zip", {
             "ext/Clean.java": "package ext; public class Clean {}",
