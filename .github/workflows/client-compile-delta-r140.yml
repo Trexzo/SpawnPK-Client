@@ -1,0 +1,35 @@
+name: V309 compile delta R140 smoke
+on:
+  pull_request:
+    paths:
+      - "src/spk_recovery/private_v309_compile_delta_r140.py"
+      - "tests/test_private_v309_compile_delta_r140.py"
+      - ".github/workflows/client-compile-delta-r140.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: client-compile-delta-r140-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+      - name: Install source recovery package
+        run: python -m pip install -e .
+      - name: Run R140 two-compile source overlay tests
+        run: python -m unittest discover -s tests -p "test_private_v309_compile_delta_r140.py" -v
+      - name: Syntax check
+        run: python -m compileall -q src/spk_recovery/private_v309_compile_delta_r140.py
