@@ -10,6 +10,8 @@ from zipfile import ZipFile
 
 from spk_recovery.private_original_jvm_invoke_edges_r130 import (
     PrivateOriginalInvokeR130Error, collect_jvm_invoke_edges,
+    CANONICAL_V309, _CANONICAL_INVOKE_SHAPE,
+    require_independent_canonical_invoke_checkpoint,
 )
 
 
@@ -53,6 +55,21 @@ class OriginalJvmInvokeR130Tests(unittest.TestCase):
             if include_target:
                 archive.write(self.classes / "rs" / "B.class", "rs/B.class")
         return hashlib.sha256(self.jar.read_bytes()).hexdigest()
+
+    def test_independent_canonical_original_shape_checkpoint(self):
+        require_independent_canonical_invoke_checkpoint(
+            dict(_CANONICAL_INVOKE_SHAPE), CANONICAL_V309)
+        mutated = dict(_CANONICAL_INVOKE_SHAPE)
+        mutated["direct_rs_to_rs_invoke_sites"] += 1
+        with self.assertRaisesRegex(
+                PrivateOriginalInvokeR130Error,
+                "CANONICAL_V309_INDEPENDENT_INVOKE_CHECKPOINT_MISMATCH"):
+            require_independent_canonical_invoke_checkpoint(
+                mutated, CANONICAL_V309)
+        # The synthetic test fixture has its own explicit pin;
+        # it must not be forced into the real v309 population counts.
+        require_independent_canonical_invoke_checkpoint(
+            mutated, "f" * 64)
 
     def test_real_direct_calls_keep_lambda_indy_separate(self):
         pin = self.build()
