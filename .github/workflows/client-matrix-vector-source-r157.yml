@@ -1,0 +1,32 @@
+name: V309 original transform vector source parity R157
+on:
+  pull_request:
+    paths:
+      - "tests/test_private_v309_matrix_vector_transform_parity_r157.py"
+      - ".github/workflows/client-matrix-vector-source-r157.yml"
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install client source recovery package
+        run: python -m pip install -e .
+      - name: Strict original vector and transform JVM Code source parity
+        run: python -m unittest discover -s tests -p "test_private_v309_matrix_vector_transform_parity_r157.py" -v
+      - name: Regression R156 strict source-only scaffolds
+        run: python -m unittest discover -s tests -p "test_private_v309_matrix_source_helper_r156.py" -v
+      - name: Regression R155 selected source closure
+        run: python -m unittest discover -s tests -p "test_private_v309_matrix_source_closure_r155.py" -v
