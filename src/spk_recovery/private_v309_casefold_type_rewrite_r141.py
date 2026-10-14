@@ -1,4 +1,4 @@
-"""R141: provisional exact-v309 class-casefold import and Java *type* repair.
+"""R141/R143: provisional v309 class-casefold and class/package-shadow type repair.
 
 R125 may rename original binary class leaf identities to resolve Windows case
 collisions. A Java source import then names an alias that was NOT present in the
@@ -46,25 +46,41 @@ def manifest(entries):
 
 
 def _exact_casefold_type_aliases(nonrs_names, original_sha256):
-    """Only unchanged packages and leaf class-casefold aliases from R125."""
+    """Only independently justified class-casefold/shadow leaf aliases from R125."""
     proof = plan_client_namespaces(
         nonrs_names, include_identifiers=True,
         original_jar_sha256=original_sha256)
     eligible = {}
+    case_count = 0
+    shadow_count = 0
     for row in proof["remaps"]:
         old, new = row["old_internal_name"], row["new_internal_name"]
         oldpath, _, oldleaf = old.rpartition("/")
         newpath, _, newleaf = new.rpartition("/")
         if (oldpath != newpath or oldleaf == newleaf
-                or "$" in old or "$" in new
-                or "windows_class_case" not in row["reasons"]):
+                or "$" in old or "$" in new):
             continue
-        need(newleaf.startswith(oldleaf + "__Case_"),
-             "UNEXPECTED_R125_CLASS_CASE_ALIAS")
+        reasons = set(row["reasons"])
+        is_case = "windows_class_case" in reasons
+        is_shadow = "java_class_package_shadow" in reasons
+        if not (is_case or is_shadow):
+            continue
+        # These are disjoint actual R125 class-leaf legality operations.
+        # Never rewrite a source import using an unrelated guessed alias.
+        need(not (is_case and is_shadow),
+             "R125_AMBIGUOUS_CASE_AND_CLASS_PACKAGE_SHADOW_ALIAS")
+        if is_case:
+            need(newleaf.startswith(oldleaf + "__Case_"),
+                 "UNEXPECTED_R125_CLASS_CASE_ALIAS")
+            case_count += 1
+        else:
+            need(newleaf.startswith(oldleaf + "__Type_"),
+                 "UNEXPECTED_R125_CLASS_PACKAGE_SHADOW_ALIAS")
+            shadow_count += 1
         eligible[old.replace("/", ".")] = new.replace("/", ".")
     need(len(set(eligible.values())) == len(eligible),
-         "CASEFOLD_ALIAS_TARGET_COLLISION")
-    return eligible, proof["private_mapping_sha256"]
+         "R125_IMPORTED_LEAF_ALIAS_TARGET_COLLISION")
+    return eligible, proof["private_mapping_sha256"], case_count, shadow_count
 
 
 def _ast_type_alias_spans(source, original_import, *,
@@ -245,7 +261,7 @@ def patch_private_casefold_source(source_zip, original_jar, *,
         "provisional_non_rs_untainted"])
     need(len(nonrs) == graph["non_rs_without_known_rs_dependency_chain"],
          "R141_PROVISIONAL_CLASSPATH_CHANGED")
-    aliases, mapping_digest = _exact_casefold_type_aliases(
+    aliases, mapping_digest, case_count, shadow_count = _exact_casefold_type_aliases(
         nonrs, original_sha256)
     rewritten, proof = rewrite_private_candidate(original_sources, aliases)
     result = {
@@ -254,7 +270,9 @@ def patch_private_casefold_source(source_zip, original_jar, *,
         "original_client_sha256": original_sha256,
         "source_archive_sha256": source_sha256,
         "source_java_file_count": len(original_sources),
-        "eligible_original_nonrs_casefold_type_count": len(aliases),
+        "eligible_original_nonrs_casefold_type_count": case_count,
+        "eligible_original_nonrs_shadow_type_count": shadow_count,
+        "eligible_original_nonrs_all_rewritable_leaf_aliases": len(aliases),
         "private_r125_mapping_sha256": mapping_digest,
         "source_manifest_before_sha256": manifest(original_sources),
         "source_manifest_after_sha256": manifest(rewritten),
