@@ -1,0 +1,29 @@
+name: V309 original matrix method coverage R153
+on:
+  pull_request:
+    paths:
+      - "src/spk_recovery/private_v309_matrix_method_coverage_r153.py"
+      - "tests/test_private_v309_matrix_method_coverage_r153.py"
+      - ".github/workflows/client-matrix-method-coverage-r153.yml"
+  workflow_dispatch:
+
+jobs:
+  original-coverage:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install recovery tooling
+        run: python -m pip install -e .
+      - name: Verify exhaustive synthetic original JVM matrix method partition
+        run: python -m unittest discover -s tests -p "test_private_v309_matrix_method_coverage_r153.py" -v
