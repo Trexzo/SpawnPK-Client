@@ -43,7 +43,7 @@ def require(value, reason):
         raise PrivateMatrixLoaderR153Error(reason)
 
 
-def _exact_selection(selection):
+def _exact_selection(selection, *, allow_euler_method_bodies=False):
     data = Path(selection).read_bytes()
     require(len(data) <= 32768, "R153_SELECTION_NOT_BOUNDED")
     try:
@@ -51,11 +51,21 @@ def _exact_selection(selection):
     except (ValueError, UnicodeError) as exc:
         raise PrivateMatrixLoaderR153Error("R153_SELECTION_NOT_JSON") from exc
     selected = _method_list(values, allow_constructor_methods=True)
-    require(len(selected) == 2 and sum(x[0] == "<init>" for x in selected) == 1
-            and sum(x[0] != "<init>" for x in selected) == 1,
-            "R153_ONLY_ONE_CONSTRUCTOR_AND_ONE_DECODER_ALLOWED")
+    expected = 4 if allow_euler_method_bodies else 2
+    require(len(selected) == expected
+            and sum(x[0] == "<init>" for x in selected) == 1,
+            "R154_BOUNDED_CONSTRUCTOR_DECODER_EULER_SELECTION_REQUIRED")
+    additional = [m for m in selected
+                  if m[0] != "<init>" and m[1] == "()[F"]
+    require(len(additional) == (2 if allow_euler_method_bodies else 0)
+            and all(m[0] not in ("<init>", "<clinit>") for m in additional)
+            and len([m for m in selected
+                     if m[0] not in ("<init>",)
+                     and m[1] != "()[F"]) == 1,
+            "R154_ONLY_TWO_EULER_AND_ONE_BUFFER_LOADER_ALLOWED")
     constructor = next(x for x in selected if x[0] == "<init>")
-    decoder = next(x for x in selected if x[0] != "<init>")
+    decoder = next(x for x in selected
+                   if x[0] != "<init>" and x[1] != "()[F")
     require(constructor[1] == decoder[1] and
             re.fullmatch(r"\(L([A-Za-z0-9_$]+/)*[A-Za-z0-9_$]+;Z\)V",
                          constructor[1]) is not None,
@@ -98,7 +108,8 @@ def verify_private_original_matrix_packet_loader(
         private_source_only_support_zip, private_selection_json, *,
         original_sha256=CANONICAL_V309,
         matrix_source_sha256, support_source_sha256, selection_sha256,
-        original_owner="com/a/b/a/b"):
+        original_owner="com/a/b/a/b",
+        allow_euler_method_bodies=False):
     inputs = [
         (original_jar, original_sha256),
         (private_matrix_java_zip, matrix_source_sha256),
@@ -111,7 +122,8 @@ def verify_private_original_matrix_packet_loader(
         r"[A-Za-z_$][A-Za-z0-9_$]*(?:/[A-Za-z_$][A-Za-z0-9_$]*)+",
         original_owner) is not None,
         "R153_INVALID_ORIGINAL_OWNER")
-    selected = _exact_selection(private_selection_json)
+    selected = _exact_selection(private_selection_json,
+                                allow_euler_method_bodies=allow_euler_method_bodies)
     matrix_java = source_members(private_matrix_java_zip, matrix_source_sha256)
     helpers = source_members(private_source_only_support_zip,
                              support_source_sha256)
@@ -146,6 +158,25 @@ def verify_private_original_matrix_packet_loader(
             "R153_ORIGINAL_BINARY_IDENTITY_MISMATCH")
     referenced = _relevant_original_invocations(
         original_profile, selected)
+    if allow_euler_method_bodies:
+        extras = [m for m in selected if m[1] == "()[F"]
+        declared = [
+            m for m in original_profile["methods"]
+            if m["descriptor"] == "()[F"
+        ]
+        # The real original matrix has exactly two Euler-output methods,
+        # one package-private and one public. The source must reproduce
+        # their actual Math-only code without helper invocation fallback.
+        require(len(extras) == 2
+                and sorted(extras) == sorted(
+                    (m["name"], m["descriptor"]) for m in declared)
+                and sorted(m["access"] & 0x0007 for m in declared) == [0, 1]
+                and all(
+                    call["owner"].startswith("java/lang/Math")
+                    for method in declared
+                    for call in method["method_invocations"]
+                ),
+                "R154_ORIGINAL_EULER_METHODS_NOT_EXACT_TWO_MATH_ONLY")
     provided_owners = {name[:-5] for name, _ in helpers}
     require(len(referenced) == len(provided_owners) == 3
             and referenced == provided_owners
@@ -216,7 +247,8 @@ def verify_private_original_matrix_packet_loader(
         raise PrivateMatrixLoaderR153Error(
             "R153_SELECTED_ORIGINAL_JVM_CODE_PARITY_FAILED") from exc
     require(built_profile["internal_name"] == original_owner
-            and checks["verified_selected_method_count"] == 2
+            and checks["verified_selected_method_count"] ==
+                (4 if allow_euler_method_bodies else 2)
             and checks["verified_constructor_count"] == 1
             and checks["core_method_bytecode_differences"] == 0,
             "R153_SELECTED_ORIGINAL_MATRIX_METHOD_BODY_NOT_VERIFIED")
@@ -234,6 +266,10 @@ def verify_private_original_matrix_packet_loader(
             hashlib.sha256(built_binary).hexdigest(),
         **checks,
         "source_only_supporting_class_count": len(provided_owners),
+        "euler_float_array_source_methods_checked":
+            2 if allow_euler_method_bodies else 0,
+        "euler_methods_required_explicit_opt_in":
+            True,
         "support_class_bodies_original_equivalence_accepted": False,
         "support_class_bodies_executed": False,
         "source_supports_are_original_class_binary_fallback": False,
@@ -264,6 +300,7 @@ def main(argv=None):
     p.add_argument("--selection-sha256", required=True)
     p.add_argument("--original-sha256", default=CANONICAL_V309)
     p.add_argument("--original-owner", default="com/a/b/a/b")
+    p.add_argument("--allow-euler-method-bodies", action="store_true")
     a = p.parse_args(argv)
     dest = Path(a.fresh_private_sanitized_report_json)
     try:
@@ -279,7 +316,8 @@ def main(argv=None):
             matrix_source_sha256=a.matrix_sha256,
             support_source_sha256=a.support_sha256,
             selection_sha256=a.selection_sha256,
-            original_owner=a.original_owner)
+            original_owner=a.original_owner,
+            allow_euler_method_bodies=a.allow_euler_method_bodies)
         dest.write_text(json.dumps(
             results, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         print("R153_ORIGINAL_PACKET_DEPENDENT_MATRIX_JAVA_METHODS_PROVEN")
