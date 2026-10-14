@@ -1,0 +1,36 @@
+name: V309 class casefold source alias R141 smoke
+on:
+  pull_request:
+    paths:
+      - "src/spk_recovery/private_v309_casefold_type_rewrite_r141.py"
+      - "src/spk_recovery/java/PrivateImportedTypeAliasSpansR141.java"
+      - "tests/test_private_v309_casefold_type_rewrite_r141.py"
+      - ".github/workflows/client-casefold-source-rewrite-r141.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: client-casefold-r141-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Recompile real synthetic Java casefold alias source
+        run: python -m unittest discover -s tests -p "test_private_v309_casefold_type_rewrite_r141.py" -v
+      - name: Syntax check
+        run: python -m compileall -q src/spk_recovery/private_v309_casefold_type_rewrite_r141.py
