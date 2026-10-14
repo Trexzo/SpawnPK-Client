@@ -161,8 +161,7 @@ def patch_private_candidate(source_zip, original_jar, *,
         result = result[:start] + new + result[end:]
     new_bytes = result.encode("utf-8")
     need(new_bytes != before
-         and re.search(r"(?<![\\w$.])" + re.escape(ORIGINAL_IMPORT)
-                       + r"(?=\\s*;)", result) is None
+         and re.search(re.escape(ORIGINAL_IMPORT) + r"\s*;", result) is None
          and len(re.findall(r"\bd_\b", result)) == 0
          and result.count(mapped_import) == 1
          and len(re.findall(r"\b" + re.escape(mapped_name) + r"\b", result)) == 2,
