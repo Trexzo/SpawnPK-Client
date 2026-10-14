@@ -44,9 +44,10 @@ def _write_provisional_original_nonrs_capsule(original_jar, allowed, target):
     with ZipFile(original_jar) as original, ZipFile(
             target, "w", compression=ZIP_DEFLATED) as out:
         present = set()
+        original_members = set(original.namelist())
         for name in sorted(allowed):
             entry = name + ".class"
-            need(entry in original.namelist(),
+            need(entry in original_members,
                  "ORIGINAL_CAPSULE_MEMBER_MISSING")
             data = original.read(entry)
             member = ZipInfo(entry, date_time=(1980, 1, 1, 0, 0, 0))
