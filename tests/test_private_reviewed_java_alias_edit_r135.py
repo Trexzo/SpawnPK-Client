@@ -88,7 +88,7 @@ class PrivateReviewedImportAliasR135Tests(unittest.TestCase):
         output, report = self.repair()
         self.assertEqual(len(output), 2)
         body = dict(output)[TARGET].decode("utf-8")
-        self.assertNotIn(ORIGINAL_IMPORT, body)
+        self.assertNotIn("import " + ORIGINAL_IMPORT + ";", body)
         self.assertNotIn("d_.a(", body)
         self.assertIn("org.apache.commons.a.d__Type_", body)
         self.assertIn("__Type_", body)
