@@ -1,0 +1,37 @@
+name: V309 matrix Packet loader source-only R153
+on:
+  pull_request:
+    paths:
+      - "src/spk_recovery/private_v309_matrix_packet_loader_parity_r153.py"
+      - "tests/test_private_v309_matrix_packet_loader_parity_r153.py"
+      - ".github/workflows/client-matrix-packet-loader-r153.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: v309-matrix-packet-r153-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  loader-parity:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install client recovery package
+        run: python -m pip install -e .
+      - name: Independently recompile original-style game-linked constructor/decoder with source-only companions
+        run: python -m unittest discover -s tests -p "test_private_v309_matrix_packet_loader_parity_r153.py" -v
+      - name: R152 static pool regression
+        run: python -m unittest discover -s tests -p "test_private_v309_matrix_pool_source_parity_r152.py" -v
+      - name: Python syntax
+        run: python -m compileall -q src/spk_recovery/private_v309_matrix_packet_loader_parity_r153.py
