@@ -5,10 +5,11 @@ exactly two identical candidate Java methods with a trusted Java AST, rewrite
 only AST-verified this.caret / this.payload field-access spans into the two
 JVM field identities directly proven by the original B method instructions,
 and independently compile each method in an isolated minimal Java9 owner.
-Compare decoded JVM Code instructions, resolved CP operands, stack/frame
-metadata and exception handlers to ORIGINAL B. This is a method-body parity
-witness under explicit field aliases, not whole Packet-class recovery or
-a unique mapping between two semantically identical source methods.
+Compare decoded JVM instructions, resolved CP operands and exception handlers
+to ORIGINAL B, keeping StackMapTable frame equality a separate gate: actual
+v309 may encode full_frame where isolated javac emits append_frame. This
+supports method INSTRUCTIONS, not complete JVM Code-attribute parity or a
+unique source member mapping.
 """
 from __future__ import annotations
 
@@ -279,9 +280,17 @@ def prove_private_signed_short_body_rebuild(original_jar, source_zip, *,
                 "checks": checks,
             })
 
-    ensure(all(a["all_checked_bytecode_parity_properties_equal"]
-               for a in attempts),
-           "R149_SIGNED_SHORT_SOURCE_BODY_BYTECODE_PARITY_NOT_ESTABLISHED")
+    # Compare instruction-level evidence separately from StackMapTable:
+    # original v309 B() has a full_frame, isolated javac an append_frame.
+    # A valid matching opcode stream is NOT complete Code attribute parity.
+    core_keys = (
+        "exact_code_length", "exact_max_stack", "exact_max_locals",
+        "exact_decoded_jvm_instructions_and_resolved_cp",
+        "exact_exception_handlers", "exact_member_access",
+    )
+    ensure(all(all(item["checks"][key] for key in core_keys)
+               for item in attempts),
+           "R149_ISOLATED_SOURCE_INSTRUCTION_PARITY_NOT_ESTABLISHED")
     # Same method name is deliberately used for both isolated recompiles;
     # neither tells us which original source method was called historically.
     name_digest = hashlib.sha256(
@@ -300,8 +309,15 @@ def prove_private_signed_short_body_rebuild(original_jar, source_zip, *,
         "original_cursor_and_payload_field_aliases_from_jvm_code": True,
         "distinct_identical_java_source_bodies_found": len(attempts),
         "isolated_method_compilations_performed": len(attempts),
+        "each_isolated_method_core_instruction_parity_equal":
+            all(all(item["checks"][key] for key in core_keys)
+                for item in attempts),
         "each_isolated_method_all_checked_parity_properties_equal":
             all(a["all_checked_bytecode_parity_properties_equal"] for a in attempts),
+        "whole_original_code_attribute_parity_accepted": False,
+        "stackmap_frame_representation_mismatch_blocks_full_parity":
+            not all(a["checks"]["exact_stackmap_presence_and_resolved_frames"]
+                    for a in attempts),
         "per_method_exact_code_length": all(a["checks"]["exact_code_length"]
                                            for a in attempts),
         "per_method_exact_decoded_instructions_resolved_cp":
