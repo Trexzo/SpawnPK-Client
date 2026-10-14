@@ -182,59 +182,80 @@ def rewrite_private_candidate(entries, eligible, *, java_helper=None):
                 edited.append((rel, body))
                 continue
             affected_files += 1
-            # One per file avoids ambiguous old/new simple-name overlap.
-            if len(affected) != 1 or len(set(imports)) != len(imports):
+            # Multiple independent aliases are safe only as ONE atomic
+            # source-file transaction. No best-effort subset is permitted.
+            # The per-import JDK AST scan sees the same unmodified source.
+            if (len(affected) > 8 or len(set(affected)) != len(affected)
+                    or len(set(imports)) != len(imports)):
                 withheld_files += 1
                 edited.append((rel, body))
                 continue
-            old = affected[0]
-            alias = eligible[old]
-            oldsimple = old.rsplit(".", 1)[-1]
-            newsimple = alias.rsplit(".", 1)[-1]
-            if oldsimple == newsimple or any(
-                    x != old and x.rsplit(".", 1)[-1] in (oldsimple, newsimple)
-                    for x in imports):
-                withheld_files += 1
-                edited.append((rel, body))
-                continue
-            # Unsupported additional full-qualified type spellings: do not
-            # assume they are import-references or compile-resolvable.
-            if before.count(old) != 1:
-                withheld_files += 1
-                edited.append((rel, body))
-                continue
-            spans = _ast_type_alias_spans(
-                body, old, helper_classes=classes, empty=empty,
-                java=java, work=work)
-            if any(kind == "UNSUPPORTED" for kind, *_ in spans):
+            oldsimples = [old.rsplit(".", 1)[-1] for old in affected]
+            newsimples = [eligible[old].rsplit(".", 1)[-1]
+                          for old in affected]
+            # An old or new simple name must never collide with ANY other
+            # imported type or with another alias being concurrently patched.
+            all_old_and_new = oldsimples + newsimples
+            imported_other_simples = [
+                name.rsplit(".", 1)[-1]
+                for name in imports if name not in affected
+            ]
+            if (len(set(all_old_and_new)) != len(all_old_and_new)
+                    or any(s in imported_other_simples
+                           for s in all_old_and_new)):
                 withheld_files += 1
                 edited.append((rel, body))
                 continue
             changes = []
-            for kind, start, end, source in spans:
-                if kind == "IMPORT":
-                    need(source == old, "R141_ORIGINAL_IMPORT_AST_MISMATCH")
-                    changes.append((start, end, alias))
-                else:
-                    need(source == oldsimple, "R141_TYPE_IDENTIFIER_MISMATCH")
-                    changes.append((start, end, newsimple))
+            all_types = 0
+            blocked = False
+            for old in affected:
+                alias = eligible[old]
+                oldsimple = old.rsplit(".", 1)[-1]
+                newsimple = alias.rsplit(".", 1)[-1]
+                # Includes the qualification-prefix ambiguity: e.g. a.b
+                # and a.b.C in a single source. No implicit guess is safe.
+                if before.count(old) != 1:
+                    blocked = True
+                    break
+                spans = _ast_type_alias_spans(
+                    body, old, helper_classes=classes, empty=empty,
+                    java=java, work=work)
+                if any(kind == "UNSUPPORTED" for kind, *_ in spans):
+                    blocked = True
+                    break
+                for kind, start, end, source in spans:
+                    if kind == "IMPORT":
+                        need(source == old,
+                             "R144_ORIGINAL_IMPORT_AST_MISMATCH")
+                        changes.append((start, end, alias))
+                    else:
+                        need(source == oldsimple,
+                             "R144_TYPE_IDENTIFIER_AST_MISMATCH")
+                        changes.append((start, end, newsimple))
+                        all_types += 1
+            if blocked:
+                withheld_files += 1
+                edited.append((rel, body))
+                continue
             ordered = sorted(changes, key=lambda x: x[0])
-            need(all(ordered[i][1] <= ordered[i+1][0]
+            need(len([1 for _, _, _ in changes]) >= len(affected) and
+                 all(ordered[i][1] <= ordered[i+1][0]
                      for i in range(len(ordered)-1)),
-                 "R141_AST_PATCH_SPANS_OVERLAP")
+                 "R144_ATOMIC_AST_PATCH_SPANS_OVERLAP")
             candidate = before
             for start, end, target in reversed(ordered):
                 candidate = candidate[:start] + target + candidate[end:]
+            final_imports = re.findall(
+                r"(?m)^[ \t]*import[ \t]+([\w.$]+)[ \t]*;", candidate)
             need(candidate != before and
-                 candidate.count("import " + alias + ";") == 1 and
-                 old not in re.findall(
-                     r"(?m)^[ \t]*import[ \t]+([\w.$]+)[ \t]*;", candidate),
-                 "R141_IMPORT_REWRITE_NOT_VERIFIED")
+                 all(candidate.count("import " + eligible[old] + ";") == 1
+                     and old not in final_imports for old in affected),
+                 "R144_ATOMIC_IMPORTS_NOT_ALL_REWRITTEN")
             edited.append((rel, candidate.encode("utf-8")))
             changed_files += 1
-            changed_imports += 1
-            changed_type_occurrences += sum(kind == "TYPE"
-                                            for kind, *_ in spans)
+            changed_imports += len(affected)
+            changed_type_occurrences += all_types
     need([path for path, _ in entries] == [path for path, _ in edited],
          "R141_SOURCE_COVERAGE_OR_ORDER_CHANGED")
     return edited, {
