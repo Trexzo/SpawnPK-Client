@@ -64,10 +64,72 @@ def _write_provisional_original_nonrs_capsule(original_jar, allowed, target):
     return _sha256(target.read_bytes())
 
 
+def _normalize_private_provisional_capsule(input_jar, output_jar, scratch):
+    """Use existing R125 solver + R8R constant-pool remapper, private only.
+
+    This does not certify original-derived dependency ownership or source
+    identity. The whole original rs/ namespace was already excluded by R136.
+    """
+    from .private_client_namespace_legalizer_r125 import (
+        plan_client_namespaces,
+    )
+    from .namespace_collision import analyze_namespace_collisions
+    from .collision_bytecode_remap import transform_collision_jar
+
+    with ZipFile(input_jar) as data:
+        names = {n[:-6] for n in data.namelist()
+                 if n.endswith(".class")}
+    need(bool(names) and all(not n.startswith("rs/") for n in names),
+         "R138_GAME_CLASS_IN_PROVISIONAL_CAPSULE")
+    original_sha = sha_file(input_jar)
+    proof = plan_client_namespaces(
+        names, include_identifiers=True,
+        original_jar_sha256=original_sha)
+    pre = analyze_namespace_collisions(input_jar)
+    plan = {
+        "schema_version": 1,
+        "kind": "class_package_namespace_collision_plan",
+        "identifiers_included": True,
+        "plan_id": "R138_DIAGNOSTIC_" + original_sha[:20].upper(),
+        "collision_report_id": pre["report_id"],
+        "readable_jar_sha256": original_sha,
+        "remaps": [
+            {"old_internal_name": row["old_internal_name"],
+             "new_internal_name": row["new_internal_name"]}
+            for row in proof["remaps"]
+        ],
+    }
+    plan_path = scratch / "private-original-namespace-plan.json"
+    plan_path.write_text(
+        json.dumps(plan, sort_keys=True) + "\n", encoding="utf-8")
+    transform = transform_collision_jar(
+        input_jar, plan_path, output_jar)
+    need(transform["summary"]["post_collision_edge_count"] == 0
+         and transform["summary"]["input_class_count"] == len(names),
+         "R138_REMAP_DID_NOT_PRESERVE_ORIGINAL_CLASS_COVERAGE")
+    with ZipFile(output_jar) as mapped:
+        entries = [n for n in mapped.namelist() if n.endswith(".class")]
+    need(len(entries) == len(names)
+         and all(not n.startswith("rs/") for n in entries),
+         "R138_ORIGINAL_GAME_BINARY_REINTRODUCED")
+    return {
+        "pre_collision_edges": transform["summary"][
+            "pre_collision_edge_count"],
+        "post_collision_edges": 0,
+        "classfile_remap_count": transform["summary"][
+            "expanded_remap_count"],
+        "changed_original_classfile_count": transform["summary"][
+            "rewritten_class_count"],
+        "private_mapping_digest_sha256": proof["private_mapping_sha256"],
+        "private_normalized_capsule_sha256": sha_file(output_jar),
+    }
+
+
 def private_source_compile_frontier(source_zip, original_jar, *,
                                     source_sha256,
                                     original_sha256=CANONICAL_V309,
-                                    maximum_diagnostics=3000):
+                                    maximum_diagnostics=3000,
+                                    normalize_diagnostic_classpath=False):
     need(type(maximum_diagnostics) is int
          and 100 <= maximum_diagnostics <= 3000,
          "COMPILER_ERROR_LIMIT_INVALID")
@@ -89,6 +151,12 @@ def private_source_compile_frontier(source_zip, original_jar, *,
         capsule = root / "DIAGNOSTIC_ORIGINAL_NONRS_UNVERIFIED.jar"
         capsule_sha = _write_provisional_original_nonrs_capsule(
             original_jar, allowed, capsule)
+        normalized_evidence = None
+        selected_capsule = capsule
+        if normalize_diagnostic_classpath:
+            selected_capsule = root / "normalized-original-nonrs-private.jar"
+            normalized_evidence = _normalize_private_provisional_capsule(
+                capsule, selected_capsule, root)
         srcroot = root / "client-java"
         output = root / "compiled-preview"
         empty = root / "empty-external-sourcepath"
@@ -108,7 +176,7 @@ def private_source_compile_frontier(source_zip, original_jar, *,
         cmd = [
             javac, "--release", "11", "-proc:none", "-implicit:none",
             "-encoding", "UTF-8", "-Xmaxerrs", str(maximum_diagnostics),
-            "-classpath", str(capsule),
+            "-classpath", str(selected_capsule),
             "-sourcepath", str(empty),
             "-d", str(output),
         ] + paths
@@ -149,7 +217,14 @@ def private_source_compile_frontier(source_zip, original_jar, *,
             "non_rs_game_bound_classfiles_excluded": graph[
                 "non_rs_with_any_rs_dependency_chain"],
             "provisional_non_rs_classpath_classfiles": len(allowed),
-            "private_diagnostic_classpath_sha256": capsule_sha,
+            "private_unmapped_capsule_sha256": capsule_sha,
+            "private_diagnostic_classpath_sha256": sha_file(
+                selected_capsule),
+            "diagnostic_classpath_collision_normalized":
+                bool(normalize_diagnostic_classpath),
+            "diagnostic_namespace_remap_evidence":
+                normalized_evidence if normalized_evidence is not None
+                else {"not_applied": True},
             "javac_release": 11,
             "annotation_processing_disabled": True,
             "implicit_class_compilation_disabled": True,
@@ -182,6 +257,8 @@ def main(argv=None):
     p.add_argument("--source-sha256", required=True)
     p.add_argument("--original-sha256", default=CANONICAL_V309)
     p.add_argument("--maximum-diagnostics", type=int, default=3000)
+    p.add_argument("--collision-normalize-provisional-classpath",
+                   action="store_true")
     args = p.parse_args(argv)
     output = Path(args.fresh_private_javac_report)
     try:
@@ -193,7 +270,9 @@ def main(argv=None):
             args.private_original_v309_jar,
             source_sha256=args.source_sha256,
             original_sha256=args.original_sha256,
-            maximum_diagnostics=args.maximum_diagnostics)
+            maximum_diagnostics=args.maximum_diagnostics,
+            normalize_diagnostic_classpath=
+                args.collision_normalize_provisional_classpath)
         output.write_text(
             json.dumps(report, sort_keys=True, indent=2) + "\n",
             encoding="utf-8")
