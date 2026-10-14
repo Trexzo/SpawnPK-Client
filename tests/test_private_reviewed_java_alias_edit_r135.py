@@ -45,7 +45,9 @@ class PrivateReviewedImportAliasR135Tests(unittest.TestCase):
             capture_output=True)
         self.assertEqual(compiled.returncode, 0,
                          compiled.stderr.decode("utf-8", errors="replace"))
-        return (output / (name + ".class")).read_bytes()
+        package = ("org/apache/commons/a" if name == "d"
+                   else "org/apache/commons/a/d")
+        return (output / package / (name + ".class")).read_bytes()
 
     def build(self, *, static=True, with_shadow=True):
         modifier = "static " if static else ""
