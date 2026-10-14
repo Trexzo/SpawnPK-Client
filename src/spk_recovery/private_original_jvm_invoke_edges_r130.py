@@ -53,6 +53,28 @@ _INVOKES = frozenset((
 ))
 
 
+# Independent original-v309 Code walker checkpoint for the exact pinned
+# binary. This is an aggregate cross-parser invariant, not source parity.
+_CANONICAL_INVOKE_SHAPE = {
+    "game_rs_classfiles_parsed": 1159,
+    "declared_game_methods_scanned": 8389,
+    "direct_jvm_invoke_sites_total": 49438,
+    "direct_rs_to_rs_invoke_sites": 31241,
+    "distinct_rs_to_rs_owner_edges": 3939,
+    "distinct_rs_to_rs_method_target_sites": 10970,
+    "invokedynamic_sites_excluded_for_independent_bootstrap_proof": 2069,
+    "rs_target_edges_without_corresponding_original_classfile": 0,
+}
+
+
+def require_independent_canonical_invoke_checkpoint(report, original_sha):
+    if original_sha != CANONICAL_V309:
+        return
+    require(all(report.get(k) == v for k, v
+                in _CANONICAL_INVOKE_SHAPE.items()),
+            "CANONICAL_V309_INDEPENDENT_INVOKE_CHECKPOINT_MISMATCH")
+
+
 def collect_jvm_invoke_edges(original_jar, *,
                              expected_sha=CANONICAL_V309,
                              include_identifiers=False):
@@ -169,6 +191,7 @@ def collect_jvm_invoke_edges(original_jar, *,
         "full_client_deobfuscated": False,
         "private_identifiers_included": bool(include_identifiers),
     }
+    require_independent_canonical_invoke_checkpoint(report, expected_sha)
     if include_identifiers:
         # These are solely the original-side inputs to R129.
         report["private_original_call_edges"] = edges
