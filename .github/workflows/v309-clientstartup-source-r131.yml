@@ -1,0 +1,37 @@
+name: V309 recovered ClientStartUp source class evidence
+on:
+  pull_request:
+    paths:
+      - ".gitattributes"
+      - "source-candidates/v309/src/rs/runelite/events/ClientStartUp.java"
+      - "src/spk_recovery/private_v309_clientstartup_frame_r131.py"
+      - "tests/test_private_v309_clientstartup_recovered_source_r131.py"
+      - ".github/workflows/v309-clientstartup-source-r131.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: v309-source-clientstartup-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  real-java-source:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Compile real recovered source and verify frozen original opcode witness
+        run: python -m unittest discover -s tests -p "test_private_v309_clientstartup_recovered_source_r131.py" -v
+      - name: Python compilation
+        run: python -m compileall -q src/spk_recovery/private_v309_clientstartup_frame_r131.py
