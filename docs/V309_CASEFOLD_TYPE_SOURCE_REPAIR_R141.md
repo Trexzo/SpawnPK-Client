@@ -21,3 +21,16 @@ python -m spk_recovery.private_v309_casefold_type_rewrite_r141 PRIVATE_DECOMPILE
 Report records input SHA pins, changed/unchanged files, changed imports/type references, withheld ambiguous files, original R125 mapping digest and explicit non-certification flags. Never publish original-derived candidate Java, original JAR, project runtime assets/accounts, identifier-bearing maps, or derived classfiles. Even a clean diagnostic javac run against the provisional original-derived non-rs classpath would not prove independently owned dependencies, semantic original parity, runtime equivalence, or redistribution rights.
 
 Final target remains `recovered-source/v309/src/` as a complete, independently compilable, verified Java client snapshot.
+
+
+## Actual private v309 parse-only eligibility census (independent of R141 package CLI)
+
+A separate Java 11 `JavacTask.parse()` helper inspected the **real**, hash-verified 1,271-Java decompiled source ZIP against the original-v309 non-rs classfile **casefold-group losing-name set**. It did **not** execute the original JAR, edit actual source, run R136's exact dependency filter, or claim R141's full private CLI succeeded.
+
+- Affected: **47** explicit non-static imports in **43** distinct Java files.
+- **39** files have exactly one affected import and **4** have two.
+- Among 43 affected files, **27** passed the independent conservative AST type-context screen for safe *candidate* import/identifier rewriting; **11** had unsupported expression/static receiver or type-shadow issues; **5** were withheld because of multiple affected imports or extra fully-qualified use.
+- Across the AST-inspected subset, **65** syntactically typed identifiers and **13** unsupported identifier occurrences were observed. These are screening counts, not accepted original source edits.
+- The actual R141 implementation may admit fewer files after exact R136 partitioning, deterministic R125 aliases, offset checks and all other private gates. **No R141 actual-source repaired Java ZIP or actual post-R141 compiler error count is claimed.**
+
+Next: exact private R141 CLI replay on the pinned original v309/source ZIP, compare the resulting report against this screening upper bound, then feed that private updated client source through the R138 classpath and R140 diagnostic compilation gate. Any unresolved files must be repaired with separate independent evidence; do not disable the ambiguity veto merely to increase edited-file counts.
