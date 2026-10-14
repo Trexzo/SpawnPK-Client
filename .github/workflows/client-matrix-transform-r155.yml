@@ -1,0 +1,37 @@
+name: V309 matrix transform field projection source parity R155
+on:
+  pull_request:
+    paths:
+      - "src/spk_recovery/private_v309_matrix_packet_loader_parity_r153.py"
+      - "tests/test_private_v309_matrix_transform_projection_parity_r155.py"
+      - ".github/workflows/client-matrix-transform-r155.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: v309-matrix-transform-r155-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  projection-parity:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install v309 client recovery tooling
+        run: python -m pip install -e .
+      - name: Recompile and check matrix transform projection with strict original method field aliases
+        run: python -m unittest discover -s tests -p "test_private_v309_matrix_transform_projection_parity_r155.py" -v
+      - name: Recheck Euler original method parity gates
+        run: python -m unittest discover -s tests -p "test_private_v309_matrix_euler_source_parity_r154.py" -v
+      - name: Python syntax check
+        run: python -m compileall -q src/spk_recovery/private_v309_matrix_packet_loader_parity_r153.py
