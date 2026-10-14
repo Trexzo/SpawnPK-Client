@@ -49,6 +49,7 @@ class R149OriginalPacketShortReaderBodyParity(unittest.TestCase):
             " private static final BigInteger rsaExponent = new BigInteger(\"65537\");\n"
             " public byte[] payload;\n"
             " public int caret;\n"
+            " public Packet() {}\n"
             " public int method2616() " + self.BODY + "\n"
             " public int method673() " + self.BODY + "\n"
             " public int otherMethod() { return 9; }\n"
