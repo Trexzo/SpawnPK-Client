@@ -167,12 +167,21 @@ def verify_private_matrix_source_subset(
         original_owner="com/a/b/a/b",
         allow_constructor_methods=False,
         allow_class_initializer=False,
-        require_selected_self_call_closure=False):
-    pins = (
+        require_selected_self_call_closure=False,
+        private_scaffold_java_zip=None, private_scaffold_sha256=None):
+    pins = [
         (original_jar, original_sha256),
         (recovered_java_zip, recovered_source_sha256),
         (method_selection_json, selection_sha256),
-    )
+    ]
+    if private_scaffold_java_zip is not None:
+        require(type(private_scaffold_sha256) is str
+                and len(private_scaffold_sha256) == 64,
+                "R156_SOURCE_HELPER_ZIP_SHA256_REQUIRED")
+        pins.append((private_scaffold_java_zip, private_scaffold_sha256))
+    else:
+        require(private_scaffold_sha256 is None,
+                "R156_SOURCE_HELPER_DIGEST_WITHOUT_ZIP")
     require(all(sha_file(p) == digest for p, digest in pins),
             "R150_PRIVATE_ORIGINAL_OR_DONOR_SHA_MISMATCH")
     require(type(original_owner) is str and
@@ -209,6 +218,27 @@ def verify_private_matrix_source_subset(
     source_bytes = source[0][1]
     require(type(source_bytes) is bytes and len(source_bytes) <= 2_000_000,
             "R150_UNBOUNDED_JAVA_SOURCE")
+    helpers = []
+    if private_scaffold_java_zip is not None:
+        helpers = source_members(private_scaffold_java_zip, private_scaffold_sha256)
+        require(1 <= len(helpers) <= 3 and
+                all(rel.endswith(".java") and rel != original_owner + ".java"
+                    and type(body) is bytes and 0 < len(body) <= 100_000
+                    for rel, body in helpers),
+                "R156_SOURCE_HELPERS_NOT_BOUNDED_AND_SEPARATE")
+        helper_paths = [rel[:-5] for rel, _ in helpers]
+        require(len(helper_paths) == len(set(helper_paths)) ==
+                len(set(path.casefold() for path in helper_paths)),
+                "R156_DUPLICATED_PRIVATE_SOURCE_HELPERS")
+        with ZipFile(original_jar) as jar:
+            available = set(jar.namelist())
+            require(all(path + ".class" in available and
+                        not path.startswith("rs/") and
+                        path != original_owner for path in helper_paths),
+                    "R156_HELPER_NOT_EXACT_ORIGINAL_NON_GAME_OWNER")
+        require(original_owner.casefold() not in
+                {path.casefold() for path in helper_paths},
+                "R156_PRIVATE_HELPER_SHADOWS_ORIGINAL_OWNER")
     # Only JDK parsing/compilation, annotation processing disabled; no
     # original binary on classpath and no project fallback sourcepath.
     javac = shutil.which("javac")
@@ -218,6 +248,14 @@ def verify_private_matrix_source_subset(
         owner_source = root / "src" / (original_owner + ".java")
         owner_source.parent.mkdir(parents=True, exist_ok=True)
         owner_source.write_bytes(source_bytes)
+        compile_sources = [owner_source]
+        for rel, content in helpers:
+            helper_file = root / "src" / rel
+            require(not helper_file.exists() and not helper_file.is_symlink(),
+                    "R156_SOURCE_HELPER_PATH_ALREADY_EXISTS")
+            helper_file.parent.mkdir(parents=True, exist_ok=True)
+            helper_file.write_bytes(content)
+            compile_sources.append(helper_file)
         classes = root / "classes"
         empty = root / "empty"
         classes.mkdir()
@@ -231,7 +269,8 @@ def verify_private_matrix_source_subset(
                 [javac, "--release", "9", "-proc:none", "-implicit:none",
                  "-g:none", "-classpath", str(empty),
                  "-sourcepath", str(empty),
-                 "-d", str(classes), str(owner_source)],
+                 "-d", str(classes)] +
+                [str(file) for file in compile_sources],
                 cwd=root, env=env, stdin=subprocess.DEVNULL,
                 capture_output=True, timeout=90, check=False)
         except (subprocess.TimeoutExpired, OSError) as exc:
@@ -245,8 +284,15 @@ def verify_private_matrix_source_subset(
         rebuilt_binary = candidate.read_bytes()
         require(0 < len(rebuilt_binary) <= 2_000_000,
                 "R150_PRIVATE_REBUILT_CLASS_UNBOUNDED")
-        require(len(list(classes.rglob("*.class"))) == 1,
-                "R150_UNEXPECTED_ADDITIONAL_COMPILED_JAVA_CLASSES")
+        actual_classes = {
+            file.relative_to(classes).as_posix() for file in
+            classes.rglob("*.class")
+        }
+        expected_classes = {original_owner + ".class"} | {
+            rel[:-5] + ".class" for rel, _ in helpers
+        }
+        require(actual_classes == expected_classes,
+                "R156_OUTPUT_CONTAINS_UNEXPECTED_OR_MISSING_CLASSFILES")
 
     parsed = parse_class(original_binary)
     require(parsed.name == original_owner,
@@ -284,6 +330,11 @@ def verify_private_matrix_source_subset(
             hashlib.sha256(rebuilt_binary).hexdigest(),
         **checks,
         "verified_methods_cover_full_original_matrix_class": False,
+        "private_compilation_only_helper_source_count": len(helpers),
+        "private_compilation_only_scaffold_source_sha256":
+            private_scaffold_sha256,
+        "helper_java_source_class_bodies_verified_original": False,
+        "original_helper_binary_classfiles_placed_on_classpath": False,
         "selected_original_and_rebuilt_self_call_closure_required":
             bool(require_selected_self_call_closure),
         "selected_original_self_call_edges_closed_and_checked":
@@ -322,6 +373,8 @@ def main(argv=None):
     p.add_argument("--allow-constructor-methods", action="store_true")
     p.add_argument("--allow-class-initializer", action="store_true")
     p.add_argument("--require-selected-self-call-closure", action="store_true")
+    p.add_argument("--private-scaffold-java-zip")
+    p.add_argument("--private-scaffold-sha256")
     args = p.parse_args(argv)
     output = Path(args.fresh_private_sanitized_report_json)
     try:
@@ -339,7 +392,9 @@ def main(argv=None):
             original_owner=args.original_owner,
             allow_constructor_methods=args.allow_constructor_methods,
             allow_class_initializer=args.allow_class_initializer,
-            require_selected_self_call_closure=args.require_selected_self_call_closure)
+            require_selected_self_call_closure=args.require_selected_self_call_closure,
+            private_scaffold_java_zip=args.private_scaffold_java_zip,
+            private_scaffold_sha256=args.private_scaffold_sha256)
         output.write_text(json.dumps(
             results, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         print("R150_PRIVATE_ORIGINAL_LINKED_MATRIX_JAVA_METHODS_RECOMPILED")
