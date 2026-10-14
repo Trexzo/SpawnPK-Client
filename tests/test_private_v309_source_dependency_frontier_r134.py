@@ -59,6 +59,34 @@ public class Recovered { }
             "source_import_evidence"],
             "possible_original_nested_class_unverified")
 
+    def test_underscore_alias_correlates_with_actual_jvm_shadow_only(self):
+        original = self.original | {
+            "org/apache/commons/a/d",
+            "org/apache/commons/a/d/Inner"
+        }
+        report = source_dependency_provenance(
+            self.entries, original, include_private_names=True)
+        rows = {row["java_import"]: row
+                for row in report["private_import_evidence"]}
+        self.assertEqual(
+            rows["org.apache.commons.a.d_"]["source_import_evidence"],
+            "possible_original_shadow_alias_unverified")
+        self.assertFalse(
+            rows["org.apache.commons.a.d_"][
+                "is_original_dependency_certified"])
+        self.assertFalse(
+            rows["org.apache.commons.a.d_"][
+                "is_user_added_code_certified"])
+
+    def test_underscore_without_shadow_not_accepted_as_alias(self):
+        report = source_dependency_provenance(
+            self.entries, self.original, include_private_names=True)
+        rows = {row["java_import"]: row
+                for row in report["private_import_evidence"]}
+        self.assertEqual(rows["org.apache.commons.a.d_"][
+            "source_import_evidence"],
+            "not_found_by_exact_original_or_source_path")
+
     def test_static_wildcard_and_jdk_imports_not_false_exact(self):
         report = source_dependency_provenance(
             self.entries, self.original, include_private_names=True)
