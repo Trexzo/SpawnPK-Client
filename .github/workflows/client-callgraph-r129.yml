@@ -1,0 +1,27 @@
+name: V309 call-graph candidate smoke
+on:
+  pull_request:
+    paths:
+      - "src/spk_recovery/private_client_callgraph_corroboration_r129.py"
+      - "tests/test_private_client_callgraph_corroboration_r129.py"
+      - ".github/workflows/client-callgraph-r129.yml"
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Callgraph evidence classification tests
+        run: python -m unittest discover -s tests -p "test_private_client_callgraph_corroboration_r129.py" -v
+      - name: Compile Python module
+        run: python -m compileall -q src/spk_recovery/private_client_callgraph_corroboration_r129.py
