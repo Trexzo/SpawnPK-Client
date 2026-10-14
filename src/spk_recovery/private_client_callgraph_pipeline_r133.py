@@ -67,8 +67,7 @@ def replay_original_source_callgraph(source_zip, original_jar, *,
     report.update({
         "schema_version": 1,
         "kind": "private_v309_full_source_original_callgraph_pipeline_r133",
-        "source_java_files_parsed": shape["source_ast_named_declarations"]
-            if "source_ast_named_declarations" in shape else None,
+        "source_java_files_parsed": source["source_java_file_count"],
         "source_ast_declared_types": shape["source_ast_named_declarations"],
         "original_rs_classfiles_parsed": original["parsed_rs_class_count"],
         "original_rs_methods_parsed": original["parsed_rs_method_count"],
