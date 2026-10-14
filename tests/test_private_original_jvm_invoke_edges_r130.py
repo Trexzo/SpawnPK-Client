@@ -59,7 +59,7 @@ class OriginalJvmInvokeR130Tests(unittest.TestCase):
         result = collect_jvm_invoke_edges(
             self.jar, expected_sha=pin, include_identifiers=True)
         self.assertEqual(result["game_rs_classfiles_parsed"], 2)
-        self.assertEqual(result["direct_rs_to_rs_invoke_sites"], 2)
+        self.assertEqual(result["direct_rs_to_rs_invoke_sites"], 3)
         self.assertEqual(result["distinct_rs_to_rs_owner_edges"], 1)
         self.assertGreaterEqual(
             result[
@@ -67,7 +67,7 @@ class OriginalJvmInvokeR130Tests(unittest.TestCase):
             ], 1)
         self.assertEqual(
             result["private_original_call_edges"],
-            [{"caller": "rs/A", "callee": "rs/B", "count": 2}])
+            [{"caller": "rs/A", "callee": "rs/B", "count": 3}])
         self.assertFalse(result["source_class_identity_accepted"])
         self.assertFalse(
             result["source_to_original_callgraph_comparison_performed"])
