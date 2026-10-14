@@ -31,8 +31,9 @@ def need(value, code):
 
 def decode(value):
     try:
-        return base64.urlsafe_b64decode(
-            value + "=" * (-len(value) % 4)).decode("utf-8")
+        return base64.b64decode(
+            value + "=" * (-len(value) % 4),
+            altchars=b"-_", validate=True).decode("utf-8")
     except Exception as exc:
         raise PrivateSourceInvokeR131Error(
             "SOURCE_ATTRIBUTED_EDGE_PROTOCOL_BASE64_INVALID") from exc
