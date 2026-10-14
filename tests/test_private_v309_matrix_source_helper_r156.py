@@ -117,7 +117,12 @@ class R156PrivateOriginalMatrixSourceHelpersTests(unittest.TestCase):
 
     def test_missing_source_helper_cannot_fallback_to_original_binary(self):
         with self.assertRaises(PrivateMatrixMethodSourceR150Error):
-            self.verify(helper=None)
+            verify_private_matrix_source_subset(
+                self.original, self.source, self.selection,
+                original_sha256=self.sha(self.original),
+                recovered_source_sha256=self.sha(self.source),
+                selection_sha256=self.sha(self.selection),
+                original_owner=self.OWNER)
 
     def test_wrong_helper_field_type_cannot_silently_match(self):
         incorrect = self.write_zip("incorrect-helper.zip", {
