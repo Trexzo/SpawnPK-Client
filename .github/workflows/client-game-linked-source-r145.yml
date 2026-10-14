@@ -1,0 +1,35 @@
+name: V309 original linked source bridge R145 smoke
+on:
+  pull_request:
+    paths:
+      - "src/spk_recovery/private_v309_game_linked_source_bridge_r145.py"
+      - "tests/test_private_v309_game_linked_source_bridge_r145.py"
+      - ".github/workflows/client-game-linked-source-r145.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: client-linked-source-r145-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install private source recovery helpers
+        run: python -m pip install -e .
+      - name: Recompile game-linked original Java donor against recovered client source
+        run: python -m unittest discover -s tests -p "test_private_v309_game_linked_source_bridge_r145.py" -v
+      - name: Syntax-check R145
+        run: python -m compileall -q src/spk_recovery/private_v309_game_linked_source_bridge_r145.py
