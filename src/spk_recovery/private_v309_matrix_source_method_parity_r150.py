@@ -40,7 +40,7 @@ def require(ok, reason):
         raise PrivateMatrixMethodSourceR150Error(reason)
 
 
-def _method_list(raw):
+def _method_list(raw, *, allow_constructor_methods=False):
     require(type(raw) is list and 1 <= len(raw) <= 32,
             "R150_EXPECT_EXPLICIT_BOUNDED_METHOD_SELECTION")
     results = []
@@ -53,10 +53,11 @@ def _method_list(raw):
                 and re.fullmatch(r"\([a-zA-Z0-9;_$/\[]*\)[A-Za-z0-9;_$/\[]+",
                                  entry["descriptor"]) is not None,
                 "R150_INVALID_METHOD_IDENTITY")
-        # Constructors are not accepted by this first method-body recovery
-        # pass: a donor may contain synthetic scaffolding constructors.
-        require(entry["name"] not in ("<init>", "<clinit>"),
-                "R150_CONSTRUCTOR_OR_CLASS_INITIALIZER_NOT_RECOVERED")
+        # Constructors require an explicit opt-in. Unselected constructors,
+        # source-only scaffolds and class initializers are NEVER accepted.
+        require(entry["name"] != "<clinit>" and
+                (entry["name"] != "<init>" or allow_constructor_methods),
+                "R151_CONSTRUCTOR_NOT_EXPLICITLY_AUTHORIZED")
         results.append((entry["name"], entry["descriptor"]))
     require(len(results) == len(set(results)),
             "R150_DUPLICATE_PRIVATE_SELECTED_METHOD")
@@ -114,6 +115,8 @@ def _strict_inspections(original, rebuilt, *, selected):
             "R150_SELECTED_JAVA_SOURCE_METHOD_CODE_DIFFERS_FROM_ORIGINAL")
     return {
         "verified_selected_method_count": len(original_methods),
+        "verified_constructor_count": sum(
+            method[0] == "<init>" for method in selected),
         "matched_opcode_count": sum(x["original_opcode_count"]
                                    for x in original_methods),
         "core_method_bytecode_differences": code_differences,
@@ -129,7 +132,8 @@ def verify_private_matrix_source_subset(
         original_jar, recovered_java_zip, method_selection_json, *,
         original_sha256=CANONICAL_V309,
         recovered_source_sha256, selection_sha256,
-        original_owner="com/a/b/a/b"):
+        original_owner="com/a/b/a/b",
+        allow_constructor_methods=False):
     pins = (
         (original_jar, original_sha256),
         (recovered_java_zip, recovered_source_sha256),
@@ -145,7 +149,9 @@ def verify_private_matrix_source_subset(
     require(len(config_bytes) <= 100_000,
             "R150_PRIVATE_SELECTION_TOO_LARGE")
     try:
-        selected = _method_list(json.loads(config_bytes))
+        selected = _method_list(
+            json.loads(config_bytes),
+            allow_constructor_methods=allow_constructor_methods)
     except (UnicodeError, json.JSONDecodeError) as exc:
         raise PrivateMatrixMethodSourceR150Error(
             "R150_INVALID_PRIVATE_METHOD_SELECTION") from exc
@@ -234,6 +240,8 @@ def verify_private_matrix_source_subset(
             hashlib.sha256(rebuilt_binary).hexdigest(),
         **checks,
         "verified_methods_cover_full_original_matrix_class": False,
+        "constructor_selection_requires_explicit_opt_in": True,
+        "unselected_constructors_or_initializers_recovered": False,
         "unselected_private_methods_and_scaffolding_accepted": False,
         "original_game_class_binary_fallback_used": False,
         "source_compiled_with_empty_original_external_classpath": True,
@@ -262,6 +270,7 @@ def main(argv=None):
     p.add_argument("--source-sha256", required=True)
     p.add_argument("--selection-sha256", required=True)
     p.add_argument("--original-owner", default="com/a/b/a/b")
+    p.add_argument("--allow-constructor-methods", action="store_true")
     args = p.parse_args(argv)
     output = Path(args.fresh_private_sanitized_report_json)
     try:
@@ -276,7 +285,8 @@ def main(argv=None):
             original_sha256=args.original_sha256,
             recovered_source_sha256=args.source_sha256,
             selection_sha256=args.selection_sha256,
-            original_owner=args.original_owner)
+            original_owner=args.original_owner,
+            allow_constructor_methods=args.allow_constructor_methods)
         output.write_text(json.dumps(
             results, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         print("R150_PRIVATE_ORIGINAL_LINKED_MATRIX_JAVA_METHODS_RECOMPILED")
