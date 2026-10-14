@@ -99,7 +99,7 @@ class PrivateImportOverlayR139Tests(unittest.TestCase):
         self.assertEqual(1, counts["whole_java_files_withheld_for_unresolved_imports"])
 
         # R125 class/package alias has a different simple name; no edit.
-        body = b"package rs; import ext.n; public class X { n value; }\n"
+        body = b"package rs;\nimport ext.n;\npublic class X { n value; }\n"
         withheld, counts = import_overlay_entries(
             [("rs/X.java", body)], eligible, deferred)
         self.assertEqual(body, withheld[0][1])
