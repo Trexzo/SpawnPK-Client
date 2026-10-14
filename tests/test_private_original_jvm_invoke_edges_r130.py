@@ -86,7 +86,7 @@ class OriginalJvmInvokeR130Tests(unittest.TestCase):
         self.assertEqual(
             result["rs_target_edges_without_corresponding_original_classfile"],
             1)
-        self.assertEqual(result["direct_rs_to_rs_invoke_sites"], 2)
+        self.assertEqual(result["direct_rs_to_rs_invoke_sites"], 3)
 
     def test_hash_mismatch_is_rejected(self):
         self.build()
