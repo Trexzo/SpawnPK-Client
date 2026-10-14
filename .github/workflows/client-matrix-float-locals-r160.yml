@@ -1,0 +1,30 @@
+name: V309 matrix float local reconstruction R160
+on:
+  pull_request:
+    paths:
+      - "src/spk_recovery/private_v309_float_locals_lifter_r160.py"
+      - "tests/test_private_v309_float_locals_lifter_r160.py"
+      - ".github/workflows/client-matrix-float-locals-r160.yml"
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install recovery package
+        run: python -m pip install -e .
+      - name: Verify Java source of original float locals and array writes
+        run: python -m unittest discover -s tests -p "test_private_v309_float_locals_lifter_r160.py" -v
+      - name: R159 regression
+        run: python -m unittest discover -s tests -p "test_private_v309_float_stack_lifter_r159.py" -v
