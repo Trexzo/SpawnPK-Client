@@ -12,6 +12,21 @@ This provides three distinct groups:
 
 All class/package names and private partition lists are omitted from the default aggregate-only report. `--private-classes` produces full identity-bearing evidence **only in the fresh local private report**; never upload it or any original classfile to public GitHub.
 
+## Exact original-v309 private graph preflight — 2026-10-14
+
+An **independent local, read-only implementation** of the CP class/member reference and field/method descriptor dependency scan was applied to exact original v309 SHA256 `ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38`. This is a real binary preflight but **not** yet an official packaged R136 CLI replay against the private original.
+
+| JVM dependency metric | Count |
+|---|---:|
+| Original v309 classfiles scanned | **10,502** |
+| Original `rs/` client classfiles | **1,159** |
+| Original non-`rs/` classfiles | **9,343** |
+| Non-`rs/` classes directly referencing `rs/` | **8** |
+| Additional non-`rs/` classes transitively depending on those 8 | **0** |
+| Non-`rs/` classfiles with no observed reference path to `rs/` | **9,335** |
+
+**Interpretation:** Exclude the eight directly game-bound classes from any attempted original-client-independent third-party compile capsule. Do **not** infer that the remaining 9,335 original-archive classfiles are independently licensed third-party code, original-like Java source, safe from reflection/dynamic linking, or permitted in the final zero-original-project-binary-fallback compile. A prior provisional dependency capsule used namespace-based filtering and cannot be retroactively marked accepted by these counts. The identity-bearing excluded entries remain private.
+
 ## Private invocation
 
 ```text
