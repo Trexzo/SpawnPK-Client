@@ -110,8 +110,7 @@ def source_dependency_provenance(entries, original_classes,
         "original_class_paths": len(original_classes),
         "java_import_declarations": len(imports),
         "classifications": dict(sorted(totals.items())),
-        "unlocated_top_package_families": dict(sorted(
-            unresolved_packages.items())),
+        "unlocated_distinct_top_package_families": len(unresolved_packages),
         "private_row_manifest_sha256": _manifest_sha(private_rows),
         "original_dependency_ownership_certified": False,
         "missing_import_proves_nonoriginal_source": False,
@@ -122,6 +121,8 @@ def source_dependency_provenance(entries, original_classes,
     }
     if include_private_names:
         summary["private_import_evidence"] = private_rows
+        summary["private_unlocated_package_families"] = dict(
+            sorted(unresolved_packages.items()))
     return summary
 
 
