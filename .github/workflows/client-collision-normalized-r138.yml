@@ -1,0 +1,35 @@
+name: V309 collision-normalized source compiler smoke
+on:
+  pull_request:
+    paths:
+      - "src/spk_recovery/private_v309_compiler_frontier_r137.py"
+      - "tests/test_private_v309_collision_normalized_frontier_r138.py"
+      - ".github/workflows/client-collision-normalized-r138.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: v309-collision-normalized-r138-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Class/package javac failure and actual R125 R8R recovery fixtures
+        run: python -m unittest discover -s tests -p "test_private_v309_collision_normalized_frontier_r138.py" -v
+      - name: Compile Python
+        run: python -m compileall -q src/spk_recovery/private_v309_compiler_frontier_r137.py
