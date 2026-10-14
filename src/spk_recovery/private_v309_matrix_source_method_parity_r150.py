@@ -41,8 +41,7 @@ def require(ok, reason):
 
 
 def _method_list(raw, *, allow_constructor_methods=False,
-                 allow_class_initializer=False,
-        require_selected_self_call_closure=False):
+                 allow_class_initializer=False):
     require(type(raw) is list and 1 <= len(raw) <= 32,
             "R150_EXPECT_EXPLICIT_BOUNDED_METHOD_SELECTION")
     results = []
@@ -167,7 +166,8 @@ def verify_private_matrix_source_subset(
         recovered_source_sha256, selection_sha256,
         original_owner="com/a/b/a/b",
         allow_constructor_methods=False,
-        allow_class_initializer=False):
+        allow_class_initializer=False,
+        require_selected_self_call_closure=False):
     pins = (
         (original_jar, original_sha256),
         (recovered_java_zip, recovered_source_sha256),
