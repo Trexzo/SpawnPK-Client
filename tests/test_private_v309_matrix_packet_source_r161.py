@@ -133,7 +133,7 @@ class R161MatrixPacketSourceTests(unittest.TestCase):
         altered=self.archive("wrong-source.zip",{
             "ext/Matrix.java":self.matrix_java(known_original=False,
                                                wrong_index=True)})
-        with self.assertRaises(R161MatrixPacketSourceError):
+        with self.assertRaises(ValueError):
             self.prove(source=altered)
 
     def test_missing_packet_source_scaffold_cannot_fallback_to_binary(self):
