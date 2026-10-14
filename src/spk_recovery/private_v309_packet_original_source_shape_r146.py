@@ -177,7 +177,18 @@ def corroborate_private_packet_source(original_jar, source_zip, *,
          dependent.name == original_dependent and
          calls["internal_name"] == original_dependent,
          "R146_ORIGINAL_BINARY_CLASSFILE_IDENTITY_MISMATCH")
-    linked = original_buffer in calls["class_references"]
+    # JVM method/field descriptors are UTF-8 CP entries: javac need not
+    # emit a CONSTANT_Class for a type used only in a method signature.
+    # R136's dependency graph also includes these descriptor references.
+    needle = "L" + original_buffer + ";"
+    linked = bool(
+        original_buffer in calls["class_references"] or
+        any(needle in row["descriptor"]
+            for row in dependent.fields + dependent.methods) or
+        any(row["owner"] == original_buffer or
+            needle in row["descriptor"]
+            for row in calls["member_references"])
+    )
     original_fields, original_methods = _member_shapes(binary)
     helper = (Path(__file__).resolve().parent / "java" /
               "PrivatePacketStructuralSourceR146.java")
