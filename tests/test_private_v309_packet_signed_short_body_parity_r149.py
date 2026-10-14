@@ -126,6 +126,8 @@ class R149OriginalPacketShortReaderBodyParity(unittest.TestCase):
         self.assertTrue(proof["per_method_exact_code_length"])
         self.assertTrue(proof["per_method_exact_decoded_instructions_resolved_cp"])
         self.assertTrue(proof["per_method_exact_stackmaps"])
+        self.assertTrue(proof["each_isolated_method_core_instruction_parity_equal"])
+        self.assertFalse(proof["whole_original_code_attribute_parity_accepted"])
         self.assertTrue(proof["jdk_java9_compilation_used_no_original_game_binary_classpath"])
         self.assertFalse(proof["original_to_source_member_identity_uniquely_determined"])
         self.assertFalse(proof["matrix_java_source_recovered"])
