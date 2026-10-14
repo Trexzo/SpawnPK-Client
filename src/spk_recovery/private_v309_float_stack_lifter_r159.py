@@ -119,7 +119,7 @@ def private_float_array_expression(original_jar, *, original_sha256,
         elif opcode == "getfield":
             _check(stack and stack.pop() == "this" and
                    operand.startswith("#") and
-                   re.search(r"(?:^|[./])" +
+                   re.search(r"(?:^|[ ./])" +
                              re.escape(float_array_field) +
                              r":\[F$", comment) is not None,
                    "R159_JVM_FIELD_LOAD_NOT_EXPECTED_FLOAT_ARRAY")
