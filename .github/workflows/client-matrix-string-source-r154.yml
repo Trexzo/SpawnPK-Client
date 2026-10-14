@@ -1,0 +1,30 @@
+name: V309 original matrix toString Java9 source parity R154
+on:
+  pull_request:
+    paths:
+      - "tests/test_private_v309_matrix_string_source_parity_r154.py"
+      - ".github/workflows/client-matrix-string-source-r154.yml"
+  workflow_dispatch:
+
+jobs:
+  matrix-string:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Install recovery package
+        run: python -m pip install -e .
+      - name: Verify toString method bytecode and unaccepted helper vetoes
+        run: python -m unittest discover -s tests -p "test_private_v309_matrix_string_source_parity_r154.py" -v
+      - name: Preserve R153 method coverage
+        run: python -m unittest discover -s tests -p "test_private_v309_matrix_method_coverage_r153.py" -v
