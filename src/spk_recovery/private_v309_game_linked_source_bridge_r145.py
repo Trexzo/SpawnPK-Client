@@ -20,6 +20,8 @@ import tempfile
 from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
 
 from .private_client_namespace_legalizer_r125 import CANONICAL_V309
+
+CANONICAL_V308 = "854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6"
 from .private_client_source_ast_census_r126 import (
     _java_ast_declarations, source_members, sha_file,
 )
@@ -66,7 +68,9 @@ def compare_private_linked_owner_source(source_zip, original_jar,
                                         private_donor_java_zip, *,
                                         source_sha256, donor_sha256,
                                         original_sha256=CANONICAL_V309,
-                                        maximum_diagnostics=3000):
+                                        maximum_diagnostics=3000,
+                                        cross_version_original_jar=None,
+                                        cross_version_sha256=CANONICAL_V308):
     """Exactly one owned original linked class, supplied as REAL Java source."""
     require(all(sha_file(path) == digest for path, digest in (
         (source_zip, source_sha256),
@@ -94,13 +98,28 @@ def compare_private_linked_owner_source(source_zip, original_jar,
             "R145_ORIGINAL_BINARY_PARTITION_OVERLAP")
 
     rel, body = donated[0]
-    original_owner = rel[:-5].replace("/", "/")
+    original_owner = rel[:-5]
     require(original_owner in original_linked
             and not original_owner.startswith("rs/")
             and "$" not in original_owner,
             "R145_DONOR_NOT_A_DIRECT_ORIGINAL_RS_LINKED_OWNER")
     require(rel.casefold() not in {path.casefold() for path, _ in existing},
             "R145_OWNER_ALREADY_DEFINED_BY_JAVA_SOURCE")
+    cross_version_checked = cross_version_original_jar is not None
+    reused_binary_identical = False
+    original_owner_class_sha = None
+    if cross_version_checked:
+        require(sha_file(cross_version_original_jar) == cross_version_sha256,
+                "R145_CROSS_VERSION_ORIGINAL_SHA256_MISMATCH")
+        with ZipFile(original_jar) as current, ZipFile(
+                cross_version_original_jar) as prior:
+            path = original_owner + ".class"
+            require(path in current.namelist(),
+                    "R145_ORIGINAL_SOURCE_OWNER_CLASSFILE_MISSING")
+            original_bytes = current.read(path)
+            original_owner_class_sha = hashlib.sha256(original_bytes).hexdigest()
+            reused_binary_identical = (path in prior.namelist()
+                and prior.read(path) == original_bytes)
 
     with tempfile.TemporaryDirectory(prefix="spk-r145-private-") as scratch:
         temp = Path(scratch)
@@ -161,6 +180,14 @@ def compare_private_linked_owner_source(source_zip, original_jar,
         "original_client_sha256": original_sha256,
         "original_source_zip_sha256": source_sha256,
         "private_java_donor_zip_sha256": donor_sha256,
+        "cross_version_original_checked": cross_version_checked,
+        "cross_version_original_whole_jar_sha256":
+            cross_version_sha256 if cross_version_checked else None,
+        "cross_version_original_owner_class_sha256":
+            original_owner_class_sha,
+        "cross_version_original_owner_class_byte_identical":
+            reused_binary_identical if cross_version_checked else None,
+        "cross_version_source_semantic_name_carry_forward_accepted": False,
         "private_source_preview_zip_sha256": new_sha,
         "original_source_manifest_sha256": _manifest(existing),
         "combined_source_manifest_sha256": _manifest(combined),
@@ -199,6 +226,9 @@ def compare_private_linked_owner_source(source_zip, original_jar,
         (original_jar, original_sha256),
         (private_donor_java_zip, donor_sha256))),
         "R145_ORIGINAL_INPUT_CHANGED_DURING_COMPILATION")
+    if cross_version_checked:
+        require(sha_file(cross_version_original_jar) == cross_version_sha256,
+                "R145_CROSS_VERSION_JAR_CHANGED_DURING_COMPILE")
     return result
 
 
@@ -212,6 +242,8 @@ def main(argv=None):
     parser.add_argument("--donor-sha256", required=True)
     parser.add_argument("--original-sha256", default=CANONICAL_V309)
     parser.add_argument("--maximum-diagnostics", type=int, default=3000)
+    parser.add_argument("--cross-version-original-jar")
+    parser.add_argument("--cross-version-sha256", default=CANONICAL_V308)
     args = parser.parse_args(argv)
     dest = Path(args.fresh_private_sanitized_report)
     try:
@@ -224,7 +256,9 @@ def main(argv=None):
             source_sha256=args.source_sha256,
             donor_sha256=args.donor_sha256,
             original_sha256=args.original_sha256,
-            maximum_diagnostics=args.maximum_diagnostics)
+            maximum_diagnostics=args.maximum_diagnostics,
+            cross_version_original_jar=args.cross_version_original_jar,
+            cross_version_sha256=args.cross_version_sha256)
         dest.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n",
                         encoding="utf-8")
         print("R145_PRIVATE_ORIGINAL_LINKED_SOURCE_BRIDGE_MEASURED_NOT_CERTIFIED")
