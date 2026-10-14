@@ -70,6 +70,10 @@ def source_dependency_provenance(entries, original_classes,
          "ORIGINAL_CLASS_INDEX_REQUIRED")
     imports = _import_inventory(entries)
     source_paths = _candidate_paths(entries)
+    original_package_prefixes = {
+        name[:index] for name in original_classes
+        for index, char in enumerate(name) if char == "/"
+    }
     totals = Counter()
     unresolved_packages = Counter()
     private_rows = []
@@ -88,6 +92,12 @@ def source_dependency_provenance(entries, original_classes,
                 classification = "possible_original_nested_class_unverified"
             elif candidate_outer in source_paths:
                 classification = "possible_candidate_nested_class_unverified"
+            elif (internal.endswith("_")
+                  and internal[:-1] in original_classes
+                  and internal[:-1] in original_package_prefixes):
+                # Example: decompiler's d_ alias vs JVM d.class plus d/*
+                # package. This is *only* a collision-related hypothesis.
+                classification = "possible_original_shadow_alias_unverified"
             elif spelling.startswith(("java.", "javax.", "jdk.", "sun.")):
                 classification = "jdk_namespace_or_external_api_unverified"
             else:
