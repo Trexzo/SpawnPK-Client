@@ -48,3 +48,12 @@ Example extra private CLI options:
 ```text
 --cross-version-original-jar PRIVATE_ORIGINAL_V308.jar --cross-version-sha256 854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6
 ```
+
+
+## Matrix donor's `rs/x/e` dependency — source-name recovery lead (private evidence)
+
+The original matrix owner has a constructor and initializer method referencing original JVM type `rs/x/e`. No `rs/x/e.java` exists in the 1,271-Java decompiled-source candidate, so an original-spelled matrix donor cannot simply be appended and compiled unchanged. The candidate **does** contain `rs/io/Packet.java`. Independent read-only evidence found **both exact 309-digit RSA modulus and 65537 exponent decimal constants from candidate `Packet.java` present byte-for-byte as constant-pool UTF-8 strings in original-v309 `rs/x/e.class`**, alongside a matching general binary-buffer role and integer mask layout. This strongly corroborates a provisional rename `rs/x/e` → `rs/io/Packet`; it is **not** complete original class/method parity or an accepted rename.
+
+Critically, original `rs/x/e.class` is **NOT** byte-identical between v308 and v309 despite the matrix owner being identical: v308 SHA-256 `9748bf6e11bb0c70d04c3218ccc03770c882a0d65e281b7f621cd3108ebad562`, v309 SHA-256 `b605d053ed38f602f90ac6bd2ff58de7149a55b44a9e88ee123802e4606a1fa2`. Exact matrix-owner byte reuse therefore **does not imply unchanged dependencies** across versions. Before real matrix-source compilation, independently verify the `Packet` owner mapping through full class structural and code-use corroboration; rewrite all dependent type identifiers using AST authority rather than loose text replacement, then run original method parity against original v309. Don't silently supply original `rs/x/e.class` as fallback.
+
+This type-identity gap is now a specific next implementation frontier, not an excuse to count a noncompilable Java donor as accepted recovery.
