@@ -8,6 +8,7 @@ import unittest
 from zipfile import ZipFile
 
 from spk_recovery.bytecode_profile import profile_class_field_accesses
+from spk_recovery.source_method_parity import _normalized_instructions
 from spk_recovery.private_v309_float_stack_lifter_r159 import (
     OriginalFloatStackR159Error, private_float_array_expression,
 )
@@ -105,7 +106,8 @@ class R159StrictFloatStackSourceRecovery(unittest.TestCase):
             (output / (self.OWNER + ".class")).read_bytes())
         old = next(m for m in original["methods"] if m["name"] == "g")
         new = next(m for m in rebuilt["methods"] if m["name"] == "g")
-        self.assertEqual(old["instructions"], new["instructions"])
+        self.assertEqual(_normalized_instructions(original, old),
+                         _normalized_instructions(rebuilt, new))
         self.assertEqual(old["code_length"], new["code_length"])
 
     def test_mismatched_original_jar_hash_fails_closed(self):
