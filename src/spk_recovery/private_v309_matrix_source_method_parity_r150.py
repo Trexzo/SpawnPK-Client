@@ -40,14 +40,15 @@ def require(ok, reason):
         raise PrivateMatrixMethodSourceR150Error(reason)
 
 
-def _method_list(raw, *, allow_constructor_methods=False):
+def _method_list(raw, *, allow_constructor_methods=False,
+                 allow_class_initializer=False):
     require(type(raw) is list and 1 <= len(raw) <= 32,
             "R150_EXPECT_EXPLICIT_BOUNDED_METHOD_SELECTION")
     results = []
     for entry in raw:
         require(type(entry) is dict and set(entry) == {"name", "descriptor"}
                 and type(entry["name"]) is str
-                and re.fullmatch(r"(?:[A-Za-z_$][A-Za-z0-9_$]*|<init>)",
+                and re.fullmatch(r"(?:[A-Za-z_$][A-Za-z0-9_$]*|<init>|<clinit>)",
                                  entry["name"]) is not None
                 and type(entry["descriptor"]) is str
                 and re.fullmatch(r"\([a-zA-Z0-9;_$/\[]*\)[A-Za-z0-9;_$/\[]+",
@@ -55,9 +56,11 @@ def _method_list(raw, *, allow_constructor_methods=False):
                 "R150_INVALID_METHOD_IDENTITY")
         # Constructors require an explicit opt-in. Unselected constructors,
         # source-only scaffolds and class initializers are NEVER accepted.
-        require(entry["name"] != "<clinit>" and
-                (entry["name"] != "<init>" or allow_constructor_methods),
-                "R151_CONSTRUCTOR_NOT_EXPLICITLY_AUTHORIZED")
+        require((entry["name"] != "<init>" or allow_constructor_methods)
+                and (entry["name"] != "<clinit>" or
+                     (allow_class_initializer and
+                      entry["descriptor"] == "()V")),
+                "R152_INITIALIZER_OR_CONSTRUCTOR_NOT_EXPLICITLY_AUTHORIZED")
         results.append((entry["name"], entry["descriptor"]))
     require(len(results) == len(set(results)),
             "R150_DUPLICATE_PRIVATE_SELECTED_METHOD")
@@ -117,6 +120,8 @@ def _strict_inspections(original, rebuilt, *, selected):
         "verified_selected_method_count": len(original_methods),
         "verified_constructor_count": sum(
             method[0] == "<init>" for method in selected),
+        "verified_selected_class_initializer_count": sum(
+            method[0] == "<clinit>" for method in selected),
         "matched_opcode_count": sum(x["original_opcode_count"]
                                    for x in original_methods),
         "core_method_bytecode_differences": code_differences,
@@ -133,7 +138,8 @@ def verify_private_matrix_source_subset(
         original_sha256=CANONICAL_V309,
         recovered_source_sha256, selection_sha256,
         original_owner="com/a/b/a/b",
-        allow_constructor_methods=False):
+        allow_constructor_methods=False,
+        allow_class_initializer=False):
     pins = (
         (original_jar, original_sha256),
         (recovered_java_zip, recovered_source_sha256),
@@ -151,7 +157,8 @@ def verify_private_matrix_source_subset(
     try:
         selected = _method_list(
             json.loads(config_bytes),
-            allow_constructor_methods=allow_constructor_methods)
+            allow_constructor_methods=allow_constructor_methods,
+            allow_class_initializer=allow_class_initializer)
     except (UnicodeError, json.JSONDecodeError) as exc:
         raise PrivateMatrixMethodSourceR150Error(
             "R150_INVALID_PRIVATE_METHOD_SELECTION") from exc
@@ -241,6 +248,7 @@ def verify_private_matrix_source_subset(
         **checks,
         "verified_methods_cover_full_original_matrix_class": False,
         "constructor_selection_requires_explicit_opt_in": True,
+        "static_class_initializer_selection_requires_explicit_opt_in": True,
         "unselected_constructors_or_initializers_recovered": False,
         "unselected_private_methods_and_scaffolding_accepted": False,
         "original_game_class_binary_fallback_used": False,
@@ -271,6 +279,7 @@ def main(argv=None):
     p.add_argument("--selection-sha256", required=True)
     p.add_argument("--original-owner", default="com/a/b/a/b")
     p.add_argument("--allow-constructor-methods", action="store_true")
+    p.add_argument("--allow-class-initializer", action="store_true")
     args = p.parse_args(argv)
     output = Path(args.fresh_private_sanitized_report_json)
     try:
@@ -286,7 +295,8 @@ def main(argv=None):
             recovered_source_sha256=args.source_sha256,
             selection_sha256=args.selection_sha256,
             original_owner=args.original_owner,
-            allow_constructor_methods=args.allow_constructor_methods)
+            allow_constructor_methods=args.allow_constructor_methods,
+            allow_class_initializer=args.allow_class_initializer)
         output.write_text(json.dumps(
             results, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         print("R150_PRIVATE_ORIGINAL_LINKED_MATRIX_JAVA_METHODS_RECOMPILED")
