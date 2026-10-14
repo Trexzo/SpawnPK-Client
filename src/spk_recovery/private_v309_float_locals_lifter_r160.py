@@ -207,7 +207,7 @@ def recover_original_float_local_method(
     require(output.returncode == 0 and
             len(output.stdout) <= 5_000_000,
             "R160_JAVAP_BINARY_INSPECTION_REJECTED")
-    parsed_output = output.stdout.decode("utf-8",errors="strict")
+    parsed_output = output.stdout.decode("utf-8",errors="strict").replace("\r\n", "\n")
     ins = _instructions(parsed_output, java_header, descriptor)
     require(len(ins) == expected_instruction_count and
             ins[-1][:2] == (expected_final_offset, "return"),
