@@ -33,3 +33,18 @@ Expected whole-original v309 SHA-256 `ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c
 **Current limitation:** This PR does not itself decompile/rebuild the original game-linked matrix owner; its exact owner source must be recovered privately and independently proved with class/method/Code parity. R145 is only the safe way to measure such a verified source candidate in the whole v309 compile, without gaming the error count by reintroducing the original binary. The independently observed post-R144 516 remaining javac errors are not automatically reduced by R145; until a verified real Java donor is supplied, there is **no real v309 R145 error reduction**.
 
 Original `rs/` first-party class/member provenance, thousands of non-`rs/` external binaries' ownership, Lombok-origin hypotheses, source package aliases and runtime parity remain separate. No release of full `recovered-source/v309/src/` is authorized yet.
+
+
+## Original v308 → v309 exact-byte source reuse evidence
+
+**Verified privately on the actual SHA-pinned user asset archive on 2026-10-14:** the original linked matrix owner `com/a/b/a/b.class` is **byte-for-byte identical** in v308 and v309, with class-byte SHA-256 `52b1d1bf805643aefb9244a88fbf6b47b67b36664d920e023db3d68afa4e3030`. Whole-client pins are v308 `854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6` and v309 `ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38`.
+
+This is unusually useful for the user's versioned original-client Java source-tree roadmap: a separately accepted, original-proven, compiled-Java-equivalent recovery of this *specific owner class* can potentially be reused between the two versions because the entire original class bytes — not simply its name or API — agree. It does **not** prove the surrounding game model classes, dependency versions, source-generated names or runtime behavior are identical.
+
+R145 now optionally accepts `--cross-version-original-jar PRIVATE_ORIGINAL_V308.jar --cross-version-sha256 854f26ff...` and compares the exact single original linked-owner `.class` bytes against the currently pinned v309 owner. Both whole original-archive hashes are guarded before and after replay. The sanitized JSON report records the cross-version input digest, selected-owner class digest, exact-byte identity boolean and explicitly `cross_version_source_semantic_name_carry_forward_accepted=false`. It never copies either original classfile into the source compile classpath. CI tests positive exact-byte identity, negative changed original owner and changed whole-JAR SHA. No recovered original Java matrix class has been accepted yet; the byte match alone is a reuse constraint, not a compilation result or source parity proof.
+
+Example extra private CLI options:
+
+```text
+--cross-version-original-jar PRIVATE_ORIGINAL_V308.jar --cross-version-sha256 854f26ff9f134b0317572e7ac1688e6f40a231d5a4c66f8db5d655b7f45ce7c6
+```
