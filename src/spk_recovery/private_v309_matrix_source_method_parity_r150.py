@@ -41,7 +41,8 @@ def require(ok, reason):
 
 
 def _method_list(raw, *, allow_constructor_methods=False,
-                 allow_class_initializer=False):
+                 allow_class_initializer=False,
+        require_selected_self_call_closure=False):
     require(type(raw) is list and 1 <= len(raw) <= 32,
             "R150_EXPECT_EXPLICIT_BOUNDED_METHOD_SELECTION")
     results = []
@@ -131,6 +132,33 @@ def _strict_inspections(original, rebuilt, *, selected):
             frame_differences == 0,
         "private_methods": original_methods,
     }
+
+
+def _self_call_closure_for_selected(profile, selected, owner):
+    """Selected recovered methods may invoke only other selected owner methods.
+
+    A genuine self-invocation (including a constructor) cannot rely on a
+    compilation-only stub when closure mode is enabled. This does not make
+    external library or field dependencies independently proven.
+    """
+    allowed = set(selected)
+    missing = []
+    local_edges = 0
+    for identity in selected:
+        matches = [row for row in profile["methods"]
+                   if (row["name"], row["descriptor"]) == identity]
+        require(len(matches) == 1,
+                "R155_CLOSURE_SELECTED_METHOD_NOT_UNIQUE")
+        for call in matches[0]["method_invocations"]:
+            if call.get("owner") != owner:
+                continue
+            local_edges += 1
+            target = (call["name"], call["descriptor"])
+            if target not in allowed:
+                missing.append(target)
+    require(not missing,
+            "R155_SELECTED_SOURCE_DEPENDS_ON_UNVERIFIED_SELF_METHOD")
+    return local_edges
 
 
 def verify_private_matrix_source_subset(
@@ -234,6 +262,15 @@ def verify_private_matrix_source_subset(
             "R150_ORIGINAL_AND_REBUILT_OWNER_NOT_EQUAL")
     checks = _strict_inspections(
         original_profile, rebuilt_profile, selected=selected)
+    verified_self_call_edges = None
+    if require_selected_self_call_closure:
+        old_edges = _self_call_closure_for_selected(
+            original_profile, selected, original_owner)
+        new_edges = _self_call_closure_for_selected(
+            rebuilt_profile, selected, original_owner)
+        require(old_edges == new_edges,
+                "R155_ORIGINAL_AND_RECOMPILED_SELF_CALL_EDGE_COUNT_DIFFERS")
+        verified_self_call_edges = old_edges
     private = checks.pop("private_methods")
     report = {
         "schema_version": 1,
@@ -247,6 +284,10 @@ def verify_private_matrix_source_subset(
             hashlib.sha256(rebuilt_binary).hexdigest(),
         **checks,
         "verified_methods_cover_full_original_matrix_class": False,
+        "selected_original_and_rebuilt_self_call_closure_required":
+            bool(require_selected_self_call_closure),
+        "selected_original_self_call_edges_closed_and_checked":
+            verified_self_call_edges,
         "constructor_selection_requires_explicit_opt_in": True,
         "static_class_initializer_selection_requires_explicit_opt_in": True,
         "unselected_constructors_or_initializers_recovered": False,
@@ -280,6 +321,7 @@ def main(argv=None):
     p.add_argument("--original-owner", default="com/a/b/a/b")
     p.add_argument("--allow-constructor-methods", action="store_true")
     p.add_argument("--allow-class-initializer", action="store_true")
+    p.add_argument("--require-selected-self-call-closure", action="store_true")
     args = p.parse_args(argv)
     output = Path(args.fresh_private_sanitized_report_json)
     try:
@@ -296,7 +338,8 @@ def main(argv=None):
             selection_sha256=args.selection_sha256,
             original_owner=args.original_owner,
             allow_constructor_methods=args.allow_constructor_methods,
-            allow_class_initializer=args.allow_class_initializer)
+            allow_class_initializer=args.allow_class_initializer,
+            require_selected_self_call_closure=args.require_selected_self_call_closure)
         output.write_text(json.dumps(
             results, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         print("R150_PRIVATE_ORIGINAL_LINKED_MATRIX_JAVA_METHODS_RECOMPILED")
