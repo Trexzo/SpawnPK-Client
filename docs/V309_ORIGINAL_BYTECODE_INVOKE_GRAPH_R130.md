@@ -13,6 +13,21 @@ The client-side recovery milestone remains [#1004](https://github.com/Trexzo/Spa
 
 The default private report contains only aggregate counts, exact original-JAR digest, deterministic digest of owner-to-owner edges, and another digest of exact method-target rows. Use `--private-identifiers` **only for local private evidence** to expose `private_original_call_edges` (R129 compatible), and detailed `private_original_method_targets`. Do not upload this report with private identifiers or any original source/binary.
 
+## Exact private original-v309 cross-check, 2026-10-14
+
+An independent read-only classfile/Code bytecode parser, separate from the packaged R130 routine and not launched with the JVM, was run over the exact SHA-pinned private original v309 client JAR. It parsed all **1,159** `rs/` classfiles (classfile major **53**), **8,389** declared methods and **8,281** methods with actual `Code` attributes.
+
+| Verified original-side bytecode observation | Count |
+|---|---:|
+| All direct JVM invoke instructions in `rs/` method bodies | **49,438** |
+| Direct `rs/` → `rs/` JVM invoke instructions | **31,241** |
+| Distinct `rs/` → `rs/` class-owner directed edges | **3,939** |
+| Distinct owner+invocation-opcode+target-method+descriptor entries | **10,970** |
+| `invokedynamic` instructions kept out of direct-call edges | **2,069** |
+| Original `rs/` target-owner edges absent from original archive | **0** |
+
+**Proof boundary:** these numbers are from a private **independent Code walker**, not the final GitHub R130 CLI. They are expected aggregate checkpoints that R130 must reproduce from its different existing `bytecode_profile` decoder in a later private exact-original run. No client was executed; no private class names, method identities or binaries were committed. These counts are original-JVM-only and say nothing by themselves about source-to-original class matching or a rebuilt client.
+
 ## Private command
 
 ```text
