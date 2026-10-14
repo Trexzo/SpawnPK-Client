@@ -38,7 +38,7 @@ class PrivateReviewedImportAliasR135Tests(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
         output = work / "classes"
-        output.mkdir()
+        output.mkdir(exist_ok=True)
         compiled = subprocess.run(
             [shutil.which("javac"), "--release", "9", "-g:none",
              "-proc:none", "-d", str(output), str(path)],
