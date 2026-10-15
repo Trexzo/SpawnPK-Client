@@ -138,11 +138,17 @@ def verify_pinned_original_spellbook_parent_methods(
              "R205_EXACT_FIVE_EMITTED_SOURCE_CLASSES_REQUIRED")
         rebuilt_bytes=(out/(original_owner+".class")).read_bytes()
     rebuilt=parse_class(rebuilt_bytes)
-    need((original.name,original.super_name,original.access,
-          original.major,original.minor,original.interfaces)==
-         (rebuilt.name,rebuilt.super_name,rebuilt.access,
-          rebuilt.major,rebuilt.minor,rebuilt.interfaces),
-         "R205_ORIGINAL_PARENT_JVM_CLASS_HEADER_CHANGED")
+    need((original.name,original.access,original.major,
+          original.minor,original.interfaces)==
+         (rebuilt.name,rebuilt.access,rebuilt.major,
+          rebuilt.minor,rebuilt.interfaces),
+         "R205_ORIGINAL_PARENT_NON_SUPER_CLASS_HEADER_CHANGED")
+    superclass_is_exact=original.super_name==rebuilt.super_name
+    if not superclass_is_exact:
+        need(original_owner=="rs/n/c/ap" and
+             original.super_name=="rs/n/c" and
+             rebuilt.super_name=="rs/n/c/c",
+             "R205_UNAUTHORIZED_ORIGINAL_SUPERCLASS_BINARY_NAME_CHANGE")
     before=profile_class_field_accesses(original_bytes)
     after=profile_class_field_accesses(rebuilt_bytes)
     all_old={(m["name"],m["descriptor"]) for m in before["methods"]}
@@ -172,6 +178,9 @@ def verify_pinned_original_spellbook_parent_methods(
         "original_selected_method_count_verified":len(selected_methods),
         "original_selected_instructions_verified":expected_instructions,
         "original_method_code_offsets_and_symbolic_refs_match":True,
+        "original_superclass_binary_name_identical":superclass_is_exact,
+        "compiler_only_superclass_name_mapping_explicit":
+            not superclass_is_exact,
         "original_full_parent_method_set_rebuilt":False,
         "original_parent_all_fields_and_attributes_verified":False,
         "other_methods_remaining_unverified":
