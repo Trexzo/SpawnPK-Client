@@ -1,0 +1,22 @@
+name: R196 source import frontier
+on:
+  pull_request:
+    paths:
+      - 'tools/source_import_frontier_r196.py'
+      - 'tests/test_source_import_frontier_r196.py'
+      - '.github/workflows/r196-source-import-frontier.yml'
+  workflow_dispatch:
+jobs:
+  import-frontier:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Synthetic dependency-source frontier
+        run: python -m unittest discover -s tests -p test_source_import_frontier_r196.py -v
