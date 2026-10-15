@@ -56,17 +56,17 @@ def run(source_root: Path, java: Path, java_sha: str, deps: list[Path],
     command = [str(java), "-XDrawDiagnostics", "-proc:none", "-encoding", "UTF-8",
                "--release", "9", "-Xmaxerrs", "1000000"]
     safe_argv(command[1:])
-    if deps:
-        # The explicit -classpath is generated here, never accepted from users.
-        command += ["-classpath", os.pathsep.join(str(p.resolve()) for p in deps)]
-    else:
-        # Remove inherited CLASSPATH influence, below.
-        command += ["-classpath", ""]
     env = {key: value for key, value in os.environ.items()
            if key not in ("CLASSPATH", "JAVA_TOOL_OPTIONS", "_JAVA_OPTIONS", "JDK_JAVA_OPTIONS")}
     try:
         with tempfile.TemporaryDirectory(prefix="spk-r182-javac-") as output_dir:
-            completed = subprocess.run(command + ["-d", output_dir] + sources,
+            empty_sources = str(Path(output_dir) / "empty-sourcepath")
+            Path(empty_sources).mkdir()
+            classpath = (os.pathsep.join(str(p.resolve()) for p in deps)
+                         if deps else output_dir)
+            completed = subprocess.run(command + ["-classpath", classpath,
+                                                   "-sourcepath", empty_sources,
+                                                   "-d", output_dir] + sources,
                                        env=env, cwd=source_root,
                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                        text=True, encoding="utf-8", errors="replace",
