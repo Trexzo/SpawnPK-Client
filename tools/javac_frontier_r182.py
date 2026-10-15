@@ -56,7 +56,18 @@ def build_report(path: Path, expected_sha: str, profile: str) -> dict:
         raise ValueError("Transcript SHA-256 mismatch; refusing unpinned input")
     if not re.fullmatch(r"[A-Za-z0-9_.-]{1,100}", profile):
         raise ValueError("Invalid profile identifier")
-    rows, unparsed = parse_transcript(path.read_text(encoding="utf-8").splitlines())
+    lines = path.read_text(encoding="utf-8").splitlines()
+    rows, unparsed = parse_transcript(lines)
+    summaries = []
+    for line in lines:
+        match = re.fullmatch(r"\s*(\d+) (errors?|warnings?)\s*", line)
+        if match:
+            summaries.append({"count": int(match.group(1)), "kind": match.group(2).rstrip("s")})
+    claimed_errors = sum(x["count"] for x in summaries if x["kind"] == "error")
+    parsed_errors = sum(x["key"].startswith("compiler.err.") for x in rows)
+    # If output is truncated or contains diagnostic structures this parser
+    # cannot read, never treat the parsed count as the full compiler frontier.
+    complete_error_inventory = bool(summaries) and claimed_errors == parsed_errors and not unparsed
     rows.sort(key=lambda r: (r["file"].casefold(), r["file"], r["line"],
                              r["column"] or 0, r["key"], r["message"]))
     return {
@@ -65,12 +76,16 @@ def build_report(path: Path, expected_sha: str, profile: str) -> dict:
         "transcript_sha256": actual,
         "parsed_diagnostic_count": len(rows),
         "unparsed_line_count": len(unparsed),
+        "summary_counts": summaries,
+        "parsed_error_count": parsed_errors,
+        "summary_error_count": claimed_errors if summaries else None,
+        "complete_error_inventory": complete_error_inventory,
         "root_cause_status": "not_proven",
         "diagnostics": rows,
         "unparsed_lines": unparsed,
         "limitations": [
             "Transcript ingestion only; no compilation performed",
-            "Original raw javac count not independently verified",
+            "Summary count is transcript-reported, not independently verified",
             "No dependency provenance or source tree was examined",
             "Root causes remain unknown until separately evidenced",
             "Do not compare error counts across different profiles",
