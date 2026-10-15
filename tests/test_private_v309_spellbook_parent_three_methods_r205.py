@@ -166,6 +166,14 @@ class R205SyntheticParentSelectedMethods(unittest.TestCase):
         with self.assertRaises(R205OriginalSpellbookPartialError):
             self.verify(candidate=bad)
 
+    def test_unapproved_superclass_change_rejected(self):
+        mutated=self.write_zip(
+            "wrong-superclass.zip",
+            {self.parent:self.main_source.replace(
+                "Main extends Base", "Main extends Settings")})
+        with self.assertRaises(R205OriginalSpellbookPartialError):
+            self.verify(candidate=mutated)
+
     def test_wrong_original_source_and_helper_sha_pins_rejected(self):
         for opts in (
             {"original_sha256":"0"*64},
