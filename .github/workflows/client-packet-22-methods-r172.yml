@@ -1,0 +1,31 @@
+name: V309 original Packet 22-method Java recovery R172
+on:
+  pull_request:
+    paths:
+      - "src/spk_recovery/private_v309_packet_22_methods_r172.py"
+      - "tests/test_private_v309_packet_22_methods_r172.py"
+      - ".github/workflows/client-packet-22-methods-r172.yml"
+  workflow_dispatch:
+jobs:
+  java-source:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: python -m pip install -e .
+      - name: Independently compile and compare 22 original Packet JVM Code bodies
+        run: python -m unittest discover -s tests -p "test_private_v309_packet_22_methods_r172.py" -v
+      - name: Preserve R171 six original Packet methods
+        run: python -m unittest discover -s tests -p "test_private_v309_packet_six_readers_r171.py" -v
+      - name: Python syntax
+        run: python -m compileall -q src/spk_recovery/private_v309_packet_22_methods_r172.py
