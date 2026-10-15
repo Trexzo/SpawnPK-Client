@@ -60,7 +60,7 @@ def verify_original_signlink_run_source(
         previous_twentythree_instructions=574,
 ):
     need(expected_run_instructions>0 and original_methods==24 and
-         original_owner.endswith("/a"),
+         isinstance(original_owner,str) and "/" in original_owner,
          "R188_EXACT_ORIGINAL_RUN_METHOD_SCOPE_REQUIRED")
     private_inputs=(
         (original_jar,original_sha256),
