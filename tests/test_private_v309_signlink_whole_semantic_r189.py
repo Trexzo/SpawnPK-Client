@@ -42,9 +42,15 @@ class R189SyntheticConstantPoolSemanticTests(unittest.TestCase):
             "    }\n"
             "  }\n"
         )
-        cls.fillers="".join(
-            "  public static void x%03d(){v=1;}\n" % x
-            for x in range(125))
+        # Fixed-width invokevirtual/methodref operands pad the constant
+        # pool without causing reverse ldc_w-to-ldc width changes.
+        cls.fillers=(
+            "  public static void filler(){"+
+            "".join("x%03d();" % x for x in range(110))+
+            "}\n"+
+            "".join("  private static void x%03d(){}\n" % x
+                    for x in range(110))
+        )
         cls.original=cls.compile_java("synthetic-old",
             cls.header+cls.focus+cls.fillers+"}\n")
         cls.rebuilt=cls.compile_java("synthetic-reordered",
@@ -148,8 +154,10 @@ class R189SyntheticConstantPoolSemanticTests(unittest.TestCase):
 
     def test_missing_method_fails_even_if_other_code_equivalent(self):
         mutated=self.compile_java("synthetic-missing-method",
-            self.header+self.fillers.replace(
-                "  public static void x024(){v=1;}\n","")+
+            self.header+
+            self.fillers.replace("x024();","x999();").replace(
+                "private static void x024(){}",
+                "private static void x999(){}")+
             self.focus+"}\n")
         with self.assertRaises(R189SignlinkWholeSourceSemanticError):
             self.verify(mutated)
