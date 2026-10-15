@@ -31,7 +31,7 @@ def verify_packet_49(jar,sourcezip,*,original_sha256,
     old=verify_packet_43(
         jar,sourcezip,original_sha256=original_sha256,
         source_sha256=source_sha256,owner=owner,class_sha256=class_sha256,
-        first_six_kwargs=kw,previous_count=old_count-new_count*0-360,
+        first_six_kwargs=kw,previous_count=old_count-360,
         new_count=360,initial_six=first_six)
     if old["total_matching_original_jvm_instructions"]!=old_count:
         raise ValueError("R175_PRIOR_43_METHOD_SOURCE_PROOF_FAILED")
