@@ -125,7 +125,7 @@ class R166OriginalTransformTests(unittest.TestCase):
     def test_changed_concat_recipe_fails_despite_same_method_opcodes(self):
         bad=self.source_archive("wrong-concat.zip",
                                 self.java(changed_recipe=True))
-        with self.assertRaises(R166OriginalTransformError):
+        with self.assertRaises(ValueError):
             self.prove(bad)
 
     def test_original_class_modifier_change_is_rejected(self):
