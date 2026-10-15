@@ -28,8 +28,8 @@ from .private_v309_signlink_twentyone_source_r186 import (
 NEW_TWO = (("g", "()Ljava/lang/String;"), ("<clinit>", "()V"))
 TWENTYTHREE = tuple((*TWENTYONE, *NEW_TWO))
 TOTAL_METHODS = 24
-MATCHED_JVM_INSTRUCTIONS = 574
-NEW_JVM_INSTRUCTIONS = 105
+MATCHED_JVM_INSTRUCTIONS = 622
+NEW_JVM_INSTRUCTIONS = 153
 
 
 class R187OriginalSignlinkTwentyThreeError(ValueError):
