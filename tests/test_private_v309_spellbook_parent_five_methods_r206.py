@@ -206,6 +206,13 @@ class R206UnrelatedFiveMethods(unittest.TestCase):
         with self.assertRaises(R206OriginalSpellbookPartialError):
             self.verify(source=candidate)
 
+    def test_unapproved_superclass_change_rejected(self):
+        candidate=self.pack("wrong-superclass.zip",{
+            self.parent:self.code.replace(
+                "Main extends Base", "Main extends Styles")})
+        with self.assertRaises(R206OriginalSpellbookPartialError):
+            self.verify(source=candidate)
+
     def test_bad_input_digest_and_selected_count_rejected(self):
         for changed in (
             {"original_jar_sha256":"0"*64},
