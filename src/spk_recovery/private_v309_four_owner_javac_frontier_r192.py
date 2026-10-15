@@ -160,7 +160,7 @@ def _compile_private_zip(source_zip,root,label,*,javac):
         target=src/name
         target.parent.mkdir(parents=True,exist_ok=True)
         target.write_bytes(content)
-        paths.append(str(target))
+        paths.append(target.as_posix())
     argfile=root/(label+"-java-sources.args")
     argfile.write_text("\n".join(paths)+"\n",encoding="utf-8")
     env=os.environ.copy()
@@ -180,7 +180,7 @@ def _compile_private_zip(source_zip,root,label,*,javac):
     except (OSError,subprocess.TimeoutExpired) as exc:
         raise R192PrivateSourceFrontierError(
             "R192_SOURCE_ONLY_JAVA9_COMPILATION_ABORTED") from exc
-    diagnostic=result.stderr.decode("utf-8",errors="replace")
+    diagnostic=result.stderr.decode("utf-8",errors="replace").replace("\r\n","\n").replace("\r","\n")
     details=re.findall(r"(?m)^.*\.java:\d+: error: ([^\r\n]+)",diagnostic)
     summary=re.findall(r"(?m)^(\d+) errors?$",diagnostic)
     if result.returncode==0:
