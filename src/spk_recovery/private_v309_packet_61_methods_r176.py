@@ -26,13 +26,15 @@ def verify_packet_61(jar,sourcezip,*,original_sha256,source_sha256,
                      owner="rs/x/e",class_sha256,first_six_kwargs=None,
                      legacy=1183,new_count=311,first_six=186,
                      prior_endian=360,prior_twenty_two=309,
+                     prior_six_new_instructions=212,
                      expected_calls=5):
     kw=dict(first_six_kwargs or {})
     before=verify_packet_49(
         jar,sourcezip,original_sha256=original_sha256,
         source_sha256=source_sha256,owner=owner,
         class_sha256=class_sha256,first_six_kwargs=kw,
-        old_count=legacy-212,new_count=212,first_six=first_six,
+        old_count=legacy-prior_six_new_instructions,
+        new_count=prior_six_new_instructions,first_six=first_six,
         previous_endian_count=prior_endian,
         previous_22_count=prior_twenty_two,self_call_edges=3)
     if before["total_matching_original_jvm_instructions"]!=legacy:
