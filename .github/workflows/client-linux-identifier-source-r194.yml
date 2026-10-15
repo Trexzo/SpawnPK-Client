@@ -1,0 +1,28 @@
+name: V309 original Linux identifier Java R194
+on:
+  pull_request:
+    paths:
+      - "src/spk_recovery/private_v309_linux_identifier_source_r194.py"
+      - "tests/test_private_v309_linux_identifier_source_r194.py"
+      - ".github/workflows/client-linux-identifier-source-r194.yml"
+  workflow_dispatch:
+jobs:
+  linux-source-proof:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: python -m pip install -e .
+      - run: python -m unittest discover -s tests -p "test_private_v309_linux_identifier_source_r194.py" -v
+      - run: python -m unittest discover -s tests -p "test_private_v309_macos_serial_source_r193.py" -v
+      - run: python -m compileall -q src/spk_recovery/private_v309_linux_identifier_source_r194.py
