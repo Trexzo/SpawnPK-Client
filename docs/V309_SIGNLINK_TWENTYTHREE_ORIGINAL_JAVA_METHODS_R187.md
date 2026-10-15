@@ -28,15 +28,15 @@ All previous private stage ZIP hashes remain pinned by the verifier (6, 11, 16, 
 
 | JVM method | Matched decoded JVM instructions | Source behavior |
 | --- | ---: | --- |
-| g():String | 82/82 | Original file-store directory discovery over fourteen candidate paths, create/existence logic and exception boundaries |
-| <clinit>():void | 23/23 | Exact original static initialization order and 79-byte Code stream for audio support, cache files, thread state, identity strings and flags |
-| **New R187** | **105/105** | Java9 source-only independently compiled |
+| g():String | 115/115 | Original file-store directory discovery over fourteen candidate paths, create/existence logic and exception boundaries |
+| <clinit>():void | 38/38 | Exact original static initialization order and 79-byte Code stream for audio support, cache files, thread state, identity strings and flags |
+| **New R187** | **153/153** | Java9 source-only independently compiled |
 | Prior R186 21 methods | 469/469 | Independently recovered in earlier source stages |
-| **Combined 23 of 24 methods** | **574/574** | Selected original JVM Code, not complete class source |
+| **Combined 23 of 24 methods** | **622/622** | Selected original JVM Code, not complete class source |
 
 Local isolated Java9 compilation used JDK21 javac --release 9 -g:none -proc:none -implicit:none, no original game classfiles on classpath, and precisely six explicitly unverified declaration-only helper classes. The original and rebuilt javap instruction offsets, opcodes and symbolic operands matched for selected methods; the StringConcatFactory recipes for g() were checked against the original BootstrapMethods table.
 
-**JVM constant-pool ordering:** placing g() after previously recovered methods caused Javac to widen original ldc to ldc_w for 13 short string constants, changing all method offsets. Moving g() earlier in the private Java declaration order restored its original exact 82-instruction / 206-byte Code stream; this also retained prior selected method code layouts. The new static initializer reproduces the original 79-byte Code stream in the original assignment order. CP slot numbers / invokedynamic *indices* themselves are not accepted as semantic identity; the repo's strict comparison resolves symbolic operands and bootstrap recipe content.
+**JVM constant-pool ordering:** placing g() after previously recovered methods caused Javac to widen original ldc to ldc_w for 13 short string constants, changing all method offsets. Moving g() earlier in the private Java declaration order restored its original exact 115-instruction / 206-byte Code stream; this also retained prior selected method code layouts. The new static initializer reproduces the original 79-byte Code stream in the original assignment order. CP slot numbers / invokedynamic *indices* themselves are not accepted as semantic identity; the repo's strict comparison resolves symbolic operands and bootstrap recipe content.
 
 ## GitHub verifier / test coverage
 
