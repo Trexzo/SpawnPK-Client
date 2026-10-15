@@ -37,7 +37,6 @@ class R186SyntheticTwentyOneMethodTests(unittest.TestCase):
             "  private static int priority;\n"
             "  private static Runnable runnable;\n"
             "  private static byte[] bytes;\n"
-            "  private static rs.w.c a;\n"
             "  private Z(){count=2;}\n"
             "  public static boolean a(String text){return text==null;}\n"
             "  public static boolean b(String text){return text!=null;}\n"
@@ -76,6 +75,7 @@ class R186SyntheticTwentyOneMethodTests(unittest.TestCase):
             "  public static String c(){return saved;}\n"
         )
         fourth=(
+            "  private static rs.w.c a;\n"
             "  public static String b(){return System.getProperty(\"user.home\");}\n"
             "  public static String f(){return \".\"+rs.f.a.B;}\n"
             "  public static boolean d(){return rs.k.j.a()==rs.k.j.a;}\n"
