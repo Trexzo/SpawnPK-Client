@@ -6,6 +6,8 @@ on:
       - 'tests/test_javac_frontier_r182.py'
       - 'tools/javac_frontier_compare_r182.py'
       - 'tests/test_javac_frontier_compare_r182.py'
+      - 'tools/source_manifest_r182.py'
+      - 'tests/test_source_manifest_r182.py'
       - '.github/workflows/r182-javac-frontier.yml'
   workflow_dispatch:
 jobs:
@@ -21,4 +23,4 @@ jobs:
         with:
           python-version: '3.11'
       - name: Run synthetic R182 tests
-        run: python -m unittest discover -s tests -p 'test_javac_frontier*r182.py' -v
+        run: python -m unittest discover -s tests -p 'test_*r182.py' -v
