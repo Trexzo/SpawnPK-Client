@@ -28,14 +28,15 @@ def verify_packet_43(jar,sourcezip,*,original_sha256,source_sha256,
                      owner="rs/x/e",class_sha256,
                      first_six_kwargs=None,
                      previous_count=611,new_count=360,
-                     initial_six=186):
+                     initial_six=186,previous_22_count=309):
     kw=dict(first_six_kwargs or {})
     proof=verify_packet_34(
         jar,sourcezip,original_sha256=original_sha256,
         source_sha256=source_sha256,owner=owner,class_sha256=class_sha256,
         first_six_kwargs={**kw,
                           "base_six_instruction_count":initial_six},
-        legacy=309,writes=previous_count-309)
+        legacy=previous_22_count,
+        writes=previous_count-previous_22_count)
     if proof["original_jvm_instructions_matched"]!=previous_count:
         raise ValueError("R174_R173_ORIGINAL_PROOF_NOT_ACCEPTED")
     if sha_file(jar)!=original_sha256 or sha_file(sourcezip)!=source_sha256:
