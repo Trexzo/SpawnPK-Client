@@ -37,5 +37,33 @@ class PrivateJavacRunnerTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "timed out"):
                     run(base, javac, digest, [], {}, timeout=1)
 
+
+    def test_success_and_unexplained_exit(self):
+        import subprocess
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            (base / "A.java").write_text("class A {}", encoding="utf-8")
+            javac = base / "fake-javac"
+            javac.write_bytes(b"synthetic")
+            digest = hashlib.sha256(javac.read_bytes()).hexdigest()
+            def successful(argv, **kwargs):
+                self.assertIn("-proc:none", argv)
+                self.assertIn("-sourcepath", argv)
+                self.assertIn("-classpath", argv)
+                self.assertIn("-d", argv)
+                self.assertEqual(1, sum(x.endswith("A.java") for x in argv))
+                self.assertNotIn("CLASSPATH", kwargs["env"])
+                return subprocess.CompletedProcess(argv, 0, "", "")
+            with patch("private_javac_runner_r182.subprocess.run", side_effect=successful):
+                result = run(base, javac, digest, [], {})
+            self.assertTrue(result["complete_error_inventory"])
+            self.assertEqual(0, result["parsed_error_count"])
+            self.assertIsNone(result["reported_error_count"])
+            with patch("private_javac_runner_r182.subprocess.run",
+                       return_value=subprocess.CompletedProcess([], 1, "", "fatal: compiler crashed")):
+                failed = run(base, javac, digest, [], {})
+            self.assertFalse(failed["complete_error_inventory"])
+            self.assertEqual(1, failed["compiler_exit_code"])
+
 if __name__ == "__main__":
     unittest.main()
