@@ -80,6 +80,13 @@ def run(source_root: Path, java: Path, java_sha: str, deps: list[Path],
     reported = re.findall(r"(?m)^\s*(\d+) errors?\s*$", output)
     errors = sum(r["key"].startswith("compiler.err.") for r in rows)
     claimed = sum(map(int, reported)) if reported else None
+    # javac emits no "0 errors" summary on successful compilation. Zero
+    # diagnostics with exit 0 is a complete empty error inventory; a nonzero
+    # exit without a summary is never an authoritative frontier.
+    complete = (claimed == errors and not unparsed) if claimed is not None else (
+        completed.returncode == 0 and errors == 0 and not unparsed)
+    if completed.returncode != 0 and errors == 0 and claimed is None:
+        complete = False
     return {
         "schema": "spk.private-javac-run.r182.v1",
         "javac_executable_sha256": actual,
@@ -90,7 +97,7 @@ def run(source_root: Path, java: Path, java_sha: str, deps: list[Path],
         "compiler_exit_code": completed.returncode,
         "parsed_error_count": errors,
         "reported_error_count": claimed,
-        "complete_error_inventory": claimed is not None and claimed == errors and not unparsed,
+        "complete_error_inventory": complete,
         "unparsed_line_count": len(unparsed),
         "transcript_sha256": digest_bytes(output.encode("utf-8")),
         "compiler_output": output,
