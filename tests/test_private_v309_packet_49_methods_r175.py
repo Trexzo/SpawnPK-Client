@@ -53,7 +53,10 @@ class R175PacketAdditionalReaderTests(R174PacketEndianReaderTests):
             old_count=self.instructions+self.additional_instructions+
                       self.writer_count+self.endian_count,
             new_count=self.new_count+count_delta,
-            first_six=self.instructions,self_call_edges=3)
+            first_six=self.instructions,
+            previous_endian_count=self.endian_count,
+            previous_22_count=self.instructions+self.additional_instructions,
+            self_call_edges=3)
 
     def test_49_selected_packet_java_method_bodies_match(self):
         r=self.verify49()
