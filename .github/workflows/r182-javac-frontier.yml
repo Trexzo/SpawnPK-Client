@@ -1,0 +1,22 @@
+name: R182 javac frontier synthetic
+on:
+  pull_request:
+    paths:
+      - 'tools/javac_frontier_r182.py'
+      - 'tests/test_javac_frontier_r182.py'
+      - '.github/workflows/r182-javac-frontier.yml'
+  workflow_dispatch:
+jobs:
+  synthetic:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run synthetic parser tests
+        run: python -m unittest discover -s tests -p test_javac_frontier_r182.py -v
