@@ -75,6 +75,11 @@ class R191SyntheticPlatformEnumTests(unittest.TestCase):
             "original_owner":"invented/O",
             "original_class_sha256":
                 hashlib.sha256(self.original).hexdigest(),
+            "original_field_map":{
+                "Windows":"Windows","MacOS":"MacOS",
+                "Linux":"Linux","Other":"Other",
+                "e":"e","$VALUES":"$VALUES"},
+            "original_array_method_map":{"$values":"$values"},
         }
         options.update(kwargs)
         return audit_original_platform_enum_java(
