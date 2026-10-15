@@ -68,8 +68,14 @@ def verify_packet_22(original_jar,java_zip,*,original_sha256,
     new=profile_class_field_accesses(rebuilt)
     six={("B","()I"),("r","()I"),("s","()F"),
          ("p","()I"),("o","()I"),("y","()I")}
-    mapping=first_six_kwargs.get("selected_six",six)
-    selection=set(mapping)|set(EXTRA)
+    mapping={
+        (first_six_kwargs.get("signed_short","B"),"()I"),
+        (first_six_kwargs.get("raw_int","r"),"()I"),
+        (first_six_kwargs.get("float_reader","s"),"()F"),
+        (first_six_kwargs.get("alternate_raw_int","p"),"()I"),
+        (first_six_kwargs.get("unsigned_short","o"),"()I"),
+        (first_six_kwargs.get("unsigned_byte","y"),"()I")}
+    selection=mapping|set(EXTRA)
     original={(m["name"],m["descriptor"]):m for m in old["methods"]}
     additional=sum(len(original[x]["instructions"]) for x in EXTRA)
     if additional!=expected_extra or len(selection)!=22:
