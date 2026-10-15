@@ -1,0 +1,22 @@
+name: R197 verified dependency archives
+on:
+  pull_request:
+    paths:
+      - 'tools/dependency_closure_r197.py'
+      - 'tests/test_dependency_closure_r197.py'
+      - '.github/workflows/r197-dependency-closure.yml'
+  workflow_dispatch:
+jobs:
+  synthetic:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify archive approval and duplicate screening
+        run: python -m unittest discover -s tests -p 'test_dependency_closure_r197.py' -v
