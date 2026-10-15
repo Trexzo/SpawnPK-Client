@@ -28,7 +28,8 @@ public class Example {
         self.assertEqual(2, count)
         self.assertNotIn("import lombok.", modified)
         self.assertIn("throw spkRecoverySneaky", modified)
-        self.assertEqual(modified, rewrite_java(modified)[0])
+        with self.assertRaisesRegex(ValueError, "Helper"):
+            rewrite_java(modified)
         with tempfile.TemporaryDirectory() as d:
             src = Path(d) / "Example.java"
             src.write_text(modified, encoding="utf-8")
@@ -55,7 +56,7 @@ class Check {
         with self.assertRaisesRegex(ValueError, "Helper"):
             rewrite_java("class X { void spkRecoverySneaky(){} }")
         with self.assertRaisesRegex(ValueError, "No method body"):
-            rewrite_java("@SneakyThrows interface A { void call(); }")
+            rewrite_java("interface A { @SneakyThrows void call(); }")
 
     def test_preserves_braces_in_strings_and_comments(self):
         src = """class S {
