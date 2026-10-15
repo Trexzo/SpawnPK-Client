@@ -148,8 +148,12 @@ def audit_config_enum_classfiles(
          original.major==53 and original.minor==0 and
          (original.access & 0x4000),
          "R197_ORIGINAL_JAVA9_ENUM_CLASS_HEADER_CHANGED")
-    aliases=tuple(config["constants"])
-    field_map=dict(aliases)
+    aliases=tuple(config.get("aliases",config["constants"]))
+    field_map=dict(config["constants"])
+    need(len(aliases)==len(config["constants"]) and
+         set(label for _,label in aliases)==
+             set(label for _,label in config["constants"]),
+         "R197_ALIAS_LABELS_MUST_MATCH_ORIGINAL_ENUM_VALUES")
     field_map[config["array_field"]]="$VALUES"
     field_map.update({n:n for n in config["other_fields"]})
     old_fields={f["name"]:f for f in original.fields}
