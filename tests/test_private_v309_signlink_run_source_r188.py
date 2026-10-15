@@ -155,7 +155,7 @@ class R188SyntheticRunSourceTests(unittest.TestCase):
     def test_unverified_full_source_not_claimed(self):
         report=self.verify()
         self.assertFalse(report["complete_original_classfile_identical"])
-        self.assertFalse(report["original_client_code_executed"])
+        self.assertFalse(report["original_game_code_executed"])
         self.assertFalse(report["canonical_source_tree_modified"])
         self.assertFalse(report["original_source_redistribution_authorized"])
 
