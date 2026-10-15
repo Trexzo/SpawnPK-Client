@@ -45,8 +45,8 @@ class R178OriginalPacketWithRealParentsTests(unittest.TestCase):
                 for n in ("rs/t","rs/a")}
         profile=profile_class_field_accesses(
             self.original_class_bytes())
-        selected={(m["name"],m["descriptor"]) for m in profile["methods"]}-
-                 {("notRestored","()I"),("<clinit>","()V")}
+        selected=({(m["name"],m["descriptor"]) for m in profile["methods"]} -
+                  {("notRestored","()I"),("<clinit>","()V")})
         self.selected_inst=sum(len(m["instructions"])
             for m in profile["methods"]
             if (m["name"],m["descriptor"]) in selected)
