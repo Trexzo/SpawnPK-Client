@@ -43,3 +43,23 @@ The consolidated **R7 private model source archive** adds two more edited client
 Tests cover item value and high-alch arithmetic, mutable price/quantity, state reset, quantity threshold comparison, LootTracker grouping and merge, timestamps, and item price modes. **No original-v309 bytecode parity is claimed.**
 
 Artifact: `SpawnPK_v309_MODEL_SOURCE_R7_PRIVATE.zip`. The archive is delivered privately, with per-source-file hashes and both test sources. It should only be applied through reviewed private source overlays; do not assume that these seven Lombok replacement classes preserve bytecode parity with the original v309 client.
+
+
+## R187 complete uploaded-source javac A/B replay
+
+Replayed **the complete 1,274 Java files** from the uploaded third-party client decompilation on local JDK 21.0.12.1 with the same command and no external JARs in both runs:
+
+```
+javac -proc:none -g:none -encoding UTF-8 -Xmaxerrs 3000 -d <isolated-output> <all-1274-java-files>
+```
+
+| Identical build profile | Baseline uploaded sources | R7 with seven model source replacements |
+|---|---:|---:|
+| javac diagnostic errors | 2,391 | 2,109 |
+| warnings | 9 | 9 |
+| `cannot find symbol` occurrences | 1,711 | 1,485 |
+| `package lombok does not exist` occurrences | 54 | 36 |
+
+**Net change: -282 compiler diagnostics**, not 282 independent bug fixes. Most of the reduction is cascading resolution after adding explicit constructors/getters and removing seven classes' Lombok imports. Other external dependencies remain absent. This comparison concerns **the uploaded third-party 1,274-file decompilation**, not the separate 1,279-file original-v309 private recovery snapshot; do not transfer its compiler counts into v309 original-source acceptance.
+
+The private R7 package includes `FULL_TREE_COMPARISON.json` with diagnostic category deltas and SHA-256 of both raw compiler stderr logs. Dedicated model tests for LootTracker and ground-item logic pass. Original-v309 bytecode-equivalent Java source remains unverified.
