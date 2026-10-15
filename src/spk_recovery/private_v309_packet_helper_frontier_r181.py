@@ -16,7 +16,7 @@ from zipfile import ZipFile
 from .bytecode_profile import profile_class_field_accesses
 from .classfile import parse_class
 from .private_client_namespace_legalizer_r125 import CANONICAL_V309
-from .private_client_source_ast_census_r126 import sha_file, source_members
+from .private_client_source_ast_census_r126 import sha_file
 from .private_v309_packet_complete_source_r179 import (
     COMPILER_ONLY_HELPERS, ORIGINAL_PACKET_SHA,
 )
@@ -39,6 +39,43 @@ def _digest_json(value):
     raw = json.dumps(value, sort_keys=True, separators=(",", ":"),
                      ensure_ascii=False).encode("utf-8")
     return hashlib.sha256(raw).hexdigest()
+
+
+def _candidate_source_paths(candidate, expected_sha):
+    """Check canonical recovered-source ZIP paths; do not load or run Java."""
+    p=Path(candidate)
+    require(p.is_file() and not p.is_symlink() and
+            sha_file(p)==expected_sha,
+            "R181_CANDIDATE_SOURCE_ARCHIVE_NOT_PINNED")
+    prefix="recovered-source/v309/src/"
+    with ZipFile(p) as archive:
+        infos=archive.infolist()
+        require(1<=len(infos)<=50000,
+                "R181_CANDIDATE_ZIP_ENTRY_COUNT_INVALID")
+        names=[i.filename for i in infos]
+        require(len(names)==len(set(names)),
+                "R181_CANDIDATE_ZIP_DUPLICATE_FILE")
+        chosen=[]
+        total=0
+        for item in infos:
+            name=item.filename
+            require(not name.startswith("/") and "\\" not in name and
+                    all(x not in ("", ".", "..")
+                        for x in name.rstrip("/").split("/")) and
+                    ((item.external_attr >> 16) & 0o170000) != 0o120000,
+                    "R181_CANDIDATE_ZIP_UNSAFE_FILE")
+            if item.is_dir() or not name.endswith(".java"):
+                continue
+            require(name.startswith(prefix) and
+                    len(name)<400 and item.file_size<=2_000_000,
+                    "R181_CANDIDATE_JAVA_FILE_OUTSIDE_CANONICAL_TREE")
+            total+=item.file_size
+            require(total<=50_000_000,
+                    "R181_CANDIDATE_JAVA_SIZE_EXCEEDS_LIMIT")
+            chosen.append(name)
+    require(chosen and len(chosen)==len({x.casefold() for x in chosen}),
+            "R181_CANDIDATE_DUPLICATE_OR_EMPTY_JAVA_PATH_SET")
+    return set(chosen)
 
 
 def audit_packet_helper_frontier(
@@ -80,11 +117,8 @@ def audit_packet_helper_frontier(
     if have_source:
         require(_HEX64.fullmatch(candidate_source_sha256) is not None,
                 "R181_CANDIDATE_SHA_INVALID")
-        entries=source_members(private_source_candidate_zip,
-                               candidate_source_sha256)
-        sources={name for name,_ in entries}
-        require(len(sources)==len(entries),
-                "R181_CANDIDATE_DUPLICATE_SOURCE_PATH")
+        sources=_candidate_source_paths(private_source_candidate_zip,
+                                        candidate_source_sha256)
     with ZipFile(original_jar) as jar:
         paths=[packet_owner+".class",*(o+".class" for o in owners)]
         listing=jar.namelist()
