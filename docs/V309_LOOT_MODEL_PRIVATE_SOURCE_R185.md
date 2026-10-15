@@ -25,3 +25,12 @@ Private archive: `SpawnPK_v309_LOOT_SOURCE_R5_PRIVATE.zip` (delivered in the con
 - Keep source files private until redistribution rights are verified. Do not auto-merge them into authoritative source tree without review.
 
 Next work: replay on the actual private v309 source snapshot and verify all callers, binary ABI, and strict original classfile method-level parity; prioritize genuinely original methods over repeated subset-count increases.
+
+
+## R186 extension — LootTrackerRecord source and grouping semantics
+
+Extended the same private model batch to `LootTrackerRecord.java`. Explicitly implements former Lombok accessors and title/type identity while retaining existing record grouping and merge logic. Added explicit constructor null checks for `title` and `type`. The private R6 package contains five edited production Java classes, one unchanged enum and one test harness.
+
+Independently compiled the seven files together with `javac --release 9 -proc:none`, no Lombok or original-client JAR, and executed `LootSourceTest`, including record ignored/visible kill counting, total-price calculation, merge quantity and timestamp propagation, getters, item equality, and price mode. The test passed.
+
+**This is original-candidate source repair, not exact v309 bytecode parity.** The explicit Lombok replacements, including equality/hash details and null validation, require caller ABI and original JVM parity review before acceptance. R186 private artifact name: `SpawnPK_v309_LOOT_SOURCE_R6_PRIVATE.zip`.
