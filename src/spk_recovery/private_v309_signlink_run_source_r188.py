@@ -57,7 +57,7 @@ def verify_original_signlink_run_source(
         previous_six_instructions=62, previous_eleven_instructions=147,
         previous_sixteen_instructions=356,
         previous_twentyone_instructions=469,
-        previous_twentythree_instructions=574,
+        previous_twentythree_instructions=622,
 ):
     need(expected_run_instructions>0 and original_methods==24 and
          isinstance(original_owner,str) and "/" in original_owner,
