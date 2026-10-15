@@ -61,7 +61,7 @@ class R197SyntheticConfigEnums(unittest.TestCase):
                          '        if(value.name().equalsIgnoreCase(str))\n'
                          '          return value;\n'
                          '      }\n'
-                         '      return aa;\n'
+                         '      return FIXED;\n'
                          '    }\n',
                 "declaration":"FIXED,FLEX,WIDE;\n",
                 "field_names":(),
