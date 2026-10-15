@@ -85,3 +85,10 @@ R8 represents **292 fewer raw diagnostics** than baseline under the *same* JDK 2
 Three isolated Java test programs pass: LootSourceTest, GroundModelTest and UnitsFormatterTest. The complete private R8 package includes reviewed source candidate edits, genuine companion source requirements, tests, source SHA manifest and `FULL_TREE_COMPARISON.json` containing per-profile compiler stderr SHA digests and aggregate deltas.
 
 **Acceptance status remains private/unverified.** The source was derived from the uploaded third-party decompilation rather than recovered from the exact original v309 JAR. Source method parity, cross-call API compatibility, runtime behavior and redistribution authorization all require separate independent verification. Do not merge Java source as exact-v309 authority.
+
+
+## Full 1,274-file candidate snapshot — privately assembled R8
+
+A private full-source candidate was materialized as `SpawnPK_v309_FULL_SOURCE_R8_PRIVATE.zip`. The ZIP contains `src/**/*.java` (exactly 1,274 sources), `PRIVATE_MANIFEST.json` with per-file SHA-256 and the nine exact before/after changed-source witnesses, plus `FULL_TREE_COMPARISON.json`. A programmatic manifest comparison confirmed **all 1,265 other Java source files are byte-identical** to the uploaded R4 baseline.
+
+This is a complete **candidate source tree**, not a completely compilable or original-v309-verified tree. The R8 JDK-only compiler still reports 2,099 errors. Neither the private archive nor original-derived Java is pushed to GitHub. Any future acceptance must replay against the pinned original v309 JAR and the canonical separately recovered 1,279-source private snapshot.
