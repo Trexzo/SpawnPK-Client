@@ -19,7 +19,7 @@ The private Java9 source-only recompilation uses JDK 21 javac --release 9 -g:non
 
 ## Crucial distinction: method source vs fully recovered original class
 
-R187 independently verifies **23/24 original JVM methods, 574/574 selected original instructions** from one private source-only Java class candidate. R188 independently verifies the **remaining run() method, 248/248 original instructions**, in a different private source-only candidate. Thus **all 24 method bodies have now been reconstructed individually**, with 822 originally matched instructions across TWO builds.
+R187 independently verifies **23/24 original JVM methods, 622/622 selected original instructions** from one private source-only Java class candidate. R188 independently verifies the **remaining run() method, 248/248 original instructions**, in a different private source-only candidate. Thus **all 24 method bodies have now been reconstructed individually**, with 870 originally matched instructions across TWO builds.
 
 **THIS DOES NOT YET PROVE that all 24 methods match simultaneously when compiled from one Java source file.** The additional run() Java body changes Javac's constant-pool allocation; moving it earlier avoids nonoriginal ldc_w widening in run() but introduces ldc_w widening in several other original method bodies. Keeping the original R187 source ordering retains the other 23 method bodies but widens multiple constants inside run(). Tested numerous Java declaration positions; do not claim whole-class source parity from separately compiled method proofs.
 
