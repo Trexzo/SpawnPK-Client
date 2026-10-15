@@ -63,3 +63,25 @@ javac -proc:none -g:none -encoding UTF-8 -Xmaxerrs 3000 -d <isolated-output> <al
 **Net change: -282 compiler diagnostics**, not 282 independent bug fixes. Most of the reduction is cascading resolution after adding explicit constructors/getters and removing seven classes' Lombok imports. Other external dependencies remain absent. This comparison concerns **the uploaded third-party 1,274-file decompilation**, not the separate 1,279-file original-v309 private recovery snapshot; do not transfer its compiler counts into v309 original-source acceptance.
 
 The private R7 package includes `FULL_TREE_COMPARISON.json` with diagnostic category deltas and SHA-256 of both raw compiler stderr logs. Dedicated model tests for LootTracker and ground-item logic pass. Original-v309 bytecode-equivalent Java source remains unverified.
+
+
+## R188 — expanded private Java model repair and whole-source replay
+
+Added two additional production Java source repairs to the private R8 package:
+
+- `LootTrackerMapping.java`: replaces Lombok enum all-argument constructor with explicit `LootTrackerMapping(String name)`. This file is checked in the full 1,274-file compiler replay; its external dependencies preclude isolated compilation without extra source.
+- `UnitsFormatter.java`: removes Lombok `@SneakyThrows` and uses the overridden `AbstractFormatter.stringToValue(String) throws ParseException` contract directly, without changing error type. Its genuine `rs.config.Units` annotation is included in isolated Java 9 tests. `UnitsFormatterTest` passes.
+
+**Whole-tree same-profile measurements (uploaded candidate only):**
+
+| Full 1,274-file JDK-only javac run | Errors | Warnings |
+|---|---:|---:|
+| Baseline R4 | 2391 | 9 |
+| R7 — seven edited production files | 2109 | 9 |
+| R8 — nine edited production files | **2099** | **9** |
+
+R8 represents **292 fewer raw diagnostics** than baseline under the *same* JDK 21.0.12.1 `-proc:none -g:none -encoding UTF-8 -Xmaxerrs 3000` invocation, with no external JARs. This is not 292 new original-method recoveries or a complete client build.
+
+Three isolated Java test programs pass: LootSourceTest, GroundModelTest and UnitsFormatterTest. The complete private R8 package includes reviewed source candidate edits, genuine companion source requirements, tests, source SHA manifest and `FULL_TREE_COMPARISON.json` containing per-profile compiler stderr SHA digests and aggregate deltas.
+
+**Acceptance status remains private/unverified.** The source was derived from the uploaded third-party decompilation rather than recovered from the exact original v309 JAR. Source method parity, cross-call API compatibility, runtime behavior and redistribution authorization all require separate independent verification. Do not merge Java source as exact-v309 authority.
