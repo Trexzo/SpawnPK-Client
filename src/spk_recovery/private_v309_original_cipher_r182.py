@@ -120,7 +120,11 @@ def verify_original_cipher_source(
             identifiers(right)==set(methods) and
             all(x["code_length"] is not None for x in left["methods"]),
             "R182_ORIGINAL_METHOD_INVENTORY_NOT_COMPLETE")
-    proof=_strict_inspections(left,right,selected=methods)
+    try:
+        proof=_strict_inspections(left,right,selected=methods)
+    except ValueError as exc:
+        raise OriginalCipherR182Error(
+            "R182_ORIGINAL_CIPHER_JVM_CODE_NOT_EQUAL") from exc
     require(proof["verified_selected_method_count"]==expected_methods
             and proof["matched_opcode_count"]==expected_instructions
             and proof["all_selected_core_method_code_equal"],
