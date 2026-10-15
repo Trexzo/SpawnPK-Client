@@ -1,0 +1,30 @@
+name: V309 original Packet 49 source methods R175
+on:
+  pull_request:
+    paths:
+      - "src/spk_recovery/private_v309_packet_49_methods_r175.py"
+      - "tests/test_private_v309_packet_49_methods_r175.py"
+      - ".github/workflows/client-packet-49-methods-r175.yml"
+  workflow_dispatch:
+jobs:
+  source:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: python -m pip install -e .
+      - name: Independently recompile 49 selected original Packet method bodies
+        run: python -m unittest discover -s tests -p "test_private_v309_packet_49_methods_r175.py" -v
+      - name: R174 43-source-method regression
+        run: python -m unittest discover -s tests -p "test_private_v309_packet_43_methods_r174.py" -v
+      - run: python -m compileall -q src/spk_recovery/private_v309_packet_49_methods_r175.py
