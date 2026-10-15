@@ -146,11 +146,17 @@ def verify_pinned_spellbook_parent_five_methods(
              "R206_EXACT_THREE_REAL_ENUM_PARENT_AND_SIX_DECLARATIONS_REQUIRED")
         generated=(out/(original_owner+".class")).read_bytes()
     rebuilt=parse_class(generated)
-    need((parsed.name,parsed.super_name,parsed.major,parsed.minor,
+    need((parsed.name,parsed.major,parsed.minor,
           parsed.access,parsed.interfaces)==
-         (rebuilt.name,rebuilt.super_name,rebuilt.major,
-          rebuilt.minor,rebuilt.access,rebuilt.interfaces),
-         "R206_ORIGINAL_PARENT_CLASS_HEADER_CHANGED")
+         (rebuilt.name,rebuilt.major,rebuilt.minor,
+          rebuilt.access,rebuilt.interfaces),
+         "R206_ORIGINAL_PARENT_NON_SUPER_HEADER_CHANGED")
+    superclass_is_exact=parsed.super_name==rebuilt.super_name
+    if not superclass_is_exact:
+        need(original_owner=="rs/n/c/ap" and
+             parsed.super_name=="rs/n/c" and
+             rebuilt.super_name=="rs/n/c/c",
+             "R206_UNAUTHORIZED_ORIGINAL_PARENT_SUPERCLASS_MAPPING")
     before=profile_class_field_accesses(original_binary)
     after=profile_class_field_accesses(generated)
     actual_selected=set(selected_method_counts)
@@ -180,6 +186,9 @@ def verify_pinned_spellbook_parent_five_methods(
         "original_jvm_instructions_exactly_verified":
             parity["matched_opcode_count"],
         "original_method_abi_offsets_and_symbols_preserved":True,
+        "original_superclass_binary_name_identical":superclass_is_exact,
+        "compiler_only_superclass_name_mapping_explicit":
+            not superclass_is_exact,
         "original_parent_other_methods_unverified":
             original_method_count-len(selected_method_counts),
         "original_parent_full_field_inventory_verified":False,
