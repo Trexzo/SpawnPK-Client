@@ -34,3 +34,12 @@ Extended the same private model batch to `LootTrackerRecord.java`. Explicitly im
 Independently compiled the seven files together with `javac --release 9 -proc:none`, no Lombok or original-client JAR, and executed `LootSourceTest`, including record ignored/visible kill counting, total-price calculation, merge quantity and timestamp propagation, getters, item equality, and price mode. The test passed.
 
 **This is original-candidate source repair, not exact v309 bytecode parity.** The explicit Lombok replacements, including equality/hash details and null validation, require caller ABI and original JVM parity review before acceptance. R186 private artifact name: `SpawnPK_v309_LOOT_SOURCE_R6_PRIVATE.zip`.
+
+
+## R187 extension — GroundItem and ItemThreshold
+
+The consolidated **R7 private model source archive** adds two more edited client classes, `rs/plugins/grounditems/GroundItem.java` and `ItemThreshold.java`, with explicit field accessors and GroundItem mutators replacing Lombok-generated methods. It retains the five edited LootTracker classes, the unchanged LootRecordType enum, and adds a second behavioral test. Nine Java files compile together with Java 9 language/API compatibility and no third-party dependency jars; `LootSourceTest` and `GroundModelTest` execute successfully.
+
+Tests cover item value and high-alch arithmetic, mutable price/quantity, state reset, quantity threshold comparison, LootTracker grouping and merge, timestamps, and item price modes. **No original-v309 bytecode parity is claimed.**
+
+Artifact: `SpawnPK_v309_MODEL_SOURCE_R7_PRIVATE.zip`. The archive is delivered privately, with per-source-file hashes and both test sources. It should only be applied through reviewed private source overlays; do not assume that these seven Lombok replacement classes preserve bytecode parity with the original v309 client.
