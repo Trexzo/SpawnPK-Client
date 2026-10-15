@@ -45,3 +45,23 @@ python tools/javac_frontier_compare_r182.py --before BEFORE.json --before-sha256
 ```
 
 **Strict limit:** A matching lock claims comparison eligibility; this tooling does not itself verify that the lock truthfully describes the compiler, input set, or transitive dependency closure. The lock fields are a future integration contract, not authoritative provenance. No cause classification or private v309 compilation has been performed by this branch.
+
+## Source and dependency manifest stage
+
+`tools/source_manifest_r182.py` inventories each Java file in a private source directory with its relative POSIX path and SHA-256, recording a deterministic source-scope digest. Case-insensitive source-path collisions reject the inventory to avoid silently losing files on Windows.
+
+A separately reviewed JSON object maps explicitly approved dependency basenames to expected SHA-256 values. The tool rejects unapproved, malformed, duplicate-member or case-colliding JAR/ZIPs and known client-code namespace class entries (`rs/`, `com/jagex/`, including versioned `rs/` class paths). The output contains the source paths/hashes and must remain private.
+
+Example:
+
+```powershell
+python tools/source_manifest_r182.py --source-root 'C:\private\v309\recovered-source\v309\src' --approved-deps-json 'C:\private\approved-dependencies.json' --deps 'C:\private\dependencies\library.jar' --output 'C:\private\v309\source-manifest-r182.json'
+```
+
+This stage is an **inventory and fail-closed heuristic guard**, not an independently authenticated source provenance statement. A JAR lacking the known forbidden namespaces is not thereby proven legitimate. Transitive/Maven resolution, shaded or relocated original classes, zip bombs, nested archives, packaged dependency trees, source code authentication, license review, toolchain command fingerprints and compiler execution are outside this stage. The prior R182 profile-lock comparator still relies on caller-supplied source/dependency digests; automatic authoritative lock generation is not implemented.
+
+Synthetic test command:
+
+```powershell
+python -m unittest discover -s tests -p 'test_*r182.py' -v
+```
