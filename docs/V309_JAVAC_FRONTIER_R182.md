@@ -33,3 +33,15 @@ python -m unittest discover -s tests -p 'test_javac_frontier_r182.py'
 - Comparing identical-profile before/after outputs (not yet supported).
 
 **No decrease from the last reported 2,343 JDK-only compiler errors is claimed.** The older 516-result used a different dependency profile and must not be compared directly.
+
+## Same-profile comparison extension
+
+`tools/javac_frontier_compare_r182.py` now accepts two SHA-pinned JSON reports and their independently pinned profile-lock files. Required lock fields: `toolchain_sha256`, `javac_command_sha256`, `dependency_manifest_sha256`, `source_scope_sha256`, and `dependency_policy` (`no-original-client-binary`). It rejects differing locks, incomplete diagnostic inventories, transcript count mismatch, and conflicting build labels. Its output contains aggregate counts only, not private source paths or diagnostic messages.
+
+Example:
+
+```text
+python tools/javac_frontier_compare_r182.py --before BEFORE.json --before-sha256 PIN --after AFTER.json --after-sha256 PIN --before-lock LOCK1.json --before-lock-sha256 PIN --after-lock LOCK2.json --after-lock-sha256 PIN --output DELTA.json
+```
+
+**Strict limit:** A matching lock claims comparison eligibility; this tooling does not itself verify that the lock truthfully describes the compiler, input set, or transitive dependency closure. The lock fields are a future integration contract, not authoritative provenance. No cause classification or private v309 compilation has been performed by this branch.
