@@ -27,9 +27,8 @@ def verify_packet_34(jar,sourcezip,*,original_sha256,source_sha256,
         jar,sourcezip,original_sha256=original_sha256,
         source_sha256=source_sha256,owner=owner,
         class_sha256=class_sha256,first_six_kwargs=kw,
-        expected_six_instructions=base_six,
-        expected_additional_instructions=legacy-base_six,
-        expected_total_instructions=legacy)
+        expected_legacy=base_six,
+        expected_extra=legacy-base_six)
     if first["verified_original_jvm_instructions"]!=legacy:
         raise ValueError("R173_R172_METHOD_PROOF_FAILED")
     with ZipFile(jar) as z:original=z.read(owner+".class")
