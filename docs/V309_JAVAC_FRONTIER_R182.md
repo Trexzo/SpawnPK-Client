@@ -65,3 +65,17 @@ Synthetic test command:
 ```powershell
 python -m unittest discover -s tests -p 'test_*r182.py' -v
 ```
+
+## Private source-only Java 9 compilation runner
+
+`tools/private_javac_runner_r182.py` combines the R182 source and dependency inventories with a SHA-pinned **javac executable** (not an authenticated complete JDK). It launches javac with a fixed option allowlist, `-proc:none`, an isolated temporary `-d` class-output directory, an empty sourcepath, and an explicit classpath consisting only of approved direct dependencies. Environment variables that automatically inject JVM/classpath options are removed. It uses no shell or original client JAR fallback, and checks that the Java source inventory did not change during execution.
+
+The runner's JSON output contains the **full private compiler transcript**, including source paths and errors. Do not publish it. Example:
+
+```powershell
+$Compiler = 'C:\Program Files\Java\jdk-9\bin\javac.exe'
+$Hash = (Get-FileHash -LiteralPath $Compiler -Algorithm SHA256).Hash.ToLowerInvariant()
+python tools/private_javac_runner_r182.py --source-root 'C:\private\v309\src' --javac $Compiler --javac-sha256 $Hash --approved-deps-json 'C:\private\approved-dependencies.json' --output 'C:\private\v309\build-r182.json'
+```
+
+This is an **experimental private compilation diagnostic runner**, not a release build or permission to publish reconstructed code. In particular, SHA-pinning only the javac executable does not pin its complete JDK runtime or inherited Java environment; direct archive scans cannot establish all transitive, relocated, or license properties of dependencies. No successful whole-client build or changed compiler-error count is asserted.
