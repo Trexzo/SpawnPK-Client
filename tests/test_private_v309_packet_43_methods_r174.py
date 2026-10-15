@@ -62,6 +62,7 @@ class R174PacketEndianReaderTests(R173PacketWriterTests):
             previous_count=self.instructions+self.additional_instructions+
                            self.writer_count,
             new_count=self.endian_count+expected_delta,
+            previous_22_count=self.instructions+self.additional_instructions,
             initial_six=self.instructions)
 
     def test_all_43_original_selected_methods_recompiled(self):
