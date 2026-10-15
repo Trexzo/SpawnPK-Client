@@ -10,6 +10,7 @@ import json
 import os
 import re
 import subprocess
+import tempfile
 from pathlib import Path
 
 from source_manifest_r182 import inventory_source, inspect_dependencies, digest_bytes
@@ -61,16 +62,19 @@ def run(source_root: Path, java: Path, java_sha: str, deps: list[Path],
     else:
         # Remove inherited CLASSPATH influence, below.
         command += ["-classpath", ""]
-    command += sources
     env = {key: value for key, value in os.environ.items()
            if key not in ("CLASSPATH", "JAVA_TOOL_OPTIONS", "_JAVA_OPTIONS", "JDK_JAVA_OPTIONS")}
     try:
-        completed = subprocess.run(command, env=env, cwd=source_root,
-                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                   text=True, encoding="utf-8", errors="replace",
-                                   timeout=timeout, check=False)
+        with tempfile.TemporaryDirectory(prefix="spk-r182-javac-") as output_dir:
+            completed = subprocess.run(command + ["-d", output_dir] + sources,
+                                       env=env, cwd=source_root,
+                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                       text=True, encoding="utf-8", errors="replace",
+                                       timeout=timeout, check=False)
     except subprocess.TimeoutExpired as exc:
         raise ValueError("javac timed out; no complete inventory") from exc
+    if inventory_source(source_root)["source_scope_sha256"] != inv["source_scope_sha256"]:
+        raise ValueError("Source changed during compilation")
     output = completed.stdout + "\n" + completed.stderr
     rows, unparsed = parse_transcript(output.splitlines())
     reported = re.findall(r"(?m)^\s*(\d+) errors?\s*$", output)
