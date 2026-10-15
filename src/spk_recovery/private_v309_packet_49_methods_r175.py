@@ -26,13 +26,16 @@ def verify_packet_49(jar,sourcezip,*,original_sha256,
                      source_sha256,owner="rs/x/e",class_sha256,
                      first_six_kwargs=None,
                      old_count=971,new_count=212,first_six=186,
+                     previous_endian_count=360,previous_22_count=309,
                      self_call_edges=3):
     kw=dict(first_six_kwargs or {})
     old=verify_packet_43(
         jar,sourcezip,original_sha256=original_sha256,
         source_sha256=source_sha256,owner=owner,class_sha256=class_sha256,
-        first_six_kwargs=kw,previous_count=old_count-360,
-        new_count=360,initial_six=first_six)
+        first_six_kwargs=kw,
+        previous_count=old_count-previous_endian_count,
+        new_count=previous_endian_count,initial_six=first_six,
+        previous_22_count=previous_22_count)
     if old["total_matching_original_jvm_instructions"]!=old_count:
         raise ValueError("R175_PRIOR_43_METHOD_SOURCE_PROOF_FAILED")
     if sha_file(jar)!=original_sha256 or sha_file(sourcezip)!=source_sha256:
