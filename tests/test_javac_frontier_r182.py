@@ -50,12 +50,12 @@ class Frontiers(unittest.TestCase):
     def test_summary_complete_and_mismatch(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "errors.txt"
-            row = "X.java:4: compiler.err.doesnt.exist: xyz\\n"
-            path.write_text(row + "1 error\\n", encoding="utf-8")
+            row = "X.java:4: compiler.err.doesnt.exist: xyz\n"
+            path.write_text(row + "1 error\n", encoding="utf-8")
             a = build_report(path, hashlib.sha256(path.read_bytes()).hexdigest(), "jdk9-a")
             self.assertEqual(1, a["summary_error_count"])
             self.assertTrue(a["complete_error_inventory"])
-            path.write_text(row + "2 errors\\n", encoding="utf-8")
+            path.write_text(row + "2 errors\n", encoding="utf-8")
             b = build_report(path, hashlib.sha256(path.read_bytes()).hexdigest(), "jdk9-a")
             self.assertFalse(b["complete_error_inventory"])
             self.assertEqual(1, b["parsed_error_count"])
