@@ -63,16 +63,16 @@ def _method_index(profile):
     return result
 
 
-def _rename_original_symbols(instructions,owner):
+def _rename_original_symbols(instructions,owner,*,field_mapping,method_mapping):
     out=[]
     for item in instructions:
         entry=dict(item)
         if entry.get("owner")==owner:
             if entry["opcode"] in ("0xb2","0xb3","0xb4","0xb5"):
-                entry["name"]=PLATFORM_FIELD_MAPPING.get(
+                entry["name"]=field_mapping.get(
                     entry["name"],entry["name"])
             elif entry["opcode"] in ("0xb6","0xb7","0xb8","0xb9"):
-                entry["name"]=PLATFORM_METHOD_MAPPING.get(
+                entry["name"]=method_mapping.get(
                     entry["name"],entry["name"])
         out.append(entry)
     return out
@@ -81,7 +81,7 @@ def _rename_original_symbols(instructions,owner):
 def audit_original_platform_enum_java(
         original_binary,recompiled_binary, *,
         original_owner=PLATFORM_OWNER,
-        original_class_sha256=None):
+        original_class_sha256=None,original_field_map=PLATFORM_FIELD_MAPPING,original_array_method_map=PLATFORM_METHOD_MAPPING):
     """Full original six-method Code semantics with eight extra alias ops.
 
     All control-flow targets are expressed as instruction indices; the eight
@@ -107,11 +107,11 @@ def audit_original_platform_enum_java(
          "R191_ORIGINAL_ENUM_FIELD_METHOD_COUNTS_CHANGED")
     old_fields={x["name"]:x for x in original.fields}
     new_fields={x["name"]:x for x in candidate.fields}
-    need(set(old_fields)==set(PLATFORM_FIELD_MAPPING) and
-         set(new_fields)==set(PLATFORM_FIELD_MAPPING.values()) |
+    need(set(old_fields)==set(original_field_map) and
+         set(new_fields)==set(original_field_map.values()) |
          {alias for alias,_ in ALIAS_LAYOUT},
          "R191_EXPECTED_CORE_AND_ALIAS_FIELDS_ONLY")
-    for original_name,source_name in PLATFORM_FIELD_MAPPING.items():
+    for original_name,source_name in original_field_map.items():
         old=old_fields[original_name];new=new_fields[source_name]
         need((old["descriptor"],old["access"])==
              (new["descriptor"],new["access"]),
@@ -126,13 +126,13 @@ def audit_original_platform_enum_java(
     right=_method_index(new)
     need(len(left)==6 and len(right)==6,
          "R191_SIX_ORIGINAL_PLATFORM_ENUM_METHODS_REQUIRED")
-    need({(PLATFORM_METHOD_MAPPING.get(n,n),d) for n,d in left}==
+    need({(original_array_method_map.get(n,n),d) for n,d in left}==
          set(right),"R191_PUBLIC_OR_SYNTHETIC_METHOD_SET_CHANGED")
 
     total=0
     stackmap_differences=0
     for (name,desc),before in left.items():
-        other=(PLATFORM_METHOD_MAPPING.get(name,name),desc)
+        other=(original_array_method_map.get(name,name),desc)
         after=right[other]
         need(before["access"]==after["access"] and
              before["max_stack"]==after["max_stack"] and
@@ -140,7 +140,7 @@ def audit_original_platform_enum_java(
              "R191_ENUM_METHOD_ABI_OR_CODE_LIMITS_CHANGED")
         a,old_handlers=_semantic_method(old,before)
         b,new_handlers=_semantic_method(new,after)
-        a=_rename_original_symbols(a,original_owner)
+        a=_rename_original_symbols(a,original_owner,field_mapping=original_field_map,method_mapping=original_array_method_map)
         if other==("<clinit>","()V"):
             # Enum constants and the generated values array are constructed
             # first. Exactly four alias assignments appear immediately after.
