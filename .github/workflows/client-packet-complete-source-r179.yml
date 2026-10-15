@@ -1,0 +1,30 @@
+name: V309 full Packet Java Code R179
+on:
+  pull_request:
+    paths:
+      - "src/spk_recovery/private_v309_packet_complete_source_r179.py"
+      - "tests/test_private_v309_packet_complete_source_r179.py"
+      - ".github/workflows/client-packet-complete-source-r179.yml"
+  workflow_dispatch:
+jobs:
+  proof:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: python -m pip install -e .
+      - name: Prove full original Packet method and initializer Code from Java source
+        run: python -m unittest discover -s tests -p "test_private_v309_packet_complete_source_r179.py" -v
+      - name: Keep R178 partial Packet plus original parent source proof
+        run: python -m unittest discover -s tests -p "test_private_v309_packet_73_methods_r178.py" -v
+      - run: python -m compileall -q src/spk_recovery/private_v309_packet_complete_source_r179.py
