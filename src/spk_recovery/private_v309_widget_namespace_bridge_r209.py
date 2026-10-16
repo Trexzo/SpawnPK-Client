@@ -26,11 +26,16 @@ from .private_client_namespace_legalizer_r125 import (
     CANONICAL_V309,
     original_class_inventory,
     plan_client_namespaces,
+    package_prefixes,
 )
 
 ORIGINAL_WIDGET_BASE = "rs/n/c"
 ORIGINAL_SPELLBOOK_CHILD = "rs/n/c/ap"
 ORIGINAL_PARENT = "rs/n"
+EXPECTED_ROOT_SHA256 = (
+    "47d084fedbd212af8d3d8622fe894b476de6e911b3a88a50b3a87a92dbaa0cf7"
+)
+EXPECTED_V309_CLASS_PACKAGE_SHADOWS = 173
 EXPECTED_BASE_SHA256 = (
     "65b1517e3630da9dcc79b8e53c28fa1622c000ff0825b33880ca3262d4d2b2a0"
 )
@@ -119,8 +124,15 @@ def verify_private_v309_widget_namespace(
         child_sha256=EXPECTED_CHILD_SHA256):
     """Real private binary hierarchy with pinned full-JAR and class hashes."""
     names=original_class_inventory(original_jar,original_sha256)
+    count=len(names & package_prefixes(names))
+    need(count==EXPECTED_V309_CLASS_PACKAGE_SHADOWS and
+         ORIGINAL_PARENT in names and
+         ORIGINAL_WIDGET_BASE in names and
+         ORIGINAL_SPELLBOOK_CHILD in names,
+         "R209_ORIGINAL_FULL_CLIENT_SHADOW_INVENTORY_CHANGED")
     with ZipFile(original_jar) as archive:
         expected={
+            ORIGINAL_PARENT:EXPECTED_ROOT_SHA256,
             ORIGINAL_WIDGET_BASE:base_sha256,
             ORIGINAL_SPELLBOOK_CHILD:child_sha256,
         }
@@ -144,6 +156,8 @@ def verify_private_v309_widget_namespace(
         "original_base_class_sha256":base_sha256,
         "original_child_class_sha256":child_sha256,
         "original_child_superclass_edge_sha_pinned":True,
+        "original_nested_type_shadow_root_sha256":EXPECTED_ROOT_SHA256,
+        "original_client_class_package_shadow_count":count,
         "original_source_compiled":False,
         "original_game_code_executed":False,
     })
