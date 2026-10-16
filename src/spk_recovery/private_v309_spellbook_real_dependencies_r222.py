@@ -217,9 +217,7 @@ def verify_private_real_widget_and_enums(original_jar,source_zip,
     widget_proof=audit_readable_widget_classfiles(
         base,compiled_widget,
         expected_original_sha256=ORIGINAL_WIDGET_SHA256)
-    need(widget_proof["matched_original_decoded_jvm_instructions"]
-         if "matched_original_decoded_jvm_instructions" in widget_proof
-         else widget_proof["matched_original_decoded_jvm_instructions"]==11,
+    need(widget_proof["matched_original_decoded_jvm_instructions"]==11,
          "R222_REAL_WIDGET_ORIGINAL_JVM_PARITY_NOT_PROVEN")
     # The one emitted target's bytes equal the R221 independently
     # original-JAR verified candidate, so all 4314 method Code bytes and
