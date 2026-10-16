@@ -5,18 +5,22 @@ on:
       - 'tools/java/r220/**'
       - 'tools/java/r222/**'
       - 'tools/java/r223/**'
+      - 'tools/java/r224/**'
       - 'tests/java/r220/**'
       - 'tests/java/r222/**'
       - 'tests/java/r223/**'
+      - 'tests/java/r224/**'
       - '.github/workflows/client-r220-cache-transaction.yml'
   pull_request:
     paths:
       - 'tools/java/r220/**'
       - 'tools/java/r222/**'
       - 'tools/java/r223/**'
+      - 'tools/java/r224/**'
       - 'tests/java/r220/**'
       - 'tests/java/r222/**'
       - 'tests/java/r223/**'
+      - 'tests/java/r224/**'
       - '.github/workflows/client-r220-cache-transaction.yml'
   workflow_dispatch:
 jobs:
@@ -59,4 +63,13 @@ jobs:
           javac --release 11 -d r223-test-out tools/java/r223/CacheUpdateTransaction.java tests/java/r223/R223RecoveryInventorySmoke.java
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           java -cp r223-test-out rs.cache.updater.assets.R223RecoveryInventorySmoke
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Compile and test repeatable rollback under Java11
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path r224-test-out -Force | Out-Null
+          javac --release 11 -d r224-test-out tools/java/r224/CacheUpdateTransaction.java tests/java/r224/R224RollbackReplaySmoke.java
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          java -cp r224-test-out rs.cache.updater.assets.R224RollbackReplaySmoke
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
