@@ -3,12 +3,16 @@ on:
   push:
     paths:
       - 'tools/java/r220/**'
+      - 'tools/java/r222/**'
       - 'tests/java/r220/**'
+      - 'tests/java/r222/**'
       - '.github/workflows/client-r220-cache-transaction.yml'
   pull_request:
     paths:
       - 'tools/java/r220/**'
+      - 'tools/java/r222/**'
       - 'tests/java/r220/**'
+      - 'tests/java/r222/**'
       - '.github/workflows/client-r220-cache-transaction.yml'
   workflow_dispatch:
 jobs:
@@ -31,4 +35,15 @@ jobs:
           javac --release 11 -d r220-test-out tools/java/r220/CacheUpdateTransaction.java tests/java/r220/R220PublicTransactionSmoke.java
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           java -cp r220-test-out rs.cache.updater.assets.R220PublicTransactionSmoke
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Compile and exercise R222 root-isolated cache helper
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path r222-test-out -Force | Out-Null
+          javac --release 11 -d r222-test-out tools/java/r222/CacheUpdateTransaction.java tests/java/r222/R222RootIsolationSmoke.java tests/java/r222/R221_CrashAndLockRegression.java
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          java -cp r222-test-out rs.cache.updater.assets.R222RootIsolationSmoke
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          java -cp r222-test-out rs.cache.updater.assets.R221_CrashAndLockRegression
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
