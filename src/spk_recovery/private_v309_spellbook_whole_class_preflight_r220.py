@@ -38,8 +38,8 @@ MODULES={
     "r214":"spk_recovery.private_v309_readable_spellbook_long_filter_r214",
     "r215":"spk_recovery.private_v309_readable_spellbook_constructor_initializer_r215",
     "r216":"spk_recovery.private_v309_readable_spellbook_filter_panel_r216",
-    "r217":"spk_recovery.private_v309_readable_spellbook_lunar_ancient_r217",
-    "r218":"spk_recovery.private_v309_readable_spellbook_lunar_definitions_r218",
+    "r217":"spk_recovery.private_v309_readable_spellbook_layouts_r217",
+    "r218":"spk_recovery.private_v309_readable_lunar_spells_r218",
     "r219":"spk_recovery.private_v309_readable_spellbook_final_methods_r219",
 }
 # Audited original-method inventories, not names inferred from partial
@@ -105,6 +105,7 @@ def verify_manifest(rows=ROWS, expected=EXPECTED,
                 getattr(obj,key) for key in (
                     "SOURCE_SHA256","DONOR_JAVA_SHA256",
                     "DONOR_SHA256","READABLE_SOURCE_SHA256",
+                    "READABLE_JAVA_SHA256",
                 ) if hasattr(obj,key)]
             # Some modules label their source differently; require any
             # present donor pins to be consistent, not inferred by name.
