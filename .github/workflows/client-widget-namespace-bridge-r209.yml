@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'src/spk_recovery/private_v309_widget_namespace_bridge_r209.py'
+      - 'src/spk_recovery/private_v309_widget_shadow_chain_r209.py'
       - 'tests/test_private_v309_widget_namespace_bridge_r209.py'
       - '.github/workflows/client-widget-namespace-bridge-r209.yml'
   workflow_dispatch:
