@@ -4,15 +4,19 @@ on:
     paths:
       - 'tools/java/r220/**'
       - 'tools/java/r222/**'
+      - 'tools/java/r223/**'
       - 'tests/java/r220/**'
       - 'tests/java/r222/**'
+      - 'tests/java/r223/**'
       - '.github/workflows/client-r220-cache-transaction.yml'
   pull_request:
     paths:
       - 'tools/java/r220/**'
       - 'tools/java/r222/**'
+      - 'tools/java/r223/**'
       - 'tests/java/r220/**'
       - 'tests/java/r222/**'
+      - 'tests/java/r223/**'
       - '.github/workflows/client-r220-cache-transaction.yml'
   workflow_dispatch:
 jobs:
@@ -46,4 +50,13 @@ jobs:
           java -cp r222-test-out rs.cache.updater.assets.R222RootIsolationSmoke
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           java -cp r222-test-out rs.cache.updater.assets.R221_CrashAndLockRegression
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Test R223 fail-closed recovery inventory on Java11
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path r223-test-out -Force | Out-Null
+          javac --release 11 -d r223-test-out tools/java/r223/CacheUpdateTransaction.java tests/java/r223/R223RecoveryInventorySmoke.java
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          java -cp r223-test-out rs.cache.updater.assets.R223RecoveryInventorySmoke
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
