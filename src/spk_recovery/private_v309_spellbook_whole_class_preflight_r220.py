@@ -78,6 +78,8 @@ def verify_manifest(rows=ROWS, expected=EXPECTED,
     seen=Counter(keys)
     require(set(seen)==set(expected) and all(x==1 for x in seen.values()),
             "R220_DUPLICATE_OR_MISSING_ORIGINAL_JVM_METHOD")
+    require(tuple(rows)==ROWS,
+            "R220_ORIGINAL_TO_PROOF_BATCH_OWNERSHIP_CHANGED")
     require(len(rows)==14 and sum(v for _,_,v in rows)==4314,
             "R220_ORIGINAL_METHOD_OP_INVENTORY_NOT_4314")
     require(all(expected[k]==count for _,k,count in rows),
