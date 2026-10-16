@@ -1,0 +1,28 @@
+name: V309 original 81-method readable Packet Java R227
+on:
+  pull_request:
+    paths:
+      - 'src/spk_recovery/private_v309_original_readable_packet_all_methods_r227.py'
+      - 'tests/test_private_v309_original_readable_packet_all_methods_r227.py'
+      - '.github/workflows/client-original-readable-packet-r227.yml'
+  workflow_dispatch:
+jobs:
+  complete-packet-original-code:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: python -m pip install -e .
+      - run: python -m unittest discover -s tests -p test_private_v309_original_readable_packet_all_methods_r227.py -v
+      - run: python -m unittest discover -s tests -p test_private_v309_real_packet_base_closure_r226.py -v
+      - run: python -m compileall -q src/spk_recovery/private_v309_original_readable_packet_all_methods_r227.py
