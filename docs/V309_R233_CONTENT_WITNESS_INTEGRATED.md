@@ -1,0 +1,11 @@
+# R233 Lane A — integrate cache R225 content witness onto R232
+
+Received exact Lane B cache R225 private ZIP through the owner's Library (donor origin PR #1121). Verified donor overlay and **only** replaced `src/rs/cache/updater/assets/CacheUpdateTransaction.java` in canonical Lane A R232/R231 source. Original SHA256 `690417259a7343a7a5f1134a1b0b05693acef7b207c8d6998d0b6182a94b3409`, donor postimage SHA256 `9be38338d50c7a774d070e00ad6c426dc363180ef2c8d83c052b6baa41b78e43`. All 1,276 other Java files remained unchanged, including CacheUpdater, FileDownloader and GUI/network classes.
+
+**Full actual private build:** 1,277 Java files compiled under `javac --release 11 -proc:none -g:none -encoding UTF-8`, zero errors, **1,386** generated .class files. Rebuilt source JAR SHA256 `d10538c6102ad4da1bbb24322f091cb540caa5aed59e08da86f3c9fe7b571f83`; complete merged source ZIP SHA256 `d328693c81f6e74a75c7b978a3314c5a8746b8806f4d02a469580b7267cf12db`.
+
+**Independent regressions against the actual merged .class files:** cache R225 content witness/space 22 PASS, R224 rollback replay 21 PASS, R223 inventory 14 PASS, R222 isolation 8 PASS, R221 crash/locking 10 PASS, R220 transaction 8 PASS, real CacheUpdater extraction path returned exit 0 and logged expected traversal-rejection exception. The seven test classes were compiled separately and are not packaged as production classfiles.
+
+**Private R233 delivery** `SpawnPK_v309_R233_LANE_A_CACHE_WITNESS_INTEGRATED_PRIVATE.zip` SHA256 `69f52d3c5ce08a0522821fb911f2402954a264529142f00ced600b3a36f5d1db`; ZIP CRC passed. Contains complete source/JAR/exact non-game dependency candidates, changed-only overlay, seven real regression logs and previous R232 GUI/local TCP test evidence. R232 Windows scripts inside baseline evidence refer to earlier file names and **must not be represented as ready-to-run R233 launchers**.
+
+**Outstanding:** no new GUI or TCP test was run on the R233 binary; R232 earlier 1134×537 login screen and accepted TCP `0e1d` from dummy 127.0.0.1:43594 remain prior baseline only. Authenticated local-server handshake, gameplay and Windows GUI are still unverified. Cache transaction continues to belong to Lane B. Keep draft.
