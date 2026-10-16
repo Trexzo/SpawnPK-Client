@@ -149,7 +149,8 @@ class R215SyntheticReadableConstructorAndDefaults(unittest.TestCase):
 
     def test_donor_constructor_and_initializer_source_extraction(self):
         src=self.body.replace("Readable","Class179").replace(
-            "Font[] var1","HitsplatFont[] var1")
+            "Font[] var1","HitsplatFont[] var1").replace(
+            "List<Type>","List<Class176>")
         constructor=extract_exact_readable_constructor(src)
         self.assertIn("super(var1);",constructor)
         fields=extract_original_static_initializer_declarations(src)
@@ -169,7 +170,8 @@ class R215SyntheticReadableConstructorAndDefaults(unittest.TestCase):
 
     def test_duplicate_or_missing_readable_constructor_rejected(self):
         src=self.body.replace("Readable","Class179").replace(
-            "Font[] var1","HitsplatFont[] var1")
+            "Font[] var1","HitsplatFont[] var1").replace(
+            "List<Type>","List<Class176>")
         with self.assertRaises(R215OriginalReadableInitializerError):
             extract_exact_readable_constructor(src+
                 " public Class179(HitsplatFont[] var1) {super(var1);}")
