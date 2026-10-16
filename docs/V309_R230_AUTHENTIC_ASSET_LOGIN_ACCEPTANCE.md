@@ -1,0 +1,9 @@
+# R230 — verified source-built v309 login UI using owner archived assets
+
+Lane A resolved R229's 20%-asset-gate failure without editing cache transaction or Java production code. Located authentic archived `.spawnpk (3)(1).zip` in owner's private Library (SHA256 `9de2ccf52a24455a1161fd8c215c3e6e7d14fdbbf65c8084538b043c20386b7f`), with 10,831 `.spawnpk/` entries and original `versions.dat` recording cache `69.0`, sprites `74.0`, configs `112.0`. This is archived local data, not proof assets are byte-for-byte v309 release originals.
+
+Staged archive into a new isolated Linux `user.home/.spawnpk`, leaving installed game folders unchanged. Source-built integrated R229/R226 client launched with `spk.offlineProbe=true`, server host `127.0.0.1`; actual Xvfb screenshot shows full SpawnPK login screen with username/password fields, login button, sidebar and Latest Update panel. The prior 20% `Error loading game assets!` disappeared. Java stderr had unsupported-tray-icon warning only, no exception stack trace. Login handshake, local gameplay and Windows graphic behavior **not verified**.
+
+Independently replayed full actual Java 11 build: **1,277 sources, 1,384 classfiles, zero errors**. No production Java changed; Lane B owns cache transaction. Added hash-pinned, non-overwriting Windows asset staging and combined GUI/TCP smoke scripts; these Windows scripts were NOT executed on Windows. Asset archive not bundled or published.
+
+Final private R230 ZIP `SpawnPK_v309_R230_AUTHENTIC_ASSETS_LOGIN_PRIVATE.zip` SHA256 `5c21e5c643de759da80c4d18ebb6a49c84968d47a979caa33f7d4ad2170a7125`. Contains full prior private source/JAR, scripts, screenshot, actual compiler and startup logs, manifests. Next owner Windows smoke with exact archive, original v309 reference JAR and screenshot/localhost socket capture. PR remains draft pending live Windows GUI/handshake and original-bytecode parity.
