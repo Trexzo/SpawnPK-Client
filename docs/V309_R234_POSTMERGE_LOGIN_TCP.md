@@ -1,0 +1,9 @@
+# R234 Lane A — actual post-merge GUI + localhost TCP replay
+
+Re-read Issue #1117; no newer cache donor after the accepted Lane B cache R225 content witness in R233. **No production Java or Lane B cache files modified.** The exact R233 integrated source-built client JAR SHA256 `d10538c6102ad4da1bbb24322f091cb540caa5aed59e08da86f3c9fe7b571f83` was executed in a new isolated Linux home with authentic archived `.spawnpk` assets and resource-only overlay derived locally from pinned original v309 JAR.
+
+New Xvfb actual runtime evidence: real `[V309] SpawnPK` top-level 1134×537 window, login form rendered, no Java exception stack trace (only unsupported tray icon warning); GUI click with throwaway credentials to a **dummy TCP listener on 127.0.0.1:43594** generated accepted localhost connection and initial bytes `0e1d`. Login subsequently cannot succeed because the listener implements no SpawnPK protocol. Complete handshake/gameplay NOT verified. Network isolation outside known probe paths not certified.
+
+Corrected inherited obsolete R229 filenames in owner-local resource overlay and Windows GUI smoke scripts. R234 packaged R233 binaries under their actual names and R234_RUNTIME_SHA256.json, R234_Resource_Mappings.json, R234_Stage_Archived_Assets.ps1, R234_Resource_Overlay.ps1, R234_Windows_GUI_Smoke.ps1. SHA references and ZIP CRC checked in Linux; **Windows script has not been executed under Windows**. The R233 clean 1277-source Java 11 build and seven cache regression suites remain prior R233 verification, not rerun in this batch.
+
+One private `SpawnPK_v309_R234_POSTMERGE_LOGIN_TCP_PRIVATE.zip`, SHA256 `b0d038358ce7082a1956428e18f303315006e0e685f69cbe9c440cb1e3dc36cc`, contains complete R233 source-built snapshot, authentic screenshot/TCP evidence and corrected local Windows handoff. No original private font/resource archive is redistributed. Keep PR draft pending owner Windows screenshot and protocol-authenticated local server.
