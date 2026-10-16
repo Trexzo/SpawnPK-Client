@@ -25,7 +25,7 @@ public class SafeZipPathSelfTest {
          reject(root.toFile(), name);
       }
       File safe = SafeZipPath.resolveUnderRoot(root.toFile(), new ZipEntry("nested/subdir/asset.dat"));
-      if (!safe.toPath().equals(root.resolve("nested/subdir/asset.dat"))) {
+      if (!safe.getCanonicalFile().equals(root.resolve("nested/subdir/asset.dat").toFile().getCanonicalFile())) {
          throw new AssertionError("Normal entry did not resolve correctly");
       }
       File windows = SafeZipPath.resolveUnderRoot(root.toFile(), new ZipEntry("nested\\subdir\\asset.dat"));
