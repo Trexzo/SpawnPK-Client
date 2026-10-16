@@ -3,6 +3,9 @@ package rs.cache.updater.assets;
 import java.io.*;
 import java.nio.file.*;
 import java.util.Locale;
+import java.security.MessageDigest;
+import java.nio.charset.StandardCharsets;
+import java.util.stream.Stream;
 
 /** Real JVM child-process tests of Windows case-insensitive cache root identity. */
 public final class R228_WindowsCaseAliasRegression {
@@ -90,6 +93,28 @@ public final class R228_WindowsCaseAliasRegression {
          "Cased-root recovery failed to restore original cache");
       check(Files.readString(root.resolve("updated.dat")).equals("new-cache"),
          "Recovery deleted the previous cache's updated file");
+      // Simulate a journal/workspace created by pre-R228 with a mixed-case
+      // path digest. A restart under a different spelling must still recover it.
+      Process legacyStop = child("crash", root);
+      check(legacyStop.getInputStream().read() == 'H', "Legacy test child did not reach rename");
+      check(legacyStop.waitFor(8, java.util.concurrent.TimeUnit.SECONDS), "Legacy child hung");
+      check(legacyStop.exitValue() == 17, "Legacy child not abruptly terminated");
+      Path owned;
+      try (Stream<Path> paths = Files.list(parent)) {
+         owned = paths.filter(x -> x.getFileName().toString().startsWith(".spk-cache-update-"))
+            .findFirst().orElseThrow();
+      }
+      byte[] exactDigest = MessageDigest.getInstance("SHA-256")
+         .digest(root.toString().getBytes(StandardCharsets.UTF_8));
+      StringBuilder hex = new StringBuilder();
+      for (int i = 0; i < 12; i++) hex.append(String.format("%02x", exactDigest[i] & 255));
+      Path oldStyle = parent.resolve(".spk-cache-update-" + hex + "-legacy-casing");
+      check(!owned.equals(oldStyle), "Legacy namespace unexpectedly identical");
+      Files.move(owned, oldStyle);
+      CacheUpdateTransaction.recover(aliased.toFile());
+      check(Files.readString(root.resolve("original.dat")).equals("NEW-ORIGINAL"),
+         "Legacy cased journal was not discovered/restored");
+      check(!Files.exists(oldStyle), "Legacy transaction not cleaned after recovery");
       System.out.println("R228_WINDOWS_CASE_ALIAS_PASS checks=" + assertions);
    }
 }
