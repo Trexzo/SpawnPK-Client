@@ -198,7 +198,7 @@ class R212UnrelatedThreeMethodSourceParity(unittest.TestCase):
                 sample.replace("method1966","other"),"method1966")
         with self.assertRaises(R212ReadableSpellbookCodeError):
             extract_original_donor_method(
-                sample.replace("}}\n","}\n"),"method1966")
+                sample.replace("return;}}\n}\n","return;}\n"),"method1966")
 
 
 if __name__=="__main__":
