@@ -15,7 +15,7 @@ class ClosedJava11SubsetTests(unittest.TestCase):
             with zipfile.ZipFile(source,"w") as z:
                 z.writestr("src/demo/A.java","package demo; class A { int add(int x) { return x+1; } }")
                 z.writestr("src/demo/B.java","package demo; class B { Unknown missing; }")
-                z.writestr("src/demo/C.java","package demo; import external.Api; class C {}")
+                z.writestr("src/demo/C.java","package demo;\nimport external.Api;\nclass C {}")
             history=recover_subset(source,output)
             self.assertEqual(2,history[0]["sources"])
             self.assertEqual(1,history[-1]["sources"])
