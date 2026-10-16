@@ -14,6 +14,9 @@ from zipfile import ZipFile, ZIP_DEFLATED
 from spk_recovery.private_client_namespace_legalizer_r125 import (
     plan_client_namespaces,
 )
+from spk_recovery.private_v309_widget_shadow_chain_r209 import (
+    compile_three_depth_synthetic_chain,
+)
 from spk_recovery.private_v309_widget_namespace_bridge_r209 import (
     R209NamespaceBridgeError,
     inspect_widget_legalizer,
@@ -35,6 +38,17 @@ class R209SyntheticWidgetNamespaceTests(unittest.TestCase):
         self.assertFalse(result["original_v309_binary_byte_identity_proven"])
         self.assertFalse(result["original_proprietary_source_compiled"])
         self.assertFalse(result["original_game_code_executed"])
+
+    def test_two_nested_type_package_shadows_built_in_one_java9_source(self):
+        result=compile_three_depth_synthetic_chain()
+        self.assertEqual(3,len(result["legal_type_names"]))
+        self.assertTrue(result["original_source_compilation_failed"])
+        self.assertTrue(result[
+            "all_three_emitted_classfile_owners_and_supers_verified"])
+        self.assertTrue(result[
+            "two_simultaneous_class_package_shadows_eliminated"])
+        self.assertFalse(result["original_game_class_hierarchy_reproduced"])
+        self.assertFalse(result["original_client_source_compiled"])
 
     def test_mapping_is_deterministic_and_child_package_is_preserved(self):
         original={"toy/widget/Base","toy/widget/Base/Child"}
