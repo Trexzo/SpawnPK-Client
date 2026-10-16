@@ -134,7 +134,8 @@ def decode_javap_method(disassembly,header):
 def verify_original_class170_code(original_javap, rebuilt_javap, *,
                                   methods=METHODS,
                                   original_total=954,
-                                  global_alias_sha=GLOBAL_ALIAS_SHA256):
+                                  global_alias_sha=GLOBAL_ALIAS_SHA256,
+                                  expected_alias_count=50):
     need(len(methods)==6 and sum(row[6] for row in methods)==original_total,
          "R224_EXACT_SIX_JVM_METHOD_INVENTORY_REQUIRED")
     all_aliases={}
@@ -174,7 +175,8 @@ def verify_original_class170_code(original_javap, rebuilt_javap, *,
         })
     global_digest=sha(json.dumps(all_aliases,sort_keys=True,
                                  separators=(",",":")).encode())
-    need(len(all_aliases)==50 and global_digest==global_alias_sha,
+    need(len(all_aliases)==expected_alias_count and
+         global_digest==global_alias_sha,
          "R224_COMPLETE_50_SYMBOLIC_RENAME_TABLE_CHANGED")
     return {
         "schema_version":1,
