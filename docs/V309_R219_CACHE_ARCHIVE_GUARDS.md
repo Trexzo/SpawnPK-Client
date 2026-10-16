@@ -1,0 +1,7 @@
+# R219 — ZIP path collision and excluded-subtree fixes
+
+The real v309 source-built client received two production edits: `rs/cache/updater/AssetUpdater.java` and `rs/cache/updater/assets/CacheUpdater.java`. Both reject repeated ZIP output targets after canonical destination resolution, including case-only filename collisions that conflict on Windows. The cache updater now excludes entire `sprites/` and `configs/` trees, rather than just their top-level ZIP records, and counts skipped compressed archive content against the existing uncompressed-byte limits. R218 path traversal guards and per-file staging remain in place.
+
+Full Java 11 clean-source compilation: **1,275 Java sources, 1,376 classfiles, zero errors**. The targeted R219 test verified collision refusal in both extractors, valid nested extraction and recursive reserved-subtree exclusion. Java compiler and regression logs are included in the private archive. Note: the archive is not all-or-nothing transactional, and graphical/gameplay acceptance was not rerun.
+
+Verified private bundle `SpawnPK_v309_R219_ARCHIVE_HARDENING_PRIVATE.zip` SHA256 `3164189a976e1a197803215f1ccc7b748707600501eea1d3fb7f0b93c33bc68e`; source-built JAR SHA256 `405699e286d5325c8430886e0c6d73d1a5a38483767c33d3bc9344ade87352f1`. Complete private Java source, v309 non-game dependency JARs and Windows rebuild/local-resource tools are in the bundle. No proprietary source or fonts uploaded to public GitHub.
