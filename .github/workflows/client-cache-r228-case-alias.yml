@@ -1,0 +1,34 @@
+name: v309 cache R228 Windows case alias guard
+on:
+  push:
+    paths:
+      - 'tools/java/r228/**'
+      - 'tests/java/r228/**'
+      - '.github/workflows/client-cache-r228-case-alias.yml'
+  pull_request:
+    paths:
+      - 'tools/java/r228/**'
+      - 'tests/java/r228/**'
+      - '.github/workflows/client-cache-r228-case-alias.yml'
+  workflow_dispatch:
+jobs:
+  case-insensitive-root-identity:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+      - name: Compile JDK11 cache transaction and case-alias regression
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path r228-bin -Force | Out-Null
+          javac --release 11 -d r228-bin tools/java/r228/CacheUpdateTransaction.java tests/java/r228/R228_WindowsCaseAliasRegression.java
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          java -cp r228-bin rs.cache.updater.assets.R228_WindowsCaseAliasRegression
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
