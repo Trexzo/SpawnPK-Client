@@ -147,7 +147,7 @@ def normalize_ancient_compiler_shape(original_source, *, pin=True):
 
 
 def audit_layout_methods(original_javap,readable_javap, *,
-                         details=METHOD_DETAILS):
+                         details=METHOD_DETAILS,expected_total=906):
     proofs={}
     for readable,expected in sorted(details.items()):
         oldname=expected["original"]
@@ -172,7 +172,7 @@ def audit_layout_methods(original_javap,readable_javap, *,
             "all_original_offsets_branches_and_operands_match":True,
         }
     need(sum(x["matched_original_jvm_instructions"] for x in
-             proofs.values())==906,"R217_ORIGINAL_JVM_TOTAL_906_DRIFT")
+             proofs.values())==expected_total,"R217_ORIGINAL_JVM_TOTAL_DRIFT")
     return proofs
 
 
