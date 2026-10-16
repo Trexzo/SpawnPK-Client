@@ -109,7 +109,7 @@ class R216InventedPanelSourceProof(unittest.TestCase):
 
     def test_original_and_rebuilt_invented_panel_match(self):
         result=self.compare(self.original_javap)
-        self.assertEqual(len(self.rows),result["matched_jvm_instructions"])
+        self.assertEqual(len(self.rows),result["original_jvm_instructions_matched"])
         self.assertTrue(result[
             "all_original_code_offsets_branches_equal"])
         self.assertFalse(result["donor_java_method_modified"])
