@@ -33,7 +33,7 @@ ONE_EMITTED_CLASS_SHA256="b88820d9893b5a2d5b2ff05f5b88aa6d77dc5ee4a66f377db83758
 METHODS=(
  ("public static void h();","public static void method1966();",10,0,"c29bc71626d2926ce1c4d0d1e395380bdc395d0234c69bd3f4ed8e65c4f241ef"),
  ("public static void i();","public static void method3153();",62,0,"8d100c46b7854f579e97a703ce717c4a1ee7d0785d2821aa91bea8f369f75901"),
- ("public static void j();","public static void method236();",19,0,"504e88113d9f6de4e6b19d3ee813b3f4ce775ebc981ec49a92af19dde47165d"),
+ ("public static void j();","public static void method236();",19,0,"504e88113d9f6de4f774de664fc5fc399e18c38a7eac49a92af19dde47165d"),
  ("public static void a(rs.n.c.ap$c);","public static void method2689(rs.interfaces.widgets.Class178);",243,0,"a7de3252557f43b328325dc8d2d925e688d648026c401f8d570712dbde8a5b0e"),
  ("public rs.n.c.ap(rs.l.K[]);","public rs.interfaces.widgets.Class179(rs.graphics.HitsplatFont[]);",4,0,"1c5f629d4f842c62434516fb803e0c31f03caef33589461ec47503e0f7075814"),
  ("public void a();","public void register();",438,0,"c5208f52477762f4cf219eece66a757bd60949cc774510d32d28b5fc372a9e57"),
@@ -168,6 +168,9 @@ def verify_private_unified_class(original_jar,normalized_java,rebuilt_class):
     original_jar=Path(original_jar)
     normalized_java=Path(normalized_java)
     rebuilt_class=Path(rebuilt_class)
+    require(original_jar.is_file() and normalized_java.is_file() and
+            rebuilt_class.is_file(),
+            "R221_ALL_PINNED_PRIVATE_FILES_REQUIRED")
     require(sha(original_jar.read_bytes())==ORIGINAL_JAR_SHA256 and
             sha(normalized_java.read_bytes())==NORMALIZED_REAL_SOURCE_SHA256 and
             sha(rebuilt_class.read_bytes())==ONE_EMITTED_CLASS_SHA256,
