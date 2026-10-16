@@ -54,6 +54,25 @@ public final class R228_WindowsCaseAliasRegression {
             default: throw new AssertionError("unexpected child mode");
          }
       }
+      // R229: on a case-sensitive filesystem two physical root directories
+      // may differ only by capitalization. Never assign them one Windows lock.
+      Path fixture = Files.createTempDirectory("r229-distinct-roots-");
+      Path upper = Files.createDirectory(fixture.resolve("Cache"));
+      Path lower = fixture.resolve("cache");
+      if (!Files.exists(lower)) {
+         Files.createDirectory(lower);
+      }
+      if (!Files.isSameFile(upper, lower)) {
+         try {
+            CacheUpdateTransaction.verifyCaseFoldCollision(upper, true);
+            throw new AssertionError("R229 accepted separate cache roots with one lock identity");
+         } catch (IOException expected) {
+            if (!expected.getMessage().contains("identity collision")) throw expected;
+         }
+      } else {
+         CacheUpdateTransaction.verifyCaseFoldCollision(upper, true);
+      }
+      System.out.println("R229_CASE_COLLISION_PRECHECK_PASS");
       if (File.separatorChar != '\\') {
          System.out.println("R228_WINDOWS_ALIAS_NOT_APPLICABLE; Java11 test compiled");
          return;
