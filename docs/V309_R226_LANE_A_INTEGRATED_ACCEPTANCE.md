@@ -1,0 +1,13 @@
+# R226 — Lane A accepts Lane B cache-recovery R221 into source-runtime R225
+
+Per Issue #1117, integrated exactly two Lane B-owned paths: `src/rs/cache/updater/assets/CacheUpdateTransaction.java` imported byte-identically, and `CacheUpdater.java` constructor/download entry points adopted from the R221 donor. Retained Lane A R225 whole-tree baseline, `FileDownloader`, `ClientFileDownloader`, socket guards, and all R225 hardened ZIP-extractor path limits and duplicate protections. Integrated extractor also excludes `versions.dat` when preserving independent local version state.
+
+**Full actual private production build:** javac --release 11: 1,277 source files, 1,384 classfiles, **zero errors**, real source-built private JAR SHA256 `5ebbc4c90e68004fede59695f90e12b9c73bafcf0ec23cab38dfa078fe3002bd`.
+
+**Actual integrated tests:** Lane B's exact production `CacheUpdateTransaction` passed 10 crash/lock/recovery and 8 transactional regressions; real merged `CacheUpdater.extractCache` rollback/security check passed. Lane A R225 downloader passed six loopback HTTP cases (offline=no request, 503, empty, success, chunked, temp cleanup). Lane B's old R219 downloader regression no longer compiles with the R225-owned downloader because it accesses removed fields; it was **not accepted as passing** and is superseded by the current R225 HTTP test.
+
+**Offline GUI:** source-built JAR under xvfb with verified owner-local resource overlay, `spk.offlineProbe=true`, game server host `127.0.0.1`, port 43594: reached plugin startup; stopped by explicit 14-second timeout with no Java exception stack traces. Still reports missing local sprite-version and unsupported tray icon. Windows GUI, live cache readers, local-server handshake, cross-OS OS-lock and exhaustive outbound network isolation NOT verified.
+
+**Immutable inputs and accepted outputs:** Lane A R225 ZIP SHA256 `e4738f97086dd4619d0c4027789647bad35707ce7cbcb8226b93188a60ae62e5`; Lane B cache-recovery R221 ZIP SHA256 `eaa8d7e9f4ab21466a3dee462ed8fa74f6271dbf12cd178c2b110ce802b673d9`. Unified source ZIP SHA256 `670f4ea73ffd8de678511767227f444c0172ff9214848091a5359dfc9f5aed63`. Final private ZIP `SpawnPK_v309_R226_LANE_A_CACHE_INTEGRATED_PRIVATE.zip` SHA256 `17bc85791a1f51ee6dc660729cb5b0434066c4fa08bf9fedc5d547e7ebcf31d4`, integrity verified. All changed-file base/donor/postimage SHA256 values, and conflict ledger included in R226_ACCEPTANCE.json.
+
+Remaining: owner-local Windows launcher GUI screenshot and localhost socket evidence; Lane B owns further cache crash/readers/symlink correctness; Lane C owns original JVM bytecode semantic parity. Do not merge PR yet.
