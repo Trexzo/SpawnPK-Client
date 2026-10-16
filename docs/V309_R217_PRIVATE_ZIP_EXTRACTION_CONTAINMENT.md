@@ -9,10 +9,10 @@ The **newly written** public production helper is [SafeZipPath.java](../tools/ja
 - Baseline private R216 bundle SHA-256: `70b0f7e952db24dbaa116b10c4625a6128d34a3952c533c54ae686d87cae9286`.
 - Rebuilt complete tree: **1,276 actual Java files**, `javac --release 11 -proc:none -g:none -encoding UTF-8`, **zero errors**, **1,377 production JVM classfiles**.
 - The private original-version compile-only library contains **zero `rs/` game classfiles**, preventing a binary fallback from masquerading as source compilation.
-- The regression invoked **both real production extraction paths**, rejecting malicious `../`, nested traversals, absolute paths, Windows separators/device paths, and an existing symlink leading outside the extraction root. Safe nested asset ZIP extraction passed.
+- The regression invoked **both real production extraction paths**, rejecting malicious `../`, nested traversals, absolute paths, Windows separators/device paths, and an existing symlink leading outside the extraction root. Windows CI independently caught a canonical-path-only bypass; production now also rejects filesystem symlinks and junction-like link objects on each existing extraction path component. Safe nested asset ZIP extraction passed.
 - Existing R216 offline cache/version/download regression: **PASS**.
-- Full private R217 source archive SHA-256: `3972e50956064bc4fcf9f41334ed67f0912d97b4514e3ed8084280634e9e2a28`.
-- R217 source-built production JAR SHA-256: `627236e820c05bb60d59df927a8d98636c2ecfeb0d1b1da6d8e4b1e07adb8210`.
+- Full private R217 source archive SHA-256: `731b699017277f67d7f3855a59c0b06c7109776be924491314280ada358019b9`.
+- R217 source-built production JAR SHA-256: `0fcdcc946780fe8dd228d69e050ca017802e9e113a1f7fc794278ae6b0882542`.
 
 Public CI is limited to verifying the helper on synthetic ZIP entry names. It does **not** possess the private original source, Java dependencies, or the two real production extractors. Keep this PR in draft until independent private-input verification and Windows gameplay tests.
 
