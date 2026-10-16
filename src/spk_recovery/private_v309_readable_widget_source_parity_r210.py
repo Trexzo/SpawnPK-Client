@@ -113,18 +113,19 @@ def exact_methods(profile):
     return entries
 
 
-def map_instruction(old, *, owner_map, field_map, method_map):
+def map_instruction(old, *, owner_map, field_map, method_map,
+                    original_owner=ORIGINAL_OWNER):
     row=dict(old)
     if "owner" in row:
         prior_owner=row["owner"]
         row["owner"]=owner_map.get(prior_owner,prior_owner)
-        if prior_owner==ORIGINAL_OWNER and row["opcode"] in (
+        if prior_owner==original_owner and row["opcode"] in (
                 "0xb2","0xb3","0xb4","0xb5"):
             old_id=(row["name"],row["descriptor"])
             need(old_id in field_map,
                  "R210_UNMAPPED_ORIGINAL_WIDGET_FIELD_ACCESS")
             row["name"]=field_map[old_id][0]
-        if prior_owner==ORIGINAL_OWNER and row["opcode"] in (
+        if prior_owner==original_owner and row["opcode"] in (
                 "0xb6","0xb7","0xb8","0xb9"):
             old_id=(row["name"],row["descriptor"])
             need(old_id in method_map,
@@ -213,7 +214,8 @@ def audit_readable_widget_classfiles(
         b=_normalized_instructions(candidate,to_method)
         rewritten=[map_instruction(
             row,owner_map=owner_map,
-            field_map=field_map,method_map=method_map)
+            field_map=field_map,method_map=method_map,
+            original_owner=original_owner)
             for row in a]
         need(rewritten==b,
              "R210_READABLE_WIDGET_JVM_CODE_OR_OPERAND_MISMATCH")
