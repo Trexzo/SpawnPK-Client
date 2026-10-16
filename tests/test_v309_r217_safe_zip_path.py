@@ -19,7 +19,8 @@ class ZipGuardTests(unittest.TestCase):
                 text=True)
             actual = subprocess.run(
                 ["java", "-cp", str(out), "SafeZipPathSelfTest"],
-                check=True, capture_output=True, text=True)
+                check=False, capture_output=True, text=True)
+            self.assertEqual(actual.returncode, 0, actual.stdout + "\n" + actual.stderr)
             self.assertIn("PASS: R217", actual.stdout)
 
 if __name__ == "__main__":
