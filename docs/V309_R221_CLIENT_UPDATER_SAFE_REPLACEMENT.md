@@ -1,0 +1,7 @@
+# R221 — fix destructive client JAR update path
+
+Production source repair in `rs/cache/updater/assets/ClientUpdater.java`: the old path deleted the installed `client.jar` before downloading a replacement. R221 checks the existing opt-in `spk.offlineProbe` guard before local file operations, stages the download in a same-folder temporary file, checks that it is a nonempty readable JAR with manifest, and only then replaces the installed file. Temporary staging is cleaned up after failed downloads; moving falls back to a non-atomic replace where unsupported. This is not a signed-JAR authenticity check or full binary equivalence.
+
+Clean `javac --release 11` of **1,275** Java source files passed (0 errors, **1,376 production classfiles**). Targeted actual-source installer test passed three cases: invalid downloaded bytes preserve existing JAR, valid staged JAR replaces old bytes, offline probe refuses update. UI startup and Windows execution were **not rerun** in R221.
+
+Verified private full source/build package `SpawnPK_v309_R221_CLIENT_UPDATE_SAFETY_PRIVATE.zip` SHA-256 `d89415a9ff504ced824698310383b852cc36513b2319197a1df60f1182da3f24`. Source-built JAR SHA-256 `440778d8a6570b0b6b83d8a0a19d4dbd4284b9f90fce88456cb5f920d1b2affe`. Includes self-consistent R221 Windows rebuild and optional owner-local resource scripts. No original proprietary game or font bytes committed to GitHub. Keep PR draft.
