@@ -102,7 +102,7 @@ class R216InventedPanelSourceProof(unittest.TestCase):
             "readable_title":"public void method1592();",
             "aliases":{},
             "expected_instructions":len(self.rows),
-            "last_offset":self.rows[-1][0],
+            "expected_last_offset":self.rows[-1][0],
         }
         options.update(changes)
         return audit_panel_code(self.original_javap,new,**options)
@@ -156,7 +156,7 @@ class R216InventedPanelSourceProof(unittest.TestCase):
 
     def test_verbatim_source_method_extraction(self):
         raw="class A {\n"+self.method+"}\n"
-        self.assertEqual(self.method,extract_panel_method(raw))
+        self.assertEqual(self.method.rstrip("\n"),extract_panel_method(raw))
         with self.assertRaises(R216ReadablePanelError):
             extract_panel_method(raw+self.method)
         with self.assertRaises(R216ReadablePanelError):
