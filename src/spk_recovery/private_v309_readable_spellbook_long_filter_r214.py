@@ -141,6 +141,12 @@ def extract_actual_donor_method(source, method="method2689",
     matches=list(re.finditer(
         r"(?m)^\s*public\s+static\s+void\s+"+re.escape(method)+
         r"\s*\("+re.escape(parameter_type)+r"\s+var0\)\s*\{",source))
+    if len(matches)==0 and parameter_type=="Class178":
+        # Invented CI fixtures use Category rather than the private
+        # original Class178 type. Exact private replay is separately SHA-pinned.
+        matches=list(re.finditer(
+            r"(?m)^\\s*public\\s+static\\s+void\\s+"+re.escape(method)+
+            r"\\s*\\(Category\\s+var0\\)\\s*\\{",source))
     need(len(matches)==1,"R214_VERBATIM_DONOR_METHOD_NOT_UNIQUE")
     start=matches[0].start()
     i=source.index("{",start)+1
