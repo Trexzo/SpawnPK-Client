@@ -1,0 +1,9 @@
+# R203 — provisional RuneLite linked-geometry source repair and 379-source Java11 island
+
+From the R200 full private candidate, this batch changes exactly one Java source: `rs/runelite/api/Class294.java`. Its static assertion-status initializer referred to `RectangleUnion.class.desiredAssertionStatus()`, but `RectangleUnion` was not a resolvable Java type. Candidate replacement: `Class294.class.desiredAssertionStatus()`. This is **provisional**: the exact original-v309 bytecode must be compared before accepting the assertion owner or treating it as authentic recovery. Avoid extending this speculative rename across other classes.
+
+The candidate also brings unchanged `Class296.java` and `Class297.java` back into a self-contained compiling group. A fresh `javac --release 11 -proc:none -g:none` compilation of **379 actual Java source files** (the earlier 376 plus those 3) passed with **zero errors**, no external JARs and no placeholder source classes. The separate full 1,274-source `javac --release 11` diagnostic replay still reports **2,001 errors**, unchanged from R200; this is not a complete source build.
+
+Full R203 private archive delivered in chat: `SpawnPK_v309_R203_FULL_SOURCE_AND_JAVA11_379_PRIVATE.zip`, SHA-256 `6ebb538bd4ba7bc85e708c194ce852fb8cd2e68a8cc99498e0f5e16ca2399953`. It includes all 1,274 candidate Java files, private manifest with exact before/after Class294 SHA hashes, the accepted 379-source path list, and complete full-tree compiler stderr. Do not publish the proprietary Java files in GitHub.
+
+The test and CI should check Java 11 compilation of a **synthetic** three-class mutual dependency and assert the source rewriting rule's exact single owner reference, not claim original JVM parity. Keep PR draft. This is a 3-file incremental compilation acceptance advance with **one provisional Java source change**, not three newly reverse-engineered classes.
