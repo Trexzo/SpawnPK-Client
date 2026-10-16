@@ -97,13 +97,15 @@ class R216InventedPanelSourceProof(unittest.TestCase):
             check=True,timeout=25).stdout
 
     def compare(self,new,**changes):
-        return audit_panel_code(
-            self.original_javap,new,
-            original_title="public void method1592();",
-            readable_title="public void method1592();",
-            aliases={},
-            expected_instructions=len(self.rows),
-            last_offset=self.rows[-1][0],**changes)
+        options={
+            "original_title":"public void method1592();",
+            "readable_title":"public void method1592();",
+            "aliases":{},
+            "expected_instructions":len(self.rows),
+            "last_offset":self.rows[-1][0],
+        }
+        options.update(changes)
+        return audit_panel_code(self.original_javap,new,**options)
 
     def test_original_and_rebuilt_invented_panel_match(self):
         result=self.compare(self.original_javap)
