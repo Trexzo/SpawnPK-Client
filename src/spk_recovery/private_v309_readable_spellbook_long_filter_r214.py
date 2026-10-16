@@ -136,10 +136,11 @@ def file_sha(path):
     return hasher.hexdigest()
 
 
-def extract_actual_donor_method(source, method="method2689"):
+def extract_actual_donor_method(source, method="method2689",
+                                parameter_type="Class178"):
     matches=list(re.finditer(
         r"(?m)^\s*public\s+static\s+void\s+"+re.escape(method)+
-        r"\s*\(Class178\s+var0\)\s*\{",source))
+        r"\s*\("+re.escape(parameter_type)+r"\s+var0\)\s*\{",source))
     need(len(matches)==1,"R214_VERBATIM_DONOR_METHOD_NOT_UNIQUE")
     start=matches[0].start()
     i=source.index("{",start)+1
