@@ -1,0 +1,28 @@
+name: V309 real readable spellbook filter-panel R216
+on:
+  pull_request:
+    paths:
+      - 'src/spk_recovery/private_v309_readable_spellbook_filter_panel_r216.py'
+      - 'tests/test_private_v309_readable_spellbook_filter_panel_r216.py'
+      - '.github/workflows/client-readable-spellbook-filter-panel-r216.yml'
+  workflow_dispatch:
+jobs:
+  real-source-panel:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: python -m pip install -e .
+      - run: python -m unittest discover -s tests -p test_private_v309_readable_spellbook_filter_panel_r216.py -v
+      - run: python -m unittest discover -s tests -p test_private_v309_readable_spellbook_constructor_initializer_r215.py -v
+      - run: python -m compileall -q src/spk_recovery/private_v309_readable_spellbook_filter_panel_r216.py
