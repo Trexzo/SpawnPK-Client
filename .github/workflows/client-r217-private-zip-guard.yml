@@ -1,0 +1,31 @@
+name: Client R217 public ZIP-path guard
+on:
+  push:
+    paths:
+      - 'tools/java/r217/**'
+      - 'tests/test_v309_r217_safe_zip_path.py'
+      - '.github/workflows/client-r217-private-zip-guard.yml'
+  pull_request:
+    paths:
+      - 'tools/java/r217/**'
+      - 'tests/test_v309_r217_safe_zip_path.py'
+      - '.github/workflows/client-r217-private-zip-guard.yml'
+  workflow_dispatch:
+jobs:
+  synthetic-helper-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '11'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile helper and run path escape tests
+        run: python -m unittest discover -s tests -p test_v309_r217_safe_zip_path.py -v
