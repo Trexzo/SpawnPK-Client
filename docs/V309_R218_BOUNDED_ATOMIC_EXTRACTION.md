@@ -1,0 +1,7 @@
+# R218 — bounded, staged asset extraction
+
+Source changes to both real v309 asset ZIP extractors (`rs/cache/updater/AssetUpdater.java`, `rs/cache/updater/assets/CacheUpdater.java`) now use try-with-resources, checked uncompressed byte limits (1 GiB/entry, 4 GiB/archive), 100,000 entry limit, and per-file temporary staging before replacement. The previous canonical path traversal guard is retained. A successful earlier archive member may remain after a later failure: **the entire extraction transaction is not atomic**.
+
+Complete clean `javac --release 11` on 1,275 private Java sources passed with **zero compilation errors**, producing **1,376 production classfiles**. Actual new tests passed for staged replacement, existing-file preservation when traversal is refused, valid nested files, temporary cleanup, both real extraction paths and 100,001-member rejection. Previous path traversal and offline-updater regression checks also passed. UI application checks and virtual-display startup were **not rerun** in R218.
+
+Private complete build ZIP `SpawnPK_v309_R218_BOUNDED_ATOMIC_EXTRACTION_PRIVATE.zip` SHA256 `b19ed29a15609533eb8e1a9ab916a0776e011f6d01db3e5dda0c67d17ae73155`. Source-built JAR SHA256 `26c8190d3caa8a3b731074451f0f2c40cf96a96a99f1eb665304839f6e365bfe`. Contains 1,275-source snapshot, separate non-game v309 binary dependencies, self-contained Windows rebuild, and test evidence. Original v309 rs/game bytecode and font assets not included. Keep PR draft.
