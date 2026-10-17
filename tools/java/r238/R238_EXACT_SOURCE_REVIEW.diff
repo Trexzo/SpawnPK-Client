@@ -1,0 +1,62 @@
+--- R237/src/rs/cache/updater/assets/CacheUpdateTransaction.java
++++ R238/src/rs/cache/updater/assets/CacheUpdateTransaction.java
+@@ -309,6 +309,7 @@
+          // previous/ backup exists on restart, this prevents an unrelated
+          // cache root being mistaken for the interrupted new installation.
+          writeInstallWitness(work, hadOriginal, stagedWitness);
++         verifyWorkspaceLayout(work);
+          writeState(work, root, "STAGED");
+          if (hadOriginal) {
+             writeState(work, root, "MOVING_OLD");
+@@ -426,6 +427,9 @@
+    }
+ 
+    private static void recoverSingle(Path root, Path work) throws IOException {
++      // Recovery must not erase files other processes inserted into the
++      // transaction workspace, even if cache-root content itself is verified.
++      verifyWorkspaceLayout(work);
+       String[] entry = readState(work);
+       if (!sameRoot(entry[1], root)) {
+          throw new IOException("Cache recovery marker points to another root: " + work);
+@@ -943,8 +947,41 @@
+       });
+    }
+ 
++   /**
++    * A transaction owns a fixed set of top-level entries. In particular, it
++    * does NOT own arbitrary files placed alongside the journal by an unrelated
++    * process. If unexpected data appears, retain the entire workspace for
++    * inspection rather than deleting it recursively.
++    *
++    * Journal-writing temporary files left after a sudden process stop also
++    * fail closed; these require manual review rather than being guessed safe.
++    */
++   private static void verifyWorkspaceLayout(Path work) throws IOException {
++      try (DirectoryStream<Path> entries = Files.newDirectoryStream(work)) {
++         for (Path entry : entries) {
++            String name = entry.getFileName().toString();
++            if (name.equals("staged") || name.equals("previous") ||
++                  name.equals("interrupted-new")) {
++               requirePlainDirectory(entry);
++            } else if (name.equals(MARKER) || name.equals(INSTALL_WITNESS) ||
++                  name.equals(ROLLBACK_WITNESS) || name.equals("cache.zip")) {
++               if (!Files.isRegularFile(entry, NOFOLLOW) || Files.isSymbolicLink(entry)) {
++                  throw new IOException("Unsafe cache transaction workspace entry: " + entry);
++               }
++            } else {
++               throw new IOException("Unexpected cache transaction workspace entry; " +
++                  "preserving foreign or incomplete data: " + entry);
++            }
++         }
++      }
++   }
++
+    private static void deleteTreeNoLinks(Path root) throws IOException {
+       if (!Files.exists(root, NOFOLLOW)) return;
++      // All existing call sites only delete cache transaction workspaces.
++      // Check again immediately before any recursive deletion, since files
++      // may have been added after the initial recovery inventory.
++      verifyWorkspaceLayout(root);
+       Files.walkFileTree(root, new SimpleFileVisitor<Path>() {
+          @Override public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                throws IOException {
