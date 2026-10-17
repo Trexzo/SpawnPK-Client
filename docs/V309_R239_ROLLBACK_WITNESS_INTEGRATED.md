@@ -1,0 +1,9 @@
+# R239 — Lane A integration of Lane B cache R231 rollback witness
+
+Read Issue #1117. Exact donor private `SpawnPK_v309_R231_ROLLBACK_WITNESS_PRIVATE.zip` obtained from owner's Library. Applied only `src/rs/cache/updater/assets/CacheUpdateTransaction.java` from Lane B to canonical Lane A R238. Verified preimage SHA256 `8ee21c114b98f7ece960b1347609edd8ffce300614f19d7f3103baaeaa715882` byte-for-byte matched donor backup; verified postimage SHA256 `52f10e3b6cc69955bc5557aafc62af0f65d5558adcdbaf6287ac9d66258f1235`. No other Java modified.
+
+Independently ran real private full `javac --release 11 -proc:none -g:none`: 1,277 Java source files, 1,386 classfiles, exit 0, zero errors. Actual compiled merged-code regressions PASS: R231 rollback witness 14; R230 ancestor collisions 14; R229 root case collisions 9; R227 staged mutation 24; R226 postrename 23; R225 content witness 22; R224 rollback replay 21; R223 recovery inventory 14; R222 recovery isolation 8; R221 crash/locking 10; R220 transaction 8; real CacheUpdater extraction PASS. All twelve test programs compiled separately from production.
+
+Unified private R239 release SHA256 `e20573bb9127e1463765025b272e1c8f6322f2dfbd7c6ea3ab894ea9e4a6f635` ZIP integrity PASS. Complete merged private source ZIP SHA256 `d8e07107cf28f1f2eeb71716b3e270ec9a2daba581ffcb0da1d75c04e066538c`; source-built JAR SHA256 `2fb181152eb9cc2bba38ce2669041fb79edd979635782973197322b9d95870dc`; JAR main class rs.gui.Launcher. Includes full source, JAR, non-game dependencies, exact donor, build/test logs, JSON manifest. No proprietary original fonts/assets bundled.
+
+**Unverified** R239 native GUI on Windows, graphical login on current JAR, completed authentication, and gameplay. Older R235 local challenge success is not replayed here. Keep PR draft and preserve Lane B ownership of cache transaction.
