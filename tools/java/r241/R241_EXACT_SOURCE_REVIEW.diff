@@ -1,0 +1,92 @@
+--- R240/src/rs/cache/updater/assets/CacheUpdateTransaction.java
++++ R241/src/rs/cache/updater/assets/CacheUpdateTransaction.java
+@@ -75,8 +75,14 @@
+    /** Integration hook only for synthetic crash and rollback regression. */
+    static boolean install(File cacheRoot, Downloader downloader, Extractor extractor,
+          SwitchHook afterBackup, SwitchHook afterPromotion) throws IOException {
++      return install(cacheRoot, downloader, extractor, afterBackup, afterPromotion, () -> { });
++   }
++
++   /** Deterministic fault-injection hook for the final cleanup boundary only. */
++   static boolean install(File cacheRoot, Downloader downloader, Extractor extractor,
++         SwitchHook afterBackup, SwitchHook afterPromotion, SwitchHook beforeCleanup) throws IOException {
+       if (cacheRoot == null || downloader == null || extractor == null ||
+-            afterBackup == null || afterPromotion == null) {
++            afterBackup == null || afterPromotion == null || beforeCleanup == null) {
+          throw new IOException("Missing cache update input");
+       }
+       Path root = checkedRoot(cacheRoot);
+@@ -85,7 +91,7 @@
+          // its Windows path identity remained unambiguous while acquiring it.
+          verifyCaseFoldCollision(root, File.separatorChar == '\\');
+          recoverUnderLock(root);
+-         return doInstall(root, downloader, extractor, afterBackup, afterPromotion);
++         return doInstall(root, downloader, extractor, afterBackup, afterPromotion, beforeCleanup);
+       }
+    }
+ 
+@@ -260,17 +266,19 @@
+    }
+ 
+    private static boolean doInstall(Path root, Downloader downloader, Extractor extractor,
+-         SwitchHook afterBackup, SwitchHook afterPromotion) throws IOException {
++         SwitchHook afterBackup, SwitchHook afterPromotion, SwitchHook beforeCleanup) throws IOException {
+       Path work = Files.createTempDirectory(root.getParent(), scopedWorkPrefix(root));
+       Path stage = work.resolve("staged");
+       Path old = work.resolve("previous");
+       Path archive = work.resolve("cache.zip");
+       boolean completed = false;
+       boolean recovered = false;
++      boolean promoted = false;
++      boolean hadOriginal = false;
+       try {
+          writeState(work, root, "PREPARING");
+          Files.createDirectory(stage);
+-         boolean hadOriginal = Files.exists(root, NOFOLLOW);
++         hadOriginal = Files.exists(root, NOFOLLOW);
+          Map<String, byte[]> initial = null;
+          if (hadOriginal) {
+             // Take a content fingerprint of the active files, not timestamps.
+@@ -356,6 +364,7 @@
+          verifyCommittedInstallWitness(work, root);
+          if (hadOriginal) verifyOriginalBeforeCleanup(work, old);
+          completed = true;
++         promoted = true;
+          return true;
+       } catch (IOException | RuntimeException failure) {
+          try {
+@@ -370,14 +379,29 @@
+          // remove the backup or journal; the next invocation will recover it.
+          if (completed || recovered) {
+             try {
+-               // The original copy is still at risk until directory cleanup.
+-               // A late non-cooperating writer must not have that data erased.
+-               if (completed && Files.exists(old, NOFOLLOW) &&
+-                     MAGIC_V3.equals(readState(work)[0])) {
+-                  verifyOriginalBeforeCleanup(work, old);
++               if (promoted) {
++                  // A successful return is NOT safe merely because the live
++                  // root was checked before entering this finally block. An
++                  // external writer can edit it while the previous backup is
++                  // still present. Verify BOTH sides immediately before any
++                  // destructive workspace cleanup, and propagate failures.
++                  beforeCleanup.onSwitch();
++                  verifyWorkspaceLayout(work);
++                  String[] state = readState(work);
++                  if (!MAGIC_V3.equals(state[0]) || !"PROMOTED".equals(state[2])) {
++                     throw new IOException("Committed cache journal changed before cleanup: " + work);
++                  }
++                  if (readInstallWitness(work) == null) {
++                     throw new IOException("Missing committed cache installation witness: " + work);
++                  }
++                  verifyCommittedInstallWitness(work, root);
++                  if (hadOriginal) verifyOriginalBeforeCleanup(work, old);
+                }
+                deleteTreeNoLinks(work);
+             } catch (IOException cleanupError) {
++               if (promoted) throw cleanupError;
++               // Keep an original exception from the update/rollback path as
++               // primary; the surviving journal allows a later recovery.
+                System.err.println("Cache staging cleanup incomplete: " + work + ": " + cleanupError);
+             }
+          }
