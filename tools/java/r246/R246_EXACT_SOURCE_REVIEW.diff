@@ -24,4 +24,4 @@
 +      }
        // PREPARING has no installation witness yet. If the original still
        // exists, staged/ is disposable ONLY while every staged directory and
-       // file is an unchanged subset of that live original.
+       // file is an unchanged subset of that live original. A failed copy,
