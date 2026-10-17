@@ -1,0 +1,58 @@
+--- R232/src/rs/cache/updater/assets/CacheUpdateTransaction.java
++++ R233/src/rs/cache/updater/assets/CacheUpdateTransaction.java
+@@ -338,6 +338,11 @@
+          moveDirectory(stage, root);
+          afterPromotion.onSwitch();
+          writeState(work, root, "PROMOTED");
++         // Commit is not safe to clean up while the promoted cache may have
++         // been changed by a process ignoring our separate transaction lock.
++         // Verify the persisted staged witness before releasing the only
++         // known-good prior copy in previous/.
++         verifyCommittedInstallWitness(work, root);
+          completed = true;
+          return true;
+       } catch (IOException | RuntimeException failure) {
+@@ -485,7 +490,10 @@
+       }
+       if (oldExists) {
+          if (phase.equals("PROMOTED") && activeExists) {
+-            // The journal says installation completed; old is safe to release.
++            // A PROMOTED journal alone does not prove the live cache still
++            // holds the staged bytes. Never delete the previous known-good
++            // cache until the committed contents have been verified.
++            verifyCommittedInstallWitness(work, root);
+            deleteTreeNoLinks(work);
+            return;
+         }
+@@ -523,6 +531,9 @@
+       }
+       if (activeExists) {
+         if (phase.equals("PROMOTED")) {
++            // Also retain the journal for initial installs or externally
++            // missing backups when the promoted contents have been changed.
++            verifyCommittedInstallWitness(work, root);
+            deleteTreeNoLinks(work);
+            return;
+         }
+@@ -631,6 +642,21 @@
+       }
+       if (!witness[2].equals(snapshotFingerprint(candidate))) {
+         throw new IOException("Uncommitted cache does not match persisted installation witness: " + work);
++      }
++   }
++
++   /**
++    * A committed install has no authority to discard a preexisting backup
++    * solely from the PROMOTED journal state. For v232+ transactions we have
++    * a staged digest and can prove the live tree still matches those bytes.
++    * Pre-v232 workspaces remain readable, but are explicitly witnessless.
++    */
++   private static void verifyCommittedInstallWitness(Path work, Path root) throws IOException {
++      String[] witness = readInstallWitness(work);
++      if (witness == null) return; // compatibility only for earlier journals
++      if (!witness[2].equals(snapshotFingerprint(root))) {
++         throw new IOException("Promoted cache differs from persisted installation witness; " +
++            "preserving previous cache and recovery journal: " + work);
+       }
+    }
+ 
