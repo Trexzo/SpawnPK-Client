@@ -24,7 +24,7 @@ This closes the demonstrated *verification gap*; it does not establish a race-fr
 
 ## Verified deterministic private handoff
 
-- Complete private bundle: `SpawnPK_v309_R241_FINAL_CLEANUP_PROVENANCE_PRIVATE.zip` SHA256 **`d89d222ed01913eab8510ae83fd7969cf75332c28d2c9c106197d1fd140fb054`**, 22,504,184 bytes.
+- Complete private bundle: `SpawnPK_v309_R241_FINAL_CLEANUP_PROVENANCE_PRIVATE.zip` SHA256 **`16076c488431dfa83ff0e93266362faf2e234b82d02d2e92dd06587f94ae5261`**, 22,543,415 bytes.
 - Internal changed-only `R241_CHANGED_ONLY.zip` SHA256 `c08f50dbf82817cbd10f81f3e5bf06330e02a87400b30ba6fbce27c4125d0297`.
 - Private complete source ZIP SHA256 `76b456ab29fd1e3484879aded09018aa6d605c6c553945188fe39682d1c3fbb8`.
 - Java11-target compiled class-only JAR SHA256 `81ffbd321e51f28eec61296ddc4e2cdb5a13b4b2d8341bd42be2e352cd426f7c`.
@@ -35,3 +35,16 @@ This closes the demonstrated *verification gap*; it does not establish a race-fr
 Last confirmed canonical Chat A title is R242 with cache R234; newer world-protocol research in the same PR does not itself prove cache R241 integration. Read the **actual helper SHA** first. If still R234, apply cache **R235 → R236 → R237 → R238 → R239 → R240 → R241** sequentially, verifying each source preimage and rebuilding the **canonical** 1,277-file client at each stage. **Only** overwrite `CacheUpdateTransaction.java`; never replace Chat A's CacheUpdater, downloader, Java GUI, asset recovery, launcher or networking with the donor source tree.
 
 Native Windows private game testing, authenticated gameplay, real hardware power cut, malicious witness/journal alteration and arbitrary outside post-hash writes remain unresolved. **Keep draft; no merge to main.**
+
+## Verified one-step R234 → R241 canonical integration option
+
+Chat A's PR #1084 currently titles its most recent accepted **cache helper R234** even though its protocol/world testing has progressed beyond R254. To avoid burdening Chat A with seven separate helper-only merges, the private full ZIP now also includes **`R241_R234_TO_R241_CUMULATIVE.zip`** and **`R241_Apply_R234_CumulativeOverlay.ps1`**.
+
+I independently hashed **all 1,277 Java sources in each of eight actual complete donor snapshots R234, R235, R236, R237, R238, R239, R240, R241**: the exact same **1,276 other Java source files** persist throughout. The helper preimage `bc08aff2ddd3948f5ea8c248100234a39ee03cafd66b24e27b48c85e91aa2cad` can therefore be replaced **directly** with final R241 postimage `e1071509d9ac3044cb939ee9504ee057214a5e5ccb8cfff8457ea6c4d29fa3fc`, changing only the one helper source. The cumulative script refuses any unknown source hash, creates a verified timestamped backup, checks the replacement digest, and rolls back on error. It never overwrites Chat A's 1,276 other sources, GUI, downloader, cache extractor or launcher.
+
+- Cumulative nested overlay ZIP SHA256: `dff961dc5e819850d3d83142e2c8962f6f0a0a54b360683b2bad88c525b7f450`.
+- Earlier incremental R240→R241 changed-only ZIP SHA256 is unchanged: `c08f50dbf82817cbd10f81f3e5bf06330e02a87400b30ba6fbce27c4125d0297`.
+- Full private combined bundle SHA256 after adding this option: **`16076c488431dfa83ff0e93266362faf2e234b82d02d2e92dd06587f94ae5261`**.
+- Both package builds deterministic, ZIP CRC and nested source/compiled JAR/dependency checks pass.
+- **IMPORTANT**: Direct overlay is valid only when the actual Chat A `CacheUpdateTransaction.java` SHA is exactly the R234 preimage. If it has changed, refuse/stop and reconcile. After applying, Chat A must independently recompile the complete canonical 1,277-source tree, run merged cache regressions, and replay its own GUI and localhost login tests. Private donor compilation does not prove merged R254 runtime acceptance.
+
