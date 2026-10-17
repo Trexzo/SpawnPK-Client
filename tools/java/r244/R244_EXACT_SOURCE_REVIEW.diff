@@ -1,0 +1,65 @@
+--- R243/src/rs/cache/updater/assets/CacheUpdateTransaction.java
++++ R244/src/rs/cache/updater/assets/CacheUpdateTransaction.java
+@@ -368,7 +368,11 @@
+          return true;
+       } catch (IOException | RuntimeException failure) {
+          try {
+-            recoverSingle(root, work);
++            // We own this staging tree during this very invocation. A failed
++            // download/extraction may intentionally leave partial bytes that
++            // are safe to clean before the process exits; restart recovery
++            // cannot assume that ownership and uses the stricter witness rule.
++            recoverSingle(root, work, true);
+             recovered = true;
+          } catch (IOException recoveryError) {
+             failure.addSuppressed(recoveryError);
+@@ -466,6 +470,11 @@
+    }
+ 
+    private static void recoverSingle(Path root, Path work) throws IOException {
++      recoverSingle(root, work, false);
++   }
++
++   private static void recoverSingle(Path root, Path work, boolean currentInvocation)
++         throws IOException {
+       // Recovery must not erase files other processes inserted into the
+       // transaction workspace, even if cache-root content itself is verified.
+       verifyWorkspaceLayout(work);
+@@ -503,6 +512,16 @@
+       if (activeExists) requirePlainDirectory(root);
+       if (stageExists) requirePlainDirectory(stage);
+       boolean abandonedExists = Files.exists(abandoned, NOFOLLOW);
++      // PREPARING has no installation witness yet. If the original still
++      // exists, staged/ is disposable ONLY while every staged directory and
++      // file is an unchanged subset of that live original. A failed copy,
++      // extracted file or foreign rewrite cannot be attributed to the updater
++      // and must survive for manual inspection instead of recursive deletion.
++      // Restrict this new contract to V3 to preserve historical V1/V2 replay.
++      if (!currentInvocation && MAGIC_V3.equals(entry[0]) && phase.equals("PREPARING") &&
++            stageExists && activeExists && !oldExists) {
++         verifyPreparingStageOwnership(root, stage, work);
++      }
+       // R243: PREPARING and STAGED precede moving the original to previous/.
+       // If both the live original and backup have disappeared, staged/ may be
+       // the ONLY surviving copy of the original (the updater initially copied
+@@ -730,6 +749,20 @@
+          return;
+       }
+       throw new IOException("No active cache or backup; refusing recovery cleanup: " + work);
++   }
++
++   /** Fail closed if a PREPARING stage is no longer a byte-identical subset. */
++   private static void verifyPreparingStageOwnership(Path original, Path stage, Path work)
++         throws IOException {
++      Map<String, byte[]> live = snapshotTreeNoLinks(original);
++      Map<String, byte[]> staged = snapshotTreeNoLinks(stage);
++      for (Map.Entry<String, byte[]> entry : staged.entrySet()) {
++         byte[] observed = live.get(entry.getKey());
++         if (observed == null || !Arrays.equals(entry.getValue(), observed)) {
++            throw new IOException("Unattributed PREPARING stage content; preserving stage and journal: " +
++               work + " at " + entry.getKey());
++         }
++      }
+    }
+ 
+    /** Deterministic digest of relative names, directories and actual file SHA-256. */
