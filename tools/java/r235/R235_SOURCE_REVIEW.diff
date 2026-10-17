@@ -1,0 +1,39 @@
+--- R234/src/rs/cache/updater/assets/CacheUpdateTransaction.java
++++ R235/src/rs/cache/updater/assets/CacheUpdateTransaction.java
+@@ -435,9 +435,20 @@
+       // installation witness is durably written. Every later phase in V2
+       // REQUIRES that marker. A missing witness is not a legacy journal.
+       // Check before any rollback, quarantine, promotion or cleanup.
+-      if (MAGIC_V2.equals(entry[0]) && !phase.equals("PREPARING") &&
+-            readInstallWitness(work) == null) {
+-         throw new IOException("Missing required V2 cache installation witness: " + work);
++      if (MAGIC_V2.equals(entry[0])) {
++         if (!phase.equals("PREPARING") && readInstallWitness(work) == null) {
++            throw new IOException("Missing required V2 cache installation witness: " + work);
++         }
++         // R235: New rollback journals MUST carry a durable fingerprint of
++         // the original cache. Losing that marker can otherwise make
++         // ROLLBACK_PREPARED/RESTORED look like legacy witnessless recovery
++         // and delete the sole evidence of an unrelated replacement.
++         if (phase.equals("ROLLBACK_PREPARED") || phase.equals("ROLLBACK_RESTORED")) {
++            Path witness = work.resolve(ROLLBACK_WITNESS);
++            if (!Files.isRegularFile(witness, NOFOLLOW)) {
++               throw new IOException("Missing required V2 original-cache rollback witness: " + work);
++            }
++         }
+       }
+       Path old = work.resolve("previous");
+       Path stage = work.resolve("staged");
+@@ -500,6 +511,12 @@
+          throw new IOException("Recovery has an unresolved interrupted-new directory: " + work);
+       }
+       if (oldExists) {
++         // An interrupted ROLLBACK_PREPARED may still hold previous/. Validate
++         // the already-persisted V2 original fingerprint BEFORE relocating it.
++         // Older V1 journals continue through their legacy recovery path.
++         if (MAGIC_V2.equals(entry[0]) && phase.equals("ROLLBACK_PREPARED")) {
++            verifyRollbackWitness(work, old);
++         }
+          if (phase.equals("PROMOTED") && activeExists) {
+             // A PROMOTED journal alone does not prove the live cache still
+             // holds the staged bytes. Never delete the previous known-good
