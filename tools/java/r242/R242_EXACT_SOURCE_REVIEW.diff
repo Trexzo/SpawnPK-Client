@@ -1,0 +1,25 @@
+--- R241/src/rs/cache/updater/assets/CacheUpdateTransaction.java
++++ R242/src/rs/cache/updater/assets/CacheUpdateTransaction.java
+@@ -521,6 +521,22 @@
+             throw new IOException("Unexpected staged cache in committed transaction: " + work);
+          }
+       }
++      // Once a witnessed update enters PROMOTING, an original cache that
++      // existed at the start MUST be preserved in previous/ until explicit
++      // successful cleanup. If previous/ disappears and the live directory is
++      // missing (or contains only the newly promoted bytes), we cannot prove
++      // whether the original was restored, deleted, or moved externally.
++      // Refuse cleanup instead of treating the transaction as a first install.
++      // This also covers a PROMOTED journal left by interrupted cleanup; such
++      // a state requires inspection because original-backup evidence is gone.
++      if (!oldExists && isWitnessedJournal(entry[0]) &&
++            (phase.equals("PROMOTING") || phase.equals("PROMOTED"))) {
++         String[] originProof = readInstallWitness(work);
++         if (originProof != null && "HAD_ORIGINAL".equals(originProof[1])) {
++            throw new IOException("Original cache backup is missing from witnessed " +
++               "transaction; preserving cache and recovery journal: " + work);
++         }
++      }
+       // The staged installation is also data that recovery may erase. Its
+       // content is not covered by the rollback/original-cache fingerprint.
+       // From STAGED onwards V2/V3 transactions have an authenticated stage
