@@ -31,3 +31,6 @@ R231 writes `.rollback-witness` containing a deterministic SHA-256 digest of the
 ## Limits
 
 The new fingerprint is content-based, not a cryptographic authentication token against a malicious actor who can edit the witness itself. Legacy pending journals with no witness retain prior compatibility behavior. Durability across hardware power loss, directory fsync and races after the final fingerprint check remain unproven. Keep draft.
+## Pending successor: R232 first-install witness
+
+The separate private R232 candidate protects no-original-cache recovery using a staged-content SHA-256 witness. It is not yet part of this public source branch. Private full-source build verified 1,277 Java/1,388 classfiles and 19 offline regression programs; native Windows game acceptance is still pending. Coordination details: issue #1117.
