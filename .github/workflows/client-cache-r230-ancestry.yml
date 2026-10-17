@@ -3,12 +3,16 @@ on:
   push:
     paths:
       - 'tools/java/r230/**'
+      - 'tools/java/r231/**'
       - 'tests/java/r230/**'
+      - 'tests/java/r231/**'
       - '.github/workflows/client-cache-r230-ancestry.yml'
   pull_request:
     paths:
       - 'tools/java/r230/**'
+      - 'tools/java/r231/**'
       - 'tests/java/r230/**'
+      - 'tests/java/r231/**'
       - '.github/workflows/client-cache-r230-ancestry.yml'
   workflow_dispatch:
 jobs:
@@ -33,4 +37,13 @@ jobs:
           java -cp r230-bin rs.cache.updater.assets.R230AncestorCollisionSmoke
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           java -cp r230-bin rs.cache.updater.assets.R228_WindowsCaseAliasRegression
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify R231 backup-witness recovery on Java11
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path r231-bin -Force | Out-Null
+          javac --release 11 -d r231-bin tools/java/r231/CacheUpdateTransaction.java tests/java/r231/R231RollbackWitnessSmoke.java
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          java -cp r231-bin rs.cache.updater.assets.R231RollbackWitnessSmoke
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
