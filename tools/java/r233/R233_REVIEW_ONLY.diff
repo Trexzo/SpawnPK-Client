@@ -21,23 +21,23 @@
 +            // holds the staged bytes. Never delete the previous known-good
 +            // cache until the committed contents have been verified.
 +            verifyCommittedInstallWitness(work, root);
-            deleteTreeNoLinks(work);
-            return;
-         }
+             deleteTreeNoLinks(work);
+             return;
+          }
 @@ -523,6 +531,9 @@
        }
        if (activeExists) {
-         if (phase.equals("PROMOTED")) {
+          if (phase.equals("PROMOTED")) {
 +            // Also retain the journal for initial installs or externally
 +            // missing backups when the promoted contents have been changed.
 +            verifyCommittedInstallWitness(work, root);
-            deleteTreeNoLinks(work);
-            return;
-         }
+             deleteTreeNoLinks(work);
+             return;
+          }
 @@ -631,6 +642,21 @@
        }
        if (!witness[2].equals(snapshotFingerprint(candidate))) {
-         throw new IOException("Uncommitted cache does not match persisted installation witness: " + work);
+          throw new IOException("Uncommitted cache does not match persisted installation witness: " + work);
 +      }
 +   }
 +
