@@ -1,0 +1,51 @@
+--- a/CacheUpdateTransaction.java
++++ b/CacheUpdateTransaction.java
+@@ -41,6 +41,9 @@
+    private static final String INSTALL_WITNESS_MAGIC = "SPK-CACHE-INSTALL-WITNESS-V1";
+    private static final String WITNESS_MAGIC = "SPK-CACHE-ROLLBACK-WITNESS-V1";
+    private static final String MAGIC = "SPK-CACHE-TRANSACTION-V1";
++   // All new transactions use V2 so removal of required witness metadata
++   // cannot silently downgrade them to legacy (pre-R232) recovery behavior.
++   private static final String MAGIC_V2 = "SPK-CACHE-TRANSACTION-V2";
+    private static final LinkOption NOFOLLOW = LinkOption.NOFOLLOW_LINKS;
+ 
+    private CacheUpdateTransaction() { }
+@@ -428,6 +431,14 @@
+          throw new IOException("Cache recovery marker points to another root: " + work);
+       }
+       String phase = entry[2];
++      // PREPARING is the only new-journal phase entered before the staged
++      // installation witness is durably written. Every later phase in V2
++      // REQUIRES that marker. A missing witness is not a legacy journal.
++      // Check before any rollback, quarantine, promotion or cleanup.
++      if (MAGIC_V2.equals(entry[0]) && !phase.equals("PREPARING") &&
++            readInstallWitness(work) == null) {
++         throw new IOException("Missing required V2 cache installation witness: " + work);
++      }
+       Path old = work.resolve("previous");
+       Path stage = work.resolve("staged");
+       Path abandoned = work.resolve("interrupted-new");
+@@ -701,7 +712,7 @@
+          throw new IOException("Invalid cache recovery marker: " + marker);
+       }
+       String[] lines = Files.readString(marker, StandardCharsets.UTF_8).split("\n", -1);
+-      if (lines.length != 4 || !lines[0].equals(MAGIC) ||
++      if (lines.length != 4 || !(lines[0].equals(MAGIC) || lines[0].equals(MAGIC_V2)) ||
+             lines[1].isEmpty() || !lines[3].isEmpty() ||
+             !(lines[2].equals("PREPARING") || lines[2].equals("STAGED") ||
+                lines[2].equals("MOVING_OLD") || lines[2].equals("OLD_MOVED") ||
+@@ -714,9 +725,13 @@
+    }
+ 
+    private static void writeState(Path work, Path root, String phase) throws IOException {
++      // New workspaces start at V2; an old interrupted V1 journal must stay V1
++      // throughout rollback so it never acquires a required witness retroactively.
++      Path marker = work.resolve(MARKER);
++      String version = Files.exists(marker, NOFOLLOW) ? readState(work)[0] : MAGIC_V2;
+       Path temporary = Files.createTempFile(work, ".journal-", ".tmp");
+       try {
+-         byte[] bytes = (MAGIC + "\n" + root + "\n" + phase + "\n")
++         byte[] bytes = (version + "\n" + root + "\n" + phase + "\n")
+             .getBytes(StandardCharsets.UTF_8);
+          try (FileChannel channel = FileChannel.open(temporary, StandardOpenOption.WRITE)) {
+             ByteBuffer buffer = ByteBuffer.wrap(bytes);
