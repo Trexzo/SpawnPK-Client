@@ -1,0 +1,9 @@
+# R262 — full-scene readiness snapshots from real client
+
+On October 17, 2026, compiled an isolated diagnostic-only `rs/Client.java` overlay from canonical R256 source with `javac --release 11` (PASS). Preserved production client. Replayed the known localhost ISAAC test with identity 249, normal region 73 chunk coords 400,400, and minimal player update 81, using authentic archived assets in a disposable Linux/Xvfb client home.
+
+**New evidence: each R262_SCENE record is a complete single `tryEnableDetailedGraphics()` object-readiness pass.** It reports each of four region offsets, blocked count and the separate transition flag instead of merging sampled calls or accumulated model IDs.
+
+In the final replay, 19 complete passes were logged. **13/19** had all four regions ready, and passes **13, 15, 19** had all four ready **and** `field869=false`. The last observed pass was attempt 19, with 4/4 ready and transition false. This directly establishes that the previously observed -3 object readiness blocker **can clear** in real runtime. It does **not** establish model permanence or stable terrain: some intervening passes reverted to 4/4 blocked. The reported `graphics=1` is sampled **before** scene promotion in the method, not after. A subsequent stable screenshot, outbound map-ready 121, and post-initialization scene evidence are still required.
+
+No new object-ID-to-model-ID mapping claimed; next focus should be why readiness oscillates and whether the source-built client reaches `graphicsMode=2` during a sustained connection. No native Windows proof, game-world interaction or original-code parity claim. Private R262 evidence ZIP SHA256 `85f92d66afde736152d8f03b0e272c4ba0da511d9c6fd7a4688dfc25bf49cbe6`, includes overlay, actual logs, reproduction script, per-attempt report and compile evidence. Keep #1084 draft.
