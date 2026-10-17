@@ -1,0 +1,132 @@
+--- R238/src/rs/cache/updater/assets/CacheUpdateTransaction.java
++++ R239/src/rs/cache/updater/assets/CacheUpdateTransaction.java
+@@ -44,6 +44,9 @@
+    // All new transactions use V2 so removal of required witness metadata
+    // cannot silently downgrade them to legacy (pre-R232) recovery behavior.
+    private static final String MAGIC_V2 = "SPK-CACHE-TRANSACTION-V2";
++   // V3 additionally authenticates the original backup before it can be
++   // removed after promotion. V1/V2 pending workspaces stay readable.
++   private static final String MAGIC_V3 = "SPK-CACHE-TRANSACTION-V3";
+    private static final LinkOption NOFOLLOW = LinkOption.NOFOLLOW_LINKS;
+ 
+    private CacheUpdateTransaction() { }
+@@ -312,6 +315,10 @@
+          verifyWorkspaceLayout(work);
+          writeState(work, root, "STAGED");
+          if (hadOriginal) {
++            // Durably pin the old cache BEFORE relocating it. A successful
++            // promotion must not erase previous/ if an outside writer has
++            // changed those bytes through an open handle since the rename.
++            writeRollbackWitness(work, root);
+             writeState(work, root, "MOVING_OLD");
+             moveDirectory(root, old);
+             writeState(work, root, "OLD_MOVED");
+@@ -347,6 +354,7 @@
+          // Verify the persisted staged witness before releasing the only
+          // known-good prior copy in previous/.
+          verifyCommittedInstallWitness(work, root);
++         if (hadOriginal) verifyOriginalBeforeCleanup(work, old);
+          completed = true;
+          return true;
+       } catch (IOException | RuntimeException failure) {
+@@ -361,8 +369,15 @@
+          // Uncaught Errors simulate sudden JVM/process death in tests. Do not
+          // remove the backup or journal; the next invocation will recover it.
+          if (completed || recovered) {
+-            try { deleteTreeNoLinks(work); }
+-            catch (IOException cleanupError) {
++            try {
++               // The original copy is still at risk until directory cleanup.
++               // A late non-cooperating writer must not have that data erased.
++               if (completed && Files.exists(old, NOFOLLOW) &&
++                     MAGIC_V3.equals(readState(work)[0])) {
++                  verifyOriginalBeforeCleanup(work, old);
++               }
++               deleteTreeNoLinks(work);
++            } catch (IOException cleanupError) {
+                System.err.println("Cache staging cleanup incomplete: " + work + ": " + cleanupError);
+             }
+          }
+@@ -439,7 +454,7 @@
+       // installation witness is durably written. Every later phase in V2
+       // REQUIRES that marker. A missing witness is not a legacy journal.
+       // Check before any rollback, quarantine, promotion or cleanup.
+-      if (MAGIC_V2.equals(entry[0])) {
++      if (isWitnessedJournal(entry[0])) {
+          if (!phase.equals("PREPARING") && readInstallWitness(work) == null) {
+             throw new IOException("Missing required V2 cache installation witness: " + work);
+          }
+@@ -468,7 +483,7 @@
+       // A backup directory cannot legitimately survive a first installation,
+       // and a rollback of an original root cannot have NO_ORIGINAL provenance.
+       // Check these invariants BEFORE accepting PROMOTED or rolling back.
+-      if (MAGIC_V2.equals(entry[0])) {
++      if (isWitnessedJournal(entry[0])) {
+          String[] provenance = readInstallWitness(work);
+          if ((oldExists || phase.equals("ROLLBACK_PREPARED") ||
+                phase.equals("ROLLBACK_RESTORED")) &&
+@@ -541,6 +556,11 @@
+          throw new IOException("Recovery has an unresolved interrupted-new directory: " + work);
+       }
+       if (oldExists) {
++         // V3 binds every known-good previous/ backup to an immutable content
++         // witness written BEFORE moving the old live root. This includes a
++         // PROMOTED journal; successful cleanup may not destroy a changed
++         // backup even when the promoted root itself is still identical.
++         if (MAGIC_V3.equals(entry[0])) verifyOriginalBeforeCleanup(work, old);
+          // Before the old backup is restored or any quarantine is deleted,
+          // authenticate the disposable replacement (or existing quarantine)
+          // against the staged install fingerprint. Otherwise unrelated cache
+@@ -553,7 +573,7 @@
+          // An interrupted ROLLBACK_PREPARED may still hold previous/. Validate
+          // the already-persisted V2 original fingerprint BEFORE relocating it.
+          // Older V1 journals continue through their legacy recovery path.
+-         if (MAGIC_V2.equals(entry[0]) && phase.equals("ROLLBACK_PREPARED")) {
++         if (isWitnessedJournal(entry[0]) && phase.equals("ROLLBACK_PREPARED")) {
+             verifyRollbackWitness(work, old);
+          }
+          if (phase.equals("PROMOTED") && activeExists) {
+@@ -746,6 +766,24 @@
+       }
+    }
+ 
++   private static boolean isWitnessedJournal(String version) {
++      return MAGIC_V2.equals(version) || MAGIC_V3.equals(version);
++   }
++
++   /**
++    * V3 original-cache proof is different from a staged install fingerprint:
++    * even a valid newly promoted root MUST NOT justify deletion of an
++    * externally modified previous/ backup. Fail closed if the durable witness
++    * is missing or the old bytes have changed since it was the live cache.
++    */
++   private static void verifyOriginalBeforeCleanup(Path work, Path old) throws IOException {
++      Path witness = work.resolve(ROLLBACK_WITNESS);
++      if (!Files.isRegularFile(witness, NOFOLLOW) || Files.isSymbolicLink(witness)) {
++         throw new IOException("Missing V3 original-cache witness; preserving previous backup: " + work);
++      }
++      verifyRollbackWitness(work, old);
++   }
++
+    private static void writeRollbackWitness(Path work, Path original) throws IOException {
+       Path marker = work.resolve(ROLLBACK_WITNESS);
+       if (Files.exists(marker, NOFOLLOW)) {
+@@ -787,7 +825,8 @@
+          throw new IOException("Invalid cache recovery marker: " + marker);
+       }
+       String[] lines = Files.readString(marker, StandardCharsets.UTF_8).split("\\n", -1);
+-      if (lines.length != 4 || !(lines[0].equals(MAGIC) || lines[0].equals(MAGIC_V2)) ||
++      if (lines.length != 4 || !(lines[0].equals(MAGIC) ||
++            lines[0].equals(MAGIC_V2) || lines[0].equals(MAGIC_V3)) ||
+             lines[1].isEmpty() || !lines[3].isEmpty() ||
+             !(lines[2].equals("PREPARING") || lines[2].equals("STAGED") ||
+                lines[2].equals("MOVING_OLD") || lines[2].equals("OLD_MOVED") ||
+@@ -803,7 +842,7 @@
+       // New workspaces start at V2; an old interrupted V1 journal must stay V1
+       // throughout rollback so it never acquires a required witness retroactively.
+       Path marker = work.resolve(MARKER);
+-      String version = Files.exists(marker, NOFOLLOW) ? readState(work)[0] : MAGIC_V2;
++      String version = Files.exists(marker, NOFOLLOW) ? readState(work)[0] : MAGIC_V3;
+       Path temporary = Files.createTempFile(work, ".journal-", ".tmp");
+       try {
+          byte[] bytes = (version + "\n" + root + "\n" + phase + "\n")
