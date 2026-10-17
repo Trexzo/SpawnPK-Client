@@ -1,1 +1,27 @@
-R236 review diff: full private artifact SHA256 374ea0ef81da56fa82b6eb9f247e53bb08ff8ccb2133c533d8a4f6bad91b8ad0
+--- R235/src/rs/cache/updater/assets/CacheUpdateTransaction.java
++++ R236/src/rs/cache/updater/assets/CacheUpdateTransaction.java
+@@ -460,6 +460,24 @@
+       if (activeExists) requirePlainDirectory(root);
+       if (stageExists) requirePlainDirectory(stage);
+       boolean abandonedExists = Files.exists(abandoned, NOFOLLOW);
++      // A V2 installation witness records whether a previous root existed.
++      // A backup directory cannot legitimately survive a first installation,
++      // and a rollback of an original root cannot have NO_ORIGINAL provenance.
++      // Check these invariants BEFORE accepting PROMOTED or rolling back.
++      if (MAGIC_V2.equals(entry[0])) {
++         String[] provenance = readInstallWitness(work);
++         if ((oldExists || phase.equals("ROLLBACK_PREPARED") ||
++               phase.equals("ROLLBACK_RESTORED")) &&
++               (provenance == null || !"HAD_ORIGINAL".equals(provenance[1]))) {
++            throw new IOException("V2 cache origin conflicts with original backup or rollback: " + work);
++         }
++         // A committed promotion has consumed staged/ by directory rename.
++         // Any replacement staged/ is unexpected and must not be deleted
++         // along with the previous known-good cache during cleanup.
++         if (phase.equals("PROMOTED") && stageExists) {
++            throw new IOException("Unexpected staged cache in committed transaction: " + work);
++         }
++      }
+       // Rollback is a separate journalled transaction. Without these phases,
+       // a crash AFTER old was restored but BEFORE work cleanup would leave a
+       // PROMOTING marker and risk deleting the restored original on restart.
