@@ -1,0 +1,27 @@
+--- R245/src/rs/cache/updater/assets/CacheUpdateTransaction.java
++++ R246/src/rs/cache/updater/assets/CacheUpdateTransaction.java
+@@ -524,6 +524,24 @@
+          }
+          verifyOriginalBeforeCleanup(work, root);
+       }
++      // A crash can occur AFTER the stage installation witness has been
++      // persisted but BEFORE PREPARING advances to STAGED. Unlike truly
++      // witnessless PREPARING, that durable marker describes the original
++      // presence and exact staged bytes. Never discard it on contradictory
++      // origin, missing stage, or modified stage content. This closes the
++      // empty-stage case where no backup survives but HAD_ORIGINAL was saved.
++      if (!currentInvocation && isWitnessedJournal(entry[0]) &&
++            phase.equals("PREPARING")) {
++         String[] preparingWitness = readInstallWitness(work);
++         if (preparingWitness != null) {
++            if (!stageExists || oldExists ||
++                  ("HAD_ORIGINAL".equals(preparingWitness[1]) != activeExists) ||
++                  !preparingWitness[2].equals(snapshotFingerprint(stage))) {
++               throw new IOException("PREPARING cache conflicts with persisted install " +
++                  "witness; preserving stage and journal: " + work);
++            }
++         }
++      }
+       // PREPARING has no installation witness yet. If the original still
+       // exists, staged/ is disposable ONLY while every staged directory and
+       // file is an unchanged subset of that live original.
