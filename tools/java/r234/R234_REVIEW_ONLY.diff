@@ -46,6 +46,6 @@
        try {
 -         byte[] bytes = (MAGIC + "\n" + root + "\n" + phase + "\n")
 +         byte[] bytes = (version + "\n" + root + "\n" + phase + "\n")
-            .getBytes(StandardCharsets.UTF_8);
+             .getBytes(StandardCharsets.UTF_8);
           try (FileChannel channel = FileChannel.open(temporary, StandardOpenOption.WRITE)) {
              ByteBuffer buffer = ByteBuffer.wrap(bytes);
