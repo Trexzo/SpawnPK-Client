@@ -1,0 +1,22 @@
+--- R239/src/rs/cache/updater/assets/CacheUpdateTransaction.java
++++ R240/src/rs/cache/updater/assets/CacheUpdateTransaction.java
+@@ -497,6 +497,19 @@
+             throw new IOException("Unexpected staged cache in committed transaction: " + work);
+          }
+       }
++      // The staged installation is also data that recovery may erase. Its
++      // content is not covered by the rollback/original-cache fingerprint.
++      // From STAGED onwards V2/V3 transactions have an authenticated stage
++      // snapshot: refuse to discard new/foreign content without matching it.
++      // PREPARING has not yet recorded a stage witness and remains legacy.
++      if (stageExists && isWitnessedJournal(entry[0]) && !phase.equals("PREPARING")) {
++         String[] stagedProof = readInstallWitness(work);
++         if (stagedProof == null ||
++               !stagedProof[2].equals(snapshotFingerprint(stage))) {
++            throw new IOException("Staged cache differs from persisted install witness; " +
++               "preserving staged files and recovery journal: " + work);
++         }
++      }
+       // Rollback is a separate journalled transaction. Without these phases,
+       // a crash AFTER old was restored but BEFORE work cleanup would leave a
+       // PROMOTING marker and risk deleting the restored original on restart.
