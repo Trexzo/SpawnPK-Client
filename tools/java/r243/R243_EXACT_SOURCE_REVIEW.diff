@@ -1,0 +1,32 @@
+--- R242/src/rs/cache/updater/assets/CacheUpdateTransaction.java
++++ R243/src/rs/cache/updater/assets/CacheUpdateTransaction.java
+@@ -503,6 +503,29 @@
+       if (activeExists) requirePlainDirectory(root);
+       if (stageExists) requirePlainDirectory(stage);
+       boolean abandonedExists = Files.exists(abandoned, NOFOLLOW);
++      // R243: PREPARING and STAGED precede moving the original to previous/.
++      // If both the live original and backup have disappeared, staged/ may be
++      // the ONLY surviving copy of the original (the updater initially copied
++      // its files there). A PREPARING journal has no durable origin witness;
++      // STAGED journals from V1 also have no origin information. Fail closed
++      // before recursively deleting a nonempty, unattributed staged copy.
++      if (!activeExists && !oldExists && stageExists &&
++            (phase.equals("PREPARING") || phase.equals("STAGED"))) {
++         boolean nonempty;
++         try (DirectoryStream<Path> contents = Files.newDirectoryStream(stage)) {
++            nonempty = contents.iterator().hasNext();
++         }
++         if (phase.equals("PREPARING") && nonempty) {
++            throw new IOException("PREPARING cache has no original or backup; preserving staged files: " + work);
++         }
++         if (phase.equals("STAGED")) {
++            String[] origin = isWitnessedJournal(entry[0]) ? readInstallWitness(work) : null;
++            if ((origin == null && nonempty) ||
++                  (origin != null && "HAD_ORIGINAL".equals(origin[1]))) {
++               throw new IOException("Original cache missing before backup move; preserving staged files: " + work);
++            }
++         }
++      }
+       // A V2 installation witness records whether a previous root existed.
+       // A backup directory cannot legitimately survive a first installation,
+       // and a rollback of an original root cannot have NO_ORIGINAL provenance.
