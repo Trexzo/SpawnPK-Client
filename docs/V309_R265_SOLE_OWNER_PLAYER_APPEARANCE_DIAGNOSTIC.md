@@ -29,7 +29,7 @@ The new standalone Java test exercises the **real rebuilt Packet bit-reader** wi
 
 `SpawnPK_v309_R265_UNIFIED_CACHE_R246_PLAYER_APPEARANCE_DIAGNOSTIC_PRIVATE.zip`
 
-SHA256 **67273073b7e718a9eab5db44d19c6e8facf820c160a73053bcc6247418be22f3**; 25,127,406 bytes, 1,289 ZIP entries. Two deterministic builds yielded identical bytes, ZIP CRC passed.
+SHA256 **9579556ab5b941bb2697955e56cf4b9d43b68787a652c580a702228554b28dbb**; 25,129,777 bytes, 1,291 ZIP entries. Two deterministic builds yielded identical bytes, ZIP CRC passed.
 
 Inside: complete unified 1,277-source production tree, Java11 rebuilt JAR SHA256 **dc42ce52380d51bbc6162589d66e7226e5c86541ab84869f710b38ceffd7a503**; separate diagnostic-only rebuilt JAR SHA256 **ece94b2f5a49e8d2a07dcbe97c0456caa9618f801c77ae929a1a99a7e5b2a59a**, standalone test, source manifest, compile logs and evidence. Diagnostic `Client.java` SHA256 **01e0acd8fa79617cd31e84d39260d073aae3be18909041cef88227d7d1760870**; canonical `Client.java` SHA256 **13a7c5a386112c9ca122fd8557dfca0a77e024de8e29a203d205528b1e88fc9d**. Diagnostic logs are inserted before and after self player mask handling and after overall 81 parsing, not production changes.
 
@@ -40,3 +40,9 @@ Inside: complete unified 1,277-source production tree, Java11 rebuilt JAR SHA256
 Next implementation batch: create a source-valid appearance body from the actual player decoder (no fabricated item IDs), replay initial `81` with **0x10** on a persistent localhost listener, log `R265_SELF_MASK_BEFORE/AFTER` and local model readiness, inspect screenshot and actual terrain buffers; fix the first real failing stage. Keep the prior R264 packet 249→73 (chunk 400,400)→81 and ISAAC seed behavior unchanged.
 
 The branch contains only independently authored test/documentation. Do not publish private original-derived source or merge historical stacked PRs solely on this evidence. **Keep draft.**
+
+## R265 follow-on: structurally valid appearance body decoded
+
+In addition to the original 10-check bitstream boundary fixture, compiled and ran `R265AppearanceDecodeRegression.java` against actual `rs.model.Player` (4 assertions) and `R265CompleteAppearanceFrameRegression.java` against actual `rs.io.Packet` **and** `rs.model.Player` (13 assertions). The latter builds a **60-byte 81 packet payload**: 3 initial player bits/list bytes, self appearance mask `0x10`, negated-byte length `0xC9`, and a **55-byte valid parser-level appearance body** (username LocalTest, zeros for equipment, no declared animations). It verifies correct self update, sentinel 2047, byte alignment, read length, complete consumption, fresh `hasAppearance=false` and post-decoding `hasAppearance=true`. All checks PASS, no exceptions.
+
+This is **parser acceptance, not rendering**: zero equipment means no verified body mesh or visible local actor, and no actual local GUI/session replay was performed in R265. The private archive checksum above was regenerated after adding both source-backed test fixtures, and the rebuilt production/diagnostic JAR hashes are unchanged. Do not transmit these fixtures to live servers.
