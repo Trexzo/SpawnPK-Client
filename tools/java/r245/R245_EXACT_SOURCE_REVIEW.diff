@@ -1,0 +1,21 @@
+--- R244/src/rs/cache/updater/assets/CacheUpdateTransaction.java
++++ R245/src/rs/cache/updater/assets/CacheUpdateTransaction.java
+@@ -512,6 +512,18 @@
+       if (activeExists) requirePlainDirectory(root);
+       if (stageExists) requirePlainDirectory(stage);
+       boolean abandonedExists = Files.exists(abandoned, NOFOLLOW);
++      // MOVING_OLD is journalled AFTER persisting the original-cache witness
++      // and BEFORE moving root to previous/. If previous/ is absent, the
++      // still-live root must match that original witness. Otherwise deleting
++      // staged/ would lose evidence while falsely accepting a changed root.
++      // This is V3-only: historical journals have no mandatory origin proof.
++      if (MAGIC_V3.equals(entry[0]) && phase.equals("MOVING_OLD") && !oldExists) {
++         String[] origin = readInstallWitness(work);
++         if (!activeExists || origin == null || !"HAD_ORIGINAL".equals(origin[1])) {
++            throw new IOException("V3 MOVING_OLD has no provable live original; preserving staged files: " + work);
++         }
++         verifyOriginalBeforeCleanup(work, root);
++      }
+       // PREPARING has no installation witness yet. If the original still
+       // exists, staged/ is disposable ONLY while every staged directory and
+       // file is an unchanged subset of that live original. A failed copy,
