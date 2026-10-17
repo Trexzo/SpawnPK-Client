@@ -1,0 +1,7 @@
+# R223 — legacy socket path covered by offline probe
+
+R222 protected the main game socket and separate report receiver, but `rs/pkg48/Class307.java` still directly opened a socket from an already-resolved `InetAddress` and performed a reverse-DNS lookup. R223 changes `Class307` to validate resolved addresses through new `rs.network.LocalEndpointPolicy.requirePermittedAddress` and skips its reverse-DNS lookup while `-Dspk.offlineProbe=true` is enabled. Normal-mode behavior is preserved. This is scoped to discovered paths and does not certify complete network isolation.
+
+Clean Java 11 rebuild: **1,276 sources, 1,377 classfiles, zero errors**. New offline policy test: 5/5 cases PASS (v4/v6 loopback allowed, public and null refused, normal-mode public preserved). Controlled 12-second virtual-display startup reached plugin initialization with no fatal exception in captured logs, then stopped by test timeout. Windows graphical/gameplay was not tested.
+
+Private ZIP `SpawnPK_v309_R223_LEGACY_SOCKET_BOUNDARY_PRIVATE.zip`: SHA256 `75facf2e20db23a9000b4b34261be5759f2d30eaad1cdc55f69fdd7cd67fe4b8`. Source-built JAR SHA256 `357b16d7593b969b93b08fc050bdae9006654d82918739cd6cb61b918a3c541b`. Full private source, v309 non-game dependencies, tested scripts and logs are contained in the private bundle. Do not publish original assets or client Java in the public PR. Keep draft pending Windows and original bytecode acceptance.

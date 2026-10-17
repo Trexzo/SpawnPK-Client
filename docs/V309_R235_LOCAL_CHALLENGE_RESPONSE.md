@@ -1,0 +1,9 @@
+# R235 — actual v309 local login challenge and rejection verified
+
+Lane A continued canonical integrated source-runtime R233/R234, re-read Issue #1117; **no production Java/source or Lane B cache code changed**. With authentic archived local `.spawnpk` assets and pinned local-only reference resources, launched the source-built client under Linux Xvfb using `spk.offlineProbe=true` and game host `127.0.0.1:43594`.
+
+Actual loopback server protocol evidence, using disposable test credentials only: client opened TCP connection, sent initial handshake `0e1d` (opcode 14 + name hash); server sent eight throwaway prefix bytes, challenge status zero and 8-byte server seed `0123456789abcdef`; client sent **login opcode 16** with 1-byte declared payload length **105**, and the server read exactly **105 encrypted payload bytes**. Dummy server deliberately sent rejection status **3**. Pixel screenshot confirms client displayed **`Invalid username or password!`**. Complete encrypted payload was not logged, decrypted or distributed. This verifies RSA-login-block *framing* and negative-response handling; not a successful authentication exchange or gameplay. Window rendered with actual UI pixels.
+
+This is **a runtime test, not a new rebuild**: the exact previously full-source-compiled R233 client JAR is unchanged. Windows GUI and end-to-end compatible local-server session remain unverified. The newer Lane B cache R227 donor mentioned in #1117 is not integrated by this batch, because it depends on the intervening R226 preimage.
+
+One validated private package `SpawnPK_v309_R235_LOCAL_LOGIN_CHALLENGE_PRIVATE.zip` SHA256 `02c143e67363607059a001a991869ef5bc4a1c89561d0ac828d3214efc0b4520` bundles canonical R234 source/binary handoff, reproducible localhost-only Python probe, redacted challenge metadata, screenshot and logs. Original large assets/fonts excluded. ZIP CRC PASS. Keep PR draft.

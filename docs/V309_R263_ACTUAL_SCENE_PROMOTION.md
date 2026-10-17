@@ -1,0 +1,9 @@
+# R263 — source-built graphical scene promotion observed
+
+October 17 2026 diagnostic-only replay, continuing R262. **No canonical production source modified.** Using an isolated copy of 1,277 R247 client Java sources plus R262 diagnostic, `javac --release 11` compiled 1,386 class files with zero errors. Real Java client started in Linux Xvfb with archived authentic assets and localhost-only ISAAC-framed login/249/73(400,400)/81 packets.
+
+**Actual client runtime:** 3 instances each of `R263_SCENE_BUILD_ENTER graphics=2 base=3152,3152`, `R263_SCENE_BUILD_EXIT graphics=2 base=3152,3152`, `R263_MAP_READY_121_ENQUEUED graphics=2`. This proves `tryEnableDetailedGraphics()` entered state 2, invoked `l()` scene-construction and returned, and issued the outgoing opcode-121 enqueue call. Scene gates were intermittent; test listener closed and broke socket later.
+
+**NOT established:** actual server receipt/decoding of packet 121 (test listener only accumulated bytes); stable detailed scene; visible rendered terrain/player model; native Windows. Screenshot attempt failed due Xauthority setup and is not included. No gameplay acceptance or original deobf equivalence claim. Retain PR #1084 DRAFT.
+
+Private evidence ZIP `SpawnPK_R263_Detailed_Scene_Promotion_Evidence.zip` SHA256 `7aebb68655b5e85ec4c5ce063bc389ba358e0e8d7d341baed03b451816e7203f` includes diagnostic Client.java, full javac log, localhost runner, redacted client/server logs and report. Next: sustained controlled local socket, decode outbound ISAAC to prove map-ready 121 delivered; image capture with working Xauthority and player appearance verification.

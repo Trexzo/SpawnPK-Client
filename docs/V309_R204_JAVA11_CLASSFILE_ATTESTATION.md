@@ -1,0 +1,9 @@
+# R204 — clean Java 11 source-to-classfile acceptance (379 real files)
+
+Starting with the unchanged R203 private archive, extracted the **exact 379 accepted client candidate Java sources** from its manifest into a fresh temporary directory. Ran `javac --release 11 -proc:none -g:none` without any dependency JARs, compiler output from earlier rounds, stubs, or the original client JAR. **Compilation succeeded** and emitted **394 real JVM classfiles** (more binaries than sources due to Java nested/anonymous classes). This is a source-build acceptance artifact, not a 394-original-method or original-bytecode reconstruction claim.
+
+Private deliverable: `SpawnPK_v309_R204_JAVA11_379_CLASSFILE_ATTESTATION_PRIVATE.zip`, exact SHA-256 `74423f3ad59588fc6f311840ed9edbca85903adcbb30bca6faf17381c5f1a9ad`. Contains **394 real compiled .class files** and `PRIVATE_ATTESTATION.json` with the SHA-256 of every input Java source and generated classfile and SHA-256 of the source archive (`6ebb538bd4ba7bc85e708c194ce852fb8cd2e68a8cc99498e0f5e16ca2399953`). The proprietary archive remains private.
+
+Public-safe GitHub tool: `tools/attest_closed_java11_classes_r204.py` generates the same sort of private output, failing on duplicate ZIP paths, wrong 379-source count, unsafe filenames, failed compiler exit code, and existing output ZIP. A 379-class synthetic fixture plus Windows/Linux CI test its behavior without publishing private client Java.
+
+**Expansion attempt limitation:** Compiling all 895 excluded source files together against the 379-class baseline still produces widespread cascading dependency errors. A batch-pruning experiment did **not** establish any additional accepted file; do not claim more than 379 without a complete clean compilation. The full 1,274-source client remains at its latest separately measured **2,001 errors** (JDK-only profile). Original v309 bytecode parity, dependency closure and a runnable full client remain unverified.

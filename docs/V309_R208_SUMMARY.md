@@ -1,0 +1,1 @@
+R208 locally verified a batch of 17 script-packet Java source changes. Five readable accessor aliases were added to the packet base class, and 130 handler calls were updated. A Java 11 synthetic delegation test passed. The full 1,274-source JDK-only compiler replay remains at 2,001 errors and does not build. This is candidate source readability work, not original-bytecode parity.

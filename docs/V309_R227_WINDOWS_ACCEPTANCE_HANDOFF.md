@@ -1,0 +1,9 @@
+# R227 — Lane A Windows runtime handoff repaired
+
+Canonical production Java is unchanged from integrated source-runtime R226; no Lane B cache implementation touched. The R226 handoff shipped dependencies named `R225_EXACT_*`, but its rebuild and resource-overlay scripts referenced nonexistent `R226_EXACT_*` files. The launcher additionally required an absent `R226_RUNTIME_SHA256.json`. This prevented the Windows scripts from reaching Java startup.
+
+R227 consistently names and SHA-pins its two dependency JARs, complete source ZIP and source-built client JAR, corrects both PowerShell scripts, ships the required runtime digest manifest, and adds an explicit opt-in `R227_Windows_GUI_Smoke.ps1`. That runner checks the original v309 reference JAR hash, creates resources locally, launches with `spk.offlineProbe=true` and game host `127.0.0.1`, records process logs and sampled TCP connections, and terminates the bounded test process. Sampling is **not** exhaustive packet/network isolation evidence; screenshot and local handshake remain unverified.
+
+Independent full private actual-source `javac --release 11` replay: **1,277 Java files, 1,384 generated classfiles, exit 0**, zero compiler errors. Checked all SHA-256 manifests and verified there are no stale R225/R226 filenames referenced by R227 scripts; confirmed built JAR contains `rs/gui/Launcher.class` and 1,384 classfiles. No full GUI or Windows validation was executed here.
+
+Final private R227 ZIP `SpawnPK_v309_R227_WINDOWS_GUI_ACCEPTANCE_PRIVATE.zip` SHA256 `d4f6c4bcfae7e33dd051ec415afea96a51b4d9b946267d0667a445c5b562c98c` (ZIP integrity passed). Source-built JAR and all source are from R226; no new production Java changes. Next owner action: run smoke script locally with original v309 JAR; attach window screenshot, smoke-result JSON, stdout/stderr, TCP CSV, and describe what appeared in game window. Maintain Lane B ownership of CacheUpdater/CacheUpdateTransaction.

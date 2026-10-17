@@ -1,0 +1,22 @@
+name: R198 complete direct-import coverage
+on:
+  pull_request:
+    paths:
+      - 'tools/source_import_coverage_r198.py'
+      - 'tests/test_source_import_coverage_r198.py'
+      - '.github/workflows/r198-source-coverage.yml'
+  workflow_dispatch:
+jobs:
+  synthetic:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Complete direct-import regression tests
+        run: python -m unittest discover -s tests -p 'test_source_import_coverage_r198.py' -v

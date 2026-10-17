@@ -1,0 +1,26 @@
+name: R194 bulk Java source rewrite synthetic
+on:
+  pull_request:
+    paths:
+      - 'tools/private_sneakythrows_rewrite_r194.py'
+      - 'tests/test_private_sneakythrows_rewrite_r194.py'
+      - '.github/workflows/r194-private-rewrite.yml'
+  workflow_dispatch:
+jobs:
+  rewrite:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Verify private bulk rewrite synthetic Java9 behavior
+        run: python -m unittest discover -s tests -p test_private_sneakythrows_rewrite_r194.py -v

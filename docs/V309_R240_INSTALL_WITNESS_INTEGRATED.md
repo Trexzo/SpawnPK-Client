@@ -1,0 +1,9 @@
+# R240 Lane A — integrate cache R232 first-install witness
+
+Confirmed current GitHub PR #1084 is Lane A R239; retained it as canonical, rather than reverting to R238. Pulled exact private Lane B cache R232 donor. Applied ONLY `src/rs/cache/updater/assets/CacheUpdateTransaction.java` after independently verifying the R239 preimage SHA256 `52f10e3b6cc69955bc5557aafc62af0f65d5558adcdbaf6287ac9d66258f1235`, including matching donor backup. Accepted postimage SHA256 `a7f823d22ac3b0a97c97d5fba27193d2ae4a39fd1ce9b02a9127edb1bf7a8e79`. Other 1276 source Java files unchanged.
+
+Independent full actual Java11 source build: 1277 Java, 1386 generated production JVM classes, javac exit 0, zero errors. Integrated real production cache tests: R232 first-install witness 22 PASS, R231 rollback witness 14, R230 ancestor 14, R229 root case 9, R227 staged 24, R226 postrename 23, R225 witness 22, R224 rollback 21, R223 inventory 14, R222 isolation 8, R221 crash/lock 10, R220 transaction 8, and real cache extraction negative check PASS. Test classes separately compiled; not inserted into production JAR.
+
+Private consolidated ZIP `SpawnPK_v309_R240_INSTALL_WITNESS_INTEGRATED_PRIVATE.zip` CRC PASS SHA256 `0acb080b1d256c7cd6a2c6a44d6fc781fc8590f4191f2ce49b8a7bef1646be91`; complete source ZIP `f001619c6da0b525d3bf5932b7e886624f831f27b6ac4fc80f1b2539cedf6341`, source-built Java JAR `a19c788c17afd14e31813c028f0d40d85d50c38b6b8925c8888d7d7b8fbaf9fa`. Includes changed-only overlay, exact compile/runtime dependency libraries, 13 real logs and verification JSON.
+
+NOT TESTED on R240: graphical startup, localhost login challenge, Windows GUI, authenticated login/gameplay, actual power-cut recovery. Earlier runtime results apply to older builds only. Cache ownership remains Lane B; keep PR draft.

@@ -1,0 +1,7 @@
+# R202 — larger independently compiling Java 11 candidate subset
+
+Using the private R200 candidate archive (1,274 Java sources), I expanded the R201 owner selection to include imports whose target class belongs to another candidate source. Full compilation uses `javac --release 11 -proc:none -g:none` with no external dependencies, invented stand-ins, or original client JAR. The successive selected source counts were 1,101 (3,000 capped diagnostics), 704 (3,000 capped), 511 (672), 385 (37), 378 (10), then **376 sources with zero diagnostics**. Each round excluded only the actual error-owning Java sources and recompiled the complete remaining set.
+
+This improves on R201's 320-source island by **56 additional real Java files**. Full third-party candidate still has 1,274 sources, with 2,001 outstanding errors in the separately measured dependency-free build. Private complete R202 source subset ZIP, filename `SpawnPK_v309_R202_JAVA11_SOURCE_ONLY_376_PRIVATE.zip`, SHA256 `d61b6258f9efd61bf6b747d5e8236523c5abc6bd6224f5137d6d0b48d97ed396`, delivered to the user directly, with full file-by-file SHA manifest.
+
+No source files were modified in this batch; this is a greater independent source-build verification and cannot establish original v309 bytecode parity. Keep proprietary candidate Java private.

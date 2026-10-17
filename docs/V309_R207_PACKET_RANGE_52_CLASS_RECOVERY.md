@@ -1,0 +1,11 @@
+# R207 — full 52-class outgoing packet range recovered as named opcode owners
+
+This batch edits **every one** of `rs/packets/Class203.java` through `Class254.java` (52 Java source files). Each class now has an explicit `private static final int PACKET_OPCODE` instead of its bare opcode literal in `write(Packet)`, and the output packet buffer parameter is named `output` instead of a decompiler `var1`. This is a **range-wide conservative source-readability reconstruction**, not semantic naming of every packet or proof of original v309 classfile equivalence. Duplicate packet opcodes exist, and no user-facing packet names were invented.
+
+**Behavioral evidence:** All 52 original and 52 edited Java classes compiled independently using Java 11 and a synthetic recording `rs.io.Packet` test double. The production `OutgoingPacket` interface was used. Invoked every outgoing packet class reflectively with deterministic constructor arguments and compared complete serialized **writer-call sequences**, including opcode and payload values. All 52 traces matched exactly. Trace SHA-256: `76f01eec9834fca77800de15dce268fea59f0d121089a047ab0d4f8afc069f2c`. The test double is **not** used to claim full client compilation or original bytecode equivalence.
+
+**Full-tree compiler replay:** All **1,274** source files from the R207 private ZIP were recompiled with `javac --release 11 -proc:none -g:none -encoding UTF-8 -Xmaxerrs 3000` without external dependencies. The count remains **2,001 errors**, unchanged from the R200 baseline. Thus, these 52 changes are verified behavior-preserving edits, **not** resolved missing external library dependencies.
+
+**Private full-source delivery:** `SpawnPK_v309_R207_FULL_SOURCE_PACKET_RANGE_PRIVATE.zip`, SHA-256 `b1eaaefaeb860cf6c6cfe2acd8656813b5b1ef4b59822449c4b1dbf0f8a1870b`. Includes complete 1,274-source tree, per-file preimage/postimage hashes and opcode inventory for all 52 changed source files. The 52 implementations are not published in GitHub due to unresolved source redistribution rights.
+
+**Next:** More full-range packet protocol recovery requires verified original-v309 method and field mappings or a known authenticated protocol transcript; packet class names and higher-level meaning cannot safely be guessed from the opcode alone.

@@ -1,0 +1,11 @@
+# R210 — test-server endpoint produced a real embedded dependency candidate
+
+User-provided `SpawnPK-Endpoint-Audit.zip` includes the actual published `client.jar`: SHA-256 `5dd36b137a64f4cd3f5189e9df96aaf0397d7b6595b31cb7dacb9b7bdf7611b7`, size 6,059,461 bytes, with 2,526 JVM classes. CloudFront `spk_test/versions.txt` reports **client_version = 382.0** (not the recovery target v309). Maven POM metadata names SLF4J, Gson, Guava, Jackson, SnakeYAML, etc.; **POM metadata is not proof those libraries' unrelocated Java classes exist**. Their standard namespace class counts for `org/slf4j/`, `com/google/gson/`, `org/yaml/snakeyaml/`, `com/google/inject/`, `javax/inject/` are all zero. Some libraries appear under relocated/obfuscated names.
+
+We filtered the submitted v382 JAR to a **non-`rs/` dependency candidate**, excluding all original-v382 game classes (source code ownership for `rs/` must remain from v309). Contains actual third-party-looking class bytecode, chiefly 835 Substance/Trident, 739 Jackson, 178 `org/c/`, 128 Apache and 55 obfuscated Trove namespace classfiles. Private candidate JAR SHA-256 `58ac664a0eb9c11196c01520984f06f900edad7922f2ba6b5b4e61c35382be1e`.
+
+Full **1,274 v309 candidate Java files** were recompiled under `javac --release 11 -proc:none -g:none -encoding UTF-8 -Xmaxerrs 3000`, with that filtered JAR on the classpath and no `rs/` bytecode from v382. **Errors: 2,001 (JDK only) → 1,799 (filtered v382 library candidate)**. Comparing source-owner/error-message multisets: 211 diagnostics removed, 9 new diagnostics introduced, net -202. Hence the cross-version binary is **not a compatible complete dependency substitute**; no source-only build or original-v309 equivalence is claimed.
+
+Private self-contained delivery `SpawnPK_R210_client382_embedded_dependency_probe_PRIVATE.zip` includes filtered JAR, exact compiler stderr, provenance and reproducible extraction script. It is not published on GitHub.
+
+Next: identify actual `org/c/` and `gnu/trove/` obfuscated binary ABI owners, compare their bytecode signatures to v309 references, identify version-appropriate original dependencies and recompile. Do not blindly treat a version 382 bundled class as a version 309 authentic dependency.

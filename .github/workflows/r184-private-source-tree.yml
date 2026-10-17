@@ -1,0 +1,22 @@
+name: R184 private source-tree synthetic
+on:
+  pull_request:
+    paths:
+      - 'tools/private_source_tree_r184.py'
+      - 'tests/test_private_source_tree_r184.py'
+      - '.github/workflows/r184-private-source-tree.yml'
+  workflow_dispatch:
+jobs:
+  synthetic:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Test private source tree assembly
+        run: python -m unittest discover -s tests -p 'test_private_source_tree_r184.py' -v
