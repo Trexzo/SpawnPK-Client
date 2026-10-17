@@ -1,0 +1,9 @@
+# R260 — observed landscape object readiness (real client)
+
+Executed an isolated Java11-compiled `rs/io_.java` diagnostic overlay against the canonical R247-derived source-built client on Linux/Xvfb, using archived assets and the existing ISAAC localhost login/249→73(400,400)→81 replay. Production Java was not changed.
+
+**Actual runtime result:** diagnostic sampled 62 landscape region readiness returns: 52 true, 10 false (sampled results, not necessarily every invocation). Initial terrain/landscape missing counts fell from 4/4 to 0/0. `tryEnableDetailedGraphics()` still returned `-3` object-unwalkable in the observed gate trace; no `graphicsMode=2` promotion observed. The reported 13,055 object-check failures are **cumulative repeated checks**, not a count of different objects or currently missing models. Similarly, the diagnostic ID set is cumulative and CANNOT be interpreted as the final unresolved set. Some regions became ready while other checks remained false.
+
+This is consistent with R259 demonstrating successful model-header installation for sampled IDs, but does not yet prove all required models become ready or terrain renders. Local probe ended with a controlled server closure; Windows and sustained gameplay remain unverified.
+
+Private reproducible evidence archive: `SpawnPK_R260_Object_Readiness_Runtime_Audit.zip` SHA256 `21ab2817e8aa98c1adbc3fb5028c393e65cc39d7257cdf8c36ebb7001daee869`, with diagnostic-only overlay, compilation log, actual client log and structured summary. No original source or assets published in GitHub. Next test: reset failing IDs **per complete scene-readiness attempt**, classify final specific object/model missing-state, and track whether repeated cache deliveries eventually clear all failing regions. Keep #1084 DRAFT.
