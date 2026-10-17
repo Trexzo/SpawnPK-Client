@@ -1,0 +1,88 @@
+--- R236/src/rs/cache/updater/assets/CacheUpdateTransaction.java
++++ R237/src/rs/cache/updater/assets/CacheUpdateTransaction.java
+@@ -485,6 +485,10 @@
+          if (oldExists || !activeExists) {
+             throw new IOException("Inconsistent completed rollback state: " + work);
+          }
++         // A quarantine may have survived rollback cleanup. Never discard
++         // its bytes unless they still equal the uncommitted stage witness.
++         // An unrelated process might have replaced them after quarantine.
++         if (abandonedExists) verifyDiscardedInstallWitness(work, abandoned);
+          // Detect unrelated replacements of the restored old cache before
+          // discarding its surviving rollback journal and witness.
+          verifyRollbackWitness(work, root);
+@@ -497,11 +501,15 @@
+          if (!activeExists) {
+             throw new IOException("Rollback has no restored cache or backup: " + work);
+          }
++         // The abandoned replacement is evidence until its contents are
++         // verified. Do NOT erase a quarantine containing unrelated changes.
++         if (abandonedExists) verifyDiscardedInstallWitness(work, abandoned);
+          // With a witness, prove the active directory actually contains the
+          // original backup, not unrelated files recreated by another writer.
+          // Legacy R224-R230 journals without witnesses remain compatible.
+          verifyRollbackWitness(work, root);
+          writeState(work, root, "ROLLBACK_RESTORED");
++         if (Files.exists(abandoned, NOFOLLOW)) verifyDiscardedInstallWitness(work, abandoned);
+          deleteTreeNoLinks(work);
+          return;
+       }
+@@ -529,6 +537,15 @@
+          throw new IOException("Recovery has an unresolved interrupted-new directory: " + work);
+       }
+       if (oldExists) {
++         // Before the old backup is restored or any quarantine is deleted,
++         // authenticate the disposable replacement (or existing quarantine)
++         // against the staged install fingerprint. Otherwise unrelated cache
++         // bytes could be silently moved into interrupted-new and discarded.
++         if (activeExists && (phase.equals("PROMOTING") ||
++               phase.equals("ROLLBACK_PREPARED"))) {
++            verifyDiscardedInstallWitness(work, root);
++         }
++         if (abandonedExists) verifyDiscardedInstallWitness(work, abandoned);
+          // An interrupted ROLLBACK_PREPARED may still hold previous/. Validate
+          // the already-persisted V2 original fingerprint BEFORE relocating it.
+          // Older V1 journals continue through their legacy recovery path.
+@@ -562,8 +579,10 @@
+             writeRollbackWitness(work, old);
+          }
+          if (activeExists) {
+-            // Quarantine an uncommitted freshly promoted cache.
++            // Quarantine an uncommitted freshly promoted cache. Revalidate
++            // after the rename to detect writes through preexisting handles.
+             moveDirectory(root, abandoned);
++            verifyDiscardedInstallWitness(work, abandoned);
+          }
+          try {
+             moveDirectory(old, root);
+@@ -572,6 +591,7 @@
+          }
+          verifyRollbackWitness(work, root);
+          writeState(work, root, "ROLLBACK_RESTORED");
++         if (Files.exists(abandoned, NOFOLLOW)) verifyDiscardedInstallWitness(work, abandoned);
+          deleteTreeNoLinks(work);
+          return;
+       }
+@@ -688,6 +708,22 @@
+       }
+       if (!witness[2].equals(snapshotFingerprint(candidate))) {
+          throw new IOException("Uncommitted cache does not match persisted installation witness: " + work);
++      }
++   }
++
++   /**
++    * Recovery discards promoted or quarantined files after restoring previous/.
++    * For V2 installs those files must still match the exact staged witness.
++    * A non-cooperating writer can otherwise cause us to delete its unrelated
++    * modifications while blindly cleaning interrupted-new/ or active root.
++    * Pending V1 journals retain their historical witnessless behavior.
++    */
++   private static void verifyDiscardedInstallWitness(Path work, Path candidate) throws IOException {
++      String[] witness = readInstallWitness(work);
++      if (witness == null) return; // genuine pre-R232 legacy only
++      if (!witness[2].equals(snapshotFingerprint(candidate))) {
++         throw new IOException("Discarded cache differs from persisted installation witness; " +
++            "preserving unverified data and previous cache: " + work);
+       }
+    }
+ 
