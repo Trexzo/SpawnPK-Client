@@ -56,7 +56,7 @@ public final class R277MixedFootprintRegression {
  }
  static boolean route(Client c,int startX,int startY,int targetX,int targetY)throws Exception {
   rs.model.Player p=Client.localPlayer;p.method3089(startX,startY,true);
-  Method route=hidden("method3573",int.class,int.class,int.class,int.class,int.class,int.class,int.class,int.class,boolean.class,int.class);
+  Method route=hidden("method3573",int.class,int.class,int.class,int.class,int.class,int.class,int.class,int.class,int.class,boolean.class,int.class);
   return (boolean)route.invoke(c,0,0,0,0,startY,0,0,targetY,startX,false,targetX);
  }
  public static void main(String[]args)throws Exception{
