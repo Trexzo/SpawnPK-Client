@@ -16,6 +16,28 @@ public final class R278ObjectActionAuthorityRegression {
  static int checks;
  static void ck(boolean ok,String why){if(!ok)throw new AssertionError(why);checks++;}
  static int u16(byte[] b,int i){return (b[i]&255)<<8 | (b[i+1]&255);}
+ static boolean outgoingIncludesAction(Packet output,int expected) {
+  byte[] bytes=Arrays.copyOf(output.payload,output.caret);
+  rs.network.Class257 cipher=new rs.network.Class257(new int[]{13,22,37,41});
+  int at=0,seen=0,objects=0;
+  while(at<bytes.length && seen++<8) {
+   int opcode=((bytes[at++]&255)-cipher.method0())&255;
+   int dataSize;
+   if(opcode==98 || opcode==164 || opcode==248) {
+    if(at>=bytes.length)return false;
+    dataSize=1+(bytes[at]&255);
+   } else if(opcode==183) dataSize=3;
+   else if(opcode==228 || opcode==252 || opcode==70 || opcode==234 || opcode==132) {
+    dataSize=6;
+    if(opcode!=expected)return false;
+    objects++;
+   } else return false;
+   if(at+dataSize>bytes.length)return false;
+   at+=dataSize;
+  }
+  return objects==1 && at==bytes.length;
+ }
+
  static int u24(byte[] b,int i){return (b[i]&255)<<16 | (b[i+1]&255)<<8 | b[i+2]&255;}
  static byte[] read(ZipFile z,String n)throws Exception{ZipEntry e=z.getEntry(n);if(e==null)throw new IOException("missing "+n);try(InputStream in=z.getInputStream(e)){return in.readAllBytes();}}
  static byte[] indexed(byte[] dat,byte[] idx,int id,int index)throws Exception{
@@ -169,6 +191,7 @@ public final class R278ObjectActionAuthorityRegression {
     Client.outgoingPacket.isaacRandom=new rs.network.Class257(new int[]{13,22,37,41});
     objectMenu.invoke(c,menuOptions[j],hashes[i],e[1],e[2],e[0],"present object");
     ck(Client.outgoingPacket.caret>=7,"valid object action suppressed id="+e[0]+" action="+menuOptions[j]);
+    ck(outgoingIncludesAction(Client.outgoingPacket,wireActions[j]),"valid action opcode/framing changed id="+e[0]+" expected="+wireActions[j]);
     ck(sceneHash(c,e[1],e[2])==hashes[i],"menu action mutated live scene object");
    }
   }
