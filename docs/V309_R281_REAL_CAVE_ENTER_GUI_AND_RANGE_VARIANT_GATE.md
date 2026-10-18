@@ -50,3 +50,7 @@ Original owner input SHA256s:
 **Remaining:** true cave/dungeon transition and genuine gameplay world server semantics, Cooking range Cook GUI, native Windows graphical runtime, original server authentication, long-term stable game sessions, original binary bytecode parity and physical power loss unverified. No production code changed, no real user install. Keep #1142 DRAFT, no main merge.
 
 **Next R282:** capture actual scene-picked object ID/model hash for Cooking range variants and resolve why graphical Cook is absent; expand GUI collision/path acceptance with a precise readiness gate; then native Windows owner acceptance at a meaningful milestone.
+
+## R282 follow-up correction — definition bank is part of the evidence
+
+The earlier R281 28-check object-identity test called `ObjectDefinition.load(new Archive(...))`, which on these inputs leaves **OSRS-config bank `field1136`** active; therefore ID114's **Cook** option in that test is valid for the OSRS configuration only. R282 instrumented the **actual GUI scene picker**, finding exact ID114 at local (51,49) in region12593's **standard bank `field1133`**, with both normal and raw action decodes **null**, no cached override or transform. The standard region's Examine-only menu is correct. New explicit three-bank + reset regression 78/78 and independently rerun R278 797/797 pass. See `docs/V309_R282_COOKING_RANGE_DEFINITION_BANK_GUI_ROOT_CAUSE.md`. Do not introduce a global Cook patch or infer a scene-picked duplicate ID from R281's OSRS-mode test.
