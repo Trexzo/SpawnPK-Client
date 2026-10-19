@@ -11,6 +11,8 @@ on:
       - 'tests/python/r291/**'
       - 'tests/python/r292/**'
       - 'tests/python/r293/**'
+      - 'tests/python/r294/**'
+      - 'tools/gui/r294/**'
       - 'tests/java/r293/**'
       - 'tools/recovery/r293/**'
       - 'tests/powershell/r292/**'
@@ -30,6 +32,8 @@ on:
       - 'tests/python/r291/**'
       - 'tests/python/r292/**'
       - 'tests/python/r293/**'
+      - 'tests/python/r294/**'
+      - 'tools/gui/r294/**'
       - 'tests/java/r293/**'
       - 'tools/recovery/r293/**'
       - 'tests/powershell/r292/**'
@@ -73,6 +77,8 @@ jobs:
         run: python tests/python/r292/R292AdmissionRegression.py
       - name: Verify R293 pinned real-client source-fix contract
         run: python tests/python/r293/R293SourceSafetyRegression.py
+      - name: Verify R294 pinned R293 graphical replay source safety (no private inputs)
+        run: python tests/python/r294/R294SourceSafetyRegression.py
       - name: Exercise genuine Windows PowerShell failure paths (no game)
         if: runner.os == 'Windows'
         shell: pwsh
