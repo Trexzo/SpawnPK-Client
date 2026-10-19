@@ -153,21 +153,21 @@ def admission(input_dir, r291_release, output, *, loader=None, runtime=None,
         source = loader(r291_release)
         put('r297_r295_gui_source_sha256', True, 'exact exact R297 R295 GUI source SHA256')
     except (ValueError, OSError, KeyError, zipfile.BadZipFile, SyntaxError) as exc:
-        put('r291_original_source_sha256', False, type(exc).__name__)
+        put('r297_r295_gui_source_sha256', False, type(exc).__name__)
     put('win32', platform == 'win32', 'native Microsoft Windows only')
     if source is not None:
         try:
             source.preflight(input_dir, output)
             put('seven_owner_archives_and_r295_overlay', True, 'all owner/private inputs and source anchors pinned')
         except (Exception,) as exc:
-            put('seven_owner_archives_and_r290_overlay', False, str(exc)[:180])
+            put('seven_owner_archives_and_r295_overlay', False, str(exc)[:180])
         try:
             safe, reason = safe_output_ancestors(output)
             put('no_output_ancestor_reparse', safe, reason)
         except (Exception,) as exc:
             put('no_output_ancestor_reparse', False, type(exc).__name__)
     else:
-        put('seven_owner_archives_and_r290_overlay', False, 'untrusted R291 source cannot be executed')
+        put('seven_owner_archives_and_r295_overlay', False, 'untrusted R291 source cannot be executed')
         put('no_output_ancestor_reparse', False, 'R291 source not verified')
     try:
         deps = runtime()
