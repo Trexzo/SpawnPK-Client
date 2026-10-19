@@ -6,10 +6,10 @@ The R285 source-built localhost Cooking range GUI proof passed on Linux/Xvfb. R2
 
 ## Added source
 
-- **tools/windows/R287-Owner-Readiness.py** — JSON-only, read-only diagnostic with **15 checks**: Windows host, input folder, exact SHA256 for the original **five owner-private input archives plus the R286 source-only release ZIP**, unused safe output destination, Python 3.11+, Pillow, Java and javac 11+, physical 1400x900 primary display with 96-DPI effective system setting, and an unused localhost 127.0.0.1:43594 port. Hashes are streamed rather than reading entire ZIPs into memory.
-- **tests/python/r287/R287ReadinessRegression.py** — **19/19 Python unittest cases passed** using disposable dummy archives and injected Win32 observations on Linux. Covers missing/changed pins, wrong display/DPI, busy port, missing compiler, existing or nested output, dangling symlink, missing parent, symlinked owner input, Java-version parsing, and genuine off-Windows refusal.
+- **tools/windows/R287-Owner-Readiness.py** — JSON-only, read-only diagnostic with **16 checks**: Windows host, input folder, exact SHA256 for the original **five owner-private input archives plus the R286 source-only release ZIP and the corrected final R286 bootstrap script**, unused safe output destination, Python 3.11+, Pillow, Java and javac 11+, physical 1400x900 primary display with 96-DPI effective system setting, and an unused localhost 127.0.0.1:43594 port. Hashes are streamed rather than reading entire ZIPs into memory.
+- **tests/python/r287/R287ReadinessRegression.py** — **20/20 Python unittest cases passed** using disposable dummy archives and injected Win32 observations on Linux. Covers missing/changed pins (including stale R286 bootstrap), wrong display/DPI, busy port, missing compiler, existing or nested output, dangling symlink, missing parent, symlinked owner input, Java-version parsing, and genuine off-Windows refusal.
 
-Run standalone on Windows, with five exact private archives and the R286 source-only ZIP already in the input folder:
+Run standalone on Windows, with five exact private archives, the R286 source-only ZIP, and the final Invoke-R286-Guarded-Windows.ps1 in the input folder:
 
 ~~~powershell
 python tools\windows\R287-Owner-Readiness.py --input-dir "$env:USERPROFILE\Downloads" --output "$env:USERPROFILE\Desktop\SpawnPK-R286-Disposable-Acceptance"
@@ -30,3 +30,5 @@ ready=true means *prerequisites only*: it is **NOT** a Windows graphics pass, a 
 The R278 class-only private JAR SHA256 remains dbaeaef9b375c8a99a6138075bed4ba71ef71ad2d82e8417ae36b400bd4828bd; client production source is unchanged. Original private cache/JAR/dependencies are not committed. No PR merge to main is justified until a *real* owner-side Windows run passes and the original source/provenance gates are resolved.
 
 **Next gate:** native Windows diagnostics (R287) and then guarded R286 GUI acceptance when the owner chooses to run it. If preflight fails, fix the specific environment or mismatch first; do not disable the safety checks to fabricate a pass.
+
+The final R286 standalone bootstrap script is pinned to SHA256 **2186740003afb75df8dd79e2da6a721c121026733dc20ca087973f1d0cd70246**. An older pre-release copy is rejected before anyone attempts the GUI; this corrects the earlier mismatched bootstrap hash circulated during R286 packaging.
