@@ -7,6 +7,9 @@ on:
       - 'tools/windows/**'
       - 'tests/python/r287/**'
       - 'tests/python/r289/**'
+      - 'tests/python/r290/**'
+      - 'tests/java/r290/**'
+      - 'tools/recovery/r290/**'
       - 'tests/powershell/r289/**'
       - '.github/workflows/v309-r289-windows-safety.yml'
   push:
@@ -16,6 +19,9 @@ on:
       - 'tools/windows/**'
       - 'tests/python/r287/**'
       - 'tests/python/r289/**'
+      - 'tests/python/r290/**'
+      - 'tests/java/r290/**'
+      - 'tools/recovery/r290/**'
       - 'tests/powershell/r289/**'
       - '.github/workflows/v309-r289-windows-safety.yml'
 
@@ -45,6 +51,8 @@ jobs:
         run: python tests/python/r287/R287ReadinessRegression.py
       - name: Verify R289 contract and original SHA pins
         run: python tests/python/r289/R289GateContractRegression.py
+      - name: Verify R290 source-build safety and preimage refusal
+        run: python tests/python/r290/R290SourceSafetyRegression.py
       - name: Exercise genuine Windows PowerShell failure paths (no game)
         if: runner.os == 'Windows'
         shell: pwsh
