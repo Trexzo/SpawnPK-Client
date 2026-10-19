@@ -8,6 +8,8 @@ on:
       - 'tests/python/r287/**'
       - 'tests/python/r289/**'
       - 'tests/python/r290/**'
+      - 'tests/python/r291/**'
+      - 'tests/powershell/r291/**'
       - 'tests/java/r290/**'
       - 'tools/recovery/r290/**'
       - 'tests/powershell/r289/**'
@@ -20,6 +22,8 @@ on:
       - 'tests/python/r287/**'
       - 'tests/python/r289/**'
       - 'tests/python/r290/**'
+      - 'tests/python/r291/**'
+      - 'tests/powershell/r291/**'
       - 'tests/java/r290/**'
       - 'tools/recovery/r290/**'
       - 'tests/powershell/r289/**'
@@ -53,7 +57,14 @@ jobs:
         run: python tests/python/r289/R289GateContractRegression.py
       - name: Verify R290 source-build safety and preimage refusal
         run: python tests/python/r290/R290SourceSafetyRegression.py
+      - name: Verify R291 R290-aware guarded overlay and fake-archive refusal
+        run: python tests/python/r291/R291SafetyRegression.py
       - name: Exercise genuine Windows PowerShell failure paths (no game)
         if: runner.os == 'Windows'
         shell: pwsh
         run: ./tests/powershell/r289/Invoke-R289-SafeWindowsChecks.ps1
+      - name: Verify real Win32 R291 bootstrap fail-closed contracts
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./tests/powershell/r291/Invoke-R291-NativeSourceSafety.ps1
+
