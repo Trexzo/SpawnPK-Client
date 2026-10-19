@@ -9,6 +9,6 @@ trap 'rm -rf "$OUT"' EXIT
 python3 "$DIR/scripts/stage_r278_inputs.py" "$1" "$2" "$3" "$OUT"
 CP="$OUT/R278_SOURCE_BUILT_CLASS_ONLY.jar:$OUT/R239_EXACT_RUNTIME_LIB.jar:$OUT/R218_EXACT_LIBS_COMPILE_ONLY_PRIVATE.jar"
 mkdir -p "$OUT/tests"
-javac --release 11 -encoding UTF-8 -cp "$CP" -d "$OUT/tests" "$DIR/tests/R282DefinitionBankIsolationRegression.java"
+javac --release 11 -encoding UTF-8 -cp "$CP" -d "$OUT/tests" "$DIR/../java/r282/R282DefinitionBankIsolationRegression.java"
 java -Djava.awt.headless=true "-Duser.home=$OUT/home" -cp "$OUT/tests:$CP" R282DefinitionBankIsolationRegression "$OUT/config.bin"
 echo 'R282_CLEAN_PINNED_OWNER_SOURCE_BANK_REGRESSION_PASS checks=78'
