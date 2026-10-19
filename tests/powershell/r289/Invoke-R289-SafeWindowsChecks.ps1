@@ -55,3 +55,5 @@ finally {
     }
 }
 Write-Host "R289_REAL_WINDOWS_SAFE_ENTRY_TESTS_PASS checks=$Checks gui=NOT_TESTED owner_inputs=NOT_USED"
+# Expected negative probes leave LASTEXITCODE=2; terminate CI cleanly on true success.
+exit 0
