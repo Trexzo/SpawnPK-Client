@@ -223,7 +223,6 @@ def main(argv=None):
     # refuses existing output. Never import game bytes into GitHub/this bundle.
     return int(original.main(['--input-dir', str(input_dir),'--output',str(output),'--run-native-gui']))
 
-
 if __name__=='__main__':
     try: raise SystemExit(main())
     except (OSError, ValueError, RuntimeError) as exc:
