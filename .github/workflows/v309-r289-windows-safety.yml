@@ -1,0 +1,51 @@
+name: v309 source-only Windows acceptance safety
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'tools/windows/**'
+      - 'tests/python/r287/**'
+      - 'tests/python/r289/**'
+      - 'tests/powershell/r289/**'
+      - '.github/workflows/v309-r289-windows-safety.yml'
+  push:
+    branches:
+      - integration/v309-r265-local-player-mask-diagnostic
+    paths:
+      - 'tools/windows/**'
+      - 'tests/python/r287/**'
+      - 'tests/python/r289/**'
+      - 'tests/powershell/r289/**'
+      - '.github/workflows/v309-r289-windows-safety.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-source-gates:
+    name: Source-only gates (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022]
+    timeout-minutes: 10
+    steps:
+      - name: Preserve source line endings for SHA pins
+        shell: bash
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify R287 negative-path suite
+        run: python tests/python/r287/R287ReadinessRegression.py
+      - name: Verify R289 contract and original SHA pins
+        run: python tests/python/r289/R289GateContractRegression.py
+      - name: Exercise genuine Windows PowerShell failure paths (no game)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./tests/powershell/r289/Invoke-R289-SafeWindowsChecks.ps1
