@@ -68,7 +68,6 @@ def r293_patch(base:bytes)->bytes:
     if hashlib.sha256(new).hexdigest()!=PIN_R293_SOURCE:raise ValueError('R293_POSTIMAGE_DRIFT')
     return new
 
-
 SCENE_PREIMAGE_SHA = '5757842cf0cea18bcd99667ddeba5150ec915e450308ca07ff45ee3922fdf6b1'
 SCENE_POSTIMAGE_SHA = '24790fc3aac8676df95c1cd0f830f26bc6ad749cc87435f47b9eb69c9c8ef813'
 R295_JAR_SHA = 'f5b6f4b6ea3e5e8fc49e1cbe61197647ed7c1e238a49d935c77882cb40da2e35'
