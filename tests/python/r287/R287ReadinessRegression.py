@@ -31,7 +31,13 @@ class ReadinessTests(unittest.TestCase):
             data = ('dummy-'+label).encode()
             (self.inputs/name).write_bytes(data)
             self.expected[label] = (name, r.hashlib.sha256(data).hexdigest())
+        self.bootstrap = self.inputs/'bootstrap.ps1'
+        self.bootstrap.write_bytes(b'final guarded owner script fixture')
         self.release = ('r286.zip', r.hashlib.sha256(self.package.read_bytes()).hexdigest())
+        self.bootstrap_tuple = ('bootstrap.ps1', r.hashlib.sha256(self.bootstrap.read_bytes()).hexdigest())
+        self.bootstrap_patch = mock.patch.object(r, 'BOOTSTRAP', self.bootstrap_tuple)
+        self.bootstrap_patch.start()
+        self.addCleanup(self.bootstrap_patch.stop)
         self.release_patch = mock.patch.object(r, 'RELEASE', self.release)
         self.release_patch.start()
         self.addCleanup(self.release_patch.stop)
@@ -48,7 +54,7 @@ class ReadinessTests(unittest.TestCase):
     def test_all_checks_good_no_output_created(self):
         result = self.check()
         self.assertTrue(result['ready'])
-        self.assertEqual(len(result['checks']), 15)
+        self.assertEqual(len(result['checks']), 16)
         self.assertFalse(self.output.exists())
         self.assertFalse(result['client_modified'])
         self.assertFalse(result['created_output'])
@@ -65,6 +71,10 @@ class ReadinessTests(unittest.TestCase):
 
     def test_tampered_release_denied(self):
         self.package.write_bytes(b'tampered')
+        self.assertFalse(self.check()['ready'])
+
+    def test_tampered_bootstrap_denied(self):
+        self.bootstrap.write_bytes(b'pre-release wrong script fixture')
         self.assertFalse(self.check()['ready'])
 
     def test_missing_release_denied(self):
