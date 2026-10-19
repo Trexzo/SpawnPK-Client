@@ -37,3 +37,15 @@ python scripts/R286-Windows-Acceptance.py --r278 R278_PRIVATE.zip --r265 R265_PR
 This acceptance uses a synthetic 127.0.0.1 test server and dummy local login, not actual original game login/authentication, inventory, cooking mechanics, native server pathfinding or sustained production gameplay. UI positioning, Win32 foreground ownership, Java AWT behavior and process cleanup are **not yet empirically tested on Windows**. If the GUI run fails, `R286_acceptance.json` and logs identify the failing stage; only the newly created disposable output home can be manually deleted. Original source archives and installed client remain untouched.
 
 Keep [`Trexzo/SpawnPK-Client` PR #1142](https://github.com/Trexzo/SpawnPK-Client/pull/1142) DRAFT. No merge to main until real Windows acceptance and broader compatibility checks are completed.
+
+## R286 public archive re-execution (additional reviewable safety test)
+
+The public independently authored test \`tests/python/r286/R286StandaloneSafetySuite.py\` pins the **exact release archive SHA256 \`2cacd2c551d6169be45e695f324d6c70a6d2a0b73a59b15fc5bce444f88a9877\`**, verifies that every ZIP entry is source-safe, and re-executes the **actual 19 negative-path tests from a fresh extracted copy**. It also exercises the missing-owner-input denial path and checks that no output directory is created. Locally, this added public test passed **91/91 independent checks**, on top of the separately executed **92/92 archive-evidence checks**. Its committed Git blob \`1f4037d6f37e167efa6bae7e0201c9ad948c9586\` exactly matches the tested source.
+
+To run this check on any Python 3.11+ environment, without touching your client or requiring Windows:
+
+\`\`\`bash
+python tests/python/r286/R286StandaloneSafetySuite.py SpawnPK_v309_R286_WINDOWS_GUARDED_ACCEPTANCE_SOURCE_ONLY.zip
+\`\`\`
+
+This remains **test preparation only**, and the Windows GUI field in the archive manifest is deliberately \`NOT_TESTED\`.
