@@ -199,7 +199,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input-dir', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--r291-source', type=Path)
+    parser.add_argument('--r297-source', type=Path)
     parser.add_argument('--run-native-gui', action='store_true', help='EXPLICIT real Windows AWT opt-in')
     args = parser.parse_args(argv)
     input_dir = args.input_dir.expanduser().absolute()
