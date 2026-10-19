@@ -8,7 +8,6 @@ allowed as inputs. Results are written to stdout, not disk.
 """
 import argparse
 import hashlib
-import importlib.util
 import json
 from pathlib import Path
 import re
@@ -19,6 +18,8 @@ import sys
 
 RELEASE = ('SpawnPK_v309_R286_WINDOWS_GUARDED_ACCEPTANCE_SOURCE_ONLY.zip',
            '2cacd2c551d6169be45e695f324d6c70a6d2a0b73a59b15fc5bce444f88a9877')
+BOOTSTRAP = ('Invoke-R286-Guarded-Windows.ps1',
+             '2186740003afb75df8dd79e2da6a721c121026733dc20ca087973f1d0cd70246')
 ARCHIVES = {
     'r278': ('SpawnPK_v309_R278_FULL_SOURCE_OBJECT_AUTHORITY_GUARDS.zip',
              'e83f4211d96ffe4188807c79e50cc526eecbe020d010cdd8fecb4a10f2768280'),
@@ -50,8 +51,13 @@ def java_major(version_text):
 
 
 def runtime_prerequisites():
+    try:
+        from PIL import Image as _pillow_image  # Check actual import, not just presence.
+        pillow_ok = hasattr(_pillow_image, 'open')
+    except (ImportError, OSError):
+        pillow_ok = False
     report = {'python': sys.version_info.major == 3 and sys.version_info.minor >= 11,
-              'pillow': importlib.util.find_spec('PIL') is not None}
+              'pillow': pillow_ok}
     for program in ('java', 'javac'):
         path = shutil.which(program)
         if not path:
@@ -140,7 +146,7 @@ def readiness(input_dir, evidence, output, *, platform_name=None,
     is_windows = platform_name == 'win32'
     record('native_windows', is_windows, 'Windows required; Linux cannot verify Win32 GUI')
     record('input_directory', input_dir.is_dir() and not input_dir.is_symlink(), 'owner archive directory')
-    for label, (filename, digest) in {'r286_release': RELEASE, **expectations}.items():
+    for label, (filename, digest) in {'r286_release': RELEASE, 'r286_bootstrap': BOOTSTRAP, **expectations}.items():
         path = evidence if label == 'r286_release' else input_dir / filename
         if not path.is_file() or path.is_symlink():
             record('sha256_'+label, False, 'required regular file absent or symbolic link: '+filename)
