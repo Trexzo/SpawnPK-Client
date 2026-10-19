@@ -14,6 +14,8 @@ on:
       - 'tests/python/r294/**'
       - 'tests/python/r295/**'
       - 'tests/python/r296/**'
+      - 'tests/python/r297/**'
+      - 'tests/powershell/r297/**'
       - 'tools/gui/r296/**'
       - 'tests/java/r295/**'
       - 'tools/recovery/r295/**'
@@ -40,6 +42,8 @@ on:
       - 'tests/python/r294/**'
       - 'tests/python/r295/**'
       - 'tests/python/r296/**'
+      - 'tests/python/r297/**'
+      - 'tests/powershell/r297/**'
       - 'tools/gui/r296/**'
       - 'tests/java/r295/**'
       - 'tools/recovery/r295/**'
@@ -93,6 +97,8 @@ jobs:
         run: python tests/python/r295/R295SourceSafetyRegression.py
       - name: Verify R296 original wait/full wrapper source safety
         run: python tests/python/r296/R296SourceSafetyRegression.py
+      - name: Verify R297 exact R295 native GUI source and truthful Win32 readiness
+        run: python tests/python/r297/R297AcceptanceRegression.py
       - name: Exercise genuine Windows PowerShell failure paths (no game)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -105,4 +111,8 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: ./tests/powershell/r292/Invoke-R292-NativeSourceSafety.ps1
+      - name: Verify real Win32 R297 native launcher failure paths (no game)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./tests/powershell/r297/Invoke-R297-NativeSourceSafety.ps1
 
