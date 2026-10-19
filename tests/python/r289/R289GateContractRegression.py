@@ -72,6 +72,10 @@ class GateContract(unittest.TestCase):
         for name in ('*.jar','*.class','*.dat','*.idx','*.ttf','*.otf'):
             self.assertEqual(list(ROOT.glob('tools/windows/'+name)),[])
 
+    def test_windows_negative_probes_reset_final_exit_status(self):
+        ps = ROOT / 'tests/powershell/r289/Invoke-R289-SafeWindowsChecks.ps1'
+        self.assertEqual(ps.read_text().strip().splitlines()[-1], 'exit 0')
+
     def test_wrong_public_inputs_refuse_without_new_output(self):
         with tempfile.TemporaryDirectory(prefix='r289-contract-') as t:
             input_dir = Path(t)/'inputs'
