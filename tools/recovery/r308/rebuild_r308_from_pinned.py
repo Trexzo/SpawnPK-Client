@@ -71,7 +71,8 @@ def main(argv=None):
   manifest=json.loads(manifest_path.read_text())
   if manifest.get('compiled_classes')!=1386 or manifest.get('java_source_files')!=1277:
    raise ValueError('R308_PRIVATE_BUILD_CLASS_COUNT_DRIFT')
-  manifest.update(milestone='R308',new_scene_sha256=PIN_R308_SCENE,
+  manifest.update(milestone='R308',previous_scene_sha256=PIN_R307_SCENE,
+   previous_client_sha256='f7d8e18a5e5d0b43e25b579388d06f035e0890dc8d595c41aac56bb316fc9dcf',new_scene_sha256=PIN_R308_SCENE,
    source_built_private_jar_sha256=PIN_R308_JAR,
    change='Eight scene placement entry points reject out-of-scene plane and coordinates before modifying tiles.')
   original_jar.rename(stage/'R308_SOURCE_BUILT_CLASS_ONLY.jar')
