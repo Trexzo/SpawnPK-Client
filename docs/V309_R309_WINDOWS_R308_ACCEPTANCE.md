@@ -40,3 +40,6 @@ Both commands reject an existing output path; preflight creates no output. The n
 The public `tests/python/r309/R309SourceSafetyRegression.py` exercises source provenance, archive/JAR pinning, absence of owner inputs, source tampering, invalid method anchors, non-Windows refusal, and explicit GUI opt-in without launching the game.
 
 Hosted source-only Windows/Linux CI cannot establish native owner gameplay or real GPU rendering. R308's independently reported 106,769 authentic JVM assertions and Linux Cooking GUI replay are pre-existing evidence, not new R309 test results. Native Windows R308 graphics (especially 50-tile draw radius), the production server and sustained gameplay remain unverified until an actual guarded Windows receipt exists. No merges or owner installation are implied.
+
+
+Git-for-Windows CRLF checkout conversion is supported only by first canonicalizing CRLF to LF and then verifying the **same exact Git blob and SHA-256 pins**. Mixed/stray carriage returns and changed source bytes are refused.
