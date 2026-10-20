@@ -8,7 +8,7 @@ This milestone updates the **owner-native test harness only**. No game class, ca
 - Private owner-only ZIP (not in GitHub): `SpawnPK_v309_R308_SCENE_PLACEMENT_BOUNDS_PRIVATE.zip`
 - Private ZIP SHA-256: `977645c2ed90c0936815e9da5ca609ee23480176088137f8d3e7ee3b88654d6c`
 - ZIP member: `bin/R308_SOURCE_BUILT_CLASS_ONLY.jar`
-- Compiled private JAR SHA-256: `501072d504a4e03a758f44aaa32f0990d3f1599662f6d2fa0d83a14e6fc314`
+- Compiled private JAR SHA-256: `501072d504a4e03a758f44aaa32f0990d3f1599662f6f6d2fa0d83a14e6fc314`
 
 R309 reads the existing R297 readiness and GUI harness from this exact GitHub checkout, verifies their Git blob hashes (and the original GUI script's independent SHA-256), and adapts four pinned source literals in memory: private R308 ZIP name, its SHA-256, R308 JAR SHA-256 and four JAR member references. This reuses the original R286 guarded Windows GUI/Robot harness and its original-archive trust pins rather than duplicating launcher or isolation logic.
 
