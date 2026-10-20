@@ -16,6 +16,34 @@ For compatibility, the original harness uses an internal `r295` parameter name; 
 
 The original readiness gates are retained: Python/Pillow/Java, native interactive Windows, physical 1400×900 at 96 DPI, free loopback port 43594, safe fresh output path, exact private owner input hashes and original GUI source anchors. The native harness then checks the foreground Java window and drives the isolated localhost-only interaction. No user game folder is modified.
 
+## R310 PowerShell entry: one source checkout, no extracted installer
+
+R310 adds `tools/windows/Invoke-R310-R308-Owner.ps1` as the preferred **Windows PowerShell** entry. No extra ZIP, Python patch extraction, global Java installation, networking, or owner-game file modifications are introduced by the entry point. It verifies the exact public Git blob of the underlying R309 Python worker (also accepting only canonicalized CRLF); the worker then verifies the old pinned R297/R286 scripts and the owner-private archive checks.
+
+The following commands use an already cloned checkout of PR #1142's integration branch. Edit `$Root` to its actual location. The default mode performs **inventory only**, without a GUI or output directory:
+
+```powershell
+$Root = 'C:\path\to\SpawnPK-Client'
+$Entry = Join-Path $Root 'tools\windows\Invoke-R310-R308-Owner.ps1'
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Entry -Inventory
+```
+
+For the complete **read-only native readiness preflight** (which requires all seven owner-private files, 1400×900 primary desktop at 100% DPI, and free localhost port):
+
+```powershell
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Entry -Preflight
+```
+
+After readiness succeeds, and **only when the owner intentionally authorizes automated AWT mouse/keyboard input to the foreground isolated Java client**, start the bounded GUI:
+
+```powershell
+& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Entry -RunNativeGui
+```
+
+`-InputDir`, `-Output`, and `-Root` overrides are supported. Output defaults to a fresh timestamped Desktop folder, is never overwritten, and is only relevant to the preflight and opt-in GUI modes. An empty or tampered checkout fails before launching Python. Default inventory/readiness status is not gameplay acceptance; `-RunNativeGui` still runs the original strict R286 checks.
+
+The wrapper cannot change screen resolution, scaling, display focus, OS graphics mode, owner input hash pins or any private asset. Do **not** bypass these strict gates when working on another desktop size. Genuine R308 Windows/GPU gameplay stays `NOT_TESTED` until owner-native evidence exists.
+
 ## Read-only inventory before running the owner GUI
 
 From the same branch checkout, check all seven required owner-private files **without creating output or launching the client**:
