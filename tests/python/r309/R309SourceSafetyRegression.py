@@ -138,6 +138,7 @@ class Safety(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             inputs=Path(d)/'inputs';inputs.mkdir()
             target=owner.R286[0]
+            (inputs/target).write_bytes(b'fixture-only')
             original=Path.is_symlink
             with mock.patch.object(Path,'is_symlink',autospec=True,
                   side_effect=lambda path: path.name==target or original(path)):
@@ -246,6 +247,7 @@ class Safety(unittest.TestCase):
                 info=original(path,*args,**kw)
                 if path.name != name:return info
                 class Fake:
+                    st_mode = info.st_mode
                     st_file_attributes = getattr(stat,'FILE_ATTRIBUTE_REPARSE_POINT',1024)
                 return Fake()
             with mock.patch.object(Path,'lstat',autospec=True,side_effect=tagged):
@@ -272,6 +274,7 @@ class Safety(unittest.TestCase):
                 actual=orig(path,*args,**kw)
                 if path==inputs:
                     class Fake:
+                        st_mode = actual.st_mode
                         st_file_attributes = getattr(stat,'FILE_ATTRIBUTE_REPARSE_POINT',1024)
                     return Fake()
                 return actual
