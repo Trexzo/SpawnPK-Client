@@ -16,6 +16,9 @@ on:
       - 'tests/python/r296/**'
       - 'tests/python/r297/**'
       - 'tests/python/r298/**'
+      - 'tests/python/r299/**'
+      - 'tests/java/r299/**'
+      - 'tools/recovery/r299/**'
       - 'tools/recovery/r298/**'
       - 'tests/powershell/r297/**'
       - 'tools/gui/r296/**'
@@ -46,6 +49,9 @@ on:
       - 'tests/python/r296/**'
       - 'tests/python/r297/**'
       - 'tests/python/r298/**'
+      - 'tests/python/r299/**'
+      - 'tests/java/r299/**'
+      - 'tools/recovery/r299/**'
       - 'tools/recovery/r298/**'
       - 'tests/powershell/r297/**'
       - 'tools/gui/r296/**'
@@ -105,6 +111,8 @@ jobs:
         run: python tests/python/r297/R297AcceptanceRegression.py
       - name: Verify R298 pinned read-only Scene query boundaries and safe owner rebuild
         run: python tests/python/r298/R298SourceSafetyRegression.py
+      - name: Verify R299 seven real-client Scene mutation guards and source pins
+        run: python tests/python/r299/R299SourceSafetyRegression.py
       - name: Exercise genuine Windows PowerShell failure paths (no game)
         if: runner.os == 'Windows'
         shell: pwsh
