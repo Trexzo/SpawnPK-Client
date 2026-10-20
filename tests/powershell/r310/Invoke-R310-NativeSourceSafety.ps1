@@ -73,6 +73,27 @@ try {
     Assert-R310 ($Preflight.Text -match 'R310_READ_ONLY_PREFLIGHT_NOT_ADMITTED') 'preflight failed to propagate status'
     Assert-R310 (-not (Test-Path -LiteralPath $Output)) 'preflight created output'
 
+    # Real owner invocation used -File without -Root. Previously, parameter
+    # binding evaluated $PSScriptRoot as empty; test from an unrelated cwd.
+    Push-Location -LiteralPath $Tmp
+    try {
+        $DefaultInventoryText = (& $Native -NoProfile -ExecutionPolicy Bypass -File $Entry -InputDir $Owner -Inventory 2>&1 | Out-String)
+        $DefaultInventoryExit = $LASTEXITCODE
+        Assert-R310 ($DefaultInventoryExit -eq 1) 'default checkout root did not refuse absent private inputs'
+        Assert-R310 ($DefaultInventoryText -match 'R309_R308_INPUT_INVENTORY') 'default checkout root did not find pinned worker'
+        Assert-R310 ($DefaultInventoryText -match 'R310_INVENTORY_NOT_ADMITTED') 'default root inventory failed to propagate input refusal'
+        Assert-R310 (-not ($DefaultInventoryText -match 'Cannot bind argument to parameter')) 'default root still fails in param binding'
+
+        $DefaultPreflightText = (& $Native -NoProfile -ExecutionPolicy Bypass -File $Entry -InputDir $Owner -Output $Output -Preflight 2>&1 | Out-String)
+        $DefaultPreflightExit = $LASTEXITCODE
+        Assert-R310 ($DefaultPreflightExit -eq 1) 'default checkout root did not refuse incomplete preflight'
+        Assert-R310 ($DefaultPreflightText -match 'R309_R308_READINESS') 'default root preflight did not run readiness'
+        Assert-R310 (-not (Test-Path -LiteralPath $Output)) 'default root preflight created output'
+    }
+    finally {
+        Pop-Location
+    }
+
     $CRLF = [Text.Encoding]::UTF8.GetString($Source).Replace([string][char]10, ([string][char]13+[string][char]10))
     [IO.File]::WriteAllText($Worker, $CRLF, (New-Object Text.UTF8Encoding $false))
     $CrLfResult = Invoke-Entry @('-Inventory')
