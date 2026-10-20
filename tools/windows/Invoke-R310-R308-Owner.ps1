@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$Root = (Join-Path $PSScriptRoot '..\..'),
+    [string]$Root,
     [string]$InputDir = (Join-Path $env:USERPROFILE 'Downloads'),
     [string]$Output = (Join-Path ([Environment]::GetFolderPath('Desktop')) ('SpawnPK-R308-Native-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))),
     [switch]$Inventory,
@@ -9,6 +9,16 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+
+# Automatic variables such as $PSScriptRoot are only reliable after script
+# parameter binding. Derive the checkout root in the script body, never in
+# a default param expression. Explicit -Root remains supported for tests.
+if ([string]::IsNullOrWhiteSpace($Root)) {
+    if ([string]::IsNullOrWhiteSpace($PSScriptRoot)) {
+        throw 'R310_SCRIPT_HOME_UNAVAILABLE'
+    }
+    $Root = (Resolve-Path -LiteralPath (Join-Path -Path $PSScriptRoot -ChildPath '..\..') -ErrorAction Stop).ProviderPath
+}
 
 # The exact R309 Python worker, pinned by its public Git blob. R310 never
 # downloads or extracts a script and never modifies the installed game.
