@@ -87,7 +87,7 @@ class SourceSafety(unittest.TestCase):
   for unsafe in ('spawnpk.net','urllib.request','requests.get(', 'rs.gui.Launcher'):
    self.assertNotIn(unsafe,s)
   for path in (SCRIPT.parent,JAVA.parent):
-   if path==ROOT: continue  # flat local test workspace; repository paths scanned in CI
+   if path==ROOT: continue  # developer flat workspace; public repository paths scanned in CI
    self.assertFalse([f for f in path.iterdir() if f.is_file() and f.suffix.lower() in {'.class','.jar','.dat','.idx'}])
 
 if __name__=='__main__':unittest.main(verbosity=2)
