@@ -75,17 +75,55 @@ def load_adapters(root: Path = ROOT):
     return (compile_pinned('r297_readiness', readiness),
             compile_pinned('r309_r308_pinned_harness', rewrite_pinned_harness(original)))
 
+def audit_inputs(input_dir: Path, harness):
+    """Read-only inventory. A passing inventory is NOT native GUI acceptance."""
+    if not input_dir.is_dir() or input_dir.is_symlink():
+        raise R309Refusal('R309_INPUT_INVENTORY_DIRECTORY_MISSING_OR_SYMLINK')
+    expected = {'r286': harness.R286, 'r295': harness.R295, **harness.OWNER}
+    entries = []
+    for key, (filename, digest) in expected.items():
+        path = input_dir/filename
+        if path.is_symlink():
+            status = 'SYMLINK_REFUSED'
+        elif not path.is_file():
+            status = 'MISSING'
+        elif harness.sha256_file(path) != digest:
+            status = 'SHA256_MISMATCH'
+        else:
+            status = 'SHA256_PASS'
+        entries.append({'key': key, 'filename': filename, 'status': status})
+    return {
+        'milestone': 'R309',
+        'target': 'R308',
+        'kind': 'READ_ONLY_INPUT_INVENTORY_NOT_NATIVE_ACCEPTANCE',
+        'inputs': entries,
+        'total': len(entries),
+        'verified': sum(x['status'] == 'SHA256_PASS' for x in entries),
+        'all_verified': all(x['status'] == 'SHA256_PASS' for x in entries),
+        'client_modified': False,
+        'native_windows_gui': 'NOT_TESTED',
+    }
+
 def run(args=None):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--input-dir', type=Path, required=True, help='Owner-only SHA-pinned archive directory')
     p.add_argument('--output', type=Path, required=True, help='New, non-existing native receipt directory')
     p.add_argument('--run-native-gui', action='store_true', help='Explicitly permit bounded Windows AWT input')
+    p.add_argument('--inventory', action='store_true', help='Read-only status of all exact owner inputs (no GUI)')
     a = p.parse_args(args)
+    if a.inventory and a.run_native_gui:
+        raise R309Refusal('R309_INVENTORY_AND_GUI_MUTUALLY_EXCLUSIVE')
+    if a.input_dir is None or (not a.inventory and a.output is None):
+        p.error('--input-dir is required; --output is also required except in --inventory mode')
     inp = a.input_dir.expanduser().absolute()
-    out = a.output.expanduser().absolute()
     if a.run_native_gui and sys.platform != 'win32':
         raise R309Refusal('R309_REFUSE_NON_WINDOWS_GUI')
     readiness, harness = load_adapters()
+    if a.inventory:
+        report = audit_inputs(inp, harness)
+        print('R309_R308_INPUT_INVENTORY '+json.dumps(report, sort_keys=True), flush=True)
+        return 0 if report['all_verified'] else 2
+    out = a.output.expanduser().absolute()
     report, trusted = readiness.admission(inp, ORIGINAL, out, loader=lambda _: harness)
     report['milestone'] = 'R309'
     report['target'] = 'R308'
