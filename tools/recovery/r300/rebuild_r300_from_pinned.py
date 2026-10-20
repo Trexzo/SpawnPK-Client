@@ -194,7 +194,6 @@ def patch_scene_entrypoints(prior: bytes) -> bytes:
         raise ValueError('R300_SCENE_POSTIMAGE_MISMATCH')
     return changed
 
-
 def main(argv=None):
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--r278',required=True,type=Path,help='exact original owner R278 ZIP')
