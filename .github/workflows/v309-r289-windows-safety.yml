@@ -49,6 +49,7 @@ on:
       - 'tools/recovery/r299/**'
       - 'tools/recovery/r298/**'
       - 'tests/powershell/r297/**'
+      - 'tests/powershell/r310/**'
       - 'tools/gui/r296/**'
       - 'tests/java/r295/**'
       - 'tools/recovery/r295/**'
@@ -110,6 +111,7 @@ on:
       - 'tools/recovery/r299/**'
       - 'tools/recovery/r298/**'
       - 'tests/powershell/r297/**'
+      - 'tests/powershell/r310/**'
       - 'tools/gui/r296/**'
       - 'tests/java/r295/**'
       - 'tools/recovery/r295/**'
@@ -205,4 +207,8 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: ./tests/powershell/r297/Invoke-R297-NativeSourceSafety.ps1
+      - name: R310 pinned owner PowerShell entry, source hash and native GUI refusal (no game)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./tests/powershell/r310/Invoke-R310-NativeSourceSafety.ps1
 
