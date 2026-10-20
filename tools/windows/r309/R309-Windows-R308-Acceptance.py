@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import stat
 from pathlib import Path
 import sys
 import types
@@ -75,22 +76,40 @@ def load_adapters(root: Path = ROOT):
     return (compile_pinned('r297_readiness', readiness),
             compile_pinned('r309_r308_pinned_harness', rewrite_pinned_harness(original)))
 
+def has_reparse_attribute(path: Path) -> bool:
+    """Refuse Win32 junctions/reparse points as well as ordinary symlinks."""
+    info = path.lstat()
+    return path.is_symlink() or bool(
+        getattr(info, 'st_file_attributes', 0)
+        & getattr(stat, 'FILE_ATTRIBUTE_REPARSE_POINT', 0)
+    )
+
 def audit_inputs(input_dir: Path, harness):
-    """Read-only inventory. A passing inventory is NOT native GUI acceptance."""
-    if not input_dir.is_dir() or input_dir.is_symlink():
-        raise R309Refusal('R309_INPUT_INVENTORY_DIRECTORY_MISSING_OR_SYMLINK')
+    """Inventory every owner input without writes; only digest matches are PASS."""
+    try:
+        if has_reparse_attribute(input_dir) or not input_dir.is_dir():
+            raise R309Refusal('R309_INPUT_INVENTORY_UNSAFE_DIRECTORY')
+    except OSError as error:
+        raise R309Refusal('R309_INPUT_INVENTORY_DIRECTORY_MISSING_OR_UNREADABLE') from error
     expected = {'r286': harness.R286, 'r295': harness.R295, **harness.OWNER}
     entries = []
     for key, (filename, digest) in expected.items():
         path = input_dir/filename
-        if path.is_symlink():
-            status = 'SYMLINK_REFUSED'
-        elif not path.is_file():
+        try:
+            if has_reparse_attribute(path):
+                status = 'REPARSE_POINT_REFUSED'
+            elif not path.is_file():
+                status = 'NOT_REGULAR_FILE'
+            else:
+                try:
+                    status = ('SHA256_PASS' if harness.sha256_file(path) == digest
+                              else 'SHA256_MISMATCH')
+                except OSError:
+                    status = 'READ_ERROR'
+        except FileNotFoundError:
             status = 'MISSING'
-        elif harness.sha256_file(path) != digest:
-            status = 'SHA256_MISMATCH'
-        else:
-            status = 'SHA256_PASS'
+        except OSError:
+            status = 'READ_ERROR'
         entries.append({'key': key, 'filename': filename, 'status': status})
     return {
         'milestone': 'R309',
