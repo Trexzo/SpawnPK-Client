@@ -41,6 +41,12 @@ def read_pinned(path: Path, git_sha: str, sha256: str | None = None) -> bytes:
     if not path.is_file() or path.is_symlink():
         raise R309Refusal('R309_PINNED_PUBLIC_SOURCE_MISSING_OR_SYMLINK '+path.name)
     data = path.read_bytes()
+    # Windows Git autocrlf can change only line endings during checkout.
+    # Accept CRLF solely when the canonical LF bytes match BOTH source pins.
+    if b'\r' in data:
+        data = data.replace(b'\r\n', b'\n')
+        if b'\r' in data:
+            raise R309Refusal('R309_INVALID_PUBLIC_SOURCE_LINE_ENDINGS '+path.name)
     if git_blob_sha(data) != git_sha or (sha256 and hashlib.sha256(data).hexdigest() != sha256):
         raise R309Refusal('R309_PINNED_PUBLIC_SOURCE_HASH_MISMATCH '+path.name)
     return data
