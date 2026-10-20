@@ -28,6 +28,13 @@ try {
     $Scripts = Join-Path $Fake 'tools\windows\r309'
     [void][IO.Directory]::CreateDirectory($Scripts)
     $Worker = Join-Path $Scripts 'R309-Windows-R308-Acceptance.py'
+    # R309 intentionally refuses to load without both pinned *public* R297 sources.
+    # Copy these verbatim; no owner-private ZIPs, cache or binaries are staged.
+    $R297Fake = Join-Path $Fake 'tools\windows\r297'
+    [void][IO.Directory]::CreateDirectory($R297Fake)
+    foreach ($Name in @('R297-Owner-Readiness.py', 'R297-Windows-R295-Acceptance.py')) {
+        Copy-Item -LiteralPath (Join-Path $Root ('tools\windows\r297\' + $Name)) -Destination (Join-Path $R297Fake $Name)
+    }
     $Owner = Join-Path $Tmp 'owner'
     [void][IO.Directory]::CreateDirectory($Owner)
     $Output = Join-Path $Tmp 'SHOULD-NOT-EXIST'
