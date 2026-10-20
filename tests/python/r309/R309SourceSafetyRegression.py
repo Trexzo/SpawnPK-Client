@@ -196,7 +196,27 @@ class Safety(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             with self.assertRaisesRegex(r.R309Refusal,'DIRECTORY_MISSING_OR_SYMLINK'):
                 r.audit_inputs(Path(d)/'absent',owner)
-    def test_24_no_private_assets_or_downloads(self):
+    def test_24_native_mode_still_requires_output_argument(self):
+        with tempfile.TemporaryDirectory() as d:
+            with mock.patch.object(r,'load_adapters',side_effect=AssertionError('load forbidden')):
+                with self.assertRaises(SystemExit) as caught:
+                    r.run(['--input-dir',d])
+            self.assertEqual(caught.exception.code,2)
+    def test_25_alternate_r308_release_hash_refused_before_extraction(self):
+        _,owner=r.load_adapters()
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            inputs=root/'inputs';inputs.mkdir()
+            expected={'r286':owner.R286,'r295':owner.R295,**owner.OWNER}
+            lookup={filename:digest for filename,digest in expected.values()}
+            for filename,_ in expected.values():
+                (inputs/filename).write_bytes(b'fake owner private fixture')
+            lookup[owner.R295[0]]='0'*64
+            with mock.patch.object(owner,'sha256_file',side_effect=lambda path: lookup[path.name]):
+                with self.assertRaisesRegex(owner.GuardError,'R291_INPUT_SHA256_MISMATCH r295'):
+                    owner.preflight(inputs,root/'receipt')
+            self.assertFalse((root/'receipt').exists())
+    def test_26_no_private_assets_or_downloads(self):
         s=ENTRY.read_text()
         for forbidden in ('requests.get(', 'urllib.request', 'spawnpk.net','taskkill /IM','rs.gui.Launcher'):
             self.assertNotIn(forbidden,s)
