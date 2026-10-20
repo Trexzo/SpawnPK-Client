@@ -16,6 +16,21 @@ For compatibility, the original harness uses an internal `r295` parameter name; 
 
 The original readiness gates are retained: Python/Pillow/Java, native interactive Windows, physical 1400×900 at 96 DPI, free loopback port 43594, safe fresh output path, exact private owner input hashes and original GUI source anchors. The native harness then checks the foreground Java window and drives the isolated localhost-only interaction. No user game folder is modified.
 
+## Read-only inventory before running the owner GUI
+
+From the same branch checkout, check all seven required owner-private files **without creating output or launching the client**:
+
+```powershell
+$Root = 'C:\path\to\SpawnPK-Client'
+$Inputs = Join-Path $env:USERPROFILE 'Downloads'
+$Entry = Join-Path $Root 'tools\windows\r309\R309-Windows-R308-Acceptance.py'
+& py -3 $Entry --input-dir $Inputs --inventory
+```
+
+The single JSON result has one entry per required archive/JAR, with `MISSING`, `SHA256_MISMATCH`, `SYMLINK_REFUSED` or `SHA256_PASS`. This includes the seven exact R286/R308/R278/R265/assets/original/R230 dependencies. A nonzero exit means at least one input was not verified. It checks all seven rather than reporting only the first problem, shows filenames but not private absolute paths or measured hashes, and is safe to run repeatedly. **All seven passing still proves input checksums only, not ZIP overlay correctness, Windows readiness, graphical success or GPU correctness.**
+
+Some earlier R308 packages have different archive SHA-256 values. Only the **specific pinned R308 private ZIP** above is accepted by this adapter; do not rename, force-accept or bypass a different archive checksum.
+
 ## Owner command
 
 Use a checkout of the branch with R309 and all previously required owner-private archives already under Downloads. Start with the read-only preflight:
