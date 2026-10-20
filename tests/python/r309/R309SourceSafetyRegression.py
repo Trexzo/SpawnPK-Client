@@ -82,7 +82,21 @@ class Safety(unittest.TestCase):
             with redirect_stdout(io.StringIO()):
                 self.assertEqual(r.run(['--input-dir',d,'--output',str(Path(d)/'receipt'),'--run-native-gui']),0)
             self.assertEqual(owner.main.call_args.args[0][-1],'--run-native-gui')
-    def test_12_no_private_assets_or_downloads(self):
+    def test_12_crlf_checkout_rehashed_to_exact_public_bytes(self):
+        original=r.read_pinned(r.ORIGINAL,r.ORIGINAL_GIT_BLOB,r.ORIGINAL_SHA256)
+        with tempfile.TemporaryDirectory() as d:
+            changed=Path(d)/'windows-checkout.py'
+            changed.write_bytes(original.replace(b'\n',b'\r\n'))
+            canonical=r.read_pinned(changed,r.ORIGINAL_GIT_BLOB,r.ORIGINAL_SHA256)
+            self.assertEqual(canonical,original)
+    def test_13_lone_carriage_return_is_refused(self):
+        original=r.read_pinned(r.ORIGINAL,r.ORIGINAL_GIT_BLOB,r.ORIGINAL_SHA256)
+        with tempfile.TemporaryDirectory() as d:
+            damaged=Path(d)/'damaged.py'
+            damaged.write_bytes(original.replace(b'\n',b'\r\n')+b'\r')
+            with self.assertRaisesRegex(r.R309Refusal,'INVALID_PUBLIC_SOURCE_LINE_ENDINGS'):
+                r.read_pinned(damaged,r.ORIGINAL_GIT_BLOB,r.ORIGINAL_SHA256)
+    def test_14_no_private_assets_or_downloads(self):
         s=ENTRY.read_text()
         for forbidden in ('requests.get(', 'urllib.request', 'spawnpk.net','taskkill /IM','rs.gui.Launcher'):
             self.assertNotIn(forbidden,s)
