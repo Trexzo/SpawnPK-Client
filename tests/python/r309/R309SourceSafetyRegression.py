@@ -96,7 +96,107 @@ class Safety(unittest.TestCase):
             damaged.write_bytes(original.replace(b'\n',b'\r\n')+b'\r')
             with self.assertRaisesRegex(r.R309Refusal,'INVALID_PUBLIC_SOURCE_LINE_ENDINGS'):
                 r.read_pinned(damaged,r.ORIGINAL_GIT_BLOB,r.ORIGINAL_SHA256)
-    def test_14_no_private_assets_or_downloads(self):
+    def test_14_inventory_reports_all_seven_missing_without_writing(self):
+        _,owner=r.load_adapters()
+        with tempfile.TemporaryDirectory() as d:
+            inputs=Path(d)/'inputs';inputs.mkdir()
+            result=r.audit_inputs(inputs,owner)
+            self.assertEqual(result['total'],7)
+            self.assertEqual(result['verified'],0)
+            self.assertFalse(result['all_verified'])
+            self.assertEqual(len(result['inputs']),7)
+            self.assertTrue(all(x['status']=='MISSING' for x in result['inputs']))
+            self.assertEqual([x['key'] for x in result['inputs']],
+                             ['r286','r295','r278','r265','assets','original','r230'])
+            self.assertEqual(list(inputs.iterdir()),[])
+    def test_15_inventory_detects_every_wrong_sha_without_launch(self):
+        _,owner=r.load_adapters()
+        with tempfile.TemporaryDirectory() as d:
+            inputs=Path(d)/'inputs';inputs.mkdir()
+            expected={'r286':owner.R286,'r295':owner.R295,**owner.OWNER}
+            for filename,_ in expected.values():
+                (inputs/filename).write_bytes(b'fabricated private input - do not trust')
+            result=r.audit_inputs(inputs,owner)
+            self.assertEqual(result['verified'],0)
+            self.assertTrue(all(x['status']=='SHA256_MISMATCH' for x in result['inputs']))
+    def test_16_inventory_exact_sha_positive_with_synthetic_hasher(self):
+        _,owner=r.load_adapters()
+        with tempfile.TemporaryDirectory() as d:
+            inputs=Path(d)/'inputs';inputs.mkdir()
+            expected={'r286':owner.R286,'r295':owner.R295,**owner.OWNER}
+            lookup={filename:digest for filename,digest in expected.values()}
+            for filename,_ in expected.values():
+                (inputs/filename).write_bytes(b'fake fixture, not a valid owner archive')
+            with mock.patch.object(owner,'sha256_file',side_effect=lambda path: lookup[path.name]):
+                result=r.audit_inputs(inputs,owner)
+            self.assertEqual(result['verified'],7)
+            self.assertTrue(result['all_verified'])
+            self.assertEqual(result['native_windows_gui'],'NOT_TESTED')
+            self.assertFalse(result['client_modified'])
+    def test_17_inventory_refuses_symlinked_archive(self):
+        _,owner=r.load_adapters()
+        with tempfile.TemporaryDirectory() as d:
+            inputs=Path(d)/'inputs';inputs.mkdir()
+            target=owner.R286[0]
+            original=Path.is_symlink
+            with mock.patch.object(Path,'is_symlink',autospec=True,
+                  side_effect=lambda path: path.name==target or original(path)):
+                result=r.audit_inputs(inputs,owner)
+            self.assertEqual(result['inputs'][0]['status'],'SYMLINK_REFUSED')
+    def test_18_inventory_cli_does_not_require_output_or_start_gui(self):
+        _,owner=r.load_adapters()
+        with tempfile.TemporaryDirectory() as d:
+            game=mock.Mock(side_effect=AssertionError('GUI must not start'))
+            with mock.patch.object(r,'load_adapters',return_value=(None,owner)),mock.patch.object(owner,'main',game,create=True):
+                with redirect_stdout(io.StringIO()) as out:
+                    self.assertEqual(r.run(['--input-dir',d,'--inventory']),2)
+                self.assertIn('R309_R308_INPUT_INVENTORY',out.getvalue())
+                self.assertNotIn(str(d),out.getvalue())
+            game.assert_not_called()
+    def test_19_inventory_and_gui_optin_combination_denied(self):
+        with tempfile.TemporaryDirectory() as d:
+            with mock.patch.object(r,'load_adapters',side_effect=AssertionError('load forbidden')):
+                with self.assertRaisesRegex(r.R309Refusal,'MUTUALLY_EXCLUSIVE'):
+                    r.run(['--input-dir',d,'--inventory','--run-native-gui'])
+    def test_20_r286_synthetic_entrypoint_overlay_targets_exact_r308(self):
+        _,owner=r.load_adapters()
+        original=(
+            "    'r230': '5c21e5c643de759da80c4d18ebb6a49c84968d47a979caa33f7d4ad2170a7125',\n"
+            "R278_JAR = 'dbaeaef9b375c8a99a6138075bed4ba71ef71ad2d82e8417ae36b400bd4828bd'\n"
+            "with zipfile.ZipFile(inputs['r278']) as z:\n"
+            "jar = testhome/'R278_SOURCE_BUILT_CLASS_ONLY.jar'\n"
+            "z.read('bin/R278_SOURCE_BUILT_CLASS_ONLY.jar')\n"
+            "if digest(jar) != R278_JAR:\n"
+            "    except (AttributeError, OSError):\n        dpi = 96\n"
+            "    return {'pid': pid.value, 'window_rect': [rect.left, rect.top, rect.right, rect.bottom]}\n"
+        )
+        patched=owner.overlay('scripts/R286-Windows-Acceptance.py',original.encode()).decode()
+        for token in (owner.R295_JAR, owner.R295[1], r.R308_JAR_MEMBER,
+                      "with zipfile.ZipFile(inputs['r295']) as z:",
+                      'R291_CLIENT_WINDOW_NOT_AT_VERIFIED_ROBOT_ANCHORS',
+                      'R291_CANNOT_VERIFY_WINDOWS_DPI'):
+            self.assertIn(token,patched)
+        self.assertNotIn('R278_SOURCE_BUILT_CLASS_ONLY.jar',patched)
+    def test_21_r286_synthetic_robot_overlay_targets_exact_r308(self):
+        _,owner=r.load_adapters()
+        original=("jar = base/'R278_SOURCE_BUILT_CLASS_ONLY.jar'\n"
+                  "if API.digest(jar)!=API.R278_JAR:\n")
+        patched=owner.overlay('scripts/probe/run_r286_windows_gui.py',original.encode()).decode()
+        self.assertIn("base/'R308_SOURCE_BUILT_CLASS_ONLY.jar'",patched)
+        self.assertIn('API.R295_JAR',patched)
+        self.assertNotIn('R278_SOURCE_BUILT_CLASS_ONLY.jar',patched)
+    def test_22_r286_synthetic_overlay_rejects_drift(self):
+        _,owner=r.load_adapters()
+        with self.assertRaisesRegex(owner.GuardError,'ANCHOR_NOT_UNIQUE'):
+            owner.overlay('scripts/R286-Windows-Acceptance.py',b'unexpected owner source')
+        with self.assertRaisesRegex(owner.GuardError,'UNLISTED_OVERLAY'):
+            owner.overlay('scripts/untrusted.py',b'print("no")')
+    def test_23_missing_required_directory_fail_closed(self):
+        _,owner=r.load_adapters()
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaisesRegex(r.R309Refusal,'DIRECTORY_MISSING_OR_SYMLINK'):
+                r.audit_inputs(Path(d)/'absent',owner)
+    def test_24_no_private_assets_or_downloads(self):
         s=ENTRY.read_text()
         for forbidden in ('requests.get(', 'urllib.request', 'spawnpk.net','taskkill /IM','rs.gui.Launcher'):
             self.assertNotIn(forbidden,s)
