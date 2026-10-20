@@ -106,8 +106,8 @@ def audit_inputs(input_dir: Path, harness):
 
 def run(args=None):
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--input-dir', type=Path, required=True, help='Owner-only SHA-pinned archive directory')
-    p.add_argument('--output', type=Path, required=True, help='New, non-existing native receipt directory')
+    p.add_argument('--input-dir', type=Path, help='Owner-only SHA-pinned archive directory')
+    p.add_argument('--output', type=Path, help='New, non-existing native receipt directory')
     p.add_argument('--run-native-gui', action='store_true', help='Explicitly permit bounded Windows AWT input')
     p.add_argument('--inventory', action='store_true', help='Read-only status of all exact owner inputs (no GUI)')
     a = p.parse_args(args)
