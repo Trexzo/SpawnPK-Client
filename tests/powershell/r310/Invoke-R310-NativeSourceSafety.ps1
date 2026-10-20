@@ -16,7 +16,7 @@ $Tokens = $null; $Syntax = $null
 [void][Management.Automation.Language.Parser]::ParseFile($Entry, [ref]$Tokens, [ref]$Syntax)
 Assert-R310 (@($Syntax).Count -eq 0) 'PowerShell parser errors'
 $Body = Get-Content -LiteralPath $Entry -Raw
-Assert-R310 ($Body.Contains("386215eae214ad73512492f5db50fda271e6adc9")) 'Python blob not pinned'
+Assert-R310 ($Body.Contains("149c50e9ede9ca2ed70afcf6708ee9b882c84a10")) 'Python blob not pinned'
 Assert-R310 ($Body.Contains("R310_PINNED_PYTHON_WORKER_GIT_BLOB_MISMATCH")) 'source hash guard missing'
 Assert-R310 ($Body.Contains("'--run-native-gui'")) 'GUI opt-in guard missing'
 Assert-R310 (-not ($Body.Contains('Invoke-WebRequest') -or $Body.Contains('taskkill'))) 'unexpected download or process kill'
