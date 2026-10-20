@@ -17,6 +17,9 @@ on:
       - 'tests/python/r297/**'
       - 'tests/python/r298/**'
       - 'tests/python/r299/**'
+      - 'tests/python/r300/**'
+      - 'tests/java/r300/**'
+      - 'tools/recovery/r300/**'
       - 'tests/java/r299/**'
       - 'tools/recovery/r299/**'
       - 'tools/recovery/r298/**'
@@ -50,6 +53,9 @@ on:
       - 'tests/python/r297/**'
       - 'tests/python/r298/**'
       - 'tests/python/r299/**'
+      - 'tests/python/r300/**'
+      - 'tests/java/r300/**'
+      - 'tools/recovery/r300/**'
       - 'tests/java/r299/**'
       - 'tools/recovery/r299/**'
       - 'tools/recovery/r298/**'
@@ -113,6 +119,8 @@ jobs:
         run: python tests/python/r298/R298SourceSafetyRegression.py
       - name: Verify R299 seven real-client Scene mutation guards and source pins
         run: python tests/python/r299/R299SourceSafetyRegression.py
+      - name: Verify R300 real-client plane/bridge/object-footprint source guards
+        run: python tests/python/r300/R300SourceSafetyRegression.py
       - name: Exercise genuine Windows PowerShell failure paths (no game)
         if: runner.os == 'Windows'
         shell: pwsh
