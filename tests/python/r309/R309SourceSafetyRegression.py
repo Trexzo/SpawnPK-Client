@@ -142,7 +142,7 @@ class Safety(unittest.TestCase):
             with mock.patch.object(Path,'is_symlink',autospec=True,
                   side_effect=lambda path: path.name==target or original(path)):
                 result=r.audit_inputs(inputs,owner)
-            self.assertEqual(result['inputs'][0]['status'],'SYMLINK_REFUSED')
+            self.assertEqual(result['inputs'][0]['status'],'REPARSE_POINT_REFUSED')
     def test_18_inventory_cli_does_not_require_output_or_start_gui(self):
         _,owner=r.load_adapters()
         with tempfile.TemporaryDirectory() as d:
@@ -194,7 +194,7 @@ class Safety(unittest.TestCase):
     def test_23_missing_required_directory_fail_closed(self):
         _,owner=r.load_adapters()
         with tempfile.TemporaryDirectory() as d:
-            with self.assertRaisesRegex(r.R309Refusal,'DIRECTORY_MISSING_OR_SYMLINK'):
+            with self.assertRaisesRegex(r.R309Refusal,'DIRECTORY_MISSING_OR_UNREADABLE'):
                 r.audit_inputs(Path(d)/'absent',owner)
     def test_24_native_mode_still_requires_output_argument(self):
         with tempfile.TemporaryDirectory() as d:
@@ -216,7 +216,69 @@ class Safety(unittest.TestCase):
                 with self.assertRaisesRegex(owner.GuardError,'R291_INPUT_SHA256_MISMATCH r295'):
                     owner.preflight(inputs,root/'receipt')
             self.assertFalse((root/'receipt').exists())
-    def test_26_no_private_assets_or_downloads(self):
+    def test_26_inventory_read_error_keeps_all_seven_results(self):
+        _, owner = r.load_adapters()
+        with tempfile.TemporaryDirectory() as d:
+            inputs = Path(d)/'inputs'; inputs.mkdir()
+            expected = {'r286':owner.R286, 'r295':owner.R295, **owner.OWNER}
+            for name, _ in expected.values():
+                (inputs/name).write_bytes(b'fixture-only')
+            def fake_sha(path):
+                if path.name == owner.R286[0]:
+                    raise PermissionError('private path must never appear in report')
+                return '0'*64
+            with mock.patch.object(owner,'sha256_file',side_effect=fake_sha):
+                result = r.audit_inputs(inputs,owner)
+            self.assertEqual(result['total'],7)
+            self.assertEqual(result['inputs'][0]['status'],'READ_ERROR')
+            self.assertEqual(sum(e['status']=='SHA256_MISMATCH' for e in result['inputs']),6)
+            self.assertNotIn('private path',str(result))
+            self.assertFalse(result['all_verified'])
+    def test_27_inventory_refuses_junction_without_digest(self):
+        _,owner=r.load_adapters()
+        import stat
+        with tempfile.TemporaryDirectory() as d:
+            inputs=Path(d)/'inputs';inputs.mkdir()
+            name=owner.R286[0]
+            (inputs/name).write_bytes(b'fixture')
+            original=Path.lstat
+            def tagged(path,*args,**kw):
+                info=original(path,*args,**kw)
+                if path.name != name:return info
+                class Fake:
+                    st_file_attributes = getattr(stat,'FILE_ATTRIBUTE_REPARSE_POINT',1024)
+                return Fake()
+            with mock.patch.object(Path,'lstat',autospec=True,side_effect=tagged):
+                with mock.patch.object(owner,'sha256_file',side_effect=AssertionError('read through junction')):
+                    result=r.audit_inputs(inputs,owner)
+            self.assertEqual(result['inputs'][0]['status'],'REPARSE_POINT_REFUSED')
+            self.assertEqual(result['total'],7)
+    def test_28_inventory_rejects_non_regular_file_and_continues(self):
+        _,owner=r.load_adapters()
+        with tempfile.TemporaryDirectory() as d:
+            inputs=Path(d)/'inputs';inputs.mkdir()
+            (inputs/owner.R286[0]).mkdir()
+            result=r.audit_inputs(inputs,owner)
+            self.assertEqual(result['inputs'][0]['status'],'NOT_REGULAR_FILE')
+            self.assertEqual(result['inputs'][1]['status'],'MISSING')
+            self.assertEqual(len(result['inputs']),7)
+    def test_29_inventory_refuses_reparse_input_root(self):
+        _,owner=r.load_adapters()
+        import stat
+        with tempfile.TemporaryDirectory() as d:
+            inputs=Path(d)/'inputs'; inputs.mkdir()
+            orig=Path.lstat
+            def tagged(path,*args,**kw):
+                actual=orig(path,*args,**kw)
+                if path==inputs:
+                    class Fake:
+                        st_file_attributes = getattr(stat,'FILE_ATTRIBUTE_REPARSE_POINT',1024)
+                    return Fake()
+                return actual
+            with mock.patch.object(Path,'lstat',autospec=True,side_effect=tagged):
+                with self.assertRaisesRegex(r.R309Refusal,'UNSAFE_DIRECTORY'):
+                    r.audit_inputs(inputs,owner)
+    def test_30_no_private_assets_or_downloads(self):
         s=ENTRY.read_text()
         for forbidden in ('requests.get(', 'urllib.request', 'spawnpk.net','taskkill /IM','rs.gui.Launcher'):
             self.assertNotIn(forbidden,s)
