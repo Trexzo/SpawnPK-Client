@@ -15,6 +15,10 @@ import sys
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
+# 'python scripts/...' puts scripts/ rather than the checkout root first on
+# sys.path. Match 'python -m unittest discover -s tests -v', whose cwd is root.
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 TOTAL_SHARDS = 4
 BASELINE_TEST_COUNT = 3531
 HEAVY_MODULE = "test_source_normalization"
@@ -78,6 +82,10 @@ def main(argv=None):
     # Identical discovery semantics to: python -m unittest discover -s tests -v
     loader = unittest.TestLoader()
     discovered = loader.discover(start_dir=str(ROOT / "tests"))
+    # Fail immediately rather than spending minutes running some shards when
+    # any test file could not import. Imported _FailedTests never count as proof.
+    if loader.errors:
+        raise RuntimeError("RECOVERY_SHARD_DISCOVERY_IMPORT_ERROR " + loader.errors[0][:400])
     cases = list(flatten(discovered))
     groups = plan_cases(cases)
     print(
