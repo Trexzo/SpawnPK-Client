@@ -20,6 +20,9 @@ on:
       - 'tests/python/r300/**'
       - 'tests/python/r301/**'
       - 'tests/python/r302/**'
+      - 'tests/python/r303/**'
+      - 'tests/java/r303/**'
+      - 'tools/recovery/r303/**'
       - 'tests/java/r302/**'
       - 'tools/recovery/r302/**'
       - 'tests/java/r301/**'
@@ -62,6 +65,9 @@ on:
       - 'tests/python/r300/**'
       - 'tests/python/r301/**'
       - 'tests/python/r302/**'
+      - 'tests/python/r303/**'
+      - 'tests/java/r303/**'
+      - 'tools/recovery/r303/**'
       - 'tests/java/r302/**'
       - 'tools/recovery/r302/**'
       - 'tests/java/r301/**'
@@ -137,6 +143,8 @@ jobs:
         run: python tests/python/r301/R301SourceSafetyRegression.py
       - name: Verify R302 static Scene occluder capacity source and SHA authority
         run: python tests/python/r302/R302SourceSafetyRegression.py
+      - name: R303 source-only regression
+        run: python tests/python/r303/R303SourceSafetyRegression.py
       - name: Exercise genuine Windows PowerShell failure paths (no game)
         if: runner.os == 'Windows'
         shell: pwsh
