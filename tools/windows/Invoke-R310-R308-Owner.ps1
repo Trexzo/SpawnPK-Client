@@ -12,7 +12,7 @@ Set-StrictMode -Version Latest
 
 # The exact R309 Python worker, pinned by its public Git blob. R310 never
 # downloads or extracts a script and never modifies the installed game.
-$ExpectedGitBlob = '386215eae214ad73512492f5db50fda271e6adc9'
+$ExpectedGitBlob = '149c50e9ede9ca2ed70afcf6708ee9b882c84a10'
 $Modes = @([bool]$Inventory, [bool]$Preflight, [bool]$RunNativeGui) | Where-Object { $_ }
 if (@($Modes).Count -gt 1) { throw 'R310_REFUSE_MULTIPLE_MODES' }
 if (-not $Inventory -and -not $Preflight -and -not $RunNativeGui) { $Inventory = $true }
