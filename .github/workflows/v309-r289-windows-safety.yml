@@ -24,6 +24,9 @@ on:
       - 'tests/python/r304/**'
       - 'tests/python/r305/**'
       - 'tests/python/r306/**'
+      - 'tests/python/r307/**'
+      - 'tests/java/r307/**'
+      - 'tools/recovery/r307/**'
       - 'tests/java/r306/**'
       - 'tools/recovery/r306/**'
       - 'tests/java/r305/**'
@@ -78,6 +81,9 @@ on:
       - 'tests/python/r304/**'
       - 'tests/python/r305/**'
       - 'tests/python/r306/**'
+      - 'tests/python/r307/**'
+      - 'tests/java/r307/**'
+      - 'tools/recovery/r307/**'
       - 'tests/java/r306/**'
       - 'tools/recovery/r306/**'
       - 'tests/java/r305/**'
@@ -169,6 +175,8 @@ jobs:
         run: python tests/python/r305/R305SourceSafetyRegression.py
       - name: R306 live draw-radius transition source safety (no private client)
         run: python tests/python/r306/R306SourceSafetyRegression.py
+      - name: R307 GPU/cold viewport full-source rebuild safety (source only)
+        run: python tests/python/r307/R307SourceSafetyRegression.py
       - name: Exercise genuine Windows PowerShell failure paths (no game)
         if: runner.os == 'Windows'
         shell: pwsh
