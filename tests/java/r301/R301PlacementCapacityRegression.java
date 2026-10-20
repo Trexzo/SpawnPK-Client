@@ -2,7 +2,6 @@ import java.lang.reflect.*;
 import rs.Scene;
 import rs.model.Class11;
 
-/** Real compiled Scene: tracked-object capacity must reject before tile changes. */
 public class R301PlacementCapacityRegression {
  static int checks=0;
  static final int[] BAD={-1,5000,5001,Integer.MAX_VALUE};
