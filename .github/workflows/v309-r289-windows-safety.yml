@@ -22,6 +22,9 @@ on:
       - 'tests/python/r302/**'
       - 'tests/python/r303/**'
       - 'tests/python/r304/**'
+      - 'tests/python/r305/**'
+      - 'tests/java/r305/**'
+      - 'tools/recovery/r305/**'
       - 'tests/java/r304/**'
       - 'tools/recovery/r304/**'
       - 'tests/java/r303/**'
@@ -70,6 +73,9 @@ on:
       - 'tests/python/r302/**'
       - 'tests/python/r303/**'
       - 'tests/python/r304/**'
+      - 'tests/python/r305/**'
+      - 'tests/java/r305/**'
+      - 'tools/recovery/r305/**'
       - 'tests/java/r304/**'
       - 'tools/recovery/r304/**'
       - 'tests/java/r303/**'
@@ -153,6 +159,8 @@ jobs:
         run: python tests/python/r303/R303SourceSafetyRegression.py
       - name: R304 source-only variable scene visibility regression
         run: python tests/python/r304/R304SourceSafetyRegression.py
+      - name: R305 scene yaw wrap and positive-edge source safety
+        run: python tests/python/r305/R305SourceSafetyRegression.py
       - name: Exercise genuine Windows PowerShell failure paths (no game)
         if: runner.os == 'Windows'
         shell: pwsh
