@@ -283,9 +283,9 @@ def verify_new_project_authority(
     """Reject mismatched new original binaries BEFORE migration workspace writes."""
     if not isinstance(authority, dict):
         raise UpdateIntakeError("EXPECTED_NEW_AUTHORITY_INVALID")
-    if authority.get("build") != int(new_build_id[1:]) if (
-        new_build_id.startswith("v") and new_build_id[1:].isdigit()
-    ) else True:
+    if not (new_build_id.startswith("v") and new_build_id[1:].isdigit()):
+        raise UpdateIntakeError("EXPECTED_NEW_AUTHORITY_BUILD_ID_INVALID")
+    if authority.get("build") != int(new_build_id[1:]):
         raise UpdateIntakeError("EXPECTED_NEW_AUTHORITY_BUILD_MISMATCH")
     if new_index.get("sha256") != authority.get("sha256"):
         raise UpdateIntakeError("EXPECTED_NEW_AUTHORITY_JAR_SHA_MISMATCH")
