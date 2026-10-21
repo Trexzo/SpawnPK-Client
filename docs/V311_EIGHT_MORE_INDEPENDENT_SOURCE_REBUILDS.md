@@ -57,3 +57,52 @@ Hosted CI uses unrelated JDK-only synthetic Java source, including a real try/ca
 **Unproven:** complete v311 source compilation, exact complete original classfile bytes and attributes, StackMapTable frames, original source syntax/author provenance, all runtime inputs, original-v309/v310 method lineage, live 50-tile rendering and authenticated server gameplay.
 
 **Next substantive engineering gate:** grow safe original-v311 Java source islands, then resolve class/package naming collisions through the existing reviewed class-identity/remapper pipeline without losing verifiable bytecode provenance.
+
+
+## v311 compile-only temporary alias: all eleven as one source island
+
+A follow-up **actual owner-private original-v311 replay** combined all 11
+previously reconstructed Java files in **one** zero-original-game-classpath
+`javac --release 9 -proc:none -g:none` compilation. The original Java
+declarations `rs.t` and package `rs.t` cannot coexist in one unrenamed
+Java source compilation. A separate, disposable source overlay changed
+**only** the owning `rs/t.java` declaration, constructor and self-field
+types to temporary `rs.RecoveredNodeV311` under the *same* `rs` package.
+The private original `rs/t.java` and all ten other canonical sources were
+not modified.
+
+**Measured actual results (not a hosted synthetic fixture):**
+
+- 11 distinct original `rs/` Java source files compiled together;
+  exactly 11 JVM classfiles produced, all Java 9 bytecode;
+- private compiled-class-path/SHA-256 manifest:
+  `0afb856039e8370a8940d758f1610d544ebff261636c79f8afd0f3e47c9711ab`;
+- 11/11 verified declarations and **259/259 original ordered JVM instructions**
+  match after inverse-mapping the temporary class identity and normalizing
+  numeric constant-pool indexes only; the two original exception handlers
+  in the sleep helper also match;
+- no client launch, server connection, game class binary fallback or GUI
+  acceptance is represented by the result.
+
+The recompiled binary class identities are **compile-only aliases**, not
+accepted semantic deobfuscation names. The public repository's existing
+`classfile_utf8_remap` is now reused by
+`standalone_source_parity.verify_standalone_sources` to restore class
+identities on **copied output classfiles** for comparison against original
+`javap` output. `--compile-alias` makes the review explicit. The original
+JAR, canonical source and any compiled/repaired class output remain private.
+The tool must reject incorrect original SHA pins, missing/ambiguous references,
+unrecognized source identifier uses, unsafe/colliding replacement class
+identities, reflective string rewrites and any source-tree mutation.
+
+Synthetic GitHub CI separately compiles two unrelated Java 9 classes with
+the same class/package conflict (`rs.t` versus `rs.t.f`) and requires
+full declaration, byte-offset and symbolic instruction parity after the
+inverse bytecode alias. It also verifies negative paths. The actual private
+11-source compilation is **not run in public GitHub CI**.
+
+This solves a *bounded source-island compilation blocker*, not all the
+original v311 namespace shadows, Windows path case collisions or full
+1,184-class Java source reconstruction. The R125 namespace legalizer and
+independent class/member lineage gates remain required for a full client.
+
