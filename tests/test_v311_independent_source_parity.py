@@ -12,6 +12,7 @@ import zipfile
 from spk_recovery.standalone_source_parity import (
     StandaloneSourceParityError,
     _normalize_javap,
+    require_compilable_source_namespace,
     verify_standalone_sources,
 )
 
@@ -213,6 +214,20 @@ public class rs.demo.Wait {
                 "          garbage",
                 "          3    1    4   Class java/lang/RuntimeException",
             ))
+
+    def test_unrenamed_class_package_collision_refused(self):
+        with self.assertRaisesRegex(
+            StandaloneSourceParityError, "SOURCE_CLASS_PACKAGE_COLLISION"
+        ):
+            require_compilable_source_namespace({
+                "rs/t.class", "rs/t/f.class", "rs/t/h.class",
+            })
+        require_compilable_source_namespace({
+            "rs/t/f.class", "rs/t/h.class",
+            "rs/runelite/events/MenuOpened.class",
+        })
+        with self.assertRaisesRegex(StandaloneSourceParityError, "INVALID_CLASS_PATH"):
+            require_compilable_source_namespace({"rs/../unsafe.class"})
 
     def test_wrong_original_jar_pin_refuses_before_any_output(self):
         with tempfile.TemporaryDirectory() as directory:
