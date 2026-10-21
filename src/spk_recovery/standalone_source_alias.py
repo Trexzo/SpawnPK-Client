@@ -191,7 +191,6 @@ def rewrite_reviewed_external_type_alias(
     package = old_entry.rpartition("/")[0]
     _require(
         alias_entry.rpartition("/")[0] == package
-        and referring_entry.rpartition("/")[0] == package
         and referring_entry != old_entry,
         "COMPILE_ALIAS_EXTERNAL_PACKAGE_REQUIRES_REVIEW",
     )
@@ -208,12 +207,24 @@ def rewrite_reviewed_external_type_alias(
             i += 1
         _require(i < len(sig), "COMPILE_ALIAS_EXTERNAL_PACKAGE_UNTERMINATED")
         _require(
-            "".join(package_bits) == expected,
+            "".join(package_bits)
+            == referring_entry.rpartition("/")[0].replace("/", "."),
             "COMPILE_ALIAS_EXTERNAL_PACKAGE_REQUIRES_REVIEW",
         )
         package_end = i + 1
     else:
         raise StandaloneAliasError("COMPILE_ALIAS_EXTERNAL_PACKAGE_REQUIRES_REVIEW")
+    # Most selected original Java classes live in *other* packages and do
+    # not reference the aliased node. Keep them byte-for-byte untouched.
+    if not any(
+        token.kind == "ident" and token.text == old_name
+        for token in sig[package_end:]
+    ):
+        return source
+    _require(
+        referring_entry.rpartition("/")[0] == package,
+        "COMPILE_ALIAS_EXTERNAL_PACKAGE_REQUIRES_REVIEW",
+    )
     edits: list[tuple[int, int]] = []
     for index in range(package_end, len(sig)):
         token = sig[index]
