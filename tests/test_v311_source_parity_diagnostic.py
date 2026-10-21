@@ -64,6 +64,39 @@ public final class Clock {
         self.assertNotIn("java/lang/System", summary)
         self.assertNotIn("Clock", summary)
 
+    def test_javac_local_variable_slot_scope_diagnostic(self):
+        # Original-source layout can depend on a local variable's lexical
+        # lifetime even when the Java values and JVM opcode COUNT match.
+        narrow = """
+package demo;
+public final class Clock {
+  public int size(String text) {
+    int width = 0;
+    { String suffix = text.substring(0); width += suffix.length(); }
+    int height = width;
+    return height;
+  }
+}
+"""
+        broad = narrow.replace(
+            "{ String suffix = text.substring(0); width += suffix.length(); }",
+            "String suffix = text.substring(0); width += suffix.length();",
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            parent = Path(directory)
+            expected = self.build(parent / "narrow", narrow)
+            wrong = self.build(parent / "broad", broad)
+        self.assertNotEqual(expected, wrong)
+        left_instructions = sum(x[:1].isdigit() for x in expected)
+        right_instructions = sum(x[:1].isdigit() for x in wrong)
+        self.assertEqual(left_instructions, right_instructions)
+        summary = first_jvm_parity_difference(expected, wrong)
+        self.assertIsNotNone(summary)
+        self.assertIn("reason=instruction_operand_or_branch_target", summary)
+        self.assertIn("original_opcode=istore", summary)
+        self.assertIn("rebuilt_opcode=istore", summary)
+        self.assertNotIn("suffix", summary)
+
     def test_operand_mismatch_is_reported_without_original_values(self):
         original = (
             "CLASS public class demo.Clock {",
