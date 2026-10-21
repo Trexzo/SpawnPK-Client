@@ -234,18 +234,14 @@ public class rs.demo.Wait {
         # This is distinct from the owner's 23 original v311 rebuilds.
         with tempfile.TemporaryDirectory() as directory:
             obj = JavaFixture(Path(directory))
-            original = {}
-            with zipfile.ZipFile(obj.jar) as z:
-                for name in z.namelist():
-                    original[name] = z.read(name)
             for i in range(20):
                 relative = f"rs/demo/Aux{i:02d}.java"
                 source = obj.src / relative
                 source.write_text(
-                    "package rs.demo;\\n"
-                    + f"public final class Aux{i:02d} {{\\n"
-                    + f"    public int value() {{ return {i}; }}\\n"
-                    + "}}\\n".replace("}}", "}"),
+                    "package rs.demo;\n"
+                    + f"public final class Aux{i:02d} {{\n"
+                    + f"    public int value() {{ return {i}; }}\n"
+                    + "}\n",
                     encoding="utf-8",
                 )
             classes = obj.root / "twenty-three-original-classes"
