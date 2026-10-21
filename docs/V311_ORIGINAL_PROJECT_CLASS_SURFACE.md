@@ -41,6 +41,47 @@ These are **obfuscated package labels**, not a source-workload estimate or proof
 - `rs/eventbus/EventBus.class` exists, SHA-256 `7bcd16369a679f743b644bdf62c4b39dc50608ccbdbfe4768d142a7fc7af8259`.
 - **`rs/Scene.class` and `rs/s/e/c.class` do not occur under those names in this v311 ZIP.** This does *not* prove scene logic was removed. They might have been renamed, repackaged, replaced or otherwise absent. Only cross-build class/method evidence can establish relationships.
 
+
+## Recovered original v311 scene-role topology (structural candidate, not source transfer)
+
+A further **actual original-v311 classfile inspection** located a uniquely shaped
+scene-grid holder in `rs/V.class`, with original SHA-256
+`c9d927a22fd77905b93c455f7135c83408b534cd71cc767ca962827f9b144a0c`.
+Its structure matches the **role** of a 4-plane scene:
+
+- 77 fields, 66 methods, and a `([[[I)V` constructor taking terrain height arrays;
+- an instance tile array `rs/H[][][]`, and a static `boolean[][][][]` visibility grid;
+- the constructor sets **4 planes and 104×104 tiles** and allocates the 3-dimensional `rs/H` grid accordingly;
+- the original `rs/Client.class` holds a field of descriptor `Lrs/V;`;
+- the tile type `rs/H.class` (SHA-256
+  `ae42657b2cf14f40ce4966d77a714734d4b9ac73560dfd1753fed213f78c6d7a`)
+  has 24 fields, 12 methods, a `(III)V` position constructor, a `Lrs/H;`
+  self-link and an array of scene-entity references.
+
+These are direct classfile structure and constructor-instruction observations,
+**not inferred solely from one name/size**. `src/spk_recovery/scene_role_candidates.py`
+checks six independent topology witnesses on a fully parsed private original
+index, after verifying the exact v311 original JAR SHA and the complete project
+class path/content fingerprint. Ambiguous/missing candidates cause refusal.
+
+Run the read-only candidate probe after the existing `spk-recovery index`
+command on a locally owned original JAR (no extra R308 archive is needed):
+
+```powershell
+spk-recovery index C:\private\client-v311.jar --expect-sha256 5b619b82a8ed976d2051f84cda98815943d1ddb82afac9d49f3126f829101268 --out C:\private\v311-index.json
+spk-recovery scene-role-candidates C:\private\v311-index.json --expected-new-authority .\authority\v311.json --out C:\private\v311-scene-role.json
+```
+
+The command never writes into the JAR or original index, refuses overwriting
+an existing result, and reports **only** class-path role candidates and
+structural summary. No source, private bytecode, cache, asset or proprietary
+constants are published. A scene-role witness is **not proof** that `rs/V`
+is byte-identical/semantically the same as historical R308 `rs/Scene`; that
+must be established from an authenticated earlier original-client index/JAR
+using class/method evidence. Historical R308 fixes must **not** be applied
+automatically to original v311.
+
+
 ## How this moves recovery forward
 
 1. **Keep** v308 rebuilt Java regression evidence and the original v309 authority on their original versions. v311 is a distinct original-client release.
