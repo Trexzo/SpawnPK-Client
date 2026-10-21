@@ -159,7 +159,7 @@ def _normalize_javap(result: str) -> tuple[tuple[str, ...], int]:
 def _javap(javap: str, classpath: Path, classname: str) -> tuple[tuple[str, ...], int]:
     try:
         run = subprocess.run(
-            [javap, "-classpath", str(classpath), "-c", "-p", "-s", classname],
+            [javap, "-classpath", str(classpath), "-c", "-p", "-s", "-constants", classname],
             capture_output=True, text=True, encoding="utf-8",
             errors="replace", timeout=50, check=False,
         )
