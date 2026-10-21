@@ -14,6 +14,7 @@ from .authority_snapshot import (
 from .indexer import index_jar, write_index
 from .scene_role_candidates import SceneRoleProbeError, discover_scene_role
 from .scene_member_frontier import MemberFrontierError, analyze_original_scene
+from .standalone_source_parity import StandaloneSourceParityError, verify_standalone_sources
 from .diffing import diff_indexes
 from .decompiler import (
     DecompilerError,
@@ -236,6 +237,21 @@ def main(argv: list[str] | None = None) -> int:
     pmf.add_argument("--expected-new-authority", type=Path, required=True)
     pmf.add_argument("--out", type=Path, required=True)
     pmf.add_argument("--javap", default="javap")
+
+    psb = sub.add_parser(
+        "verify-standalone-source",
+        help="Verify original class vs standalone Java source rebuild, without original game classpath",
+    )
+    psb.add_argument("original_jar", type=Path)
+    psb.add_argument("source_root", type=Path)
+    psb.add_argument("--original-sha256", required=True)
+    psb.add_argument(
+        "--class-sha256", action="append", required=True,
+        help="class entry followed by '=' and lowercase expected original SHA256",
+    )
+    psb.add_argument("--out-dir", type=Path, required=True)
+    psb.add_argument("--javac", default="javac")
+    psb.add_argument("--javap", default="javap")
 
     pd = sub.add_parser(
         "diff",
@@ -874,6 +890,33 @@ def main(argv: list[str] | None = None) -> int:
         print(f"rs_classes={idx['summary']['rs_class_count']}")
         print(f"parse_errors={idx['summary']['class_parse_error_count']}")
         print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "verify-standalone-source":
+        try:
+            original_classes = {}
+            for item in args.class_sha256:
+                if "=" not in item:
+                    raise StandaloneSourceParityError("INVALID_CLASS_SHA256_ARGUMENT")
+                classname, digest = item.split("=", 1)
+                if classname in original_classes:
+                    raise StandaloneSourceParityError("DUPLICATE_CLASS_ARGUMENT")
+                original_classes[classname] = digest
+            report = verify_standalone_sources(
+                args.original_jar, args.source_root, args.out_dir,
+                original_sha256=args.original_sha256,
+                class_sha256=original_classes,
+                javac=args.javac, javap=args.javap,
+            )
+        except (StandaloneSourceParityError, OSError) as exc:
+            print(f"REFUSED: {exc}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_STANDALONE_SOURCE_PARITY_PASS")
+        print(f"verified_classes={report['total_classes']}")
+        print(f"ordered_original_instructions={report['total_ordered_instructions']}")
+        print("original_game_classes_on_compile_classpath=NONE")
+        print("full_classfile_byte_identity=NOT_PROVEN")
+        print(f"private_report={args.out_dir / 'SOURCE-REBUILD-VERIFY.json'}")
         return 0
 
     if args.cmd == "scene-member-frontier":
