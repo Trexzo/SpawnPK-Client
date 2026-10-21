@@ -12,6 +12,7 @@ import zipfile
 from spk_recovery.standalone_source_alias import (
     StandaloneAliasError, validate_compile_aliases, rename_owned_class_source,
     ensure_no_external_alias_refs,
+    rewrite_reviewed_external_superclass_alias,
 )
 from spk_recovery.standalone_source_parity import (
     verify_standalone_sources,
@@ -180,6 +181,84 @@ class CompileOnlyAliasTests(unittest.TestCase):
                 ),
                 old_entry=ORIGINAL,
             )
+
+    def test_reviewed_external_superclass_alias_only(self):
+        source = """package rs;
+public final class Derived extends t {
+    public Derived() {}
+}
+"""
+        updated = rewrite_reviewed_external_superclass_alias(
+            source, old_entry=ORIGINAL, alias_entry=ALIAS
+        )
+        self.assertIn("class Derived extends RecoveredNodeV311", updated)
+        self.assertEqual(
+            source, source
+        )
+        for dangerous in (
+            "package rs; public class Derived { private t linked; }",
+            "package rs; public class Derived { public t get() { return null; } }",
+            "package rs; public class Derived { public void call() { new t(); } }",
+            "package rs.other; public class Derived extends t {}",
+        ):
+            with self.subTest(dangerous=dangerous):
+                with self.assertRaisesRegex(
+                    StandaloneAliasError, "EXTERNAL_SOURCE_REFERENCE"
+                ):
+                    rewrite_reviewed_external_superclass_alias(
+                        dangerous, old_entry=ORIGINAL, alias_entry=ALIAS
+                    )
+
+    def test_three_java9_classes_and_reviewed_cross_source_inheritance(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            sources, original, classes, original_hash = self.make_original(root)
+            derived_src = sources / "rs/Derived.java"
+            original_java = """package rs;
+public final class Derived extends t {
+    public Derived() {}
+    public void unlink() { detach(); }
+}
+"""
+            derived_src.write_text(original_java, encoding="utf-8")
+            generated = root / "original-derived"
+            generated.mkdir()
+            # Fixture only: compile the third original class against the
+            # first original synthetic class. The production verifier NEVER
+            # uses an original client JAR or classes as compilation inputs.
+            build = subprocess.run([
+                "javac", "--release", "9", "-proc:none", "-g:none",
+                "-classpath", str(root / "compile-0"),
+                "-sourcepath", str(root / "empty-sourcepath"),
+                "-d", str(generated), str(derived_src),
+            ], capture_output=True, text=True, timeout=35)
+            self.assertEqual(build.returncode, 0, build.stderr)
+            new_path = "rs/Derived.class"
+            original_bytes = (generated / new_path).read_bytes()
+            with zipfile.ZipFile(original, "a") as archive:
+                archive.writestr(new_path, original_bytes)
+            classes[new_path] = digest(original_bytes)
+            out = root / "three-class-verified"
+            result = verify_standalone_sources(
+                original, sources, out,
+                original_sha256=digest(original.read_bytes()),
+                class_sha256=classes,
+                compile_aliases={ORIGINAL: ALIAS},
+            )
+            self.assertTrue(result["all_passed"])
+            self.assertEqual(result["total_classes"], 3)
+            self.assertEqual(result["compile_only_class_alias_count"], 1)
+            self.assertEqual(
+                result["explicit_original_project_dependency_closure"][
+                    "source_project_dependency_edges"
+                ], 1,
+            )
+            self.assertEqual(
+                derived_src.read_text(encoding="utf-8"), original_java
+            )
+            self.assertTrue((out / "restored-classfiles" / new_path).is_file())
+            self.assertFalse(result["canonical_source_modified"])
+            self.assertFalse(result["original_game_binary_on_compile_classpath"])
 
     def test_unverified_alias_target_name_is_rejected(self):
         for target in ("rs/../../Unsafe.class", "rs/recovered-name.class"):
