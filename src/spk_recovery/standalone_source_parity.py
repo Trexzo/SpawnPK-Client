@@ -167,7 +167,9 @@ def verify_standalone_sources(
     """
     _require(re.fullmatch(r"[0-9a-f]{64}", original_sha256) is not None,
              "INVALID_ORIGINAL_SHA256_PIN")
-    _require(bool(class_sha256) and len(class_sha256) <= 16, "INVALID_CLASS_SET")
+    # Bounded expansion allows the 23-class original-v311 source island,
+    # without accepting an unreviewed whole-client compilation attempt.
+    _require(bool(class_sha256) and len(class_sha256) <= 64, "INVALID_CLASS_SET")
     _require(not output_root.exists() and not output_root.is_symlink(),
              "OUTPUT_ALREADY_EXISTS")
     original_jar = original_jar.resolve()
