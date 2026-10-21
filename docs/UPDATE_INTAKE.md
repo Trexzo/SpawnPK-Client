@@ -74,3 +74,41 @@ migration identity.
 
 Those are later R3 integration stages after the intake report has established the exact
 delta surface.
+
+
+## v311 exact-original authority gate (optional, recommended)
+
+The current official SpawnPK client is **v311**, whose verified original JAR
+SHA-256 is in [`authority/v311.json`](../authority/v311.json).
+The original `rs/` class inventory was measured directly from that JAR.
+No private JAR, cache or recovered source is embedded in Git.
+
+When a complete independently verified **original v309 or v310 index** exists,
+use the existing R3A command and explicitly pin the new original authority:
+
+```powershell
+spk-recovery update-intake `
+  C:\private\v309-original-index.json `
+  C:\private\client-v311.jar `
+  --old-build-id v309 `
+  --new-build-id v311 `
+  --expected-new-authority .\authority\v311.json `
+  --out-dir .\generated\v311-intake
+```
+
+The `--expected-new-authority` gate runs after full JAR indexing, **before**
+the matcher and before writing a migration workspace. It independently checks
+the current JAR SHA-256, build-ID binding, fully parseable class names/paths,
+and complete target `rs/` class fingerprint (count, Java class versions,
+sorted name/class-SHA digest). A wrong client or truncated/mismatched source
+surface refuses intake. Without this opt-in flag, the existing generic
+update-intake command is unchanged.
+
+This still **does not prove** the equivalent Java source was recovered,
+nor that old `rs/Scene.class` or `rs/s/e/c.class` was removed; the class matcher
+must establish moved/renamed identities before source/mapping transfer.
+The prior exact v309 JAR authority is
+`ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38`.
+Do not use the separately rebuilt **R308** private class-only JAR as the
+original v309 authority.
+
