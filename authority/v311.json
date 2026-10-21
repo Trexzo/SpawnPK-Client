@@ -31,7 +31,8 @@
     "This is a new official-client baseline, not a claim that the recovered source produces byte-identical v311 classes.",
     "Prior v308 and v309 authorities are historical migration references. Their project recovery artifacts must not be silently relabeled as v311.",
     "Use the existing spk-recovery update-intake pipeline with independently SHA-verified old index and original client JAR to obtain genuine changed/added/removed class evidence.",
-    "Observed absence of rs/Scene.class or rs/s/e/c.class as paths in the official v311 ZIP does not prove scene/feature removal; bytecode matching must establish potential renamed equivalents before carrying R308 changes."
+    "Observed absence of rs/Scene.class or rs/s/e/c.class as paths in the official v311 ZIP does not prove scene/feature removal; bytecode matching must establish potential renamed equivalents before carrying R308 changes.",
+    "Original v311 bytecode contains a uniquely identifiable rs/V scene topology and rs/H tile topology; neither has been promoted as a cross-build class identity."
   ],
   "project_class_surface": {
     "scope": "rs/",
@@ -69,5 +70,29 @@
     ],
     "full_jvm_class_parse": "NOT_YET_REPLAYED_WITH_PROJECT_INDEXER",
     "cross_build_identity_proven": false
+  },
+  "scene_role_candidate": {
+    "scene_class_path": "rs/V.class",
+    "scene_class_sha256": "c9d927a22fd77905b93c455f7135c83408b534cd71cc767ca962827f9b144a0c",
+    "scene_fields": 77,
+    "scene_methods": 66,
+    "tile_class_path": "rs/H.class",
+    "tile_class_sha256": "ae42657b2cf14f40ce4966d77a714734d4b9ac73560dfd1753fed213f78c6d7a",
+    "tile_fields": 24,
+    "tile_methods": 12,
+    "original_client_field_descriptor": "Lrs/V;",
+    "scene_tile_grid_descriptor": "[[[Lrs/H;",
+    "scene_visibility_grid_descriptor": "[[[[Z",
+    "scene_constructor_descriptor": "([[[I)V",
+    "tile_constructor_descriptor": "(III)V",
+    "original_scene_dimensions": {
+      "planes": 4,
+      "x": 104,
+      "y": 104
+    },
+    "status": "SCENE_ROLE_CANDIDATE_FROM_ORIGINAL_V311_BYTECODE",
+    "historical_scene_class_identity": "NOT_PROVEN",
+    "semantic_rename_authorized": false,
+    "note": "Original v311 role evidence; direct v308/v309 cross-build class identity and source transfer still require independent matching."
   }
 }
