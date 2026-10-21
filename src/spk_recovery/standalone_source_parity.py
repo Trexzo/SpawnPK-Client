@@ -18,6 +18,7 @@ import zipfile
 
 from .classfile_utf8_remap import ClassfileRemapError, remap_classfile_utf8
 from .source_dependency_closure import SourceClosureError, require_selected_source_closure
+from .source_parity_diagnostic import first_jvm_parity_difference
 from .standalone_source_alias import (
     StandaloneAliasError, validate_compile_aliases,
     rename_owned_class_source, rewrite_reviewed_external_type_alias,
@@ -359,8 +360,14 @@ def verify_standalone_sources(
         classname = entry[:-6].replace("/", ".")
         original_rows, original_insns = _javap(javap, original_jar, classname)
         recovered_rows, recovered_insns = _javap(javap, comparison_dir, classname)
-        _require(original_rows == recovered_rows,
-                 "ORDERED_JVM_INSTRUCTIONS_OR_DECLARATIONS_MISMATCH " + entry)
+        if original_rows != recovered_rows:
+            detail = first_jvm_parity_difference(
+                original_rows, recovered_rows
+            )
+            raise StandaloneSourceParityError(
+                "ORDERED_JVM_INSTRUCTIONS_OR_DECLARATIONS_MISMATCH "
+                + entry + " " + (detail or "first_difference_unavailable")
+            )
         _require(original_insns == recovered_insns,
                  "JVM_INSTRUCTION_COUNT_MISMATCH")
         witness = {
