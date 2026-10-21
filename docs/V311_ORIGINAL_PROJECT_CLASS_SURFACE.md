@@ -82,6 +82,45 @@ using class/method evidence. Historical R308 fixes must **not** be applied
 automatically to original v311.
 
 
+## Actual original-v311 Scene member worklist (not a bug report)
+
+A separate SHA-gated **read-only** `javap -c -p -s rs.V` scan of the
+exact original v311 JAR identified **66 total scene methods**, including its
+static initializer. **42** directly reference the `rs/V.i:[[[Lrs/H;`
+tile-grid field. **22** of those also contain a general array-store
+(`aastore`) or an `rs/H` tile-object field write (`putfield`).
+
+These 22 are **mutation-review candidates, not 22 confirmed writes to the
+scene tile grid and certainly not 22 bugs**. The `aastore` instruction may
+target an unrelated array; the scan does not perform stack/alias analysis.
+Presence or absence of a conditional branch before the *first* grid field
+read does not prove bounds safety, because caller invariants and later
+guards also matter.
+
+Examples worth classifying during recovered-source reconstruction include
+the direct four-integer scene operation `(IIII)V`, two-integer scene update
+`(II)V`, the `(IIIB)V` tile-object operation, and the
+`i/k/l(III)V` methods. Their existing obfuscated names/descriptors are
+identifiers **within original v311 only**. In particular, they are not
+automatically assigned historical R308 method names.
+
+New `src/spk_recovery/scene_member_frontier.py` reproduces this review
+worklist from the original JAR on the owner's machine, after checking the
+exact JAR and `rs/V.class` SHA-256. It invokes local `javap` without a
+shell, refuses malformed/partial disassemblies or changed observed census,
+and emits per-method signatures, opcode-sequence hashes, and aggregate
+grid/read/store/conditional counts. It does **not** embed a proprietary
+bytecode instruction transcript in the report.
+
+```powershell
+spk-recovery scene-member-frontier C:\private\client-v311.jar --expected-new-authority .\authority\v311.json --out C:\private\v311-scene-method-frontier.json
+```
+
+This gives a focused method-level cross-version research queue. A real
+**original v309 or v310** bytecode/index is still needed to prove
+individual class/member correspondence. No v311 source build, bounds-fix
+port, graphical run, or verified vulnerability is claimed here.
+
 ## How this moves recovery forward
 
 1. **Keep** v308 rebuilt Java regression evidence and the original v309 authority on their original versions. v311 is a distinct original-client release.
