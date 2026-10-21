@@ -235,6 +235,8 @@ def main(argv: list[str] | None = None) -> int:
     pui.add_argument("--old-build-id", required=True)
     pui.add_argument("--new-build-id", required=True)
     pui.add_argument("--scope-prefix", default="rs/")
+    pui.add_argument("--expected-new-authority", type=Path,
+                     help="Optional exact original-client manifest, e.g. authority/v311.json")
     pui.add_argument("--out-dir", type=Path, required=True)
 
     put = sub.add_parser(
@@ -886,6 +888,10 @@ def main(argv: list[str] | None = None) -> int:
                 old_build_id=args.old_build_id,
                 new_build_id=args.new_build_id,
                 scope_prefix=args.scope_prefix,
+                new_authority=(
+                    _load(args.expected_new_authority)
+                    if args.expected_new_authority is not None else None
+                ),
             )
             paths = write_update_workspace(
                 args.out_dir,
@@ -895,6 +901,7 @@ def main(argv: list[str] | None = None) -> int:
         except (
             UpdateIntakeError,
             json.JSONDecodeError,
+            OSError,
         ) as e:
             print(f"REFUSED: {e}", file=sys.stderr)
             return 2
