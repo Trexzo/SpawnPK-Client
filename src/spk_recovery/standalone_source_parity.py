@@ -16,6 +16,12 @@ import subprocess
 from typing import Any
 import zipfile
 
+from .classfile_utf8_remap import ClassfileRemapError, remap_classfile_utf8
+from .standalone_source_alias import (
+    StandaloneAliasError, validate_compile_aliases,
+    rename_owned_class_source, ensure_no_external_alias_refs,
+)
+
 
 class StandaloneSourceParityError(ValueError):
     pass
@@ -151,6 +157,7 @@ def verify_standalone_sources(
     original_jar: Path, source_root: Path, output_root: Path,
     *, original_sha256: str, class_sha256: dict[str, str],
     javac: str = "javac", javap: str = "javap",
+    compile_aliases: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     """Build exact selected source classes with no game binary classpath.
 
@@ -187,26 +194,81 @@ def verify_standalone_sources(
     except (zipfile.BadZipFile, EOFError, OSError) as exc:
         raise StandaloneSourceParityError("INVALID_ORIGINAL_ARCHIVE") from exc
 
-    # Preflight all obfuscated namespace conflicts before creating output.
-    # Only classes chosen for this independent source island are checked.
-    require_compilable_source_namespace(set(selected))
+    # Exact reviewed compile-only alias. It is NOT semantic renaming.
+    # Preserve original class names on every accepted evidence report.
+    aliases = validate_compile_aliases(
+        set(selected), compile_aliases or {}, set(names)
+    )
+    try:
+        require_compilable_source_namespace(
+            {aliases.get(entry, entry) for entry in selected}
+        )
+    except StandaloneSourceParityError as exc:
+        raise StandaloneSourceParityError(
+            "COMPILE_ALIAS_CLASS_PACKAGE_COLLISION_REMAINS"
+        ) from exc
 
-    sources: list[Path] = []
+    originals: dict[str, Path] = {}
     source_digests: dict[str, str] = {}
+    source_text: dict[str, str] = {}
     for entry in selected:
         rel = entry[:-6] + ".java"
         src = source_root / rel
-        _require(not src.is_symlink() and src.is_file(), "SOURCE_FILE_MISSING_OR_SYMLINK")
-        _require(src.resolve().is_relative_to(source_root), "SOURCE_ESCAPES_PRIVATE_ROOT")
-        sources.append(src)
+        _require(not src.is_symlink() and src.is_file(),
+                 "SOURCE_FILE_MISSING_OR_SYMLINK")
+        _require(src.resolve().is_relative_to(source_root),
+                 "SOURCE_ESCAPES_PRIVATE_ROOT")
+        originals[entry] = src
         source_digests[entry] = _digest(src)
-    # Source paths and binaries are not copied into the report.
+        if aliases:
+            try:
+                source_text[entry] = src.read_text(encoding="utf-8")
+            except (UnicodeDecodeError, OSError) as exc:
+                raise StandaloneSourceParityError(
+                    "COMPILE_ALIAS_SOURCE_UNREADABLE"
+                ) from exc
+
+    # Fail *before any output directory is created* for ambiguous source
+    # type references or lexically unreviewed constructor/declaration edits.
+    if aliases:
+        for entry, text_value in source_text.items():
+            if entry in aliases:
+                rename_owned_class_source(
+                    text_value, old_entry=entry, alias_entry=aliases[entry]
+                )
+            else:
+                for renamed_entry in aliases:
+                    ensure_no_external_alias_refs(
+                        text_value, old_entry=renamed_entry
+                    )
+
+    # Private outputs only; the canonical Java tree is never modified.
     output_root.mkdir(parents=True, exist_ok=False)
     cls = output_root / "classes"
     cp = output_root / "empty-classpath"
     srcpath = output_root / "empty-sourcepath"
     for directory in (cls, cp, srcpath):
         directory.mkdir()
+    sources: list[Path] = []
+    if aliases:
+        stage = output_root / "alias-sources"
+        stage.mkdir()
+        for entry in selected:
+            if entry in aliases:
+                dest = stage / (aliases[entry][:-6] + ".java")
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                changed = rename_owned_class_source(
+                    source_text[entry],
+                    old_entry=entry,
+                    alias_entry=aliases[entry],
+                )
+                dest.write_text(changed, encoding="utf-8", newline="")
+                sources.append(dest)
+            else:
+                sources.append(originals[entry])
+    else:
+        sources = list(originals.values())
+
     cmd = [
         javac, "--release", "9", "-proc:none", "-g:none", "-encoding", "UTF-8",
         "-classpath", str(cp), "-sourcepath", str(srcpath),
@@ -227,17 +289,48 @@ def verify_standalone_sources(
         p.relative_to(cls).as_posix()
         for p in cls.rglob("*.class") if p.is_file()
     }
-    _require(actual_classes == set(selected), "COMPILED_CLASS_SET_MISMATCH")
+    _require(
+        actual_classes == {aliases.get(entry, entry) for entry in selected},
+        "COMPILED_CLASS_SET_MISMATCH",
+    )
+
+    # Restore exact ORIGINAL identities in copied classfile metadata, before
+    # comparing javap. A textual javap substitution could conceal changed
+    # symbolic targets or reflection literals, so use the existing bounded
+    # JVM constant-pool remapper (which refuses touching CONSTANT_String).
+    comparison_dir = cls
+    if aliases:
+        comparison_dir = output_root / "restored-classfiles"
+        comparison_dir.mkdir()
+        reverse = {
+            new[:-6]: old[:-6] for old, new in aliases.items()
+        }
+        for entry in selected:
+            actual = cls / aliases.get(entry, entry)
+            try:
+                restored = remap_classfile_utf8(
+                    actual.read_bytes(), reverse
+                )
+            except ClassfileRemapError as exc:
+                raise StandaloneSourceParityError(
+                    "COMPILE_ALIAS_INVERSE_CLASSFILE_REFUSED"
+                ) from exc
+            if entry in aliases:
+                _require(restored.replacement_count > 0,
+                         "COMPILE_ALIAS_INVERSE_CLASSFILE_NOT_APPLIED")
+            dest = comparison_dir / entry
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            dest.write_bytes(restored.data)
 
     witnesses: list[dict[str, Any]] = []
     for entry, expected_sha in selected.items():
-        compiled = cls / entry
+        compiled = cls / aliases.get(entry, entry)
         blob = compiled.read_bytes()
         _require(blob[:8] == bytes.fromhex("cafebabe00000035"),
                  "COMPILED_CLASS_NOT_JAVA9")
         classname = entry[:-6].replace("/", ".")
         original_rows, original_insns = _javap(javap, original_jar, classname)
-        recovered_rows, recovered_insns = _javap(javap, cls, classname)
+        recovered_rows, recovered_insns = _javap(javap, comparison_dir, classname)
         _require(original_rows == recovered_rows,
                  "ORDERED_JVM_INSTRUCTIONS_OR_DECLARATIONS_MISMATCH " + entry)
         _require(original_insns == recovered_insns,
@@ -257,6 +350,7 @@ def verify_standalone_sources(
                 line.startswith("HANDLER ") for line in original_rows
             ),
             "java_release": 9,
+            "compile_only_class_alias": aliases.get(entry),
             "original_game_binary_on_compile_classpath": False,
             "full_classfile_attribute_or_runtime_parity": "NOT_PROVEN",
         }
@@ -271,10 +365,17 @@ def verify_standalone_sources(
         ),
         "results": witnesses,
         "all_passed": True,
+        "compile_only_class_alias_count": len(aliases),
+        "canonical_source_modified": False,
         "complete_v311_source_recovery": False,
         "original_game_binary_on_compile_classpath": False,
         "full_classfile_or_graphical_parity": "NOT_PROVEN",
     }
+    # Detect concurrent or accidental changes to canonical source during
+    # construction/compilation before issuing evidence.
+    for entry, source in originals.items():
+        _require(_digest(source) == source_digests[entry],
+                 "CANONICAL_SOURCE_MODIFIED_DURING_COMPILE")
     result_path = output_root / "SOURCE-REBUILD-VERIFY.json"
     result_path.write_text(
         json.dumps(report, indent=2, sort_keys=True) + "\n",
