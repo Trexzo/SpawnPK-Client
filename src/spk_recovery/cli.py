@@ -15,6 +15,7 @@ from .indexer import index_jar, write_index
 from .scene_role_candidates import SceneRoleProbeError, discover_scene_role
 from .scene_member_frontier import MemberFrontierError, analyze_original_scene
 from .standalone_source_parity import StandaloneSourceParityError, verify_standalone_sources
+from .standalone_source_alias import StandaloneAliasError
 from .diffing import diff_indexes
 from .decompiler import (
     DecompilerError,
@@ -252,6 +253,10 @@ def main(argv: list[str] | None = None) -> int:
     psb.add_argument("--out-dir", type=Path, required=True)
     psb.add_argument("--javac", default="javac")
     psb.add_argument("--javap", default="javap")
+    psb.add_argument(
+        "--compile-alias", action="append", default=[],
+        help="reviewed compile-only original.class=temporary.class alias; never a semantic name",
+    )
 
     pd = sub.add_parser(
         "diff",
@@ -902,13 +907,22 @@ def main(argv: list[str] | None = None) -> int:
                 if classname in original_classes:
                     raise StandaloneSourceParityError("DUPLICATE_CLASS_ARGUMENT")
                 original_classes[classname] = digest
+            aliases = {}
+            for item in args.compile_alias:
+                if "=" not in item:
+                    raise StandaloneSourceParityError("INVALID_COMPILE_ALIAS_ARGUMENT")
+                old_entry, new_entry = item.split("=", 1)
+                if old_entry in aliases:
+                    raise StandaloneSourceParityError("DUPLICATE_COMPILE_ALIAS_ARGUMENT")
+                aliases[old_entry] = new_entry
             report = verify_standalone_sources(
                 args.original_jar, args.source_root, args.out_dir,
                 original_sha256=args.original_sha256,
                 class_sha256=original_classes,
                 javac=args.javac, javap=args.javap,
+                compile_aliases=aliases,
             )
-        except (StandaloneSourceParityError, OSError) as exc:
+        except (StandaloneSourceParityError, StandaloneAliasError, OSError) as exc:
             print(f"REFUSED: {exc}", file=sys.stderr)
             return 2
         print("SPK_RECOVERY_STANDALONE_SOURCE_PARITY_PASS")
