@@ -928,6 +928,8 @@ def main(argv: list[str] | None = None) -> int:
         print("SPK_RECOVERY_STANDALONE_SOURCE_PARITY_PASS")
         print(f"verified_classes={report['total_classes']}")
         print(f"ordered_original_instructions={report['total_ordered_instructions']}")
+        print(f"compile_only_aliases={report['compile_only_class_alias_count']}")
+        print("canonical_source_modified=FALSE")
         print("original_game_classes_on_compile_classpath=NONE")
         print("full_classfile_byte_identity=NOT_PROVEN")
         print(f"private_report={args.out_dir / 'SOURCE-REBUILD-VERIFY.json'}")
