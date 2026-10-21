@@ -136,15 +136,18 @@ class CompileOnlyAliasTests(unittest.TestCase):
             self.assertFalse(output.exists())
 
     def test_alias_cannot_change_package_or_shadow_original_member(self):
-        for mapping, reason in [
-            ({ORIGINAL: "another/Changed.class"}, "MUST_PRESERVE_PACKAGE"),
-            ({ORIGINAL: CHILD}, "TARGET_EXISTS_IN_ORIGINAL"),
-            ({CHILD: "rs/t/f.class"}, "OLD_CLASS_NOT_SELECTED"),
+        for mapping, existing_entries, reason in [
+            ({ORIGINAL: "rs/other/Changed.class"}, {ORIGINAL, CHILD},
+             "MUST_PRESERVE_PACKAGE"),
+            ({ORIGINAL: "rs/f.class"}, {ORIGINAL, CHILD, "rs/f.class"},
+             "TARGET_EXISTS_IN_ORIGINAL"),
+            ({CHILD: CHILD}, {ORIGINAL, CHILD},
+             "OLD_CLASS_NOT_SELECTED"),
         ]:
             with self.subTest(mapping=mapping):
                 with self.assertRaisesRegex(StandaloneAliasError, reason):
                     validate_compile_aliases(
-                        {ORIGINAL, CHILD}, mapping, {ORIGINAL, CHILD},
+                        {ORIGINAL, CHILD}, mapping, existing_entries,
                     )
 
     def test_source_rewrite_only_types_declaration_and_constructor(self):
