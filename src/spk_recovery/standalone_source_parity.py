@@ -17,6 +17,7 @@ from typing import Any
 import zipfile
 
 from .classfile_utf8_remap import ClassfileRemapError, remap_classfile_utf8
+from .source_dependency_closure import SourceClosureError, require_selected_source_closure
 from .standalone_source_alias import (
     StandaloneAliasError, validate_compile_aliases,
     rename_owned_class_source, ensure_no_external_alias_refs,
@@ -182,6 +183,7 @@ def verify_standalone_sources(
         _require(re.fullmatch(r"[0-9a-f]{64}", digest) is not None,
                  "INVALID_CLASS_SHA256_PIN")
         selected[entry] = digest
+    closure_report: dict[str, Any] | None = None
     try:
         with zipfile.ZipFile(original_jar) as z:
             names = [x.filename for x in z.infolist()]
@@ -193,6 +195,12 @@ def verify_standalone_sources(
                          "WRONG_ORIGINAL_CLASS")
                 _require(blob[:8] == bytes.fromhex("cafebabe00000035"),
                          "EXPECTED_JAVA9_ORIGINAL_CLASS")
+            try:
+                closure_report = require_selected_source_closure(
+                    z, set(selected)
+                )
+            except SourceClosureError as exc:
+                raise StandaloneSourceParityError(str(exc)) from exc
     except (zipfile.BadZipFile, EOFError, OSError) as exc:
         raise StandaloneSourceParityError("INVALID_ORIGINAL_ARCHIVE") from exc
 
@@ -371,6 +379,7 @@ def verify_standalone_sources(
         "canonical_source_modified": False,
         "complete_v311_source_recovery": False,
         "original_game_binary_on_compile_classpath": False,
+        "explicit_original_project_dependency_closure": closure_report,
         "full_classfile_or_graphical_parity": "NOT_PROVEN",
     }
     # Detect concurrent or accidental changes to canonical source during
