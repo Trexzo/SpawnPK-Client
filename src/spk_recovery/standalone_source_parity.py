@@ -1,0 +1,229 @@
+"""Verify independently rebuilt original client classes without binary fallback.
+
+Local-only source acceptance: the exact original JAR stays private, and javac
+receives no original game JAR or original game class directory. This proves
+public declaration + disassembled Code instruction parity (including byte
+offsets, branch targets and resolved constant operands), not complete
+classfile/StackMapTable identity or full client parity.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+import re
+import subprocess
+from typing import Any
+import zipfile
+
+
+class StandaloneSourceParityError(ValueError):
+    pass
+
+
+_CLASS_RE = re.compile(r"rs/(?:[A-Za-z_$][A-Za-z_$0-9]*/)*[A-Za-z_$][A-Za-z_$0-9]*\.class\Z")
+_INSTRUCTION_RE = re.compile(r"^\s*(\d+):\s+([a-z][a-z0-9_]*)(?:\s+(.+))?$")
+
+
+def _digest(path: Path) -> str:
+    hasher = hashlib.sha256()
+    with path.open("rb") as file:
+        for block in iter(lambda: file.read(1024 * 1024), b""):
+            hasher.update(block)
+    return hasher.hexdigest()
+
+
+def _require(ok: bool, reason: str) -> None:
+    if not ok:
+        raise StandaloneSourceParityError(reason)
+
+
+def _normalize_javap(result: str) -> tuple[tuple[str, ...], int]:
+    """Canonicalize only numeric constant-pool slots, not symbolic operands."""
+    declaration_lines: list[str] = []
+    instruction_count = 0
+    for raw in result.splitlines():
+        line = raw.rstrip()
+        if line.startswith("Compiled from "):
+            continue
+        match = _INSTRUCTION_RE.fullmatch(line)
+        if match:
+            offset, opcode, operands = match.groups()
+            operand = (operands or "").strip()
+            if "#" in operand:
+                _require("//" in operand, "UNRESOLVED_JAVAP_CONSTANT_POOL_OPERAND")
+                before, comment = operand.split("//", 1)
+                # #N is only a *constant-pool index*. Keep all remaining
+                # operands, exact offsets, symbolic comments and branch sites.
+                before = re.sub(r"#\d+\b", "#CP", before)
+                operand = before.strip() + " // " + comment.strip()
+            declaration_lines.append(
+                str(int(offset)) + ": " + opcode + (" " + operand if operand else "")
+            )
+            instruction_count += 1
+            continue
+        stripped = line.strip()
+        if not stripped or stripped in ("Code:", "}", "{"):
+            continue
+        if line.startswith("  ") and not line.startswith("    "):
+            # exact field/method declarations (order + modifiers + names)
+            declaration_lines.append("DECL " + stripped)
+        elif line.startswith("    descriptor: "):
+            declaration_lines.append("DESC " + stripped[len("descriptor: "):])
+        elif stripped.endswith(" {") and ("class " in stripped or "interface " in stripped):
+            declaration_lines.append("CLASS " + stripped)
+        elif stripped.startswith("static {};"):
+            declaration_lines.append("DECL " + stripped)
+        elif stripped.startswith("Exception table:"):
+            _require(False, "EXCEPTION_TABLE_REQUIRES_FULL_VERIFIER")
+        elif stripped.startswith("from") or stripped.startswith("to"):
+            _require(False, "EXCEPTION_TABLE_REQUIRES_FULL_VERIFIER")
+    _require(instruction_count > 0, "DISASSEMBLY_HAS_NO_INSTRUCTIONS")
+    _require(any(x.startswith("CLASS ") for x in declaration_lines),
+             "DISASSEMBLY_MISSING_CLASS")
+    _require(any(x.startswith("DECL ") for x in declaration_lines),
+             "DISASSEMBLY_MISSING_DECLARATIONS")
+    return tuple(declaration_lines), instruction_count
+
+
+def _javap(javap: str, classpath: Path, classname: str) -> tuple[tuple[str, ...], int]:
+    try:
+        run = subprocess.run(
+            [javap, "-classpath", str(classpath), "-c", "-p", "-s", classname],
+            capture_output=True, text=True, encoding="utf-8",
+            errors="replace", timeout=50, check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise StandaloneSourceParityError("JAVAP_UNAVAILABLE_OR_TIMEOUT") from exc
+    _require(run.returncode == 0 and len(run.stdout) < 4_000_000,
+             "JAVAP_FAILURE_OR_EXCESSIVE_OUTPUT")
+    return _normalize_javap(run.stdout)
+
+
+def verify_standalone_sources(
+    original_jar: Path, source_root: Path, output_root: Path,
+    *, original_sha256: str, class_sha256: dict[str, str],
+    javac: str = "javac", javap: str = "javap",
+) -> dict[str, Any]:
+    """Build exact selected source classes with no game binary classpath.
+
+    output_root must not exist; selected source files must be ordinary local
+    files. A failed compile/verification leaves private intermediate files
+    but does not publish an acceptance report.
+    """
+    _require(re.fullmatch(r"[0-9a-f]{64}", original_sha256) is not None,
+             "INVALID_ORIGINAL_SHA256_PIN")
+    _require(bool(class_sha256) and len(class_sha256) <= 16, "INVALID_CLASS_SET")
+    _require(not output_root.exists() and not output_root.is_symlink(),
+             "OUTPUT_ALREADY_EXISTS")
+    original_jar = original_jar.resolve()
+    source_root = source_root.resolve()
+    _require(original_jar.is_file() and source_root.is_dir(), "INPUT_MISSING")
+    _require(_digest(original_jar) == original_sha256, "WRONG_ORIGINAL_JAR")
+    selected: dict[str, str] = {}
+    for entry, digest in sorted(class_sha256.items()):
+        _require(_CLASS_RE.fullmatch(entry) is not None, "INVALID_CLASS_PATH")
+        _require(re.fullmatch(r"[0-9a-f]{64}", digest) is not None,
+                 "INVALID_CLASS_SHA256_PIN")
+        selected[entry] = digest
+    try:
+        with zipfile.ZipFile(original_jar) as z:
+            names = [x.filename for x in z.infolist()]
+            _require(len(names) == len(set(names)), "AMBIGUOUS_ORIGINAL_ZIP_ENTRIES")
+            for entry, expected in selected.items():
+                _require(entry in names, "MISSING_ORIGINAL_CLASS")
+                blob = z.read(entry)
+                _require(hashlib.sha256(blob).hexdigest() == expected,
+                         "WRONG_ORIGINAL_CLASS")
+                _require(blob[:8] == bytes.fromhex("cafebabe00000035"),
+                         "EXPECTED_JAVA9_ORIGINAL_CLASS")
+    except (zipfile.BadZipFile, EOFError, OSError) as exc:
+        raise StandaloneSourceParityError("INVALID_ORIGINAL_ARCHIVE") from exc
+
+    sources: list[Path] = []
+    source_digests: dict[str, str] = {}
+    for entry in selected:
+        rel = entry[:-6] + ".java"
+        src = source_root / rel
+        _require(not src.is_symlink() and src.is_file(), "SOURCE_FILE_MISSING_OR_SYMLINK")
+        _require(src.resolve().is_relative_to(source_root), "SOURCE_ESCAPES_PRIVATE_ROOT")
+        sources.append(src)
+        source_digests[entry] = _digest(src)
+    # Source paths and binaries are not copied into the report.
+    output_root.mkdir(parents=True, exist_ok=False)
+    cls = output_root / "classes"
+    cp = output_root / "empty-classpath"
+    srcpath = output_root / "empty-sourcepath"
+    for directory in (cls, cp, srcpath):
+        directory.mkdir()
+    cmd = [
+        javac, "--release", "9", "-proc:none", "-g:none", "-encoding", "UTF-8",
+        "-classpath", str(cp), "-sourcepath", str(srcpath),
+        "-d", str(cls),
+        *[str(p) for p in sources],
+    ]
+    try:
+        compiler = subprocess.run(
+            cmd, capture_output=True, text=True,
+            encoding="utf-8", errors="replace",
+            timeout=120, check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise StandaloneSourceParityError("JAVAC_UNAVAILABLE_OR_TIMEOUT") from exc
+    _require(compiler.returncode == 0, "INDEPENDENT_SOURCE_COMPILE_FAILED")
+
+    actual_classes = {
+        p.relative_to(cls).as_posix()
+        for p in cls.rglob("*.class") if p.is_file()
+    }
+    _require(actual_classes == set(selected), "COMPILED_CLASS_SET_MISMATCH")
+
+    witnesses: list[dict[str, Any]] = []
+    for entry, expected_sha in selected.items():
+        compiled = cls / entry
+        blob = compiled.read_bytes()
+        _require(blob[:8] == bytes.fromhex("cafebabe00000035"),
+                 "COMPILED_CLASS_NOT_JAVA9")
+        classname = entry[:-6].replace("/", ".")
+        original_rows, original_insns = _javap(javap, original_jar, classname)
+        recovered_rows, recovered_insns = _javap(javap, cls, classname)
+        _require(original_rows == recovered_rows,
+                 "ORDERED_JVM_INSTRUCTIONS_OR_DECLARATIONS_MISMATCH " + entry)
+        _require(original_insns == recovered_insns,
+                 "JVM_INSTRUCTION_COUNT_MISMATCH")
+        witness = {
+            "class_entry": entry,
+            "original_class_sha256": expected_sha,
+            "rebuilt_class_sha256": hashlib.sha256(blob).hexdigest(),
+            "candidate_source_sha256": source_digests[entry],
+            "ordered_instruction_count": original_insns,
+            "declaration_and_instruction_sha256": hashlib.sha256(
+                json.dumps(original_rows, ensure_ascii=False, separators=(",", ":"))
+                .encode("utf-8")
+            ).hexdigest(),
+            "ordered_symbolic_instruction_parity": True,
+            "java_release": 9,
+            "original_game_binary_on_compile_classpath": False,
+            "full_classfile_attribute_or_runtime_parity": "NOT_PROVEN",
+        }
+        witnesses.append(witness)
+    report = {
+        "schema_version": 1,
+        "kind": "v311_independent_source_rebuild_parity",
+        "original_jar_sha256": original_sha256,
+        "total_classes": len(witnesses),
+        "total_ordered_instructions": sum(
+            x["ordered_instruction_count"] for x in witnesses
+        ),
+        "results": witnesses,
+        "all_passed": True,
+        "complete_v311_source_recovery": False,
+        "original_game_binary_on_compile_classpath": False,
+        "full_classfile_or_graphical_parity": "NOT_PROVEN",
+    }
+    result_path = output_root / "SOURCE-REBUILD-VERIFY.json"
+    result_path.write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return report
