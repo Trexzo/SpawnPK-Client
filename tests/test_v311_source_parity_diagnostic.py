@@ -92,8 +92,10 @@ public final class Clock {
         self.assertEqual(left_instructions, right_instructions)
         summary = first_jvm_parity_difference(expected, wrong)
         self.assertIsNotNone(summary)
-        self.assertIn("reason=instruction_operand_or_branch_target", summary)
-        self.assertIn("original_opcode=istore", summary)
+        # Local slots 0..3 use dedicated JVM _n opcode forms, so this
+        # test's first mismatch is the opcode encoding itself.
+        self.assertIn("reason=instruction_opcode", summary)
+        self.assertIn("original_opcode=istore_3", summary)
         self.assertIn("rebuilt_opcode=istore", summary)
         self.assertNotIn("suffix", summary)
 
