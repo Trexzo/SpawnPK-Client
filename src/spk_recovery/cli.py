@@ -16,6 +16,7 @@ from .scene_role_candidates import SceneRoleProbeError, discover_scene_role
 from .scene_member_frontier import MemberFrontierError, analyze_original_scene
 from .standalone_source_parity import StandaloneSourceParityError, verify_standalone_sources
 from .standalone_source_alias import StandaloneAliasError
+from .source_island_frontier import SourceFrontierError, write_source_frontier
 from .diffing import diff_indexes
 from .decompiler import (
     DecompilerError,
@@ -257,6 +258,15 @@ def main(argv: list[str] | None = None) -> int:
         "--compile-alias", action="append", default=[],
         help="reviewed compile-only original.class=temporary.class alias; never a semantic name",
     )
+
+    psf = sub.add_parser(
+        "original-source-frontier",
+        help="Find SHA-attested original classes with complete explicit dependencies inside a source island",
+    )
+    psf.add_argument("original_jar", type=Path)
+    psf.add_argument("--source-authority", type=Path, required=True)
+    psf.add_argument("--out", type=Path, required=True)
+    psf.add_argument("--max-candidates", type=int, default=30)
 
     pd = sub.add_parser(
         "diff",
@@ -895,6 +905,22 @@ def main(argv: list[str] | None = None) -> int:
         print(f"rs_classes={idx['summary']['rs_class_count']}")
         print(f"parse_errors={idx['summary']['class_parse_error_count']}")
         print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "original-source-frontier":
+        try:
+            report = write_source_frontier(
+                args.original_jar, args.source_authority, args.out,
+                max_candidates=args.max_candidates,
+            )
+        except (SourceFrontierError, OSError) as exc:
+            print(f"REFUSED: {exc}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_ORIGINAL_SOURCE_FRONTIER_PASS")
+        print(f"attested_selected_classes={report['selected_classes_attested']}")
+        print(f"dependency_closed_candidates={report['direct_dependency_closed_candidate_count']}")
+        print("source_reconstructed=NOT_PROVEN")
+        print(f"private_report={args.out}")
         return 0
 
     if args.cmd == "verify-standalone-source":
