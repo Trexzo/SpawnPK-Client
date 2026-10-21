@@ -1,0 +1,34 @@
+{
+  "authority": "EXACT_CURRENT_CLIENT",
+  "build": 311,
+  "library_source_name": "client(20261021-111920).jar",
+  "sha256": "5b619b82a8ed976d2051f84cda98815943d1ddb82afac9d49f3126f829101268",
+  "size_bytes": 17586755,
+  "main_class": "rs.gui.Launcher",
+  "archive_entries": 10947,
+  "class_entries": 10527,
+  "rs_class_entries": 1184,
+  "resource_entries": 420,
+  "build_evidence": {
+    "class": "rs/f/a.class",
+    "field": "public static final int c",
+    "constant_value": 311,
+    "class_sha256": "01f0546471ba05b71cf4ceb8245f76fde9c3306375db41ef21323c8885d0281e"
+  },
+  "verification": {
+    "scope": "offline read-only inspection of user-supplied original JAR",
+    "zip_integrity": "PASS",
+    "duplicate_member_names": 0,
+    "direct_traversal_entries": 0,
+    "real_game_runtime": "NOT_TESTED",
+    "recovered_v311_source_rebuild": "NOT_TESTED",
+    "v309_to_v311_class_delta": "NOT_COMPUTED"
+  },
+  "notes": [
+    "The original client binary is private and is not committed.",
+    "The build number 311 comes from the actual class ConstantValue; filename alone is not authority.",
+    "This is a new official-client baseline, not a claim that the recovered source produces byte-identical v311 classes.",
+    "Prior v308 and v309 authorities are historical migration references. Their project recovery artifacts must not be silently relabeled as v311.",
+    "Use the existing spk-recovery update-intake pipeline with independently SHA-verified old index and original client JAR to obtain genuine changed/added/removed class evidence."
+  ]
+}
