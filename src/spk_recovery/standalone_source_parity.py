@@ -20,7 +20,7 @@ from .classfile_utf8_remap import ClassfileRemapError, remap_classfile_utf8
 from .source_dependency_closure import SourceClosureError, require_selected_source_closure
 from .standalone_source_alias import (
     StandaloneAliasError, validate_compile_aliases,
-    rename_owned_class_source, rewrite_reviewed_external_superclass_alias,
+    rename_owned_class_source, rewrite_reviewed_external_type_alias,
 )
 
 
@@ -266,10 +266,11 @@ def verify_standalone_sources(
             else:
                 transformed = text_value
                 for renamed_entry, alias_entry in aliases.items():
-                    transformed = rewrite_reviewed_external_superclass_alias(
+                    transformed = rewrite_reviewed_external_type_alias(
                         transformed,
                         old_entry=renamed_entry,
                         alias_entry=alias_entry,
+                        referring_entry=entry,
                     )
             staged_text[entry] = transformed
 
