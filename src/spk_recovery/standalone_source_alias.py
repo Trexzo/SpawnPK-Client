@@ -122,3 +122,50 @@ def ensure_no_external_alias_refs(
             raise StandaloneAliasError(
                 "COMPILE_ALIAS_EXTERNAL_SOURCE_REFERENCE_REQUIRES_REVIEW"
             )
+
+def rewrite_reviewed_external_superclass_alias(
+    source: str, *, old_entry: str, alias_entry: str,
+) -> str:
+    """Rewrite only same-package `class Child extends Old` references.
+
+    This is deliberately not a generic Java refactor. Names used in fields,
+    methods, casts, reflection or another package must be separately reviewed.
+    Source comments and literal strings are never rewritten.
+    """
+    old_name = old_entry.rsplit("/", 1)[-1][:-6]
+    new_name = alias_entry.rsplit("/", 1)[-1][:-6]
+    expected_package = old_entry.rpartition("/")[0].replace("/", ".")
+    sig = _significant_java(source)
+    package_end = 0
+    package_name = ""
+    if sig and sig[0].text == "package":
+        idx = 1
+        package_bits: list[str] = []
+        while idx < len(sig) and sig[idx].text != ";":
+            package_bits.append(sig[idx].text)
+            idx += 1
+        _require(idx < len(sig), "COMPILE_ALIAS_EXTERNAL_PACKAGE_UNTERMINATED")
+        package_name = "".join(package_bits)
+        package_end = idx + 1
+    edits: list[tuple[int, int]] = []
+    for index, token in enumerate(sig[package_end:], start=package_end):
+        if token.kind != "ident" or token.text != old_name:
+            continue
+        previous = sig[index - 1].text if index > 0 else ""
+        next_text = sig[index + 1].text if index + 1 < len(sig) else ""
+        _require(
+            package_name == expected_package
+            and previous == "extends"
+            and next_text in ("{", "implements"),
+            "COMPILE_ALIAS_EXTERNAL_SOURCE_REFERENCE_REQUIRES_REVIEW",
+        )
+        _require(
+            any(t.text == "class" for t in sig[package_end:index]),
+            "COMPILE_ALIAS_EXTERNAL_SOURCE_REFERENCE_REQUIRES_REVIEW",
+        )
+        edits.append((token.start, token.end))
+    result = source
+    for start, end in reversed(edits):
+        result = result[:start] + new_name + result[end:]
+    return result
+
