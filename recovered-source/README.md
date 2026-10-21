@@ -3,6 +3,12 @@
 ## Client-only, standalone per-build releases
 
 
+The objective is a genuinely **source-compilable original SpawnPK client** with deobfuscated class/member identities and separate local runtime assets. The **current official client is v311** (exact binary authority in [`authority/v311.json`](../authority/v311.json)); the full-tree recovered-source target must therefore be **v311** for new development. The prior v308 recovered-client rebuild and v309 Source-M1 work remain **historical/in-progress baselines**, not proof of a source-compilable v311 release. Existing old-build evidence must be preserved under its original version, and publication order is determined by verified source milestones, **not** by chronological build number.
+
+Every accepted release is a **complete snapshot** in `recovered-source/vNNN/src/`, not merely a patch against the previous one. A subsequent release may reuse proven unchanged Java sources and stable semantic identities from the prior certified tree, but it must independently meet the new exact client binary's full class/source build gates. The versioned provenance records cross-build reused identities and the changed/renamed-class queue.
+
+Client runtime caches (`.spawnpk/`), original `client.jar` files, and local profile/log/settings data (`.spawnpk-data/`) remain strictly outside Git. Asset manifests may be hash-pinned privately; no independently implemented server tree is part of these client releases.
+
 ## v311 intake and source migration boundary
 
 The official client JAR received on 2026-10-21 has SHA-256
@@ -29,13 +35,6 @@ members. Finish with a full standalone
 zero-fallback Java compile and release-verification gates. Old graphical
 acceptance packages for the historical R308 rebuild are not mandatory
 prerequisites to this *source recovery* work.
-
-The objective is a genuinely **source-compilable original SpawnPK client** with deobfuscated class/member identities and separate local runtime assets. The **current official client is v311** (exact binary authority in [`authority/v311.json`](../authority/v311.json)); the full-tree recovered-source target must therefore be **v311** for new development. The prior v308 recovered-client rebuild and v309 Source-M1 work remain **historical/in-progress baselines**, not proof of a source-compilable v311 release. Existing old-build evidence must be preserved under its original version, and publication order is determined by verified source milestones, **not** by chronological build number.
-
-Every accepted release is a **complete snapshot** in `recovered-source/vNNN/src/`, not merely a patch against the previous one. A subsequent release may reuse proven unchanged Java sources and stable semantic identities from the prior certified tree, but it must independently meet the new exact client binary's full class/source build gates. The versioned provenance records cross-build reused identities and the changed/renamed-class queue.
-
-Client runtime caches (`.spawnpk/`), original `client.jar` files, and local profile/log/settings data (`.spawnpk-data/`) remain strictly outside Git. Asset manifests may be hash-pinned privately; no independently implemented server tree is part of these client releases.
-
 
 This directory is the canonical in-repository home for verified recovered Java source releases.
 
