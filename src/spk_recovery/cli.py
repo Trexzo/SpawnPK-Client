@@ -13,6 +13,7 @@ from .authority_snapshot import (
 )
 from .indexer import index_jar, write_index
 from .scene_role_candidates import SceneRoleProbeError, discover_scene_role
+from .scene_member_frontier import MemberFrontierError, analyze_original_scene
 from .diffing import diff_indexes
 from .decompiler import (
     DecompilerError,
@@ -226,6 +227,15 @@ def main(argv: list[str] | None = None) -> int:
     psr.add_argument("index", type=Path)
     psr.add_argument("--expected-new-authority", type=Path, required=True)
     psr.add_argument("--out", type=Path, required=True)
+
+    pmf = sub.add_parser(
+        "scene-member-frontier",
+        help="Review exact v311 scene tile-grid access methods using SHA-pinned javap",
+    )
+    pmf.add_argument("jar", type=Path)
+    pmf.add_argument("--expected-new-authority", type=Path, required=True)
+    pmf.add_argument("--out", type=Path, required=True)
+    pmf.add_argument("--javap", default="javap")
 
     pd = sub.add_parser(
         "diff",
@@ -863,6 +873,30 @@ def main(argv: list[str] | None = None) -> int:
         print(f"classes={idx['summary']['class_count']}")
         print(f"rs_classes={idx['summary']['rs_class_count']}")
         print(f"parse_errors={idx['summary']['class_parse_error_count']}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "scene-member-frontier":
+        try:
+            if args.out.exists():
+                raise MemberFrontierError("MEMBER_FRONTIER_REFUSE_OVERWRITE")
+            report = analyze_original_scene(
+                args.jar, _load(args.expected_new_authority),
+                javap=args.javap,
+            )
+            args.out.parent.mkdir(parents=True, exist_ok=True)
+            args.out.write_text(
+                json.dumps(report, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+        except (MemberFrontierError, OSError, json.JSONDecodeError) as exc:
+            print(f"REFUSED: {exc}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_SCENE_MEMBER_FRONTIER_PASS")
+        print(f"grid_access_methods={report['grid_referencing_methods']}")
+        print(f"mutation_review_candidates={report['mutation_review_candidates']}")
+        print("bounds_correctness=NOT_PROVEN")
+        print("historical_member_identity=NOT_PROVEN")
         print(f"out={args.out}")
         return 0
 
