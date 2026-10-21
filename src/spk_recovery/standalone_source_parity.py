@@ -20,7 +20,7 @@ from .classfile_utf8_remap import ClassfileRemapError, remap_classfile_utf8
 from .source_dependency_closure import SourceClosureError, require_selected_source_closure
 from .standalone_source_alias import (
     StandaloneAliasError, validate_compile_aliases,
-    rename_owned_class_source, ensure_no_external_alias_refs,
+    rename_owned_class_source, rewrite_reviewed_external_superclass_alias,
 )
 
 
@@ -238,19 +238,25 @@ def verify_standalone_sources(
                     "COMPILE_ALIAS_SOURCE_UNREADABLE"
                 ) from exc
 
-    # Fail *before any output directory is created* for ambiguous source
-    # type references or lexically unreviewed constructor/declaration edits.
+    # Prepare every source transformation *before* making output folders.
+    # External references are supported ONLY for same-package superclass
+    # declarations, never for arbitrary Java identifiers or reflection.
+    staged_text: dict[str, str] = {}
     if aliases:
         for entry, text_value in source_text.items():
             if entry in aliases:
-                rename_owned_class_source(
+                transformed = rename_owned_class_source(
                     text_value, old_entry=entry, alias_entry=aliases[entry]
                 )
             else:
-                for renamed_entry in aliases:
-                    ensure_no_external_alias_refs(
-                        text_value, old_entry=renamed_entry
+                transformed = text_value
+                for renamed_entry, alias_entry in aliases.items():
+                    transformed = rewrite_reviewed_external_superclass_alias(
+                        transformed,
+                        old_entry=renamed_entry,
+                        alias_entry=alias_entry,
                     )
+            staged_text[entry] = transformed
 
     # Private outputs only; the canonical Java tree is never modified.
     output_root.mkdir(parents=True, exist_ok=False)
@@ -264,14 +270,10 @@ def verify_standalone_sources(
         stage = output_root / "alias-sources"
         stage.mkdir()
         for entry in selected:
-            if entry in aliases:
-                dest = stage / (aliases[entry][:-6] + ".java")
+            changed = staged_text[entry]
+            if changed != source_text[entry]:
+                dest = stage / (aliases.get(entry, entry)[:-6] + ".java")
                 dest.parent.mkdir(parents=True, exist_ok=True)
-                changed = rename_owned_class_source(
-                    source_text[entry],
-                    old_entry=entry,
-                    alias_entry=aliases[entry],
-                )
                 dest.write_text(changed, encoding="utf-8", newline="")
                 sources.append(dest)
             else:
