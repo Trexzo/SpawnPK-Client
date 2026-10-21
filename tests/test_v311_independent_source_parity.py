@@ -42,6 +42,17 @@ public final class Failure extends Exception {
     public Failure(Throwable cause) { super(cause); }
 }
 """,
+    "rs/demo/Wait.java": """
+package rs.demo;
+public final class Wait {
+    public static void pause(long millis) {
+        if (millis > 0) {
+            try { Thread.sleep(millis); }
+            catch (InterruptedException e) { e.printStackTrace(); }
+        }
+    }
+}
+""",
 }
 
 
@@ -84,7 +95,7 @@ class JavaFixture:
 @unittest.skipUnless(shutil.which("javac") and shutil.which("javap"),
                      "Requires the same JDK preinstalled in Recovery CI")
 class StandaloneSourceParityTests(unittest.TestCase):
-    def test_two_actual_compilable_synthetic_classes_match(self):
+    def test_three_actual_compilable_synthetic_classes_match(self):
         with tempfile.TemporaryDirectory() as directory:
             obj = JavaFixture(Path(directory))
             report = verify_standalone_sources(
@@ -93,14 +104,22 @@ class StandaloneSourceParityTests(unittest.TestCase):
                 class_sha256=obj.expected,
             )
             self.assertTrue(report["all_passed"])
-            self.assertEqual(report["total_classes"], 2)
+            self.assertEqual(report["total_classes"], 3)
             self.assertGreater(report["total_ordered_instructions"], 15)
             self.assertFalse(report["original_game_binary_on_compile_classpath"])
             self.assertFalse(report["complete_v311_source_recovery"])
             self.assertEqual(report["full_classfile_or_graphical_parity"], "NOT_PROVEN")
             self.assertTrue((obj.root / "accepted" / "SOURCE-REBUILD-VERIFY.json").is_file())
+            # Unlike the previous verifier, this must compare original
+            # exception table start/end/target and exact catch type.
+            self.assertGreater(
+                next(x for x in report["results"]
+                     if x["class_entry"] == "rs/demo/Wait.class")[
+                    "matched_exception_handler_entries"
+                ], 0,
+            )
             self.assertEqual(
-                len(list((obj.root / "accepted" / "classes").rglob("*.class"))), 2
+                len(list((obj.root / "accepted" / "classes").rglob("*.class"))), 3
             )
 
     def test_operand_normalization_keeps_offsets_and_resolved_targets(self):
@@ -136,6 +155,64 @@ public class rs.demo.Node {
 """
         with self.assertRaisesRegex(StandaloneSourceParityError, "UNRESOLVED"):
             _normalize_javap(example)
+
+    def test_exception_handler_symbolic_type_and_range_are_compared(self):
+        example = """
+public class rs.demo.Wait {
+  public rs.demo.Wait();
+    descriptor: ()V
+    Code:
+       0: aload_0
+       1: invokespecial #1 // Method java/lang/Object."<init>":()V
+       4: return
+  public static void pause(long);
+    descriptor: (J)V
+    Code:
+       0: lconst_0
+       1: return
+    Exception table:
+       from    to  target type
+          0    1    1   Class java/lang/InterruptedException
+}
+"""
+        baseline = _normalize_javap(example)[0]
+        self.assertIn(
+            "HANDLER 0 1 1 Class java/lang/InterruptedException", baseline
+        )
+        self.assertNotEqual(
+            baseline,
+            _normalize_javap(example.replace(
+                "0    1    1   Class", "0    2    1   Class"
+            ))[0],
+        )
+        self.assertNotEqual(
+            baseline,
+            _normalize_javap(example.replace(
+                "java/lang/InterruptedException", "java/lang/Exception"
+            ))[0],
+        )
+
+    def test_malformed_exception_table_refuses(self):
+        example = """
+public class rs.demo.Wait {
+  public static void pause();
+    descriptor: ()V
+    Code:
+       0: return
+    Exception table:
+       from    to  target type
+          garbage
+}
+"""
+        with self.assertRaisesRegex(StandaloneSourceParityError, "EMPTY_EXCEPTION_TABLE"):
+            _normalize_javap(example)
+        with self.assertRaisesRegex(
+            StandaloneSourceParityError, "MALFORMED_EXCEPTION_HANDLER_RANGE"
+        ):
+            _normalize_javap(example.replace(
+                "          garbage",
+                "          3    1    4   Class java/lang/RuntimeException",
+            ))
 
     def test_wrong_original_jar_pin_refuses_before_any_output(self):
         with tempfile.TemporaryDirectory() as directory:
