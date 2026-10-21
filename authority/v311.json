@@ -22,13 +22,52 @@
     "direct_traversal_entries": 0,
     "real_game_runtime": "NOT_TESTED",
     "recovered_v311_source_rebuild": "NOT_TESTED",
-    "v309_to_v311_class_delta": "NOT_COMPUTED"
+    "v309_to_v311_class_delta": "NOT_COMPUTED",
+    "v311_project_entry_inventory": "EXACT_ORIGINAL_JAR_MEASURED; NOT_CROSS_BUILD_DIFF"
   },
   "notes": [
     "The original client binary is private and is not committed.",
     "The build number 311 comes from the actual class ConstantValue; filename alone is not authority.",
     "This is a new official-client baseline, not a claim that the recovered source produces byte-identical v311 classes.",
     "Prior v308 and v309 authorities are historical migration references. Their project recovery artifacts must not be silently relabeled as v311.",
-    "Use the existing spk-recovery update-intake pipeline with independently SHA-verified old index and original client JAR to obtain genuine changed/added/removed class evidence."
-  ]
+    "Use the existing spk-recovery update-intake pipeline with independently SHA-verified old index and original client JAR to obtain genuine changed/added/removed class evidence.",
+    "Observed absence of rs/Scene.class or rs/s/e/c.class as paths in the official v311 ZIP does not prove scene/feature removal; bytecode matching must establish potential renamed equivalents before carrying R308 changes."
+  ],
+  "project_class_surface": {
+    "scope": "rs/",
+    "class_count": 1184,
+    "path_sha256_manifest_digest": "c9a88342e8f1d3eed57d113d0691b8ffb0014c46947637437705e03159e4d535",
+    "digest_construction": "SHA256 of UTF-8 rows sorted by full class entry path: path + NUL + lowercase SHA256(class bytes) + LF",
+    "class_major_versions": {
+      "53": 1184
+    },
+    "project_uncompressed_class_bytes": 3709911,
+    "package_class_counts_top": {
+      "n": 173,
+      "l": 171,
+      "plugins": 155,
+      "gui": 106,
+      "ui": 91,
+      "o": 53,
+      "[root]": 51,
+      "runelite": 44,
+      "r": 37,
+      "d": 36,
+      "k": 35,
+      "cache": 29
+    },
+    "important_entry_sha256": {
+      "rs/f/a.class": "01f0546471ba05b71cf4ceb8245f76fde9c3306375db41ef21323c8885d0281e",
+      "rs/Client.class": "f37d249f40eb212086d334777dc5e9e707276a7cf129f6a00955071b5d9bda98",
+      "rs/cache/osrs/util/OsrsMapDependencyScanner.class": "fee0729269f73923a073cbfd658ac26c66b0d7db46446992e3428451385d317a",
+      "rs/gui/Launcher.class": "6b8eaea0b78fbb60e1d6e92497f6a5f8ab25a297e72d49889980fd224c1d9d27",
+      "rs/eventbus/EventBus.class": "7bcd16369a679f743b644bdf62c4b39dc50608ccbdbfe4768d142a7fc7af8259"
+    },
+    "old_recovery_path_absent": [
+      "rs/Scene.class",
+      "rs/s/e/c.class"
+    ],
+    "full_jvm_class_parse": "NOT_YET_REPLAYED_WITH_PROJECT_INDEXER",
+    "cross_build_identity_proven": false
+  }
 }
