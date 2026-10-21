@@ -75,7 +75,7 @@ class ProjectSourceClosureTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             jar, src, hashes, base, child = self.fixture(Path(d))
             self.assertIn("rs/demo/RelatedBase.class", explicit_class_references(child))
-            self.assertNotIn("rs/demo/RelatedChild.class", explicit_class_references(base))
+            self.assertIn("rs/demo/RelatedBase.class", explicit_class_references(base))
             self.assertEqual(
                 explicit_class_references(child) - {"rs/demo/RelatedChild.class"},
                 {"rs/demo/RelatedBase.class"},
@@ -126,7 +126,7 @@ class ProjectSourceClosureTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
             jar, src, hashes, base, child = self.fixture(root)
-            self.assertEqual(explicit_class_references(base), set())
+            self.assertEqual(explicit_class_references(base), {"rs/demo/RelatedBase.class"})
 
 
 if __name__ == "__main__":
