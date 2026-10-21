@@ -5,8 +5,10 @@ import hashlib
 import json
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 from spk_recovery.indexer import project_class_surface
+from spk_recovery.update_intake import UpdateIntakeError, intake_new_jar, verify_new_project_authority
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -99,6 +101,98 @@ class ProjectSurfaceTests(unittest.TestCase):
         self.assertEqual(project["full_jvm_class_parse"], "NOT_YET_REPLAYED_WITH_PROJECT_INDEXER")
         self.assertEqual(doc["verification"]["v309_to_v311_class_delta"], "NOT_COMPUTED")
         self.assertEqual(doc["verification"]["recovered_v311_source_rebuild"], "NOT_TESTED")
+
+
+    def test_target_authority_valid_new_index(self):
+        data = index_fixture()
+        data["sha256"] = "f" * 64
+        authority = {
+            "build": 311,
+            "sha256": "f" * 64,
+            "project_class_surface": project_class_surface(data),
+        }
+        observed = verify_new_project_authority(
+            data, authority, new_build_id="v311", scope_prefix="rs/"
+        )
+        self.assertEqual(observed["class_count"], 2)
+
+    def test_wrong_old_release_or_wrong_jar_fails_before_matcher(self):
+        data = index_fixture()
+        data["sha256"] = "e" * 64
+        authority = {
+            "build": 311,
+            "sha256": "f" * 64,
+            "project_class_surface": project_class_surface(data),
+        }
+        with self.assertRaisesRegex(UpdateIntakeError, "JAR_SHA_MISMATCH"):
+            verify_new_project_authority(
+                data, authority, new_build_id="v311", scope_prefix="rs/"
+            )
+        with (
+            patch("spk_recovery.update_intake.index_jar", return_value={
+                **data,
+                "summary": {"class_parse_error_count": 0},
+            }),
+            patch("spk_recovery.update_intake.build_update_intake") as matcher,
+        ):
+            with self.assertRaisesRegex(UpdateIntakeError, "JAR_SHA_MISMATCH"):
+                intake_new_jar(
+                    {"sha256": "a" * 64},
+                    Path("synthetic-not-on-disk.jar"),
+                    old_build_id="v309",
+                    new_build_id="v311",
+                    new_authority=authority,
+                )
+            matcher.assert_not_called()
+
+    def test_wrong_target_class_surface_fails_closed(self):
+        data = index_fixture()
+        data["sha256"] = "f" * 64
+        authority = {
+            "build": 311,
+            "sha256": "f" * 64,
+            "project_class_surface": project_class_surface(data),
+        }
+        authority["project_class_surface"]["class_count"] = 311
+        with self.assertRaisesRegex(UpdateIntakeError, "PROJECT_SURFACE_MISMATCH"):
+            verify_new_project_authority(
+                data, authority, new_build_id="v311", scope_prefix="rs/"
+            )
+
+    def test_target_build_and_scope_bound(self):
+        data = index_fixture()
+        data["sha256"] = "f" * 64
+        authority = {
+            "build": 311,
+            "sha256": "f" * 64,
+            "project_class_surface": project_class_surface(data),
+        }
+        with self.assertRaisesRegex(UpdateIntakeError, "BUILD_MISMATCH"):
+            verify_new_project_authority(
+                data, authority, new_build_id="v310", scope_prefix="rs/"
+            )
+        with self.assertRaisesRegex(UpdateIntakeError, "SCOPE_MISMATCH"):
+            verify_new_project_authority(
+                data, authority, new_build_id="v311", scope_prefix="other/"
+            )
+        with self.assertRaisesRegex(UpdateIntakeError, "BUILD_ID_INVALID"):
+            verify_new_project_authority(
+                data, authority, new_build_id="latest", scope_prefix="rs/"
+            )
+
+    def test_unparsed_project_class_rejected_before_matching(self):
+        data = index_fixture()
+        data["sha256"] = "f" * 64
+        authority = {
+            "build": 311,
+            "sha256": "f" * 64,
+            "project_class_surface": project_class_surface(data),
+        }
+        del data["classes"]["rs/a.class"]
+        with self.assertRaisesRegex(UpdateIntakeError, "CLASS_PARSE_REFUSED"):
+            verify_new_project_authority(
+                data, authority, new_build_id="v311", scope_prefix="rs/"
+            )
 
 
 if __name__ == "__main__":
