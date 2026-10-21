@@ -34,6 +34,17 @@ class TypeAliasTests(unittest.TestCase):
                         referring_entry="rs/Collection.class",
                     )
 
+    def test_unrelated_packages_without_alias_references_unchanged(self):
+        source = "package rs.t; public class f { public int value() { return 3; } }"
+        self.assertEqual(
+            rewrite_reviewed_external_type_alias(
+                source, old_entry="rs/t.class",
+                alias_entry="rs/RecoveredNodeV311.class",
+                referring_entry="rs/t/f.class",
+            ),
+            source,
+        )
+
     def test_other_package_refused(self):
         with self.assertRaisesRegex(StandaloneAliasError, "EXTERNAL_PACKAGE"):
             rewrite_reviewed_external_type_alias(
