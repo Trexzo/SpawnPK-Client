@@ -16,8 +16,8 @@ from typing import Any
 
 
 EXPECTED_CLASS = "rs/V.class"
-DECL = re.compile(r"^  (?:public|private|protected|static)\\b.*[;{}]$")
-OP = re.compile(r"^\\s+(\\d+):\\s+([a-z][a-z0-9_]*)\\b(.*)$")
+DECL = re.compile(r"^  (?:public|private|protected|static)\b.*[;{}]$")
+OP = re.compile(r"^\s+(\d+):\s+([a-z][a-z0-9_]*)\b(.*)$")
 EXPECTED_HEADER = "public final class rs.V {"
 
 
@@ -74,7 +74,7 @@ def parse_javap_scene(
             i for i, (_, op, operands) in enumerate(method["ops"])
             if op in ("getfield", "putfield")
             and re.search(
-                r"Field (?:rs/V\\.)?i:\\[\\[\\[Lrs/H;", operands,
+                r"Field (?:rs/V\.)?i:\[\[\[Lrs/H;", operands,
             )
         ]
         if not refs:
@@ -101,8 +101,7 @@ def parse_javap_scene(
             "method_signature": method["signature"],
             "descriptor": descriptor,
             "signature_descriptor_sha256": hashlib.sha256(
-                (method["signature"] + "\\0" + descriptor)
-                .encode("utf-8").replace(b"\\0", b"\\x00")
+                (method["signature"] + "\0" + descriptor).encode("utf-8")
             ).hexdigest(),
             "opcode_sequence_sha256": hashlib.sha256(
                 " ".join(op for _, op, _ in method["ops"]).encode("ascii")
