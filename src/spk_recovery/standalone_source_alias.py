@@ -169,3 +169,76 @@ def rewrite_reviewed_external_superclass_alias(
         result = result[:start] + new_name + result[end:]
     return result
 
+
+def rewrite_reviewed_external_type_alias(
+    source: str, *, old_entry: str, alias_entry: str,
+    referring_entry: str,
+) -> str:
+    """Compile-only rewrite of strictly recognized same-package Java types.
+
+    Accepted: superclass `extends T`, local/field/parameter/return
+    declarations `T variable` and constructor expressions `new T(...)`.
+    Rewrites only lexer-identified tokens; no comments, literal strings,
+    wildcard imports, reflective names, arbitrary expressions or fields
+    named like the class may be changed. Unknown uses fail closed.
+    """
+    _require(
+        _ENTRY.fullmatch(old_entry) is not None
+        and _ENTRY.fullmatch(alias_entry) is not None
+        and _ENTRY.fullmatch(referring_entry) is not None,
+        "COMPILE_ALIAS_CLASS_PATH_INVALID",
+    )
+    package = old_entry.rpartition("/")[0]
+    _require(
+        alias_entry.rpartition("/")[0] == package
+        and referring_entry.rpartition("/")[0] == package
+        and referring_entry != old_entry,
+        "COMPILE_ALIAS_EXTERNAL_PACKAGE_REQUIRES_REVIEW",
+    )
+    old_name = old_entry.rsplit("/", 1)[-1][:-6]
+    new_name = alias_entry.rsplit("/", 1)[-1][:-6]
+    sig = _significant_java(source)
+    package_end = 0
+    expected = package.replace("/", ".")
+    if sig and sig[0].text == "package":
+        package_bits: list[str] = []
+        i = 1
+        while i < len(sig) and sig[i].text != ";":
+            package_bits.append(sig[i].text)
+            i += 1
+        _require(i < len(sig), "COMPILE_ALIAS_EXTERNAL_PACKAGE_UNTERMINATED")
+        _require(
+            "".join(package_bits) == expected,
+            "COMPILE_ALIAS_EXTERNAL_PACKAGE_REQUIRES_REVIEW",
+        )
+        package_end = i + 1
+    else:
+        raise StandaloneAliasError("COMPILE_ALIAS_EXTERNAL_PACKAGE_REQUIRES_REVIEW")
+    edits: list[tuple[int, int]] = []
+    for index in range(package_end, len(sig)):
+        token = sig[index]
+        if token.kind != "ident" or token.text != old_name:
+            continue
+        previous = sig[index - 1].text if index else ""
+        following = sig[index + 1] if index + 1 < len(sig) else None
+        next_text = following.text if following else ""
+        is_qualified = previous == "." or next_text == "."
+        is_super = previous == "extends" and next_text in ("{", "implements")
+        is_constructed = previous == "new" and next_text == "("
+        is_declared_type = (
+            following is not None
+            and following.kind == "ident"
+            and previous in (
+                "public", "protected", "private", "static", "final",
+                "volatile", "transient", "(", ",", "{", ";", "}",
+            )
+        )
+        _require(
+            not is_qualified and (is_super or is_constructed or is_declared_type),
+            "COMPILE_ALIAS_EXTERNAL_SOURCE_REFERENCE_REQUIRES_REVIEW",
+        )
+        edits.append((token.start, token.end))
+    result = source
+    for start, end in reversed(edits):
+        result = result[:start] + new_name + result[end:]
+    return result
