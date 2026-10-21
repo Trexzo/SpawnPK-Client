@@ -38,6 +38,23 @@ def _require(ok: bool, reason: str) -> None:
         raise StandaloneSourceParityError(reason)
 
 
+def require_compilable_source_namespace(class_entries: set[str]) -> None:
+    """Refuse unrenamed class/package collisions in the selected source island.
+
+    Java cannot simultaneously compile `rs.t` and `package rs.t; class f`
+    as source in one unrenamed compilation unit. Detection is limited to
+    selected entries, not unrelated original classes on the private JAR.
+    """
+    _require(all(_CLASS_RE.fullmatch(n) is not None for n in class_entries),
+             "INVALID_CLASS_PATH")
+    internal = {n[:-6] for n in class_entries}
+    for name in sorted(internal):
+        parts = name.split("/")
+        for i in range(1, len(parts)):
+            parent = "/".join(parts[:i])
+            _require(parent not in internal, "SOURCE_CLASS_PACKAGE_COLLISION")
+
+
 def _normalize_javap(result: str) -> tuple[tuple[str, ...], int]:
     """Compare declarations, exact Code offsets/operands and exception handlers.
 
@@ -169,6 +186,10 @@ def verify_standalone_sources(
                          "EXPECTED_JAVA9_ORIGINAL_CLASS")
     except (zipfile.BadZipFile, EOFError, OSError) as exc:
         raise StandaloneSourceParityError("INVALID_ORIGINAL_ARCHIVE") from exc
+
+    # Preflight all obfuscated namespace conflicts before creating output.
+    # Only classes chosen for this independent source island are checked.
+    require_compilable_source_namespace(set(selected))
 
     sources: list[Path] = []
     source_digests: dict[str, str] = {}
