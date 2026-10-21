@@ -132,7 +132,22 @@ def _normalize_javap(result: str) -> tuple[tuple[str, ...], int]:
         elif stripped.startswith("static {};"):
             rows.append("DECL " + stripped)
     _require(not in_exception_table or handler_rows > 0, "EMPTY_EXCEPTION_TABLE")
-    _require(instruction_count > 0, "DISASSEMBLY_HAS_NO_INSTRUCTIONS")
+    # An original JVM interface can have abstract method declarations
+    # without any Code attributes. Verify its full declarations and method
+    # descriptors rather than rejecting legitimate zero-opcode interfaces.
+    # A concrete class or truncated disassembly must still fail closed.
+    if instruction_count == 0:
+        _require(
+            any(
+                x.startswith("CLASS ") and re.search(
+                    r"\binterface\s+[^{}]+\{$", x
+                ) is not None
+                for x in rows
+            )
+            and any(x.startswith("DECL ") for x in rows)
+            and any(x.startswith("DESC ") for x in rows),
+            "DISASSEMBLY_HAS_NO_INSTRUCTIONS",
+        )
     _require(any(x.startswith("CLASS ") for x in rows),
              "DISASSEMBLY_MISSING_CLASS")
     _require(any(x.startswith("DECL ") for x in rows),
