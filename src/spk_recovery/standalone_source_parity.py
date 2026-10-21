@@ -39,13 +39,48 @@ def _require(ok: bool, reason: str) -> None:
 
 
 def _normalize_javap(result: str) -> tuple[tuple[str, ...], int]:
-    """Canonicalize only numeric constant-pool slots, not symbolic operands."""
-    declaration_lines: list[str] = []
+    """Compare declarations, exact Code offsets/operands and exception handlers.
+
+    Only numeric constant-pool slots are replaceable; preserve symbolic
+    targets and exact exception-handler start/end/target/catch type. Do not
+    pretend this verifies StackMapTable, attributes or runtime behavior.
+    """
+    rows: list[str] = []
     instruction_count = 0
+    in_exception_table = False
+    handler_rows = 0
     for raw in result.splitlines():
         line = raw.rstrip()
         if line.startswith("Compiled from "):
             continue
+        stripped = line.strip()
+        if stripped == "Exception table:":
+            _require(not in_exception_table, "NESTED_EXCEPTION_TABLE")
+            in_exception_table = True
+            handler_rows = 0
+            rows.append("EXCEPTION TABLE")
+            continue
+        if in_exception_table:
+            if re.fullmatch(r"from\s+to\s+target\s+type", stripped):
+                continue
+            handler = re.fullmatch(
+                r"\s*(\d+)\s+(\d+)\s+(\d+)\s+(Class [\w/$]+|any)\s*",
+                line,
+            )
+            if handler:
+                start, end, target, catch_type = handler.groups()
+                _require(int(start) < int(end),
+                         "MALFORMED_EXCEPTION_HANDLER_RANGE")
+                rows.append(
+                    f"HANDLER {int(start)} {int(end)} {int(target)} {catch_type}"
+                )
+                handler_rows += 1
+                continue
+            _require(handler_rows > 0, "EMPTY_EXCEPTION_TABLE")
+            _require(not re.match(r"^\s+\d", line),
+                     "MALFORMED_EXCEPTION_HANDLER_ROW")
+            in_exception_table = False
+
         match = _INSTRUCTION_RE.fullmatch(line)
         if match:
             offset, opcode, operands = match.groups()
@@ -57,33 +92,28 @@ def _normalize_javap(result: str) -> tuple[tuple[str, ...], int]:
                 # operands, exact offsets, symbolic comments and branch sites.
                 before = re.sub(r"#\d+\b", "#CP", before)
                 operand = before.strip() + " // " + comment.strip()
-            declaration_lines.append(
+            rows.append(
                 str(int(offset)) + ": " + opcode + (" " + operand if operand else "")
             )
             instruction_count += 1
             continue
-        stripped = line.strip()
         if not stripped or stripped in ("Code:", "}", "{"):
             continue
         if line.startswith("  ") and not line.startswith("    "):
-            # exact field/method declarations (order + modifiers + names)
-            declaration_lines.append("DECL " + stripped)
+            rows.append("DECL " + stripped)
         elif line.startswith("    descriptor: "):
-            declaration_lines.append("DESC " + stripped[len("descriptor: "):])
+            rows.append("DESC " + stripped[len("descriptor: "):])
         elif stripped.endswith(" {") and ("class " in stripped or "interface " in stripped):
-            declaration_lines.append("CLASS " + stripped)
+            rows.append("CLASS " + stripped)
         elif stripped.startswith("static {};"):
-            declaration_lines.append("DECL " + stripped)
-        elif stripped.startswith("Exception table:"):
-            _require(False, "EXCEPTION_TABLE_REQUIRES_FULL_VERIFIER")
-        elif stripped.startswith("from") or stripped.startswith("to"):
-            _require(False, "EXCEPTION_TABLE_REQUIRES_FULL_VERIFIER")
+            rows.append("DECL " + stripped)
+    _require(not in_exception_table or handler_rows > 0, "EMPTY_EXCEPTION_TABLE")
     _require(instruction_count > 0, "DISASSEMBLY_HAS_NO_INSTRUCTIONS")
-    _require(any(x.startswith("CLASS ") for x in declaration_lines),
+    _require(any(x.startswith("CLASS ") for x in rows),
              "DISASSEMBLY_MISSING_CLASS")
-    _require(any(x.startswith("DECL ") for x in declaration_lines),
+    _require(any(x.startswith("DECL ") for x in rows),
              "DISASSEMBLY_MISSING_DECLARATIONS")
-    return tuple(declaration_lines), instruction_count
+    return tuple(rows), instruction_count
 
 
 def _javap(javap: str, classpath: Path, classname: str) -> tuple[tuple[str, ...], int]:
@@ -202,6 +232,9 @@ def verify_standalone_sources(
                 .encode("utf-8")
             ).hexdigest(),
             "ordered_symbolic_instruction_parity": True,
+            "matched_exception_handler_entries": sum(
+                line.startswith("HANDLER ") for line in original_rows
+            ),
             "java_release": 9,
             "original_game_binary_on_compile_classpath": False,
             "full_classfile_attribute_or_runtime_parity": "NOT_PROVEN",
