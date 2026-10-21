@@ -229,6 +229,71 @@ public class rs.demo.Wait {
         with self.assertRaisesRegex(StandaloneSourceParityError, "INVALID_CLASS_PATH"):
             require_compilable_source_namespace({"rs/../unsafe.class"})
 
+    def test_bounded_twenty_three_class_source_island(self):
+        # Real javac parity replay with 23 synthetic JDK-only classes.
+        # This is distinct from the owner's 23 original v311 rebuilds.
+        with tempfile.TemporaryDirectory() as directory:
+            obj = JavaFixture(Path(directory))
+            original = {}
+            with zipfile.ZipFile(obj.jar) as z:
+                for name in z.namelist():
+                    original[name] = z.read(name)
+            for i in range(20):
+                relative = f"rs/demo/Aux{i:02d}.java"
+                source = obj.src / relative
+                source.write_text(
+                    "package rs.demo;\\n"
+                    + f"public final class Aux{i:02d} {{\\n"
+                    + f"    public int value() {{ return {i}; }}\\n"
+                    + "}}\\n".replace("}}", "}"),
+                    encoding="utf-8",
+                )
+            classes = obj.root / "twenty-three-original-classes"
+            classes.mkdir()
+            files = sorted(obj.src.rglob("*.java"))
+            built = subprocess.run([
+                "javac", "--release", "9", "-proc:none", "-g:none",
+                "-encoding", "UTF-8",
+                "-classpath", str(obj.root / "empty_cp"),
+                "-sourcepath", str(obj.root / "empty_src"),
+                "-d", str(classes), *[str(path) for path in files],
+            ], capture_output=True, text=True, timeout=60)
+            self.assertEqual(built.returncode, 0, built.stderr)
+            combined = obj.root / "twenty-three-original.jar"
+            with zipfile.ZipFile(combined, "w") as z:
+                for path in sorted(classes.rglob("*.class")):
+                    relative = path.relative_to(classes).as_posix()
+                    z.writestr(relative, path.read_bytes())
+            with zipfile.ZipFile(combined) as z:
+                pinned = {name: sha(z.read(name)) for name in z.namelist()}
+            self.assertEqual(len(pinned), 23)
+            report = verify_standalone_sources(
+                combined, obj.src, obj.root / "twenty-three-parity",
+                original_sha256=sha(combined.read_bytes()),
+                class_sha256=pinned,
+            )
+            self.assertEqual(report["total_classes"], 23)
+            self.assertTrue(report["all_passed"])
+            self.assertFalse(report["original_game_binary_on_compile_classpath"])
+
+    def test_seventy_classes_cannot_bypass_bounded_island_gate(self):
+        selected = {
+            f"rs/demo/Aux{i:02d}.class": "a" * 64
+            for i in range(65)
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            destination = Path(directory) / "no-output"
+            with self.assertRaisesRegex(
+                StandaloneSourceParityError, "INVALID_CLASS_SET"
+            ):
+                verify_standalone_sources(
+                    Path("original-not-needed.jar"),
+                    Path("source-not-needed"), destination,
+                    original_sha256="a" * 64,
+                    class_sha256=selected,
+                )
+            self.assertFalse(destination.exists())
+
     def test_wrong_original_jar_pin_refuses_before_any_output(self):
         with tempfile.TemporaryDirectory() as directory:
             obj = JavaFixture(Path(directory))
