@@ -12,6 +12,7 @@ from .authority_snapshot import (
     write_authority_snapshot,
 )
 from .indexer import index_jar, write_index
+from .scene_role_candidates import SceneRoleProbeError, discover_scene_role
 from .diffing import diff_indexes
 from .decompiler import (
     DecompilerError,
@@ -217,6 +218,14 @@ def main(argv: list[str] | None = None) -> int:
     pi.add_argument("jar", type=Path)
     pi.add_argument("--out", type=Path, required=True)
     pi.add_argument("--expect-sha256")
+
+    psr = sub.add_parser(
+        "scene-role-candidates",
+        help="Attest v311 original scene/tile structure, without semantic promotion",
+    )
+    psr.add_argument("index", type=Path)
+    psr.add_argument("--expected-new-authority", type=Path, required=True)
+    psr.add_argument("--out", type=Path, required=True)
 
     pd = sub.add_parser(
         "diff",
@@ -854,6 +863,28 @@ def main(argv: list[str] | None = None) -> int:
         print(f"classes={idx['summary']['class_count']}")
         print(f"rs_classes={idx['summary']['rs_class_count']}")
         print(f"parse_errors={idx['summary']['class_parse_error_count']}")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "scene-role-candidates":
+        try:
+            if args.out.exists():
+                raise SceneRoleProbeError("SCENE_ROLE_REFUSE_OVERWRITE")
+            report = discover_scene_role(
+                _load(args.index), _load(args.expected_new_authority)
+            )
+            args.out.parent.mkdir(parents=True, exist_ok=True)
+            args.out.write_text(
+                json.dumps(report, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+        except (SceneRoleProbeError, OSError, json.JSONDecodeError) as exc:
+            print(f"REFUSED: {exc}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_SCENE_ROLE_CANDIDATE_PASS")
+        print("scene=" + report["candidates"][0]["scene_class_path"])
+        print("tile=" + report["candidates"][0]["tile_class_path"])
+        print("historical_identity=NOT_ESTABLISHED")
         print(f"out={args.out}")
         return 0
 
