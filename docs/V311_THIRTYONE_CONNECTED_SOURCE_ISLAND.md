@@ -23,6 +23,22 @@ Actual private compiled class-path/SHA manifest digest: `d09609eafe3854dbf4c03a2
 
 The strict original classfile constant-pool reference census returns **31 selected classes, six explicit cross-project class dependency edges and zero unselected explicit project-class references**. New dependencies include `rs/a → rs/t`, `rs/N → rs/t`, `rs/y/b → rs/y/c` and `rs/ui/components/q → rs/ui/components/w`, beyond the three edges in the preceding 25-source island. Two more explicit references to `rs/t` require treating its temporary compile alias as a true **source-island identity mapping**, not merely a local class-declaration replacement.
 
+## Zero-instruction original interfaces: still require complete declarations
+
+Three of the six added original classes are interfaces whose classfiles
+contain **zero `Code` instructions**. They must not be labeled unrecovered
+merely because they have no executable methods, nor accepted based only on a
+matching empty instruction list. The updated source-parity verifier accepts
+zero instructions **only** for a class declaration that is actually an
+`interface` and still has matching declared methods and their JVM
+descriptors. Concrete classes without `Code` continue to fail closed.
+
+A new synthetic Java9 regression compiles two interface-only original
+fixtures with inheritance, verifies exact declaration/descriptor parity and
+one original inter-interface dependency, while another regression rejects a
+truncated concrete-class disassembly. The actual three v311 original
+interfaces were separately inspected and source-compiled **privately**.
+
 ## Original-vs-rebuilt offline behavior and class-shape probe
 
 In an isolated JDK classloader, original and rebuilt implementations agreed on linked-node splice/unlink behavior, repeated unlink idempotence, the derived data-holder's `g=-1` and other zero-initialized fields, and reflection-verified abstract class/interface inheritance shapes. This is a bounded offline JDK probe; it does not verify original game rendering, login, client server calls, concurrent behavior or every class method.
