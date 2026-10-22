@@ -170,6 +170,52 @@ def _javap(javap: str, classpath: Path, classname: str) -> tuple[tuple[str, ...]
     return _normalize_javap(run.stdout)
 
 
+
+def _normalize_jvm_bootstrap_methods(verbose_disassembly: str) -> tuple[str, ...]:
+    """Compare invokedynamic bootstrap targets and recipes, not CP slot numbers.
+
+    javap -c emits identical InvokeDynamic name/descriptor for many different
+    StringConcatFactory recipes. Without checking BootstrapMethods, a changed
+    color-code prefix could appear bytecode-identical. Treat unresolved
+    missing or malformed verbose tables as unsupported, not as parity.
+    """
+    lines = verbose_disassembly.splitlines()
+    markers = [i for i, line in enumerate(lines) if line == "BootstrapMethods:"]
+    _require(len(markers) == 1, "JVM_BOOTSTRAP_TABLE_MISSING_OR_AMBIGUOUS")
+    rows: list[str] = []
+    for line in lines[markers[0] + 1:]:
+        if line and not line[0].isspace():
+            break
+        text_line = line.strip()
+        if not text_line:
+            continue
+        # Constant-pool indexes differ between valid source builds. The
+        # invokedynamic bootstrap index, target and recipe must not differ.
+        text_line = re.sub(r"#\\d+\\b", "#CP", text_line)
+        rows.append(" ".join(text_line.split()))
+    _require(bool(rows) and any("REF_" in row for row in rows),
+             "JVM_BOOTSTRAP_TABLE_EMPTY_OR_MALFORMED")
+    return tuple(rows)
+
+
+def _javap_bootstrap_methods(
+    javap: str, classpath: Path, classname: str,
+) -> tuple[str, ...]:
+    try:
+        run = subprocess.run(
+            [javap, "-classpath", str(classpath), "-v", "-p", classname],
+            capture_output=True, text=True, encoding="utf-8",
+            errors="replace", timeout=50, check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise StandaloneSourceParityError(
+            "JVM_BOOTSTRAP_JAVAP_UNAVAILABLE_OR_TIMEOUT"
+        ) from exc
+    _require(run.returncode == 0 and len(run.stdout) < 4_000_000,
+             "JVM_BOOTSTRAP_JAVAP_FAILURE_OR_EXCESSIVE_OUTPUT")
+    return _normalize_jvm_bootstrap_methods(run.stdout)
+
+
 def verify_standalone_sources(
     original_jar: Path, source_root: Path, output_root: Path,
     *, original_sha256: str, class_sha256: dict[str, str],
@@ -370,6 +416,21 @@ def verify_standalone_sources(
             )
         _require(original_insns == recovered_insns,
                  "JVM_INSTRUCTION_COUNT_MISMATCH")
+        # Invokedynamic may have identical Code instructions while referring
+        # to different StringConcatFactory recipes or bootstrap targets.
+        # Never call a source rebuild equivalent solely from such Code rows.
+        has_dynamic = any(" invokedynamic " in row for row in original_rows)
+        bootstrap_rows: tuple[str, ...] = ()
+        if has_dynamic:
+            bootstrap_rows = _javap_bootstrap_methods(
+                javap, original_jar, classname
+            )
+            _require(
+                bootstrap_rows == _javap_bootstrap_methods(
+                    javap, comparison_dir, classname
+                ),
+                "JVM_INVOKEDYNAMIC_BOOTSTRAP_MISMATCH " + entry,
+            )
         witness = {
             "class_entry": entry,
             "original_class_sha256": expected_sha,
@@ -381,6 +442,13 @@ def verify_standalone_sources(
                 .encode("utf-8")
             ).hexdigest(),
             "ordered_symbolic_instruction_parity": True,
+            "invokedynamic_bootstrap_compared": has_dynamic,
+            "invokedynamic_bootstrap_sha256": (
+                hashlib.sha256(
+                    json.dumps(bootstrap_rows, separators=(",", ":"))
+                    .encode("utf-8")
+                ).hexdigest() if has_dynamic else None
+            ),
             "matched_exception_handler_entries": sum(
                 line.startswith("HANDLER ") for line in original_rows
             ),
