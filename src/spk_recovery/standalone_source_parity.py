@@ -191,7 +191,7 @@ def _normalize_jvm_bootstrap_methods(verbose_disassembly: str) -> tuple[str, ...
             continue
         # Constant-pool indexes differ between valid source builds. The
         # invokedynamic bootstrap index, target and recipe must not differ.
-        text_line = re.sub(r"#\\d+\\b", "#CP", text_line)
+        text_line = re.sub(r"#\d+\b", "#CP", text_line)
         rows.append(" ".join(text_line.split()))
     _require(bool(rows) and any("REF_" in row for row in rows),
              "JVM_BOOTSTRAP_TABLE_EMPTY_OR_MALFORMED")
