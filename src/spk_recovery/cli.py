@@ -267,6 +267,8 @@ def main(argv: list[str] | None = None) -> int:
     psf.add_argument("--source-authority", type=Path, required=True)
     psf.add_argument("--out", type=Path, required=True)
     psf.add_argument("--max-candidates", type=int, default=30)
+    psf.add_argument("--max-group-size", type=int, default=8,
+                     help="maximum additional original classes in one proposed batch (2..32)")
 
     pd = sub.add_parser(
         "diff",
@@ -912,6 +914,7 @@ def main(argv: list[str] | None = None) -> int:
             report = write_source_frontier(
                 args.original_jar, args.source_authority, args.out,
                 max_candidates=args.max_candidates,
+                max_group_size=args.max_group_size,
             )
         except (SourceFrontierError, OSError) as exc:
             print(f"REFUSED: {exc}", file=sys.stderr)
@@ -919,6 +922,7 @@ def main(argv: list[str] | None = None) -> int:
         print("SPK_RECOVERY_ORIGINAL_SOURCE_FRONTIER_PASS")
         print(f"attested_selected_classes={report['selected_classes_attested']}")
         print(f"dependency_closed_candidates={report['direct_dependency_closed_candidate_count']}")
+        print(f"dependency_closed_groups={report['dependency_closed_group_candidate_count']}")
         print("source_reconstructed=NOT_PROVEN")
         print(f"private_report={args.out}")
         return 0
