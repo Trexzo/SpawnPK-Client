@@ -17,8 +17,8 @@ from spk_recovery.standalone_source_parity import (
 )
 
 SOURCES = {
-    "synthetic/buffers/FloatPool.java": r"""
-package synthetic.buffers;
+    "rs/syntheticbuffers/FloatPool.java": r"""
+package rs.syntheticbuffers;
 import java.nio.*;
 public final class FloatPool {
  private FloatBuffer data=ByteBuffer.allocateDirect(32).order(ByteOrder.nativeOrder()).asFloatBuffer();
@@ -36,8 +36,8 @@ public final class FloatPool {
  public FloatBuffer buffer(){return data;}
 }
 """,
-    "synthetic/buffers/IntPool.java": r"""
-package synthetic.buffers;
+    "rs/syntheticbuffers/IntPool.java": r"""
+package rs.syntheticbuffers;
 import java.nio.*;
 public final class IntPool {
  private IntBuffer data=ByteBuffer.allocateDirect(32).order(ByteOrder.nativeOrder()).asIntBuffer();
@@ -58,7 +58,7 @@ public final class IntPool {
 }
 
 PROBE = r"""
-import synthetic.buffers.*;
+import rs.syntheticbuffers.*;
 import java.util.*;
 public final class SyntheticBufferTranscript {
  public static void main(String[] args){
@@ -151,7 +151,7 @@ class SyntheticBufferSourceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory)
             sources,jar,pins=self.fixture(root)
-            changed=sources/"synthetic/buffers/IntPool.java"
+            changed=sources/"rs/syntheticbuffers/IntPool.java"
             changed.write_text(changed.read_text().replace(
                 "capacity*=2;","capacity*=3;"),encoding="utf-8")
             with self.assertRaisesRegex(
@@ -179,7 +179,7 @@ class SyntheticBufferSourceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root=Path(directory)
             sources,jar,pins=self.fixture(root)
-            (sources/"synthetic/buffers/FloatPool.java").unlink()
+            (sources/"rs/syntheticbuffers/FloatPool.java").unlink()
             with self.assertRaises(StandaloneSourceParityError):
                 verify_standalone_sources(
                     jar,sources,root/"bad",
