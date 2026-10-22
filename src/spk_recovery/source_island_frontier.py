@@ -43,11 +43,85 @@ def _source_name_collision(candidate: str, selected: set[str]) -> bool:
     )
 
 
+def _dependency_closed_groups(
+    edges: dict[str, set[str]],
+    selected: set[str],
+    metadata: dict[str, tuple[str, int]],
+    *,
+    max_group_size: int,
+    max_candidates: int,
+) -> tuple[int, list[dict[str, Any]]]:
+    """Discover bounded multi-class additions, including mutual dependencies.
+
+    A seed's entire explicit transitive project-class closure must fit inside
+    the proposed batch plus the attested selection. This also finds cycles
+    that a single-class direct-dependency frontier necessarily overlooks.
+    """
+    unique: dict[tuple[str, ...], dict[str, Any]] = {}
+    for seed in sorted(edges):
+        if seed in selected:
+            continue
+        pending = [seed]
+        additional: set[str] = set()
+        rejected = False
+        while pending:
+            name = pending.pop()
+            if name in selected or name in additional:
+                continue
+            if name not in edges:  # Referenced original project class absent.
+                rejected = True
+                break
+            additional.add(name)
+            if len(additional) > max_group_size:
+                rejected = True
+                break
+            pending.extend(sorted(edges[name] - selected - additional, reverse=True))
+        if rejected or len(additional) < 2:
+            continue
+        key = tuple(sorted(additional))
+        if key in unique:
+            continue
+        anchored = sorted({
+            dependency for name in additional for dependency in edges[name] & selected
+        })
+        unique[key] = {
+            "original_class_paths": list(key),
+            "original_class_sha256": {
+                name: metadata[name][0] for name in key
+            },
+            "additional_class_count": len(key),
+            "additional_original_class_bytes": sum(metadata[name][1] for name in key),
+            "internal_explicit_dependency_edges": sum(
+                len(edges[name] & additional) for name in key
+            ),
+            "dependencies_to_selected": anchored,
+            "connected_to_selected": bool(anchored),
+            "class_package_collision_with_selection_or_batch": any(
+                _source_name_collision(name, selected | (additional - {name}))
+                for name in additional
+            ),
+            "source_reconstructed": False,
+            "compile_or_runtime_parity_proven": False,
+        }
+    candidates = sorted(
+        unique.values(),
+        key=lambda item: (
+            item["class_package_collision_with_selection_or_batch"],
+            not item["connected_to_selected"],
+            item["additional_class_count"],
+            item["additional_original_class_bytes"],
+            item["original_class_paths"],
+        ),
+    )
+    return len(candidates), candidates[:max_candidates]
+
+
 def discover_original_source_frontier(
     original_jar: Path,
     manifest: dict[str, Any],
     *,
     max_candidates: int = 30,
+    max_group_size: int = 8,
 ) -> dict[str, Any]:
     """Return a small reproducible queue, refusing unverifiable authority.
 
@@ -56,6 +130,8 @@ def discover_original_source_frontier(
     """
     if not 1 <= max_candidates <= 100:
         raise SourceFrontierError("SOURCE_FRONTIER_INVALID_LIMIT")
+    if not 2 <= max_group_size <= 32:
+        raise SourceFrontierError("SOURCE_FRONTIER_INVALID_GROUP_SIZE")
     expected_jar = manifest.get("original_jar_sha256")
     selected_hashes = manifest.get("original_class_sha256")
     if not isinstance(expected_jar, str) or not _SHA.fullmatch(expected_jar):
@@ -92,8 +168,11 @@ def discover_original_source_frontier(
             # Verify selected source closure as well; an arbitrary hash list
             # must not be mistaken for an already independent source island.
             edges: dict[str, set[str]] = {}
+            metadata: dict[str, tuple[str, int]] = {}
             for name in sorted(project):
-                edges[name] = explicit_class_references(archive.read(name)) - {name}
+                class_bytes = archive.read(name)
+                edges[name] = explicit_class_references(class_bytes) - {name}
+                metadata[name] = (hashlib.sha256(class_bytes).hexdigest(), len(class_bytes))
             for name in selected:
                 if edges[name] - selected:
                     raise SourceFrontierError("SOURCE_FRONTIER_BASE_SELECTION_NOT_CLOSED")
@@ -106,8 +185,8 @@ def discover_original_source_frontier(
                 # Dependency *adjacent*, not merely JDK-only standalone.
                 proposed.append({
                     "original_class_path": name,
-                    "original_class_sha256": hashlib.sha256(archive.read(name)).hexdigest(),
-                    "original_class_bytes": archive.getinfo(name).file_size,
+                    "original_class_sha256": metadata[name][0],
+                    "original_class_bytes": metadata[name][1],
                     "direct_original_project_dependencies": sorted(dependencies),
                     "additional_explicit_project_dependencies_needed": 0,
                     "class_package_collision_with_selected": _source_name_collision(
@@ -119,6 +198,10 @@ def discover_original_source_frontier(
     except (zipfile.BadZipFile, OSError, EOFError, SourceClosureError) as exc:
         raise SourceFrontierError("SOURCE_FRONTIER_ARCHIVE_OR_CLASS_PARSE_ERROR") from exc
 
+    group_count, groups = _dependency_closed_groups(
+        edges, selected, metadata,
+        max_group_size=max_group_size, max_candidates=max_candidates,
+    )
     proposed.sort(key=lambda item: (
         item["class_package_collision_with_selected"],
         item["original_class_bytes"],
@@ -133,6 +216,9 @@ def discover_original_source_frontier(
         "original_project_classes": len(project),
         "direct_dependency_closed_candidate_count": len(proposed),
         "candidates": proposed[:max_candidates],
+        "dependency_closed_group_candidate_count": group_count,
+        "max_additional_classes_per_group": max_group_size,
+        "dependency_closed_group_candidates": groups,
         "all_selected_source_files_compiled": "NOT_EVALUATED",
         "dynamic_or_resource_dependency_closure": "NOT_PROVEN",
         "original_class_bytecode_published": False,
@@ -141,7 +227,7 @@ def discover_original_source_frontier(
 
 def write_source_frontier(
     original_jar: Path, manifest_path: Path, output_path: Path,
-    *, max_candidates: int = 30,
+    *, max_candidates: int = 30, max_group_size: int = 8,
 ) -> dict[str, Any]:
     if output_path.exists() or output_path.is_symlink():
         raise SourceFrontierError("SOURCE_FRONTIER_REFUSE_OVERWRITE")
@@ -152,7 +238,8 @@ def write_source_frontier(
     if not isinstance(manifest, dict):
         raise SourceFrontierError("SOURCE_FRONTIER_MANIFEST_NOT_OBJECT")
     report = discover_original_source_frontier(
-        original_jar, manifest, max_candidates=max_candidates
+        original_jar, manifest, max_candidates=max_candidates,
+        max_group_size=max_group_size,
     )
     output_path.parent.mkdir(parents=True, exist_ok=True)
     try:
