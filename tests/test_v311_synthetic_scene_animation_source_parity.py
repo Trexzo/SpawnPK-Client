@@ -19,7 +19,7 @@ from spk_recovery.standalone_source_parity import (
 )
 
 SOURCES = {
- "rs/synthetic94/SlidingCount.java": """package rs.synthetic94;
+ "rs/synthetic93/SlidingCount.java": """package rs.synthetic93;
 public final class SlidingCount {
  private int lower,upper,value;
  public SlidingCount(int lower,int upper){
@@ -29,7 +29,7 @@ public final class SlidingCount {
  public void advance(){value++;if(value>upper)value=lower;}
 }
 """,
- "rs/synthetic94/LabelRecord.java": """package rs.synthetic94;
+ "rs/synthetic93/LabelRecord.java": """package rs.synthetic93;
 public final class LabelRecord {
  private String text;
  private int width,height;
@@ -38,7 +38,7 @@ public final class LabelRecord {
  public int area(){return width*height;}
 }
 """,
- "rs/synthetic94/MutableNumber.java": """package rs.synthetic94;
+ "rs/synthetic93/MutableNumber.java": """package rs.synthetic93;
 public final class MutableNumber {
  private int value;
  public MutableNumber(int first){value=first;}
@@ -46,7 +46,7 @@ public final class MutableNumber {
  public int get(){return value;}
 }
 """,
- "rs/synthetic94/DashboardSnapshot.java": """package rs.synthetic94;
+ "rs/synthetic93/DashboardSnapshot.java": """package rs.synthetic93;
 public final class DashboardSnapshot {
  private final SlidingCount counter;
  private final LabelRecord label;
@@ -63,8 +63,8 @@ public final class DashboardSnapshot {
 }
 
 PROBE = """
-import rs.synthetic94.*;
-public final class Synthetic94Transcript {
+import rs.synthetic93.*;
+public final class Synthetic93Transcript {
  public static void main(String[] unused){
   for(int n:new int[]{-1,0,3,Integer.MAX_VALUE}){
    SlidingCount counter=new SlidingCount(n,n+2);
@@ -98,7 +98,7 @@ def run(argv):
     all(shutil.which(executable) for executable in ("javac", "javap", "java")),
     "JDK9+ tools required",
 )
-class Synthetic94SceneSourceTests(unittest.TestCase):
+class Synthetic93SceneSourceTests(unittest.TestCase):
     def fixture(self, root: Path):
         sources = root / "src"
         for name, body in SOURCES.items():
@@ -142,7 +142,7 @@ class Synthetic94SceneSourceTests(unittest.TestCase):
                     "source_project_dependency_edges"
                 ], 3,
             )
-            probe = root / "Synthetic94Transcript.java"
+            probe = root / "Synthetic93Transcript.java"
             probe.write_text(PROBE, encoding="utf-8")
             run([
                 "javac", "--release", "9", "-cp", str(jar),
@@ -152,7 +152,7 @@ class Synthetic94SceneSourceTests(unittest.TestCase):
             for cp in (jar, root / "rebuilt" / "classes"):
                 outputs.append(run([
                     "java", "-cp", str(root) + os.pathsep + str(cp),
-                    "Synthetic94Transcript",
+                    "Synthetic93Transcript",
                 ]))
             self.assertEqual(outputs[0], outputs[1])
             self.assertEqual(len(outputs[0].splitlines()), 18)
@@ -161,7 +161,7 @@ class Synthetic94SceneSourceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             src, jar, pins = self.fixture(root)
-            target = src / "rs/synthetic94/SlidingCount.java"
+            target = src / "rs/synthetic93/SlidingCount.java"
             original = target.read_text()
             changed = original.replace("value++;", "value+=2;")
             self.assertNotEqual(original, changed)
@@ -179,7 +179,7 @@ class Synthetic94SceneSourceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             src, jar, pins = self.fixture(root)
-            (src / "rs/synthetic94/MutableNumber.java").unlink()
+            (src / "rs/synthetic93/MutableNumber.java").unlink()
             with self.assertRaises(StandaloneSourceParityError):
                 verify_standalone_sources(
                     jar, src, root / "refused",
