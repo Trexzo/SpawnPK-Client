@@ -15,6 +15,7 @@ import zipfile
 from spk_recovery.standalone_source_parity import (
     StandaloneSourceParityError, verify_standalone_sources,
 )
+from spk_recovery.standalone_source_alias import StandaloneAliasError
 
 SOURCES={
  "rs/k/c.java": """package rs.k;
@@ -101,7 +102,7 @@ class SyntheticClassPackageShadowParity(unittest.TestCase):
    root=Path(directory)
    src,jar,pins=self.fixture(root)
    with self.assertRaisesRegex(
-    StandaloneSourceParityError,"COMPILE_ALIAS_CLASS_PACKAGE_COLLISION_REMAINS"
+    StandaloneAliasError,"COMPILE_ALIAS_CLASS_PACKAGE_COLLISION_REMAINS"
    ):
     verify_standalone_sources(
      jar,src,root/"refused",
