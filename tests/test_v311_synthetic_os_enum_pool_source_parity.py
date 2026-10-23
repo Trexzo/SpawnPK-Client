@@ -137,10 +137,10 @@ class R100SyntheticOSPoolTests(unittest.TestCase):
             self.assertTrue(result["all_passed"])
             self.assertEqual(result["total_classes"], 2)
             self.assertFalse(result["original_game_binary_on_compile_classpath"])
-            self.assertEqual(
+            self.assertTrue(
                 result["explicit_original_project_dependency_closure"][
-                    "unresolved_project_dependency_edges"
-                ], 0,
+                    "explicit_project_class_closure"
+                ]
             )
             probe = root / "ToyR100Runtime.java"
             probe.write_text(PROBE, encoding="utf-8")
