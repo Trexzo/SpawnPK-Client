@@ -12,6 +12,11 @@ from .authority_snapshot import (
     write_authority_snapshot,
 )
 from .indexer import index_jar, write_index
+from .scene_role_candidates import SceneRoleProbeError, discover_scene_role
+from .scene_member_frontier import MemberFrontierError, analyze_original_scene
+from .standalone_source_parity import StandaloneSourceParityError, verify_standalone_sources
+from .standalone_source_alias import StandaloneAliasError
+from .source_island_frontier import SourceFrontierError, write_source_frontier
 from .diffing import diff_indexes
 from .decompiler import (
     DecompilerError,
@@ -218,6 +223,53 @@ def main(argv: list[str] | None = None) -> int:
     pi.add_argument("--out", type=Path, required=True)
     pi.add_argument("--expect-sha256")
 
+    psr = sub.add_parser(
+        "scene-role-candidates",
+        help="Attest v311 original scene/tile structure, without semantic promotion",
+    )
+    psr.add_argument("index", type=Path)
+    psr.add_argument("--expected-new-authority", type=Path, required=True)
+    psr.add_argument("--out", type=Path, required=True)
+
+    pmf = sub.add_parser(
+        "scene-member-frontier",
+        help="Review exact v311 scene tile-grid access methods using SHA-pinned javap",
+    )
+    pmf.add_argument("jar", type=Path)
+    pmf.add_argument("--expected-new-authority", type=Path, required=True)
+    pmf.add_argument("--out", type=Path, required=True)
+    pmf.add_argument("--javap", default="javap")
+
+    psb = sub.add_parser(
+        "verify-standalone-source",
+        help="Verify original class vs standalone Java source rebuild, without original game classpath",
+    )
+    psb.add_argument("original_jar", type=Path)
+    psb.add_argument("source_root", type=Path)
+    psb.add_argument("--original-sha256", required=True)
+    psb.add_argument(
+        "--class-sha256", action="append", required=True,
+        help="class entry followed by '=' and lowercase expected original SHA256",
+    )
+    psb.add_argument("--out-dir", type=Path, required=True)
+    psb.add_argument("--javac", default="javac")
+    psb.add_argument("--javap", default="javap")
+    psb.add_argument(
+        "--compile-alias", action="append", default=[],
+        help="reviewed compile-only original.class=temporary.class alias; never a semantic name",
+    )
+
+    psf = sub.add_parser(
+        "original-source-frontier",
+        help="Find SHA-attested original classes with complete explicit dependencies inside a source island",
+    )
+    psf.add_argument("original_jar", type=Path)
+    psf.add_argument("--source-authority", type=Path, required=True)
+    psf.add_argument("--out", type=Path, required=True)
+    psf.add_argument("--max-candidates", type=int, default=30)
+    psf.add_argument("--max-group-size", type=int, default=8,
+                     help="maximum additional original classes in one proposed batch (2..32)")
+
     pd = sub.add_parser(
         "diff",
         help="Compare two previously generated indexes",
@@ -235,6 +287,8 @@ def main(argv: list[str] | None = None) -> int:
     pui.add_argument("--old-build-id", required=True)
     pui.add_argument("--new-build-id", required=True)
     pui.add_argument("--scope-prefix", default="rs/")
+    pui.add_argument("--expected-new-authority", type=Path,
+                     help="Optional exact original-client manifest, e.g. authority/v311.json")
     pui.add_argument("--out-dir", type=Path, required=True)
 
     put = sub.add_parser(
@@ -855,6 +909,108 @@ def main(argv: list[str] | None = None) -> int:
         print(f"out={args.out}")
         return 0
 
+    if args.cmd == "original-source-frontier":
+        try:
+            report = write_source_frontier(
+                args.original_jar, args.source_authority, args.out,
+                max_candidates=args.max_candidates,
+                max_group_size=args.max_group_size,
+            )
+        except (SourceFrontierError, OSError) as exc:
+            print(f"REFUSED: {exc}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_ORIGINAL_SOURCE_FRONTIER_PASS")
+        print(f"attested_selected_classes={report['selected_classes_attested']}")
+        print(f"dependency_closed_candidates={report['direct_dependency_closed_candidate_count']}")
+        print(f"dependency_closed_groups={report['dependency_closed_group_candidate_count']}")
+        print("source_reconstructed=NOT_PROVEN")
+        print(f"private_report={args.out}")
+        return 0
+
+    if args.cmd == "verify-standalone-source":
+        try:
+            original_classes = {}
+            for item in args.class_sha256:
+                if "=" not in item:
+                    raise StandaloneSourceParityError("INVALID_CLASS_SHA256_ARGUMENT")
+                classname, digest = item.split("=", 1)
+                if classname in original_classes:
+                    raise StandaloneSourceParityError("DUPLICATE_CLASS_ARGUMENT")
+                original_classes[classname] = digest
+            aliases = {}
+            for item in args.compile_alias:
+                if "=" not in item:
+                    raise StandaloneSourceParityError("INVALID_COMPILE_ALIAS_ARGUMENT")
+                old_entry, new_entry = item.split("=", 1)
+                if old_entry in aliases:
+                    raise StandaloneSourceParityError("DUPLICATE_COMPILE_ALIAS_ARGUMENT")
+                aliases[old_entry] = new_entry
+            report = verify_standalone_sources(
+                args.original_jar, args.source_root, args.out_dir,
+                original_sha256=args.original_sha256,
+                class_sha256=original_classes,
+                javac=args.javac, javap=args.javap,
+                compile_aliases=aliases,
+            )
+        except (StandaloneSourceParityError, StandaloneAliasError, OSError) as exc:
+            print(f"REFUSED: {exc}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_STANDALONE_SOURCE_PARITY_PASS")
+        print(f"verified_classes={report['total_classes']}")
+        print(f"ordered_original_instructions={report['total_ordered_instructions']}")
+        print(f"compile_only_aliases={report['compile_only_class_alias_count']}")
+        print("canonical_source_modified=FALSE")
+        print("original_game_classes_on_compile_classpath=NONE")
+        print("full_classfile_byte_identity=NOT_PROVEN")
+        print(f"private_report={args.out_dir / 'SOURCE-REBUILD-VERIFY.json'}")
+        return 0
+
+    if args.cmd == "scene-member-frontier":
+        try:
+            if args.out.exists():
+                raise MemberFrontierError("MEMBER_FRONTIER_REFUSE_OVERWRITE")
+            report = analyze_original_scene(
+                args.jar, _load(args.expected_new_authority),
+                javap=args.javap,
+            )
+            args.out.parent.mkdir(parents=True, exist_ok=True)
+            args.out.write_text(
+                json.dumps(report, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+        except (MemberFrontierError, OSError, json.JSONDecodeError) as exc:
+            print(f"REFUSED: {exc}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_SCENE_MEMBER_FRONTIER_PASS")
+        print(f"grid_access_methods={report['grid_referencing_methods']}")
+        print(f"mutation_review_candidates={report['mutation_review_candidates']}")
+        print("bounds_correctness=NOT_PROVEN")
+        print("historical_member_identity=NOT_PROVEN")
+        print(f"out={args.out}")
+        return 0
+
+    if args.cmd == "scene-role-candidates":
+        try:
+            if args.out.exists():
+                raise SceneRoleProbeError("SCENE_ROLE_REFUSE_OVERWRITE")
+            report = discover_scene_role(
+                _load(args.index), _load(args.expected_new_authority)
+            )
+            args.out.parent.mkdir(parents=True, exist_ok=True)
+            args.out.write_text(
+                json.dumps(report, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+        except (SceneRoleProbeError, OSError, json.JSONDecodeError) as exc:
+            print(f"REFUSED: {exc}", file=sys.stderr)
+            return 2
+        print("SPK_RECOVERY_SCENE_ROLE_CANDIDATE_PASS")
+        print("scene=" + report["candidates"][0]["scene_class_path"])
+        print("tile=" + report["candidates"][0]["tile_class_path"])
+        print("historical_identity=NOT_ESTABLISHED")
+        print(f"out={args.out}")
+        return 0
+
     if args.cmd == "diff":
         report = diff_indexes(
             _load(args.old),
@@ -886,6 +1042,10 @@ def main(argv: list[str] | None = None) -> int:
                 old_build_id=args.old_build_id,
                 new_build_id=args.new_build_id,
                 scope_prefix=args.scope_prefix,
+                new_authority=(
+                    _load(args.expected_new_authority)
+                    if args.expected_new_authority is not None else None
+                ),
             )
             paths = write_update_workspace(
                 args.out_dir,
@@ -895,6 +1055,7 @@ def main(argv: list[str] | None = None) -> int:
         except (
             UpdateIntakeError,
             json.JSONDecodeError,
+            OSError,
         ) as e:
             print(f"REFUSED: {e}", file=sys.stderr)
             return 2

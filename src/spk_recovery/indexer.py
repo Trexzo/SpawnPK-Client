@@ -79,6 +79,59 @@ def index_jar(path: Path) -> dict:
     return result
 
 
+
+def project_class_surface(index: dict, prefix: str = "rs/") -> dict:
+    """Content-bound project-class census for a *fully parsed* JAR index.
+
+    The digest is SHA-256 of sorted class-path, NUL, lowercase entry-SHA256,
+    newline rows. It does not publish class bytes, strings, methods or assets.
+    It is an inventory equality witness, NOT cross-version class identity.
+    """
+    if not isinstance(prefix, str) or not prefix.endswith("/") or not prefix:
+        raise ValueError("PROJECT_SURFACE_INVALID_SCOPE")
+    entries = index.get("entries")
+    classes = index.get("classes")
+    if not isinstance(entries, dict) or not isinstance(classes, dict):
+        raise ValueError("PROJECT_SURFACE_INDEX_MISSING")
+    names = sorted(
+        name for name in entries
+        if isinstance(name, str) and name.startswith(prefix) and name.endswith(".class")
+    )
+    if not names:
+        raise ValueError("PROJECT_SURFACE_EMPTY")
+    majors: dict[str, int] = {}
+    package_counts: dict[str, int] = {}
+    rows: list[bytes] = []
+    for path in names:
+        entry = entries[path]
+        klass = classes.get(path)
+        if not isinstance(entry, dict) or not isinstance(klass, dict):
+            raise ValueError("PROJECT_SURFACE_UNPARSED_CLASS " + path)
+        digest = entry.get("sha256")
+        if (not isinstance(digest, str) or len(digest) != 64
+                or any(c not in "0123456789abcdef" for c in digest)):
+            raise ValueError("PROJECT_SURFACE_INVALID_CLASS_SHA " + path)
+        if klass.get("internal_name") != path[:-6]:
+            raise ValueError("PROJECT_SURFACE_CLASS_PATH_MISMATCH " + path)
+        major = klass.get("major")
+        if type(major) is not int or major < 45 or major > 100:
+            raise ValueError("PROJECT_SURFACE_INVALID_CLASS_VERSION " + path)
+        rows.append((path + "\0" + digest + "\n").encode("utf-8"))
+        majors[str(major)] = majors.get(str(major), 0) + 1
+        parts = path[len(prefix):].split("/")
+        package = parts[0] if len(parts) > 1 else "[root]"
+        package_counts[package] = package_counts.get(package, 0) + 1
+    return {
+        "scope": prefix,
+        "class_count": len(names),
+        "path_sha256_manifest_digest": hashlib.sha256(b"".join(rows)).hexdigest(),
+        "class_major_versions": dict(sorted(majors.items(), key=lambda r: int(r[0]))),
+        "package_class_counts": dict(sorted(package_counts.items())),
+        "full_jvm_class_parse": True,
+        "cross_build_identity_proven": False,
+    }
+
+
 def write_index(index: dict, out: Path) -> None:
     out.parent.mkdir(parents=True, exist_ok=True)
     # Preserve ordinary non-ASCII output exactly as before. Only lone
