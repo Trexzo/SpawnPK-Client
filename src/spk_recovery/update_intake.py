@@ -7,7 +7,7 @@ from typing import Any
 
 from .diffing import diff_indexes
 from .delta_classify import classify_class_deltas
-from .indexer import index_jar, write_index
+from .indexer import index_jar, project_class_surface, write_index
 from .matcher import match_classes
 
 
@@ -272,6 +272,36 @@ def build_update_intake(
     }
 
 
+
+def verify_new_project_authority(
+    new_index: dict[str, Any],
+    authority: dict[str, Any],
+    *,
+    new_build_id: str,
+    scope_prefix: str,
+) -> dict[str, Any]:
+    """Reject mismatched new original binaries BEFORE migration workspace writes."""
+    if not isinstance(authority, dict):
+        raise UpdateIntakeError("EXPECTED_NEW_AUTHORITY_INVALID")
+    if not (new_build_id.startswith("v") and new_build_id[1:].isdigit()):
+        raise UpdateIntakeError("EXPECTED_NEW_AUTHORITY_BUILD_ID_INVALID")
+    if authority.get("build") != int(new_build_id[1:]):
+        raise UpdateIntakeError("EXPECTED_NEW_AUTHORITY_BUILD_MISMATCH")
+    if new_index.get("sha256") != authority.get("sha256"):
+        raise UpdateIntakeError("EXPECTED_NEW_AUTHORITY_JAR_SHA_MISMATCH")
+    pinned = authority.get("project_class_surface")
+    if not isinstance(pinned, dict) or pinned.get("scope") != scope_prefix:
+        raise UpdateIntakeError("EXPECTED_NEW_AUTHORITY_SCOPE_MISMATCH")
+    try:
+        observed = project_class_surface(new_index, scope_prefix)
+    except ValueError as exc:
+        raise UpdateIntakeError("EXPECTED_NEW_AUTHORITY_CLASS_PARSE_REFUSED") from exc
+    for name in ("class_count", "path_sha256_manifest_digest", "class_major_versions"):
+        if observed[name] != pinned.get(name):
+            raise UpdateIntakeError("EXPECTED_NEW_AUTHORITY_PROJECT_SURFACE_MISMATCH " + name)
+    return observed
+
+
 def intake_new_jar(
     old_index: dict[str, Any],
     new_jar: Path,
@@ -279,11 +309,17 @@ def intake_new_jar(
     old_build_id: str,
     new_build_id: str,
     scope_prefix: str = "rs/",
+    new_authority: dict[str, Any] | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     new_index = index_jar(new_jar)
     if new_index["summary"]["class_parse_error_count"] != 0:
         raise UpdateIntakeError(
             "new JAR index contains class parse errors; refusing intake"
+        )
+    if new_authority is not None:
+        verify_new_project_authority(
+            new_index, new_authority,
+            new_build_id=new_build_id, scope_prefix=scope_prefix,
         )
     report = build_update_intake(
         old_index,

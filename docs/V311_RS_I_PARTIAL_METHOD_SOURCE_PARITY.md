@@ -1,0 +1,11 @@
+# v311 rs/I partial source checkpoint (2026-10-22)
+
+The owner-private exact-original v311 JAR (SHA-256 `5b619b82a8ed976d2051f84cda98815943d1ddb82afac9d49f3126f829101268`) was compared against separately compiled Java9 source for **16 selected methods** of `rs/I`. All **55/55 ordered JVM instructions**, offsets, resolved symbolic operands and selected method descriptors agree. The original `rs/I.class` SHA-256 is `94d14f52b4b3de8448753d5f40bae69bd5ad6a3649454a3e92801b42f03765b6` and contains **2,040 total JVM instructions**. The selected 55 instructions are a subset, not a complete source rebuild.
+
+The partial source contains 18 instance field declarations, 3 setters, 3 getters and 10 array accessors. Its zero-argument placeholder constructor does **not** match the original 19-int constructor. The original static initializer and array tables are not reconstructed. One accessor uses a **declaration-only stub** for `rs/k/e.a`, not the recovered renderer. The original game JAR was never supplied to the Java compiler.
+
+A bounded original-versus-rebuilt reflection probe matched integer and array accessors when allocating objects without invoking their unlike constructors. It did not execute the renderer-dependent accessor. The private verifier checks original JAR and per-class SHA, partial-source and stub SHA, Java9 bytecode, exact selected methods and descriptors; it refused a modified accessor even after repinning the source hash. A clean extraction replay passed.
+
+Private evidence archive: `SpawnPK-v311-R58-Scene-I-16-Method-Partial-Source.zip`, SHA-256 `41b72f33c013693a07de321c41c2bae1977fe2d7fbfe2061382a69c18a7b3410`. The archive includes incomplete private Java, a named source stub, private verifier, probe and evidence manifest; no original binary or game assets. It is **not** committed to public GitHub.
+
+**No promotion:** accepted v311 recovery stays **58 distinct classes / 3,261 original instructions**. Six tile classes remain provisional (86/86 matching instructions), with unrecovered full `rs/I` and `rs/a/a` source dependencies. This document does not certify a complete `rs/I`, full classfile byte identity, a complete client or live-game behavior. PR #1142 remains draft and unmerged.

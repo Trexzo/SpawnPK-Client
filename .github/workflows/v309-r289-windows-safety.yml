@@ -1,0 +1,214 @@
+name: v309 source-only Windows acceptance safety
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'tools/windows/**'
+      - 'tests/python/r287/**'
+      - 'tests/python/r289/**'
+      - 'tests/python/r290/**'
+      - 'tests/python/r291/**'
+      - 'tests/python/r292/**'
+      - 'tests/python/r293/**'
+      - 'tests/python/r294/**'
+      - 'tests/python/r295/**'
+      - 'tests/python/r296/**'
+      - 'tests/python/r297/**'
+      - 'tests/python/r298/**'
+      - 'tests/python/r299/**'
+      - 'tests/python/r300/**'
+      - 'tests/python/r301/**'
+      - 'tests/python/r302/**'
+      - 'tests/python/r303/**'
+      - 'tests/python/r304/**'
+      - 'tests/python/r305/**'
+      - 'tests/python/r306/**'
+      - 'tests/python/r307/**'
+      - 'tests/python/r308/**'
+      - 'tests/python/r309/**'
+      - 'tests/java/r308/**'
+      - 'tools/recovery/r308/**'
+      - 'tests/java/r307/**'
+      - 'tools/recovery/r307/**'
+      - 'tests/java/r306/**'
+      - 'tools/recovery/r306/**'
+      - 'tests/java/r305/**'
+      - 'tools/recovery/r305/**'
+      - 'tests/java/r304/**'
+      - 'tools/recovery/r304/**'
+      - 'tests/java/r303/**'
+      - 'tools/recovery/r303/**'
+      - 'tests/java/r302/**'
+      - 'tools/recovery/r302/**'
+      - 'tests/java/r301/**'
+      - 'tools/recovery/r301/**'
+      - 'tests/java/r300/**'
+      - 'tools/recovery/r300/**'
+      - 'tests/java/r299/**'
+      - 'tools/recovery/r299/**'
+      - 'tools/recovery/r298/**'
+      - 'tests/powershell/r297/**'
+      - 'tests/powershell/r310/**'
+      - 'tools/gui/r296/**'
+      - 'tests/java/r295/**'
+      - 'tools/recovery/r295/**'
+      - 'tools/gui/r294/**'
+      - 'tests/java/r293/**'
+      - 'tools/recovery/r293/**'
+      - 'tests/powershell/r292/**'
+      - 'tests/powershell/r291/**'
+      - 'tests/java/r290/**'
+      - 'tools/recovery/r290/**'
+      - 'tests/powershell/r289/**'
+      - '.github/workflows/v309-r289-windows-safety.yml'
+  push:
+    branches:
+      - integration/v309-r265-local-player-mask-diagnostic
+    paths:
+      - 'tools/windows/**'
+      - 'tests/python/r287/**'
+      - 'tests/python/r289/**'
+      - 'tests/python/r290/**'
+      - 'tests/python/r291/**'
+      - 'tests/python/r292/**'
+      - 'tests/python/r293/**'
+      - 'tests/python/r294/**'
+      - 'tests/python/r295/**'
+      - 'tests/python/r296/**'
+      - 'tests/python/r297/**'
+      - 'tests/python/r298/**'
+      - 'tests/python/r299/**'
+      - 'tests/python/r300/**'
+      - 'tests/python/r301/**'
+      - 'tests/python/r302/**'
+      - 'tests/python/r303/**'
+      - 'tests/python/r304/**'
+      - 'tests/python/r305/**'
+      - 'tests/python/r306/**'
+      - 'tests/python/r307/**'
+      - 'tests/python/r308/**'
+      - 'tests/python/r309/**'
+      - 'tests/java/r308/**'
+      - 'tools/recovery/r308/**'
+      - 'tests/java/r307/**'
+      - 'tools/recovery/r307/**'
+      - 'tests/java/r306/**'
+      - 'tools/recovery/r306/**'
+      - 'tests/java/r305/**'
+      - 'tools/recovery/r305/**'
+      - 'tests/java/r304/**'
+      - 'tools/recovery/r304/**'
+      - 'tests/java/r303/**'
+      - 'tools/recovery/r303/**'
+      - 'tests/java/r302/**'
+      - 'tools/recovery/r302/**'
+      - 'tests/java/r301/**'
+      - 'tools/recovery/r301/**'
+      - 'tests/java/r300/**'
+      - 'tools/recovery/r300/**'
+      - 'tests/java/r299/**'
+      - 'tools/recovery/r299/**'
+      - 'tools/recovery/r298/**'
+      - 'tests/powershell/r297/**'
+      - 'tests/powershell/r310/**'
+      - 'tools/gui/r296/**'
+      - 'tests/java/r295/**'
+      - 'tools/recovery/r295/**'
+      - 'tools/gui/r294/**'
+      - 'tests/java/r293/**'
+      - 'tools/recovery/r293/**'
+      - 'tests/powershell/r292/**'
+      - 'tests/powershell/r291/**'
+      - 'tests/java/r290/**'
+      - 'tools/recovery/r290/**'
+      - 'tests/powershell/r289/**'
+      - '.github/workflows/v309-r289-windows-safety.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  isolated-source-gates:
+    name: Source-only gates (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2022]
+    timeout-minutes: 10
+    steps:
+      - name: Preserve source line endings for SHA pins
+        shell: bash
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify R287 negative-path suite
+        run: python tests/python/r287/R287ReadinessRegression.py
+      - name: Verify R289 contract and original SHA pins
+        run: python tests/python/r289/R289GateContractRegression.py
+      - name: Verify R290 source-build safety and preimage refusal
+        run: python tests/python/r290/R290SourceSafetyRegression.py
+      - name: Verify R291 R290-aware guarded overlay and fake-archive refusal
+        run: python tests/python/r291/R291SafetyRegression.py
+      - name: Verify R292 truthful readiness and SHA-locked source refusal
+        run: python tests/python/r292/R292AdmissionRegression.py
+      - name: Verify R293 pinned real-client source-fix contract
+        run: python tests/python/r293/R293SourceSafetyRegression.py
+      - name: Verify R294 pinned R293 graphical replay source safety (no private inputs)
+        run: python tests/python/r294/R294SourceSafetyRegression.py
+      - name: Verify R295 client Scene bound patch provenance and private file exclusion
+        run: python tests/python/r295/R295SourceSafetyRegression.py
+      - name: Verify R296 original wait/full wrapper source safety
+        run: python tests/python/r296/R296SourceSafetyRegression.py
+      - name: Verify R297 exact R295 native GUI source and truthful Win32 readiness
+        run: python tests/python/r297/R297AcceptanceRegression.py
+      - name: Verify R298 pinned read-only Scene query boundaries and safe owner rebuild
+        run: python tests/python/r298/R298SourceSafetyRegression.py
+      - name: Verify R299 seven real-client Scene mutation guards and source pins
+        run: python tests/python/r299/R299SourceSafetyRegression.py
+      - name: Verify R300 real-client plane/bridge/object-footprint source guards
+        run: python tests/python/r300/R300SourceSafetyRegression.py
+      - name: Verify R301 pinned tracked object capacity and atomicity source contracts
+        run: python tests/python/r301/R301SourceSafetyRegression.py
+      - name: Verify R302 static Scene occluder capacity source and SHA authority
+        run: python tests/python/r302/R302SourceSafetyRegression.py
+      - name: R303 source-only regression
+        run: python tests/python/r303/R303SourceSafetyRegression.py
+      - name: R304 source-only variable scene visibility regression
+        run: python tests/python/r304/R304SourceSafetyRegression.py
+      - name: R305 scene yaw wrap and positive-edge source safety
+        run: python tests/python/r305/R305SourceSafetyRegression.py
+      - name: R306 live draw-radius transition source safety (no private client)
+        run: python tests/python/r306/R306SourceSafetyRegression.py
+      - name: R307 GPU/cold viewport full-source rebuild safety (source only)
+        run: python tests/python/r307/R307SourceSafetyRegression.py
+      - name: R308 eight scene placement entrypoint source-safety
+        run: python tests/python/r308/R308SourceSafetyRegression.py
+      - name: R309 original R308 Win32 adapter and private-input refusal (source-only)
+        run: python tests/python/r309/R309SourceSafetyRegression.py
+      - name: Exercise genuine Windows PowerShell failure paths (no game)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./tests/powershell/r289/Invoke-R289-SafeWindowsChecks.ps1
+      - name: Verify real Win32 R291 bootstrap fail-closed contracts
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./tests/powershell/r291/Invoke-R291-NativeSourceSafety.ps1
+      - name: Verify native Win32 R292 SHA/GUI-opt-in fail-closed behavior
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./tests/powershell/r292/Invoke-R292-NativeSourceSafety.ps1
+      - name: Verify real Win32 R297 native launcher failure paths (no game)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./tests/powershell/r297/Invoke-R297-NativeSourceSafety.ps1
+      - name: R310 pinned owner PowerShell entry, source hash and native GUI refusal (no game)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./tests/powershell/r310/Invoke-R310-NativeSourceSafety.ps1
+
