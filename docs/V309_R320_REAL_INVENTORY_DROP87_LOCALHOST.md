@@ -1,0 +1,15 @@
+# R320 — original recovered-client inventory Drop87 → authoritative 53
+
+27 October 2026. This is a real owner-cache-backed local GUI acceptance on the reconstructed **v309** client, not a production source change or an exact v311 original-bytecode certification.
+
+**Two independent Linux/Xvfb original-cache GUI sessions completed PASS (exit code 0)** at **21.41 and 21.33 seconds**, using the unchanged 1,277-source-built class-only client JAR SHA-256 `b551c58e7e07154f1a5b27e153db9df803bbbca820cc8ee133e8b515aba72721`. No diagnostic Java classes or collision overrides were active.
+
+The localhost-only ISAAC synthetic server opened inventory parent interface **3213 on tab 3** via opcode71 and inserted **7 Coins** in widget **3214** via incoming opcode53. A real AWT right-click at desktop **(711,416)** exposed the genuine in-game menu **Use / Bag-exchange / Drop / Examine Coins**. A second actual mouse click at **(684,477)** selected **Drop Coins**. The real client sent outbound ISAAC-decoded **opcode87**, six-byte item action: **item995**, **widget3214**, **slot0** (original `method590(item); writeShort(widget); method590(slot)`). The server decoded that packet and only then sent a genuine incoming **opcode53** empty slot update. The seven-coin sprite disappeared.
+
+The true item-sprite rectangle **(685,389)-(742,439)** changed **299 pixels** in each run. The gold-sprite color signature dropped from **198 counted pixels** before to **zero** afterward. Captured outgoing client wire lengths and SHA-256 differ between independently staged sessions: **49 bytes** / `805451586501738624957f0d651d1f28c9d6553ba370d165874d3c13243c4e32` and **48 bytes** / `d642c5f1f288bf943490e82e722ad697167cb00ca9aca9bd5c4f935d7188b3ea`. Exact screenshot hashes and strict evidence contract are documented in private GitHub.
+
+**Full source-safe test tooling now lives in the owner's [PRIVATE recovery PR #4](https://github.com/Trexzo/fullspkclient-private/pull/4)** under `recovery/v309-r320`: reproducible SHA-pinned mock-server+outbound-decoder generator, real AWT inventory action robot, owner-only Java/AWT GUI runner, opcode87/53 contract, fail-closed real receipt verifier and original-independent synthetic regression tests. The original recovered Java source, private JARs, credentials, and 203MB cache are NOT uploaded to the public repository.
+
+**Not verified:** actual production SpawnPK server drop permissions, world-ground spawning, withdrawals/moves/trades, server-side persistence, native Windows GPU, longer inventory soak or exact original-v311 bytecode. **Zero original production source modifications** in R320. The complete 1,277-source private GitHub import is **still pending** [private issue #3](https://github.com/Trexzo/fullspkclient-private/issues/3) until those files and three pinned JARs actually appear in the private Git tree.
+
+Keep [public PR #1143](https://github.com/Trexzo/SpawnPK-Client/pull/1143) DRAFT/UNMERGED, preserve main and the distinct original-v311 parity track.
