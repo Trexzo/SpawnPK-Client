@@ -1,0 +1,17 @@
+# R326 — rapid inventory updates with a single ordered sender
+
+28 October 2026 · Redacted original-client acceptance report. Original Java code, client binaries, asset cache and account data remain owner-private.
+
+The recovered source-built **v309** game client (unchanged JAR SHA-256 `b551c58e7e07154f1a5b27e153db9df803bbbca820cc8ee133e8b515aba72721`) and authentic owner cache ran in two separate Linux/Xvfb graphical sessions. Both connected **only** to an isolated synthetic ISAAC server on 127.0.0.1.
+
+**First GUI session: PASS, exit0, 20.84s.** The local server advanced inventory revision **2 → 11 → 20** through **18 accepted consecutive mutations**. Eight worker threads issued **200 obsolete revision proposals**; the reference dispatcher rejected all 200, plus fenced one outdated prior-connection proposal and one outdated write. A designated single writer emitted exactly **three full-widget opcode53 frames**: the initial revision2, the last state from the first burst (revision11), and the last state from the second (revision20). The game GUI showed a real slot reorder (1,132 changed item pixels) and then returned to the initial order (0 changed pixels). No intermediate revision packets reached the synthetic client's socket.
+
+**Second independently launched GUI session: PASS, exit0, 19.83s.** The local server restored its persisted revision20 state, associated the new connection with test generation **2**, rejected **80** worker proposals from generation **1** and refused another old-generation write. It delivered exactly two revision20 inventory53 frames (restore + valid repeat). The fresh game's visible inventory matched the first session's final order and remained unchanged after the resend (0 pixels changed in both comparisons). Saved test state SHA-256 `b5a1dae4d9448299f8bf911278ae031dfca25bd16423589c58a5f75a531f3f2a`.
+
+**Verified source-safe code** on owner-private [draft PR #4](https://github.com/Trexzo/fullspkclient-private/pull/4) under `recovery/v309-r326/`: a reference single-writer dispatcher with send-boundary serialization, revision and connection-generation fences, idempotent commits, socket failure quarantine; compact SHA-pinned local GUI fixture rebuild, independent receipt verifier, and 25 synthetic regression tests in Windows/Linux Python CI. Real game GUI evidence was verified separately from hosted synthetic tests.
+
+The owner-private ZIP `SpawnPK-v309-R326-Private-SingleWriter-Inventory-Acceptance.zip` has **28 files, 1,130,814 bytes**, SHA-256 `c5bbc7d4900256e533a06c7fcef73b1ba256a6696d11188abb93aa01a8157928`, independently passed clean-extraction SHA manifest, genuine-session receipt and 25/25 source-only tests. No game Java/cache is embedded in this ZIP.
+
+**Limits:** this dispatcher is **not deployed to the real SpawnPK server**. Existing full-inventory opcode53 is unversioned; an obsolete packet that has already crossed the socket boundary still requires a corrective resend (R325). Real production account persistence, live game server concurrency, native Windows GPU and v311 original-bytecode parity are **not tested**. Zero production client source/JAR changes for R326.
+
+The complete original recovered **1,277 Java source files and three private JARs remain ABSENT** from the private GitHub recovery branch, tracked at [private issue #3](https://github.com/Trexzo/fullspkclient-private/issues/3). Keep public draft PR #1143 and private draft PR #4 unmerged; preserve separate owner-developed main and v311 recovery work.
