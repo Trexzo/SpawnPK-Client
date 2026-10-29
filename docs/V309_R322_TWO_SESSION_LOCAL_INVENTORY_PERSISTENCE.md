@@ -1,0 +1,13 @@
+# R322 — recovered v309 inventory survives a simulated reconnect
+
+28 October 2026. Two **independent real Java GUI sessions** were tested using the unchanged 1,277-source-rebuilt v309 client JAR, authentic original cache, and an isolated localhost-only synthetic ISAAC server.
+
+The first real client session (**30.51 seconds, exit 0**) accepted inventory drag opcode214 and received incoming full inventory update opcode53. The isolated server persisted item order to disk (Logs x1 in slot0, Coins x7 in slot1), SHA-256 `d0240cfd5d72dc44f3206a16156335a91fa38f6ed78569a5c1f33b1d812c1a48`. A **separately launched client** then reconnected to a separately launched local server (**24.30 seconds, exit 0**) and received that order from the durable state file. Its inventory image matched the earlier post-drag item region with **zero changed pixels**; compared with the unswapped initial state, it differed by **1,132 pixels**.
+
+The second client issued another genuine GUI drag (outgoing ISAAC opcode214, widget3214 slot0→slot1, mode0). The synthetic server intentionally **rejected** the drag and sent authoritative incoming opcode53 restoring the persisted order. The client's post-reassertion screenshot matched its initial restored slot state, again **zero changed item pixels**. The second session's real client wire was 51 bytes, SHA-256 `ad0f0b1f9fed616a7d9a02674669f024f4c7ab7aeb458fac6071092010f2dc90`.
+
+An initial test-runner retry timed out during its second launch and was **not accepted**; both phases later passed in independently executed replays, and an additional fresh-fixture reconstruction repeated both successful sessions.
+
+No production game code changes: the compiled client JAR remains `b551c58e7e07154f1a5b27e153db9df803bbbca820cc8ee133e8b515aba72721`. [Private PR #4](https://github.com/Trexzo/fullspkclient-private/pull/4) includes the fail-closed R322 reconnect verifier, synthetic negative tests and CI. The tested fixture-generation script and sanitised evidence are in the owner-private R322 supplemental ZIP SHA-256 `c421c303b162901b7756d17b5da9d8d364fb6966a0db0c801ee44254143c1084`; that generator is **not yet committed to GitHub**.
+
+**Boundaries:** this tests two local client/server processes and a synthetic server-side state file. It is **not** actual production SpawnPK account persistence, a database transaction, live server reconciliation, or native Windows GPU certification. The original v311 bytecode parity lane is separate. The complete 1,277 recovered Java sources and three pinned JARs remain absent from the private Git branch, tracked in [private issue #3](https://github.com/Trexzo/fullspkclient-private/issues/3). Keep PRs draft/unmerged.
