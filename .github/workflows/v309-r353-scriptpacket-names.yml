@@ -1,0 +1,31 @@
+name: R353 readable v309 script packet handlers
+on:
+  pull_request:
+    paths:
+      - 'scripts/prepare_v309_r353_scriptpacket_names.py'
+      - 'tests/test_v309_r353_scriptpacket_names.py'
+      - 'docs/V309_R353_READABLE_SCRIPT_PACKET_HANDLERS.md'
+      - '.github/workflows/v309-r353-scriptpacket-names.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  readable-rename:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.12']
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Test exact original handler registration and source-shape gates
+        run: python -m unittest discover -s tests -p 'test_v309_r353_scriptpacket_names.py' -v
+      - name: Verify direct private-stage CLI works and compiles
+        run: python scripts/prepare_v309_r353_scriptpacket_names.py --help
+      - name: Python syntax-check source transformation
+        run: python -m py_compile scripts/prepare_v309_r353_scriptpacket_names.py
