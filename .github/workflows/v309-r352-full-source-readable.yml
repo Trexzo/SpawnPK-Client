@@ -1,0 +1,32 @@
+name: R352 complete v309 R315 source and readable pass1 gates
+on:
+  pull_request:
+    paths:
+      - 'scripts/prepare_v309_r315_complete_readable_source.py'
+      - 'tests/test_v309_r352_full_source_readability.py'
+      - 'docs/V309_R352_FULL_SOURCE_BUILD_AND_READABLE_PASS1.md'
+      - '.github/workflows/v309-r352-full-source-readable.yml'
+      - 'scripts/apply_v309_r351_readable_packet_handler_candidate.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  private-source-gate:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.12']
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Test exact private R315 tree pins and zero-project-class dependency checks
+        run: python -m unittest discover -s tests -p 'test_v309_r352_full_source_readability.py' -v
+      - name: Retest inferred packet-handler source identifier rewrite
+        run: python -m unittest discover -s tests -p 'test_v309_r351_packet_handler_readability.py' -v
+      - name: Compile verifier without private source or game binaries
+        run: python -m py_compile scripts/prepare_v309_r315_complete_readable_source.py
