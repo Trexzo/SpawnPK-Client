@@ -14,7 +14,10 @@ import stat
 import sys
 from zipfile import ZipFile, BadZipFile
 
-from scripts.apply_v309_r351_readable_packet_handler_candidate import transform
+if __package__:
+    from .apply_v309_r351_readable_packet_handler_candidate import transform
+else:
+    from apply_v309_r351_readable_packet_handler_candidate import transform
 
 R315_ARCHIVE_SHA = "e46a213ba949dc0a2f420a040b5c9d38451c0923e3ea39917a5d2eb3c9b2fa28"
 R315_JAVA_COUNT = 1277
