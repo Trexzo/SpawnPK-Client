@@ -51,3 +51,23 @@ Only use a fresh, private destination: never `recovered-source/v309/src` until i
 Use the staged tree as the full **candidate** baseline; then prioritize verified original-v309 mapping of `Class<number>`, `field<number>`, `method<number>`, source/JVM type-owner references, and private compiler diagnostics. Existing R124–R130, R181–R192, and Source-M1 research in this **correct** repository is authoritative starting work and must not be duplicated in an unrelated project.
 
 No original client JARs, runtime caches, credentials, or raw decompiled Java are committed to this public repository. CI uses only synthetic miniature ZIPs. Actual private R211 source and any future build outputs remain outside Git. The connected owner desktop was offline at this milestone; no new original v309 Java runtime/build acceptance is claimed.
+
+## First explicit readable Java class rename (private research candidate)
+
+As an initial **actual source transformation**, the owner-private R211 tree was inspected around `rs/scriptpacket/Class260.java`. The file declares an **abstract** class implementing Guice `Module`, provides `handlePacket()`, `setPacket(Packet)`, `setClient(Client)`, and convenience packet readers. Its role supports the **inferred** readable name `rs.scriptpacket.AbstractScriptPacketHandler`, rather than leaving an opaque `Class260` label.
+
+The precise R211 lexical rewrite updated **144 `Class260` occurrences in 71 Java source files** and renamed the declaring Java file. Import, extends, fully qualified references and source comments were updated in the same private candidate; every remaining source path and byte outside those occurrences stayed unchanged. **No original JAR or binary source artifact was modified.** A JDK 21 `JavacTask.parse()` pass using Java 11 source grammar parsed **all 1,275 rewritten Java files with zero Java syntax parse errors**. This confirms syntax only, not dependency resolution, compilation, semantics, reflection safety, clean build, or JVM instruction parity.
+
+`scripts/apply_v309_r351_readable_packet_handler_candidate.py` reproduces the pinned one-class rename on an R351 SHA-verified private stage, refuses unexpected declaration/method shape or changed source references, and writes a new private source tree + per-file SHA manifest. Synthetic Windows/Linux tests exercise the rename and negative controls without uploading raw client Java.
+
+**Status:** This readable name is `SEMANTIC_CANDIDATE` only. It is **not** an approved original class identity, semantic mapping authority, or a Source-M1 release. The complete file graph and the original `Class260` name remain recorded for future round-trip remapping.
+
+Private reusable example, after the previous intake command:
+
+```powershell
+py -3 scripts/apply_v309_r351_readable_packet_handler_candidate.py `
+  --r351-private-stage "C:\private\v309-r351-source-candidate" `
+  --new-private-output "C:\private\v309-r351-readable-scriptpacket"
+```
+
+The private readable candidate ZIP was generated independently from the same R211 input with the specified one-class/71-file, 144-identifier rewrite, and checksum-verified before linking to the owner. Raw source is deliberately not pushed to public GitHub.
