@@ -45,3 +45,16 @@ Hosted Windows/Linux CI uses **synthetic source fixtures only**, testing wrong r
 Source Pass 1 removed `Class260`; this pass removes `Class261`, `Class262` and `Class263`. The formerly reported **306 numeric `Class<number>.java` filenames are now 303**. Most `field<number>` and `method<number>` names remain. Only rename when grounded in source usage, registry/method evidence and full-source compile; then independently evaluate JVM symbolic equivalence and reflection-sensitive references before any future Source-M1 publication.
 
 **Production v312, updater, original v309 JAR, runtime caches, account/server and public main branch remain unchanged. Keep draft/unmerged.**
+
+
+## Independent reproducible complete-source build kit
+
+A second, standalone private package was created from **all 1,277 R353 readable Java files**, the original two hash-pinned *non-game* dependency JARs and a build script with updated exact source/JAR SHA pins:
+
+- `SpawnPK-v309-R353-Readable-Pass2-Reproducible-Build-Kit.zip`
+- Package SHA-256: `e6feb8683843cefaf29e0aa86c1ad2c4d71747ce739974cdebabbd436ff7951e`
+- Size: **19,839,280 bytes**
+- The kit was extracted to a **fresh temporary workspace**, and its own `tools/rebuild_from_source.py` was executed independently. Result: **exit 0**, `R353_PRIVATE_READABLE_REBUILD_PASS classes=1386`.
+- The reproducibly packed compiled JAR SHA-256 again matched **`d3c86c83393b219aa2ac6c4134194764c9836df388af6e5970c21349c1342c13`**.
+
+This independently reproduces the second source-pass build from the distributable kit, with **zero original `rs/` game-class binary fallback**. The generated compiled candidate JAR is *not* an untouched original v309 executable and has not undergone original-client runtime parity or Source-M1 semantic certification. The kit contains private readable source and dependencies and is **not committed to the public GitHub repository**.
