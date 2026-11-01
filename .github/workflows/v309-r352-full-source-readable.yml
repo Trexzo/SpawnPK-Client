@@ -28,5 +28,7 @@ jobs:
         run: python -m unittest discover -s tests -p 'test_v309_r352_full_source_readability.py' -v
       - name: Retest inferred packet-handler source identifier rewrite
         run: python -m unittest discover -s tests -p 'test_v309_r351_packet_handler_readability.py' -v
+      - name: Verify direct private source staging CLI imports correctly
+        run: python scripts/prepare_v309_r315_complete_readable_source.py --help
       - name: Compile verifier without private source or game binaries
         run: python -m py_compile scripts/prepare_v309_r315_complete_readable_source.py
