@@ -1,0 +1,33 @@
+name: R351 private v309 full-source candidate intake
+on:
+  pull_request:
+    paths:
+      - 'scripts/prepare_v309_r211_source_candidate.py'
+      - 'tests/test_v309_r351_private_source_intake.py'
+      - 'tests/test_v309_r351_packet_handler_readability.py'
+      - 'scripts/apply_v309_r351_readable_packet_handler_candidate.py'
+      - 'docs/V309_R351_PRIVATE_FULLTREE_SOURCE_INTAKE.md'
+      - '.github/workflows/v309-r351-source-candidate-intake.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  candidate-intake:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.12']
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Test exact-archive private full-source staging and false authority rejection
+        run: python -m unittest discover -s tests -p 'test_v309_r351_private_source_intake.py' -v
+      - name: Test semantic packet-handler class rename and false-authority rejection
+        run: python -m unittest discover -s tests -p 'test_v309_r351_packet_handler_readability.py' -v
+      - name: Compile private intake and readable rename tools (without proprietary Java)
+        run: python -m py_compile scripts/prepare_v309_r211_source_candidate.py scripts/apply_v309_r351_readable_packet_handler_candidate.py
