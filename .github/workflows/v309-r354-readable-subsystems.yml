@@ -1,0 +1,31 @@
+name: R354 readable source cache eventbus config candidate
+on:
+  pull_request:
+    paths:
+      - 'scripts/prepare_v309_r354_readable_subsystems.py'
+      - 'tests/test_v309_r354_readable_subsystems.py'
+      - 'docs/V309_R354_READABLE_CACHE_EVENTBUS_CONFIG.md'
+      - '.github/workflows/v309-r354-readable-subsystems.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-rename:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.12']
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Check synthetic inferred type-field-method refactors and exact inverse
+        run: python -m unittest discover -s tests -p 'test_v309_r354_readable_subsystems.py' -v
+      - name: Validate CLI entry point without user-private source material
+        run: python scripts/prepare_v309_r354_readable_subsystems.py --help
+      - name: Check syntax of reproducible private source transformation
+        run: python -m py_compile scripts/prepare_v309_r354_readable_subsystems.py
