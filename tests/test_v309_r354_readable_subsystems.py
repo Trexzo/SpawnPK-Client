@@ -23,7 +23,7 @@ class R354Tests(unittest.TestCase):
                 b' byte[] method2942(int var1, int var2, boolean var3) {return null;} }'),
             "rs/cache/osrs/util/Class47.java":(
                 b'class Class47 { final int field370=0;'
-                b' final String field371="",field372=""; }'),
+                b' final String field371=""; final String field372=""; }'),
             "rs/cache/osrs/util/Class48.java":(
                 b'interface Class48 {void accept(int var1, int var2, int var3, int var4); }'),
             "rs/config/Class50.java":(
