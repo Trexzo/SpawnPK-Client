@@ -1,0 +1,112 @@
+{
+  "expected_refs": {
+    "Class113": {
+      "rs/gpu/Class113.java": 1,
+      "rs/gpu/SkyboxDefinition.java": 3
+    },
+    "Class131": {
+      "rs/gui/loadouts/dialogs/Class131.java": 2,
+      "rs/gui/loadouts/dialogs/CreateLoadoutAction.java": 1
+    },
+    "Class140": {
+      "rs/gui/loadouts/dialogs/Class140.java": 2,
+      "rs/gui/loadouts/dialogs/LoadoutInputDialog.java": 1
+    },
+    "Class302": {
+      "rs/model/Class11.java": 2,
+      "rs/plugins/entityhider/EntityHiderPlugin.java": 7,
+      "rs/plugins/hiddenplayer/HiddenPlayerPlugin.java": 3,
+      "rs/runelite/api/Class302.java": 1,
+      "rs/runelite/api/EntityDrawCallbacks.java": 4
+    },
+    "Class42": {
+      "rs/definitions/Class42.java": 1,
+      "rs/definitions/Class43.java": 3,
+      "rs/scriptpacket/handler/SceneObjectScriptPacket.java": 7
+    },
+    "Class43": {
+      "rs/Client.java": 3,
+      "rs/definitions/Class43.java": 1,
+      "rs/scriptpacket/handler/SceneObjectScriptPacket.java": 9
+    },
+    "Class80": {
+      "rs/gui/UiUtils.java": 2,
+      "rs/util/Class80.java": 1
+    },
+    "Class83": {
+      "rs/util/Class83.java": 1,
+      "rs/util/Class84.java": 2,
+      "rs/util/Class85.java": 3
+    },
+    "Class99": {
+      "rs/ui/components/Class99.java": 1,
+      "rs/ui/components/DragAndDropReorderPane.java": 3
+    },
+    "field1196": {
+      "rs/definitions/Class42.java": 1,
+      "rs/definitions/Class43.java": 1,
+      "rs/scriptpacket/handler/SceneObjectScriptPacket.java": 3
+    },
+    "field1197": {
+      "rs/definitions/Class42.java": 1,
+      "rs/definitions/Class43.java": 1,
+      "rs/scriptpacket/handler/SceneObjectScriptPacket.java": 4
+    },
+    "field1198": {
+      "rs/definitions/Class42.java": 1,
+      "rs/definitions/Class43.java": 1,
+      "rs/scriptpacket/handler/SceneObjectScriptPacket.java": 4
+    },
+    "field1199": {
+      "rs/definitions/Class42.java": 1,
+      "rs/definitions/Class43.java": 1,
+      "rs/scriptpacket/handler/SceneObjectScriptPacket.java": 4
+    },
+    "field1200": {
+      "rs/definitions/Class42.java": 1,
+      "rs/definitions/Class43.java": 1,
+      "rs/scriptpacket/handler/SceneObjectScriptPacket.java": 2
+    },
+    "field1201": {
+      "rs/definitions/Class42.java": 1,
+      "rs/definitions/Class43.java": 1,
+      "rs/scriptpacket/handler/SceneObjectScriptPacket.java": 2
+    },
+    "field1202": {
+      "rs/Client.java": 1,
+      "rs/definitions/Class43.java": 3,
+      "rs/scriptpacket/handler/SceneObjectScriptPacket.java": 8
+    },
+    "method1280": {
+      "rs/ui/components/Class99.java": 1,
+      "rs/ui/components/DragAndDropReorderPane.java": 1
+    },
+    "method1785": {
+      "rs/util/Class83.java": 1,
+      "rs/util/Class85.java": 1
+    },
+    "method1914": {
+      "rs/gpu/Class113.java": 1,
+      "rs/gpu/SkyboxDefinition.java": 1
+    },
+    "method2468": {
+      "rs/util/Class83.java": 1,
+      "rs/util/Class85.java": 1
+    },
+    "method2476": {
+      "rs/util/Class83.java": 1,
+      "rs/util/Class84.java": 1
+    }
+  },
+  "owner_hashes": {
+    "rs/definitions/Class42.java": "8ba6458965140bb6a380966eb9accfc518b8cb47da67bd8b5a81ee4764369279",
+    "rs/definitions/Class43.java": "7ce2f9bb5f39adef41b4f34aab552edb1c87fb5784c83de7aec61fad42b8095f",
+    "rs/gpu/Class113.java": "e2d6bcba405c18483eb218ca2b412971cfd7d8af125c13a9e37822b967e2c0f1",
+    "rs/gui/loadouts/dialogs/Class131.java": "d2c6e0d4b930b72bd3d9afcb626afc3bcb919d8478a3b8ec5b063756be4f146b",
+    "rs/gui/loadouts/dialogs/Class140.java": "be715b75b64ad2f3123c66a4cf3855252d9af85d572fb4ecbd31a0ec393a730c",
+    "rs/runelite/api/Class302.java": "d5e76a4934e8ed1dd00f0f51d8bd79196b9fff6340c31b88cf85abb10a3334ac",
+    "rs/ui/components/Class99.java": "d75c15a1c9a8473dbef92a616e9a7f3d9209cfe06db74f09a8ea505d8671f25f",
+    "rs/util/Class80.java": "e83f7fde0399fc0802f2e93ed7557c355aa53fdf9f9db5b10de987187fafa956",
+    "rs/util/Class83.java": "c998a10d2d8af048e0727a576a6c44992105d6bcd93ce8d5109aa77ea00d9126"
+  }
+}
