@@ -1,0 +1,31 @@
+name: R357 readable infobox login texture and overlay helpers
+on:
+  pull_request:
+    paths:
+      - 'scripts/prepare_v309_r357_readable_ui_layers.py'
+      - 'tests/test_v309_r357_readable_ui_layers.py'
+      - 'docs/V309_R357_READABLE_UI_LAYERS_PASS6.md'
+      - '.github/workflows/v309-r357-readability.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-readable:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.12']
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Check synthetic readable names, all reference pins and exact reverse
+        run: python -m unittest discover -s tests -p 'test_v309_r357_readable_ui_layers.py' -v
+      - name: Exercise direct private CLI help without source archives
+        run: python scripts/prepare_v309_r357_readable_ui_layers.py --help
+      - name: Compile source transformation script
+        run: python -m py_compile scripts/prepare_v309_r357_readable_ui_layers.py
