@@ -1,0 +1,31 @@
+name: R355 v309 readable outline and NPC source candidates
+on:
+  pull_request:
+    paths:
+      - 'scripts/prepare_v309_r355_readable_outline_npc.py'
+      - 'tests/test_v309_r355_readable_outline_npc.py'
+      - 'docs/V309_R355_READABLE_OUTLINE_NPC_PASS4.md'
+      - '.github/workflows/v309-r355-readable-outline-npc.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  readability:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.12']
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Verify synthetic readable renames, exact reversibility and negative controls
+        run: python -m unittest discover -s tests -p 'test_v309_r355_readable_outline_npc.py' -v
+      - name: Verify private source CLI entry point
+        run: python scripts/prepare_v309_r355_readable_outline_npc.py --help
+      - name: Check source transformer syntax
+        run: python -m py_compile scripts/prepare_v309_r355_readable_outline_npc.py
