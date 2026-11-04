@@ -138,8 +138,8 @@ def transform(original, *, expected_count=SOURCE_COUNT,
         token=re.compile(r"\b"+re.escape(old)+r"\b")
         occurrences={p:len(token.findall(raw.decode("utf-8")))
                      for p,raw in current.items() if token.search(raw.decode("utf-8"))}
-        if sum(occurrences.values())!=expected_uses or not occurrences or
-            (kind!="type" and owner not in occurrences):
+        if (sum(occurrences.values())!=expected_uses or not occurrences or
+                (kind!="type" and owner not in occurrences)):
             raise Refused("REFERENCE_COUNT_OR_OWNER_DRIFT_"+old)
         edits={}
         for p in occurrences:
