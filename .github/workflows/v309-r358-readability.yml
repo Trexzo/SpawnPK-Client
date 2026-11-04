@@ -1,0 +1,42 @@
+name: R358 source deobfuscation — scene and callback identities
+on:
+  pull_request:
+    paths:
+      - 'scripts/prepare_v309_r358_readable_scene_callbacks.py'
+      - 'tests/test_v309_r358_readable_scene_callbacks.py'
+      - 'research/v309-source-recovery/r358-readability-input-witness.json'
+      - 'docs/V309_R358_READABLE_SCENE_CALLBACKS_PASS7.md'
+      - '.github/workflows/v309-r358-readability.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bounded-source-rename:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.12']
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Verify synthetic dependent type and field/method naming
+        run: python -m unittest discover -s tests -p 'test_v309_r358_readable_scene_callbacks.py' -v
+      - name: Verify R358 exact source reference evidence totals
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          doc = json.loads(Path('research/v309-source-recovery/r358-readability-input-witness.json').read_text())
+          assert len(doc['owner_hashes']) == 9
+          assert len(doc['expected_refs']) == 21
+          assert sum(sum(x.values()) for x in doc['expected_refs'].values()) == 117
+          assert all(len(x) == 64 for x in doc['owner_hashes'].values())
+      - name: Exercise private CLI without source or game JARs
+        run: python scripts/prepare_v309_r358_readable_scene_callbacks.py --help
+      - name: Syntax-check source transformer
+        run: python -m py_compile scripts/prepare_v309_r358_readable_scene_callbacks.py
