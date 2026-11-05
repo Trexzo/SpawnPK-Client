@@ -1,0 +1,171 @@
+{
+  "source_archive_sha256": "95f4319993bce5988d47d34f76709d96e72e8b0d59b319d406fa773be748cb68",
+  "source_count": 1277,
+  "types": {
+    "rs/gui/loadouts/Class124.java": "LoadoutContextMenuMouseListener",
+    "rs/gui/loadouts/Class125.java": "CloseLoadoutsWindowAction",
+    "rs/gui/loadouts/dialogs/Class126.java": "CloneEquippedLoadoutAction",
+    "rs/gui/loadouts/dialogs/Class127.java": "CancelCloneLoadoutAction",
+    "rs/gui/loadouts/dialogs/Class128.java": "CloneLoadoutButtonFactory",
+    "rs/gui/loadouts/dialogs/Class129.java": "LoadoutColorListCellRenderer",
+    "rs/gui/loadouts/dialogs/Class130.java": "LoadoutListCellRenderer",
+    "rs/gui/loadouts/dialogs/Class132.java": "ConfirmCreateLoadoutAction",
+    "rs/gui/loadouts/dialogs/Class133.java": "LoadoutTagListCellRenderer",
+    "rs/gui/loadouts/dialogs/Class134.java": "LoadoutFolderPopupListener",
+    "rs/gui/loadouts/dialogs/Class135.java": "LoadoutFolderComboBox",
+    "rs/gui/loadouts/dialogs/Class136.java": "ConfirmCreateFolderAction",
+    "rs/gui/loadouts/dialogs/Class137.java": "ConfirmRenameFolderAction",
+    "rs/gui/loadouts/dialogs/Class138.java": "ConfirmDeleteFolderAction",
+    "rs/gui/loadouts/dialogs/Class139.java": "CancelDeleteFolderAction",
+    "rs/gui/loadouts/dialogs/Class141.java": "SpawnLoadoutButtonFactory"
+  },
+  "owner_sha256": {
+    "rs/gui/loadouts/Class124.java": "d0ea65a71cd552e63f4e118a33ae0075efe85bb1c545b3e88d6548a64f0fb480",
+    "rs/gui/loadouts/Class125.java": "be9567e951af4501277a98d49889a24e96c2ae846eb7e79f22956121e6e9a41e",
+    "rs/gui/loadouts/dialogs/Class126.java": "7a009299e4b85dd2d06fd3b02c1dbb2f16fec95105a6e37ce3dc0021acf43319",
+    "rs/gui/loadouts/dialogs/Class127.java": "40975a965281841cd88c14cc622e78dcba534ea9dd99d7554e9f79b13f6f03a0",
+    "rs/gui/loadouts/dialogs/Class128.java": "3e7117de77ff0ed47b3b6e1791829790baec1265410ecc3e9f092d1b1cc2e053",
+    "rs/gui/loadouts/dialogs/Class129.java": "c3bb8ae9511dae5d3997c96824165cc74978c6d212a1f0f55a44e4ac7f357f36",
+    "rs/gui/loadouts/dialogs/Class130.java": "af4f62773526640c559837ec0e73348b7c3c47bf7531a4060b19bc945e61b3ec",
+    "rs/gui/loadouts/dialogs/Class132.java": "a252518ed8dbd7e80fe74370a5cf6b79464d73f78cb67b9efd0568ba47fc7577",
+    "rs/gui/loadouts/dialogs/Class133.java": "f8c4eb0caff971aeb0328ec8f18f61dcd909179351b34a483858a88fe474fcc0",
+    "rs/gui/loadouts/dialogs/Class134.java": "fc93224339f38ee0f262adbdc4d2e55fa03184f48e836bd3f9f9ea655425defd",
+    "rs/gui/loadouts/dialogs/Class135.java": "4c9a569a3ec002392acd2f41202c25b12022e486206b5be0bd2944d07c494486",
+    "rs/gui/loadouts/dialogs/Class136.java": "8c46b27ec5f8690351d9190093608a9a2b784299d05fdfff62786db9902458a5",
+    "rs/gui/loadouts/dialogs/Class137.java": "137ecc791a5c62ffd60ab79f8b0183046fe322f496f608eb3dc6a0d652e8f075",
+    "rs/gui/loadouts/dialogs/Class138.java": "fbbe01a8846c04ca01e90eb3ec7df2253871b60b53237ff4dad41ac82408b801",
+    "rs/gui/loadouts/dialogs/Class139.java": "204e9e389de1f7725720624d52dabf643fa2d930d8fa12cf810fabd4a30c3814",
+    "rs/gui/loadouts/dialogs/Class141.java": "2f811ca567c155066d56c953f3a0464348e159aa2df7d5b8d48ce79eefb955ea"
+  },
+  "fields": {
+    "field3196": "optionColors",
+    "field3197": "optionLabels",
+    "field3198": "colorComboBox",
+    "field3199": "loadoutFolders",
+    "field3200": "folderComboBox",
+    "field3205": "tagComboBox",
+    "field3209": "loadoutFolders"
+  },
+  "methods": {
+    "method1944": "setOptionColors",
+    "method1119": "setOptionLabels",
+    "method1436": "getOptionColors",
+    "method1503": "getOptionLabels",
+    "method3063": "createCloneLoadoutButton",
+    "method994": "createSpawnLoadoutButton"
+  },
+  "token_references": {
+    "Class124": {
+      "rs/gui/loadouts/Class124.java": 2,
+      "rs/gui/loadouts/LoadoutsPanel.java": 1
+    },
+    "Class125": {
+      "rs/gui/loadouts/Class125.java": 2,
+      "rs/gui/loadouts/LoadoutsPanel.java": 1
+    },
+    "Class126": {
+      "rs/gui/loadouts/dialogs/Class126.java": 2,
+      "rs/gui/loadouts/dialogs/CloneLoadoutAction.java": 1
+    },
+    "Class127": {
+      "rs/gui/loadouts/dialogs/Class127.java": 2,
+      "rs/gui/loadouts/dialogs/CloneLoadoutAction.java": 1
+    },
+    "Class128": {
+      "rs/gui/loadouts/dialogs/Class128.java": 1,
+      "rs/gui/loadouts/LoadoutsPanel.java": 2
+    },
+    "Class129": {
+      "rs/gui/loadouts/dialogs/Class129.java": 2,
+      "rs/gui/loadouts/dialogs/LoadoutInputDialog.java": 2
+    },
+    "Class130": {
+      "rs/gui/loadouts/dialogs/Class130.java": 2,
+      "rs/gui/loadouts/dialogs/Class135.java": 1
+    },
+    "Class132": {
+      "rs/gui/loadouts/dialogs/Class132.java": 2,
+      "rs/gui/loadouts/dialogs/CreateLoadoutAction.java": 1
+    },
+    "Class133": {
+      "rs/gui/loadouts/dialogs/Class133.java": 2,
+      "rs/gui/loadouts/dialogs/LoadoutInputDialog.java": 2
+    },
+    "Class134": {
+      "rs/gui/loadouts/dialogs/Class134.java": 2,
+      "rs/gui/loadouts/dialogs/Class135.java": 1
+    },
+    "Class135": {
+      "rs/gui/loadouts/dialogs/Class135.java": 3,
+      "rs/gui/loadouts/LoadoutsPanel.java": 2,
+      "rs/gui/loadouts/dialogs/Class130.java": 2,
+      "rs/gui/loadouts/dialogs/Class134.java": 2,
+      "rs/gui/loadouts/dialogs/SelectFolderAction.java": 4
+    },
+    "Class136": {
+      "rs/gui/loadouts/dialogs/Class136.java": 2,
+      "rs/gui/loadouts/dialogs/CreateFolderAction.java": 1
+    },
+    "Class137": {
+      "rs/gui/loadouts/dialogs/Class137.java": 2,
+      "rs/gui/loadouts/dialogs/RenameFolderAction.java": 1
+    },
+    "Class138": {
+      "rs/gui/loadouts/dialogs/Class138.java": 2,
+      "rs/gui/loadouts/dialogs/DeleteFolderAction.java": 1
+    },
+    "Class139": {
+      "rs/gui/loadouts/dialogs/Class139.java": 2,
+      "rs/gui/loadouts/dialogs/DeleteFolderAction.java": 1
+    },
+    "Class141": {
+      "rs/gui/loadouts/dialogs/Class141.java": 1,
+      "rs/gui/loadouts/LoadoutsPanel.java": 2
+    },
+    "field3196": {
+      "rs/gui/loadouts/dialogs/Class129.java": 7
+    },
+    "field3197": {
+      "rs/gui/loadouts/dialogs/Class129.java": 5
+    },
+    "field3198": {
+      "rs/gui/loadouts/dialogs/Class129.java": 3
+    },
+    "field3199": {
+      "rs/gui/loadouts/dialogs/Class130.java": 10
+    },
+    "field3200": {
+      "rs/gui/loadouts/dialogs/Class130.java": 6
+    },
+    "field3205": {
+      "rs/gui/loadouts/dialogs/Class133.java": 3
+    },
+    "field3209": {
+      "rs/gui/loadouts/dialogs/Class135.java": 3
+    },
+    "method1944": {
+      "rs/gui/loadouts/dialogs/Class129.java": 1,
+      "rs/gui/loadouts/dialogs/LoadoutInputDialog.java": 1
+    },
+    "method1119": {
+      "rs/gui/loadouts/dialogs/Class129.java": 1,
+      "rs/gui/loadouts/dialogs/LoadoutInputDialog.java": 1
+    },
+    "method1436": {
+      "rs/gui/loadouts/dialogs/Class129.java": 1
+    },
+    "method1503": {
+      "rs/gui/loadouts/dialogs/Class129.java": 1
+    },
+    "method3063": {
+      "rs/gui/loadouts/dialogs/Class128.java": 1,
+      "rs/gui/loadouts/LoadoutsPanel.java": 1
+    },
+    "method994": {
+      "rs/gui/loadouts/dialogs/Class141.java": 1,
+      "rs/gui/loadouts/LoadoutsPanel.java": 1
+    }
+  },
+  "original_jar_parity": "NOT_ESTABLISHED",
+  "lexical_scope": "Java identifiers, excluding comments and string/char literals"
+}
