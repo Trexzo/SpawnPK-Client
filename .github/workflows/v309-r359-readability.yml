@@ -1,0 +1,46 @@
+name: R359 v309 readable loadout dialogs and Java-token preservation
+on:
+  pull_request:
+    paths:
+      - 'scripts/prepare_v309_r359_readable_loadouts.py'
+      - 'tests/test_v309_r359_readable_loadouts.py'
+      - 'research/v309-source-recovery/r359-loadout-readability-witness.json'
+      - 'docs/V309_R359_READABLE_LOADOUTS_PASS8.md'
+      - '.github/workflows/v309-r359-readability.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bounded-readable-rename:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.12']
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Test Java-aware source identifier edits and exact reversibility
+        run: python -m unittest discover -s tests -p 'test_v309_r359_readable_loadouts.py' -v
+      - name: Verify pinned witness is complete and bounded
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          x = json.loads(Path('research/v309-source-recovery/r359-loadout-readability-witness.json').read_text())
+          assert x['source_count'] == 1277
+          assert len(x['types']) == 16
+          assert len(x['fields']) == 7
+          assert len(x['methods']) == 6
+          assert len(x['owner_sha256']) == 16
+          assert len(x['token_references']) == 29
+          assert all(len(v) == 64 for v in x['owner_sha256'].values())
+          assert sum(sum(row.values()) for row in x['token_references'].values()) == 107
+      - name: Verify direct private command-line interface
+        run: python scripts/prepare_v309_r359_readable_loadouts.py --help
+      - name: Syntax-check private source transformer
+        run: python -m py_compile scripts/prepare_v309_r359_readable_loadouts.py
