@@ -1,0 +1,37 @@
+name: v309 R362 readable loadout folders (synthetic only)
+on:
+  pull_request:
+    paths:
+      - 'scripts/prepare_v309_r362_readable_loadout_folders.py'
+      - 'scripts/prepare_v309_r361_readable_loadout_state.py'
+      - 'tests/test_v309_r362_readable_loadout_folders.py'
+      - 'research/v309-source-recovery/r362-loadout-folder-readability-witness.json'
+      - '.github/workflows/v309-r362-loadout-folder-readability.yml'
+  workflow_dispatch:
+
+jobs:
+  source-only:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: R362 synthetic Java token and source archive guards
+        run: python -m unittest discover -s tests -p test_v309_r362_readable_loadout_folders.py -v
+      - name: R362 public witness bounded, source-only
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          w=json.loads(Path('research/v309-source-recovery/r362-loadout-folder-readability-witness.json').read_text())
+          assert w['source_count']==1277
+          assert len(w['fields'])==4 and len(w['methods'])==6
+          assert len(w['owner_sha256'])==2
+          assert sum(sum(path_counts.values()) for path_counts in w['token_references'].values())==81
+          print('R362_WITNESS_SYNTHETIC_ONLY_PASS')
