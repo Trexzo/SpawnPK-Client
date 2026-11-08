@@ -1,0 +1,30 @@
+name: v309 R369 order.settings source-receipt verification (synthetic only)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v309-r369-order-settings.yml'
+      - 'scripts/verify_v309_r369_order_settings.py'
+      - 'tests/test_v309_r369_order_settings.py'
+      - 'research/v309-source-recovery/r369-order-settings-witness.json'
+      - 'docs/V309_R369_ATOMIC_ORDER_SETTINGS.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-receipt-tests:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Synthetic-only R369 regressions (no private source)
+        run: python -m unittest discover -s tests -p 'test_v309_r369_order_settings.py' -v
