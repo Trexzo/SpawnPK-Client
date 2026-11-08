@@ -1,0 +1,14 @@
+{
+  "candidate_jar_sha256": "e6a174121b178230d444b530edbcf978e1da9649448596e9a2e87f285e8a674b",
+  "new_owner_sha256": {
+    "rs/gui/loadouts/LoadoutsPanel.java": "eb3449785f14315c62276d29f72a430d2149c6c44976743f7f4d2c9cde45fea8",
+    "rs/gui/loadouts/io/LoadoutStore.java": "f57e6c28718da4f195dc5cd9ac959122dda279b7644835a4a690d21af604426c"
+  },
+  "new_source_archive_sha256": "b1ff1d06068c6b09ab921a25784dfd6b4fafcb855775a7ed4a1cc6dcc89c9945",
+  "prior_owner_sha256": {
+    "rs/gui/loadouts/LoadoutsPanel.java": "d89c729c729f755a20a940d828ca27b4e50e7567a577e739a322ede8cfb90bb6",
+    "rs/gui/loadouts/io/LoadoutStore.java": "7882516ed30f717e78429913badae6a65e8fb6bd31d1b579fb7cb6baae905c21"
+  },
+  "prior_source_archive_sha256": "afd2f68dd309934725623b7a4fa05ceb0bf971b3f317dc3904bdb0442ba8cf67",
+  "source_count": 1277
+}
