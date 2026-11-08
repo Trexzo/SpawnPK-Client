@@ -1,0 +1,29 @@
+name: v309 R363 loadout panel readability (synthetic only)
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/prepare_v309_r363_readable_loadout_panel.py'
+      - 'research/v309-source-recovery/r363-loadout-panel-readability-witness.json'
+      - 'tests/test_v309_r363_readable_loadout_panel.py'
+      - '.github/workflows/v309-r363-loadout-panel-readability.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-readability:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: R363 synthetic token, inverse, admission and mutation tests
+        run: python -m unittest discover -v -s tests -p test_v309_r363_readable_loadout_panel.py
