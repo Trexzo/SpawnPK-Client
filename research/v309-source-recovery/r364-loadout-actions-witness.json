@@ -1,0 +1,42 @@
+{
+  "source_archive_sha256": "035837ec988fff706bbfb241e593277e8a5c39c448821982667a33b26f990450",
+  "source_count": 1277,
+  "types": {
+    "rs/gui/loadouts/SaveLoadoutAction.java": "DeleteLoadoutConfirmAction",
+    "rs/gui/loadouts/MoveFolderDownAction.java": "MoveLoadoutDownAction",
+    "rs/gui/loadouts/MoveFolderUpAction.java": "MoveLoadoutUpAction"
+  },
+  "methods": {
+    "saveLoadout": "deleteLoadoutByName",
+    "moveFolder": "swapLoadoutsInFolder"
+  },
+  "owner_sha256": {
+    "rs/gui/loadouts/SaveLoadoutAction.java": "487901b7a920877b10337d72b1d5121aac5d1c6e30d536ed8d3afac9d269bda3",
+    "rs/gui/loadouts/MoveFolderDownAction.java": "d93eb953af09098eccc9f4159f23361920c47db035c6e20d82e418042fc3e324",
+    "rs/gui/loadouts/MoveFolderUpAction.java": "fdf5d023e21aa619cf1fb9671298cee31af4dc3d9773e450665162ced59244e0",
+    "rs/gui/loadouts/LoadoutFolders.java": "712fa77300fa0b9b2b0f5f0aa2da5afbebc37a5c6eda28f47575844e6395afbc"
+  },
+  "token_references": {
+    "SaveLoadoutAction": {
+      "rs/gui/loadouts/LoadoutsPanel.java": 1,
+      "rs/gui/loadouts/SaveLoadoutAction.java": 2
+    },
+    "MoveFolderDownAction": {
+      "rs/gui/loadouts/LoadoutsPanel.java": 1,
+      "rs/gui/loadouts/MoveFolderDownAction.java": 2
+    },
+    "MoveFolderUpAction": {
+      "rs/gui/loadouts/LoadoutsPanel.java": 1,
+      "rs/gui/loadouts/MoveFolderUpAction.java": 2
+    },
+    "saveLoadout": {
+      "rs/gui/loadouts/LoadoutFolders.java": 1,
+      "rs/gui/loadouts/SaveLoadoutAction.java": 1
+    },
+    "moveFolder": {
+      "rs/gui/loadouts/LoadoutFolders.java": 1,
+      "rs/gui/loadouts/MoveFolderDownAction.java": 1,
+      "rs/gui/loadouts/MoveFolderUpAction.java": 1
+    }
+  }
+}
