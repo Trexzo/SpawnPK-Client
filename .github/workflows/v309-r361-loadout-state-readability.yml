@@ -1,0 +1,25 @@
+name: v309 R361 source-readability pass 9 (synthetic only)
+on:
+  pull_request:
+    paths:
+      - 'scripts/prepare_v309_r361_readable_loadout_state.py'
+      - 'tests/test_v309_r361_readable_loadout_state.py'
+      - 'research/v309-source-recovery/r361-loadout-state-readability-witness.json'
+      - '.github/workflows/v309-r361-loadout-state-readability.yml'
+  workflow_dispatch:
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: R361 reversible synthetic source checks (no real game)
+        run: python -m unittest discover -s tests -p test_v309_r361_readable_loadout_state.py -v
