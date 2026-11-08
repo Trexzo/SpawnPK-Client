@@ -1,0 +1,58 @@
+{
+  "fields": {
+    "field3305": "folderMenuButton",
+    "field3306": "activeStatEditorDialog"
+  },
+  "methods": {
+    "method1012": "buildControlRows",
+    "method1483": "getFolderMenuButton",
+    "method1976": "requestLoadoutRepaint",
+    "method2809": "resetLoadoutSelector",
+    "method3472": "rebuildLoadoutSelector",
+    "method3578": "disposeStatEditorDialog",
+    "method812": "rebuildFolderPopupMenu"
+  },
+  "owner_sha256": {
+    "rs/gui/loadouts/LoadoutsPanel.java": "fa58325efa1b1310c42bcf71106393ff9e89c1a6c5121602cecb7bffd17702c9"
+  },
+  "source_archive_sha256": "f7b3d76a747b99accf33e8088eccfb5d32c7018ab25473d7430fe3f7190f6183",
+  "source_count": 1277,
+  "token_references": {
+    "field3305": {
+      "rs/gui/loadouts/LoadoutsPanel.java": 7
+    },
+    "field3306": {
+      "rs/gui/loadouts/LoadoutsPanel.java": 6
+    },
+    "method1012": {
+      "rs/gui/loadouts/LoadoutsPanel.java": 2
+    },
+    "method1483": {
+      "rs/gui/loadouts/LoadoutFolders.java": 1,
+      "rs/gui/loadouts/LoadoutsPanel.java": 1
+    },
+    "method1976": {
+      "rs/gui/loadouts/LoadoutFolders.java": 2,
+      "rs/gui/loadouts/LoadoutsPanel.java": 1,
+      "rs/gui/loadouts/dialogs/CloneEquippedLoadoutAction.java": 1,
+      "rs/gui/loadouts/dialogs/LoadoutFolderPopupListener.java": 1
+    },
+    "method2809": {
+      "rs/gui/loadouts/LoadoutFolders.java": 4,
+      "rs/gui/loadouts/LoadoutsPanel.java": 1,
+      "rs/gui/loadouts/dialogs/SelectPopupFolderAction.java": 1
+    },
+    "method3472": {
+      "rs/gui/loadouts/LoadoutFolders.java": 2,
+      "rs/gui/loadouts/LoadoutsPanel.java": 3
+    },
+    "method3578": {
+      "rs/gui/loadouts/LoadoutsPanel.java": 1,
+      "rs/gui/loadouts/StatClickHandler.java": 1
+    },
+    "method812": {
+      "rs/gui/loadouts/LoadoutFolders.java": 5,
+      "rs/gui/loadouts/LoadoutsPanel.java": 2
+    }
+  }
+}
