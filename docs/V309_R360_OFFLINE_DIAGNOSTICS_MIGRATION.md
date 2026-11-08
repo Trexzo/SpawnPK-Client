@@ -6,6 +6,7 @@ This changeset is stacked on `research/v309-r359-loadout-dialog-readability` in 
 
 | Provenance | Material moved | Limits |
 | --- | --- | --- |
+| Diagnostic R338/R343/R348/R349 | Prior static EOF, exact artifact, bytecode config and endpoint admission checks; synthetic test sources | Legacy original-binary execution evidence intentionally excluded |
 | Diagnostic R350 | Static endpoint/cache findings documented and source-only verification tool | Private owner-PC observations not included |
 | Diagnostic R351 | Denied-DNS/socket tracing logic; synthetic tests | Java SecurityManager is not OS isolation |
 | Diagnostic R352 | Java harness as inspectable source; offline output/supervisor validators | Supervisor deliberately refuses every runtime launch |
@@ -24,3 +25,5 @@ This changeset is stacked on `research/v309-r359-loadout-dialog-readability` in 
 ## Verification and non-regression gate
 
 Tests use synthetic Java classfiles and synthetic host receipts only. `run_r352.execute` remains disabled; CI never downloads or starts any game JAR. GitHub workflow is a tooling regression, **not** original-client acceptance. Draft/unmerged until a human reviews public-release suitability. Production v312, updater, original v309 JAR and local caches remain unchanged.
+
+Older original-client runtime probes (R339–R341, R344–R347) are not copied to a public executable workflow. Their findings remain historical and unverified for real reconnect; importing a probe as code would not make it safe to run without OS isolation.
