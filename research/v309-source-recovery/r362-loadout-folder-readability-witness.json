@@ -1,0 +1,60 @@
+{
+  "source_archive_sha256": "5905feaac54d8d449dbdb92cd3ce941d23e28e5e25c5033ea428d33d47bc3fe7",
+  "source_count": 1277,
+  "fields": {
+    "field3277": "ownerLoadoutsPanel",
+    "field3278": "selectedFolderName",
+    "field3279": "selectedLoadout",
+    "field3315": "allowedFolderNameCharacters"
+  },
+  "methods": {
+    "method1237": "setSelectedFolderAndLoadout",
+    "method1043": "createLoadoutInFolder",
+    "method2787": "saveFolderWithOrder",
+    "method2390": "saveCurrentFolder",
+    "method1632": "syncEquipmentSelection",
+    "method2087": "validateNewFolderName"
+  },
+  "owner_sha256": {
+    "rs/gui/loadouts/LoadoutFolders.java": "19970850281f0a24aef70c2f241669398b413c0754b448b79395f76a22fc371c",
+    "rs/gui/loadouts/equipment/DefaultLoadout.java": "ff167aa0864e3c5a4a30face64b56ce23a849a3cbdf1519f9c117fce24238f03"
+  },
+  "token_references": {
+    "field3277": {
+      "rs/gui/loadouts/LoadoutFolders.java": 41
+    },
+    "field3278": {
+      "rs/gui/loadouts/LoadoutFolders.java": 10
+    },
+    "field3279": {
+      "rs/gui/loadouts/LoadoutFolders.java": 7
+    },
+    "field3315": {
+      "rs/gui/loadouts/LoadoutFolders.java": 1,
+      "rs/gui/loadouts/equipment/DefaultLoadout.java": 1
+    },
+    "method1237": {
+      "rs/gui/loadouts/LoadoutFolders.java": 3,
+      "rs/gui/loadouts/LoadoutsPanel.java": 3
+    },
+    "method1043": {
+      "rs/gui/loadouts/LoadoutFolders.java": 1,
+      "rs/gui/loadouts/dialogs/ConfirmCreateLoadoutAction.java": 1
+    },
+    "method2787": {
+      "rs/gui/loadouts/LoadoutFolders.java": 3,
+      "rs/gui/loadouts/dialogs/ConfirmCreateLoadoutAction.java": 1
+    },
+    "method2390": {
+      "rs/gui/loadouts/LoadoutFolders.java": 1,
+      "rs/gui/loadouts/dialogs/CloneEquippedLoadoutAction.java": 1,
+      "rs/gui/loadouts/dialogs/StatEditorDialog.java": 1
+    },
+    "method1632": {
+      "rs/gui/loadouts/LoadoutFolders.java": 3
+    },
+    "method2087": {
+      "rs/gui/loadouts/LoadoutFolders.java": 3
+    }
+  }
+}
