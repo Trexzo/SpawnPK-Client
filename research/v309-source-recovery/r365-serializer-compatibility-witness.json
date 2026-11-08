@@ -1,0 +1,21 @@
+{
+  "status": "R365_PRIVATE_SOURCE_BACKED_SERIALIZER_COMPATIBILITY_CANDIDATE",
+  "source_count": 1277,
+  "old_source_zip_sha256": "b3f3073f23b49405fa591adff8e7e9ee177397eab1df24b76bb36427e5607bcc",
+  "new_source_zip_sha256": "671a627540009372ea2af45d19c239fce7953c34fe3a613372570715d069ac98",
+  "changed_source_files": [
+    "rs/gui/loadouts/io/LoadoutSerializer.java"
+  ],
+  "old_owner_sha256": "91d89f75a9992fada787cc9615e9d4144497ba06f30cbd0ae0f50e7328da06cc",
+  "new_owner_sha256": "9fb79da5af7812cf373f218b228d9794beb03c3411cb5de37cac1481f9c8f3a0",
+  "candidate_jar_sha256": "f1a31f6dbfbb07d7b21115e45fee243b191560ae02eded2f441031ac6fb9eee1",
+  "private_build_kit_sha256": "ccf93933cb196901e6f93deb41e43834b9e241c8c349cdf356632b4245457d83",
+  "compiled_classes": 1386,
+  "deterministic_rebuilds": 3,
+  "source_backed_java_assertions": 60,
+  "version5_field_order_changed": false,
+  "serializer_behavior_changed": true,
+  "original_v309_binary_parity": "NOT_TESTED",
+  "live_game_runtime": "NOT_TESTED",
+  "private_source_release_approved": false
+}
