@@ -1,0 +1,23 @@
+{
+  "fixture_type": "SYNTHETIC_NOT_OWNER_PC_ATTESTATION",
+  "milestone": "R346",
+  "original_game_jar_sha256": "ff5a58d9dc2bf7b75d7346aa6b711ebd423435e04c3f4e1f0d1de874c6d08f38",
+  "first_trial": {
+    "original_launcher_main_invoked": true,
+    "original_launcher_stage": "MAIN_RETURNED",
+    "original_stdout_redirected": true,
+    "awt_windows_showing": 1,
+    "blocked_other_connections": 3,
+    "parent_exit_code": 0
+  },
+  "second_trial": {
+    "original_launcher_main_invoked": true,
+    "original_launcher_stage": "MAIN_RETURNED",
+    "original_stdout_redirected": true,
+    "awt_windows_showing": 1,
+    "blocked_other_connections": 3,
+    "parent_exit_code": 0
+  },
+  "login": "NOT_TESTED",
+  "same_original_jvm_reconnect": "NOT_TESTED"
+}
