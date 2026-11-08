@@ -1,0 +1,27 @@
+name: v309 R365 serializer compatibility (synthetic only)
+on:
+  pull_request:
+    paths:
+      - 'scripts/verify_v309_r365_serializer_candidate.py'
+      - 'tests/test_v309_r365_serializer_candidate.py'
+      - '.github/workflows/v309-r365-serializer-compatibility.yml'
+      - 'docs/V309_R365_SERIALIZER_COMPATIBILITY.md'
+      - 'research/v309-source-recovery/r365-serializer-compatibility-witness.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source-only-regressions:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Synthetic R365 source delta contract
+        run: python -m unittest discover -s tests -p test_v309_r365_serializer_candidate.py -v
