@@ -1,4 +1,4 @@
-"""R349 original endpoint evidence boundary / no false localhost promotion."""
+"""R349 synthetic endpoint evidence boundary; NOT owner-PC runtime evidence."""
 from __future__ import annotations
 from pathlib import Path
 import copy
@@ -11,13 +11,13 @@ from endpoint_admission import (
 )
 
 HERE=Path(__file__).resolve().parent
-EVIDENCE=HERE.parent/"v309-r346"/"evidence"/"owner_original_gui_two_trials.json"
+EVIDENCE=HERE/"synthetic_r346_gui_trials.json"
 
 class R349AdmissionTests(unittest.TestCase):
     def setUp(self):
         self.original=read_json_no_duplicate_keys(EVIDENCE)
 
-    def test_two_actual_owner_gui_receipts_do_not_authorize_localhost(self):
+    def test_synthetic_gui_receipts_do_not_authorize_localhost(self):
         x=evaluate(self.original)
         self.assertEqual(x["status"],"R349_ORIGINAL_ENDPOINT_ADMISSION_BLOCKED")
         self.assertEqual(x["original_java_gui_window"],"OBSERVED_TWICE")
@@ -42,7 +42,7 @@ class R349AdmissionTests(unittest.TestCase):
                 AdmissionRefused,"MISSING_OWNER"):
                 evaluate(x)
 
-    def test_mutated_owner_gui_assertions_fail(self):
+    def test_mutated_synthetic_gui_assertions_fail(self):
         changes={
             "original_launcher_main_invoked":False,
             "original_launcher_stage":"LOADING_LAUNCHER_CLASS",
