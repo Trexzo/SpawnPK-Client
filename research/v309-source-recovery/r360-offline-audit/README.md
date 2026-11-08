@@ -4,6 +4,7 @@
 
 ## Included (reviewed, source-only)
 
+- R350 source-only `javap` endpoint/cache witness verifier (`verify_static_witness.py`) and synthetic mutation tests; real owner-PC input transcripts or evidence are **not** copied into this public repository.
 - R351 denied-endpoint guard and synthetic Java contracts; R352 GUI harness source retained for inspection only. Java SecurityManager is deprecated and **not** a trustworthy OS egress boundary.
 - R352/R353 supervisor is hard-disabled: `run_r352.execute(...)` always refuses with `R353_ORIGINAL_RUNTIME_DISABLED_PENDING_OS_ISOLATION`; no flag or CI job launches an original game JAR.
 - R353 bounded hostname aliases (128 aliases) and event retention, with synthetic fuzz/regression contracts.
