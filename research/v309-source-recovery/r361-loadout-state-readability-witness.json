@@ -1,0 +1,136 @@
+{
+  "fields": {
+    "field3259": "owningLoadoutsPanel",
+    "field3260": "loadoutTempPath1",
+    "field3261": "loadoutTempPath2",
+    "field3262": "loadoutTempPath3",
+    "field3263": "defaultLoadoutConfigPath",
+    "field3264": "orderSettingsFilename",
+    "field3265": "folderOrderSettingsPath",
+    "field3273": "primaryPetItemId",
+    "field3274": "secondaryPetItemId",
+    "field3275": "prayerBookMode",
+    "field3276": "cosmeticItemId"
+  },
+  "methods": {
+    "method1183": "getSecondaryPetItemId",
+    "method1270": "setSecondaryPetItemId",
+    "method1575": "setPrayerBookMode",
+    "method1824": "setPrimaryPetItemId",
+    "method1997": "resolveLegacyTempPath",
+    "method2629": "getPrimaryPetItemId",
+    "method2767": "writeFolderOrderSettings",
+    "method3561": "resolveFolderDataPath",
+    "method456": "getCosmeticItemId",
+    "method6": "getPrayerBookMode",
+    "method955": "deleteFolderDataFiles",
+    "method966": "setCosmeticItemId"
+  },
+  "owner_sha256": {
+    "rs/gui/loadouts/Loadout.java": "da876d49fda32ff162b7d1efe0ac7dda471917bbc27e223fa49474e74ea0dad8",
+    "rs/gui/loadouts/io/LoadoutStore.java": "6ebfbaa5af23a8143d1b9da68b9628d583e6ffa52cee1d2feaa82a82f4222812"
+  },
+  "source_archive_sha256": "31d4612bce93fc1ce30964a893d8df96d5feca7464569071daa4b2995024d5c4",
+  "source_count": 1277,
+  "token_references": {
+    "field3259": {
+      "rs/gui/loadouts/io/LoadoutStore.java": 3
+    },
+    "field3260": {
+      "rs/gui/loadouts/LoadoutsPanel.java": 1,
+      "rs/gui/loadouts/io/LoadoutStore.java": 3
+    },
+    "field3261": {
+      "rs/gui/loadouts/LoadoutsPanel.java": 1,
+      "rs/gui/loadouts/io/LoadoutStore.java": 2
+    },
+    "field3262": {
+      "rs/gui/loadouts/LoadoutsPanel.java": 1,
+      "rs/gui/loadouts/io/LoadoutStore.java": 2
+    },
+    "field3263": {
+      "rs/gui/loadouts/LoadoutsPanel.java": 3,
+      "rs/gui/loadouts/io/LoadoutStore.java": 2
+    },
+    "field3264": {
+      "rs/gui/loadouts/io/LoadoutStore.java": 1
+    },
+    "field3265": {
+      "rs/gui/loadouts/io/LoadoutStore.java": 4
+    },
+    "field3273": {
+      "rs/gui/loadouts/Loadout.java": 4
+    },
+    "field3274": {
+      "rs/gui/loadouts/Loadout.java": 4
+    },
+    "field3275": {
+      "rs/gui/loadouts/Loadout.java": 3
+    },
+    "field3276": {
+      "rs/gui/loadouts/Loadout.java": 4
+    },
+    "method1183": {
+      "rs/gui/loadouts/Loadout.java": 1,
+      "rs/gui/loadouts/dialogs/SpawnLoadoutAction.java": 1,
+      "rs/gui/loadouts/equipment/EquipmentPanel.java": 2,
+      "rs/gui/loadouts/io/LoadoutSerializer.java": 1
+    },
+    "method1270": {
+      "rs/gui/loadouts/Loadout.java": 1,
+      "rs/gui/loadouts/dialogs/CloneEquippedLoadoutAction.java": 1,
+      "rs/gui/loadouts/io/LoadoutSerializer.java": 1
+    },
+    "method1575": {
+      "rs/gui/loadouts/Loadout.java": 1,
+      "rs/gui/loadouts/dialogs/CloneEquippedLoadoutAction.java": 2,
+      "rs/gui/loadouts/equipment/DefaultLoadout.java": 1,
+      "rs/gui/loadouts/io/LoadoutSerializer.java": 1,
+      "rs/gui/loadouts/io/LoadoutStore.java": 1
+    },
+    "method1824": {
+      "rs/gui/loadouts/Loadout.java": 1,
+      "rs/gui/loadouts/dialogs/CloneEquippedLoadoutAction.java": 1,
+      "rs/gui/loadouts/io/LoadoutSerializer.java": 1,
+      "rs/gui/loadouts/io/LoadoutStore.java": 1
+    },
+    "method1997": {
+      "rs/gui/loadouts/io/LoadoutStore.java": 5
+    },
+    "method2629": {
+      "rs/gui/loadouts/Loadout.java": 1,
+      "rs/gui/loadouts/dialogs/SpawnLoadoutAction.java": 1,
+      "rs/gui/loadouts/equipment/EquipmentPanel.java": 2,
+      "rs/gui/loadouts/io/LoadoutSerializer.java": 1
+    },
+    "method2767": {
+      "rs/gui/loadouts/LoadoutFolders.java": 6,
+      "rs/gui/loadouts/LoadoutsPanel.java": 2,
+      "rs/gui/loadouts/io/LoadoutStore.java": 1
+    },
+    "method3561": {
+      "rs/gui/loadouts/io/LoadoutStore.java": 5
+    },
+    "method456": {
+      "rs/gui/loadouts/Loadout.java": 1,
+      "rs/gui/loadouts/dialogs/SpawnLoadoutAction.java": 1,
+      "rs/gui/loadouts/equipment/EquipmentPanel.java": 2,
+      "rs/gui/loadouts/io/LoadoutSerializer.java": 1
+    },
+    "method6": {
+      "rs/gui/loadouts/Loadout.java": 1,
+      "rs/gui/loadouts/dialogs/SpawnLoadoutAction.java": 1,
+      "rs/gui/loadouts/equipment/EquipmentPanel.java": 2,
+      "rs/gui/loadouts/io/LoadoutSerializer.java": 1
+    },
+    "method955": {
+      "rs/gui/loadouts/LoadoutFolders.java": 2,
+      "rs/gui/loadouts/io/LoadoutStore.java": 1
+    },
+    "method966": {
+      "rs/gui/loadouts/Loadout.java": 1,
+      "rs/gui/loadouts/dialogs/CloneEquippedLoadoutAction.java": 1,
+      "rs/gui/loadouts/io/LoadoutSerializer.java": 1
+    }
+  }
+}
