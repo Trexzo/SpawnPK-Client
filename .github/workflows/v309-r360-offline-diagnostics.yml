@@ -1,0 +1,48 @@
+name: V309 R360 offline diagnostics (synthetic only)
+
+on:
+  pull_request:
+    paths:
+      - 'research/v309-source-recovery/r360-offline-audit/**'
+      - 'docs/V309_R360_OFFLINE_DIAGNOSTICS_MIGRATION.md'
+      - '.github/workflows/v309-r360-offline-diagnostics.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Python synthetic fixtures and verifiers
+        shell: bash
+        working-directory: research/v309-source-recovery/r360-offline-audit
+        run: python -m unittest discover -s . -p 'test_*.py' -v
+      - name: Compile synthetic Java contracts
+        shell: bash
+        working-directory: research/v309-source-recovery/r360-offline-audit
+        run: |
+          mkdir -p build
+          javac --release 17 -d build R351DeniedEndpointAudit.java R351TraceContractTest.java R352OriginalLaunchTrace.java R352GuardInstalledContract.java R353BoundedAliasesContract.java
+      - name: Verify guard source-only behavior
+        shell: bash
+        working-directory: research/v309-source-recovery/r360-offline-audit
+        run: |
+          java -cp build R351TraceContractTest
+          java '-Djava.security.manager=allow' -cp build R352GuardInstalledContract
+          java -cp build R353BoundedAliasesContract
+          python verify_r354.py synthetic_host_disabled.json

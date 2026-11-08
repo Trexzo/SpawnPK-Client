@@ -1,0 +1,18 @@
+{
+  "features": {
+    "Containers-DisposableClientVM": 2,
+    "HypervisorPlatform": 2,
+    "Microsoft-Hyper-V-All": 2,
+    "Microsoft-Windows-Subsystem-Linux": 2,
+    "VirtualMachinePlatform": 2
+  },
+  "hypervisor_present": true,
+  "operating_system": "Microsoft Windows 11 Pro",
+  "original_client_started": false,
+  "os_egress_attested": false,
+  "os_version": "10.0.26100",
+  "runtime_admitted": false,
+  "sandbox_executable_present": false,
+  "schema": "R354_READ_ONLY_WINDOWS_FEATURE_INVENTORY_V1",
+  "source": "Win32_OptionalFeature+Win32_OperatingSystem+Win32_ComputerSystem"
+}
