@@ -1,0 +1,26 @@
+name: v309 R366 loadout store preservation (synthetic only)
+on:
+  pull_request:
+    paths:
+      - 'scripts/verify_v309_r366_store_candidate.py'
+      - 'tests/test_v309_r366_store_candidate.py'
+      - 'research/v309-source-recovery/r366-loadout-store-preservation-witness.json'
+      - '.github/workflows/v309-r366-loadout-store-preservation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  r366-synthetic:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Synthetic-only archive provenance tests (NO private game source)
+        run: python -m unittest discover -s tests -p test_v309_r366_store_candidate.py -v
