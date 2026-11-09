@@ -1,0 +1,20 @@
+{
+  "candidate_jar_sha256": "7154b4dd2a6609feb29fc01596a788ed413bc6f5b935d9ceefd4b3af92a2480a",
+  "candidate_owner_sha256": "25a433b71997277df711f63cdd616b5ac6fb7b437568e2b762cc8a71e6c3e79f",
+  "candidate_zip_sha256": "c87c7e2158437f03c3f52e1d88f2c91a6e9949bedc9e74917b50d30186b67e67",
+  "changed_paths": [
+    "rs/gui/loadouts/io/LoadoutStore.java"
+  ],
+  "expected_classes": 1388,
+  "inherited_assertions": 233,
+  "multi_file_transaction_proven": false,
+  "order_assertions": 45,
+  "original_game_runtime_tested": false,
+  "power_loss_durability_tested": false,
+  "previous_owner_sha256": "ba6cfb3edbc03c34e3110723962dc73ef73f1979236ad86675bd4f0e76add975",
+  "previous_zip_sha256": "582bd22720fa6655b8082d83ec69f01f9073f1e79eb0ddf225eccab00d441e4b",
+  "private_source_release_approved": false,
+  "r372_stale_order_regression_reproduced": true,
+  "source_count": 1277,
+  "uncooperative_writer_safety_proven": false
+}
