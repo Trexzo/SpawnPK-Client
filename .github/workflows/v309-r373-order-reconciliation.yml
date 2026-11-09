@@ -1,0 +1,28 @@
+name: v309 R373 rename order reconciliation (synthetic only)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v309-r373-order-reconciliation.yml'
+      - 'scripts/verify_v309_r373_order_reconciliation.py'
+      - 'tests/test_v309_r373_order_reconciliation.py'
+      - 'research/v309-source-recovery/r373-order-reconciliation-witness.json'
+      - 'docs/V309_R373_RENAME_ORDER_RECONCILIATION.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-receipt-tests:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Synthetic-only R373 source provenance tests
+        run: python -m unittest discover -s tests -p 'test_v309_r373_order_reconciliation.py' -v
