@@ -1,0 +1,27 @@
+name: v309 R372 interrupted rename source witness (synthetic only)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v309-r372-rename-receipt.yml'
+      - 'scripts/verify_v309_r372_rename_receipt.py'
+      - 'tests/test_v309_r372_rename_receipt.py'
+      - 'research/v309-source-recovery/r372-rename-receipt-witness.json'
+      - 'docs/V309_R372_INTERRUPTED_RENAME_RECEIPT.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-synthetic-receipt:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11','3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m unittest discover -s tests -p 'test_v309_r372_rename_receipt.py' -v
