@@ -1,0 +1,28 @@
+name: v309 R371 rename copy-first source witness (synthetic only)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v309-r371-rename-copy-first.yml'
+      - 'docs/V309_R371_RENAME_COPY_FIRST.md'
+      - 'research/v309-source-recovery/r371-rename-preservation-witness.json'
+      - 'scripts/verify_v309_r371_rename_candidate.py'
+      - 'tests/test_v309_r371_rename_candidate.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-archive-checks:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: R371 synthetic-only source receipt regression checks
+        run: python -m unittest discover -s tests -p 'test_v309_r371_rename_candidate.py' -v
