@@ -1,0 +1,22 @@
+{
+  "source_count": 1277,
+  "previous_zip_sha256": "df72e08423b4eb4ac030e92e3cad4743c9c98465131220624ffda4553ab05eb0",
+  "candidate_zip_sha256": "8b5e5c14b088ead3e92546148c4550ad2db51f5fb8cb81dac498076d561766d2",
+  "candidate_jar_sha256": "0c3f51374aea0d938325856ebbc6d088260e0304d795f502ed9a2a1818e3e170",
+  "changed_paths": [
+    "rs/gui/loadouts/LoadoutFolders.java",
+    "rs/gui/loadouts/io/LoadoutStore.java"
+  ],
+  "previous_owner_sha256": {
+    "rs/gui/loadouts/LoadoutFolders.java": "44ccef3286551dfa7f15e2b9e5f75490fdd635008f70ec6d1ca0e1256040f6b5",
+    "rs/gui/loadouts/io/LoadoutStore.java": "5dcca643ee6cda25a6eab085edc5ee2b46268e68a644f6181b01a8f60cec58eb"
+  },
+  "candidate_owner_sha256": {
+    "rs/gui/loadouts/LoadoutFolders.java": "a344fbb81d8f9c87bef7f08be898b8f5e023ecae8ce85102ed231978fdc07386",
+    "rs/gui/loadouts/io/LoadoutStore.java": "564f59afcfd24923b2c7c04f540e4e0695d0c5a8f810ae2fc96c58404ed911be"
+  },
+  "multi_file_transaction_proven": false,
+  "power_loss_durability_tested": false,
+  "original_game_runtime_tested": false,
+  "private_source_release_approved": false
+}
