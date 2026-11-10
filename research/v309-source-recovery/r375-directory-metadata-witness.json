@@ -1,0 +1,24 @@
+{
+  "candidate_jar_sha256": "f8aae54c7b5d262fa994783c161b19fd3387b30130432f78a005ac697d54c5ca",
+  "candidate_owner_sha256": "2f18615b71abb2e56122681a1f8c6ad404b182e3379a0c93e5fc00491c344b7e",
+  "candidate_zip_sha256": "cee56d16285f3c2592c6c9e354a4b90ba20f031570adbfcb522f070c8701450f",
+  "changed_paths": [
+    "rs/gui/loadouts/io/LoadoutStore.java"
+  ],
+  "directory_fsync_durability_proven": false,
+  "directory_sync_attempt_added": true,
+  "directory_sync_linux_probe_passed": true,
+  "generated_classfiles": 1388,
+  "inherited_source_backed_assertions": 310,
+  "multi_file_transaction_proven": false,
+  "new_source_backed_assertions": 24,
+  "original_game_runtime_tested": false,
+  "power_loss_durability_tested": false,
+  "previous_owner_sha256": "9026312b14df6b8c1ecee0f2f03ca9214a5485374323ca08d9ebb526c404b3f2",
+  "previous_zip_sha256": "a8c7b3a044ce1ac106069bd935412edbaabff4546e3618df5810e54ccf924795",
+  "private_source_release_approved": false,
+  "receipt_creation_atomic_staging_verified": true,
+  "source_count": 1277,
+  "staged_file_force_added": true,
+  "uncooperative_writer_safety_proven": false
+}
