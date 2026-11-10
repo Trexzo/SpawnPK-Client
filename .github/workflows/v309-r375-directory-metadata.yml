@@ -1,0 +1,30 @@
+name: v309 R375 advisory directory metadata sync (synthetic only)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v309-r375-directory-metadata.yml'
+      - 'scripts/verify_v309_r375_directory_metadata.py'
+      - 'tests/test_v309_r375_directory_metadata.py'
+      - 'research/v309-source-recovery/r375-directory-metadata-witness.json'
+      - 'docs/V309_R375_DIRECTORY_METADATA_SYNC.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-receipt-checks:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Verify synthetic R375 source-archive contracts only
+        run: python -m unittest discover -s tests -p 'test_v309_r375_directory_metadata.py' -v
