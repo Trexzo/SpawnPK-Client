@@ -1,0 +1,37 @@
+name: v309 R378 passive lock metadata (public synthetic only)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v309-r378-passive-lock-evidence.yml'
+      - 'scripts/verify_v309_r378_passive_lock_evidence.py'
+      - 'tests/test_v309_r378_passive_lock_evidence.py'
+      - 'research/v309-source-recovery/r378-passive-lock-evidence-witness.json'
+      - 'docs/V309_R378_PASSIVE_LOCK_PATH_EVIDENCE.md'
+      - 'tools/r378/PassiveLockMetadataProbe.java'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-verification:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Synthetic source SHA witness tests (no private source)
+        run: python -m unittest discover -s tests -p 'test_v309_r378_passive_lock_evidence.py' -v
+      - name: Compile generic passive lock metadata probe
+        run: javac --release 11 tools/r378/PassiveLockMetadataProbe.java
+      - name: Run scratch-only lock probe
+        run: java -cp tools/r378 PassiveLockMetadataProbe
