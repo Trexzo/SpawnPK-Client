@@ -1,0 +1,37 @@
+name: v309 R377 staged retention diagnostics (synthetic public only)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v309-r377-staging-retention.yml'
+      - 'scripts/verify_v309_r377_staging_retention.py'
+      - 'tests/test_v309_r377_staging_retention.py'
+      - 'research/v309-source-recovery/r377-staging-retention-witness.json'
+      - 'docs/V309_R377_STAGING_RETENTION.md'
+      - 'tools/r377/StagingAgeMetadataProbe.java'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-synthetic-and-provider-probe:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK 21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: SHA-verifier synthetic-only regression tests
+        run: python -m unittest discover -s tests -p 'test_v309_r377_staging_retention.py' -v
+      - name: Compile public generic metadata probe
+        run: javac --release 11 tools/r377/StagingAgeMetadataProbe.java
+      - name: Run scratch-directory metadata probe
+        run: java -cp tools/r377 StagingAgeMetadataProbe
