@@ -1,0 +1,37 @@
+name: v309 R380 folder-stage lock evidence (public synthetic only)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v309-r380-folder-stage-lock.yml'
+      - 'scripts/verify_v309_r380_folder_lock.py'
+      - 'tests/test_v309_r380_folder_lock.py'
+      - 'research/v309-source-recovery/r380-folder-lock-witness.json'
+      - 'docs/V309_R380_FOLDER_STAGE_LOCK_OBSERVATION.md'
+      - 'tools/r380/CooperativeFolderLockProbe.java'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-verification:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Synthetic SHA witness tests (no private source)
+        run: python -m unittest discover -s tests -p 'test_v309_r380_folder_lock.py' -v
+      - name: Compile generic folder lock probe
+        run: javac --release 11 tools/r380/CooperativeFolderLockProbe.java
+      - name: Run scratch-only folder lock probe
+        run: java -cp tools/r380 CooperativeFolderLockProbe
