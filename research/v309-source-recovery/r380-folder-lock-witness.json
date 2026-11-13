@@ -1,0 +1,26 @@
+{
+  "active_writer_owner_identified": false,
+  "automatic_stage_cleanup_enabled": false,
+  "candidate_jar_sha256": "48539b2291994584bd7c589588487b35371f9f6ece21b43763c126d73d6fec0f",
+  "candidate_owner_sha256": "c53a998cd7542e0fe527a856f79aa425d5a21c885beeec62fedd0ab0665fcf48",
+  "candidate_zip_sha256": "2ff9eb506ac001cb0c63f0dc1cbaf45fd322af33bb4191146afcdc88c1b8b3a6",
+  "changed_paths": [
+    "rs/gui/loadouts/io/LoadoutStore.java"
+  ],
+  "cooperative_order_lock_probe_verified": true,
+  "folder_lock_probe_is_stage_ownership_proof": false,
+  "folder_stage_digest_correlation_verified": true,
+  "generated_classfiles": 1388,
+  "inherited_source_backed_assertions": 442,
+  "legacy_folder_staging_lock_ownership_inferred": false,
+  "multi_file_transaction_proven": false,
+  "new_source_backed_assertions": 24,
+  "original_game_runtime_tested": false,
+  "power_loss_durability_tested": false,
+  "previous_owner_sha256": "e76e848b7107aa56dc95d995b51faaa6c0b0bd258e98766af6e6f857626beb20",
+  "previous_zip_sha256": "e23d2483b0acd27939e6b467ae6bf4e8b9f25652f57d3523fe93c32f8bb523ca",
+  "private_source_release_approved": false,
+  "source_count": 1277,
+  "stage_cleanup_safe_proven": false,
+  "windows_genuine_source_runtime_tested": false
+}
