@@ -1,0 +1,39 @@
+name: v309 R382 Windows-source acceptance witness (synthetic/public only)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v309-r382-windows-contract-portability.yml'
+      - 'docs/V309_R382_WINDOWS_SOURCE_BACKED_ACCEPTANCE.md'
+      - 'research/v309-source-recovery/r382-windows-source-backed-witness.json'
+      - 'scripts/verify_v309_r382_windows_acceptance.py'
+      - 'tests/test_v309_r382_windows_acceptance.py'
+      - 'tools/r382/WindowsContractPortabilityProbe.java'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-and-generic-provider:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK 21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11','3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Validate public witness (no private code)
+        run: python scripts/verify_v309_r382_windows_acceptance.py --witness research/v309-source-recovery/r382-windows-source-backed-witness.json
+      - name: Synthetic-only tests (no private code)
+        run: python -m unittest discover -s tests -p test_v309_r382_windows_acceptance.py -v
+      - name: Compile public scratch-only JDK probe
+        run: javac tools/r382/WindowsContractPortabilityProbe.java
+      - name: Run public scratch-only JDK probe
+        run: java -cp tools/r382 WindowsContractPortabilityProbe
