@@ -217,6 +217,22 @@ class R400AuditTests(unittest.TestCase):
                     "r400Before == r400PanelHandoffVersion")
         self.rejects("HANDOFF_VERSION_NOT_REVALIDATED")
 
+    def test_panel_snapshot_must_not_hold_history_gate(self):
+        self.mutate(
+            "Collection<LootTrackerRecord> stored = panel.getRecordsOffEdt();",
+            "synchronized (r395HistoryGate) {\n"
+            "        Collection<LootTrackerRecord> stored = panel.getRecordsOffEdt();\n"
+            "      }")
+        self.rejects("PANEL_GETTER_NESTED_UNDER_HISTORY_GATE")
+
+    def test_edt_render_must_not_hold_history_gate(self):
+        self.mutate(
+            "panel.add(name, subtitle, type, entries);",
+            "synchronized (r395HistoryGate) {\n"
+            "          panel.add(name, subtitle, type, entries);\n"
+            "        }")
+        self.rejects("EDT_PANEL_RENDER_NESTED_UNDER_HISTORY_GATE")
+
     def test_snapshot_collects_pending(self):
         self.mutate("r400ConsistentPending = new ArrayList<>(pendingRecords)",
                     "r400ConsistentPending = new ArrayList<>()")
