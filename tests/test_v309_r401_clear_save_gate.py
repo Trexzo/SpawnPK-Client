@@ -325,9 +325,7 @@ class R401ClearSaveGateTests(unittest.TestCase):
         self.mutate_plugin(
             "    panel.clearRecords();",
             "    panel.clearRecords();\n    panel.clearRecords();")
-        self.rejects() if False else self.assertTrue(self.run_gate()["file_delete_acknowledged"])
-        # Exact duplicate call is not in the current source contract:
-        # this test documents a known source-verifier limit.
+        self.rejects("PANEL_CLEAR_COUNT_NOT_EXACTLY_ONE")
 
     def test_legacy_void_store_clear_delegates(self):
         self.mutate_store("void clear() {clearWithReceipt();}",
