@@ -1,0 +1,27 @@
+name: v309 R387 original resource preservation (public synthetic only)
+on:
+  pull_request:
+    paths:
+      - 'tools/r387/verify_original_resources.py'
+      - 'tests/test_v309_r387_resource_parity.py'
+      - 'docs/V309_R387_ORIGINAL_RESOURCE_AUDIT.md'
+      - '.github/workflows/v309-r387-resource-preservation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  resource-synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Synthetic archive preservation and negative cases (no original JAR)
+        run: python -m unittest discover -s tests -p 'test_v309_r387_resource_parity.py' -v
