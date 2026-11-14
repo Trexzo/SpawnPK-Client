@@ -1,0 +1,33 @@
+name: v309 R383 Windows full-source acceptance preflight (PUBLIC synthetic only)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v309-r383-windows-full-build-preflight.yml'
+      - 'tools/r383/**'
+      - 'tests/test_v309_r383_full_windows_contract.py'
+      - 'docs/V309_R383_WINDOWS_FULL_SOURCE_BUILD_PREPARATION.md'
+      - 'research/v309-source-recovery/r383-windows-build-preflight-witness.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-synthetic-preflight:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Synthetic private-bundle validation (NO private code)
+        run: python -m unittest discover -s tests -p test_v309_r383_full_windows_contract.py -v
+      - name: Synthetic javac @argfile with spaces (NO private code)
+        run: python tools/r383/synthetic_full_compile_probe.py
