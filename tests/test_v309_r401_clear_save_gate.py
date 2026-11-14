@@ -136,7 +136,7 @@ class SyntheticStore {
     try {
       Files.deleteIfExists(file.toPath());
       return true;
-    } catch (IOException e) {
+    } catch (IOException | SecurityException e) {
       log.warn("synthetic deletion failed", e);
       return false;
     }
@@ -337,7 +337,13 @@ class R401ClearSaveGateTests(unittest.TestCase):
         self.rejects("CLEAR_SAVE_CRITICAL_ORDER_DRIFT")
 
     def test_store_delete_failure_is_refused(self):
-        self.mutate_store("catch (IOException e)","catch (RuntimeException e)")
+        self.mutate_store("catch (IOException | SecurityException e)",
+                          "catch (RuntimeException e)")
+        self.rejects("CLEAR_SAVE_CRITICAL_ORDER_DRIFT")
+
+    def test_permission_security_exception_must_fail_closed(self):
+        self.mutate_store("catch (IOException | SecurityException e)",
+                          "catch (IOException e)")
         self.rejects("CLEAR_SAVE_CRITICAL_ORDER_DRIFT")
 
     def test_store_must_delete_target_file(self):
