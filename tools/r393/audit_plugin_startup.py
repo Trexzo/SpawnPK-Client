@@ -115,8 +115,12 @@ def method_bodies(masked: str, definition: re.Pattern) -> list[str]:
 
 def constructor_pattern(name: str) -> re.Pattern:
     if name not in CONSTRUCTOR_RE_CACHE:
+        # Java permits constructors directly after an opening class brace on
+        # the same line; don't assume a declaration begins at column zero.
+        # Require a declaration boundary, not a 'new ClassName(...)' call.
         CONSTRUCTOR_RE_CACHE[name] = re.compile(
-            r"(?m)^[ \t]*(?:(?:public|private|protected)\s+)?"
+            r"(?m)(?:^[ \t]*|(?<=[;{}])[ \t]*)"
+            r"(?:(?:public|private|protected)\s+)?"
             + re.escape(name) + r"\s*\([^;{}]*\)\s*(?:throws\s+[\w\s,.]+)?\s*\{"
         )
     return CONSTRUCTOR_RE_CACHE[name]
