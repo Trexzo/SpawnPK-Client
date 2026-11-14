@@ -30,8 +30,11 @@ def check_private_structure(source:bytes)->dict:
     except UnicodeDecodeError as exc:
         raise Refused("NON_UTF8_PRIVATE_SOURCE") from exc
 
-    fields=("r399SessionEpoch","r399AcceptingDrops","r399RecordMutationSequence")
-    if any(not re.search(r"\b"+name+r"\s*;",text) for name in fields):
+    fields=(("long","r399SessionEpoch"),
+            ("boolean","r399AcceptingDrops"),
+            ("long","r399RecordMutationSequence"))
+    if any(not re.search(r"\b"+type_name+r"\s+"+name+r"\s*;",text)
+           for type_name,name in fields):
         raise Refused("SESSION_OR_MUTATION_FIELD_MISSING")
     start=r394.method_body(text,"startUp")
     stop=r394.method_body(text,"shutDown")
@@ -78,6 +81,11 @@ def check_private_structure(source:bytes)->dict:
         raise Refused("PENDING_ACK_NOT_SYNCHRONIZED")
     if "it.next() == record" not in after_render:
         raise Refused("PENDING_ACK_MUST_USE_IDENTITY")
+    # A queued callback is forbidden to request any save before its
+    # identity-only handoff. A second request is also suspicious.
+    if (drop.count("requestSave(")!=1 or
+            drop.find("requestSave(")<drop.find("if (it.next() == record)")):
+        raise Refused("LATE_OR_DUPLICATE_CALLBACK_SAVE_REQUEST")
 
     if not r395.ordered(merge,
         "r399MergedPreload = new ArrayList<>(r396PreloadRecords)",
