@@ -24,6 +24,8 @@ public final class R403AutosaveWorkerSynthetic {
         final List<String> panel=new ArrayList<>();
         final List<String> disk=new ArrayList<>();
         final ThreadLocal<Long> workerToken=new ThreadLocal<>();
+        final CountDownLatch firstCompletedWrite=new CountDownLatch(1);
+        final CountDownLatch rejectedStaleWorker=new CountDownLatch(1);
         ExecutorService worker;
         long epoch,mutation;
         boolean active,queued,dirty,pending,committed,failWrite,historyLoaded=true;
@@ -63,7 +65,9 @@ public final class R403AutosaveWorkerSynthetic {
                 final Long token=workerToken.get();
                 synchronized(historyGate) {
                     if(token!=null && (!active || !token.equals(epoch))){
-                        rejections++;return false;
+                        rejections++;
+                        rejectedStaleWorker.countDown();
+                        return false;
                     }
                 }
                 if(failWrite)return false;
@@ -79,6 +83,7 @@ public final class R403AutosaveWorkerSynthetic {
                 committed=(mutation==issued); // placeholder overwritten below
                 committed=true;
                 lastSave=System.currentTimeMillis();
+                firstCompletedWrite.countDown();
                 activeWriters--;
                 return true;
             }
@@ -150,8 +155,7 @@ public final class R403AutosaveWorkerSynthetic {
     }
     static void basicAutosaveRunsOnDaemon() {
         M m=new M();m.start();m.add("a");
-        CountDownLatch done=new CountDownLatch(1);
-        m.insideWriter=done::countDown;m.request();await(done,"background write");
+        m.request();await(m.firstCompletedWrite,"background write");
         ids(m.disk,"a");yes(m.lastWriterThread.startsWith("R403-Synthetic-Daemon"),"not on worker");
         m.stop();passed++;
     }
@@ -190,14 +194,13 @@ public final class R403AutosaveWorkerSynthetic {
         m.request();await(snapshotTaken,"snapshot");
         m.stop(); // synchronous final writes current records
         release.countDown();
-        try{Thread.sleep(30);}catch(InterruptedException e){Thread.currentThread().interrupt();}
+        await(m.rejectedStaleWorker,"stale worker refusal");
         ids(m.disk,"old");yes(m.rejections>=1,"stale worker not refused");
         passed++;
     }
     static void restartWorkerIsNotClearedByPriorSession(){
         M m=new M();m.start();m.stop();m.start();m.add("new");
-        CountDownLatch done=new CountDownLatch(1);
-        m.insideWriter=done::countDown;m.request();await(done,"restart writer");
+        m.request();await(m.firstCompletedWrite,"restart writer");
         ids(m.disk,"new");m.stop();passed++;
     }
     static void failedWriteRequiresRetry(){
