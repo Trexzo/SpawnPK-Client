@@ -95,8 +95,15 @@ def read_tree_bytes(directory: Path, suffix: str) -> dict[str, bytes]:
 
 
 def ordered(source: str, *needles: str) -> bool:
-    positions = [source.find(item) for item in needles]
-    return all(v >= 0 for v in positions) and positions == sorted(positions) and len(set(positions)) == len(positions)
+    # Source methods can contain earlier 'return' in a guard. Match a
+    # complete ordered subsequence, rather than comparing first occurrence.
+    cursor = 0
+    for needle in needles:
+        index = source.find(needle, cursor)
+        if index < 0:
+            return False
+        cursor = index + len(needle)
+    return True
 
 
 def static_assertions(source: bytes) -> dict:
