@@ -1,0 +1,40 @@
+name: v309 R395 async history restore gate (synthetic public only)
+on:
+  push:
+    branches:
+      - 'research/v309-r395-*'
+  pull_request:
+    paths:
+      - 'tools/r395/**'
+      - 'tests/test_v309_r395_async_restore_gate.py'
+      - 'tests/fixtures/r395/**'
+      - 'docs/V309_R395_ASYNC_HISTORY_CANDIDATE.md'
+      - '.github/workflows/v309-r395-async-history.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R395 public-only candidate-scope negative controls
+        run: python -m unittest discover -s tests -p 'test_v309_r395_async_restore_gate.py' -v
+      - name: R395 headless JDK11-compatible asynchronous restore race model
+        run: |
+          python -c "from pathlib import Path; Path('build/r395-synthetic').mkdir(parents=True, exist_ok=True)"
+          javac --release 11 -d build/r395-synthetic tests/fixtures/r395/R395AsyncRestoreSynthetic.java
+          java '-Djava.awt.headless=true' -cp build/r395-synthetic R395AsyncRestoreSynthetic
