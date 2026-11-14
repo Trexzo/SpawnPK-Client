@@ -229,7 +229,7 @@ class R404GateTests(unittest.TestCase):
 
     def test_record_array_read_only_once(self):
         self.mutate("store","new ArrayList<>(capturedItems.length)",
-                    "new ArrayList<>(capturedItems.length + record.getItems().length)")
+                    "new ArrayList<>(capturedItems.length);\n    int unused = record.getItems().length;")
         self.reject("R404_RECORD_ITEMS_READ_MULTIPLE_TIMES")
 
     def test_record_loop_must_use_captured_array(self):
@@ -290,8 +290,7 @@ class R404GateTests(unittest.TestCase):
         self.reject("R404_STORE_RECEIPT_REGRESSION")
 
     def test_source_scope_refuses_extra_panel_revision(self):
-        self.panel=b"additional fabricated panel change"
-        self.write()
+        (self.new_source/audit.PANEL).write_bytes(b"additional fabricated panel change")
         self.reject("R404_THREE_SOURCE_FOUR_CLASS_SCOPE_DRIFT")
 
     def test_class_scope_refuses_extra_outer_store_revision(self):
