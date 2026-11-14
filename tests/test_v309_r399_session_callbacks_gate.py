@@ -113,6 +113,7 @@ class SyntheticLootTracker {
        r399DropSessionEpoch = r399SessionEpoch;
        ++r399RecordMutationSequence;
        pendingRecords.add(record);
+       if (!historyLoaded) r396PreloadRecords.add(record);
     }
     SwingUtilities.invokeLater(() -> {
        synchronized (r395HistoryGate) {
