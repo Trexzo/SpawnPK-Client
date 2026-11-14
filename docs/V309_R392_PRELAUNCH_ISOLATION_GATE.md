@@ -57,6 +57,22 @@ startup. A matching path isn't a demonstration of malicious behavior. The
 purpose is to identify risk categories that the isolated test environment
 must contain, not to classify the client's trustworthiness.
 
+## Startup sequencing and a bounded potential freeze path
+
+A private source inspection of the recovered bootstrap code shows the order
+of significant operations: load configuration, load and reset plugins, initialize
+the ClientUI, register event listeners, start plugins, schedule ClientUI.show(),
+and initialize later client services. PluginManager.startPlugins() synchronously
+uses SwingUtilities.invokeAndWait() for each plugin and calls the plugin's
+startUp() on the event-dispatch thread; ClientUI.show() schedules a later Swing
+invokeLater() call.
+
+Thus a blocking plugin startUp() *could* stall the event-dispatch thread and
+delay the first visible window. This is a bounded hypothesis and **not**
+proof that plugins caused any actual SpawnPK freeze. It strengthens the case
+for prelaunch, no-side-effect plugin-dependency inspection and a disposable
+guest before exercising GUI startup. No plugin startup was invoked here.
+
 ## Public-safe verifier and tests
 
 The verifier checks a SHA-pinned owner-local source ZIP, refuses unsafe or
