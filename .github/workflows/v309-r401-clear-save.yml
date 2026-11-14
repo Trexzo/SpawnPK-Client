@@ -1,0 +1,40 @@
+name: v309 R401 clear/save generation serialization (synthetic public only)
+on:
+  push:
+    branches:
+      - 'research/v309-r401-*'
+  pull_request:
+    paths:
+      - 'tools/r401/**'
+      - 'tests/test_v309_r401_clear_save_gate.py'
+      - 'tests/fixtures/r401/**'
+      - 'docs/V309_R401_CLEAR_SAVE_SERIALIZATION.md'
+      - '.github/workflows/v309-r401-clear-save.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R401 public synthetic two-class source, clear receipt and generation refusal controls
+        run: python -m unittest discover -s tests -p 'test_v309_r401_clear_save_gate.py' -v
+      - name: R401 standalone Java clear/write two-thread model
+        run: |
+          python -c "from pathlib import Path; Path('build/r401-synthetic').mkdir(parents=True, exist_ok=True)"
+          javac --release 11 -d build/r401-synthetic tests/fixtures/r401/R401ClearSaveSynthetic.java
+          java -cp build/r401-synthetic R401ClearSaveSynthetic
