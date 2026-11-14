@@ -1,0 +1,41 @@
+name: v309 R386 one-layer offline Windows handoff (synthetic public only)
+on:
+  push:
+    paths:
+      - 'tools/r386/**'
+      - 'tests/test_v309_r386_one_layer_acceptance.py'
+      - '.github/workflows/v309-r386-one-layer-windows-handoff.yml'
+  pull_request:
+    paths:
+      - 'tools/r386/**'
+      - 'tests/test_v309_r386_one_layer_acceptance.py'
+      - '.github/workflows/v309-r386-one-layer-windows-handoff.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-synthetic:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.13']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Public, synthetic-only verdict and path tests
+        run: python -m unittest discover -s tests -p test_v309_r386_one_layer_acceptance.py -v
+      - name: Parse PowerShell without executing client or private bundle
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile('tools/r386/Run-R386-Windows.ps1', [ref]$tokens, [ref]$errors) | Out-Null
+          if ($errors.Count -ne 0) { $errors | ForEach-Object { Write-Error $_.Message }; exit 1 }
