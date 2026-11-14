@@ -90,6 +90,15 @@ class SyntheticBuildTests(unittest.TestCase):
  def test_large_legitimate_dependency_member_allowed(self):
   i=ZipInfo('dependencies/R218.jar');i.file_size=10_279_399
   self.assertTrue(r.safe_member(i))
+ def test_canonical_class_zipinfo_uses_portable_os_marker(self):
+  entry=r.canonical_class_zipinfo('rs/Foo.class')
+  self.assertEqual(entry.create_system,3)
+  self.assertEqual(entry.external_attr,0o644<<16)
+  self.assertEqual(entry.date_time,(2026,10,18,0,0,0))
+ def test_reject_non_class_jar_members(self):
+  for name in ('../Foo.class','/Foo.class','Foo.java','dir\\Foo.class','a//b.class'):
+   with self.subTest(name=name), self.assertRaisesRegex(r.Refused,'UNSAFE_CLASS_ENTRY'):
+    r.canonical_class_zipinfo(name)
  def test_excessive_dependency_member_rejected(self):
   i=ZipInfo('dependencies/R218.jar');i.file_size=18_000_000
   self.assertFalse(r.safe_member(i))
