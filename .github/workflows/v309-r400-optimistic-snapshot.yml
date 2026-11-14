@@ -1,0 +1,40 @@
+name: v309 R400 optimistic loot handoff snapshots (public synthetic only)
+on:
+  push:
+    branches:
+      - 'research/v309-r400-*'
+  pull_request:
+    paths:
+      - 'tools/r400/**'
+      - 'tests/test_v309_r400_optimistic_handoff_gate.py'
+      - 'tests/fixtures/r400/**'
+      - 'docs/V309_R400_OPTIMISTIC_HANDOFF_SNAPSHOT.md'
+      - '.github/workflows/v309-r400-optimistic-snapshot.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R400 synthetic source/class scope and fail-closed snapshot verifier
+        run: python -m unittest discover -s tests -p 'test_v309_r400_optimistic_handoff_gate.py' -v
+      - name: R400 standalone deterministic Java interleaving model
+        run: |
+          python -c "from pathlib import Path; Path('build/r400-synthetic').mkdir(parents=True, exist_ok=True)"
+          javac --release 11 -d build/r400-synthetic tests/fixtures/r400/R400HandoffSnapshotSynthetic.java
+          java -cp build/r400-synthetic R400HandoffSnapshotSynthetic
