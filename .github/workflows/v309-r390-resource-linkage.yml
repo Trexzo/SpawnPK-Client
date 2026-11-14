@@ -1,0 +1,34 @@
+name: v309 R390 resource classloader smoke (public synthetic only)
+on:
+  push:
+    branches:
+      - 'research/v309-r390-*'
+  pull_request:
+    paths:
+      - 'tools/r390/R390ResourceProbe.java'
+      - 'tests/test_v309_r390_resource_classloader.py'
+      - 'docs/V309_R390_WINDOWS_RESOURCE_LINKAGE.md'
+      - '.github/workflows/v309-r390-resource-linkage.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Synthetic resource visibility, classloader ordering, no-initialization tests
+        run: python -m unittest discover -s tests -p 'test_v309_r390_resource_classloader.py' -v
