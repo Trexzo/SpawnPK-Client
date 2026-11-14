@@ -72,9 +72,11 @@ def verify_kit(path: Path, expected_sha256: str) -> None:
 
 
 def safe_archive_member(info: zipfile.ZipInfo) -> bool:
-    name = info.filename
+    raw_name = info.filename
+    # ZIP directory records legitimately end in a single slash.
+    name = raw_name[:-1] if info.is_dir() and raw_name.endswith("/") else raw_name
     parts = PurePosixPath(name).parts
-    if not name or info.orig_filename != name or "\\" in name:
+    if not name or info.orig_filename != raw_name or "\\" in raw_name:
         return False
     if name.startswith("/") or name.startswith("//") or ":" in name:
         return False
