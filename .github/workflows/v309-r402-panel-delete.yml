@@ -1,0 +1,40 @@
+name: v309 R402 panel deletion transaction (public synthetic only)
+on:
+  push:
+    branches:
+      - 'research/v309-r402-*'
+  pull_request:
+    paths:
+      - 'tools/r402/**'
+      - 'tests/test_v309_r402_panel_delete_gate.py'
+      - 'tests/fixtures/r402/**'
+      - 'docs/V309_R402_PANEL_DELETE_TRANSACTIONS.md'
+      - '.github/workflows/v309-r402-panel-delete.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R402 synthetic SHA-pinned panel deletion source/class gate
+        run: python -m unittest discover -s tests -p 'test_v309_r402_panel_delete_gate.py' -v
+      - name: R402 Java EDT deletion versus in-flight save model
+        run: |
+          python -c "from pathlib import Path; Path('build/r402-synthetic').mkdir(parents=True, exist_ok=True)"
+          javac --release 11 -d build/r402-synthetic tests/fixtures/r402/R402PanelDeleteSynthetic.java
+          java -cp build/r402-synthetic R402PanelDeleteSynthetic
