@@ -118,7 +118,12 @@ def report_from_sources(sources: dict[str, str]) -> dict:
     ):
         raise Refused("LOADOUTS_LEGACY_DELETE_BRANCH_CHANGED")
     store_order_write = method_body(a["loadout_store"], "writeFolderOrderSettings")
-    if "Files.newBufferedWriter(" not in store_order_write or "Files.move(" not in store_order_write:
+    # The public entrypoint takes a file lock then delegates the actual
+    # temporary-write + atomic-move path to a private helper.
+    if "this.writeFolderOrderSettingsWithLock(" not in store_order_write:
+        raise Refused("LOADOUTS_ORDER_WRITE_DELEGATION_CHANGED")
+    store_order_helper = method_body(a["loadout_store"], "writeFolderOrderSettingsWithLock")
+    if "Files.newBufferedWriter(" not in store_order_helper or "Files.move(" not in store_order_helper:
         raise Refused("LOADOUTS_ORDER_WRITE_PATH_CHANGED")
     loader = a["image_loader"]
     loader_start = method_body(loader, "start")
