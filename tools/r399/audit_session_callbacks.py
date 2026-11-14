@@ -125,13 +125,36 @@ def audit(*,kit:Path,kit_sha:str,reference:Path,reference_sha:str,
           previous_sources:Path,previous_classes:Path,
           candidate_sources:Path,candidate_classes:Path,
           expected_sources:int=1277,expected_classes:int=1388)->dict:
-    inherited=r396.audit(
-        kit=kit,kit_sha=kit_sha,
-        reference=reference,reference_sha=reference_sha,
-        sources=candidate_sources,classes=candidate_classes,
-        expected_sources=expected_sources,expected_classes=expected_classes)
+    # R399 intentionally replaces the old R396 preload merge token and the
+    # unconditional save-success flag. Check the inherited R396 structure on
+    # an IN-MEMORY normalized view only; never modify the private source.
+    r395.require_pin(kit,kit_sha)
+    r395.require_pin(reference,reference_sha)
+    golden_src=r395.read_zip_bytes(kit,"source/",".java")
+    golden_cls=r395.read_zip_bytes(reference,"",".class")
     old_src=r395.read_tree_bytes(previous_sources,".java")
     new_src=r395.read_tree_bytes(candidate_sources,".java")
+    if (len(golden_src)!=expected_sources or golden_src.keys()!=new_src.keys()):
+        raise Refused("GOLDEN_SOURCE_SET_DRIFT")
+    golden_changes={k for k in golden_src if golden_src[k]!=new_src[k]}
+    if golden_changes!=r396.EXPECTED_SOURCES:
+        raise Refused("GOLDEN_SOURCE_SCOPE_DRIFT")
+    normalized=new_src[PLUGIN]
+    for old_token,new_token in (
+        (b"combined.addAll(r399MergedPreload)",b"combined.addAll(r396PreloadRecords)"),
+        (b"r396LastCommitSucceeded = r399NoNewDropSinceSnapshot",
+         b"r396LastCommitSucceeded = true"),
+    ):
+        if normalized.count(old_token)!=1:
+            raise Refused("INHERITED_STRUCTURE_NORMALIZATION_DRIFT")
+        normalized=normalized.replace(old_token,new_token)
+    inherited=r396.check_structure(normalized,new_src[r396.STORE])
+    inherited.update({
+        "java_source_count":len(new_src),
+        "compiled_class_count":expected_classes,
+        "changed_private_source_count":len(golden_changes),
+        "changed_private_class_count":len(r396.EXPECTED_CLASSES),
+    })
     if len(old_src)!=expected_sources or old_src.keys()!=new_src.keys():
         raise Refused("PREVIOUS_SOURCE_SET_DRIFT")
     changes=sorted(k for k in old_src if old_src[k]!=new_src[k])
@@ -139,6 +162,11 @@ def audit(*,kit:Path,kit_sha:str,reference:Path,reference_sha:str,
         raise Refused("SOURCE_CHANGE_SCOPE_DRIFT")
     old_cls=r395.read_tree_bytes(previous_classes,".class")
     new_cls=r395.read_tree_bytes(candidate_classes,".class")
+    if (len(golden_cls)!=expected_classes or golden_cls.keys()!=new_cls.keys()):
+        raise Refused("GOLDEN_CLASS_SET_DRIFT")
+    golden_class_changes={k for k in golden_cls if golden_cls[k]!=new_cls[k]}
+    if golden_class_changes!=r396.EXPECTED_CLASSES:
+        raise Refused("GOLDEN_CLASS_SCOPE_DRIFT")
     if len(old_cls)!=expected_classes or old_cls.keys()!=new_cls.keys():
         raise Refused("PREVIOUS_CLASS_SET_DRIFT")
     changed_classes=sorted(k for k in old_cls if old_cls[k]!=new_cls[k])
