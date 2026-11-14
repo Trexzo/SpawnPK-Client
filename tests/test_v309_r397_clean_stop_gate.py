@@ -144,10 +144,9 @@ class R397CleanStopTests(unittest.TestCase):
             self.run_audit()
 
     def test_guard_only_in_comment_refused(self):
-        self.current_plugin=(
-            PRIOR.replace("  boolean r396FinishStopMerge() {",
-                          "  boolean r396FinishStopMerge() { // "+GUARD.replace("\n"," ")))
-                  .encode("utf8"))
+        self.current_plugin=PRIOR.replace(
+            "  boolean r396FinishStopMerge() {",
+            "  boolean r396FinishStopMerge() { // "+GUARD.replace("\n"," ")).encode("utf8")
         self.write()
         with self.assertRaisesRegex(audit.Refused,"CLEAN_STOP_TRIPLE_EMPTY_GUARD_MISSING"):
             self.run_audit()
