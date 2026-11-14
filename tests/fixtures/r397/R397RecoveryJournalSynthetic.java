@@ -106,7 +106,8 @@ public final class R397RecoveryJournalSynthetic {
             // Directory metadata and hardware power-loss durability are unproven.
             try (FileChannel fc = FileChannel.open(frames,
                     StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
-                fc.write(ByteBuffer.wrap(frame));
+                ByteBuffer data = ByteBuffer.wrap(frame);
+                while (data.hasRemaining()) fc.write(data);
                 fc.force(true);
             }
             return id;
@@ -327,7 +328,9 @@ public final class R397RecoveryJournalSynthetic {
                 fc.write(ByteBuffer.wrap(new byte[]{(byte)0xff}),0);
                 fc.force(true);
             }
-            a.append("extra"); // append itself validates snapshot; should refuse
+            try { a.append("extra"); throw new AssertionError("corrupt snapshot accepted"); }
+            catch(IOException expected) { /* primary history remains byte-for-byte untouched */ }
+            check(Files.exists(a.frames) && Files.exists(a.main), "files unexpectedly removed");
         });
         run("oversized payload refused before writing", root -> {
             Journal a=new Journal(root);
