@@ -1,0 +1,30 @@
+name: v309 R393 plugin startup static risk map (public synthetic only)
+on:
+  push:
+    branches:
+      - 'research/v309-r393-*'
+  pull_request:
+    paths:
+      - 'tools/r393/**'
+      - 'tests/test_v309_r393_plugin_startup_map.py'
+      - 'docs/V309_R393_PLUGIN_STARTUP_RISK_MAP.md'
+      - '.github/workflows/v309-r393-plugin-startup.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: R393 ZIP and Java-lexical synthetic regressions (NO private sources)
+        run: python -m unittest discover -s tests -p 'test_v309_r393_plugin_startup_map.py' -v
