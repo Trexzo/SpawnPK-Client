@@ -103,8 +103,14 @@ def check_structure(plugin:bytes,panel:bytes)->dict:
     # R401's file commit remains serialized; both checkpoints must
     # reject in-progress partial panel mutations.
     require(save,"r402PanelEditMutating","R402_SAVE_EDIT_GUARD_MISSING")
-    if save.count("r402PanelEditMutating")<4:
+    if save.count("r402PanelEditMutating")<5:
         raise Refused("R402_SAVE_EDIT_GUARD_COUNT_DRIFT")
+    # The first save admission check must reject editing before
+    # taking any panel/pending snapshot.
+    if not re.search(
+        r"if\s*\(\s*!historyLoaded\b[\s\S]{0,150}r402PanelEditMutating",
+        save.split("panel.getRecordsOffEdt(",1)[0]):
+        raise Refused("R402_PRE_SNAPSHOT_EDIT_ADMISSION_MISSING")
     sequence(save,
         "r402PanelEditMutating",
         "panel.getRecordsOffEdt()",
