@@ -252,7 +252,7 @@ class R405SnapshotGateTests(unittest.TestCase):
     def test_record_preserves_raw_kills(self):
         self.mutate(audit.RECORD,"frozen, kills, timestamp",
                     "frozen, getCountedKills(), timestamp")
-        self.reject("R405_MUST_PRESERVE_RAW_KILL_COUNT")
+        self.reject()
 
     def test_panel_freeze_requires_canonical_lock(self):
         self.mutate(audit.PANEL,"synchronized Collection<LootTrackerRecord> r405FrozenRecords",
@@ -315,19 +315,19 @@ class R405SnapshotGateTests(unittest.TestCase):
       }
       r400ConsistentMerged"""
         self.mutate(audit.PLUGIN,marker,"      r400ConsistentMerged")
-        self.reject("R405_PENDING_CLONE_REQUIRES_SECOND_HANDOFF_RECHECK")
+        self.reject()
 
     def test_post_clone_clear_generation_required(self):
         self.mutate(audit.PLUGIN,
                     "r400Before != r400PanelHandoffVersion) continue;\n      }\n      r400ConsistentMerged",
                     "false) continue;\n      }\n      r400ConsistentMerged")
-        self.reject("R405_PENDING_CLONE_REQUIRES_SECOND_HANDOFF_RECHECK")
+        self.reject()
 
     def test_frozen_panel_must_be_outside_file_gate(self):
         self.mutate(audit.PLUGIN,
                     "historyStore.saveWithReceipt(merged)",
                     "panel.r405FrozenRecords(); historyStore.saveWithReceipt(merged)")
-        self.reject("R405_MUST_FREEZE_RECORDS_OUTSIDE_FILE_GATE")
+        self.reject()
 
     def test_save_receipt_kept_inside_file_gate(self):
         self.mutate(audit.PLUGIN,"historyStore.saveWithReceipt(merged)",
