@@ -1,0 +1,34 @@
+name: v309 R385 Windows path & JAR triage (PUBLIC synthetic only)
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/v309-r385-windows-path-and-jar-triage.yml'
+      - 'tools/r383/verify_private_full_build.py'
+      - 'tools/r385/**'
+      - 'tests/test_v309_r385_winpath_and_jar_triage.py'
+      - 'docs/V309_R385_WINDOWS_ARCHIVE_PATH_AND_CLASS_TRIAGE.md'
+      - 'research/v309-source-recovery/r385-windows-archive-path-and-class-triage-witness.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-windows-path-and-jar-triage:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Public-only verifier tests; no owner source
+        run: python -m unittest discover -s tests -p 'test_v309_r38*_*.py' -v
+      - name: Synthetic Java ZIP compatibility probe
+        run: python tools/r384/synthetic_cross_os_jar_probe.py
