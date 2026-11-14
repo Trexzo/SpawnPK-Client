@@ -117,6 +117,8 @@ def check_structure(plugin:bytes,store:bytes)->dict:
     # post-clear records when a newer EDT callback has already run.
     if "SwingUtilities.invokeLater(panel::clearRecords)" in clear:
         raise Refused("ASYNC_PANEL_CLEAR_NOT_SCOPED")
+    if clear.count("panel.clearRecords()")!=1:
+        raise Refused("PANEL_CLEAR_COUNT_NOT_EXACTLY_ONE")
     cf=clear.find("synchronized (r401FileGate)")
     if cf<0:raise Refused("CLEAR_FILE_GATE_MISSING")
     cgate=r393.braced_body(clear,clear.find("{",cf))
