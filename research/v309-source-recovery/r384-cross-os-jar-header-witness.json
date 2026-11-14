@@ -1,0 +1,23 @@
+{
+  "base_pr": 1178,
+  "class_count_verified": 1388,
+  "full_windows_private_runtime_tested": false,
+  "jar_creator_os_marker": 3,
+  "no_private_java_committed": true,
+  "private_expected_jar_sha256": "ed092c2e56967cee501c6e120f915ac10810cc9adb375cd9efba4e86d2dbebf3",
+  "private_java_source_files_changed": 0,
+  "private_kit_sha256": "902e3b583840073c095ea51c5fe5bee4034340ab92bd19dc7c36f3173f092f96",
+  "private_linux_rebuild_jar_sha256": "ed092c2e56967cee501c6e120f915ac10810cc9adb375cd9efba4e86d2dbebf3",
+  "private_source_release_approved": false,
+  "r383_runner_prior_sha256": "e435f17dd5f25b345ac567b9f329c31910e77cc09d341d2aace34d546363bb38",
+  "r384": "cross_os_jar_header_reproducibility",
+  "r384_new_tests_sha256": "2b0c4ac94c410074017ee0c96186e7cd15c61efd4f49e1ecaa2385cb21975272",
+  "r384_runner_fixed_sha256": "14af4e60dfd5ffef10a9766edccd29df531123806dfa750f2a0a0526a2ee162a",
+  "r384_synthetic_probe_sha256": "50e8e0229d2167cde4181eebdb0d207cdb38a1eaf187b1ed66aa348fb76c1260",
+  "repository": "Trexzo/SpawnPK-Client",
+  "source_count_verified": 1277,
+  "synthetic_javac_probe_passed_locally_on": "Linux JDK21",
+  "synthetic_tests_passed_locally": 32,
+  "windows_owner_device_online": false,
+  "windows_private_full_compilation_performed": false
+}
