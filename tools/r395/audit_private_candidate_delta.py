@@ -116,7 +116,7 @@ def static_assertions(source: bytes) -> dict:
         "SwingUtilities.invokeLater(",
         "restorePanel.addRecords(",
         "historyLoaded = true",
-        "r395RestoreInFlight = false",
+        "if (deferred)",
         "persistHistory(",
         "worker.setDaemon(true",
         "worker.start(",
@@ -125,6 +125,11 @@ def static_assertions(source: bytes) -> dict:
         raise Refused("ASYNC_LOAD_STRUCTURE_DRIFT")
     if "pendingRecords.clear(" in load:
         raise Refused("PENDING_DROP_CLEAR_IN_RESTORE")
+    # A recovery callback also resets the flight flag on read failure,
+    # so inspect the successful-apply region rather than the first match.
+    after_apply = load.split("restorePanel.addRecords(", 1)[-1]
+    if "r395RestoreInFlight = false" not in after_apply:
+        raise Refused("SUCCESSFUL_RESTORE_FLIGHT_RESET_MISSING")
     if not ordered(persist,
                    "if (!historyLoaded)", "r395WriteDeferred = true",
                    "return", "panel.getRecordsOffEdt("):
