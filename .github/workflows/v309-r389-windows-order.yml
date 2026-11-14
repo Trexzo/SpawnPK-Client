@@ -1,0 +1,37 @@
+name: v309 R389 cross-OS classfile order (synthetic only)
+on:
+  push:
+    branches:
+      - 'research/v309-r389-*'
+  pull_request:
+    paths:
+      - 'tools/r383/verify_private_full_build.py'
+      - 'tools/r386/run_self_contained_acceptance.py'
+      - 'tests/test_v309_r389_windows_classfile_order.py'
+      - '.github/workflows/v309-r389-windows-order.yml'
+      - 'docs/V309_R389_WINDOWS_ZIP_ORDER_FIX.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R389 deterministic ZIP and source SHA tests (synthetic only)
+        run: python -m unittest discover -s tests -p 'test_v309_r389_windows_classfile_order.py' -v
+      - name: Inherited R386 isolated acceptance guards (synthetic only)
+        run: python -m unittest discover -s tests -p 'test_v309_r386_one_layer_acceptance.py' -v
