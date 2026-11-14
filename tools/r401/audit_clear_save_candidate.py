@@ -133,7 +133,7 @@ def check_structure(plugin:bytes,store:bytes)->dict:
     ordered(store_clear,
         "Files.deleteIfExists(file.toPath())",
         "return true;",
-        "catch (IOException e)",
+        "catch (IOException | SecurityException e)",
         "return false;")
     if "return true;" not in store_clear:
         raise Refused("MISSING_FILE_MUST_COUNT_AS_DELETED")
