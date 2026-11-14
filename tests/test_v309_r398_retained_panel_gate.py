@@ -38,7 +38,8 @@ def candidate_body():
     }""")
     s=s.replace(
         "  void loadHistory() {\n",
-        "  void loadHistory() {\n    if (r398UnreconciledPanelAtStart) {return;}\n")
+        "  void loadHistory() {\n    if (r398UnreconciledPanelAtStart) {return;}\n"
+        "    final LootHistoryStore restoreStore = historyStore;\n")
     s=s.replace(
         "  boolean r396FinishStopMerge() {\n",
         """  boolean r396FinishStopMerge() {
