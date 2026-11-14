@@ -1,0 +1,40 @@
+name: v309 R403 coalesced routine autosaves (public synthetic only)
+on:
+  push:
+    branches:
+      - 'research/v309-r403-*'
+  pull_request:
+    paths:
+      - 'tools/r403/**'
+      - 'tests/test_v309_r403_autosave_gate.py'
+      - 'tests/fixtures/r403/**'
+      - 'docs/V309_R403_COALESCED_AUTOSAVE.md'
+      - '.github/workflows/v309-r403-autosave.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R403 public synthetic source/class and stale-worker admission controls
+        run: python -m unittest discover -s tests -p 'test_v309_r403_autosave_gate.py' -v
+      - name: R403 standalone Java daemon autosave and session retirement model
+        run: |
+          python -c "from pathlib import Path; Path('build/r403-synthetic').mkdir(parents=True, exist_ok=True)"
+          javac --release 11 -d build/r403-synthetic tests/fixtures/r403/R403AutosaveWorkerSynthetic.java
+          java -cp build/r403-synthetic R403AutosaveWorkerSynthetic
