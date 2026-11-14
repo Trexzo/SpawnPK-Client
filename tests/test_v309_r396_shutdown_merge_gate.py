@@ -82,9 +82,10 @@ class SyntheticStore {
     return next == null ? new ArrayList<>() : next;
   }
   List<LootTrackerRecord> loadForMerge() {
+    if (!file.exists()) {return new ArrayList<>();}
     if (bad) return null;
-    if (record == null) return null;
-    return new ArrayList<>();
+    if (record == null) {return null;}
+    return records;
   }
   void save(List<LootTrackerRecord> items) { saveWithReceipt(items); }
   boolean saveWithReceipt(List<LootTrackerRecord> items) {
@@ -217,13 +218,12 @@ class R396CandidateGateTests(unittest.TestCase):
         self.new_sources[r396.STORE] = FAKE_STORE.replace(
             "if (bad) return null;", "if (bad) return new ArrayList<>();").encode("utf-8")
         self.write()
-        # The static gate requires a null return and invalid DTO guard, but
-        # cannot prove every invalid branch uses the sentinel.
-        self.assertTrue(self.audit()["strict_history_load_failure_distinguishable"])
+        with self.assertRaisesRegex(r396.Refused, "INVALID_READ_MAPPED_TO_EMPTY"):
+            self.audit()
 
     def test_invalid_record_guard_mandatory(self):
         self.new_sources[r396.STORE] = FAKE_STORE.replace(
-            "if (record == null) return null;", "if (record == null) return new ArrayList<>();").encode("utf-8")
+            "if (record == null) {return null;}", "if (record == null) {throw new RuntimeException();}").encode("utf-8")
         self.write()
         with self.assertRaisesRegex(r396.Refused, "STRICT_DTO_VALIDATION_MISSING"):
             self.audit()
