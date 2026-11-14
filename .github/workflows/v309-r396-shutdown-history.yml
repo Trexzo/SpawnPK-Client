@@ -1,0 +1,40 @@
+name: v309 R396 shutdown history merge (public synthetic only)
+on:
+  push:
+    branches:
+      - 'research/v309-r396-*'
+  pull_request:
+    paths:
+      - 'tools/r396/**'
+      - 'tests/test_v309_r396_shutdown_merge_gate.py'
+      - 'tests/fixtures/r396/**'
+      - 'docs/V309_R396_SHUTDOWN_HISTORY_MERGE.md'
+      - '.github/workflows/v309-r396-shutdown-history.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    name: ${{ matrix.os }} / Python ${{ matrix.python-version }} / JDK21
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: R396 synthetic source/class gate and refusal regressions
+        run: python -m unittest discover -s tests -p 'test_v309_r396_shutdown_merge_gate.py' -v
+      - name: R396 standalone Java shutdown race model, no private client
+        run: |
+          python -c "from pathlib import Path; Path('build/r396-synthetic').mkdir(parents=True, exist_ok=True)"
+          javac --release 11 -d build/r396-synthetic tests/fixtures/r396/R396ShutdownMergeSynthetic.java
+          java -cp build/r396-synthetic R396ShutdownMergeSynthetic
