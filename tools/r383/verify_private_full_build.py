@@ -110,6 +110,23 @@ def javac_arg_path(p: Path)->str:
     if '\"' in s or '\n' in s or '\r' in s:raise Refused("UNSAFE_SOURCE_PATH")
     return '"'+s+'"'
 
+def canonical_class_zipinfo(relative_name: str) -> zipfile.ZipInfo:
+    """Create identical ZIP central-directory metadata on Windows and Unix.
+
+    ZipInfo otherwise defaults create_system to 0 on Windows and 3 on Unix,
+    changing the JAR's SHA-256 despite identical class bytes. A fixed UNIX
+    creator marker matches the existing pinned Linux reference JAR.
+    """
+    if (not relative_name.endswith(".class") or relative_name.startswith("/")
+            or "\\" in relative_name or any(x in ("", ".", "..")
+            for x in relative_name.split("/"))):
+        raise Refused("UNSAFE_CLASS_ENTRY")
+    info = zipfile.ZipInfo(relative_name, (2026, 10, 18, 0, 0, 0))
+    info.create_system = 3  # explicit, portable ZIP 'made by Unix' marker
+    info.compress_type = zipfile.ZIP_DEFLATED
+    info.external_attr = 0o644 << 16
+    return info
+
 def build(kit_dir: Path, result_dir: Path, compiler: Path, expected_manifest: dict, work: Path):
     sources=sorted((kit_dir/"source").rglob("*.java"))
     if len(sources)!=SOURCE_COUNT:raise Refused("SOURCE_COUNT_CHANGED")
@@ -133,9 +150,7 @@ def build(kit_dir: Path, result_dir: Path, compiler: Path, expected_manifest: di
     if jar.exists():raise Refused("REFUSE_EXISTING_JAR_OUTPUT")
     with zipfile.ZipFile(jar,"w",zipfile.ZIP_DEFLATED,compresslevel=9) as z:
         for file in classfiles:
-            info=zipfile.ZipInfo(file.relative_to(classes).as_posix(),(2026,10,18,0,0,0))
-            info.compress_type=zipfile.ZIP_DEFLATED
-            info.external_attr=0o644<<16
+            info=canonical_class_zipinfo(file.relative_to(classes).as_posix())
             z.writestr(info,file.read_bytes(),compress_type=zipfile.ZIP_DEFLATED,compresslevel=9)
     observed=hash_file(jar)
     if observed!=EXPECTED_JAR_SHA:
