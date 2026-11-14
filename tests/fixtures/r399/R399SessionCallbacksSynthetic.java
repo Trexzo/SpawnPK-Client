@@ -71,7 +71,15 @@ public final class R399SessionCallbacksSynthetic {
                 }
                 unresolved=!panel.isEmpty()||!pending.isEmpty()||!preload.isEmpty();
             }
-            if (!unresolved) restore();
+            // Restoration is queued, not synchronous, so stop and restart
+            // can invalidate a still-pending read, as in the real client.
+            final long issued = sessionEpoch;
+            if (!unresolved) edt.add(()->{
+                synchronized(gate) {
+                    if (!active || issued!=sessionEpoch) return;
+                }
+                restore();
+            });
         }
 
         void restore() {
@@ -257,7 +265,7 @@ public final class R399SessionCallbacksSynthetic {
         p.stop();
         assertTrue(p.pending.size()==1 && p.pending.get(0)==d,"failed drop discarded");
         p.start();
-        assertTrue(p.unresolved && p.disk.reads==2,"unverified pending allowed reread");
+        assertTrue(p.unresolved && p.disk.reads==1,"unverified pending allowed reread");
         p.drain();
         assertTrue(p.suppressedCallbacks==1 && p.panel.isEmpty(),"stale UI rendered");
         passed++;
